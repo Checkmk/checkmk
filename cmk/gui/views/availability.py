@@ -12,8 +12,9 @@ from collections.abc import Iterator
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import host_state_name, service_state_name
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import host_state_name, service_state_name
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi
@@ -37,7 +38,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -477,7 +478,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
 
 
 def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return
 
     if not user.may("general.reporting") or not user.may("general.instant_reports"):
@@ -1118,7 +1119,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             )
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css=["nobr narrow"])
-            if not cmk_version.is_raw_edition():
+            if cmk_version.edition() is not cmk_version.Edition.CRE:
                 table.cell(
                     _("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No")
                 )
@@ -1284,7 +1285,7 @@ def _vs_annotation():
     ]
     extra_elements: list[DictionaryEntry] = (
         []
-        if cmk_version.is_raw_edition()
+        if cmk_version.edition() is cmk_version.Edition.CRE
         else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
     )
     return Dictionary(
@@ -1484,4 +1485,5 @@ def _av_output_set_content_disposition(title: str) -> None:
         title,
         time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
     )
-    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
+    response.set_content_type("text/csv")
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)

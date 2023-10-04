@@ -7,7 +7,7 @@ import json
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, NewType, Union
+from typing import Any, NewType
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,13 +32,13 @@ class AggregationKey:
     key: str
 
 
-LabelKey = Union[ResourceKey, MetricKey]
-Key = Union[LabelKey, AggregationKey]
+LabelKey = ResourceKey | MetricKey
+Key = LabelKey | AggregationKey
 
 
 @dataclass(frozen=True)
 class GCPLabels:
-    _data: Mapping[str, Any]
+    _data: Mapping[str, Mapping[str, Mapping[str, str]]]
 
     def __getitem__(self, key: LabelKey) -> str:
         return self._data[key.prefix]["labels"][key.key]
@@ -46,7 +46,7 @@ class GCPLabels:
 
 @dataclass(frozen=True)
 class GCPAggregation:
-    _data: Mapping[str, Any]
+    _data: Mapping[str, str]
 
     def __getitem__(self, key: AggregationKey) -> str:
         return self._data[key.key]

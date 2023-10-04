@@ -14,7 +14,7 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
@@ -107,35 +107,24 @@ def _del_service_downtime(  # type: ignore[no-untyped-def]
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id], site_id)
 
 
-def delete_downtime_with_query(connection, query):
-    """Delete scheduled downtimes based upon a query"""
+def delete_downtime(
+    connection: MultiSiteConnection,
+    query: QueryExpression,
+    site_id: SiteId,
+) -> None:
+    """Delete a scheduled downtime"""
     _user.need_permission("action.downtimes")
 
-    q = Query([Downtimes.id, Downtimes.is_service]).filter(query)
+    downtimes = Query(
+        [Downtimes.id, Downtimes.is_service],
+        query,
+    ).fetchall(connection, True, [site_id])
 
-    with detailed_connection(connection) as conn:
-        downtimes = [(row["site"], row["id"], row["is_service"]) for row in q.iterate(conn)]
-
-    for site_id, downtime_id, is_service in downtimes:
-        if is_service:
-            _del_service_downtime(connection, downtime_id, site_id)
+    for downtime in downtimes:
+        if downtime["is_service"]:
+            _del_service_downtime(connection, downtime["id"], downtime["site"])
         else:
-            _del_host_downtime(connection, downtime_id, site_id)
-
-
-def delete_downtime(connection, downtime_id):
-    """Delete a scheduled downtime based upon the downtime id"""
-    _user.need_permission("action.downtimes")
-
-    with detailed_connection(connection) as conn:
-        entry = Query(
-            [Downtimes.is_service],
-            Downtimes.id == downtime_id,
-        ).fetchone(conn)
-    if entry["is_service"]:
-        _del_service_downtime(connection, downtime_id, entry["site"])
-    else:
-        _del_host_downtime(connection, downtime_id, entry["site"])
+            _del_host_downtime(connection, downtime["id"], downtime["site"])
 
 
 def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]

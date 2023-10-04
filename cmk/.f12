@@ -37,11 +37,22 @@ PYTHON3_PATHS=(
     utils
 )
 
+echo "Copy check files (checks from the CRE are special: remove vanished files)..."
+# legacy checks:
+TARGET="${ROOT}/share/check_mk/checks/"
+# NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
+# would screw up our include caching mechanism!
+sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/legacy_checks/" "${TARGET}"
+sudo find "${TARGET}" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
+# modern check plugins:
+sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/plugins/agent_based/" "${ROOT}/lib/python3/cmk/base/plugins/agent_based/"
+
 echo "Copy files..."
 sudo rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
     --exclude="base/legacy_checks" \
+    --exclude="base/plugins/agent_based" \
     -aR \
     "${PYTHON3_PATHS[@]}" \
     "$ROOT"/lib/python3/cmk/

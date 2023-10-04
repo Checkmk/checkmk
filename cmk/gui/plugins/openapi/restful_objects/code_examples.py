@@ -15,12 +15,13 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import black
 import jinja2
-from apispec.ext.marshmallow import resolve_schema_instance
+from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
 from marshmallow import Schema
 
 from cmk.utils.site import omd_site
 
 from cmk.gui import fields
+from cmk.gui.fields.base import BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
@@ -358,7 +359,7 @@ def field_value(field: fields.Field) -> str:
     return field.metadata["example"]
 
 
-def to_dict(schema: Schema) -> dict[str, str]:
+def to_dict(schema: BaseSchema) -> dict[str, str]:
     """Convert a Schema-class to a dict-representation.
 
     Examples:
@@ -389,6 +390,10 @@ def to_dict(schema: Schema) -> dict[str, str]:
     if not getattr(schema.Meta, "ordered", False):
         # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
         raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
+
+    if (schema_example := schema.schema_example) is not None:
+        return schema_example
+
     ret = {}
     for name, field in schema.declared_fields.items():
         try:
@@ -548,7 +553,7 @@ def format_nicely(obj: object) -> str:
         A string of the object, formatted nicely.
 
     """
-    return black.format_str(str(obj), mode=black.Mode(line_length=50))
+    return black.format_str(str(obj), mode=black.Mode(line_length=50))  # type: ignore[attr-defined]
 
 
 def _get_schema(schema: str | type[Schema] | None) -> Schema | None:

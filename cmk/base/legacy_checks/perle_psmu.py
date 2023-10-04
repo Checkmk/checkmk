@@ -19,15 +19,14 @@ def check_perle_psmu_powersupplies(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["psustate"]
         yield state, "Status: %s" % state_readable
-        for res in check_elphase(item, params, parsed):
-            yield res
+        yield from check_elphase(item, params, parsed)
 
 
 check_info["perle_psmu"] = LegacyCheckDefinition(
     # section is already migrated!
+    service_name="Power supply %s",
     discovery_function=lambda info: inventory_perle_psmu(info, "psustate"),
     check_function=check_perle_psmu_powersupplies,
-    service_name="Power supply %s",
     check_ruleset_name="el_inphase",
 )
 
@@ -40,7 +39,8 @@ def check_perle_psmu_fans(item, _no_params, parsed):
 
 
 check_info["perle_psmu.fan"] = LegacyCheckDefinition(
+    service_name="Fan %s",
+    sections=["perle_psmu"],
     discovery_function=lambda info: inventory_perle_psmu(info, "fanstate"),
     check_function=check_perle_psmu_fans,
-    service_name="Fan %s",
 )

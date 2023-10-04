@@ -20,15 +20,15 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicenseState, LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licensed_state
 from cmk.utils.paths import core_helper_config_dir
+from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
-from cmk.utils.type_defs import HostAddress, HostName, Item, ServiceName
 
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -277,6 +277,11 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+
+        from cmk.cee.bakery.type_defs import (  # pylint: disable=redefined-outer-name,import-outside-toplevel
+            BakeRevisionMode,
+        )
+
     except ImportError:
         return
 
@@ -287,7 +292,14 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
             config_cache, selected_hosts=None
         )
 
-    agent_bakery.bake_on_restart(target_configs)
+    agent_bakery.bake_agents(
+        target_configs,
+        bake_revision_mode=BakeRevisionMode.INACTIVE
+        if config.apply_bake_revision
+        else BakeRevisionMode.DISABLED,
+        logging_level=config.agent_bakery_logging,
+        call_site="config creation",
+    )
 
 
 @contextmanager

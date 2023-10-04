@@ -21,7 +21,7 @@ def check_mailman_lists(item, params, info):
 
 
 check_info["mailman_lists"] = LegacyCheckDefinition(
-    check_function=check_mailman_lists,
-    discovery_function=inventory_mailman_lists,
     service_name="Mailinglist %s",
+    discovery_function=inventory_mailman_lists,
+    check_function=check_mailman_lists,
 )

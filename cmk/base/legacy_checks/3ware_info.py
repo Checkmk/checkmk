@@ -45,7 +45,7 @@ def check_3ware_info(item, _no_params, info):
 
 
 check_info["3ware_info"] = LegacyCheckDefinition(
-    check_function=check_3ware_info,
-    discovery_function=inventory_3ware_info,
     service_name="RAID 3ware controller %s",
+    discovery_function=inventory_3ware_info,
+    check_function=check_3ware_info,
 )

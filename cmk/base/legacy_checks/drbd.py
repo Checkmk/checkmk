@@ -127,8 +127,9 @@ import re
 # Default thresholds for drbd checks
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, state_markers
+from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 drbd_net_default_levels = (None, None)
 drbd_disk_default_levels = (None, None)
@@ -332,16 +333,16 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
         params_diskstates_dict = dict(params.get("diskstates", []))
         diskstates_info = set()
         for ro, ds in [(parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1])]:
-            diskstate = "%s_%s" % (ro.lower(), ds)
+            diskstate = f"{ro.lower()}_{ds}"
             params_diskstate = params_diskstates_dict.get(diskstate)
 
             if params_diskstate is not None:
                 state = max(state, params_diskstate)
-                diskstates_info.add("%s/%s is %s" % (ro, ds, state_markers[params_diskstate]))
+                diskstates_info.add(f"{ro}/{ds} is {state_markers[params_diskstate]}")
             else:
                 default_state = drbd_ds_map.get(diskstate, 3)
                 if default_state > 0:
-                    diskstates_info.add("%s/%s is %s" % (ro, ds, state_markers[default_state]))
+                    diskstates_info.add(f"{ro}/{ds} is {state_markers[default_state]}")
                 state = max(state, drbd_ds_map.get(diskstate, 3))
         if diskstates_info:
             output += " (%s)" % ", ".join(diskstates_info)
@@ -352,10 +353,10 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
 
 
 check_info["drbd"] = LegacyCheckDefinition(
+    service_name="DRBD %s status",
     discovery_function=lambda info: inventory_drbd(info, "drbd"),
     check_function=check_drbd_general,
     check_ruleset_name="drbd",
-    service_name="DRBD %s status",
 )
 
 
@@ -364,9 +365,11 @@ def drbd_get_rates(list_):
     output = ""
     perfdata = []
     for type_, name, item, value, uom in list_:
-        rate = get_rate("%s.%s.%s" % (type_, name, item), now, value)
+        rate = get_rate(
+            get_value_store(), f"{type_}.{name}.{item}", now, value, raise_overflow=True
+        )
         perfdata.append((name, rate))
-        output += " %s/sec: %s%s" % (name, rate, uom)
+        output += f" {name}/sec: {rate}{uom}"
     return (output, perfdata)
 
 
@@ -388,10 +391,11 @@ def check_drbd_net(item, params, info):
 
 
 check_info["drbd.net"] = LegacyCheckDefinition(
+    service_name="DRBD %s net",
+    sections=["drbd"],
     discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
     check_function=check_drbd_net,
     check_ruleset_name="drbd.net",
-    service_name="DRBD %s net",
 )
 
 
@@ -413,10 +417,11 @@ def check_drbd_disk(item, params, info):
 
 
 check_info["drbd.disk"] = LegacyCheckDefinition(
+    service_name="DRBD %s disk",
+    sections=["drbd"],
     discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
     check_function=check_drbd_disk,
     check_ruleset_name="drbd.disk",
-    service_name="DRBD %s disk",
 )
 
 
@@ -439,7 +444,7 @@ def check_drbd_stats(item, params, info):
             ("oos", "kb out of sync"),
         ]:
             if key in parsed:
-                output += "%s: %s, " % (label, parsed[key])
+                output += f"{label}: {parsed[key]}, "
             else:
                 parsed[key] = "0"  # perfdata must always have same number of entries
             if parsed[key].isdigit():
@@ -450,8 +455,9 @@ def check_drbd_stats(item, params, info):
 
 
 check_info["drbd.stats"] = LegacyCheckDefinition(
+    service_name="DRBD %s stats",
+    sections=["drbd"],
     discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
     check_function=check_drbd_stats,
     check_ruleset_name="drbd.stats",
-    service_name="DRBD %s stats",
 )

@@ -16,33 +16,23 @@
 import ast
 import socket
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
+from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (
-    Any,
-    Counter,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-)
+from typing import Any, Protocol
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.type_defs import HostName  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
-from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -59,7 +49,7 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogMessage,
 )
 
-ClusterSection = Dict[Optional[str], logwatch.Section]
+ClusterSection = dict[str | None, logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
 
 CHECK_DEFAULT_PARAMETERS = {
@@ -91,7 +81,7 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
 
 def cluster_check_logwatch_ec(
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[logwatch.Section]],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     yield from check_logwatch_ec_common(
         None,
@@ -142,7 +132,7 @@ def check_logwatch_ec_single(
 def cluster_check_logwatch_ec_single(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[logwatch.Section]],
+    section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
     yield from check_logwatch_ec_common(
@@ -170,13 +160,15 @@ register.check_plugin(
 # Yet another unbelievable API violation:
 def _get_effective_service_level(
     plugin_name: CheckPluginName,
-    item: Optional[str],
+    item: str | None,
 ) -> int:
     """Get the service level that applies to the current service."""
 
     host = HostName(host_name())
-    service_description = cmk.base.config.service_description(host, plugin_name, item)
     config_cache = cmk.base.config.get_config_cache()
+    service_description = cmk.base.config.service_description(
+        config_cache.ruleset_matcher, host, plugin_name, item
+    )
     service_level = config_cache.service_level_of_service(host, service_description)
     if service_level is not None:
         return service_level
@@ -203,7 +195,7 @@ def logwatch_to_prio(level: str) -> int:
 
 def _logwatch_inventory_mode_rules(  # type: ignore[no-untyped-def]
     forward_settings,
-) -> Tuple[str, Dict[str, Any]]:
+) -> tuple[str, dict[str, Any]]:
     merged_rules = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
@@ -303,7 +295,7 @@ def _filter_accumulated_lines(
 
 
 def check_logwatch_ec_common(  # pylint: disable=too-many-branches
-    item: Optional[str],
+    item: str | None,
     params: Mapping[str, Any],
     parsed: ClusterSection,
     *,
@@ -382,13 +374,13 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     syslog_messages = []
     cur_time = int(time.time())
 
-    forwarded_logfiles = set([])
+    forwarded_logfiles = set()
 
     # Keep track of reclassifed lines
     rclfd_total = 0
     rclfd_to_ignore = 0
 
-    logfile_reclassify_settings: Dict[str, Any] = {}
+    logfile_reclassify_settings: dict[str, Any] = {}
 
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):
@@ -545,7 +537,7 @@ class MessageForwarder:
             return LogwatchFordwardResult()
 
         split_files = self._split_file_messages(
-            (message + "\n" for message in map(repr, syslog_messages))
+            message + "\n" for message in map(repr, syslog_messages)
         )
         for file_index, file_content in enumerate(split_files):
             spool_file = self._get_new_spool_file(method, file_index)
@@ -591,7 +583,7 @@ class MessageForwarder:
 
     def _forward_tcp(
         self,
-        method: Tuple,
+        method: tuple,
         syslog_messages: Sequence[SyslogMessage],
     ) -> LogwatchFordwardResult:
         # Transform old format: (proto, address, port)
@@ -636,7 +628,7 @@ class MessageForwarder:
     @staticmethod
     def _forward_send_tcp(
         method: tuple,
-        message_chunks: Iterable[Tuple[float, int, List[str]]],
+        message_chunks: Iterable[tuple[float, int, list[str]]],
         result: LogwatchFordwardResult,
     ) -> None:
         protocol, method_params = method
@@ -664,7 +656,7 @@ class MessageForwarder:
     # b) Write files for new chunk
     def _spool_messages(
         self,
-        message_chunks: Iterable[Tuple[float, int, List[str]]],
+        message_chunks: Iterable[tuple[float, int, list[str]]],
         result: LogwatchFordwardResult,
     ) -> None:
         self._spool_path.mkdir(parents=True, exist_ok=True)
@@ -691,9 +683,9 @@ class MessageForwarder:
 
     def _load_spooled_messages(
         self,
-        method: Tuple,
+        method: tuple,
         result: LogwatchFordwardResult,
-    ) -> List[Tuple[float, int, List[str]]]:
+    ) -> list[tuple[float, int, list[str]]]:
         spool_params = method[1]["spool"]
 
         try:

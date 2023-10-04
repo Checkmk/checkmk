@@ -8,33 +8,31 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
-def parse_jolokia_jvm_garbagecollectors(info):
+def parse_jolokia_jvm_garbagecollectors(string_table):
     parsed = {}
-    for instance, _mbean, bulk_data in parse_jolokia_json_output(info):
+    for instance, _mbean, bulk_data in parse_jolokia_json_output(string_table):
         for data in bulk_data.values():
             name = data.get("Name")
             if not name:
                 continue
-            item = "%s GC %s" % (instance, name)
+            item = f"{instance} GC {name}"
             parsed.setdefault(item, {}).update(data)
 
     return parsed
 
 
-@discover
-def discover_jolokia_jvm_garbagecollectors(_item, data):
-    return -1 not in (data.get("CollectionCount", -1), data.get("CollectionTime", -1))
+def discover_jolokia_jvm_garbagecollectors(section):
+    yield from (
+        (item, {})
+        for item, data in section.items()
+        if -1 not in (data.get("CollectionCount", -1), data.get("CollectionTime", -1))
+    )
 
 
 def transform_units(params):
@@ -56,8 +54,9 @@ def transform_units(params):
     return new_params
 
 
-@get_parsed_item_data
-def check_jolokia_jvm_garbagecollectors(item, params, data):
+def check_jolokia_jvm_garbagecollectors(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     now = time.time()
     try:
         count = data["CollectionCount"]
@@ -66,9 +65,9 @@ def check_jolokia_jvm_garbagecollectors(item, params, data):
         return
 
     try:
-        count_rate = get_rate("%s.count" % item, now, count)
+        count_rate = get_rate(get_value_store(), "%s.count" % item, now, count, raise_overflow=True)
     finally:  # initalize 2nd counter!
-        ctime_rate = get_rate("%s.time" % item, now, ctime)
+        ctime_rate = get_rate(get_value_store(), "%s.time" % item, now, ctime, raise_overflow=True)
 
     params = transform_units(params)
 
@@ -90,8 +89,8 @@ def check_jolokia_jvm_garbagecollectors(item, params, data):
 
 
 check_info["jolokia_jvm_garbagecollectors"] = LegacyCheckDefinition(
-    service_name="JVM %s",
     parse_function=parse_jolokia_jvm_garbagecollectors,
+    service_name="JVM %s",
     discovery_function=discover_jolokia_jvm_garbagecollectors,
     check_function=check_jolokia_jvm_garbagecollectors,
     check_ruleset_name="jvm_gc",

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -123,7 +124,7 @@ register.snmp_section(
 )
 
 
-def _map(mapping: Dict[str, str], value: str) -> str:
+def _map(mapping: dict[str, str], value: str) -> str:
     return mapping.get(value, "unknown(%s)" % value)
 
 

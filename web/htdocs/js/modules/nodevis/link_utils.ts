@@ -1,3 +1,11 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+import * as d3 from "d3";
+import {BaseType, Transition} from "d3";
 import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,
@@ -5,14 +13,17 @@ import {
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
-import {AbstractClassRegistry, DefaultTransition} from "nodevis/utils";
+import {
+    AbstractClassRegistry,
+    DefaultTransition,
+    TypeWithName,
+} from "nodevis/utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;
 }
 
-export class AbstractLink {
-    static class_name = "abstract";
+export class AbstractLink implements TypeWithName {
     _world: NodevisWorld;
     _link_data: NodevisLink;
     _selection: d3SelectionG | null;
@@ -26,6 +37,10 @@ export class AbstractLink {
             this._link_data.source.data.chunk.layout_settings.config.line_config;
     }
 
+    class_name() {
+        return "abstract";
+    }
+
     selection(): d3SelectionG {
         if (this._selection == null)
             throw Error("Missing selection for node " + this.id());
@@ -36,7 +51,9 @@ export class AbstractLink {
         return compute_link_id(this._link_data);
     }
 
-    render_into(selection): void {
+    render_into<GType extends d3.BaseType, Data>(
+        selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ): void {
         // Straigth line style
         const line_selection = selection
             .selectAll("line")
@@ -44,6 +61,7 @@ export class AbstractLink {
             .join("line")
             .attr("marker-end", "url(#triangle)")
             .attr("stroke-width", function (d) {
+                // @ts-ignore
                 return Math.max(1, 2 - d.depth);
             })
             .style("stroke", this._color());
@@ -57,6 +75,7 @@ export class AbstractLink {
             .attr("stroke-width", 1)
             .style("stroke", this._color());
 
+        // @ts-ignore
         this._selection =
             this._line_config.style == "straight"
                 ? line_selection
@@ -93,7 +112,6 @@ export class AbstractLink {
             return;
         }
         this.selection().style("stroke-opacity", 0.3);
-
         const x1 = source.data.target_coords.x;
         const y1 = source.data.target_coords.y;
         const x2 = target.data.target_coords.x;
@@ -104,8 +122,14 @@ export class AbstractLink {
         const tmp_selection = this.add_optional_transition(this.selection());
         switch (this._line_config.style) {
             case "straight": {
-                tmp_selection
-                    .attr("x1", x1)
+                (
+                    tmp_selection.attr("x1", x1) as Transition<
+                        SVGGElement,
+                        unknown,
+                        BaseType,
+                        unknown
+                    >
+                )
                     .attr("y1", y1)
                     .attr("x2", x2)
                     .attr("y2", y2);
@@ -152,7 +176,12 @@ export class AbstractLink {
         );
     }
 
-    elbow(source_x, source_y, target_x, target_y) {
+    elbow(
+        source_x: number,
+        source_y: number,
+        target_x: number,
+        target_y: number
+    ) {
         return (
             "M" + source_x + "," + source_y + "V" + target_y + "H" + target_x
         );
@@ -202,8 +231,6 @@ export class AbstractLink {
     }
 }
 
-class LinkTypeClassRegistry extends AbstractClassRegistry<
-    typeof AbstractLink
-> {}
+class LinkTypeClassRegistry extends AbstractClassRegistry<AbstractLink> {}
 
 export const link_type_class_registry = new LinkTypeClassRegistry();

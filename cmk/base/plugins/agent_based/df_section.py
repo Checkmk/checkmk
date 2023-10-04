@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import Callable, List, Mapping, Optional, Sequence, Set, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -21,7 +21,7 @@ LsblkMap = Mapping[str, str | None]
 MpToDevice = Mapping[str, str]
 
 
-def _padded_line(line: List[str]) -> List[str]:
+def _padded_line(line: list[str]) -> list[str]:
     try:
         int(line[1])
     except ValueError:
@@ -30,7 +30,7 @@ def _padded_line(line: List[str]) -> List[str]:
     return [line[0], ""] + line[1:]
 
 
-def _reformat_line(line: List[str]) -> List[str]:
+def _reformat_line(line: list[str]) -> list[str]:
     # Handle known cases, where the file system contains spaces
     for index, entry in enumerate(line):
         if entry == "NTFS":
@@ -47,10 +47,10 @@ def _reformat_line(line: List[str]) -> List[str]:
 
 
 def _processed(
-    line: List[str],
-    seen_btrfs_devices: Set[str],
+    line: list[str],
+    seen_btrfs_devices: set[str],
     device_to_uuid: LsblkMap,
-) -> Optional[DfBlock]:
+) -> DfBlock | None:
     device, fs_type, size_kb, used_kb, avail_kb, _, *rest = line
     if fs_type == "btrfs":
         # This particular bit of magic originated in Werk #2671 and has the purpose of
@@ -91,8 +91,8 @@ def _processed(
 
 def _parse_blocks_subsection(
     blocks_subsection: StringTable, device_to_uuid: LsblkMap
-) -> Tuple[BlocksSubsection, MpToDevice]:
-    seen_btrfs_devices: Set[str] = set()
+) -> tuple[BlocksSubsection, MpToDevice]:
+    seen_btrfs_devices: set[str] = set()
     df_blocks = tuple(
         item  #
         for line in blocks_subsection
@@ -109,7 +109,7 @@ def _parse_blocks_subsection(
 def _parse_inodes_subsection(
     inodes_subsection: StringTable, mp_to_device: MpToDevice, device_to_uuid: LsblkMap
 ) -> InodesSubsection:
-    def _to_entry(line: Sequence[str]) -> Optional[DfInode]:
+    def _to_entry(line: Sequence[str]) -> DfInode | None:
         with suppress(ValueError):
             mountpoint = line[-1]
             device = mp_to_device.get(mountpoint)
@@ -142,12 +142,16 @@ def _parse_lsblk_v2_row(row: Sequence[str]) -> tuple[str, str | None]:
     ('/dev/nvme0n1', None)
     >>> _parse_lsblk_v2_row(["/dev/nvme0n1p1", "C5CD-A9E8"])
     ('/dev/nvme0n1p1', 'C5CD-A9E8')
+    >>> _parse_lsblk_v2_row(["/dev/sda","HPE", "\\x10"])
+    ('/dev/sda', 'HPE \\x10')
     """
     match row:
         case [name]:
             return name, None
         case [name, uuid]:
             return name, uuid
+        case [name, *uuid_with_spaces]:
+            return name, " ".join(uuid_with_spaces)
     raise ValueError(f"An error occured while parsing {row}")
 
 

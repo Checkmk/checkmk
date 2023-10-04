@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import "core-js/stable";
 import "cmk_figures_plugins";
@@ -13,6 +15,9 @@ import * as background_job from "background_job";
 import * as backup from "backup";
 import * as bi from "bi";
 import * as cmk_figures from "cmk_figures";
+import {figure_registry} from "cmk_figures";
+import {EventStats, HostStats, ServiceStats} from "cmk_stats";
+import {TableFigure} from "cmk_table";
 import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 import * as d3Sankey from "d3-sankey";
@@ -33,6 +38,7 @@ import * as password_meter from "password_meter";
 import * as popup_menu from "popup_menu";
 import * as prediction from "prediction";
 import * as profile_replication from "profile_replication";
+import {render_qr_codes} from "qrcode_rendering";
 import * as quicksearch from "quicksearch";
 import * as reload_pause from "reload_pause";
 import * as selection from "selection";
@@ -41,6 +47,7 @@ import * as sidebar from "sidebar";
 import * as sites from "sites";
 import * as sla from "sla";
 import * as transfer from "transfer";
+import {RequireConfirmation} from "types";
 import * as utils from "utils";
 import * as valuespecs from "valuespecs";
 import * as views from "views";
@@ -58,8 +65,19 @@ let ntop_flows;
 let ntop_top_talkers;
 let ntop_utils;
 let license_usage_timeseries_graph;
+let register;
 
+function registerRawFigureBaseClasses() {
+    figure_registry.register(TableFigure);
+    figure_registry.register(HostStats);
+    figure_registry.register(ServiceStats);
+    figure_registry.register(EventStats);
+}
+
+registerRawFigureBaseClasses();
 if (process.env.ENTERPRISE !== "no") {
+    register = require("register");
+    register.registerEnterpriseFigureBaseClasses();
     require("cmk_figures_plugins_cee");
     graphs_cee = require("graphs_cee");
     ntop_host_details = require("ntop_host_details");
@@ -83,6 +101,16 @@ $(() => {
     forms.enable_dynamic_form_elements();
     // TODO: only register when needed?
     element_dragging.register_event_handlers();
+    // add a confirmation popup for each for that has a valid confirmation text
+    document
+        .querySelectorAll<HTMLFormElement>("form[data-cmk_form_confirmation]")
+        .forEach((form, _) => {
+            const confirmation: RequireConfirmation = JSON.parse(
+                form.dataset.cmk_form_confirmation!
+            );
+            forms.add_confirm_on_submit(form, confirmation);
+        });
+    render_qr_codes();
 });
 
 export const cmk_export = {

@@ -6,9 +6,11 @@
 #ifndef EventConsoleConnection_h
 #define EventConsoleConnection_h
 
-#include <asio/local/stream_protocol.hpp>
 #include <iosfwd>
 #include <string>
+
+#include "asio/local/stream_protocol.hpp"
+
 class Logger;
 
 class EventConsoleConnection {
@@ -25,8 +27,8 @@ private:
     void check(asio::local::stream_protocol::iostream &stream,
                const std::string &what) const;
 
-    Logger *const _logger;
-    const std::string _path;
+    Logger *_logger;
+    std::string _path;
 };
 
 #endif  // EventConsoleConnection_h

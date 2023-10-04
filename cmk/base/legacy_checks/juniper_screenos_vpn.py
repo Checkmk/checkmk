@@ -27,11 +27,11 @@ def check_juniper_screenos_vpn(item, params, info):
 
 check_info["juniper_screenos_vpn"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_SCREENOS,
-    check_function=check_juniper_screenos_vpn,
-    discovery_function=inventory_juniper_screenos_vpn,
-    service_name="VPN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.4.1.1.1",
         oids=["4", "23"],
     ),
+    service_name="VPN %s",
+    discovery_function=inventory_juniper_screenos_vpn,
+    check_function=check_juniper_screenos_vpn,
 )

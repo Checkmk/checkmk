@@ -33,13 +33,14 @@ True
 False
 """
 
-from typing import Any, Dict, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cisco_wlc import CISCO_WLC_OIDS
 
-Section = Dict[str, str]
+Section = dict[str, str]
 
 _OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 
@@ -63,7 +64,7 @@ map_states = {
 }
 
 
-def parse_cisco_wlc(string_table: List[StringTable]) -> Section:
+def parse_cisco_wlc(string_table: list[StringTable]) -> Section:
     """
     >>> parse_cisco_wlc([[['AP19', '1'], ['AP02', '1']]])
     {'AP19': '1', 'AP02': '1'}
@@ -87,12 +88,13 @@ def _node_not_found(item: str, params: Mapping[str, Any]) -> Result:
     return Result(state=State.CRIT, summary=infotext)
 
 
-def _ap_info(node: Optional[str], wlc_status: str) -> Result:
+def _ap_info(node: str | None, wlc_status: str) -> Result:
     status, state_readable = map_states.get(wlc_status, (State.UNKNOWN, "unknown[%s]" % wlc_status))
     return Result(
         state=status,
-        summary="Accesspoint: %s%s"
-        % (state_readable, (" (connected to %s)" % node) if node else ""),
+        summary="Accesspoint: {}{}".format(
+            state_readable, (" (connected to %s)" % node) if node else ""
+        ),
     )
 
 
@@ -112,7 +114,7 @@ def check_cisco_wlc(item: str, params: Mapping[str, Any], section: Section) -> C
 def cluster_check_cisco_wlc(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     """
     >>> list(cluster_check_cisco_wlc("AP19", {}, {"node1": {'AP19': '1', 'AP02': '1'}}))

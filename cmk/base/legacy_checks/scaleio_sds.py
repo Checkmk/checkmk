@@ -72,9 +72,9 @@ def check_scaleio_sds(item, params, parsed):
 
 check_info["scaleio_sds"] = LegacyCheckDefinition(
     parse_function=parse_scaleio_sds,
+    service_name="ScaleIO SDS capacity %s",
     discovery_function=inventory_scaleio_sds,
     check_function=check_scaleio_sds,
-    service_name="ScaleIO SDS capacity %s",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
@@ -90,7 +90,7 @@ def check_scaleio_sds_status(item, _no_params, parsed):
         return
 
     name, pd_id = data["NAME"][0], data["PROTECTION_DOMAIN_ID"][0]
-    yield 0, "Name: %s, PD: %s" % (name, pd_id)
+    yield 0, f"Name: {name}, PD: {pd_id}"
 
     status = data["STATE"][0]
     if "normal" not in status.lower():
@@ -110,7 +110,8 @@ def check_scaleio_sds_status(item, _no_params, parsed):
 
 
 check_info["scaleio_sds.status"] = LegacyCheckDefinition(
+    service_name="ScaleIO SDS status %s",
+    sections=["scaleio_sds"],
     discovery_function=inventory_scaleio_sds_status,
     check_function=check_scaleio_sds_status,
-    service_name="ScaleIO SDS status %s",
 )

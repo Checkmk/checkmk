@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, NamedTuple, Union
+from typing import NamedTuple
 
 from ..agent_based_api.v1 import IgnoreResults, Metric, Result, State
 from ..agent_based_api.v1.type_defs import StringTable
@@ -11,10 +11,10 @@ from ..agent_based_api.v1.type_defs import StringTable
 
 class CheckResults(NamedTuple):
     overall_state: State
-    results: List[Union[IgnoreResults, Metric, Result]] = []
+    results: list[IgnoreResults | Metric | Result] = []
 
 
-ParsedSection = Dict[str, Dict]
+ParsedSection = dict[str, dict]
 
 
 def parse_sap_hana(info: StringTable) -> dict[str, StringTable]:

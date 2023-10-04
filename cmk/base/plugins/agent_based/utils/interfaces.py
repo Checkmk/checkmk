@@ -19,9 +19,10 @@ from collections.abc import (
 )
 from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
-from typing import Any, assert_never, Literal
-from typing import Mapping as TypingMapping
-from typing import ParamSpec, TypedDict, TypeVar
+from typing import Any, assert_never, Literal, ParamSpec, TypeVar
+
+import pydantic
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -75,7 +76,7 @@ DISCOVERY_DEFAULT_PARAMETERS: DiscoveryDefaultParams = {
                 "205",
                 "229",
             ],
-            "portstates": ["1"],
+            "portstates": ["1", "-1"],
         },
     ),
     "discovery_single": (
@@ -94,6 +95,41 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
+class IndependentMapping(pydantic.BaseModel, frozen=True):
+    map_operstates: Sequence[tuple[Sequence[str], Literal[0, 1, 2, 3]]] = []
+    map_admin_states: Sequence[tuple[Sequence[str], Literal[0, 1, 2, 3]]] = []
+
+
+class CombinedMapping(list[tuple[str, str, Literal[0, 1, 2, 3]]]):
+    pass
+
+
+StateMappings = IndependentMapping | CombinedMapping
+
+
+class _MissingOperStatus:
+    def __str__(self) -> str:
+        return "Not available"
+
+
+MISSING_OPER_STATUS = _MissingOperStatus()
+
+
+@dataclass(frozen=True)
+class MemberInfo:
+    name: str
+    oper_status_name: str | _MissingOperStatus
+    admin_status_name: str | None = None
+
+    def __str__(self) -> str:
+        status_info = (
+            f"({self.oper_status_name})"
+            if self.admin_status_name is None
+            else f"(op. state: {self.oper_status_name}, admin state: {self.admin_status_name})"
+        )
+        return f"{self.name} {status_info}"
+
+
 @dataclass
 class Attributes:
     index: str
@@ -101,10 +137,10 @@ class Attributes:
     alias: str
     type: str
     speed: float = 0
-    oper_status: str = ""
+    oper_status: str | None = ""
     out_qlen: float | None = None
     phys_address: Iterable[int] | str = ""
-    oper_status_name: str = ""
+    oper_status_name: str | _MissingOperStatus = ""
     speed_as_text: str = ""
     group: str | None = None
     node: str | None = None
@@ -115,7 +151,7 @@ class Attributes:
         self.finalize()
 
     def finalize(self) -> None:
-        if not self.oper_status_name:
+        if self.oper_status is not None and not self.oper_status_name:
             self.oper_status_name = statename(self.oper_status)
 
         # Fix bug in TP Link switches
@@ -1024,7 +1060,7 @@ def discover_interfaces(  # pylint: disable=too-many-branches
         )
 
 
-GroupMembers = dict[str | None, list[dict[str, str]]]
+GroupMembers = dict[str | None, list[MemberInfo]]
 
 
 def _check_ungrouped_ifs(
@@ -1190,8 +1226,8 @@ def _group_members(
     group_members: GroupMembers = {}
     for attributes in matching_attributes:
         groups_node = group_members.setdefault(attributes.node, [])
-        member_info = {
-            "name": _compute_item(
+        member_info = MemberInfo(
+            name=_compute_item(
                 group_config.get(
                     "member_appearance",
                     # This happens when someones upgrades from v1.6 to v2,0, where the structure of the
@@ -1210,10 +1246,11 @@ def _group_members(
                 section,
                 item[0] == "0",
             ),
-            "oper_status_name": attributes.oper_status_name,
-        }
-        if attributes.admin_status is not None:
-            member_info["admin_status_name"] = statename(attributes.admin_status)
+            oper_status_name=attributes.oper_status_name,
+            admin_status_name=None
+            if attributes.admin_status is None
+            else statename(attributes.admin_status),
+        )
         groups_node.append(member_info)
     return group_members
 
@@ -1301,27 +1338,20 @@ def check_multiple_interfaces(
         )
 
 
-def _get_map_states(defined_mapping: Iterable[tuple[Iterable[str], int]]) -> Mapping[str, State]:
-    map_states = {}
-    for states, mon_state in defined_mapping:
-        for st in states:
-            map_states[st] = State(mon_state)
-    return map_states
-
-
-def _render_status_info_group_members(
-    oper_status_name: str,
-    admin_status_name: str | None,
-) -> str:
-    if admin_status_name is None:
-        return "(%s)" % oper_status_name
-    return "(op. state: %s, admin state: %s)" % (oper_status_name, admin_status_name)
+def _get_map_states(
+    defined_mapping: Iterable[tuple[Iterable[str], int]]
+) -> Mapping[str | None, State]:
+    return {
+        None if st == "-1" else st: State(mon_state)
+        for states, mon_state in defined_mapping
+        for st in states
+    }
 
 
 def _check_status(
-    interface_status: str,
+    interface_status: str | None,
     target_states: Container[str] | None,
-    states_map: Mapping[str, State],
+    states_map: Mapping[str | None, State],
 ) -> State:
     mon_state = State.OK
     if target_states is not None and interface_status not in target_states:
@@ -1557,9 +1587,9 @@ def _interface_name(  # pylint: disable=too-many-branches
         ):  # description trivial
             info_interface = ""
         elif (
-            item == "%s %s" % (attributes.alias, attributes.index) and attributes.descr != ""
+            item == f"{attributes.alias} {attributes.index}" and attributes.descr != ""
         ):  # non-unique Alias
-            info_interface = "[%s/%s]" % (attributes.alias, attributes.descr)
+            info_interface = f"[{attributes.alias}/{attributes.descr}]"
         elif attributes.alias not in (item, ""):  # alias useful
             info_interface = "[%s]" % attributes.alias
         elif attributes.descr not in (item, ""):  # description useful
@@ -1569,7 +1599,7 @@ def _interface_name(  # pylint: disable=too-many-branches
 
     if attributes.node is not None:
         if info_interface:
-            info_interface = "%s on %s" % (
+            info_interface = "{} on {}".format(
                 info_interface,
                 attributes.node,
             )
@@ -1591,6 +1621,17 @@ def _interface_mac(attributes: Attributes) -> Iterable[Result]:
         )
 
 
+def _parse_params(
+    state_mappings: tuple[Literal["independent_mappings", "combined_mappings"], Any]
+) -> StateMappings:
+    match state_mappings:
+        case "independent_mappings", mapping:
+            return IndependentMapping.parse_obj(mapping)
+        case "combined_mappings", mapping:
+            return CombinedMapping(mapping)
+    raise ValueError(f"Unknown state_mappings: {state_mappings}")
+
+
 def _interface_status(
     *,
     params: Mapping[str, Any],
@@ -1604,16 +1645,13 @@ def _interface_status(
         target_oper_states = params.get("state")
         target_admin_states = params.get("admin_state")
 
-    state_mapping_type, state_mappings = params.get(
-        "state_mappings",
-        (
-            "independent_mappings",
-            {},
-        ),
+    state_mappings = (
+        _parse_params(params["state_mappings"])
+        if "state_mappings" in params
+        else IndependentMapping()
     )
     yield from _check_oper_and_admin_state(
         attributes,
-        state_mapping_type=state_mapping_type,
         state_mappings=state_mappings,
         target_oper_states=target_oper_states,
         target_admin_states=target_admin_states,
@@ -1622,57 +1660,46 @@ def _interface_status(
 
 def _check_oper_and_admin_state(
     attributes: Attributes,
-    state_mapping_type: Literal["independent_mappings", "combined_mappings"],
-    state_mappings: Iterable[tuple[str, str, int]]
-    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
+    state_mappings: StateMappings,
     target_oper_states: Container[str] | None,
     target_admin_states: Container[str] | None,
 ) -> Iterable[Result]:
-    if combined_mon_state := _check_oper_and_admin_state_combined(
-        attributes,
-        state_mapping_type,
-        state_mappings,
-    ):
-        yield combined_mon_state
-        return
-
-    map_oper_states, map_admin_states = _get_oper_and_admin_states_maps_independent(
-        state_mapping_type,
-        state_mappings,
-    )
-
+    if isinstance(state_mappings, CombinedMapping):
+        combined_mon_state = __oper_and_admin_state_combined(attributes, state_mappings)
+        if combined_mon_state is not None and attributes.admin_status is not None:
+            yield Result(
+                state=combined_mon_state,
+                summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
+                details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
+            )
+            return
     yield from _check_oper_and_admin_state_independent(
         attributes,
         target_oper_states=target_oper_states,
         target_admin_states=target_admin_states,
-        map_oper_states=map_oper_states,
-        map_admin_states=map_admin_states,
+        mapping=_get_oper_and_admin_states_maps_independent(state_mappings),
     )
 
 
 def _get_oper_and_admin_states_maps_independent(
-    state_mapping_type: Literal["combined_mappings", "independent_mappings"],
-    state_mappings: Iterable[tuple[str, str, int]]
-    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
-) -> tuple[Iterable[tuple[Iterable[str], int]], Iterable[tuple[Iterable[str], int]]]:
-    if state_mapping_type == "independent_mappings":
-        assert isinstance(state_mappings, Mapping)
-        return state_mappings.get("map_operstates", []), state_mappings.get("map_admin_states", [])
-    return [], []
+    state_mappings: StateMappings,
+) -> IndependentMapping:
+    if isinstance(state_mappings, IndependentMapping):
+        return state_mappings
+    return IndependentMapping()
 
 
 def _check_oper_and_admin_state_independent(
     attributes: Attributes,
     target_oper_states: Container[str] | None,
     target_admin_states: Container[str] | None,
-    map_oper_states: Iterable[tuple[Iterable[str], int]],
-    map_admin_states: Iterable[tuple[Iterable[str], int]],
+    mapping: IndependentMapping,
 ) -> Iterable[Result]:
     yield Result(
         state=_check_status(
             attributes.oper_status,
             target_oper_states,
-            _get_map_states(map_oper_states),
+            _get_map_states(mapping.map_operstates),
         ),
         summary=f"({attributes.oper_status_name})",
         details=f"Operational state: {attributes.oper_status_name}",
@@ -1685,45 +1712,19 @@ def _check_oper_and_admin_state_independent(
         state=_check_status(
             str(attributes.admin_status),
             target_admin_states,
-            _get_map_states(map_admin_states),
+            _get_map_states(mapping.map_admin_states),
         ),
         summary=f"Admin state: {statename(attributes.admin_status)}",
     )
 
 
-def _check_oper_and_admin_state_combined(
-    attributes: Attributes,
-    state_mapping_type: Literal["combined_mappings", "independent_mappings"],
-    state_mappings: Iterable[tuple[str, str, int]]
-    | Mapping[str, Iterable[tuple[Iterable[str], int]]],
-) -> Result | None:
-    if attributes.admin_status is None:
-        return None
-    if state_mapping_type == "independent_mappings":
-        return None
-    assert not isinstance(state_mappings, Mapping)
-    if (
-        combined_mon_state := {
-            (
-                oper_state,
-                admin_state,
-            ): State(
-                mon_state
-            )  #
-            for oper_state, admin_state, mon_state in state_mappings
-        }.get(
-            (
-                attributes.oper_status,
-                attributes.admin_status,
-            )
-        )
-    ) is None:
-        return None
-    return Result(
-        state=combined_mon_state,
-        summary=f"(op. state: {attributes.oper_status_name}, admin state: {statename(attributes.admin_status)})",
-        details=f"Operational state: {attributes.oper_status_name}, Admin state: {statename(attributes.admin_status)}",
-    )
+def __oper_and_admin_state_combined(
+    attributes: Attributes, state_mappings: CombinedMapping
+) -> State | None:
+    for oper_state, admin_state, mon_state in state_mappings:
+        if attributes.oper_status == oper_state and attributes.admin_status == admin_state:
+            return State(mon_state)
+    return None
 
 
 def _output_group_members(
@@ -1737,21 +1738,12 @@ def _output_group_members(
     for group_node, members in group_members.items():
         member_info = []
         for member in members:
-            member_info.append(
-                "%s %s"
-                % (
-                    member["name"],
-                    _render_status_info_group_members(
-                        member["oper_status_name"],
-                        member.get("admin_status_name"),
-                    ),
-                )
-            )
+            member_info.append(str(member))
 
         nodeinfo = ""
         if group_node is not None and len(group_members) > 1:
             nodeinfo = " on node %s" % group_node
-        infos_group.append("[%s%s]" % (", ".join(member_info), nodeinfo))
+        infos_group.append("[{}{}]".format(", ".join(member_info), nodeinfo))
 
     yield Result(
         state=State.OK,
@@ -1864,7 +1856,7 @@ def _check_single_bandwidth(  # pylint: disable=too-many-branches
 
         yield Result(
             state=result.state,
-            summary="%s (%s)" % (result.summary, perc_info),
+            summary=f"{result.summary} ({perc_info})",
         )
     else:
         yield result
@@ -2102,7 +2094,7 @@ def _check_single_packet_rate(
 def cluster_check(
     item: str,
     params: Mapping[str, Any],
-    section: TypingMapping[str, Section[TInterfaceType] | None],
+    section: Mapping[str, Section[TInterfaceType] | None],
 ) -> type_defs.CheckResult:
     yield from check_multiple_interfaces(
         item,

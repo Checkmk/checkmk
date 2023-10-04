@@ -18,9 +18,9 @@ def inventory_hitachi_hnas_drives(info):
     return []
 
 
-def parse_hitachi_hnas_drives(info):
+def parse_hitachi_hnas_drives(string_table):
     parsed = {}
-    for (status,) in info:
+    for (status,) in string_table:
         parsed.setdefault(status, 0)
         parsed[status] += 1
     return parsed
@@ -45,12 +45,12 @@ def check_hitachi_hnas_drives(_no_item, params, info):
 
 check_info["hitachi_hnas_drives"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_drives,
-    discovery_function=inventory_hitachi_hnas_drives,
-    parse_function=parse_hitachi_hnas_drives,
-    service_name="System Drives",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.3.4.2.1",
         oids=["4"],
     ),
+    parse_function=parse_hitachi_hnas_drives,
+    service_name="System Drives",
+    discovery_function=inventory_hitachi_hnas_drives,
+    check_function=check_hitachi_hnas_drives,
 )

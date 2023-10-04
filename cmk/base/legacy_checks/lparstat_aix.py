@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated,no-untyped-def"
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
@@ -33,14 +33,13 @@ def check_lparstat(_no_item, _no_params, section: Section):
 
     utilization = section.get("util", {})
     for name, (value, uom) in utilization.items():
-        yield 0, "%s: %s%s" % (name.title(), value, uom), [(name, value)]
+        yield 0, f"{name.title()}: {value}{uom}", [(name, value)]
 
 
 check_info["lparstat_aix"] = LegacyCheckDefinition(
-    # section migrated already!
-    check_function=check_lparstat,
-    discovery_function=inventory_lparstat,
     service_name="lparstat",
+    discovery_function=inventory_lparstat,
+    check_function=check_lparstat,
 )
 
 
@@ -68,8 +67,7 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
 
     values = CPUInfo("", user, 0, system, cpu.get("idle", 0), wait)
 
-    for util_result in check_cpu_util_unix(values, params, values_counter=False):
-        yield util_result
+    yield from check_cpu_util_unix(values, params, values_counter=False)
 
     try:
         cpu_entitlement = float(section["system_config"]["ent"])
@@ -89,9 +87,9 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
 
 
 check_info["lparstat_aix.cpu_util"] = LegacyCheckDefinition(
-    # section migrated already!
-    check_function=check_lparstat_aix_cpu,
-    discovery_function=inventory_lparstat_aix_cpu,
     service_name="CPU utilization",
+    sections=["lparstat_aix"],
+    discovery_function=inventory_lparstat_aix_cpu,
+    check_function=check_lparstat_aix_cpu,
     check_ruleset_name="cpu_iowait",
 )

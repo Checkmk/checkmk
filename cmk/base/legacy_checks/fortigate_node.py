@@ -50,14 +50,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 #   '----------------------------------------------------------------------'
 
 
-def parse_fortigate_node(info):
+def parse_fortigate_node(string_table):
     parsed = {}
-    if info[0]:
-        parsed["cluster_info"] = info[0][0]
+    if string_table[0]:
+        parsed["cluster_info"] = string_table[0][0]
 
-    for hostname, cpu_str, memory_str, sessions_str, oid_end in info[1]:
+    for hostname, cpu_str, memory_str, sessions_str, oid_end in string_table[1]:
         # This means we have a standalone cluster
-        if len(info[1]) == 1:
+        if len(string_table[1]) == 1:
             item_name = "Cluster"
         elif hostname:
             item_name = hostname
@@ -92,7 +92,7 @@ def check_fortigate_cluster(_no_item, _no_params, parsed):
 
     if "cluster_info" in parsed:
         system_mode, group_name = parsed["cluster_info"]
-        return 0, "System mode: %s, Group: %s" % (map_mode[system_mode], group_name)
+        return 0, f"System mode: {map_mode[system_mode]}, Group: {group_name}"
     return None
 
 
@@ -101,10 +101,6 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         not_equals(".1.3.6.1.4.1.12356.101.13.1.1.0", "1"),
     ),
-    parse_function=parse_fortigate_node,
-    discovery_function=inventory_fortigate_cluster,
-    check_function=check_fortigate_cluster,
-    service_name="Cluster Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12356.101.13.1",
@@ -115,6 +111,10 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
             oids=["11", "3", "4", "6", OIDEnd()],
         ),
     ],
+    parse_function=parse_fortigate_node,
+    service_name="Cluster Info",
+    discovery_function=inventory_fortigate_cluster,
+    check_function=check_fortigate_cluster,
 )
 
 # .
@@ -142,9 +142,10 @@ def check_fortigate_node_cpu(item, params, parsed):
 
 
 check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
+    service_name="CPU utilization %s",
+    sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_cpu,
     check_function=check_fortigate_node_cpu,
-    service_name="CPU utilization %s",
 )
 
 # .
@@ -174,8 +175,9 @@ def check_fortigate_node_ses(item, params, parsed):
 
 
 check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
+    service_name="Sessions %s",
+    sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_ses,
     check_function=check_fortigate_node_ses,
-    service_name="Sessions %s",
     check_ruleset_name="fortigate_node_sessions",
 )

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -22,7 +23,7 @@ def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:
     """
     want_counters = {"batch_requests/sec", "sql_compilations/sec", "sql_re-compilations/sec"}
     yield from (
-        Service(item="%s %s %s" % (obj, instance, counter))
+        Service(item=f"{obj} {instance} {counter}")
         for (obj, instance), counters in section.items()
         for counter in counters
         if counter in want_counters
@@ -40,7 +41,7 @@ def _check_common(
     counters, counter = get_item(item, section)
     rate = get_rate_or_none(
         value_store,
-        "mssql_counters.sqlstats.%s.%s.%s" % (node_name, item, counter),
+        f"mssql_counters.sqlstats.{node_name}.{item}.{counter}",
         counters.get("utc_time", time_point),
         get_int(counters, counter),
     )
@@ -52,7 +53,7 @@ def _check_common(
     yield from check_levels(
         rate,
         levels_upper=params.get(counter),
-        render_func=lambda v, n=node_name: "%s%.1f/s" % (n and "[%s] " % n, v),
+        render_func=lambda v, n=node_name: "{}{:.1f}/s".format(n and "[%s] " % n, v),
         metric_name=counter.replace("/sec", "_per_second"),
         boundaries=(0, None),
     )

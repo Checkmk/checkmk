@@ -9,10 +9,15 @@ from typing import Any
 
 import pytest
 
-from cmk.base import item_state
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.api.agent_based.utils import GetRateError
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.aws_ebs import (
     check_aws_ebs,
     check_aws_ebs_burst_balance,
@@ -131,14 +136,18 @@ def test_check_aws_ebs_raise_get_rate_error() -> None:
 
 @pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ebs() -> None:
-    for metric in [
-        "aws_ebs_disk_io_read_ios",
-        "aws_ebs_disk_io_write_ios",
-        "aws_ebs_disk_io_read_throughput",
-        "aws_ebs_disk_io_write_throughput",
-        "aws_ebs_disk_io_queue_len",
-    ]:
-        item_state.set_item_state(f"{metric}.123", (0, 0))
+    get_value_store().update(
+        {
+            f"{metric}.123": (0, 0)
+            for metric in [
+                "aws_ebs_disk_io_read_ios",
+                "aws_ebs_disk_io_write_ios",
+                "aws_ebs_disk_io_read_throughput",
+                "aws_ebs_disk_io_write_throughput",
+                "aws_ebs_disk_io_queue_len",
+            ]
+        }
+    )
     check_result = check_aws_ebs(
         item="123",
         params={},

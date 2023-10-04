@@ -14,25 +14,15 @@
 #########################################################################################
 
 import re
-from typing import (
-    Any,
-    Counter,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    TypedDict,
-)
-
-from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+from collections import Counter
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, NamedTuple, TypedDict
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -48,7 +38,7 @@ class Section(NamedTuple):
 
 
 def service_extra_conf(service: str) -> list:
-    return cmk.base.config.get_config_cache().service_extra_conf(
+    return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
         host_name(), service, cmk.base.config.logwatch_rules
     )
 
@@ -71,13 +61,13 @@ def extract_unseen_lines(
 
 def get_ec_rule_params() -> list:
     """Isolate the remaining API violation w.r.t. parameters"""
-    return cmk.base.config.get_config_cache().host_extra_conf(
+    return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
         host_name(),
         cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),
     )
 
 
-def discoverable_items(*sections: Section) -> List[str]:
+def discoverable_items(*sections: Section) -> list[str]:
     """only consider files which are 'ok' on at least one node or 'cannotopen' to notify about
     unreadable files"""
     return sorted(
@@ -103,7 +93,7 @@ def select_forwarded(
     forward_settings: Sequence[Mapping[str, Any]],
     *,
     invert: bool = False,
-) -> Set[str]:
+) -> set[str]:
     # Is forwarding enabled in general?
     if not (forward_settings and forward_settings[0]):
         return set(items) if invert else set()
@@ -115,7 +105,7 @@ def select_forwarded(
 
 def reclassify(
     counts: Counter[int],
-    patterns: Dict[str, Any],  # all I know right now :-(
+    patterns: dict[str, Any],  # all I know right now :-(
     text: str,
     old_level: str,
 ) -> str:
@@ -142,7 +132,7 @@ def reclassify(
     return patterns.get("reclassify_states", {}).get(change_state_paramkey, old_level)
 
 
-def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[Result]:
+def check_errors(cluster_section: Mapping[str | None, Section]) -> Iterable[Result]:
     """
     >>> cluster_section = {
     ...     None: Section(errors=["error w/o node info"], logfiles={}),
@@ -157,12 +147,12 @@ def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[R
         for error_msg in node_data.errors:
             yield Result(
                 state=State.UNKNOWN,
-                summary=error_msg if node is None else "[%s] %s" % (node, error_msg),
+                summary=error_msg if node is None else f"[{node}] {error_msg}",
             )
 
 
 def get_unreadable_logfiles(
-    logfile: str, section: Mapping[Optional[str], Section]
+    logfile: str, section: Mapping[str | None, Section]
 ) -> Sequence[tuple[str, str | None]]:
     """
     >>> section = Section(errors=[], logfiles={"log1": ItemData(attr="cannotopen", lines={})})

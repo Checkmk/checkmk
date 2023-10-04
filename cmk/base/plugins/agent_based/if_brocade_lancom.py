@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Mapping, Union
+from collections.abc import Iterable, Mapping
 
 from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable
 from .utils import if64, interfaces
 
-StringByteLine = List[Union[str, List[int]]]
+StringByteLine = list[str | list[int]]
 
 IF64_BASE_TREE = SNMPTree(
     base=if64.BASE_OID,
@@ -141,7 +141,7 @@ def parse_if_brocade(
 
 
 def parse_if_lancom(
-    string_table: List[StringByteTable],
+    string_table: list[StringByteTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     if_table, ssid_table, port_mapping = string_table
     return parse_if_brocade_lancom(

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Container, Mapping
+from collections.abc import Container, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.utils import netapp_api
 
 def port_name(name: str, values: Mapping[str, str]) -> str:
     try:
-        return "%s port %s" % (values["port-type"].capitalize(), name)
+        return "{} port {}".format(values["port-type"].capitalize(), name)
     except KeyError:
         return name
 

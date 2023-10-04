@@ -7,6 +7,7 @@ from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_s
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_running_on
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.utils.esx_vsphere import ESXVm
 
 
 def test_parse_esx_vsphere_running_on_host():
@@ -38,5 +39,5 @@ def test_check_running_on_host_missing() -> None:
     assert results[0].summary == "Runtime host information is missing"
 
 
-def _esx_vm_section(host: str | None) -> esx_vsphere_vm.ESXVm:
+def _esx_vm_section(host: str | None) -> ESXVm:
     return esx_vm_section(host=host)

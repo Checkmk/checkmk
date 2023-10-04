@@ -9,6 +9,7 @@ our crypto dependencies and python's built-in crypto utilities (like hashlib).
 """
 from __future__ import annotations
 
+import hashlib
 from enum import Enum
 
 from cryptography.hazmat.primitives import hashes as crypto_hashes
@@ -33,3 +34,9 @@ class HashAlgorithm(Enum):
             case crypto_hashes.SHA512():
                 return HashAlgorithm.Sha512
         raise ValueError(f"Unsupported hash algorithm: '{algo.name}'")
+
+    def to_hashlib(self) -> hashlib._Hash:
+        match self.value:
+            case crypto_hashes.SHA1():
+                return hashlib.new("sha1")  # nosec B324 # BNS:eb967b
+        raise ValueError(f"Unsupported hash algorithm: '{self.value.name}'")

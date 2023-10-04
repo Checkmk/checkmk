@@ -46,7 +46,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition, MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
+
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
@@ -99,11 +101,11 @@ def parse_rstcli_disks(rows):
     return disks
 
 
-def parse_rstcli(info):
-    if info == [["rstcli not found"]]:
+def parse_rstcli(string_table):
+    if string_table == [["rstcli not found"]]:
         return {}
 
-    rstcli_sections = parse_rstcli_sections(info)
+    rstcli_sections = parse_rstcli_sections(string_table)
     if rstcli_sections is None:
         return {}
 
@@ -130,9 +132,10 @@ rstcli_states = {
 }
 
 
-@get_parsed_item_data
-def check_rstcli(_item, _no_params, volume):
-    return rstcli_states.get(volume["State"], 3), "RAID %s, %d disks (%s), state %s" % (
+def check_rstcli(item, _no_params, parsed):
+    if not (volume := parsed.get(item)):
+        return
+    yield rstcli_states.get(volume["State"], 3), "RAID %s, %d disks (%s), state %s" % (
         volume["Raid Level"],
         int(volume["Num Disks"]),
         volume["Size"],
@@ -141,17 +144,17 @@ def check_rstcli(_item, _no_params, volume):
 
 
 check_info["rstcli"] = LegacyCheckDefinition(
-    check_function=check_rstcli,
-    discovery_function=inventory_rstcli,
     parse_function=parse_rstcli,
     service_name="RAID Volume %s",
+    discovery_function=inventory_rstcli,
+    check_function=check_rstcli,
 )
 
 
 def inventory_rstcli_pdisks(parsed):
     for key, volume in parsed.items():
         for disk in volume["Disks"]:
-            yield "%s/%s" % (key, disk["ID"]), None
+            yield "{}/{}".format(key, disk["ID"]), None
 
 
 def check_rstcli_pdisks(item, _no_params, parsed):
@@ -160,7 +163,7 @@ def check_rstcli_pdisks(item, _no_params, parsed):
     disks = parsed.get(volume, {}).get("Disks", [])
     for disk in disks:
         if disk["ID"] == disk_id:
-            infotext = "%s (unit: %s, size: %s, type: %s, model: %s, serial: %s)" % (
+            infotext = "{} (unit: {}, size: {}, type: {}, model: {}, serial: {})".format(
                 disk["State"],
                 volume,
                 disk["Size"],
@@ -173,7 +176,8 @@ def check_rstcli_pdisks(item, _no_params, parsed):
 
 
 check_info["rstcli.pdisks"] = LegacyCheckDefinition(
-    check_function=check_rstcli_pdisks,
-    discovery_function=inventory_rstcli_pdisks,
     service_name="RAID Disk %s",
+    sections=["rstcli"],
+    discovery_function=inventory_rstcli_pdisks,
+    check_function=check_rstcli_pdisks,
 )

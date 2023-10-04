@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "test_tools.h"
+#include "watest/test_tools.h"
 
 #include <shellapi.h>
 
@@ -11,16 +11,16 @@
 #include <random>
 #include <string>
 
-#include "algorithm"  // for remove_if
-#include "cfg.h"
-#include "cfg_details.h"
+#include "algorithm"            // for remove_if
 #include "corecrt_terminate.h"  // for terminate
-#include "firewall.h"
 #include "fmt/format.h"
 #include "fmt/xchar.h"
-#include "install_api.h"  // for terminate
-#include "on_start.h"
 #include "tools/_misc.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/firewall.h"
+#include "wnx/install_api.h"  // for terminate
+#include "wnx/on_start.h"
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace fs = std::filesystem;
@@ -382,7 +382,7 @@ bool TempCfgFs::loadContent(std::string_view content) {
 void TempCfgFs::allowUserAccess() const {
     std::vector<std::wstring> commands;
     tst::AllowReadWriteAccess(base_, commands);
-    wtools::ExecuteCommandsSync(L"all", commands);
+    wtools::ExecuteCommands(L"all", commands, wtools::ExecuteMode::sync);
 }
 
 [[nodiscard]] bool TempCfgFs::createFile(const fs::path &filepath,

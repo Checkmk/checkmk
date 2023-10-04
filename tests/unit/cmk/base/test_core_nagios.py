@@ -21,7 +21,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.exceptions as exceptions
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -226,7 +226,7 @@ def test_format_nagios_object() -> None:
 def test_create_nagios_host_spec(
     hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
 
@@ -502,7 +502,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "# Active checks\n"
             "define service {\n"
             "  active_checks_enabled         1\n"
-            '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2\n'
+            '  check_command                 check-mk-custom!echo "CRIT - Failed to lookup IP address and no explicit IP address configured"; exit 2\n'
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
@@ -633,8 +633,7 @@ def test_create_nagios_servicedefs_active_check(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -731,8 +730,7 @@ def test_create_nagios_servicedefs_with_warnings(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -784,8 +782,7 @@ def test_create_nagios_servicedefs_omit_service(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
 
@@ -836,8 +833,7 @@ def test_create_nagios_servicedefs_invalid_args(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")
@@ -907,8 +903,7 @@ def test_create_nagios_config_commands(
 ) -> None:
     monkeypatch.setattr(config, "active_check_info", active_check_info)
 
-    config_cache = config.get_config_cache()
-    config_cache.initialize()
+    config_cache = config._create_config_cache()
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
     hostname = HostName("my_host")

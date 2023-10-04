@@ -4,15 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import (
     ip_address_family_element,
     RulespecGroupActiveChecks,
-)
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -24,6 +21,8 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_active_checks_smtp() -> Tuple:
@@ -195,7 +194,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type="all",
-        name="active_checks:smtp",
+        name=RuleGroup.ActiveChecks("smtp"),
         valuespec=_valuespec_active_checks_smtp,
     )
 )

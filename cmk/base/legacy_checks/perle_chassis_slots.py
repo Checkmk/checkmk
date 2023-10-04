@@ -38,13 +38,13 @@ def check_perle_chassis_slots(item, _no_params, info):
     ) in info:
         if item == index:
             state, state_readable = map_diagstates[diagstate]
-            yield state, "[%s] Diagnostic result: %s" % (name, state_readable)
+            yield state, f"[{name}] Diagnostic result: {state_readable}"
             yield perle_check_alarms(alarms_str)
 
 
 check_info["perle_chassis_slots"] = LegacyCheckDefinition(
     # section is already migrated!
+    service_name="Chassis status slot %s",
     discovery_function=inventory_perle_chassis_slots,
     check_function=check_perle_chassis_slots,
-    service_name="Chassis status slot %s",
 )

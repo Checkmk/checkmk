@@ -9,11 +9,12 @@ from the configuration.
 """
 
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
+from cmk.utils.servicename import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 
 import cmk.base.config as config
 
@@ -36,8 +37,9 @@ def reset_config() -> None:
 def service_description(
     hostname: HostName, check_plugin_name: CheckPluginNameStr, item: Item
 ) -> str:
-    _load_config()
-    return config.service_description(hostname, CheckPluginName(check_plugin_name), item)
+    return config.service_description(
+        get_ruleset_matcher(), hostname, CheckPluginName(check_plugin_name), item
+    )
 
 
 def get_ruleset_matcher() -> RulesetMatcher:
@@ -50,23 +52,19 @@ def ruleset_match_object_of_service(
     hostname: HostName, svc_desc: ServiceName, svc_labels: Labels
 ) -> RulesetMatchObject:
     """Construct the object that is needed to match service rulesets"""
-    _load_config()
-    config_cache = config.get_config_cache()
-    return config_cache.ruleset_match_object_of_service(hostname, svc_desc, svc_labels=svc_labels)
+    matcher = get_ruleset_matcher()
+    matcher.cache_service_labels(hostname, svc_desc, svc_labels)
+    return matcher._service_match_object(hostname, svc_desc)
 
 
 def ruleset_match_object_for_checkgroup_parameters(
     hostname: HostName, item: Item, svc_desc: ServiceName, svc_labels: Labels
 ) -> RulesetMatchObject:
     """Construct the object that is needed to match checkgroup parameter rulesets"""
-    _load_config()
-    config_cache = config.get_config_cache()
-    return config_cache.ruleset_match_object_for_checkgroup_parameters(
-        hostname, item, svc_desc, svc_labels=svc_labels
-    )
+    matcher = get_ruleset_matcher()
+    matcher.cache_service_checkgroup(hostname, svc_desc, item, svc_labels)
+    return matcher._checkgroup_match_object(hostname, svc_desc, item)
 
 
 def get_host_labels(hostname: HostName) -> Labels:
-    _load_config()
-    config_cache = config.get_config_cache()
-    return config_cache.labels(hostname)
+    return get_ruleset_matcher().labels_of_host(hostname)

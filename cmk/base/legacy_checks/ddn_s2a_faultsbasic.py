@@ -18,7 +18,7 @@ from cmk.base.config import check_info
 #   '----------------------------------------------------------------------'
 
 
-def parse_ddn_s2a_faultsbasic(info):
+def parse_ddn_s2a_faultsbasic(string_table):
     non_unique_keys = [
         "failed_avr_fan_ctrl_item",
         "failed_avr_pwr_sup_item",
@@ -28,7 +28,7 @@ def parse_ddn_s2a_faultsbasic(info):
     ]
     return {
         key: value if key in non_unique_keys else value[0]
-        for key, value in parse_ddn_s2a_api_response(info).items()
+        for key, value in parse_ddn_s2a_api_response(string_table).items()
     }
 
 
@@ -70,9 +70,10 @@ def check_ddn_s2a_faultsbasic_disks(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
+    service_name="DDN S2A Disks",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_disks,
     check_function=check_ddn_s2a_faultsbasic_disks,
-    service_name="DDN S2A Disks",
     check_ruleset_name="disk_failures",
 )
 
@@ -118,9 +119,10 @@ def check_ddn_s2a_faultsbasic_temp(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.temp"] = LegacyCheckDefinition(
+    service_name="DDN S2A Temperature",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_temp,
     check_function=check_ddn_s2a_faultsbasic_temp,
-    service_name="DDN S2A Temperature",
 )
 
 # .
@@ -150,9 +152,10 @@ def check_ddn_s2a_faultsbasic_ps(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.ps"] = LegacyCheckDefinition(
+    service_name="DDN S2A Power Supplies",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_ps,
     check_function=check_ddn_s2a_faultsbasic_ps,
-    service_name="DDN S2A Power Supplies",
 )
 
 # .
@@ -195,9 +198,10 @@ def check_ddn_s2a_faultsbasic_fans(_no_item, params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.fans"] = LegacyCheckDefinition(
+    service_name="DDN S2A Fans",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_fans,
     check_function=check_ddn_s2a_faultsbasic_fans,
-    service_name="DDN S2A Fans",
     check_ruleset_name="fan_failures",
 )
 
@@ -229,9 +233,10 @@ def check_ddn_s2a_faultsbasic_pingfault(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.pingfault"] = LegacyCheckDefinition(
+    service_name="DDN S2A Ping Fault Status",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_pingfault,
     check_function=check_ddn_s2a_faultsbasic_pingfault,
-    service_name="DDN S2A Ping Fault Status",
 )
 
 # .
@@ -258,9 +263,10 @@ def check_ddn_s2a_faultsbasic_bootstatus(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.bootstatus"] = LegacyCheckDefinition(
+    service_name="DDN S2A Boot Status",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_bootstatus,
     check_function=check_ddn_s2a_faultsbasic_bootstatus,
-    service_name="DDN S2A Boot Status",
 )
 
 # .
@@ -303,9 +309,10 @@ def check_ddn_s2a_faultsbasic_cachecoh(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.cachecoh"] = LegacyCheckDefinition(
+    service_name="DDN S2A Cache Coherency",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_cachecoh,
     check_function=check_ddn_s2a_faultsbasic_cachecoh,
-    service_name="DDN S2A Cache Coherency",
 )
 
 # .
@@ -338,9 +345,10 @@ def check_ddn_s2a_faultsbasic_dualcomm(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.dualcomm"] = LegacyCheckDefinition(
+    service_name="DDN S2A Dual Communication",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_dualcomm,
     check_function=check_ddn_s2a_faultsbasic_dualcomm,
-    service_name="DDN S2A Dual Communication",
 )
 
 # .
@@ -372,9 +380,10 @@ def check_ddn_s2a_faultsbasic_ethernet(_no_item, _no_params, parsed):
 
 
 check_info["ddn_s2a_faultsbasic.ethernet"] = LegacyCheckDefinition(
+    service_name="DDN S2A Ethernet",
+    sections=["ddn_s2a_faultsbasic"],
     discovery_function=inventory_ddn_s2a_faultsbasic_ethernet,
     check_function=check_ddn_s2a_faultsbasic_ethernet,
-    service_name="DDN S2A Ethernet",
 )
 
 # .
@@ -409,7 +418,7 @@ def check_ddn_s2a_faultsbasic(item, _no_params, parsed):
 
 check_info["ddn_s2a_faultsbasic"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_faultsbasic,
+    service_name="DDN S2A Unit %s",
     discovery_function=inventory_ddn_s2a_faultsbasic,
     check_function=check_ddn_s2a_faultsbasic,
-    service_name="DDN S2A Unit %s",
 )

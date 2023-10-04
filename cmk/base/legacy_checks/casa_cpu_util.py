@@ -52,10 +52,6 @@ def check_casa_cpu_util(item, params, info):
 
 check_info["casa_cpu_util"] = LegacyCheckDefinition(
     detect=DETECT_CASA,
-    check_function=check_casa_cpu_util,
-    discovery_function=inventory_casa_cpu_util,
-    service_name="CPU utilization %s",
-    check_ruleset_name="cpu_utilization_multiitem",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -66,4 +62,8 @@ check_info["casa_cpu_util"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "4"],
         ),
     ],
+    service_name="CPU utilization %s",
+    discovery_function=inventory_casa_cpu_util,
+    check_function=check_casa_cpu_util,
+    check_ruleset_name="cpu_utilization_multiitem",
 )

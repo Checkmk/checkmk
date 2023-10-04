@@ -1,0 +1,15 @@
+Title: Use oracledb over cx_Oracle module for Oracle DB in check_sql
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1691668600
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The python module cx_Oracle is replaced by <a href="https://oracle.github.io/python-oracledb/">oracledb</a> to support Python 3.11 for Oracle database checks with the check_sql active check.
+In order to use the check_sql with an Oracle DB it is now necessary to install the oracledb python package with:
+C+:
+python3 -m pip install oracledb --upgrade
+C-:

@@ -51,10 +51,10 @@ def check_msexch_isclienttype(item, params, parsed):
 
 
 check_info["msexch_isclienttype"] = LegacyCheckDefinition(
-    discovery_function=discover_msexch_isclienttype,
-    check_function=check_msexch_isclienttype,
     parse_function=parse_wmi_table,
     service_name="Exchange IS Client Type %s",
+    discovery_function=discover_msexch_isclienttype,
+    check_function=check_msexch_isclienttype,
     check_ruleset_name="msx_info_store",
     check_default_parameters={
         # attention! those three dictionaries are tuples when returned by wato!

@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import copy
 import logging
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import astuple, dataclass
-from typing import Any, Final, Iterable, Self, TYPE_CHECKING, TypedDict
+from typing import Any, Final, Self, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
+from typing_extensions import TypedDict
 
 if TYPE_CHECKING:
     # The remaining pyghmi imports are expensive (60 ms for all of them together).
@@ -21,9 +22,10 @@ if TYPE_CHECKING:
 
 from six import ensure_binary
 
-from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
+from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -260,6 +262,8 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Fetching firmware information via UDP from %s:623", self._command.bmc)
         try:
             firmware_entries = self._command.get_firmware()
+        except MKTimeout:
+            raise
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch firmware information: %r", e)
             self._logger.debug("Exception", exc_info=True)
@@ -268,9 +272,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         return AgentRawData(
             b"<<<ipmi_firmware:sep(124)>>>\n"
             + b"".join(
-                self._make_line(
-                    (str(f).encode("utf8") for f in (entity_name, attribute_name, value))
-                )
+                self._make_line(str(f).encode("utf8") for f in (entity_name, attribute_name, value))
                 for entity_name, attributes in firmware_entries
                 for attribute_name, value in attributes.items()
             )
@@ -288,6 +290,8 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Fetching inventory information via UDP from %s:623", self._command.bmc)
         try:
             inventory_entries = self._command.get_inventory_descriptions()
+        except MKTimeout:
+            raise
         except Exception as e:
             self._logger.log(VERBOSE, "Failed to fetch inventory information: %r", e)
             self._logger.debug("Exception", exc_info=True)

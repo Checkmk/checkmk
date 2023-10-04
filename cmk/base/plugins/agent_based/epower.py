@@ -15,7 +15,7 @@ def discover_epower(section: Mapping[str, int]) -> DiscoveryResult:
 
 
 def check_epower(item: str, params: dict, section: dict[str, int]) -> CheckResult:
-    if power := section.get(item):
+    if (power := section.get(item)) is not None:
         yield from check_levels(
             power,
             levels_lower=params.get("levels_lower"),

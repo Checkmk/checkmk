@@ -12,9 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.avaya import DETECT_AVAYA
 
 
-def parse_avaya_88xx(info):
+def parse_avaya_88xx(string_table):
     parsed = {"fanstate": [], "temp": []}
-    for line in info:
+    for line in string_table:
         parsed["fanstate"].append(line[0])
         parsed["temp"].append(line[1])
 
@@ -63,23 +63,24 @@ def check_avaya_88xx(item, params, parsed):
 
 check_info["avaya_88xx"] = LegacyCheckDefinition(
     detect=DETECT_AVAYA,
-    parse_function=parse_avaya_88xx,
-    check_function=check_avaya_88xx,
-    discovery_function=inventory_avaya_88xx,
-    service_name="Temperature Fan %s",
-    check_ruleset_name="temperature",
-    # RAPID-CITY MIB
+    # RAPID-CITY MIB,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.4.7.1.1",
         oids=["2", "3"],
     ),
+    parse_function=parse_avaya_88xx,
+    service_name="Temperature Fan %s",
+    discovery_function=inventory_avaya_88xx,
+    check_function=check_avaya_88xx,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (55.0, 60.0),
     },
 )
 
 check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
-    check_function=check_avaya_88xx_fan,
-    discovery_function=inventory_avaya_88xx_fan,
     service_name="Fan %s Status",
+    sections=["avaya_88xx"],
+    discovery_function=inventory_avaya_88xx_fan,
+    check_function=check_avaya_88xx_fan,
 )

@@ -1,0 +1,17 @@
+Title: Fix missing entries for Checkmk check helpers logger
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695029015
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The log level setting to "Checkmk check helpers" under
+"Setup > General > Global settings > Logging of the core"
+would not always be taken into account, resulting in lost
+logging entries in cmc.log.
+
+

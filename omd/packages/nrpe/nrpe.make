@@ -4,7 +4,7 @@ NRPE := nrpe
 NRPE_BUILD := $(BUILD_HELPER_DIR)/$(NRPE)-build
 NRPE_INSTALL := $(BUILD_HELPER_DIR)/$(NRPE)-install
 
-NRPE_BUILD_DIR := $(BAZEL_BIN)/$(NRPE)/$(NRPE)
+NRPE_BUILD_DIR := $(BAZEL_BIN_EXT)/$(NRPE)/$(NRPE)
 
 $(NRPE_BUILD):
 	# run the Bazel build process which does all the dependency stuff

@@ -8,14 +8,9 @@
 
 import collections
 
-from cmk.base.check_api import (
-    check_levels,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree, startswith
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.
@@ -23,7 +18,7 @@ NimbleReadsType = "read"
 NimbleWritesType = "write"
 
 
-def parse_nimble_read_latency(info):
+def parse_nimble_read_latency(string_table):
     range_keys = [
         ("total", "Total"),
         ("0.1", "0-0.1 ms"),
@@ -42,7 +37,7 @@ def parse_nimble_read_latency(info):
     ]
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         vol_name = line[0]
         for ty, start_idx in [
             (NimbleReadsType, 1),
@@ -85,7 +80,7 @@ def _check_nimble_latency(item, params, data, ty):
     running_total_percent = 0
     results = []
     for key, (title, value) in ty_data["ranges"].items():
-        metric_name = "nimble_%s_latency_%s" % (ty, key.replace(".", ""))
+        metric_name = "nimble_{}_latency_{}".format(ty, key.replace(".", ""))
         percent_value = value / total_value * 100
 
         if float(key) >= range_reference:
@@ -96,7 +91,7 @@ def _check_nimble_latency(item, params, data, ty):
                 value=percent_value,
                 dsname=metric_name,
                 params=None,
-                human_readable_func=get_percent_human_readable,
+                human_readable_func=render.percent,
                 infoname=title,
             )
         )
@@ -105,7 +100,7 @@ def _check_nimble_latency(item, params, data, ty):
         value=running_total_percent,
         dsname=None,
         params=params[ty],
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="At or above %s" % ty_data["ranges"][params["range_reference"]][0],
     )
 
@@ -114,17 +109,14 @@ def _check_nimble_latency(item, params, data, ty):
         yield 0, infotext, perfdata
 
 
-@get_parsed_item_data
-def check_nimble_latency_reads(item, params, data):
-    return _check_nimble_latency(item, params, data, NimbleReadsType)
+def check_nimble_latency_reads(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield from _check_nimble_latency(item, params, data, NimbleReadsType)
 
 
 check_info["nimble_latency"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
-    parse_function=parse_nimble_read_latency,
-    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
-    check_function=check_nimble_latency_reads,
-    service_name="Volume %s Read IO",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
         oids=[
@@ -159,6 +151,10 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
             "51",
         ],
     ),
+    parse_function=parse_nimble_read_latency,
+    service_name="Volume %s Read IO",
+    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
+    check_function=check_nimble_latency_reads,
     check_ruleset_name="nimble_latency",
     check_default_parameters={
         # The latency range that is used to start measuring against levels.
@@ -172,15 +168,17 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
 )
 
 
-@get_parsed_item_data
-def check_nimble_latency_writes(item, params, data):
-    return _check_nimble_latency(item, params, data, NimbleWritesType)
+def check_nimble_latency_writes(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield from _check_nimble_latency(item, params, data, NimbleWritesType)
 
 
 check_info["nimble_latency.write"] = LegacyCheckDefinition(
+    service_name="Volume %s Write IO",
+    sections=["nimble_latency"],
     discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
     check_function=check_nimble_latency_writes,
-    service_name="Volume %s Write IO",
     check_ruleset_name="nimble_latency",
     check_default_parameters={
         # The latency range that is used to start measuring against levels.

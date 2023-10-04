@@ -3,145 +3,163 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
-from pathlib import Path
-from typing import Any, Literal
+from typing import NamedTuple
 
+import lxml.html
 import markdown
-from markdown.extensions import Extension
-from markdown.treeprocessors import Treeprocessor
-from pydantic import BaseModel, Field, validator
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 
-from cmk.utils.version import parse_check_mk_version
-
-from .werk import Class, Compatibility, Edition, Level, RawWerk, Werk, WerkError, WerkTranslator
+from .werk import Werk, WerkError
 
 
-class RawWerkV2(BaseModel, RawWerk):
-    # ATTENTION! If you change this model, you have to inform
-    # the website team first! They rely on those fields.
-    werk_version: Literal["2"] = Field(default="2", alias="__version__")
-    id: int
-    class_: Class = Field(alias="class")
-    component: str
-    level: Level
-    date: datetime.datetime
-    version: str
-    compatible: Compatibility
-    edition: Edition = Field(json_encoders=lambda x: x.short)
+class WerkV2ParseResult(NamedTuple):
+    metadata: dict[str, str]
     description: str
-    title: str
-
-    @validator("version")
-    def parse_version(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        parse_check_mk_version(v)
-        return v
-
-    @validator("level", pre=True)
-    def parse_level(cls, v: str) -> Level:  # pylint: disable=no-self-argument
-        try:
-            return Level(int(v))
-        except ValueError:
-            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead")
-
-    @validator("component")
-    def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        components = {k for k, _ in WerkTranslator().components()}
-        if v not in components:
-            raise TypeError(f"Component {v} not know. Choose from: {components}")
-        return v
-
-    @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "RawWerkV2":
-        return cls.parse_obj(data)
-
-    def to_json_dict(self) -> dict[str, object]:
-        return {
-            "__version__": self.werk_version,
-            "id": self.id,
-            "class": self.class_.value,
-            "compatible": self.compatible.value,
-            "component": self.component,
-            "date": self.date.isoformat(),
-            "edition": self.edition.value,
-            "level": self.level.value,
-            "title": self.title,
-            "version": self.version,
-            "description": str(self.description),
-        }
-
-    def to_werk(self) -> "Werk":
-        return Werk(
-            compatible=self.compatible,
-            version=self.version,
-            title=self.title,
-            id=self.id,
-            date=self.date,
-            description=self.description,
-            level=self.level,
-            class_=self.class_,
-            component=self.component,
-            edition=self.edition,
-        )
 
 
-def load_werk_v2(path: Path, werk_id: str) -> RawWerkV2:
-    with path.open(encoding="utf-8") as fp:
-        werk_raw = fp.read()
-
+def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
+    """
+    parse werk v2 but do not validate
+    """
+    metadata: dict[str, str] = {
+        "id": werk_id,
+    }
     # no need to parse the werk version here. markdown version and werk version
     # could potentially be different: a markdown version 3 could be parsed to a
     # werk version 2. let's hope we will keep v2 for a long time :-)
-    if not werk_raw.startswith("[//]: # (werk v2)"):
-        raise WerkError("Markdown formatted werks need to start with '[//]: # (werk v2)'")
-
-    class WerkExtractor(Treeprocessor):
-        def __init__(self, werk):
-            super().__init__()
-            self._werk = werk
-
-        def run(self, root):
-            headline = root[0]
-            if headline.tag != "h1":
-                raise WerkError(
-                    "First element after the header needs to be the title as a h1 headline. The line has to start with '#'."
-                )
-            self._werk["title"] = headline.text
-            root.remove(headline)
-
-            # we removed the headline so we can access element 0 again with a
-            # different result.
-            table = root[0]
-            if table.tag != "table":
-                raise WerkError(f"Expected a table after the title, found '{table.tag}'")
-            tbody = table.findall("./tbody/")
-            for table_tr in tbody:
-                key, value = table_tr.findall("./td")
-                self._werk[key.text] = value.text
-            root.remove(root.findall("./table")[0])
-
-    class WerkExtractorExtension(Extension):
-        def __init__(self, werk):
-            super().__init__()
-            self._werk = werk
-
-        def extendMarkdown(self, md):
-            md.treeprocessors.register(WerkExtractor(self._werk), "werk", 100)
-
-    werk: dict[str, object] = {
-        "__version__": "2",
-        "id": werk_id,
-    }
-    result = markdown.markdown(
-        werk_raw, extensions=["tables", WerkExtractorExtension(werk)], output_format="html"
-    )
-
-    # werk was passed by reference into WerkExtractorExtension which got passed
-    # to WerkExtractor which wrote all the fields.
-    werk["description"] = result
+    if not content.startswith("[//]: # (werk v2)\n"):
+        raise WerkError(
+            "Markdown formatted werks need to start with header: '[//]: # (werk v2)\\n'"
+        )
 
     try:
-        return RawWerkV2.parse_obj(werk)
+        md_title, md_table, md_description = content.split("\n\n", 2)
+    except ValueError as e:
+        raise WerkError(
+            "Structure of markdown werk could not be detected. Format has to be:"
+            "header, headline, empty line, table, empty line, description"
+        ) from e
+
+    title = md_title.removeprefix("[//]: # (werk v2)\n")
+
+    # TODO: check if it really is a h1 headline?!
+    if not title.startswith("#"):
+        raise WerkError(
+            "First element after the header needs to be the title as a h1 headline. The line has to start with '#'."
+        )
+    metadata["title"] = title.removeprefix("#").strip()
+
+    metadata_html = markdown.markdown(
+        md_table,
+        extensions=["tables"],
+        output_format="html",
+    )
+
+    parser = lxml.html.HTMLParser(recover=False)
+    table_element = lxml.html.fromstring(metadata_html, parser=parser)
+    # TODO: maybe assert len of table_element?!
+    if table_element.tag != "table":
+        raise WerkError(f"Expected a table after the title, found '{table_element.tag}'")
+    tbody = table_element.findall("./tbody/")
+    for table_tr in tbody:
+        key, value = table_tr.findall("./td")
+        if key.text is None or value.text is None:
+            continue
+        metadata[key.text] = value.text
+
+    return WerkV2ParseResult(metadata, md_description)
+
+
+def markdown_to_html(text: str) -> str:
+    return markdown.markdown(
+        text,
+        extensions=["tables", "fenced_code"],
+        output_format="html",
+    )
+
+
+def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
+    werk = parsed.metadata
+    werk["__version__"] = "2"
+
+    # see CMK-14546
+    # try:
+    #     # the treeprocessor that extracted the title runs before the inline processor, so no inline
+    #     # markdown (links, bold, italic,..) has been replaced. this is
+    #     # basically okay, because we don't want any formatting in the
+    #     # headline. but we want to give some hint to the user that no
+    #     # formatting is allowed.
+    #     _raise_if_contains_markdown_formatting(werk["title"])
+    # except WerkError as e:
+    #     raise WerkError(
+    #         "Markdown formatting in title detected, this is not allowed."
+    #     ) from e
+
+    werk["description"] = markdown_to_html(parsed.description)
+    _check_html(werk["description"])
+
+    try:
+        return Werk.model_validate(werk)
     except ValidationError as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
+
+
+# see CMK-14546
+# def _raise_if_contains_markdown_formatting(string: str) -> None:
+#     markdown_converted = markdown.markdown(string)
+#     # if markdown_converted contains any html tags, then string contained markdown formatting
+#     try:
+#         number_of_tags = len(etree.fromstring(markdown_converted))
+#     except Exception as e:
+#         if '<<<' in string and '>>>' in string:
+#             # this is a hack, ignore if someone describes an agent section
+#             # title needs to be rendered without html interpretation anyway, we just want to give a
+#             # hint to the developer writing the werk, if they use formatting in the title.
+#             return
+#         raise WerkError(f"Can not parse title '{string}' to check if it contains html") from e
+#     if number_of_tags:
+#         raise WerkError(
+#             f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
+#         )
+
+
+def _check_html(string: str) -> None:
+    tags_allowed = {
+        "code",
+        "em",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "li",
+        "ol",
+        "p",
+        "pre",
+        "strong",
+        "table",
+        "td",
+        "thead",
+        "tr",
+        "ul",
+        "a",
+        "b",
+        "blockquote",
+        "br",
+        "i",
+        "th",
+        "tt",
+        "hr",
+    }
+    parser = lxml.html.HTMLParser(recover=False)
+    tree = lxml.html.fromstring(f"<html><body>{string}</body></html>", parser=parser)
+    tags_found = {e.tag for e in tree.xpath("./body//*")}
+    tags_unknown = tags_found.difference(tags_allowed)
+    if tags_unknown:
+        tag_list = ", ".join(f"<{tag}>" for tag in tags_unknown)
+        raise WerkError(f"Found tag {tag_list} which is not in the list of allowed tags.")
+
+    li_parents_found = {e.getparent().tag for e in tree.xpath("./body//li")}
+    li_illegal_parents = li_parents_found.difference({"ul", "ol"})
+    if li_illegal_parents:
+        raise WerkError("Found li tags which are not inside <ul> or <ol>. This breaks the html.")

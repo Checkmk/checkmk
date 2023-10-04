@@ -7,7 +7,7 @@ import logging
 
 import pytest
 
-from cmk.ec.main import Perfcounters
+from cmk.ec.perfcounters import Perfcounters
 
 logger = logging.getLogger("cmk.mkeventd")
 

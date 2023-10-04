@@ -22,11 +22,11 @@ check_info["cisco_srst_phones"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1")
     ),
-    discovery_function=inventory_cisco_srst_phones,
-    check_function=check_cisco_srst_phones,
-    service_name="SRST Phones",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.441.1.3",
         oids=["2"],
     ),
+    service_name="SRST Phones",
+    discovery_function=inventory_cisco_srst_phones,
+    check_function=check_cisco_srst_phones,
 )

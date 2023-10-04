@@ -36,8 +36,6 @@ PACKAGE_PROTOBUF_LD_LIBRARY_PATH := $(PACKAGE_PROTOBUF_DESTDIR)/lib
 PACKAGE_PROTOBUF_INCLUDE_PATH    := $(PACKAGE_PROTOBUF_DESTDIR)/include/google/protobuf
 PACKAGE_PROTOBUF_PROTOC_BIN      := $(PACKAGE_PROTOBUF_DESTDIR)/bin/protoc
 
-# Executed from enterprise/core/src/Makefile.am, enterprise/core/src/.f12
-# and ./enterprise/Makefile
 $(PROTOBUF)-build-library: $(BUILD_HELPER_DIR) $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 
 # We have a globally defined $(PROTOBUF_UNPACK) target, but we need some special
@@ -49,10 +47,13 @@ $(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
+# NOTE: We can probably remove the CXXFLAGS hack below when we use a more recent
+# protobuf version. Currently -Wall is enabled for builds with GCC, and newer
+# GCC versions complain.
 $(PROTOBUF_CONFIGURE): $(PROTOBUF_PATCHING)
 	cd $(PROTOBUF_BUILD_DIR) && \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    ./configure --prefix=""
+	    CXXFLAGS="-Wno-stringop-overflow" ./configure --prefix=""
 	$(TOUCH) $@
 
 $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_CONFIGURE)

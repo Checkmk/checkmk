@@ -9,14 +9,14 @@
 #include <string>
 #include <string_view>
 
-#include "cfg.h"
-#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "providers/p_perf_counters.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/service_processor.h"
 
 using namespace std::string_literals;
 namespace rs = std::ranges;

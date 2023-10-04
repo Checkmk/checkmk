@@ -37,7 +37,7 @@ from cmk.base.config import check_info
 # 11:4:4:fc:N/A:2:node2:5005076803102127:000000:inactive_unconfigured:none:local_partner
 
 
-def parse_ibm_svc_portfc(info):
+def parse_ibm_svc_portfc(string_table):
     dflt_header = [
         "id",
         "fc_io_port_id",
@@ -55,13 +55,13 @@ def parse_ibm_svc_portfc(info):
         "adapter_port_id",
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:
             continue
         if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
-            item_name = "Node %s Slot %s Port %s" % (
+            item_name = "Node {} Slot {} Port {}".format(
                 data["node_id"],
                 data["adapter_location"],
                 data["adapter_port_id"],
@@ -83,7 +83,9 @@ def check_ibm_svc_portfc(item, _no_params, parsed):
     if not (data := parsed.get(item)):
         return
     port_status = data["status"]
-    infotext = "Status: %s, Speed: %s, WWPN: %s" % (port_status, data["port_speed"], data["WWPN"])
+    infotext = "Status: {}, Speed: {}, WWPN: {}".format(
+        port_status, data["port_speed"], data["WWPN"]
+    )
 
     if port_status == "active":
         state = 0
@@ -95,7 +97,7 @@ def check_ibm_svc_portfc(item, _no_params, parsed):
 
 check_info["ibm_svc_portfc"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_portfc,
-    check_function=check_ibm_svc_portfc,
-    discovery_function=inventory_ibm_svc_portfc,
     service_name="FC %s",
+    discovery_function=inventory_ibm_svc_portfc,
+    check_function=check_ibm_svc_portfc,
 )

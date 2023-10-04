@@ -142,12 +142,12 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_solaris_fmadm(info):
-    if len(info) < 4:
+def parse_solaris_fmadm(string_table):
+    if len(string_table) < 4:
         return {}
 
     event = []
-    for entry in ":".join(info[3]).split():
+    for entry in ":".join(string_table[3]).split():
         if entry:
             event.append(entry)
 
@@ -162,7 +162,7 @@ def parse_solaris_fmadm(info):
     }
 
     # Skip header
-    for line in info[4:]:
+    for line in string_table[4:]:
         stripped = [x.strip() for x in line]
         if stripped[0] in ["Problem class", "Fault class"]:
             parsed["problems"].append(":".join(stripped[1:]))
@@ -187,7 +187,7 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
     event = parsed["event"]
     state, state_readable = map_state.get(event["severity"], (3, "unknown"))
-    yield state, "Severity: %s (%s)" % (state_readable, event["time"])
+    yield state, "Severity: {} ({})".format(state_readable, event["time"])
 
     problems = parsed["problems"]
     if problems:
@@ -196,7 +196,7 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
 check_info["solaris_fmadm"] = LegacyCheckDefinition(
     parse_function=parse_solaris_fmadm,
+    service_name="FMD Status",
     discovery_function=inventory_solaris_fmadm,
     check_function=check_solaris_fmadm,
-    service_name="FMD Status",
 )

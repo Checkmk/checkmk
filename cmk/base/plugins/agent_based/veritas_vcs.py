@@ -4,17 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import (
-    Any,
-    Generator,
-    Iterable,
-    List,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-)
+from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 
@@ -121,12 +112,12 @@ CHECK_DEFAULT_PARAMETERS = {
 class Vcs(NamedTuple):
     attr: str
     value: str
-    cluster: Optional[str]
+    cluster: str | None
 
 
-SubSection = MutableMapping[str, List[Vcs]]
+SubSection = MutableMapping[str, list[Vcs]]
 Section = MutableMapping[str, SubSection]
-ClusterSection = Mapping[str, Optional[Section]]
+ClusterSection = Mapping[str, Section | None]
 
 
 class ClusterNodeResults(NamedTuple):
@@ -136,7 +127,7 @@ class ClusterNodeResults(NamedTuple):
     node_summaries: Sequence[str]
 
 
-def parse_veritas_vcs(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_veritas_vcs(string_table: type_defs.StringTable) -> Section | None:
     parsed: Section = {}
 
     for line in string_table:
@@ -212,7 +203,7 @@ def _frozen_state_results(
     )
 
 
-def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> Optional[str]:
+def _cluster_name(list_vcs_tuples: Sequence[Vcs]) -> str | None:
     # get last not None cluster name
     return functools.reduce(lambda x, y: y if y.cluster else x, list_vcs_tuples).cluster
 
@@ -300,7 +291,7 @@ def cluster_check_veritas_vcs_subsection(
 
     yield Result(
         state=cluster_state,
-        notice=", ".join((f'[{n.node_name}]: {", ".join(n.node_summaries)}' for n in node_results)),
+        notice=", ".join(f'[{n.node_name}]: {", ".join(n.node_summaries)}' for n in node_results),
     )
 
     if cluster_name:

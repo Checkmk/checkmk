@@ -28,11 +28,11 @@ def check_ra32e_power(item, params, info):
 
 check_info["ra32e_power"] = LegacyCheckDefinition(
     detect=DETECT_RA32E,
-    discovery_function=inventory_ra32e_power,
-    check_function=check_ra32e_power,
-    service_name="Power Supply",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20916.1.8.1.1.3",
         oids=["1"],
     ),
+    service_name="Power Supply",
+    discovery_function=inventory_ra32e_power,
+    check_function=check_ra32e_power,
 )

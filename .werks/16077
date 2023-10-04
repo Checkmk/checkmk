@@ -1,0 +1,27 @@
+Title: Agent Bakery: Leftover packages of non-agent hosts
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1692626179
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+No agent should be assigned to a host when the <i>Checkmk agent / API integrations</i>
+host property is configured to <i>No API integrations, no Checkmk agent</i>.
+Additionally, whenever a hosts is reconfigured to not being monitored by an agent any longer,
+the agent package must be unassigned from this host on next agent bakery call.
+
+Previously, the agent bakery failed to follow these rules, while a slighly different behavior
+can be observed for different versions:
+
+In Checkmk 2.0 and Checkmk 2.1, leftover assignments to agent packages aren't cleaned up.
+
+In Checkmk 2.1 and Checkmk 2.2, it's possible to assign agent packages to non-agent hosts
+when explicitly called with a host selection.
+This happens when baking agents for exlicit hosts on the commandline, and when adding new
+hosts via Setup, since the agent bakery automatically creates agents for new hosts.
+
+With this Werk, the agent bakery will follow the mentioned desired behavior.
+

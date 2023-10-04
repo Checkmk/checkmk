@@ -5,13 +5,16 @@
 """Checker for incorrect string translation functions."""
 
 import re
+from collections.abc import Sequence
 
 import astroid  # type: ignore[import]
+from astroid import nodes
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
+from pylint.lint.pylinter import PyLinter  # type: ignore[import]
 
 
-def register(linter):
+def register(linter: PyLinter) -> None:
     """Register checkers."""
     linter.register_checker(TranslationStringConstantsChecker(linter))
     linter.register_checker(EscapingProtectionChecker(linter))
@@ -27,7 +30,7 @@ def is_constant_string(first: object) -> bool:
     return isinstance(first, astroid.Const) and isinstance(first.value, str)
 
 
-def parent_is_HTML(node):
+def parent_is_HTML(node: nodes.Call) -> bool:
     if str(node.parent) == "Call()":
         # Case HTML(_("sth"))
         return isinstance(node.parent.func, astroid.Name) and node.parent.func.name == "HTML"
@@ -40,7 +43,7 @@ def parent_is_HTML(node):
     return False
 
 
-def all_tags_are_unescapable(first):
+def all_tags_are_unescapable(first: nodes.NodeNG) -> tuple[bool, Sequence[str]]:
     escapable_tags = "h1|h2|b|tt|i|u|br|nobr|pre|a|sup|p|li|ul|ol".split("|") + ["a href"]
     tags = re.findall("<[^/][^>]*>", first.value)
     tags = [tag.lstrip("<").rstrip(">").split(" ")[0] for tag in tags]
@@ -95,11 +98,12 @@ class TranslationBaseChecker(BaseChecker):
     }
 
     # return true if check worked, else add message and return false
-    def check(self, node):
+    def check(self, node: nodes.Call) -> bool:
         raise NotImplementedError()
 
-    @utils.check_messages(MESSAGE_ID)
-    def visit_call(self, node):
+    # pylint is mostly? untyped, therefore mypy warns about that decorator
+    @utils.check_messages(MESSAGE_ID)  # type: ignore[misc]
+    def visit_call(self, node: nodes.Call) -> None:
         """Called for every function call in the source code."""
 
         if not self.linter.is_message_enabled(self.MESSAGE_ID, line=node.fromlineno):
@@ -146,7 +150,7 @@ class TranslationStringConstantsChecker(TranslationBaseChecker):
         ),
     }
 
-    def check(self, node):
+    def check(self, node: nodes.Call) -> bool:
         first = node.args[0]
         if is_constant_string(first):
             # The first argument is a constant string! This is good!
@@ -183,7 +187,7 @@ class EscapingProtectionChecker(TranslationBaseChecker):
         ),
     }
 
-    def check(self, node):
+    def check(self, node: nodes.Call) -> bool:
         first = node.args[0]
         if is_constant_string(first):
             all_unescapable, tags = all_tags_are_unescapable(first)
@@ -233,7 +237,7 @@ class EscapingChecker(TranslationBaseChecker):
         ),
     }
 
-    def check(self, node):
+    def check(self, node: nodes.Call) -> bool:
         first = node.args[0]
         # The first argument is a constant string! All is well!
         if is_constant_string(first):

@@ -10,8 +10,9 @@
 # ORACLE_SID serial# machine process osuser program last_call_el sql_id
 
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def inventory_oracle_longactivesessions(info):
@@ -36,18 +37,15 @@ def check_oracle_longactivesessions(item, params, info):
             sessioncount += 1
             _sid, sidnr, serial, machine, process, osuser, program, last_call_el, sql_id = line
 
-            longoutput = (
-                "Session (sid,serial,proc) %s %s %s active for %s from %s osuser %s program %s sql_id %s "
-                % (
-                    sidnr,
-                    serial,
-                    process,
-                    get_age_human_readable(int(last_call_el)),
-                    machine,
-                    osuser,
-                    program,
-                    sql_id,
-                )
+            longoutput = "Session (sid,serial,proc) {} {} {} active for {} from {} osuser {} program {} sql_id {} ".format(
+                sidnr,
+                serial,
+                process,
+                get_age_human_readable(int(last_call_el)),
+                machine,
+                osuser,
+                program,
+                sql_id,
             )
 
     if itemfound:
@@ -74,13 +72,13 @@ def check_oracle_longactivesessions(item, params, info):
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("no info from database. Check ORA %s Instance" % item)
+    raise IgnoreResultsError("no info from database. Check ORA %s Instance" % item)
 
 
 check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
-    check_function=check_oracle_longactivesessions,
-    discovery_function=inventory_oracle_longactivesessions,
     service_name="ORA %s Long Active Sessions",
+    discovery_function=inventory_oracle_longactivesessions,
+    check_function=check_oracle_longactivesessions,
     check_ruleset_name="oracle_longactivesessions",
     check_default_parameters={
         "levels": (500, 1000),

@@ -20,12 +20,12 @@ JobCount = collections.namedtuple(  # pylint: disable=collections-namedtuple-cal
 )
 
 
-def parse_splunk_jobs(info):
+def parse_splunk_jobs(string_table):
     parsed = {}
     long_output = ""
     job_count, failed_count, zombie_count = 0, 0, 0
 
-    for job_detail in info:
+    for job_detail in string_table:
         try:
             published, author, app, dispatchstate, iszombie = job_detail
             job_count += 1
@@ -35,7 +35,7 @@ def parse_splunk_jobs(info):
             if iszombie == "True":
                 zombie_count += 1
 
-            long_output += "%s - Author: %s, Application: %s, State: %s, Zombie: %s\n" % (
+            long_output += "{} - Author: {}, Application: {}, State: {}, Zombie: {}\n".format(
                 published,
                 author,
                 app,
@@ -73,8 +73,8 @@ def check_splunk_jobs(_no_item, params, parsed):
 
 check_info["splunk_jobs"] = LegacyCheckDefinition(
     parse_function=parse_splunk_jobs,
-    check_function=check_splunk_jobs,
-    discovery_function=inventory_splunk_jobs,
     service_name="Splunk Jobs",
+    discovery_function=inventory_splunk_jobs,
+    check_function=check_splunk_jobs,
     check_ruleset_name="splunk_jobs",
 )

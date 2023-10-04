@@ -171,15 +171,17 @@ body.main .popup_menu #side_header > span {
   background-size: auto 30px;
 }
 
-#side_fold {
-  margin: $spacing 0;
+#side_fold,
+#saas {
+  padding: $spacing 4px $spacing 0;
   font-size: $font-size-small;
   color: $font-color;
   text-align: center;
   cursor: pointer;
+  border-left: 4px solid $navigation-bg-color;
 
-  &:not(.folded) {
-    color: $font-color-green;
+  &:hover {
+    border-left-color: $success;
   }
 
   img {
@@ -189,11 +191,14 @@ body.main .popup_menu #side_header > span {
       opacity: 1;
     }
   }
+}
 
-  &:not(.folded) img.folded {
-    display: none;
+#side_fold {
+  &:not(.folded) {
+    color: $font-color-green;
   }
 
+  &:not(.folded) img.folded,
   &.folded img:not(.folded) {
     display: none;
   }

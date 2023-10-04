@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
 # .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 # .1.3.6.1.4.1.2620.1.1.7.0 16297
 
 
-def parse_checkpoint_packets(info):
+def parse_checkpoint_packets(string_table):
     parsed = {}
     for key, main_index, sub_index in [
         ("Accepted", 0, 0),
@@ -29,7 +29,7 @@ def parse_checkpoint_packets(info):
         ("EspDecrypted", 1, 1),
     ]:
         try:
-            parsed[key] = int(info[main_index][0][sub_index])
+            parsed[key] = int(string_table[main_index][0][sub_index])
         except (IndexError, ValueError):
             pass
     return parsed
@@ -50,26 +50,21 @@ def check_checkpoint_packets(_no_item, params, parsed):
         else:
             warn, crit = params[key]
 
-        rate = get_rate(key, this_time, value)
-        infotext = "%s: %.1f pkts/s" % (name, rate)
+        rate = get_rate(get_value_store(), key, this_time, value, raise_overflow=True)
+        infotext = f"{name}: {rate:.1f} pkts/s"
         state = 0
         if crit is not None and rate >= crit:
             state = 2
         elif warn is not None and rate >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s pkts/s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit} pkts/s)"
 
         yield state, infotext, [(key, rate, warn, crit, 0)]
 
 
 check_info["checkpoint_packets"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_checkpoint_packets,
-    check_function=check_checkpoint_packets,
-    discovery_function=inventory_checkpoint_packets,
-    service_name="Packet Statistics",
-    check_ruleset_name="checkpoint_packets",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.1",
@@ -80,6 +75,11 @@ check_info["checkpoint_packets"] = LegacyCheckDefinition(
             oids=["5", "6"],
         ),
     ],
+    parse_function=parse_checkpoint_packets,
+    service_name="Packet Statistics",
+    discovery_function=inventory_checkpoint_packets,
+    check_function=check_checkpoint_packets,
+    check_ruleset_name="checkpoint_packets",
     check_default_parameters={
         "accepted": (100000, 200000),
         "rejected": (100000, 200000),

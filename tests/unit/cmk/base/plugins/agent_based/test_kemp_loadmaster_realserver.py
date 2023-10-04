@@ -9,6 +9,7 @@ import cmk.base.plugins.agent_based.kemp_loadmaster_realserver as klr
 import cmk.base.plugins.agent_based.kemp_loadmaster_services as kls
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection
 
 
 @pytest.fixture(name="rs_section")
@@ -26,7 +27,7 @@ def rs_section_fixture() -> klr.RSSection:
 
 
 @pytest.fixture(name="vs_section")
-def vs_section_fixture() -> klr.VSSection:
+def vs_section_fixture() -> VSSection:
     return kls.parse_kemp_loadmaster_services(
         [
             ["name 1", "1", "0", "1"],
@@ -36,7 +37,7 @@ def vs_section_fixture() -> klr.VSSection:
     )
 
 
-def test_discovery(rs_section: klr.RSSection, vs_section: klr.VSSection) -> None:
+def test_discovery(rs_section: klr.RSSection, vs_section: VSSection) -> None:
     assert list(klr.discover_kemp_loadmaster_realserver(rs_section, vs_section)) == [
         Service(item="10.20.30.101"),
         Service(item="10.20.30.102"),
@@ -75,7 +76,7 @@ def test_discovery_with_disabled_services(
 
 
 @pytest.mark.parametrize("item", ["10.20.30.101", "10.20.30.102"])
-def test_check(item: str, rs_section: klr.RSSection, vs_section: klr.VSSection) -> None:
+def test_check(item: str, rs_section: klr.RSSection, vs_section: VSSection) -> None:
     assert list(klr.check_kemp_loadmaster_realserver(item, rs_section, vs_section)) == [
         Result(state=State.OK, summary="name 1: In service"),
         Result(state=State.CRIT, summary="name 2: Out of service"),

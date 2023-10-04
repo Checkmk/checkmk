@@ -53,10 +53,10 @@ def check_msexch_rpcclientaccess(_no_item, params, parsed):
 
 
 check_info["msexch_rpcclientaccess"] = LegacyCheckDefinition(
-    discovery_function=discover_msexch_rpcclientaccess,
-    check_function=check_msexch_rpcclientaccess,
     parse_function=parse_wmi_table,
     service_name="Exchange RPC Client Access",
+    discovery_function=discover_msexch_rpcclientaccess,
+    check_function=check_msexch_rpcclientaccess,
     check_ruleset_name="msx_rpcclientaccess",
     check_default_parameters={
         "latency": (200.0, 250.0),

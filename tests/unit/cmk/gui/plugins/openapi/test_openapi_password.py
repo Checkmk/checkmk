@@ -13,7 +13,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import password_store, version
 
-managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
 
 @managedtest
@@ -309,3 +309,22 @@ def test_password_min_length_update(clients: ClientRegistry) -> None:
 
     resp.assert_status_code(400)
     assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+
+
+@managedtest
+def test_password_identifier_regex(clients: ClientRegistry) -> None:
+    resp = clients.Password.create(
+        ident="abcℕ",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {
+        "ident": [
+            "'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
+        ]
+    }

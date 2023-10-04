@@ -56,7 +56,7 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     app.testing = testing
     # Config needs a request context to work. :(
     # Until this can work, we need to do it at runtime in `FileBasedSession`.
-    # app.config["PERMANENT_SESSION_LIFETIME"] = active_config.user_idle_timeout
+    # app.config["PERMANENT_SESSION_LIFETIME"] = active_config.session_mgmt["user_idle_timeout"]
 
     # NOTE: The ordering of the blueprints is important, due to routing precedence, i.e. Rule
     # instances which are evaluated later but have the same URL will be ignored. The first Rule

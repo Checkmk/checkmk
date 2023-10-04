@@ -29,12 +29,11 @@
 #                           1/2,    => parsed = device phase + 2 banks
 #                           3/0     => parsed = device phase + 3 phases
 
-from typing import Dict, List, Optional, Tuple, Union
 
 from .agent_based_api.v1 import all_of, exists, register, SNMPTree, startswith, type_defs
 
-StatusInfo = Tuple[float, Tuple[int, str]]
-Parsed = Dict[str, Dict[str, Union[float, StatusInfo]]]
+StatusInfo = tuple[float, tuple[int, str]]
+Parsed = dict[str, dict[str, float | StatusInfo]]
 
 STATE_MAP = {
     "1": (0, "load normal"),
@@ -48,7 +47,7 @@ def get_status_info(amperage_str: str, device_state: str) -> StatusInfo:
     return float(amperage_str) / 10, STATE_MAP[device_state]
 
 
-def parse_apc_rackpdu_power(string_table: List[type_defs.StringTable]) -> Optional[Parsed]:
+def parse_apc_rackpdu_power(string_table: list[type_defs.StringTable]) -> Parsed | None:
     if not any(string_table):
         return None
 
@@ -74,7 +73,7 @@ def parse_apc_rackpdu_power(string_table: List[type_defs.StringTable]) -> Option
             continue
 
         parsed.setdefault(
-            "%s %s" % (name_part, num), {"current": get_status_info(amperage_str, device_state)}
+            f"{name_part} {num}", {"current": get_status_info(amperage_str, device_state)}
         )
     return parsed
 

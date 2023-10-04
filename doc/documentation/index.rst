@@ -1,6 +1,15 @@
 Checkmk - Developer documentation
 =================================
 
+Processes
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   processes-index.rst
+
+
 Architecture
 ------------
 

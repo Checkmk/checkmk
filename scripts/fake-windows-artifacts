@@ -16,6 +16,7 @@ touch_and_executable=(
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.exe"
     "${REPO_PATH}/${agents_windows}/check_mk_agent_legacy.msi"
     "${REPO_PATH}/${agents_windows}/OpenHardwareMonitorCLI.exe"
+    "${REPO_PATH}/${agents_windows}/robotmk_ext.exe"
 )
 
 touch_only=(

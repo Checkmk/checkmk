@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as ajax from "ajax";
 import * as hover from "hover";
@@ -12,9 +14,9 @@ type Timestamp = number;
 type Seconds = number;
 type Label = [number, string | null, number];
 type TimeRange = [number, number];
-type TimeSeriesValue = number | null;
+export type TimeSeriesValue = number | null;
 type LazyString = string; // not sure how teal with this for the moment
-type HorizontalRule = [number, string, string, string | LazyString];
+export type HorizontalRule = [number, string, string, string | LazyString];
 type SizePT = number;
 
 interface DefaultGraphRenderOptions {
@@ -57,9 +59,10 @@ interface AjaxContext {
     definition: GraphRecipe;
     data_range: GraphDataRange;
     render_options: GraphRenderOptions;
+    display_id: string;
 }
 
-interface AjaxGraph {
+export interface AjaxGraph {
     html: string;
     graph: GraphArtwork;
     context: AjaxContext;
@@ -69,7 +72,7 @@ interface LayoutedCurveArea {
     type: "area";
     points: [TimeSeriesValue, TimeSeriesValue][];
     //dynamic
-    dont_paint: [number, number];
+    title?: string;
     color: string;
 }
 
@@ -77,11 +80,11 @@ interface LayoutedCurveLine {
     type: "line";
     points: TimeSeriesValue[];
     //dynamic
-    dont_paint: [number, number];
+    title?: string;
     color: string;
 }
 
-type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
+export type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
 
 interface TimeAxis {
     labels: Label[];
@@ -107,7 +110,7 @@ interface VerticalAxis {
 }
 
 //this type is from cmk/gui/plugins/metrics/artwork.py:82
-interface GraphArtwork {
+export interface GraphArtwork {
     //optional properties assigned dynamically in javascript
     id: string;
     canvas_obj: HTMLCanvasElement;
@@ -125,6 +128,7 @@ interface GraphArtwork {
     horizontal_rules: HorizontalRule[];
     vertical_axis: VerticalAxis;
     time_axis: TimeAxis;
+    mark_requested_end_time: boolean;
     //Displayed range
     start_time: Timestamp;
     end_time: Timestamp;
@@ -137,6 +141,9 @@ interface GraphArtwork {
     pin_time: Timestamp | null;
     // Definition itself, for reproducing the graph
     definition: GraphRecipe;
+    // Display id to avoid mixups in get_id_of_graph when rendering the same graph multiple times
+    // in graph collections and dashboards. Often set to the empty string when not needed.
+    display_id: string;
 }
 
 // Styling. Please note that for each visible pixel our canvas
@@ -160,6 +167,7 @@ interface DelayedGraph {
     graph_data_range: GraphDataRange;
     graph_render_options: GraphRenderOptions;
     script_object: HTMLScriptElement;
+    graph_display_id: string;
 }
 
 //#   .-Creation-----------------------------------------------------------.
@@ -185,7 +193,11 @@ function get_id_of_graph(ajax_context: AjaxContext) {
                     g_graphs[graph_id].ajax_context!.definition.specification
                 ) &&
             JSON.stringify(ajax_context.render_options) ==
-                JSON.stringify(g_graphs[graph_id].ajax_context!.render_options)
+                JSON.stringify(
+                    g_graphs[graph_id].ajax_context!.render_options
+                ) &&
+            ajax_context.display_id ==
+                g_graphs[graph_id].ajax_context!.display_id
         ) {
             return graph_id;
         }
@@ -266,7 +278,8 @@ function get_current_script(): HTMLScriptElement {
 export function load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphRenderOptions
+    graph_render_options: GraphRenderOptions,
+    graph_display_id: string
 ) {
     const script_object = get_current_script();
 
@@ -280,6 +293,7 @@ export function load_graph_content(
             graph_data_range: graph_data_range,
             graph_render_options: graph_render_options,
             script_object: script_object,
+            graph_display_id: graph_display_id,
         });
         return;
     } else {
@@ -287,7 +301,8 @@ export function load_graph_content(
             graph_recipe,
             graph_data_range,
             graph_render_options,
-            script_object
+            script_object,
+            graph_display_id
         );
     }
 }
@@ -313,7 +328,8 @@ function do_load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
-    script_object: HTMLScriptElement
+    script_object: HTMLScriptElement,
+    graph_display_id: string
 ) {
     const graph_load_container = script_object.previousSibling as HTMLElement;
     update_graph_load_container(
@@ -329,6 +345,7 @@ function do_load_graph_content(
                 graph_recipe: graph_recipe,
                 graph_data_range: graph_data_range,
                 graph_render_options: graph_render_options,
+                graph_display_id: graph_display_id,
             })
         );
 
@@ -413,7 +430,8 @@ function delayed_graph_renderer() {
                 entry.graph_recipe,
                 entry.graph_data_range,
                 entry.graph_render_options,
-                entry.script_object
+                entry.script_object,
+                entry.graph_display_id
             );
             g_delayed_graphs.splice(i, 1);
         }
@@ -581,8 +599,6 @@ function render_graph(graph: GraphArtwork) {
     for (let i = 0; i < curves.length; i++) {
         let t = graph["start_time"];
         const curve = curves[i];
-        if (curve["dont_paint"]) continue;
-
         const points = curve["points"];
         // the hex color code can have additional opacity information
         // if these are none existing default to 0.3 UX project
@@ -709,7 +725,7 @@ function render_graph(graph: GraphArtwork) {
         }
     }
     // paint forecast graph future start
-    if (graph.definition.is_forecast) {
+    if (graph.mark_requested_end_time) {
         const pin_x = trans_t(graph.requested_end_time);
         if (pin_x >= t_orig) {
             paint_line(
@@ -1041,7 +1057,7 @@ function get_graph_id_of_dom_node(target: HTMLElement) {
     return graph_container.id;
 }
 
-function graph_global_mouse_wheel(event: Event) {
+function graph_global_mouse_wheel(event: Event): boolean | void {
     let obj: HTMLElement | ParentNode | null = event!.target as HTMLElement;
     // prevent page scrolling when making wheelies over graphs
     while (obj instanceof HTMLElement && !obj.className) obj = obj.parentNode;
@@ -1289,7 +1305,7 @@ function set_pin_position(
     event: Event,
     graph: GraphArtwork,
     timestamp: number
-) {
+): boolean | void {
     if (graph.render_options.interaction && graph.render_options.show_pin)
         return update_graph(
             event,
@@ -1517,7 +1533,10 @@ interface GraphHover {
     curve_values: CurveValues[];
 }
 
-function update_graph_hover_popup(event: Event, graph: GraphArtwork) {
+function update_graph_hover_popup(
+    event: Event,
+    graph: GraphArtwork
+): boolean | void {
     if (g_graph_update_in_process || g_graph_in_cooldown_period)
         return utils.prevent_default_events(event);
 
@@ -1563,7 +1582,9 @@ function handle_graph_hover_popup_update(
         popup_data = JSON.parse(ajax_response);
     } catch (e) {
         console.log(e);
-        alert("Failed to parse graph hover update response: " + ajax_response);
+        console.error(
+            "Failed to parse graph hover update response: " + ajax_response
+        );
         g_graph_update_in_process = false;
         return;
     }
@@ -1816,7 +1837,9 @@ function handle_graph_update(
         response = JSON.parse(ajax_response);
     } catch (e) {
         console.log(e);
-        alert("Failed to parse graph update response: " + ajax_response);
+        console.error(
+            "Failed to parse graph update response: " + ajax_response
+        );
         return;
     }
     // Structure of response:

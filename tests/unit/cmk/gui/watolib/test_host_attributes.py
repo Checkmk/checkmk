@@ -6,7 +6,9 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from cmk.utils.version import is_cloud_edition, is_raw_edition
+from tests.testlib.utils import is_cloud_repo, is_enterprise_repo
+
+from tests.unit.cmk.conftest import import_plugins
 
 import cmk.gui.watolib.host_attributes as attrs
 
@@ -284,7 +286,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if is_cloud_edition()
+        if is_cloud_repo()
         else {}
     ),
     **(
@@ -302,7 +304,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if not is_raw_edition()
+        if is_enterprise_repo()
         else {}
     ),
     "tag_snmp_ds": {
@@ -357,6 +359,7 @@ expected_attributes = {
 
 
 @pytest.mark.usefixtures("load_config")
+@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_registered_host_attributes() -> None:
     names = attrs.host_attribute_registry.keys()
     assert sorted(expected_attributes.keys()) == sorted(names)
@@ -531,6 +534,7 @@ def test_host_attribute_topics_for_folders() -> None:
     ],
 )
 @pytest.mark.parametrize("new", [True, False])
+@import_plugins(["cmk.gui.cce.plugins.wato"])
 def test_host_attributes(for_what: str, new: bool) -> None:
     topics = {
         "basic": [
@@ -548,8 +552,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         ],
         "monitoring_agents": [
             "tag_agent",
-            *(("cmk_agent_connection",) if is_cloud_edition() else ()),
-            *(("bake_agent_package",) if not is_raw_edition() else ()),
+            *(("cmk_agent_connection", "bake_agent_package") if is_enterprise_repo() else ()),
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",

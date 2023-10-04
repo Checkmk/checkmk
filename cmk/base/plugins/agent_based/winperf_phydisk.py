@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
+from collections.abc import Mapping, MutableMapping, Sequence
 from enum import IntEnum, StrEnum, unique
-from typing import Any, Final, Mapping, MutableMapping, Optional, Sequence, Union
+from typing import Any, Final
 
 from .agent_based_api.v1 import (
     get_rate,
@@ -103,7 +104,7 @@ _LINE_TO_METRIC: Final = {
     "-26": "average_write_wait",  # 208 Avg. Disc sec/Read
 }
 
-DiskType = dict[str, Union[int, float]]
+DiskType = dict[str, int | float]
 SectionsType = dict[str, DiskType]
 
 _METRIC_DENOM_SUFFIX: Final = "_base"
@@ -135,7 +136,7 @@ class InstancesRowIndex(IntEnum):
     FIRST_DISK = 2
 
 
-def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
+def parse_winperf_phydisk(string_table: type_defs.StringTable) -> diskstat.Section | None:
     if _is_data_absent(string_table):
         return None
     instances = string_table[TableRows.INSTANCES]
@@ -163,7 +164,7 @@ def _create_disk_template(header_row: Sequence[str]) -> DiskType:
     return disk_template
 
 
-def _parse_header(header_row: Sequence[str]) -> tuple[float, Optional[int]]:
+def _parse_header(header_row: Sequence[str]) -> tuple[float, int | None]:
     timestamp = float(header_row[HeaderRowIndex.TIMESTAMP])
     try:
         return timestamp, int(header_row[HeaderRowIndex.FREQUENCY])
@@ -215,7 +216,7 @@ def _is_metric_denom(metric_name: str, *, data_row: Sequence[str]) -> bool:
     )
 
 
-def _get_metric_name(data_row: Sequence[str]) -> Optional[str]:
+def _get_metric_name(data_row: Sequence[str]) -> str | None:
     """Converts numeric value at METRIC_ID offset into check_mk metric name with two exceptions:
     - If index is not known returns None
     - If index is known but name is starting from average and type at METRIC_ID is average_base,
@@ -366,7 +367,7 @@ def check_winperf_phydisk(
 def cluster_check_winperf_phydisk(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[diskstat.Section]],
+    section: Mapping[str, diskstat.Section | None],
 ) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section

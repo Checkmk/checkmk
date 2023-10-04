@@ -10,7 +10,7 @@ import pytest
 from tests.testlib import Check
 
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 pytestmark = pytest.mark.checks
 
@@ -41,7 +41,7 @@ def test_oracle_jobs_discovery_error(info: StringTable) -> None:
 )
 def test_oracle_jobs_check_error(info: StringTable) -> None:
     check = Check("oracle_jobs")
-    with pytest.raises(MKCounterWrapped):
+    with pytest.raises(IgnoreResultsError):
         check.run_check("DB19.SYS.JOB1", {}, info)
 
 

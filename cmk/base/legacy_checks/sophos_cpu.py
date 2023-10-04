@@ -10,9 +10,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.sophos import DETECT_SOPHOS
 
 
-def parse_sophos_cpu(info):
+def parse_sophos_cpu(string_table):
     try:
-        return int(info[0][0])
+        return int(string_table[0][0])
     except (ValueError, IndexError):
         return None
 
@@ -23,13 +23,13 @@ def check_sophos_cpu(item, params, parsed):
 
 check_info["sophos_cpu"] = LegacyCheckDefinition(
     detect=DETECT_SOPHOS,
-    parse_function=parse_sophos_cpu,
-    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
-    check_function=check_sophos_cpu,
-    service_name="CPU usage",
-    check_ruleset_name="sophos_cpu",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.2",
         oids=["1"],
     ),
+    parse_function=parse_sophos_cpu,
+    service_name="CPU usage",
+    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
+    check_function=check_sophos_cpu,
+    check_ruleset_name="sophos_cpu",
 )

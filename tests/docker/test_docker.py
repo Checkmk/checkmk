@@ -17,12 +17,13 @@ import requests
 import requests.exceptions
 from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
+from pytest import LogCaptureFixture
 
 import tests.testlib as testlib
 from tests.testlib.utils import cmk_path
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.version import Edition
+from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
 
 build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
@@ -289,6 +290,12 @@ def _exec_run(
     return exit_code, output.decode("utf-8")
 
 
+def _get_docker_ip(container_name: str) -> str:
+    cmd = f"docker inspect -f '{{{{range .NetworkSettings.Networks}}}}{{{{.IPAddress}}}}{{{{end}}}}' {container_name}"
+    output = subprocess.check_output(cmd, shell=True).decode("utf-8").strip() or "127.0.0.1"
+    return output
+
+
 def test_start_simple(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
@@ -399,33 +406,49 @@ def test_start_with_custom_command(
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: CMKVersion,
+    caplog: LogCaptureFixture,
 ) -> None:
-    package_path = Path(build_path, _package_name(version))
-    package_path.write_bytes(b"")
-    with pytest.raises(docker.errors.BuildError):
-        _build(request, client, version, prepare_package=False)
-    os.unlink(str(package_path))
-    _prepare_package(version)
+    pkg_name = _package_name(version)
+    pkg_path = Path(build_path, pkg_name)
+    pkg_path_sav = Path(build_path, f"{pkg_name}.sav")
+    try:
+        os.rename(pkg_path, pkg_path_sav)
+        pkg_path.write_bytes(b"")
+        with pytest.raises(docker.errors.BuildError):
+            caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
+            _build(request, client, version, prepare_package=False)
+        os.unlink(pkg_path)
+        _prepare_package(version)
+    finally:
+        try:
+            os.unlink(pkg_path)
+        except FileNotFoundError:
+            pass
+        os.rename(pkg_path_sav, pkg_path)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: CMKVersion,
+    caplog: LogCaptureFixture,
 ) -> None:
-    pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
-    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
+    key_name = "Check_MK-pubkey.gpg"
+    key_path = Path(build_path, key_name)
+    key_path_sav = Path(build_path, f"{key_name}.sav")
     try:
-        os.rename(pkg_path, pkg_path_sav)
-
-        with open(pkg_path, "w") as f:
-            f.write("")
-
+        os.rename(key_path, key_path_sav)
+        key_path.write_text("")
         with pytest.raises(docker.errors.BuildError):
+            caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             _build(request, client, version)
     finally:
-        os.unlink(pkg_path)
-        os.rename(pkg_path_sav, pkg_path)
+        os.unlink(key_path)
+        os.rename(key_path_sav, key_path)
 
 
 def test_start_enable_mail(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
@@ -581,6 +604,9 @@ def test_redirects_work_with_custom_port(
     assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
+@pytest.mark.skipif(
+    build_version().is_saas_edition(), reason="Saas edition replaced the login screen"
+)
 def test_http_access_login_screen(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
@@ -602,15 +628,34 @@ def test_http_access_login_screen(
     )
 
 
+@pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
+def test_http_access_login_screen_saas(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
+    c = _start(request, client)
+
+    ip = _get_docker_ip(c.name)
+
+    resp = requests.get(
+        f"http://{ip}:5000/cmk/check_mk/login.py?_origtarget=index.py",
+        allow_redirects=False,
+        timeout=10,
+    )
+    # saas login redirects to external service
+    assert resp.status_code == 302
+    assert "cognito_sso.py" in resp.headers["location"]
+
+
 def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
     c = _start(request, client)
     # Is the agent installed and executable?
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
-    # Check whether or not the agent port is opened
+    # Check whether the agent port is opened
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
+@pytest.mark.skipif(build_version().is_saas_edition(), reason="Temporily disabled due to CMK-14454")
 def test_update(
     request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
 ) -> None:
@@ -619,9 +664,38 @@ def test_update(
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = CMKVersion(
-        version_spec="2.1.0b3",
-        branch="2.1.0",
+        version_spec="2.2.0p8",
+        branch="2.2.0",
         edition=Edition.CRE,
+    )
+
+    assert isinstance(
+        versions_compatible(
+            Version.from_str(old_version.version), Version.from_str(version.version)
+        ),
+        VersionsCompatible,
+    )
+    # Currently, in the master branch, we can't derive the future major version from the daily
+    # build version. So we hack around a bit to gather it from the git. In the future we plan to
+    # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
+    # additional check can be removed.
+    branch_version = subprocess.check_output(
+        [
+            "make",
+            "-s",
+            "-C",
+            str(testlib.repo_path()),
+            "-f",
+            "defines.make",
+            "print-BRANCH_VERSION",
+        ],
+        encoding="utf-8",
+    ).rstrip()
+    assert isinstance(
+        versions_compatible(
+            Version.from_str(old_version.version), Version.from_str(branch_version)
+        ),
+        VersionsCompatible,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state

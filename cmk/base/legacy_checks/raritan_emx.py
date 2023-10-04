@@ -15,7 +15,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 
-def parse_raritan_emx(info):
+def parse_raritan_emx(string_table):
     raritan_type_map = {
         "0": ("temp", "Air"),
         "1": ("temp", "Water"),
@@ -24,14 +24,14 @@ def parse_raritan_emx(info):
         "4": ("valve", ""),
     }
     parsed = {}
-    for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in info:
+    for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in string_table:
         rack_type, rack_type_readable = raritan_type_map[sensor_number]
 
         extra_name = ""
         if rack_type_readable != "":
             extra_name += " " + rack_type_readable
 
-        rack_name = ("Rack %s%s %s" % (rack_id, extra_name, rack_name)).replace("DC", "").strip()
+        rack_name = (f"Rack {rack_id}{extra_name} {rack_name}").replace("DC", "").strip()
 
         if rack_type in ["binary", ""]:
             rack_value = None
@@ -103,14 +103,14 @@ def check_raritan_emx_temp(item, params, parsed):
 
 check_info["raritan_emx"] = LegacyCheckDefinition(
     detect=any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8")),
-    parse_function=parse_raritan_emx,
-    discovery_function=inventory_raritan_emx_temp,
-    check_function=check_raritan_emx_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.9",
         oids=["1.4.1.1.1", "1.4.1.1.4", "1.4.1.1.2", "2.1.1.3", "1.4.1.1.5", "2.1.1.2"],
     ),
+    parse_function=parse_raritan_emx,
+    service_name="Temperature %s",
+    discovery_function=inventory_raritan_emx_temp,
+    check_function=check_raritan_emx_temp,
     check_ruleset_name="temperature",
 )
 
@@ -135,9 +135,10 @@ def check_raritan_emx_fan(item, _no_params, parsed):
 
 
 check_info["raritan_emx.fan"] = LegacyCheckDefinition(
+    service_name="Fan %s",
+    sections=["raritan_emx"],
     discovery_function=lambda parsed: inventory_raritan_emx(parsed, "fanspeed"),
     check_function=check_raritan_emx_fan,
-    service_name="Fan %s",
 )
 
 # .
@@ -151,7 +152,8 @@ check_info["raritan_emx.fan"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 check_info["raritan_emx.binary"] = LegacyCheckDefinition(
+    service_name="Door %s",
+    sections=["raritan_emx"],
     discovery_function=lambda parsed: inventory_raritan_emx(parsed, "binary"),
     check_function=check_raritan_sensors_binary,
-    service_name="Door %s",
 )

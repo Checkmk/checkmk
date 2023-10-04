@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
-def parse_tcw241_digital(info):
+def parse_tcw241_digital(string_table):
     """
-    parse info data and create list of namedtuples for 4 digital sensors.
+    parse string_table data and create list of namedtuples for 4 digital sensors.
 
-    expected info structure:
+    expected string_table structure:
         list of digital sensor descriptions and states:
             [description1, description2, description3, description4]
             [input state1, input state2, input state3, input state4]
@@ -25,11 +25,11 @@ def parse_tcw241_digital(info):
             4: { description4: state4 }
         }
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: list of namedtuples for digital sensors
     """
     try:
-        descriptions, states = info[0][0], info[1][0]
+        descriptions, states = string_table[0][0], string_table[1][0]
     except IndexError:
         return {}
 
@@ -42,8 +42,7 @@ def parse_tcw241_digital(info):
     return info_dict
 
 
-@get_parsed_item_data
-def check_tcw241_digital(item, params, info_dict):
+def check_tcw241_digital(item, params, parsed):
     """
     Check sensor if it is open or closed
 
@@ -52,18 +51,20 @@ def check_tcw241_digital(item, params, info_dict):
     :param info_dict: dictionary with digital sensor description and state (open/close)
     :return: status
     """
-    return 0 if info_dict.get("state") == "open" else 2, "[%s] is %s" % (
+    if not (info_dict := parsed.get(item)):
+        return
+    yield 0 if info_dict.get("state") == "open" else 2, "[{}] is {}".format(
         info_dict.get("description"),
         info_dict.get("state"),
     )
 
 
+def discover_teracom_tcw241_digital(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["teracom_tcw241_digital"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
-    parse_function=parse_tcw241_digital,
-    check_function=check_tcw241_digital,
-    discovery_function=discover(),
-    service_name="Digital Sensor %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.38783.3.2.2.3",
@@ -74,4 +75,8 @@ check_info["teracom_tcw241_digital"] = LegacyCheckDefinition(
             oids=["1.0", "2.0", "3.0", "4.0"],
         ),
     ],
+    parse_function=parse_tcw241_digital,
+    service_name="Digital Sensor %s",
+    discovery_function=discover_teracom_tcw241_digital,
+    check_function=check_tcw241_digital,
 )

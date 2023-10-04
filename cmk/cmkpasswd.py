@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from __future__ import annotations
+
 import argparse
 import sys
 from collections.abc import Callable, Sequence
@@ -15,7 +17,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.paths import htpasswd_file
 from cmk.utils.store.htpasswd import Htpasswd
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 HTPASSWD_FILE = Path(htpasswd_file)
 

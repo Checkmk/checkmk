@@ -63,20 +63,17 @@ def check_strem1_sensors(item, params, info):
 
 check_info["strem1_sensors"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "Sensatronics EM1"),
-    check_function=check_strem1_sensors,
-    discovery_function=inventory_strem1_sensors,
-    service_name="Sensor - %s",
-    # 1,  # SENSATRONICS-EM1::group1Name
-    # 2,  # SENSATRONICS-EM1::group1TempName
-    # 3,  # SENSATRONICS-EM1::group1TempDataStr
-    # 4,  # SENSATRONICS-EM1::group1TempDataInt
-    # 5,  # SENSATRONICS-EM1::group1HumidName
-    # 6,  # group1HumidDataStr
-    # 7,  # group1HumidDataInt
-    # 8,  # group1WetName
-    # 9,  # group1WetDataStr
-    # 10, # group1WetDataInt
     fetch=[
+        # 1,  # SENSATRONICS-EM1::group1Name
+        # 2,  # SENSATRONICS-EM1::group1TempName
+        # 3,  # SENSATRONICS-EM1::group1TempDataStr
+        # 4,  # SENSATRONICS-EM1::group1TempDataInt
+        # 5,  # SENSATRONICS-EM1::group1HumidName
+        # 6,  # group1HumidDataStr
+        # 7,  # group1HumidDataInt
+        # 8,  # group1WetName
+        # 9,  # group1WetDataStr
+        # 10, # group1WetDataInt,
         SNMPTree(
             base=".1.3.6.1.4.1.16174.1.1.3.2.3",
             oids=["1"],
@@ -86,4 +83,7 @@ check_info["strem1_sensors"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "4"],
         ),
     ],
+    service_name="Sensor - %s",
+    discovery_function=inventory_strem1_sensors,
+    check_function=check_strem1_sensors,
 )

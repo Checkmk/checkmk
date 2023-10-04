@@ -5,7 +5,7 @@
 
 import sys
 from collections.abc import Mapping
-from typing import Any, List, NamedTuple
+from typing import Any, NamedTuple
 
 from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
 
@@ -34,7 +34,7 @@ class UPSBattery(NamedTuple):
 UPSBatterySection = UPSBattery | None
 
 
-def parse_ups_modulys_battery(string_table: List[StringTable]) -> UPSBatterySection:
+def parse_ups_modulys_battery(string_table: list[StringTable]) -> UPSBatterySection:
     try:
         raw_health, raw_uptime, raw_remaining_time, raw_capacity, raw_temperature = string_table[0][
             0

@@ -6,13 +6,9 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import (
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_bloat>>>
@@ -46,7 +42,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     table_perc_max = None
     table_abs_max = None
@@ -80,23 +76,23 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             if "%s_bloat_perc" % what in params:
                 warn, crit = params["%s_bloat_perc" % what]
                 if bloat >= crit:
-                    yield 2, "%s %s bloat: %s%% (too high)" % (line["tablename"], what, bloat)
+                    yield 2, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
                     show_levels = True
                 elif bloat >= warn:
-                    yield 1, "%s %s bloat: %s%% (too high)" % (line["tablename"], what, bloat)
+                    yield 1, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
                     show_levels = True
 
             if "%s_bloat_abs" % what in params:
                 warn, crit = params["%s_bloat_abs" % what]
                 if wasted >= crit:
-                    yield 2, "%s wasted %s bytes: %s (too high)" % (
+                    yield 2, "{} wasted {} bytes: {} (too high)".format(
                         line["tablename"],
                         what,
                         get_bytes_human_readable(wasted),
                     )
                     show_levels = True
                 elif wasted >= warn:
-                    yield 1, "%s wasted %s bytes: %s (too high)" % (
+                    yield 1, "{} wasted {} bytes: {} (too high)".format(
                         line["tablename"],
                         what,
                         get_bytes_human_readable(wasted),
@@ -127,12 +123,12 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             ("table", table_perc_max, table_abs_max),
             ("index", index_perc_max, index_abs_max),
         ]:
-            yield 0, "Maximum %s bloat at %s: %s" % (
+            yield 0, "Maximum {} bloat at {}: {}".format(
                 what,
                 perc_max["tablename"],
-                get_percent_human_readable(float(perc_max["%sbloat" % what[0]])),
+                render.percent(float(perc_max["%sbloat" % what[0]])),
             )
-            yield 0, "Maximum wasted %sspace at %s: %s" % (
+            yield 0, "Maximum wasted {}space at {}: {}".format(
                 what,
                 abs_max["tablename"],
                 get_bytes_human_readable(
@@ -152,9 +148,9 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
 
 check_info["postgres_bloat"] = LegacyCheckDefinition(
     parse_function=postgres.parse_dbs,
-    check_function=check_postgres_bloat,
-    discovery_function=inventory_postgres_bloat,
     service_name="PostgreSQL Bloat %s",
+    discovery_function=inventory_postgres_bloat,
+    check_function=check_postgres_bloat,
     check_ruleset_name="db_bloat",
     check_default_parameters={
         "table_bloat_perc": (180.0, 200.0),  # WARN at 180%, CRIT at 200%

@@ -22,6 +22,7 @@ from cmk.utils.store._file import (
     DimSerializer,
     ObjectStore,
     PickleSerializer,
+    PydanticStore,
     Serializer,
     TextSerializer,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "ObjectStore",
     "PickleSerializer",
     "Serializer",
+    "PydanticStore",
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",
@@ -127,7 +129,7 @@ def load_mk_file(
         acquire_lock(path)
 
     try:
-        exec(path.read_bytes(), globals(), default)
+        exec(path.read_bytes(), globals(), default)  # nosec B102 # BNS:aee528
     except FileNotFoundError:
         pass
     except (MKTerminate, MKTimeout):
@@ -206,6 +208,21 @@ def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = Fa
 
 def save_object_to_file(path: Path | str, data: Any, pretty: bool = False) -> None:
     _write(Path(path), DimSerializer(pretty=pretty), data)
+
+
+# A simple wrapper for cases where you want to store a python data with pickle
+# that is then read by load_object_from_pickle_file() again
+def save_object_to_pickle_file(path: Path | str, data: Any) -> None:
+    serializer = PickleSerializer[Any]()
+    # Normally the file is already locked (when data has been loaded before with lock=True),
+    # but lock it just to be sure we have the lock on the file.
+    #
+    # NOTE:
+    #  * this creates the file with 0 bytes in case it is missing
+    #  * this will leave the file behind unlocked, regardless of it being locked before or
+    #    not!
+    with locked(path):
+        ObjectStore(Path(path), serializer=serializer).write_obj(data)
 
 
 def save_text_to_file(path: Path | str, content: str) -> None:

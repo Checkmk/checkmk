@@ -1,0 +1,18 @@
+Title: mk_mysql: Make Checkmk the sole provider of mysql configuration
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1686151098
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Currently, the configuration used to access mysql when using the mk_mysql agent plugin can come from different sources, depending on what option files exist on the remote server.
+This means that a configuration provided by the agent rule "MySQL Databases" can be overridden by an existing option file that comes first in the file processing order.
+
+This werk changes this to explicitly use the Checkmk configuration in $MK_CONFDIR/mysql.cfg.
+
+If you have been using other configuration files, you will need to set up your access in the "MySQL Databases" rule.
+
+

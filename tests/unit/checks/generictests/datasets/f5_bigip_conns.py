@@ -7,6 +7,15 @@
 # mypy: disable-error-code=var-annotated
 checkname = "f5_bigip_conns"
 
+mock_item_state = {
+    "": {
+        "native" : (0, 23933),
+        "compat" : (0, 0),
+        "stathttpreqs": (0, 2166),
+    },
+}
+
+
 info = [["32", "1", "23933", "0", "2166"]]
 
 discovery = {"": [(None, {})]}

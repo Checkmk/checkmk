@@ -54,7 +54,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
-def parse_raritan_px_sensors(info):
+def parse_raritan_px_sensors(string_table):
     pre_parsed = []
     for (
         sensor_id,
@@ -68,7 +68,7 @@ def parse_raritan_px_sensors(info):
         sensor_lower_warn_str,
         sensor_upper_crit_str,
         sensor_upper_warn_str,
-    ) in info:
+    ) in string_table:
         sensor_name = (
             sensor_name.replace("Temperature", "")
             .replace("Humidity", "")
@@ -116,14 +116,14 @@ def parse_raritan_px_sensors(info):
 
 check_info["raritan_px_sensors"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
-    parse_function=parse_raritan_px_sensors,
-    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
-    check_function=check_raritan_sensors_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.4.3.3.1",
         oids=["1", "4", "2", "40", "16", "17", "41", "31", "32", "33", "34"],
     ),
+    parse_function=parse_raritan_px_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
+    check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
 )
 
@@ -138,9 +138,10 @@ check_info["raritan_px_sensors"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
+    sections=["raritan_px_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
     check_function=check_raritan_sensors,
-    service_name="Humidity %s",
 )
 
 # .
@@ -154,7 +155,8 @@ check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 check_info["raritan_px_sensors.binary"] = LegacyCheckDefinition(
+    service_name="Contact %s",
+    sections=["raritan_px_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "binary"),
     check_function=check_raritan_sensors_binary,
-    service_name="Contact %s",
 )

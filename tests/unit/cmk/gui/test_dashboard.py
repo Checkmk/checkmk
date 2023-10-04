@@ -9,10 +9,11 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.dashboard import DashboardConfig, Dashlet, dashlet_registry, DashletConfig
+from cmk.gui.dashboard import DashboardConfig, dashlet_registry, DashletConfig
+from cmk.gui.dashboard.dashlet.base import Dashlet
 from cmk.gui.htmllib.html import html
 
 
@@ -66,7 +67,7 @@ def test_dashlet_registry_plugins() -> None:
         "snapin",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_plugins += [
             "alerts_bar_chart",
             "alert_overview",
@@ -108,7 +109,7 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("linked_view", False),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
             ("custom_graph", 60),
             ("combined_graph", 60),
@@ -162,10 +163,10 @@ def test_dashlet_refresh_intervals(
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
     if type_name in ["pnpgraph", "custom_graph"]:
-        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s, c: ("template", {}))
+        monkeypatch.setattr(dashlet_type, "graph_specification", lambda s, c: None)
         monkeypatch.setattr(
-            "cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
-            lambda g, d: [{"title": "1"}],
+            "cmk.gui.graphing._graph_recipe_builder.build_graph_recipes",
+            lambda g: [{"title": "1"}],
         )
 
     monkeypatch.setattr(Dashlet, "_get_context", lambda s: {})

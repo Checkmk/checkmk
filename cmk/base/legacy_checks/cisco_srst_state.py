@@ -34,11 +34,11 @@ check_info["cisco_srst_state"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), equals(".1.3.6.1.4.1.9.9.441.1.2.1.0", "1")
     ),
-    discovery_function=inventory_cisco_srst_state,
-    check_function=check_cisco_srst_state,
-    service_name="SRST State",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.441.1.3",
         oids=["1", "4"],
     ),
+    service_name="SRST State",
+    discovery_function=inventory_cisco_srst_state,
+    check_function=check_cisco_srst_state,
 )

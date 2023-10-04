@@ -35,19 +35,17 @@ def check_netapp_vfiler(item, _no_params, info):
     return (3, "vFiler not found in SNMP output")
 
 
-# get the vfName and vfState from the vfEntry table
-
 check_info["netapp_vfiler"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
     ),
-    check_function=check_netapp_vfiler,
-    discovery_function=inventory_netapp_vfiler,
-    service_name="vFiler Status %s",
     # get the vfName and vfState from the vfEntry table
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.789.1.16.3.1",
         oids=["2", "9"],
     ),
+    service_name="vFiler Status %s",
+    discovery_function=inventory_netapp_vfiler,
+    check_function=check_netapp_vfiler,
 )

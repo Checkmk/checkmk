@@ -4,15 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_poseidon_inputs(info):
+def parse_poseidon_inputs(string_table):
     parsed = {}
-    if info:
-        for line_number, line in enumerate(info, 1):
+    if string_table:
+        for line_number, line in enumerate(string_table, 1):
             input_value, input_name, input_alarm_setup, input_alarm_state = line
             if input_name == "":
                 input_name = "Eingang %d" % line_number
@@ -37,12 +37,13 @@ def parse_poseidon_inputs(info):
     return None
 
 
-@get_parsed_item_data
-def check_poseidon_inputs(item, params, data):
+def check_poseidon_inputs(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     alarm_setup = {0: "inactive", 1: "activeOff", 2: "activeOn", 3: "unkown"}
     input_values = {0: "off", 1: "on", 3: "unkown"}
     alarm_states = {0: "normal", 1: "alarm", 3: "unkown"}
-    txt = "%s: AlarmSetup: %s" % (item, alarm_setup[data.get("input_alarm_setup", 3)])
+    txt = "{}: AlarmSetup: {}".format(item, alarm_setup[data.get("input_alarm_setup", 3)])
     yield 0, txt
 
     state = data.get("input_alarm_state", 3)
@@ -54,14 +55,18 @@ def check_poseidon_inputs(item, params, data):
     yield 0, "Values %s" % input_values.get(data.get("input_value", 3), "unknown")
 
 
+def discover_poseidon_inputs(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["poseidon_inputs"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
-    parse_function=parse_poseidon_inputs,
-    check_function=check_poseidon_inputs,
-    discovery_function=discover(),
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.3.3.1.1",
         oids=["2", "3", "4", "5"],
     ),
+    parse_function=parse_poseidon_inputs,
+    service_name="%s",
+    discovery_function=discover_poseidon_inputs,
+    check_function=check_poseidon_inputs,
 )

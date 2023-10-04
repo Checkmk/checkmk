@@ -5,10 +5,13 @@
 
 import ipaddress
 from collections.abc import Iterable
-from typing import cast, Literal, TypedDict
+from typing import cast, Literal, NotRequired
 
+from typing_extensions import TypedDict
+
+from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.servicename import ServiceName
 
 
 # This can probably improved further by making it total and removing the None,
@@ -22,29 +25,29 @@ class TranslationOptions(TypedDict, total=False):
 
 # Similar to TranslationOptions, but not the same. This aims to
 # cover exactly the structure that is configured with the valuespec.
-class TranslationOptionsSpec(TypedDict, total=False):
+class TranslationOptionsSpec(TypedDict):
     case: Literal["lower", "upper"] | None
-    drop_domain: bool
+    drop_domain: NotRequired[bool]
     mapping: list[tuple[str, str]]
     regex: list[tuple[str, str]]
 
 
 def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:
-    return HostName(_translate(translation, str(hostname)))
+    return HostName(_translate(translation, hostname))
 
 
 def translate_service_description(
     translation: TranslationOptions, service_description: str
 ) -> ServiceName:
-    if service_description.strip() in [
+    if service_description.strip() in {
         "Check_MK",
         "Check_MK Agent",
         "Check_MK Discovery",
         "Check_MK inventory",
         "Check_MK HW/SW Inventory",
-    ]:
+    }:
         return service_description.strip()
-    return ServiceName(_translate(translation, str(service_description)))
+    return ServiceName(_translate(translation, service_description))
 
 
 def _translate(translation: TranslationOptions, name: str) -> str:
@@ -72,9 +75,7 @@ def _translate(translation: TranslationOptions, name: str) -> str:
         if not expr.endswith("$"):
             expr += "$"
         rcomp = regex(expr)
-        # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(name)
-        if mo:
+        if mo := rcomp.match(name):
             name = subst
             for nr, text in enumerate(mo.groups("")):
                 name = name.replace("\\%d" % (nr + 1), text)

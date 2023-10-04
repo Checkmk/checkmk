@@ -29,11 +29,11 @@ def check_blade_mediatray(_no_item, _no_params, info):
 
 check_info["blade_mediatray"] = LegacyCheckDefinition(
     detect=DETECT_BLADE,
-    check_function=check_blade_mediatray,
-    discovery_function=inventory_blade_mediatray,
-    service_name="Media tray",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2.5.2",
         oids=["74", "75"],
     ),
+    service_name="Media tray",
+    discovery_function=inventory_blade_mediatray,
+    check_function=check_blade_mediatray,
 )

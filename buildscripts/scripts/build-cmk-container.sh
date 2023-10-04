@@ -82,7 +82,7 @@ build_image() {
     cp "${SOURCE_PATH}/${PKG_FILE}" "$DOCKER_PATH/"
 
     log "Building container image"
-    make -C "$DOCKER_PATH" VERSION_TAG="${VERSION_TAG}" "$DOCKER_IMAGE_ARCHIVE"
+    make -C "$DOCKER_PATH" VERSION_TAG="${VERSION_TAG}" BUILD_IMAGE_WITHOUT_CACHE="${BUILD_IMAGE_WITHOUT_CACHE}" "$DOCKER_IMAGE_ARCHIVE"
 
     log "Verschiebe Image-Tarball..."
     mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "${SOURCE_PATH}/"
@@ -94,9 +94,9 @@ push_image() {
     docker_push "${REGISTRY}" "${NAMESPACE}"
 }
 
-if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ]; then
-    echo "Aufrufen: build-cmk-container.sh [BRANCH] [EDITION] [VERSION] [SOURCE_PATH] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
-    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 false false push"
+if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ] || [ "$8" = "" ]; then
+    echo "Aufrufen: build-cmk-container.sh [BRANCH] [EDITION] [VERSION] [SOURCE_PATH] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [BUILD_IMAGE_WITHOUT_CACHE] [ACTION]"
+    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 false false false push"
     echo
     exit 1
 fi
@@ -107,7 +107,8 @@ VERSION=$3
 SOURCE_PATH=$4
 SET_LATEST_TAG=$5
 SET_BRANCH_LATEST_TAG=$6
-ACTION=$7
+BUILD_IMAGE_WITHOUT_CACHE=$7
+ACTION=$8
 
 VERSION_TAG=$(basename "${SOURCE_PATH}")
 

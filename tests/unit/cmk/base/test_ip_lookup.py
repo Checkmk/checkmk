@@ -13,8 +13,10 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.caching import cache_manager
+from cmk.utils.exceptions import MKIPAddressLookupError
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -33,7 +35,7 @@ _PatchMapping = Mapping[ip_lookup.IPLookupCacheId, str | None]
 
 
 def patch_config_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:
-    monkeypatch.setattr(ip_lookup._config_cache, "get", lambda _x: cache)
+    monkeypatch.setattr(cache_manager, "obtain_cache", lambda _x: cache)
 
 
 def patch_persisted_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:
@@ -205,7 +207,7 @@ def test_cached_dns_lookup_raises_once(monkeypatch: MonkeyPatch) -> None:
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(monkeypatch, {})
 
-    with pytest.raises(ip_lookup.MKIPAddressLookupError):
+    with pytest.raises(MKIPAddressLookupError):
         _ = ip_lookup.cached_dns_lookup(
             HostName("test_host"),
             family=socket.AF_INET,
@@ -252,11 +254,7 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
-    from cmk.utils.caching import config_cache as _config_cache
-    from cmk.utils.caching import runtime_cache as _runtime_cache
-
-    _config_cache.clear()
-    _runtime_cache.clear()
+    cache_manager.clear()
 
 
 class TestIPLookupCacheSerialzer:
@@ -396,12 +394,11 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("dual"), tags={TagGroupID("address_family"): TagID("ip-v4v6")})
     ts.apply(monkeypatch)
 
-    config_cache = config.get_config_cache()
     assert not ip_lookup_cache()
 
     result = ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
+            ts.config_cache.ip_lookup_config(hn) for hn in ts.config_cache.all_active_hosts()
         ),
         configured_ipv4_addresses={},
         configured_ipv6_addresses={},
@@ -516,35 +513,42 @@ def test_lookup_mgmt_board_ip_address_dual_host(
 
 
 @pytest.mark.parametrize(
-    "tags, family",
+    "tags",
     [
-        ({}, socket.AF_INET),
-        (
-            {
-                TagGroupID("address_family"): TagID("ip-v4-only"),
-            },
-            socket.AF_INET,
-        ),
-        (
-            {
-                TagGroupID("address_family"): TagID("ip-v6-only"),
-            },
-            socket.AF_INET6,
-        ),
-        (
-            {
-                TagGroupID("address_family"): TagID("ip-v4v6"),
-            },
-            socket.AF_INET,
-        ),
+        {},
+        {TagGroupID("address_family"): TagID("ip-v4-only")},
+        {TagGroupID("address_family"): TagID("ip-v6-only")},
+        {TagGroupID("address_family"): TagID("ip-v4v6")},
     ],
 )
-def test_lookup_mgmt_board_ip_address_unresolveable(
-    monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID], family: socket.AddressFamily
+def test_lookup_mgmt_board_ip_address_unresolvable(
+    monkeypatch: MonkeyPatch, tags: dict[TagGroupID, TagID]
 ) -> None:
     hostname = HostName("unresolveable-hostname")
     ts = Scenario()
     ts.add_host(hostname, tags=tags)
 
     config_cache = ts.apply(monkeypatch)
+    assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None
+
+
+def test_lookup_mgmt_board_ip_address_unresolvable_2(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def fake_lookup_ip_address(*_a, **_kw):
+        raise MKIPAddressLookupError("Failed to ...")
+
+    hostname = HostName("hostname")
+    ts = Scenario()
+    ts.add_host(hostname)
+    config_cache = ts.apply(monkeypatch)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
+    monkeypatch.setattr(
+        config,
+        "host_attributes",
+        {
+            "hostname": {"management_address": "lolo"},
+        },
+    )
+
     assert config.lookup_mgmt_board_ip_address(config_cache, hostname) is None

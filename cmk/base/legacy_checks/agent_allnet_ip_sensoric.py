@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.config import special_agent_info
 
 
 def agent_allnet_ip_sensoric_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     return [
         *(["--timeout", "%d" % params["timeout"]] if "timeout" in params else []),

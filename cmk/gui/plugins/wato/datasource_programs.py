@@ -6,8 +6,9 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsCustom
-from cmk.gui.plugins.wato.utils import HostRulespec, monitoring_macro_help, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import TextInput
+from cmk.gui.wato import monitoring_macro_help
 
 
 def _valuespec_datasource_programs():

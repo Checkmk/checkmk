@@ -8,19 +8,18 @@ from cmk.utils.render import SecondsRenderer
 
 import cmk.gui.utils as utils
 from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.type_defs import Perfdata, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from .utils import (
     LegacyPerfometerResult,
-    Perfdata,
     perfometer_linear,
     perfometer_logarithmic,
     perfometer_logarithmic_dual,
     perfometer_logarithmic_dual_independent,
     perfometers,
     render_perfometer,
-    Row,
 )
 
 

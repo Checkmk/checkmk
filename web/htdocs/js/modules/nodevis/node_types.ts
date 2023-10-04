@@ -1,26 +1,39 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 import * as d3 from "d3";
 import {
     AbstractGUINode,
     BasicQuickinfo,
     node_type_class_registry,
 } from "nodevis/node_utils";
-import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
+import {
+    ContextMenuElement,
+    d3SelectionG,
+    NodevisNode,
+    NodevisWorld,
+} from "nodevis/type_defs";
 import {SearchFilters, TypeWithName} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {
-    static class_name = "topology";
-
-    constructor(world: NodevisWorld, node) {
+    constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 9;
         this._provides_external_quickinfo_data = true;
+    }
+
+    override class_name(): string {
+        return "topology";
     }
 
     static id() {
         return "topology";
     }
 
-    render_object() {
+    override render_object() {
         AbstractGUINode.prototype.render_object.call(this);
 
         if (this.node.data.has_no_parents)
@@ -44,7 +57,7 @@ export class TopologyNode extends AbstractGUINode {
         this.update_growth_indicators();
     }
 
-    update_node_data(node, selection) {
+    override update_node_data(node: NodevisNode, selection: d3SelectionG) {
         AbstractGUINode.prototype.update_node_data.call(this, node, selection);
         this.update_growth_indicators();
     }
@@ -117,7 +130,7 @@ export class TopologyNode extends AbstractGUINode {
             );
     }
 
-    _fetch_external_quickinfo() {
+    override _fetch_external_quickinfo() {
         this._quickinfo_fetch_in_progress = true;
         const view_url =
             "view.py?view_name=topology_hover_host&display_options=I&host=" +
@@ -127,7 +140,7 @@ export class TopologyNode extends AbstractGUINode {
         );
     }
 
-    get_context_menu_elements() {
+    override get_context_menu_elements() {
         let elements =
             AbstractGUINode.prototype.get_context_menu_elements.call(this);
         elements = elements.concat(this._get_topology_menu_elements());
@@ -146,7 +159,10 @@ export class TopologyNode extends AbstractGUINode {
                 const nodevis_node =
                     this._world.nodes_layer.get_nodevis_node_by_id(node_id);
                 if (!nodevis_node) return;
-                _toggle_root_node(nodevis_node);
+                if (!_toggle_root_node(nodevis_node))
+                    new SearchFilters().remove_hosts_from_host_regex(
+                        new Set([nodevis_node.data.name])
+                    );
                 this._world.update_data();
             },
         });
@@ -159,6 +175,9 @@ export class TopologyNode extends AbstractGUINode {
                     this._world.nodes_layer.get_nodevis_node_by_id(node_id);
                 if (!nodevis_node) return;
                 _set_root_node(nodevis_node, this._world);
+                new SearchFilters().set_host_regex_filter(
+                    nodevis_node.data.name
+                );
                 this._world.update_data();
             },
         });
@@ -181,51 +200,52 @@ export class TopologyNode extends AbstractGUINode {
     }
 }
 
-function _toggle_root_node(nodevis_node: NodevisNode) {
+function _toggle_root_node(nodevis_node: NodevisNode): boolean {
     nodevis_node.data.growth_root = !nodevis_node.data.growth_root;
-    if (!nodevis_node.data.growth_root)
-        new SearchFilters().remove_hosts_from_host_regex(
-            new Set([nodevis_node.data.name])
-        );
+    return nodevis_node.data.growth_root;
 }
 
-function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld) {
+function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld): void {
     world.viewport.get_all_nodes().forEach(node => {
         node.data.growth_root = false;
     });
     nodevis_node.data.growth_root = true;
 }
 
-function _toggle_growth_continue(nodevis_node: NodevisNode) {
+function _toggle_growth_continue(nodevis_node: NodevisNode): boolean {
     nodevis_node.data.growth_continue = !nodevis_node.data.growth_continue;
     if (nodevis_node.data.growth_continue)
         nodevis_node.data.growth_forbidden = false;
+    return nodevis_node.data.growth_continue;
 }
 
-function _toggle_stop_growth(nodevis_node: NodevisNode) {
+function _toggle_stop_growth(nodevis_node: NodevisNode): boolean {
     nodevis_node.data.growth_forbidden = !nodevis_node.data.growth_forbidden;
     if (nodevis_node.data.growth_forbidden)
         nodevis_node.data.growth_continue = false;
+    return nodevis_node.data.growth_forbidden;
 }
 
 export class TopologyCentralNode extends TopologyNode {
-    static class_name = "topology_center";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 30;
         this._has_quickinfo = false;
     }
 
-    static id() {
+    override class_name(): string {
         return "topology_center";
     }
 
-    render_text(): void {
+    static override id() {
+        return "topology_center";
+    }
+
+    override render_text(): void {
         return;
     }
 
-    render_object() {
+    override render_object() {
         this.selection()
             .selectAll("circle")
             .data([this.id()])
@@ -248,19 +268,21 @@ export class TopologyCentralNode extends TopologyNode {
 }
 
 export class TopologySiteNode extends TopologyNode {
-    static class_name = "topology_site";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 16;
         this._has_quickinfo = false;
     }
 
-    static id() {
+    override class_name(): string {
         return "topology_site";
     }
 
-    render_object() {
+    static override id() {
+        return "topology_site";
+    }
+
+    override render_object() {
         this.selection()
             .selectAll("circle")
             .data([this.id()])
@@ -283,19 +305,21 @@ export class TopologySiteNode extends TopologyNode {
 }
 
 export class BILeafNode extends AbstractGUINode implements TypeWithName {
-    static class_name = "bi_leaf";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 9;
         this._provides_external_quickinfo_data = true;
     }
 
+    override class_name(): string {
+        return "bi_leaf";
+    }
+
     static id() {
         return "bi_leaf";
     }
 
-    _get_basic_quickinfo(): BasicQuickinfo[] {
+    override _get_basic_quickinfo(): BasicQuickinfo[] {
         const quickinfo: BasicQuickinfo[] = [];
         quickinfo.push({name: "Host name", value: this.node.data.hostname});
         if (this.node.data.service)
@@ -306,7 +330,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         return quickinfo;
     }
 
-    _fetch_external_quickinfo(): void {
+    override _fetch_external_quickinfo(): void {
         this._quickinfo_fetch_in_progress = true;
         let view_url;
         if (this.node.data.service)
@@ -326,7 +350,7 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
         );
     }
 
-    _get_details_url(): string {
+    override _get_details_url(): string {
         if (this.node.data.service && this.node.data.service != "") {
             return (
                 "view.py?view_name=service" +
@@ -345,8 +369,6 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
 }
 
 export class BIAggregatorNode extends AbstractGUINode {
-    static class_name = "bi_aggregator";
-
     constructor(world: NodevisWorld, node: NodevisNode) {
         super(world, node);
         this.radius = 12;
@@ -355,11 +377,15 @@ export class BIAggregatorNode extends AbstractGUINode {
             this.radius = 16;
     }
 
+    override class_name(): string {
+        return "bi_aggregator";
+    }
+
     static id() {
         return "bi_aggregator";
     }
 
-    _get_basic_quickinfo(): BasicQuickinfo[] {
+    override _get_basic_quickinfo(): BasicQuickinfo[] {
         const quickinfo: BasicQuickinfo[] = [];
         quickinfo.push({name: "Rule Title", value: this.node.data.name});
         quickinfo.push({
@@ -376,7 +402,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         return quickinfo;
     }
 
-    get_context_menu_elements(): ContextMenuElement[] {
+    override get_context_menu_elements(): ContextMenuElement[] {
         const elements: ContextMenuElement[] = [];
 
         // Local actions
@@ -401,7 +427,7 @@ export class BIAggregatorNode extends AbstractGUINode {
             elements.push({
                 text: "Below this node, expand all nodes",
                 on: event => {
-                    event.stopPropagation();
+                    event!.stopPropagation();
                     this.expand_node_including_children(this.node);
                     this._world.viewport.recompute_node_chunk_descendants_and_links(
                         this.node.data.chunk
@@ -414,7 +440,7 @@ export class BIAggregatorNode extends AbstractGUINode {
             elements.push({
                 text: "Collapse this node",
                 on: event => {
-                    event.stopPropagation();
+                    event!.stopPropagation();
                     this.collapse_node();
                 },
                 href: "",
@@ -424,7 +450,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         elements.push({
             text: "Expand all nodes",
             on: event => {
-                event.stopPropagation();
+                event!.stopPropagation();
                 this.expand_node_including_children(this.node.data.chunk.tree);
                 this._world.viewport.recompute_node_chunk_descendants_and_links(
                     this.node.data.chunk
@@ -437,7 +463,7 @@ export class BIAggregatorNode extends AbstractGUINode {
         elements.push({
             text: "Below this node, show only problems",
             on: event => {
-                event.stopPropagation();
+                event!.stopPropagation();
                 this._filter_root_cause(this.node);
                 this._world.viewport.recompute_node_chunk_descendants_and_links(
                     this.node.data.chunk

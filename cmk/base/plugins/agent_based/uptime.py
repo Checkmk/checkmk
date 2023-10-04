@@ -9,7 +9,6 @@
 
 import datetime
 import re
-from typing import Optional
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -102,7 +101,7 @@ def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type: ignor
     )
 
 
-def parse_uptime(string_table: StringTable) -> Optional[uptime.Section]:
+def parse_uptime(string_table: StringTable) -> uptime.Section | None:
     if not string_table:
         return None
 

@@ -32,12 +32,24 @@ ActionArgument = tuple[str, ...]
 ActionArguments = list[ActionArgument]
 
 from cmk.utils import plugin_registry
+from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.rulesets.ruleset_matcher import TagCondition
+from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName, HostState, ServiceDetails, ServiceName, ServiceState
 
-from cmk.bi.type_defs import ActionConfig, ComputationConfigDict, GroupConfigDict, SearchConfig
+from cmk.checkengine.submitters import (  # pylint: disable=cmk-module-layer-violation
+    ServiceDetails,
+    ServiceState,
+)
+
+from cmk.bi.type_defs import (
+    ActionConfig,
+    ComputationConfigDict,
+    GroupConfigDict,
+    HostState,
+    SearchConfig,
+)
 
 
 class BIStates:
@@ -339,17 +351,14 @@ def replace_macros(
 
 
 def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:
-    new_list: list[str] = []
-    for element in elements:
-        new_list.append(replace_macros(element, macros))
-    return new_list
+    return [replace_macros(element, macros) for element in elements]
 
 
 def replace_macros_in_dict(old_dict: dict[str, str], macros: MacroMapping) -> dict[str, str]:
-    new_dict: dict[str, str] = {}
-    for key, value in old_dict.items():
-        new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
-    return new_dict
+    return {
+        replace_macros(key, macros): replace_macros(value, macros)
+        for key, value in old_dict.items()
+    }
 
 
 def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:

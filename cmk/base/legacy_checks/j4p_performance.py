@@ -13,8 +13,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 j4p_performance_mem_default_levels = (1000, 2000)
 # Number of threads warn, crit
@@ -85,7 +86,7 @@ def inventory_j4p_performance_apps(info, what):
         levels = j4p_performance_app_sess_default_levels
     for inst, vals in parsed.items():
         for app in vals.get("apps", {}):
-            inv.append(("%s %s" % (inst, app), levels))
+            inv.append((f"{inst} {app}", levels))
     return inv
 
 
@@ -98,7 +99,7 @@ def inventory_j4p_performance_serv(info, what):
     for inst, vals in parsed.items():
         for app, val in vals.get("apps", {}).items():
             for serv in val.get("servlets", {}):
-                inv.append(("%s %s %s" % (inst, app, serv), levels))
+                inv.append((f"{inst} {app} {serv}", levels))
     return inv
 
 
@@ -116,12 +117,14 @@ def check_j4p_performance_mem(item, params, info):
         ("heap", heap, warn, crit),
         ("nonheap", non_heap, warn, crit),
     ]
-    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap) (warn/crit at %.0f/%.0f)" % (
-        total,
-        heap,
-        non_heap,
-        warn,
-        crit,
+    infotext = (
+        "{:.0f} MB total ({:.0f} MB heap, {:.0f} MB non-heap) (warn/crit at {:.0f}/{:.0f})".format(
+            total,
+            heap,
+            non_heap,
+            warn,
+            crit,
+        )
     )
     if total >= crit:
         return 2, infotext, perfdata
@@ -131,10 +134,11 @@ def check_j4p_performance_mem(item, params, info):
 
 
 check_info["j4p_performance.mem"] = LegacyCheckDefinition(
+    service_name="JMX %s Memory",
+    sections=["j4p_performance"],
+    discovery_function=lambda i: inventory_j4p_performance(i, "mem"),
     check_function=check_j4p_performance_mem,
     check_ruleset_name="j4p_performance.mem",
-    discovery_function=lambda i: inventory_j4p_performance(i, "mem"),
-    service_name="JMX %s Memory",
 )
 
 
@@ -159,7 +163,13 @@ def check_j4p_performance_threads(item, params, info):
                 status = 1
 
             # Calculate the thread increase rate
-            rate = get_rate("j4p_performance.threads.%s" % item, this_time, val)
+            rate = get_rate(
+                get_value_store(),
+                "j4p_performance.threads.%s" % item,
+                this_time,
+                val,
+                raise_overflow=True,
+            )
             output.append("ThreadRate: %0.2f" % rate)
             perfdata.append(("ThreadRate", rate))
 
@@ -170,10 +180,11 @@ def check_j4p_performance_threads(item, params, info):
 
 
 check_info["j4p_performance.threads"] = LegacyCheckDefinition(
+    service_name="JMX %s Threads",
+    sections=["j4p_performance"],
+    discovery_function=lambda i: inventory_j4p_performance(i, "threads"),
     check_function=check_j4p_performance_threads,
     check_ruleset_name="j4p_performance.threads",
-    discovery_function=lambda i: inventory_j4p_performance(i, "threads"),
-    service_name="JMX %s Threads",
 )
 
 
@@ -198,10 +209,11 @@ def check_j4p_performance_uptime(item, _unused, info):
 
 
 check_info["j4p_performance.uptime"] = LegacyCheckDefinition(
+    service_name="JMX %s Uptime",
+    sections=["j4p_performance"],
+    discovery_function=lambda i: inventory_j4p_performance(i, "uptime"),
     check_function=check_j4p_performance_uptime,
     check_ruleset_name="j4p_performance.uptime",
-    discovery_function=lambda i: inventory_j4p_performance(i, "uptime"),
-    service_name="JMX %s Uptime",
 )
 
 
@@ -216,10 +228,11 @@ def check_j4p_performance_app_state(item, _unused, info):
 
 
 check_info["j4p_performance.app_state"] = LegacyCheckDefinition(
+    service_name="JMX %s State",
+    sections=["j4p_performance"],
+    discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_state"),
     check_function=check_j4p_performance_app_state,
     check_ruleset_name="j4p_performance.app_state",
-    discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_state"),
-    service_name="JMX %s State",
 )
 
 
@@ -253,10 +266,11 @@ def check_j4p_performance_app_sess(item, params, info):
 
 
 check_info["j4p_performance.app_sess"] = LegacyCheckDefinition(
+    service_name="JMX %s Sessions",
+    sections=["j4p_performance"],
+    discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_sess"),
     check_function=check_j4p_performance_app_sess,
     check_ruleset_name="j4p_performance.app_sess",
-    discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_sess"),
-    service_name="JMX %s Sessions",
 )
 
 
@@ -285,15 +299,18 @@ def check_j4p_performance_serv_req(item, params, info):
     output = ["Requests: %d%s" % (req, status_txt)]
     perfdata = [("Requests", req, hi_warn, hi_crit)]
     this_time = time.time()
-    rate = get_rate("j4p_performance.serv_req.%s" % item, this_time, req)
+    rate = get_rate(
+        get_value_store(), "j4p_performance.serv_req.%s" % item, this_time, req, raise_overflow=True
+    )
     output.append("RequestRate: %0.2f" % rate)
     perfdata.append(("RequestRate", rate))
     return (status, ", ".join(output), perfdata)
 
 
 check_info["j4p_performance.serv_req"] = LegacyCheckDefinition(
+    service_name="JMX %s Requests",
+    sections=["j4p_performance"],
+    discovery_function=lambda i: inventory_j4p_performance_serv(i, "serv_req"),
     check_function=check_j4p_performance_serv_req,
     check_ruleset_name="j4p_performance.serv_req",
-    discovery_function=lambda i: inventory_j4p_performance_serv(i, "serv_req"),
-    service_name="JMX %s Requests",
 )

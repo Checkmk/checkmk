@@ -10,7 +10,7 @@ from livestatus import SiteId
 
 import cmk.utils.regex
 from cmk.utils.agent_registration import get_uuid_link_manager
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.gui.http import request
 from cmk.gui.log import logger

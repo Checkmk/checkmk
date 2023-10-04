@@ -172,9 +172,6 @@ def check_cisco_temp_sensor(item, params, info):
 
 check_info["cisco_temp_sensor"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.91.1.1.1.1.*")),
-    check_function=check_cisco_temp_sensor,
-    discovery_function=inventory_cisco_temp_sensor,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -189,4 +186,7 @@ check_info["cisco_temp_sensor"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "4"],
         ),
     ],
+    service_name="Temperature %s",
+    discovery_function=inventory_cisco_temp_sensor,
+    check_function=check_cisco_temp_sensor,
 )

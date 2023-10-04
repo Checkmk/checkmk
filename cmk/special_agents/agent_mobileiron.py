@@ -24,7 +24,6 @@ from urllib.parse import urljoin
 import requests
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
 from cmk.special_agents.utils.agent_common import (
@@ -146,7 +145,7 @@ class MobileironAPI:
         self._devices_per_request = 200
         self.regex_patterns = regex_patterns
         self._proxy = deserialize_http_proxy_config(proxy)
-        if _requests_proxy := typeshed_issue_7724(self._proxy.to_requests_proxies()):
+        if _requests_proxy := self._proxy.to_requests_proxies():
             self._session.proxies = _requests_proxy
 
     def __enter__(self) -> MobileironAPI:

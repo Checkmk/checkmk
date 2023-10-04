@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Dict, Generic, Literal, Mapping, Tuple, TypeVar
+from typing import Generic, Literal, TypeVar
 
-VsResult = Mapping[Literal["levels", "levels_lower"], Tuple[float, float]]
+VsResult = Mapping[Literal["levels", "levels_lower"], tuple[float, float]]
 
 
 @dataclass
 class ClientsPerInterface:
-    per_interface: Dict[str, int] = field(default_factory=lambda: {})
+    per_interface: dict[str, int] = field(default_factory=lambda: {})
 
 
 @dataclass
@@ -25,4 +26,4 @@ T = TypeVar("T", ClientsPerInterface, ClientsTotal)
 @dataclass
 class WlcClientsSection(Generic[T]):
     total_clients: int = 0
-    clients_per_ssid: Dict[str, T] = field(default_factory=dict)
+    clients_per_ssid: dict[str, T] = field(default_factory=dict)

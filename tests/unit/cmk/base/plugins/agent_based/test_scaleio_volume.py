@@ -10,10 +10,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.scaleio_volume import (
     check_scaleio_volume,
     discover_scaleio_volume,
-    DiskReadWrite,
     ScaleioVolume,
 )
-from cmk.base.plugins.agent_based.utils.scaleio import StorageConversionError
+from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "c07a5f6c00000001": ScaleioVolume(

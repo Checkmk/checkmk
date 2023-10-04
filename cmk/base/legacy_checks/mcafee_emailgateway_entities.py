@@ -10,7 +10,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 
-def parse_mcafee_emailgateway_entities(info):
+def parse_mcafee_emailgateway_entities(string_table):
     parsed = {}
     for idx, services in enumerate(
         [
@@ -50,7 +50,7 @@ def parse_mcafee_emailgateway_entities(info):
             ["WEBMC", "Eventhandler", "SMTP Retryer", "Spam Updater", "Postgres", "RMD Merge"],
         ]
     ):
-        parsed.update(dict(zip(services, info[idx][0])))
+        parsed.update(dict(zip(services, string_table[idx][0])))
     return parsed
 
 
@@ -84,10 +84,6 @@ def check_mcafee_emailgateway_entities(item, params, parsed):
 
 check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
     detect=DETECT_EMAIL_GATEWAY,
-    parse_function=parse_mcafee_emailgateway_entities,
-    discovery_function=inventory_mcafee_emailgateway_entities,
-    check_function=check_mcafee_emailgateway_entities,
-    service_name="Entity %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1230.2.4.1.2.3.2",
@@ -124,4 +120,8 @@ check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "4", "5", "6"],
         ),
     ],
+    parse_function=parse_mcafee_emailgateway_entities,
+    service_name="Entity %s",
+    discovery_function=inventory_mcafee_emailgateway_entities,
+    check_function=check_mcafee_emailgateway_entities,
 )

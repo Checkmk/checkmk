@@ -51,7 +51,7 @@ from cmk.gui.plugins.openapi.endpoints.event_console.request_schemas import (
     ChangeEventState,
     ChangeEventStateSelector,
     DeleteECEvents,
-    UpdateAndAcknowledgeEvent,
+    UpdateAndAcknowledeEventSiteIDRequired,
     UpdateAndAcknowledgeSelector,
 )
 from cmk.gui.plugins.openapi.endpoints.event_console.response_schemas import (
@@ -159,12 +159,22 @@ def _serialize_event(event: ECEvent) -> DomainObject:
     method="get",
     tag_group="Monitoring",
     path_params=[EventID],
+    query_params=[
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+                required=True,
+            )
+        }
+    ],
     response_schema=ECEventResponse,
 )
 def show_event(params: Mapping[str, Any]) -> Response:
     """Show an event"""
     try:
-        event = get_single_event_by_id(sites.live(), int(params["event_id"]))
+        event = get_single_event_by_id(sites.live(), int(params["event_id"]), params["site_id"])
     except EventNotFoundError:
         return event_id_not_found_problem(params["event_id"])
     return serve_json(data=_serialize_event(event))
@@ -177,7 +187,20 @@ def show_event(params: Mapping[str, Any]) -> Response:
     tag_group="Monitoring",
     response_schema=EventConsoleResponseCollection,
     update_config_generation=False,
-    query_params=[FilterEventsByQuery, HostName, AppName, EventState, EventPhase],
+    query_params=[
+        FilterEventsByQuery,
+        HostName,
+        AppName,
+        EventState,
+        EventPhase,
+        {
+            "site_id": gui_fields.SiteField(
+                description="An existing site id",
+                example="heute",
+                presence="should_exist",
+            )
+        },
+    ],
 )
 def show_events(params: Mapping[str, Any]) -> Response:
     """Show events"""
@@ -191,7 +214,10 @@ def show_events(params: Mapping[str, Any]) -> Response:
     return serve_json(
         constructors.collection_object(
             domain_type="event_console",
-            value=[_serialize_event(ev) for _, ev in get_all_events(sites.live(), query).items()],
+            value=[
+                _serialize_event(ev)
+                for _, ev in get_all_events(sites.live(), query, params.get("site_id")).items()
+            ],
         )
     )
 
@@ -202,7 +228,7 @@ def show_events(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     path_params=[EventID],
-    request_schema=UpdateAndAcknowledgeEvent,
+    request_schema=UpdateAndAcknowledeEventSiteIDRequired,
     output_empty=True,
     permissions_required=UPDATE_AND_ACKNOWLEDGE_PERMISSIONS,
 )
@@ -219,6 +245,7 @@ def update_and_acknowledge_event(params: Mapping[str, Any]) -> Response:
         body.get("change_contact", ""),
         query,
         body["phase"],
+        body["site_id"],
     )
 
     if not results:
@@ -240,7 +267,9 @@ def change_event_state(params: Mapping[str, Any]) -> Response:
     """Change event state"""
     user.need_permission("mkeventd.changestate")
     query = filter_event_table(event_id=params["event_id"])
-    results = change_state(sites.live(), params["body"]["new_state"], query)
+    results = change_state(
+        sites.live(), params["body"]["new_state"], query, params["body"]["site_id"]
+    )
     if not results:
         return event_id_not_found_problem(params["event_id"])
     return Response(status=204)
@@ -290,6 +319,7 @@ def update_and_acknowledge_multiple_events(params: Mapping[str, Any]) -> Respons
         body.get("change_contact", ""),
         update_query,
         body["phase"],
+        body.get("site_id"),
     )
     return Response(status=204)
 
@@ -323,7 +353,7 @@ def change_multiple_event_states(params: Mapping[str, Any]) -> Response:
                 query=body.get("query"),
             )
 
-    change_state(sites.live(), body["new_state"], change_state_query)
+    change_state(sites.live(), body["new_state"], change_state_query, body.get("site_id"))
     return Response(status=204)
 
 
@@ -356,5 +386,5 @@ def archive_events_with_filter(params: Mapping[str, Any]) -> Response:
         case "query":
             del_query = filter_event_table(query=body["query"])
 
-    archive_events(sites.live(), del_query)
+    archive_events(sites.live(), del_query, body["site_id"])
     return Response(status=204)

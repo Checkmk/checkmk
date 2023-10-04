@@ -17,18 +17,18 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs.user_id import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.utils
 import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
-from cmk.gui.wato.pages.rulesets import Rule
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_tree
-from cmk.gui.watolib.rulesets import RuleOptions, Ruleset, RuleValue
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -62,7 +62,7 @@ def fixture_gen_id(monkeypatch):
         ("only_hosts", True, True),
         # non-binary service ruleset
         (
-            "checkgroup_parameters:local",
+            RuleGroup.CheckgroupParameters("local"),
             _parameter_valuespec_local().default_value(),
             False,
         ),
@@ -105,55 +105,6 @@ def test_rule_from_config_unhandled_format(
             ruleset,
             (None,),
         )
-
-
-@pytest.mark.parametrize(
-    "ruleset_name,rule_spec",
-    [
-        # non-binary host ruleset
-        (
-            "inventory_processes_rules",
-            ("VAL", ["HOSTLIST"]),
-        ),
-        (
-            "inventory_processes_rules",
-            ("VAL", ["tag", "specs"], ["HOSTLIST"]),
-        ),
-        # binary host ruleset
-        (
-            "only_hosts",
-            (["HOSTLIST"],),
-        ),
-        (
-            "only_hosts",
-            (
-                rulesets.NEGATE,
-                ["HOSTLIST"],
-            ),
-        ),
-        # non-binary service ruleset
-        (
-            "checkgroup_parameters:local",
-            ("VAL", ["HOSTLIST"], ["SVC", "LIST"]),
-        ),
-        # binary service ruleset
-        (
-            "clustered_services",
-            (["HOSTLIST"], ["SVC", "LIST"]),
-        ),
-        (
-            "clustered_services",
-            (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]),
-        ),
-    ],
-)
-def test_rule_from_config_tuple(ruleset_name, rule_spec):
-    ruleset = rulesets.Ruleset(
-        ruleset_name, ruleset_matcher.get_tag_to_group_map(active_config.tags)
-    )
-    error = "Found old style tuple ruleset"
-    with pytest.raises(MKGeneralException, match=error):
-        ruleset.replace_folder_config(folder_tree().root_folder(), [rule_spec])
 
 
 @pytest.mark.parametrize(
@@ -310,7 +261,7 @@ def test_rule_from_config_tuple(ruleset_name, rule_spec):
         ),
         # non-binary service ruleset
         (
-            "checkgroup_parameters:local",
+            RuleGroup.CheckgroupParameters("local"),
             {
                 "id": "1",
                 "value": "VAL",
@@ -469,7 +420,8 @@ def test_ruleset_to_config(
 ) -> None:
     with set_config(wato_use_git=wato_use_git):
         ruleset = rulesets.Ruleset(
-            "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+            RuleGroup.CheckgroupParameters("local"),
+            ruleset_matcher.get_tag_to_group_map(active_config.tags),
         )
         ruleset.replace_folder_config(
             folder_tree().root_folder(),
@@ -529,7 +481,8 @@ def test_ruleset_to_config_sub_folder(
 ) -> None:
     with set_config(wato_use_git=wato_use_git):
         ruleset = rulesets.Ruleset(
-            "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+            RuleGroup.CheckgroupParameters("local"),
+            ruleset_matcher.get_tag_to_group_map(active_config.tags),
         )
 
         folder_tree().create_missing_folders("abc")
@@ -677,7 +630,7 @@ class _RuleHelper:
     @staticmethod
     def gcp_rule() -> rulesets.Rule:
         return _RuleHelper._make_rule(
-            "special_agents:gcp",
+            RuleGroup.SpecialAgents("gcp"),
             {
                 "project": "old_value",
                 "credentials": ("password", "hunter2"),
@@ -688,7 +641,7 @@ class _RuleHelper:
     @staticmethod
     def ssh_rule() -> rulesets.Rule:
         return _RuleHelper._make_rule(
-            "agent_config:lnx_remote_alert_handlers",
+            RuleGroup.AgentConfig("lnx_remote_alert_handlers"),
             {"handlers": {}, "runas": "old_value", "sshkey": ("private_key", "public_key")},
         )
 
@@ -699,7 +652,7 @@ class _RuleHelper:
         pytest.param(
             _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
             marks=pytest.mark.skipif(
-                version.is_raw_edition(),
+                version.edition() is version.Edition.CRE,
                 reason="lnx_remote_alert_handlers is not available in raw edition",
             ),
         ),
@@ -754,44 +707,42 @@ def test_diff_to_secret_and_other_attribute_changed(
 
 def test_rules_grouped_by_folder() -> None:
     """Test sort order of rules"""
-    expected_folder_order: list[CREFolder] = [
-        # TODO: The arguments look wrong here, they looks kind of mixed up
-        Folder(name="folder2/folder2/folder2", folder_path="folder2"),
-        Folder(name="folder2/folder2/folder1", folder_path="folder1"),
-        Folder(name="folder2/folder2", folder_path="folder2"),
-        Folder(name="folder2/folder1/folder2", folder_path="folder2"),
-        Folder(name="folder2/folder1/folder1", folder_path="folder1"),
-        Folder(name="folder2/folder1", folder_path="folder1"),
-        Folder(name="folder2", folder_path="folder2"),
-        Folder(name="folder1/folder2/folder2", folder_path="folder2"),
-        Folder(name="folder1/folder2/folder1", folder_path="folder1"),
-        Folder(name="folder1/folder2", folder_path="folder2"),
-        Folder(name="folder1/folder1/folder2", folder_path="folder2"),
-        Folder(name="folder1/folder1/folder1", folder_path="folder1"),
-        Folder(name="folder1/folder1", folder_path="folder1"),
-        Folder(name="folder1", folder_path="folder1"),
-        Folder(name="folder4", folder_path="abc"),
-        Folder(name="", folder_path="Main"),
+    tree = folder_tree()
+    expected_folder_order: list[str] = [
+        "folder2/folder2/folder2",
+        "folder2/folder2/folder1",
+        "folder2/folder2",
+        "folder2/folder1/folder2",
+        "folder2/folder1/folder1",
+        "folder2/folder1",
+        "folder2",
+        "folder1/folder2/folder2",
+        "folder1/folder2/folder1",
+        "folder1/folder2",
+        "folder1/folder1/folder2",
+        "folder1/folder1/folder1",
+        "folder1/folder1",
+        "folder1",
+        "folder4",
+        "",
     ]
 
-    root: CREFolder = folder_tree().root_folder()
+    root: Folder = tree.root_folder()
     ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
-    rules: list[tuple[CREFolder, int, Rule]] = [
-        (root, 0, Rule.from_ruleset_defaults(root, ruleset))
-    ]
+    rules: list[tuple[Folder, int, Rule]] = [(root, 0, Rule.from_ruleset_defaults(root, ruleset))]
 
     for nr in range(1, 3):
-        folder = Folder(name="folder%d" % nr, parent_folder=root)
+        folder = Folder.new(tree=tree, name="folder%d" % nr, parent_folder=root)
         rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
         for x in range(1, 3):
-            subfolder = Folder(name="folder%d" % x, parent_folder=folder)
+            subfolder = Folder.new(tree=tree, name="folder%d" % x, parent_folder=folder)
             rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
             for y in range(1, 3):
-                sub_subfolder = Folder(name="folder%d" % y, parent_folder=subfolder)
+                sub_subfolder = Folder.new(tree=tree, name="folder%d" % y, parent_folder=subfolder)
                 rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
 
     # Also test renamed folder
-    folder4 = Folder(name="folder4", parent_folder=root)
+    folder4 = Folder.new(tree=tree, name="folder4", parent_folder=root)
     folder4._title = "abc"  # pylint: disable=protected-access
     rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
 
@@ -800,6 +751,6 @@ def test_rules_grouped_by_folder() -> None:
     )
     with disable_redis():
         assert (
-            list(rule[0] for rule in rulesets.rules_grouped_by_folder(sorted_rules, root))
+            list(rule[0].path() for rule in rulesets.rules_grouped_by_folder(sorted_rules, root))
             == expected_folder_order
         )

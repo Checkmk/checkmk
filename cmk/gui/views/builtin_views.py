@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import Any
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (
@@ -5134,7 +5134,7 @@ builtin_views["cmk_servers"] = {
 
 def cmk_sites_painters() -> Sequence[ColumnSpec]:
     service_painters: list[Any] = []
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         service_painters += [
             ColumnSpec(name="invcmksites_cmc"),
             ColumnSpec(name="invcmksites_dcd"),
@@ -5155,7 +5155,7 @@ def cmk_sites_painters() -> Sequence[ColumnSpec]:
         ColumnSpec(name="invcmksites_stunnel"),
     ]
 
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         service_painters += [
             ColumnSpec(name="invcmksites_npcd"),
         ]

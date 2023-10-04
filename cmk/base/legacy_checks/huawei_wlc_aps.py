@@ -6,10 +6,10 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, render, SNMPTree
 
 
 class StateTemplate(NamedTuple):
@@ -42,10 +42,10 @@ ap_state_map = {
 # Defined by customer, see SUP-1020
 
 
-def parse_huawei_wlc_aps(info):
+def parse_huawei_wlc_aps(string_table):
     parsed = {}
 
-    aps_info1, aps_info2 = info
+    aps_info1, aps_info2 = string_table
 
     # Access-Points
     for idx, ap_info1 in enumerate(aps_info1):
@@ -90,7 +90,6 @@ def parse_huawei_wlc_aps(info):
 
 check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
-    parse_function=parse_huawei_wlc_aps,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2011.6.139.13.3.3.1",
@@ -101,6 +100,7 @@ check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
             oids=["3", "6", "25", "40"],
         ),
     ],
+    parse_function=parse_huawei_wlc_aps,
 )
 
 
@@ -134,7 +134,7 @@ def check_huawei_wlc_aps_status(item, params, parsed):
         # Radio state
         radio_state = data[metric]["radio_cmk_state"]
         radio_readable = data[metric]["radio_readable_state"]
-        yield radio_state, "Radio state [%s]: %s" % (band, radio_readable)
+        yield radio_state, f"Radio state [{band}]: {radio_readable}"
 
         # Channel usage
         ch_usage = data[metric]["ch_usage"]
@@ -143,16 +143,16 @@ def check_huawei_wlc_aps_status(item, params, parsed):
             ch_usage,
             "channel_utilization_%s" % metric,
             ch_usage_lev,
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Channel usage [%s]" % band,
         )
 
 
 check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
-    parse_function=parse_huawei_wlc_aps,
+    service_name="AP %s Status",
+    sections=["huawei_wlc_aps"],
     discovery_function=discovery_huawei_wlc_aps_status,
     check_function=check_huawei_wlc_aps_status,
-    service_name="AP %s Status",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -169,15 +169,15 @@ def check_huawei_wlc_aps_cpu(item, params, parsed):
     lev = params["levels"]
     val = data["cpu_percent"]
     yield check_levels(
-        val, "cpu_percent", lev, human_readable_func=get_percent_human_readable, infoname="Usage"
+        val, "cpu_percent", lev, human_readable_func=render.percent, infoname="Usage"
     )
 
 
 check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
-    parse_function=parse_huawei_wlc_aps,
-    check_function=check_huawei_wlc_aps_cpu,
-    discovery_function=discovery_huawei_wlc_aps_cpu,
     service_name="AP %s CPU",
+    sections=["huawei_wlc_aps"],
+    discovery_function=discovery_huawei_wlc_aps_cpu,
+    check_function=check_huawei_wlc_aps_cpu,
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -197,16 +197,16 @@ def check_huawei_wlc_aps_mem(item, params, parsed):
         val,
         "mem_used_percent",
         lev,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Used",
     )
 
 
 check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
-    parse_function=parse_huawei_wlc_aps,
-    check_function=check_huawei_wlc_aps_mem,
-    discovery_function=discovery_huawei_wlc_aps_mem,
     service_name="AP %s Memory",
+    sections=["huawei_wlc_aps"],
+    discovery_function=discovery_huawei_wlc_aps_mem,
+    check_function=check_huawei_wlc_aps_mem,
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -230,8 +230,8 @@ def check_huawei_wlc_aps_temp(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.temp"] = LegacyCheckDefinition(
-    parse_function=parse_huawei_wlc_aps,
-    check_function=check_huawei_wlc_aps_temp,
-    discovery_function=discovery_huawei_wlc_aps_temp,
     service_name="AP %s Temperature",
+    sections=["huawei_wlc_aps"],
+    discovery_function=discovery_huawei_wlc_aps_temp,
+    check_function=check_huawei_wlc_aps_temp,
 )

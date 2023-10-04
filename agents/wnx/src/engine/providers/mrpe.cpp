@@ -10,12 +10,12 @@
 #include <string>
 #include <tuple>
 
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/wtools.h"
-#include "glob_match.h"
-#include "logger.h"
 #include "tools/_raii.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/glob_match.h"
+#include "wnx/logger.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -303,7 +303,7 @@ void MrpeProvider::parseConfig() {
 void MrpeProvider::loadTimeout() {
     const auto mrpe_timeout = cfg::GetVal(
         cfg::groups::kMrpe, cfg::vars::kTimeout, cfg::defaults::kMrpeTimeout);
-    setTimeout(std::min(1U, mrpe_timeout));
+    setTimeout(std::max(1U, mrpe_timeout));
 }
 
 void MrpeProvider::loadConfig() {

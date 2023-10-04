@@ -64,13 +64,13 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
                     with file_path.open(encoding="utf-8") as f:
-                        exec(f.read(), globalvars)
+                        exec(f.read(), globalvars)  # nosec B102 # BNS:aee528
 
                 elif file_path.suffix == ".pyc":
                     with file_path.open("rb") as pyc:
                         code_bytes = pyc.read()[8:]
                     code = marshal.loads(code_bytes)
-                    exec(code, globalvars)
+                    exec(code, globalvars)  # nosec B102 # BNS:aee528
 
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)

@@ -36,7 +36,7 @@ def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):
     }
 
     state, state_readable = map_status[info[0][0]]
-    return state, "Status: %s, Warning configuration: %s" % (
+    return state, "Status: {}, Warning configuration: {}".format(
         state_readable,
         map_warn_config[info[0][1]],
     )
@@ -44,11 +44,11 @@ def check_intel_true_scale_chassis_temp(_no_item, _no_params, info):
 
 check_info["intel_true_scale_chassis_temp"] = LegacyCheckDefinition(
     detect=DETECT_INTEL_TRUE_SCALE,
-    discovery_function=inventory_intel_true_scale_chassis_temp,
-    check_function=check_intel_true_scale_chassis_temp,
-    service_name="Temperature status chassis",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.5",
         oids=["1", "2"],
     ),
+    service_name="Temperature status chassis",
+    discovery_function=inventory_intel_true_scale_chassis_temp,
+    check_function=check_intel_true_scale_chassis_temp,
 )

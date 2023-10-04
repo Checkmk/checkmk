@@ -7,11 +7,12 @@ import cmk.utils.store as store
 from cmk.utils import version
 from cmk.utils.notify_types import EventRule
 from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.changes as _changes
 from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -22,15 +23,23 @@ from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.utils import wato_root_dir
 
 try:
-    import cmk.gui.cee.plugins.wato as cee_wato
+    import cmk.gui.cee.alert_handling as alert_handling
 except ImportError:
-    cee_wato = None  # type: ignore[assignment]
+    alert_handling = None  # type: ignore[assignment]
 
-TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+$"
+TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
 
 
 class TimePeriodNotFoundError(KeyError):
+    pass
+
+
+class TimePeriodAlreadyExistsError(KeyError):
+    pass
+
+
+class TimePeriodBuiltInError(Exception):
     pass
 
 
@@ -71,17 +80,16 @@ def load_timeperiod(name: str) -> TimeperiodSpec:
 
 
 def delete_timeperiod(name: str) -> None:
+    if name in builtin_timeperiods():
+        raise TimePeriodBuiltInError()
     time_periods = load_timeperiods()
     if name not in time_periods:
         raise TimePeriodNotFoundError
-    time_period_details = time_periods[name]
-    time_period_alias = time_period_details["alias"]
-    # TODO: introduce at least TypedDict for TimeperiodSpecs to remove assertion
-    assert isinstance(time_period_alias, str)
-    if usages := find_usages_of_timeperiod(time_period_alias):
+    if usages := find_usages_of_timeperiod(name):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods)
+    _changes.add_change("edit-timeperiods", _("Deleted time period %s") % name)
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
@@ -95,10 +103,24 @@ def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:
     load_timeperiods.cache_clear()  # type: ignore[attr-defined]
 
 
-def save_timeperiod(name, timeperiod) -> None:  # type: ignore[no-untyped-def]
+def modify_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
     existing_timeperiods = load_timeperiods()
+    if name not in existing_timeperiods:
+        raise TimePeriodNotFoundError()
+
     existing_timeperiods[name] = timeperiod
     save_timeperiods(existing_timeperiods)
+    _changes.add_change("edit-timeperiods", _("Modified time period %s") % name)
+
+
+def create_timeperiod(name: str, timeperiod: TimeperiodSpec) -> None:  # type: ignore[no-untyped-def]
+    existing_timeperiods = load_timeperiods()
+    if name in existing_timeperiods:
+        raise TimePeriodAlreadyExistsError()
+
+    existing_timeperiods[name] = timeperiod
+    save_timeperiods(existing_timeperiods)
+    _changes.add_change("edit-timeperiods", _("Created new time period %s") % name)
 
 
 def verify_timeperiod_name_exists(name):
@@ -196,8 +218,9 @@ def _find_usages_in_other_timeperiods(time_period_name: str) -> list[TimeperiodU
         if time_period_name in tp.get("exclude", []):
             used_in.append(
                 (
-                    "%s: %s (%s)"
-                    % (_("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")),
+                    "{}: {} ({})".format(
+                        _("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")
+                    ),
                     folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
                 )
             )
@@ -244,9 +267,9 @@ def _find_usages_in_notification_rule(
 
 def _find_usages_in_alert_handler_rules(time_period_name: str) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
-    if version.is_raw_edition():
+    if version.edition() is version.Edition.CRE:
         return used_in
-    for index, rule in enumerate(cee_wato.alert_handling.load_alert_handler_rules()):
+    for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
         if rule.get("match_timeperiod") == time_period_name:
             url = folder_preserving_link(
                 [

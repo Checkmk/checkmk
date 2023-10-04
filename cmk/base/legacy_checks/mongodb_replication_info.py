@@ -28,13 +28,13 @@ from cmk.base.config import check_info
 Section = Mapping
 
 
-def parse_mongodb_replication_info(info):
+def parse_mongodb_replication_info(string_table):
     """
-    :param info: dictionary with replication info from local.oplog.rs
+    :param string_table: dictionary with replication string_table from local.oplog.rs
     :return: dict
     """
-    if info:
-        return json.loads(str(info[0][0]))
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 
@@ -51,7 +51,7 @@ def check_mongodb_replication_info(item, params, info_dict):
     :param status_dict:
     :return:
     """
-    oplog_size = "Oplog size: %s of %s used" % (
+    oplog_size = "Oplog size: {} of {} used".format(
         _bytes_human_readable(info_dict, "usedBytes"),
         _bytes_human_readable(info_dict, "logSizeBytes"),
     )
@@ -145,8 +145,8 @@ def _get_as_int(data, key):
 
 check_info["mongodb_replication_info"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_replication_info,
+    service_name="MongoDB Replication Info",
     discovery_function=discover_mongodb_replication_info,
     check_function=check_mongodb_replication_info,
-    service_name="MongoDB Replication Info",
     check_ruleset_name="mongodb_replication_info",
 )

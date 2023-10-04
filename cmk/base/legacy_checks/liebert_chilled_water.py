@@ -37,10 +37,6 @@ def check_liebert_chilled_water(item, _params, parsed):
 
 check_info["liebert_chilled_water"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_str_without_unit,
-    discovery_function=inventory_liebert_chilled_water,
-    check_function=check_liebert_chilled_water,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=[
@@ -52,4 +48,8 @@ check_info["liebert_chilled_water"] = LegacyCheckDefinition(
             "20.1.2.100.4980",
         ],
     ),
+    parse_function=parse_liebert_str_without_unit,
+    service_name="%s",
+    discovery_function=inventory_liebert_chilled_water,
+    check_function=check_liebert_chilled_water,
 )

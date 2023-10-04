@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
@@ -26,9 +26,9 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 # Just assumed
 
 
-def parse_netextreme_psu_out(info):
+def parse_netextreme_psu_out(string_table):
     parsed = {}
-    for psu_index, psu_voltage_str, psu_current_str, psu_factor_str in info:
+    for psu_index, psu_voltage_str, psu_current_str, psu_factor_str in string_table:
         psu_name = "Output %s" % psu_index
         psu_voltage = float(psu_voltage_str) * pow(10, int(psu_factor_str))
         psu_current = float(psu_current_str) * pow(10, int(psu_factor_str))
@@ -51,16 +51,20 @@ def parse_netextreme_psu_out(info):
     return parsed
 
 
+def discover_netextreme_psu_out(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["netextreme_psu_out"] = LegacyCheckDefinition(
     detect=DETECT_NETEXTREME,
-    parse_function=parse_netextreme_psu_out,
-    discovery_function=discover(),
-    check_function=check_elphase,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.38.1",
         oids=[OIDEnd(), "3", "4", "5"],
     ),
+    parse_function=parse_netextreme_psu_out,
+    service_name="Power Supply %s",
+    discovery_function=discover_netextreme_psu_out,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (11, 10),

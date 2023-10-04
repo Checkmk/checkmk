@@ -14,13 +14,14 @@ The special agent retrieves information from the Alertmanager rules API.
 It retrieves information about:
 <ul>
 <li>alert rule groups</li>
-<li>alert rules</li>
+<li>alert rules
     <ol>
     <li>name</li>
     <li>status</li>
     <li>severity</li>
     <li>message</li>
     </ol>
+</li>
 </ul>
 
 The check plugin monitors

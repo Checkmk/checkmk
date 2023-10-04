@@ -38,7 +38,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         health_summary,
     ) in info:
         sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
-        txt = "%s: %s (%s)" % (name, health_label, health_summary)
+        txt = f"{name}: {health_label} ({health_summary})"
 
         for entry in params:
             if name.startswith(entry.get("name", "")):
@@ -56,8 +56,8 @@ def check_esx_vsphere_sensors(_no_item, params, info):
 
 
 check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,
-    service_name="Hardware Sensors",
     check_ruleset_name="hostsystem_sensors",
 )

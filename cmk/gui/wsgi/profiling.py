@@ -15,7 +15,7 @@ from werkzeug.wrappers import Request
 import cmk.utils.log
 import cmk.utils.paths
 
-from cmk.gui.wsgi.applications.utils import load_single_global_wato_setting
+from cmk.gui.wsgi.applications import utils
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if typing.TYPE_CHECKING:
@@ -98,7 +98,8 @@ def _profiling_enabled(environ: WSGIEnvironment) -> bool:
 
 def _load_profiling_setting() -> bool | Literal["enable_by_var"]:
     """Load the profiling global setting from the Setup GUI config"""
-    return load_single_global_wato_setting("profile", deflt=False)
+    # NOTE: Importing the module and not the function to enable mock-ability.
+    return utils.load_single_global_wato_setting("profile", deflt=False)
 
 
 __all__ = ["ProfileSwitcher"]

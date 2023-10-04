@@ -5,21 +5,29 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
-from typing import Any, Final, Generic, NamedTuple
+from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 import cmk.utils.piggyback
-from cmk.utils.log import console
-from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.validatedstr import ValidatedString
 
-from ._typedefs import HostKey, SourceInfo, SourceType
-from .crash_reporting import create_section_crash_dump
-from .host_sections import HostSections, TRawDataSection
+from .fetcher import HostKey, SourceType
+from .parser import HostSections
 
 _CacheInfo = tuple[int, int]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
+
+_TSeq = TypeVar("_TSeq", bound=Sequence)
+
+
+class ParsedSectionName(ValidatedString):
+    @classmethod
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
 
 @dataclass(frozen=True)
@@ -29,25 +37,6 @@ class SectionPlugin:
     # keep the smallest common type of all the unions defined over there.
     parse_function: Callable[..., object]
     parsed_section_name: ParsedSectionName
-
-
-def filter_out_errors(
-    host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]]
-) -> Mapping[HostKey, HostSections]:
-    output: dict[HostKey, HostSections] = {}
-    for source, host_section in host_sections:
-        host_key = HostKey(source.hostname, source.source_type)
-        console.vverbose(f"  {host_key!s}")
-        output.setdefault(host_key, HostSections())
-        if host_section.is_ok():
-            console.vverbose(
-                "  -> Add sections: %s\n"
-                % sorted([str(s) for s in host_section.ok.sections.keys()])
-            )
-            output[host_key] += host_section.ok
-        else:
-            console.vverbose("  -> Not adding sections: %s\n" % host_section.error)
-    return output
 
 
 class _ParsingResult(NamedTuple):
@@ -61,19 +50,28 @@ class ResolvedResult(NamedTuple):
     cache_info: _CacheInfo | None
 
 
-class SectionsParser(Generic[TRawDataSection]):
+class SectionsParser(Generic[_TSeq]):
     """Call the sections parse function and return the parsing result."""
 
     def __init__(
         self,
-        host_sections: HostSections[TRawDataSection],
+        host_sections: HostSections[SectionMap[_TSeq]],
         host_name: HostName,
+        *,
+        # Note: It would be better to keep the error handling entirely out of the
+        #       check engine.  A better approach would be to wrap the function
+        #       with the error handling at the interface of the check engine.
+        #
+        #       See `cmk.base.checkers.CheckPluginMapper.__getitem__`.
+        #
+        error_handling: Callable[[SectionName, _TSeq], str],
     ) -> None:
         super().__init__()
-        self._host_sections: HostSections[TRawDataSection] = host_sections
+        self._host_sections: HostSections[SectionMap[_TSeq]] = host_sections
         self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
+        self.error_handling: Final = error_handling
 
     def __repr__(self) -> str:
         return "{}(host_sections={!r}, host_name={!r})".format(
@@ -83,7 +81,7 @@ class SectionsParser(Generic[TRawDataSection]):
         )
 
     def parse(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[TRawDataSection]], Any]
+        self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
     ) -> _ParsingResult | None:
         if section_name in self._memoized_results:
             return self._memoized_results[section_name]
@@ -103,7 +101,7 @@ class SectionsParser(Generic[TRawDataSection]):
             self._memoized_results[section_name] = None
 
     def _parse_raw_data(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[TRawDataSection]], Any]
+        self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
     ) -> Any:  # yes *ANY*
         try:
             raw_data = self._host_sections.sections[section_name]
@@ -115,15 +113,7 @@ class SectionsParser(Generic[TRawDataSection]):
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
-            self.parsing_errors.append(
-                create_section_crash_dump(
-                    operation="parsing",
-                    section_name=section_name,
-                    section_content=raw_data,
-                    host_name=self._host_name,
-                    rtc_package=None,
-                )
-            )
+            self.parsing_errors.append(self.error_handling(section_name, raw_data))
             return None
 
 
@@ -137,7 +127,7 @@ class ParsedSectionsResolver:
         self,
         parser: SectionsParser,
         *,
-        section_plugins: Mapping[SectionName, SectionPlugin],
+        section_plugins: SectionMap[SectionPlugin],
     ) -> None:
         self._parser: Final = parser
         self.section_plugins: Final = section_plugins
@@ -154,8 +144,8 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_superseders(
-        section_plugins: Mapping[SectionName, SectionPlugin],
-    ) -> Mapping[SectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
+        section_plugins: SectionMap[SectionPlugin],
+    ) -> SectionMap[Sequence[tuple[SectionName, SectionPlugin]]]:
         superseders: dict[SectionName, list[tuple[SectionName, SectionPlugin]]] = {}
         for section_name, section in section_plugins.items():
             for superseded in section.supersedes:
@@ -164,7 +154,7 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_producers(
-        section_plugins: Mapping[SectionName, SectionPlugin],
+        section_plugins: SectionMap[SectionPlugin],
     ) -> Mapping[ParsedSectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
         producers: dict[ParsedSectionName, list[tuple[SectionName, SectionPlugin]]] = {}
         for section_name, section in section_plugins.items():
@@ -219,11 +209,17 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
 
 def make_providers(
     host_sections: Mapping[HostKey, HostSections],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: SectionMap[SectionPlugin],
+    *,
+    error_handling: Callable[[SectionName, _TSeq], str],
 ) -> Mapping[HostKey, Provider]:
     return {
         host_key: ParsedSectionsResolver(
-            SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
+            SectionsParser(
+                host_sections=host_sections,
+                host_name=host_key.hostname,
+                error_handling=error_handling,
+            ),
             section_plugins={
                 section_name: section_plugins[section_name]
                 for section_name in host_sections.sections

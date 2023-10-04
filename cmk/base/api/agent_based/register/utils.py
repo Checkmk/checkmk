@@ -7,23 +7,22 @@ import inspect
 import pathlib
 import sys
 from collections.abc import Callable, Mapping, Sequence
-from typing import Final, get_args, Literal, NoReturn
+from typing import Final, get_args, Literal, NoReturn, Union
 
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.paths import agent_based_plugins_dir
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.version import Edition
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
-ITEM_VARIABLE = "%s"
-
-_NONE_TYPE = type(None)
+ITEM_VARIABLE: Final = "%s"
 
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
@@ -81,7 +80,7 @@ def validate_function_arguments(
     if len(sections) == 1:
         expected_params.append("section")
     else:
-        expected_params.extend("section_%s" % s for s in sections)
+        expected_params.extend(f"section_{s}" for s in sections)
 
     parameters = inspect.signature(function).parameters
     present_params = list(parameters)
@@ -106,7 +105,7 @@ def _raise_appropriate_type_error(
     type_label: TypeLabel,
     has_item: bool,
 ) -> NoReturn:
-    # We know we must raise. Dispatch for a better error message:
+    """Raise with appropriate error message:"""
 
     if set(expected_params) == set(present_params):  # not len()!
         exp_str = ", ".join(expected_params)
@@ -131,39 +130,48 @@ def _raise_appropriate_type_error(
     )
 
 
+# Note: The concrete union type parameters below don't matter, we are just interested in the type
+# constructors of the new & old-skool unions.
+_UNION_TYPES: Final = (type(int | str), type(Union[int, str]))
+
+
+# Poor man's pattern matching on generic types ahead! Note that we see Optional as a union at
+# runtime, so no special handling is needed for it.
+def _is_optional(annotation: object) -> bool:
+    return issubclass(type(annotation), _UNION_TYPES) and type(None) in get_args(annotation)
+
+
+# Check if the given parameter has a type of the form 'Mapping[str, T | None]' for any T.
+def _is_valid_cluster_section_parameter(p: inspect.Parameter) -> bool:
+    return (
+        any(map(str(p.annotation).startswith, ("collections.abc.Mapping[", "typing.Mapping[")))
+        and (len(args := get_args(p.annotation)) == 2)
+        and issubclass(args[0], str)
+        and _is_optional(args[1])
+    )
+
+
 def _validate_optional_section_annotation(
     *,
     parameters: Mapping[str, inspect.Parameter],
     type_label: TypeLabel,
 ) -> None:
-    """Validate that the section annotation is correct, if present.
+    section_parameters = [p for n, p in parameters.items() if n.startswith("section")]
 
-    We know almost nothing about the type of the section argument(s). Check the few things we know:
-
-        * If we have more than one section, all of them must be `Optional`.
-
-    """
-    section_args = [p for n, p in parameters.items() if n.startswith("section")]
-    if all(p.annotation == p.empty for p in section_args):
-        return  # no typing used in plugin
+    def validate_with(pred: Callable[[inspect.Parameter], bool], msg: str) -> None:
+        if not all(p.annotation == p.empty or pred(p) for p in section_parameters):
+            raise TypeError(f"Wrong type annotation: {msg}")
 
     if type_label == "cluster_check":
-        desired = " cluster sections must be of type `Mapping[str, Optional[<NodeSection>]]`"
-        if not all(
-            str(p.annotation).startswith("typing.Mapping[str, ")
-            and _NONE_TYPE in get_args(get_args(p.annotation)[1])
-            for p in section_args
-        ):
-            raise TypeError(f"Wrong type annotation: {desired}")
-        return
-
-    if len(section_args) <= 1:
-        return  # we know nothing in this case
-
-    if any(_NONE_TYPE not in get_args(p.annotation) for p in section_args):
-        raise TypeError("Wrong type annotation: multiple sections must be `Optional`")
-
-    return
+        validate_with(
+            _is_valid_cluster_section_parameter,
+            "cluster sections must be of type `Mapping[str, <NodeSection> | None]`",
+        )
+    elif len(section_parameters) > 1:
+        validate_with(
+            lambda p: _is_optional(p.annotation),
+            "multiple sections must be of type `<NodeSection> | None`",
+        )
 
 
 def _value_type(annotation: inspect.Parameter) -> bytes:
@@ -201,7 +209,7 @@ def validate_default_parameters(
         raise TypeError(f"default {params_type} parameters must be dict")
 
     if ruleset_name is None and params_type != "check":
-        raise TypeError("missing ruleset name for default %s parameters" % (params_type))
+        raise TypeError(f"missing ruleset name for default {params_type} parameters")
 
 
 def validate_check_ruleset_item_consistency(
@@ -220,7 +228,7 @@ def validate_check_ruleset_item_consistency(
     if not present_check_plugins:
         return
 
-    # Trying to detect whether or not the check has an item. But this mechanism is not
+    # Try to detect whether the check has an item. But this mechanism is not
     # 100% reliable since Checkmk appends an item to the service_description when "%s"
     # is not in the checks service_description template.
     # Maybe we need to define a new rule which enforces the developer to use the %s in

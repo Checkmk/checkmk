@@ -7,8 +7,9 @@ from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
 import cmk.utils.tags
+from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -133,7 +134,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             title=_("IPv4 address"),
             help=_(
                 "Specify an explicit IP address or resolvable DNS name here, if "
-                "the hostname is not resolvable via <tt>/etc/hots</tt> or DNS. "
+                "the hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
                 "performed when the configuration is enabled. Checkmk's "
                 "built-in DNS cache is enabled by default in the global "
@@ -183,7 +184,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             title=_("IPv6 Address"),
             help=_(
                 "Specify an explicit IPv6 address or resolvable DNS name here, if "
-                "the hostname is not resolvable via <tt>/etc/hots</tt> or DNS. "
+                "the hostname is not resolvable via <tt>/etc/hosts</tt> or DNS. "
                 "If you do not set this attribute, host name resolution will be "
                 "performed when the configuration is enabled. Checkmk's "
                 "built-in DNS cache is enabled by default in the global "

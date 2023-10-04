@@ -22,9 +22,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_postfix_mailq_status(info):
+def parse_postfix_mailq_status(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         stripped_line = [x.strip() for x in line]
         queuename = stripped_line[0].split("/")[0]
         if queuename == "postfix":
@@ -60,7 +60,7 @@ def check_postfix_mailq_status(item, params, parsed):
 
 check_info["postfix_mailq_status"] = LegacyCheckDefinition(
     parse_function=parse_postfix_mailq_status,
+    service_name="Postfix status %s",
     discovery_function=inventory_postfix_mailq_status,
     check_function=check_postfix_mailq_status,
-    service_name="Postfix status %s",
 )

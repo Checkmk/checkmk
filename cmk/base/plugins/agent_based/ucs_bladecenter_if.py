@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Union
 
 from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces, ucs_bladecenter
@@ -226,7 +225,7 @@ def _extract_counters(
     return ifaces
 
 
-PleaseDont = Dict[str, Dict[str, Union[str, Dict[str, str]]]]
+PleaseDont = dict[str, dict[str, str | dict[str, str]]]
 
 
 def _parse_fc_interfaces(data):

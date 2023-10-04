@@ -25,9 +25,9 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_tsm_storagepools(info):
+def parse_tsm_storagepools(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 4:
             continue
 
@@ -55,14 +55,14 @@ def check_tsm_storagepools(item, _no_params, parsed):
     size = int(float(data["size"]) * 1024**2)
     return (
         0,
-        "Used size: %s, Type: %s" % (get_bytes_human_readable(size), stype),
+        f"Used size: {get_bytes_human_readable(size)}, Type: {stype}",
         [("used_space", size)],
     )
 
 
 check_info["tsm_storagepools"] = LegacyCheckDefinition(
     parse_function=parse_tsm_storagepools,
+    service_name="TSM Storagepool %s",
     discovery_function=inventory_tsm_storagepools,
     check_function=check_tsm_storagepools,
-    service_name="TSM Storagepool %s",
 )

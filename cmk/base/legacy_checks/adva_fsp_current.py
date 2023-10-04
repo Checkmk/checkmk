@@ -28,7 +28,7 @@ def check_adva_fsp_current(item, _no_params, info):
             current = float(current_str) / 1000.0
             upper_threshold = float(upper_threshold_str) / 1000
 
-            infotext = "[%s] %.3f A (crit at %.3f A)" % (unit_name, current, upper_threshold)
+            infotext = f"[{unit_name}] {current:.3f} A (crit at {upper_threshold:.3f} A)"
             perfdata = [
                 (
                     "current",
@@ -48,9 +48,6 @@ def check_adva_fsp_current(item, _no_params, info):
 
 check_info["adva_fsp_current"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.1.0", "Fiber Service Platform F7"),
-    discovery_function=inventory_adva_fsp_current,
-    check_function=check_adva_fsp_current,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2544",
         oids=[
@@ -61,4 +58,7 @@ check_info["adva_fsp_current"] = LegacyCheckDefinition(
             "2.5.5.2.1.5",
         ],
     ),
+    service_name="Power Supply %s",
+    discovery_function=inventory_adva_fsp_current,
+    check_function=check_adva_fsp_current,
 )

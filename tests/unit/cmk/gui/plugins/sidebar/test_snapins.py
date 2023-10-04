@@ -5,7 +5,7 @@
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.sidebar.utils import snapin_registry
+from cmk.gui.sidebar import snapin_registry
 
 
 def test_registered_snapins() -> None:
@@ -31,13 +31,13 @@ def test_registered_snapins() -> None:
         "wato_foldertree",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_snapins += [
             "cmc_stats",
             "reports",
         ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_snapins += [
             "customers",
         ]
@@ -57,7 +57,7 @@ def test_refresh_snapins() -> None:
         "time",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_refresh_snapins += [
             "cmc_stats",
         ]

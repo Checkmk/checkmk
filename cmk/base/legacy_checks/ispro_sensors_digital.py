@@ -40,7 +40,7 @@ def check_ispro_sensors_digital(item, params, info):
             alarm_state, alarm_state_readable, alarm_device_state_readable = map_states[
                 "alarm"
             ].get(alarm, (3, "unknown", "unexpected(%s)" % alarm))
-            return alarm_state, "Status: %s, Alarm status: %s (device: %s)" % (
+            return alarm_state, "Status: {}, Alarm status: {} (device: {})".format(
                 map_states["state"].get(state, "unexpected(%s)" % state),
                 alarm_state_readable,
                 alarm_device_state_readable,
@@ -50,11 +50,11 @@ def check_ispro_sensors_digital(item, params, info):
 
 check_info["ispro_sensors_digital"] = LegacyCheckDefinition(
     detect=DETECT_ISPRO_SENSORS,
-    discovery_function=inventory_ispro_sensors_digital,
-    check_function=check_ispro_sensors_digital,
-    service_name="Digital in %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",
         oids=["1.3.1.2", "1.3.1.4", "2.4.1.3"],
     ),
+    service_name="Digital in %s",
+    discovery_function=inventory_ispro_sensors_digital,
+    check_function=check_ispro_sensors_digital,
 )

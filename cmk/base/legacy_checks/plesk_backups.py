@@ -52,7 +52,7 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
         if size == 0:
             status = 2
             status_txt = " (!!)"
-        output.append("Last Backup - Size: %s%s" % (get_bytes_human_readable(size), status_txt))
+        output.append(f"Last Backup - Size: {get_bytes_human_readable(size)}{status_txt}")
         perfdata.append(("last_backup_size", size))
 
         age_seconds = int(time.time()) - timestamp
@@ -92,7 +92,7 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
             elif total_size > params["total_size"][0]:
                 status = max(status, 1)
                 status_txt = " (!)"
-        output.append("Total Size: %s%s" % (get_bytes_human_readable(total_size), status_txt))
+        output.append(f"Total Size: {get_bytes_human_readable(total_size)}{status_txt}")
         perfdata.append(("total_size", total_size))
 
         return (status, ", ".join(output), perfdata)
@@ -101,8 +101,8 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
 
 
 check_info["plesk_backups"] = LegacyCheckDefinition(
-    check_function=check_plesk_backups,
-    discovery_function=inventory_plesk_backups,
     service_name="Plesk Backup %s",
+    discovery_function=inventory_plesk_backups,
+    check_function=check_plesk_backups,
     check_ruleset_name="plesk_backups",
 )

@@ -9,8 +9,8 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.paths
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
-from cmk.utils.type_defs import HostName
 
 
 @pytest.fixture(name="discovered_host_labels_dir")

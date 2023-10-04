@@ -23,12 +23,13 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypedDict, TypeVar
+from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypeVar
 
 import boto3
 import botocore
 from botocore.client import BaseClient
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+from typing_extensions import TypedDict
 
 import cmk.utils.password_store
 import cmk.utils.store as store
@@ -54,9 +55,6 @@ from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, S
 from cmk.special_agents.utils.argument_parsing import Args
 
 NOW = datetime.now()
-
-GLOBAL_SERVICE_REGION = "us-east-1"
-
 
 AWSStrings = bytes | str
 
@@ -363,7 +361,7 @@ def _get_ec2_piggyback_hostname(
     # instance is no longer visible in the console.
     # In this case we do not deliever any data for this piggybacked host such that
     # the services go stable and Check_MK service reports "CRIT - Got not information".
-    parsed_instance = Instance.parse_obj(inst)
+    parsed_instance = Instance.model_validate(inst)
     match piggyback_naming_convention:
         case NamingConvention.private_dns_name:
             return parsed_instance.private_dns_name
@@ -494,6 +492,25 @@ def _get_wafv2_web_acls(
         )
         for web_acl_info in web_acls_info
     ]
+
+    def _convert_byte_match_statement(byte_match_statement: dict[str, Any]) -> None:
+        byte_match_statement["SearchString"] = byte_match_statement["SearchString"].decode()
+
+    def _byte_convert_statement(general_statement: dict[str, Any]) -> None:
+        for name, statement in general_statement.items():
+            if "ByteMatchStatement" == name:
+                _convert_byte_match_statement(statement)
+            elif name in ["RateBasedStatement", "NotStatement"] and (
+                "ByteMatchStatement" in statement["ScopeDownStatement"]
+            ):
+                _convert_byte_match_statement(statement["ScopeDownStatement"]["ByteMatchStatement"])
+            elif name in ["AndStatement", "OrStatement"]:
+                for s in statement["Statements"]:
+                    _byte_convert_statement(s)
+
+    for acl in web_acls:
+        for rule in acl["Rules"]:  # type: ignore[index]
+            _byte_convert_statement(rule["Statement"])
 
     return web_acls
 
@@ -1077,7 +1094,7 @@ class EC2Limits(AWSSectionLimits):
 
     def get_live_data(self, *args):
         quota_list = list(self._iter_service_quotas("ec2"))
-        quota_dicts = [q.dict() for q in quota_list]
+        quota_dicts = [q.model_dump() for q in quota_list]
 
         response = self._client.describe_instances()  # type: ignore[attr-defined]
         reservations = self._get_response_content(response, "Reservations")
@@ -2794,7 +2811,12 @@ class ELBSummaryGeneric(AWSSection):
     ) -> AWSComputedContent:
         content_by_piggyback_hosts: dict[str, str] = {}
         for load_balancer in raw_content.content:
-            content_by_piggyback_hosts.setdefault(load_balancer["DNSName"], load_balancer)
+            if (dns_name := load_balancer.get("DNSName")) is None:
+                # SUP-15023
+                # We skip "gateway" type load balancers
+                # because they don't provide DNSName information
+                continue
+            content_by_piggyback_hosts.setdefault(dns_name, load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
@@ -5619,11 +5641,10 @@ class StatusEnum(StrEnum):
 
 
 class Tag(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     Key: str = Field(..., alias="key")
     Value: str = Field(..., alias="value")
-
-    class Config:
-        allow_population_by_field_name = True
 
 
 class Cluster(BaseModel):
@@ -5668,10 +5689,10 @@ class ECSLimits(AWSSectionLimits):
         self, *args: AWSColleagueContents
     ) -> tuple[Sequence[object], Sequence[object]]:
         quota_list = list(self._iter_service_quotas("ecs"))
-        quota_dicts = [q.dict() for q in quota_list]
+        quota_dicts = [q.model_dump() for q in quota_list]
 
         cluster_ids = list(get_ecs_cluster_arns(self._client))
-        cluster_dicts = [c.dict() for c in get_ecs_clusters(self._client, cluster_ids)]
+        cluster_dicts = [c.model_dump() for c in get_ecs_clusters(self._client, cluster_ids)]
 
         return quota_dicts, cluster_dicts
 
@@ -5790,8 +5811,8 @@ class ECSSummary(AWSSection):
     ) -> Iterable[Mapping[str, object]]:
         for cluster in clusters:
             for cluster_tag in cluster.tags:
-                if self._tags and cluster_tag.dict() in self._tags:
-                    yield cluster.dict()
+                if self._tags and cluster_tag.model_dump() in self._tags:
+                    yield cluster.model_dump()
 
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
         (colleague_contents,) = args
@@ -5800,7 +5821,7 @@ class ECSSummary(AWSSection):
         if self._tags is not None:
             return list(self._filter_clusters_by_tags(clusters))
 
-        return [c.dict() for c in clusters]
+        return [c.model_dump() for c in clusters]
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -5893,22 +5914,20 @@ class ECS(AWSSectionCloudwatch):
 # The following fields are renamed so we can use the UI nomenclature consistently
 # in the Checkmk
 class ElastiCacheNode(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     NodeId: str = Field(..., alias="CacheClusterId")
     Engine: str
     ARN: str
 
-    class Config:
-        allow_population_by_field_name = True
-
 
 class ElastiCacheCluster(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     ClusterId: str = Field(..., alias="ReplicationGroupId")
     Status: str
     MemberNodes: Sequence[str] = Field(..., alias="MemberClusters")
     ARN: str
-
-    class Config:
-        allow_population_by_field_name = True
 
 
 class SubnetGroup(BaseModel):
@@ -5955,17 +5974,17 @@ class ElastiCacheLimits(AWSSectionLimits):
         int,
     ]:
         quota_list = list(self._iter_service_quotas("elasticache"))
-        quota_dicts = [q.dict() for q in quota_list]
+        quota_dicts = [q.model_dump() for q in quota_list]
 
         cluster_dicts = [
-            c.dict()
+            c.model_dump()
             for c in get_paginated_resources(
                 self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
             )
         ]
 
         node_dicts = [
-            n.dict()
+            n.model_dump()
             for n in get_paginated_resources(
                 self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
             )
@@ -6138,7 +6157,7 @@ class ElastiCacheSummary(AWSSection):
         for node in nodes:
             for cluster in clusters:
                 if node.NodeId in cluster.MemberNodes:
-                    yield node.dict()
+                    yield node.model_dump()
                     break
 
     def get_live_data(
@@ -6150,7 +6169,7 @@ class ElastiCacheSummary(AWSSection):
         filtered_clusters = list(self._filter_clusters(clusters))
         filtered_node_dicts = list(self._filter_nodes(nodes, filtered_clusters))
 
-        return [c.dict() for c in filtered_clusters], filtered_node_dicts
+        return [c.model_dump() for c in filtered_clusters], filtered_node_dicts
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -7001,6 +7020,11 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         "--proxy-password", help="The password for authentication of the proxy server"
     )
     parser.add_argument(
+        "--global-service-region",
+        help="Set this to your region when you are in 'us-gov-*' or 'cn-*' regions.",
+        default="us-east-1",
+    )
+    parser.add_argument(
         "--assume-role",
         action="store_true",
         help="Use STS AssumeRole to assume a different IAM role",
@@ -7297,7 +7321,7 @@ def _create_session_from_args(args: Args, region: str) -> boto3.session.Session:
 
 
 def _get_account_id(args: Args) -> str:
-    session = _create_session_from_args(args, GLOBAL_SERVICE_REGION)
+    session = _create_session_from_args(args, args.global_service_region)
     account_id = session.client("sts").get_caller_identity()["Account"]
     return account_id
 
@@ -7347,7 +7371,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
         return 1
 
     for aws_services, aws_regions, aws_sections in [
-        (global_services, [GLOBAL_SERVICE_REGION], AWSSectionsUSEast),
+        (global_services, [args.global_service_region], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
     ]:
         if not aws_services or not aws_regions:

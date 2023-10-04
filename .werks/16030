@@ -1,0 +1,16 @@
+Title: Alphabetic sorting for Kubernetes dashboard elements
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1692628771
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The elements of the cluster overview dashboard were not sorted at all previously.
+They are now sorted alphabetically. 
+The sorting of the cluster and namespace dashboards was partially done on hostname, 
+which leads to a sorting by namespace. To unify this behaviour, all list elements
+are now sorted by name alphabetically
+

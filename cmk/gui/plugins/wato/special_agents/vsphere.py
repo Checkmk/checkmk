@@ -4,26 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
-    Alternative,
     Checkbox,
     Dictionary,
     DropdownChoice,
-    FixedValue,
     Integer,
     ListChoice,
     NetworkPort,
     TextInput,
 )
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
 def _factory_default_special_agents_vsphere():
@@ -73,21 +70,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     maxvalue=65535,
                 ),
             ),
-            (
-                "ssl",
-                Alternative(
-                    title=_("SSL certificate checking"),
-                    elements=[
-                        FixedValue(value=False, title=_("Deactivated"), totext=""),
-                        FixedValue(value=True, title=_("Use hostname"), totext=""),
-                        TextInput(
-                            title=_("Use other hostname"),
-                            help=_("Use a custom name for the SSL certificate validation"),
-                        ),
-                    ],
-                    default_value=True,
-                ),
-            ),
+            tls_verify_options(),
             (
                 "timeout",
                 Integer(
@@ -217,7 +200,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_vsphere(),
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:vsphere",
+        name=RuleGroup.SpecialAgents("vsphere"),
         valuespec=_valuespec_special_agents_vsphere,
         doc_references={DocReference.VMWARE: _("Monitoring VMWare ESXi")},
     )

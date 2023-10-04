@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -12,13 +13,13 @@ Section = Mapping[str, Mapping[str, Any]]
 
 
 def parse_oracle_dataguard_stats(string_table: StringTable) -> Section:
-    parsed: Dict[str, Dict[str, Any]] = {}
+    parsed: dict[str, dict[str, Any]] = {}
     for line in string_table:
         instance = {}
         if len(line) >= 5:
             db_name, db_unique_name, database_role, dgstat_parm, dgstat_value = line[:5]
             instance = parsed.setdefault(
-                "%s.%s" % (db_name, db_unique_name),
+                f"{db_name}.{db_unique_name}",
                 {
                     "database_role": database_role,
                     "dgstat": {},
@@ -78,7 +79,7 @@ def inventory_oracle_dataguard_stats(section: Section) -> InventoryResult:
             path=["software", "applications", "oracle", "dataguard_stats"],
             key_columns={
                 "sid": db_name,
-                "db_unique": "%s.%s" % (db_name, db_unique_name),
+                "db_unique": f"{db_name}.{db_unique_name}",
             },
             inventory_columns={
                 "role": data.get("database_role"),

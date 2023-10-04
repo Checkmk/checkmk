@@ -3,12 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-// TODO(sp): IWYU claims to need this for "tuple_element<>::type", but the
-// headers <tuple>, <array>, <utility>, and <ranges> are *all* official ways to
-// get this. So we should have a symbol mapping for this in our IWYU mapping
-// files, but I simply can't figure out how to make that work with the template
-// symbol. IWYU bug?
-// IWYU pragma: no_include <utility>
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <stdexcept>
@@ -81,9 +76,9 @@ info_table notification_state_types(const table<T> &states) {
         }
     }
     for (const auto &[code_name, code, info] : exit_codes) {
-        result.push_back({parens("ALERTHANDLER", code_name),  //
-                          code,                               //
-                          parens("EXIT_CODE", info)});
+        result.emplace_back(parens("ALERTHANDLER", code_name),  //
+                            code,                               //
+                            parens("EXIT_CODE", info));
     }
     return result;
 }

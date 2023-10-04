@@ -18,12 +18,14 @@ import cmk.utils.paths
 import cmk.utils.plugin_registry
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.store import locked
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.bi as bi
 import cmk.gui.visuals
 from cmk.gui import sites
+from cmk.gui.bi import bi_config_aggregation_function_registry
 from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
@@ -40,6 +42,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.nodevis_lib import (
     BILayoutManagement,
+    FilterTopologyMaxNodes,
+    FilterTopologyMeshDepth,
     MKGrowthExceeded,
     MKGrowthInterruption,
     topology_configs_dir,
@@ -57,16 +61,15 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, Page, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, Page, PageRegistry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
-from cmk.gui.plugins.wato import bi_valuespecs
 from cmk.gui.type_defs import ColumnSpec, PainterParameters, Visual, VisualLinkSpec
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.gui.visuals import get_livestatus_filter_headers
+from cmk.gui.visuals.filter import FilterRegistry
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.computer import BIAggregationFilter
@@ -74,6 +77,24 @@ from cmk.bi.lib import NodeResultBundle
 from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
 Mesh = set[str]
+
+
+def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
+    page_registry.register_page("parent_child_topology")(ParentChildTopologyPage)
+    page_registry.register_page("ajax_initial_topology_filters")(AjaxInitialTopologyFilters)
+    page_registry.register_page("ajax_fetch_aggregation_data")(AjaxFetchAggregationData)
+    page_registry.register_page("ajax_save_bi_aggregation_layout")(AjaxSaveBIAggregationLayout)
+    page_registry.register_page("ajax_delete_bi_aggregation_layout")(AjaxDeleteBIAggregationLayout)
+    page_registry.register_page("ajax_load_bi_aggregation_layout")(AjaxLoadBIAggregationLayout)
+    page_registry.register_page("ajax_save_bi_template_layout")(AjaxSaveBITemplateLayout)
+    page_registry.register_page("ajax_delete_bi_template_layout")(AjaxDeleteBITemplateLayout)
+    page_registry.register_page("ajax_load_bi_template_layout")(AjaxLoadBITemplateLayout)
+    page_registry.register_page("ajax_get_all_bi_template_layouts")(AjaxGetAllBITemplateLayouts)
+    page_registry.register_page("ajax_fetch_topology")(AjaxFetchTopology)
+    page_registry.register_page_handler("bi_map", _bi_map)
+    register_job(cleanup_topology_layouts)
+    filter_registry.register(FilterTopologyMeshDepth())
+    filter_registry.register(FilterTopologyMaxNodes())
 
 
 def _get_topology_configuration(
@@ -266,13 +287,11 @@ class ABCTopologyPage(Page):
         )
 
         html.javascript(
-            "topology_instance = new cmk.nodevis.TopologyVisualization(%s,%s);"
-            % (json.dumps(div_id), json.dumps(topology_configuration.type))
+            f"topology_instance = new cmk.nodevis.TopologyVisualization({json.dumps(div_id)},{json.dumps(topology_configuration.type)});"
         )
 
         html.javascript(
-            "topology_instance.show_topology(%s,%s)"
-            % (topology_configuration.frontend.to_json(), json.dumps(search_frontend_settings))
+            f"topology_instance.show_topology({topology_configuration.frontend.to_json()},{json.dumps(search_frontend_settings)})"
         )
 
     def _get_overlays_config(self) -> dict[str, Any]:
@@ -319,7 +338,6 @@ class ABCTopologyPage(Page):
         )
 
 
-@page_registry.register_page("parent_child_topology")
 class ParentChildTopologyPage(ABCTopologyPage):
     @classmethod
     def visual_spec(cls) -> Visual:
@@ -343,14 +361,12 @@ class ParentChildTopologyPage(ABCTopologyPage):
         }
 
 
-@page_registry.register_page("ajax_initial_topology_filters")
 class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
     def _get_context(self, page_name: str) -> dict:
         _view, show_filters = get_topology_context_and_filters()
         return {f.ident: {} for f in show_filters if f.available()}
 
 
-@cmk.gui.pages.register("bi_map")
 def _bi_map() -> None:
     aggr_name = request.var("aggr_name")
     layout_id = request.var("layout_id")
@@ -366,7 +382,6 @@ def _bi_map() -> None:
     )
 
 
-@page_registry.register_page("ajax_fetch_aggregation_data")
 class AjaxFetchAggregationData(AjaxPage):
     def page(self) -> PageResult:
         aggregations_var = request.get_str_input_mandatory("aggregations", "[]")
@@ -570,9 +585,7 @@ class NodeVisualizationBIDataMapper:
 
         aggregation_function = bi_compiled_rule.aggregation_function
         function_data = BIAggregationFunctionSchema().dump(aggregation_function)
-        aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
-            aggregation_function.kind()
-        ]
+        aggr_func_gui = bi_config_aggregation_function_registry[aggregation_function.kind()]
 
         node_data["rule_id"] = {
             "pack": bi_compiled_rule.pack_id,
@@ -598,7 +611,6 @@ class NodeVisualizationBIDataMapper:
 
 
 # Explicit Aggregations
-@page_registry.register_page("ajax_save_bi_aggregation_layout")
 class AjaxSaveBIAggregationLayout(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -609,7 +621,6 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
         return {}
 
 
-@page_registry.register_page("ajax_delete_bi_aggregation_layout")
 class AjaxDeleteBIAggregationLayout(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -619,7 +630,6 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
         return {}
 
 
-@page_registry.register_page("ajax_load_bi_aggregation_layout")
 class AjaxLoadBIAggregationLayout(AjaxPage):
     def page(self) -> PageResult:
         aggregation_name = request.var("aggregation_name")
@@ -627,7 +637,6 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
 
 
 # Templates
-@page_registry.register_page("ajax_save_bi_template_layout")
 class AjaxSaveBITemplateLayout(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -638,7 +647,6 @@ class AjaxSaveBITemplateLayout(AjaxPage):
         return {}
 
 
-@page_registry.register_page("ajax_delete_bi_template_layout")
 class AjaxDeleteBITemplateLayout(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -648,20 +656,17 @@ class AjaxDeleteBITemplateLayout(AjaxPage):
         return {}
 
 
-@page_registry.register_page("ajax_load_bi_template_layout")
 class AjaxLoadBITemplateLayout(AjaxPage):
     def page(self) -> PageResult:
         layout_id = request.var("layout_id")
         return BILayoutManagement.load_bi_template_layout(layout_id)
 
 
-@page_registry.register_page("ajax_get_all_bi_template_layouts")
 class AjaxGetAllBITemplateLayouts(AjaxPage):
     def page(self) -> PageResult:
         return BILayoutManagement.get_all_bi_template_layouts()
 
 
-@page_registry.register_page("ajax_fetch_topology")
 class AjaxFetchTopology(AjaxPage):
     def page(self) -> PageResult:
         topology_configuration, query_hash = _get_topology_configuration(
@@ -1426,6 +1431,3 @@ def cleanup_topology_layouts() -> None:
 
         store.save_object_to_file(topology_settings_lookup, topology_settings)
     last_run.touch(exist_ok=True)
-
-
-register_job(cleanup_topology_layouts)

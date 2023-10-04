@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -18,8 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_cisco_ip_sla(info):
-    precisions = {line[0]: "ms" if line[-1] == "1" else "us" for line in info[0]}
+def parse_cisco_ip_sla(string_table):
+    precisions = {line[0]: "ms" if line[-1] == "1" else "us" for line in string_table[0]}
 
     rtt_types = {
         "1": "echo",
@@ -108,7 +108,7 @@ def parse_cisco_ip_sla(info):
     ]
 
     parsed: dict[str, list] = {}
-    for content, entries in zip(contents, info):
+    for content, entries in zip(contents, string_table):
         if not entries:
             continue
 
@@ -130,17 +130,18 @@ def inventory_cisco_ip_sla(parsed):
         yield index, {}
 
 
-@get_parsed_item_data
-def check_cisco_ip_sla(_item, params, data):
+def check_cisco_ip_sla(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for description, value, unit, type_ in data:
         if not value:
             continue
 
         state = 0
         if unit:
-            infotext = "%s: %s %s" % (description, value, unit)
+            infotext = f"{description}: {value} {unit}"
         else:
-            infotext = "%s: %s" % (description, value)
+            infotext = f"{description}: {value}"
         perfdata = []
 
         param = params.get(description.lower().replace(" ", "_"))
@@ -157,7 +158,7 @@ def check_cisco_ip_sla(_item, params, data):
                 state = 1
 
             if state:
-                infotext += " (warn/crit at %s/%s)" % (warn, crit)
+                infotext += f" (warn/crit at {warn}/{crit})"
             factor = 1e3 if unit == "ms" else 1e6
             perfdata = [
                 ("rtt", value / factor, warn / factor, crit / factor)
@@ -172,11 +173,6 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "ios"),
         exists(".1.3.6.1.4.1.9.9.42.1.2.2.1.37.*"),
     ),
-    parse_function=parse_cisco_ip_sla,
-    discovery_function=inventory_cisco_ip_sla,
-    check_function=check_cisco_ip_sla,
-    service_name="Cisco IP SLA %s",
-    check_ruleset_name="cisco_ip_sla",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.42.1.2.2.1",
@@ -195,6 +191,11 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2"],
         ),
     ],
+    parse_function=parse_cisco_ip_sla,
+    service_name="Cisco IP SLA %s",
+    discovery_function=inventory_cisco_ip_sla,
+    check_function=check_cisco_ip_sla,
+    check_ruleset_name="cisco_ip_sla",
     check_default_parameters={
         "state": "active",
         "connection_lost_occured": "no",

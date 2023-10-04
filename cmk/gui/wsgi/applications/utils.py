@@ -13,6 +13,7 @@ from typing import Any, final, TYPE_CHECKING
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
+import cmk.utils.version as cmk_version
 from cmk.utils.site import url_prefix
 
 import cmk.gui.auth
@@ -179,9 +180,17 @@ def _handle_not_authenticated() -> Response:
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally
     # requested page is performed.
-    login_page = login.LoginPage()
-    login_page.set_no_html_output(plain_error())
-    login_page.handle_page()
+    if cmk_version.edition() == cmk_version.Edition.CSE:
+        from cmk.gui.cse.userdb.cognito.pages import (  # pylint: disable=no-name-in-module
+            SingleSignOn,
+        )
+
+        saas_login_page = SingleSignOn()
+        saas_login_page.handle_page()
+    else:
+        login_page = login.LoginPage()
+        login_page.set_no_html_output(plain_error())
+        login_page.handle_page()
 
     return response
 

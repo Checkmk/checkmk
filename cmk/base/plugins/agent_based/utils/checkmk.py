@@ -5,26 +5,47 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import Mapping, NamedTuple, Optional, Sequence
+from enum import StrEnum
+from typing import NamedTuple
 
 from pyasn1.type.useful import GeneralizedTime
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field, validator
 
-CheckmkSection = Mapping[str, Optional[str]]
+CheckmkSection = Mapping[str, str | None]
 CmkUpdateAgentStatus = Mapping[str, str]
 
 
 class Plugin(NamedTuple):
     name: str
     version: str
-    version_int: Optional[int]
-    cache_interval: Optional[int]
+    version_int: int | None
+    cache_interval: int | None
 
 
 class PluginSection(NamedTuple):
     plugins: Sequence[Plugin]
     local_checks: Sequence[Plugin]
+
+
+class CachedPluginType(StrEnum):
+    PLUGIN = "plugins"
+    LOCAL = "local"
+    ORACLE = "oracle"
+    MRPE = "mrpe"
+
+
+class CachedPlugin(NamedTuple):
+    plugin_type: CachedPluginType | None
+    plugin_name: str
+    timeout: int
+    pid: int
+
+
+class CachedPluginsSection(NamedTuple):
+    timeout: list[CachedPlugin] | None
+    killfailed: list[CachedPlugin] | None
 
 
 class CertInfoController(BaseModel):
@@ -46,8 +67,8 @@ class LocalConnectionStatus(BaseModel):
 
 
 class Connection(BaseModel):
-    site_id: str | None
-    coordinates: str | None  # legacy from 2.1
+    site_id: str | None = Field(None)
+    coordinates: str | None = Field(None)  # legacy from 2.1
     local: LocalConnectionStatus
 
     def get_site_id(self) -> str | None:
@@ -78,9 +99,9 @@ class ControllerSection(BaseModel):
 class CertInfo(BaseModel):
     corrupt: bool
     # if the cert is corrupt these will be None
-    not_after: datetime | None
-    signature_algorithm: str | None
-    common_name: str | None
+    not_after: datetime | None = Field(None)
+    signature_algorithm: str | None = Field(None)
+    common_name: str | None = Field(None)
 
     @validator("not_after", pre=True)
     @classmethod
@@ -114,15 +135,15 @@ class CertInfo(BaseModel):
 class CMKAgentUpdateSection(BaseModel):
     """The data of the cmk_update_agent"""
 
-    aghash: str | None
-    error: str | None
-    last_check: float | None
-    last_update: float | None
-    pending_hash: str | None
-    update_url: str | None
+    aghash: str | None = Field(None)
+    error: str | None = Field(None)
+    last_check: float | None = Field(None)
+    last_update: float | None = Field(None)
+    pending_hash: str | None = Field(None)
+    update_url: str | None = Field(None)
 
     # Added with 2.2
-    trusted_certs: dict[int, CertInfo] | None = None
+    trusted_certs: dict[int, CertInfo] | None = Field(None)
 
     @classmethod
     def parse_checkmk_section(cls, section: CheckmkSection | None) -> CMKAgentUpdateSection | None:

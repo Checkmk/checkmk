@@ -22,11 +22,16 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_python_plugins,
     _check_transport,
     _check_version,
-    check_checkmk_agent,
-    discover_checkmk_agent,
 )
+from cmk.base.plugins.agent_based.checkmk_agent import (
+    _normalize_ip_addresses as normalize_ip_addresses,
+)
+from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
 from cmk.base.plugins.agent_based.utils.checkmk import (
+    CachedPlugin,
+    CachedPluginsSection,
+    CachedPluginType,
     CertInfoController,
     CMKAgentUpdateSection,
     Connection,
@@ -40,11 +45,11 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
 
 
 def test_discovery_something() -> None:
-    assert [*discover_checkmk_agent({}, None, None, None)] == [Service()]
+    assert [*discover_checkmk_agent({}, None, None, None, None)] == [Service()]
 
 
 def test_check_no_data() -> None:
-    assert not [*check_checkmk_agent({}, None, None, None, None)]
+    assert not [*check_checkmk_agent({}, None, None, None, None, None)]
 
 
 def test_check_version_os_no_values() -> None:
@@ -959,6 +964,7 @@ def test_check_plugins(
                 section_plugins,
                 None,
                 None,
+                None,
             )
         )
         == expected_result
@@ -1116,5 +1122,131 @@ def test_certificate_validity(
 ) -> None:
     with on_time(1674578645.3644419, "UTC"):
         assert (
-            list(check_checkmk_agent({}, None, None, controller_section, None)) == expected_result
+            list(check_checkmk_agent({}, None, None, controller_section, None, None))
+            == expected_result
         )
+
+
+@pytest.mark.parametrize(
+    [
+        "section_cached_plugins",
+        "expected_result",
+    ],
+    [
+        pytest.param(
+            CachedPluginsSection(
+                timeout=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.PLUGIN,
+                        plugin_name="some_plugin",
+                        timeout=123,
+                        pid=4711,
+                    ),
+                ],
+                killfailed=None,
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Timed out plugin(s): some_plugin",
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 123s, PID: 4711) - "
+                    "Corresponding output is outdated and/or dropped.",
+                ),
+            ],
+            id="timeout_agent_plugin",
+        ),
+        pytest.param(
+            CachedPluginsSection(
+                timeout=None,
+                killfailed=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.LOCAL,
+                        plugin_name="my_local_check",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Termination failed: my_local_check",
+                    details="Cached plugins(s) that failed to be terminated after timeout: "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234) - Dysfunctional until successful termination.",
+                ),
+            ],
+            id="killfailed_local_check",
+        ),
+        pytest.param(
+            CachedPluginsSection(
+                timeout=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.PLUGIN,
+                        plugin_name="some_plugin",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                    CachedPlugin(
+                        plugin_type=None,
+                        plugin_name="other_process",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                ],
+                killfailed=[
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.LOCAL,
+                        plugin_name="my_local_check",
+                        timeout=7200,
+                        pid=1234,
+                    ),
+                    CachedPlugin(
+                        plugin_type=CachedPluginType.ORACLE,
+                        plugin_name="destroy_db",
+                        timeout=123,
+                        pid=4711,
+                    ),
+                ],
+            ),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Timed out plugin(s): some_plugin, other_process",
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 7200s, PID: 1234), "
+                    "other_process (Timeout: 7200s, PID: 1234) - Corresponding output is outdated and/or dropped.",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Termination failed: my_local_check, destroy_db",
+                    details="Cached plugins(s) that failed to be terminated after timeout: "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plugin, Timeout: 123s, PID: 4711) - "
+                    "Dysfunctional until successful termination.",
+                ),
+            ],
+            id="timeout_and_killfailed",
+        ),
+    ],
+)
+def test_cached_plugins(
+    section_cached_plugins: CachedPluginsSection | None,
+    expected_result: CheckResult,
+) -> None:
+    assert (
+        list(
+            check_checkmk_agent(
+                {},
+                None,
+                None,
+                None,
+                None,
+                section_cached_plugins,
+            )
+        )
+        == expected_result
+    )
+
+
+def test_normalize_ip() -> None:
+    assert normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

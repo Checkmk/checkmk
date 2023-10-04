@@ -6,15 +6,9 @@
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 
 
-from typing import Optional
-
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<oracle_dataguard_stats:sep(124)>>>
 # TESTDB|TESTDBU2|PHYSICAL STANDBY|apply finish time|+00 00:00:00.000|NOT ALLOWED|ENABLED|MAXIMUM PERFORMANCE|DISABLED||||APPLYING_LOG
@@ -31,7 +25,7 @@ def inventory_oracle_dataguard_stats(parsed):
         yield instance, {}
 
 
-def _get_seconds(timestamp: str) -> Optional[int]:
+def _get_seconds(timestamp: str) -> int | None:
     if not timestamp or timestamp[0] != "+":
         return None
 
@@ -50,7 +44,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Dataguard disabled or Instance not running")
+        raise IgnoreResultsError("Dataguard disabled or Instance not running")
 
     yield 0, "Database Role %s" % (dgdata["database_role"].lower())
 
@@ -65,7 +59,7 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
             if dgdata["fs_failover_observer_present"] != "YES":
                 yield 2, "Observer not connected"
             else:
-                yield 0, "Observer connected %s from host %s" % (
+                yield 0, "Observer connected {} from host {}".format(
                     dgdata["fs_failover_observer_present"].lower(),
                     dgdata["fs_failover_observer_host"],
                 )
@@ -158,9 +152,9 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
     # section is already migrated!
-    check_function=check_oracle_dataguard_stats,
-    discovery_function=inventory_oracle_dataguard_stats,
     service_name="ORA %s Dataguard-Stats",
+    discovery_function=inventory_oracle_dataguard_stats,
+    check_function=check_oracle_dataguard_stats,
     check_ruleset_name="oracle_dataguard_stats",
     check_default_parameters={
         "apply_lag": (3600, 14400),

@@ -34,12 +34,12 @@ check_info["hp_procurve_cpu"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
     ),
-    check_function=check_hp_procurve_cpu,
-    discovery_function=inventory_hp_procurve_cpu,
-    service_name="CPU utilization",
-    check_ruleset_name="cpu_utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.9.6",
         oids=["1"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_hp_procurve_cpu,
+    check_function=check_hp_procurve_cpu,
+    check_ruleset_name="cpu_utilization",
 )

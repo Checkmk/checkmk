@@ -34,7 +34,7 @@ def check_oracle_version(item, _no_params, info):
 
 
 check_info["oracle_version"] = LegacyCheckDefinition(
-    check_function=check_oracle_version,
-    discovery_function=inventory_oracle_version,
     service_name="ORA Version %s",
+    discovery_function=inventory_oracle_version,
+    check_function=check_oracle_version,
 )

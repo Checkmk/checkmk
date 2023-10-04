@@ -74,7 +74,7 @@ def check_dell_eql_storage(item, _no_params, info):
                 ("fs_size", total_bytes),
                 ("fs_free", total_bytes - used_bytes),
             ]
-            yield 0, "Used: %s/%s (Snapshots: %s, Replication: %s)" % (
+            yield 0, "Used: {}/{} (Snapshots: {}, Replication: {})".format(
                 get_bytes_human_readable(used_bytes),
                 get_bytes_human_readable(total_bytes),
                 get_bytes_human_readable(snap_bytes),
@@ -87,9 +87,6 @@ check_info["dell_eql_storage"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "EQL-SUP"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740.17"),
     ),
-    check_function=check_dell_eql_storage,
-    discovery_function=inventory_dell_eql_storage,
-    service_name="Storage %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12740.2.1",
         oids=[
@@ -103,4 +100,7 @@ check_info["dell_eql_storage"] = LegacyCheckDefinition(
             "10.1.2.1",
         ],
     ),
+    service_name="Storage %s",
+    discovery_function=inventory_dell_eql_storage,
+    check_function=check_dell_eql_storage,
 )

@@ -11,28 +11,25 @@ from typing import Any, Generic, TypeVar
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.metrics import MetricName
 
 import cmk.gui.sites as sites
+from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
+from cmk.gui.graphing._graph_recipe_builder import build_graph_recipes
+from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
+from cmk.gui.graphing._html_render import default_dashlet_graph_render_options, GraphDestinations
+from cmk.gui.graphing._utils import (
+    graph_templates_internal,
+    metric_info,
+    MKCombinedGraphLimitExceededError,
+)
+from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.html_render import (
-    default_dashlet_graph_render_options,
-    resolve_graph_recipe,
-)
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info, MKCombinedGraphLimitExceededError
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
-from cmk.gui.type_defs import (
-    Choices,
-    GraphIdentifier,
-    SingleInfos,
-    TemplateGraphIdentifier,
-    TemplateGraphSpec,
-    VisualContext,
-)
+from cmk.gui.type_defs import Choices, SingleInfos, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Dictionary,
@@ -42,11 +39,11 @@ from cmk.gui.valuespec import (
     Timerange,
     ValueSpec,
 )
-from cmk.gui.visuals import get_singlecontext_vars
+from cmk.gui.visuals import get_only_sites_from_context, get_singlecontext_vars
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
-from ..base import Dashlet, DashletId, DashletSize
+from ..base import Dashlet
 from .status_helpers import make_mk_missing_data_error
 
 
@@ -97,14 +94,9 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 (
                     (
                         graph_id,
-                        str(
-                            graph_detail.get(
-                                "title",
-                                graph_id,
-                            )
-                        ),
+                        graph_detail.title or graph_id,
                     )
-                    for graph_id, graph_detail in graph_info.items()
+                    for graph_id, graph_detail in graph_templates_internal().items()
                     if graph_id == value
                 ),
                 (
@@ -124,10 +116,10 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
 
 
 T = TypeVar("T", bound=ABCGraphDashletConfig)
-T_Ident = TypeVar("T_Ident", bound=GraphIdentifier)
+TGraphSpec = TypeVar("TGraphSpec", bound=GraphSpecification)
 
 
-class ABCGraphDashlet(Dashlet[T], Generic[T, T_Ident]):
+class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
     @classmethod
     def initial_size(cls) -> DashletSize:
         return (60, 21)
@@ -229,7 +221,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 """
 
     @abc.abstractmethod
-    def graph_identification(self, context: VisualContext) -> T_Ident:
+    def graph_specification(self, context: VisualContext) -> TGraphSpec:
         ...
 
     def __init__(
@@ -251,20 +243,20 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         if "timerange" not in self._dashlet_spec:
             self._dashlet_spec["timerange"] = "25h"
 
-        self._graph_identification: T_Ident | None = None
+        self._graph_specification: TGraphSpec | None = None
         self._graph_title: str | None = None
         self._init_exception = None
         try:
-            self._graph_identification, self._graph_title = self._init_graph()
+            self._graph_specification, self._graph_title = self._init_graph()
         except Exception as exc:
             # Passes error otherwise exception wont allow to enter dashlet editor
             self._init_exception = exc
 
-    def _init_graph(self) -> tuple[T_Ident, str | None]:
-        graph_identification = self.graph_identification(self.context if self.has_context() else {})
+    def _init_graph(self) -> tuple[TGraphSpec, str | None]:
+        graph_specification = self.graph_specification(self.context if self.has_context() else {})
 
         try:
-            graph_recipes = resolve_graph_recipe(graph_identification)
+            graph_recipes = build_graph_recipes(graph_specification)
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
@@ -276,9 +268,9 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
-        graph_title = graph_recipes[0]["title"] if graph_recipes else None
+        graph_title = graph_recipes[0].title if graph_recipes else None
 
-        return graph_identification, graph_title
+        return graph_specification, graph_title
 
     def default_display_title(self) -> str:
         return self._graph_title if self._graph_title is not None else self.title()
@@ -290,12 +282,12 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return self._reload_js()
 
     def _reload_js(self) -> str:
-        if self._graph_identification is None or self._graph_title is None:
+        if self._graph_specification is None or self._graph_title is None:
             return ""
 
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
-            json.dumps(self._graph_identification),
+            self._graph_specification.json(),
             json.dumps(
                 self._dashlet_spec.get("graph_render_options", default_dashlet_graph_render_options)
             ),
@@ -330,7 +322,7 @@ class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     source: str
 
 
-class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphIdentifier]):
+class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]):
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
@@ -353,7 +345,7 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     def single_infos(cls) -> SingleInfos:
         return ["host", "service"]
 
-    def graph_identification(self, context: VisualContext) -> TemplateGraphIdentifier:
+    def graph_specification(self, context: VisualContext) -> TemplateGraphSpecification:
         single_context = get_singlecontext_vars(context, self.single_infos())
         host = single_context.get("host")
         if not host:
@@ -375,25 +367,21 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         # handle this here
         raw_source = self._dashlet_spec["source"]
         if isinstance(raw_source, int):
-            graph_spec = TemplateGraphSpec(
-                {
-                    "site": site_id,
-                    "host_name": host,
-                    "service_description": service,
-                    "graph_index": raw_source - 1,
-                }
-            )
-        else:
-            graph_spec = TemplateGraphSpec(
-                {
-                    "site": site_id,
-                    "host_name": host,
-                    "service_description": service,
-                    "graph_id": raw_source,
-                }
+            return TemplateGraphSpecification(
+                site=site_id,
+                host_name=host,
+                service_description=service,
+                graph_index=raw_source - 1,
+                destination=GraphDestinations.dashlet,
             )
 
-        return ("template", graph_spec)
+        return TemplateGraphSpecification(
+            site=site_id,
+            host_name=host,
+            service_description=service,
+            graph_id=raw_source,
+            destination=GraphDestinations.dashlet,
+        )
 
     @classmethod
     def _parameter_elements(cls) -> DictionaryElements:
@@ -404,10 +392,10 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         yield from super()._parameter_elements()
 
     def _get_additional_macros(self) -> Mapping[str, str]:
-        if self._graph_identification is None:
+        if self._graph_specification is None:
             return {}
 
-        site = self._graph_identification[1].get("site")
+        site = self._graph_specification.site
         return {"$SITE$": site} if site else {}
 
     @classmethod

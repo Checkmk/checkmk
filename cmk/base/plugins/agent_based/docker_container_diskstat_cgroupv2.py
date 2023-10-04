@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterable, List
+from collections.abc import Iterable
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -16,18 +16,18 @@ class ParagraphParser:
     def __init__(self, hp: "HeadlineParser") -> None:
         hp.register_parser(self)
 
-    def parse(self, line: List[str]) -> None:
+    def parse(self, line: list[str]) -> None:
         pass
 
 
 class HeadlineParser:
     def __init__(self) -> None:
-        self._parsers: Dict[str, ParagraphParser] = {}
+        self._parsers: dict[str, ParagraphParser] = {}
 
     def register_parser(self, parser: ParagraphParser) -> None:
         self._parsers[parser.headline] = parser
 
-    def parse(self, lines: Iterable[List[str]]) -> None:
+    def parse(self, lines: Iterable[list[str]]) -> None:
         current_parser = None
         for line in lines:
             if len(line) == 1 and (parser := self._parsers.get(line[0])):
@@ -44,7 +44,7 @@ class TimeParagprahParser(ParagraphParser):
         super().__init__(hp)
         self.time: int
 
-    def parse(self, line: List[str]) -> None:
+    def parse(self, line: list[str]) -> None:
         self.time = int(line[0])
 
 
@@ -53,9 +53,9 @@ class NamesParagprahParser(ParagraphParser):
 
     def __init__(self, hp: HeadlineParser) -> None:
         super().__init__(hp)
-        self.names: Dict[str, str] = {}
+        self.names: dict[str, str] = {}
 
-    def parse(self, line: List[str]) -> None:
+    def parse(self, line: list[str]) -> None:
         self.names[line[1]] = line[0]
 
 
@@ -64,10 +64,10 @@ class StatParagprahParser(ParagraphParser):
 
     def __init__(self, hp: HeadlineParser) -> None:
         super().__init__(hp)
-        self.stat: Dict[str, Dict[str, str]] = {}
+        self.stat: dict[str, dict[str, str]] = {}
 
-    def parse(self, line: List[str]) -> None:
-        stat: Dict[str, str] = {}
+    def parse(self, line: list[str]) -> None:
+        stat: dict[str, str] = {}
         for kv_pair in line[1:]:
             key, value = kv_pair.split("=")
             stat[key] = value
@@ -88,7 +88,7 @@ def parse_docker_container_diskstat_cgroupv2(
     parser = DockerDiskstatParser()
     parser.parse(string_table)
 
-    section: Dict[str, Dict[str, float]] = {}
+    section: dict[str, dict[str, float]] = {}
 
     for device_number, stats in parser.stat.stat.items():
         device_name = parser.names.names[device_number]

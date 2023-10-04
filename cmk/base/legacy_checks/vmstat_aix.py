@@ -15,17 +15,18 @@
 
 import collections
 
-from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 VMStatAIX = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "VMStatAIX", ["user", "system", "idle", "wait"]
 )
 
 
-def parse_vmstat_aix(info):
+def parse_vmstat_aix(string_table):
     try:
-        data = info[0]
+        data = string_table[0]
         return VMStatAIX(int(data[13]), int(data[14]), int(data[15]), int(data[16]))
     except (IndexError, ValueError):
         return None
@@ -42,10 +43,10 @@ def check_vmstat_aix(item, params, parsed):
         0,
         "User: %s, System: %s, Idle: %s, Wait: %s"
         % (
-            get_percent_human_readable(parsed.user),
-            get_percent_human_readable(parsed.system),
-            get_percent_human_readable(parsed.idle),
-            get_percent_human_readable(parsed.wait),
+            render.percent(parsed.user),
+            render.percent(parsed.system),
+            render.percent(parsed.idle),
+            render.percent(parsed.wait),
         ),
         [
             ("us", parsed.user),
@@ -58,6 +59,6 @@ def check_vmstat_aix(item, params, parsed):
 
 check_info["vmstat_aix"] = LegacyCheckDefinition(
     parse_function=parse_vmstat_aix,
-    check_function=check_vmstat_aix,
     service_name="vmstat %s",
+    check_function=check_vmstat_aix,
 )

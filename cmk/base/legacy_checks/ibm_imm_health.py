@@ -27,7 +27,7 @@ def check_ibm_imm_health(_no_item, _no_params, info):
         text = info[num_alerts * 2 + 1 + i][0]
         if infotext != "":
             infotext += ", "
-        infotext += "%s(%s)" % (text, state)
+        infotext += f"{text}({state})"
 
     state = info[0][0]
     if state == "255":
@@ -43,11 +43,11 @@ def check_ibm_imm_health(_no_item, _no_params, info):
 
 check_info["ibm_imm_health"] = LegacyCheckDefinition(
     detect=DETECT_IBM_IMM,
-    check_function=check_ibm_imm_health,
-    discovery_function=inventory_ibm_imm_health,
-    service_name="System health",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.3.1",
         oids=["4"],
     ),
+    service_name="System health",
+    discovery_function=inventory_ibm_imm_health,
+    check_function=check_ibm_imm_health,
 )

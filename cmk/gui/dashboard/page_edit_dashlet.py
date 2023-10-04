@@ -23,7 +23,6 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.pages import Page, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.visuals.utils import visual_info_registry
 from cmk.gui.type_defs import SingleInfos
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -35,6 +34,7 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
+from cmk.gui.visuals.info import visual_info_registry
 
 from .dashlet import Dashlet, dashlet_registry, DashletConfig, DashletId
 from .store import get_permitted_dashboards, save_all_dashboards

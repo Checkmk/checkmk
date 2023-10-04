@@ -5,18 +5,18 @@
 
 #include <filesystem>
 
-#include "carrier.h"
-#include "cfg.h"
-#include "cfg_details.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "player.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test_tools.h"
+#include "wnx/carrier.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/cma_core.h"
+#include "wnx/read_file.h"
 
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
@@ -40,7 +40,7 @@ TEST(PlayerTest, Pipe) {
 TEST(PlayerTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     {
         std::string s = "$BUILTIN_AGENT_PATH$\\";
         auto result = cma::cfg::ReplacePredefinedMarkers(s);

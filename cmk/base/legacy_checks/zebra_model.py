@@ -40,9 +40,6 @@ def check_zebra_model(_no_item, _no_params, info):
 
 check_info["zebra_model"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "zebra"),
-    check_function=check_zebra_model,
-    discovery_function=inventory_zebra_model,
-    service_name="Zebra Printer Model",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.10642",
@@ -57,4 +54,7 @@ check_info["zebra_model"] = LegacyCheckDefinition(
             oids=["1"],
         ),
     ],
+    service_name="Zebra Printer Model",
+    discovery_function=inventory_zebra_model,
+    check_function=check_zebra_model,
 )

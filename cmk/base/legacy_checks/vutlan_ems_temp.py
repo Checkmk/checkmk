@@ -16,9 +16,9 @@ from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 # NOTE: the unit is not given in the SNMP walk, it is °C
 
 
-def parse_vutlan_ems_temp(info):
+def parse_vutlan_ems_temp(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         if line[0].startswith("201"):
             # all OIDs 201xxx are temperature-related
             parsed[line[1]] = float(line[2])
@@ -44,16 +44,16 @@ def check_vutlan_ems_temp(item, params, parsed):
 
 check_info["vutlan_ems_temp"] = LegacyCheckDefinition(
     detect=DETECT_VUTLAN_EMS,
-    parse_function=parse_vutlan_ems_temp,
-    discovery_function=discover_vutlan_ems_temp,
-    check_function=check_vutlan_ems_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.39052.1.3.1",
             oids=[OIDEnd(), "7", "9"],
         )
     ],
+    parse_function=parse_vutlan_ems_temp,
+    service_name="Temperature %s",
+    discovery_function=discover_vutlan_ems_temp,
+    check_function=check_vutlan_ems_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (35.0, 40.0),

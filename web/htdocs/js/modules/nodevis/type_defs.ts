@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 import * as d3 from "d3";
 import {HierarchyNode} from "d3";
 import {DatasourceManager} from "nodevis/datasources";
@@ -124,7 +130,7 @@ export interface DatasourceCallback {
 
 export interface BackendChunkResponse {
     chunks: SerializedNodeChunk[];
-    use_layout?: {[name: string]: any};
+    use_layout?: Record<string, any>;
 }
 
 export interface SerializedNodeChunk {
@@ -137,6 +143,7 @@ export interface SerializedNodeChunk {
     marked_obsolete: boolean;
     hierarchy: NodeData;
     links: SerializedNodevisLink[];
+    aggr_type?: "single" | "multi";
 }
 
 export interface NodeData {
@@ -144,19 +151,19 @@ export interface NodeData {
     id: string;
     node_type: string;
     name: string;
-    node_positioning: {[name: string]: any};
+    node_positioning: Record<string, any>;
     chunk: NodeChunk;
-    user_interactions: {[name: string]: any};
+    user_interactions: Record<string, any>;
     invisible?: boolean;
     icon_image: string;
     acknowledged: boolean;
     in_downtime: boolean;
     show_text: boolean;
-    state: number;
+    state: 0 | 1 | 2 | 3;
     target_coords: Coords;
     has_no_parents: boolean;
     box_leaf_nodes?: boolean;
-    custom_node_settings?: {[name: string]: any};
+    custom_node_settings?: Record<string, any>;
 
     use_style: AbstractLayoutStyle | null;
 
@@ -174,7 +181,7 @@ export interface NodeData {
     current_positioning: {
         type: string;
         free?: boolean;
-        text_positioning?: (x) => any;
+        text_positioning?: (x?: any) => any; // this should be selection but couldn't figure out a way to generically type it,
         hide_node_link?: boolean;
     };
 
@@ -224,18 +231,20 @@ export interface ContextMenuElement {
     text: string;
     href?: string;
     img?: string;
-    on?: (event?) => void;
+    on?: (event?: Event) => void;
 }
 
 declare module "d3" {
-    // @typescript-eslint/no-unused-vars
     export interface HierarchyNode<Datum> {
         data: Datum;
-        _children?: this[] | null;
+        _children?: this[] | undefined | null;
         x: number;
         y: number;
         fx: number | null;
         fy: number | null;
+        force?: number;
+        use_transition?: boolean;
+        children_backup?: this[];
     }
 }
 
@@ -263,7 +272,7 @@ export class NodeChunk {
     links: NodevisLink[];
 
     nodes: NodevisNode[];
-    nodes_by_id: {[name: string]: NodevisNode};
+    nodes_by_id: Record<string, NodevisNode>;
 
     // TODO: remove someday
     layout_instance: NodeVisualizationLayout | null;

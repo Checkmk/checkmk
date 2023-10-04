@@ -6,7 +6,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import chain
-from typing import Dict
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -29,8 +28,8 @@ def __parse_docker_api(data, docker_key_name):
 def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Section:
     raw = docker.parse(info).data
 
-    devices_by_name: Dict[str, Dict[str, float]] = {}
-    devices_by_number: Dict[str, Dict[str, float]] = {}
+    devices_by_name: dict[str, dict[str, float]] = {}
+    devices_by_number: dict[str, dict[str, float]] = {}
     for major_minor, name in raw["names"].items():
         devices_by_name[name] = devices_by_number[major_minor] = {
             "timestamp": raw["time"],
@@ -50,9 +49,9 @@ def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Secti
 @dataclass
 class ParsedDiskstatData:
     time: int = 0
-    names: Dict[str, str] = field(default_factory=dict)
+    names: dict[str, str] = field(default_factory=dict)
     # names[device_number] = device_name
-    stat: Dict[str, Dict[str, Dict[str, int]]] = field(
+    stat: dict[str, dict[str, dict[str, int]]] = field(
         default_factory=lambda: defaultdict(lambda: defaultdict(dict))
     )
     # stat[device_number][headline][counter_name] = value
@@ -77,7 +76,7 @@ def _parse_docker_container_diskstat_agent(info: StringTable) -> diskstat.Sectio
     for line in lines_by_headline["[names]"]:
         parsed.names[line[1]] = line[0]
 
-    section: Dict[str, Dict[str, float]] = {}
+    section: dict[str, dict[str, float]] = {}
     for device_number, stats in parsed.stat.items():
         device_name = parsed.names[device_number]
         section[device_name] = {

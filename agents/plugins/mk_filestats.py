@@ -102,11 +102,6 @@ import stat
 import sys
 import time
 
-try:
-    from typing import Dict, List  # noqa: F401 # pylint: disable=unused-import
-except ImportError:
-    pass
-
 
 def ensure_str(s):
     if sys.version_info[0] >= 3:
@@ -486,7 +481,7 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
     # with 0 count if there are no files for them.
     grouped_files = {
         "": [],  # parent
-    }  # type: Dict[str, List[FileStat]]
+    }  # type: dict[str, list[FileStat]]
     grouped_files.update({g[0]: [] for g in grouping_conditions})
     for single_file in files_iter:
         matching_child_group = _get_matching_child_group(single_file, grouping_conditions)

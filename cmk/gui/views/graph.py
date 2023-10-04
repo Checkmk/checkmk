@@ -7,10 +7,18 @@ import copy
 import time
 from collections.abc import Callable, Sequence
 from typing import Literal
+from uuid import uuid4
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._graph_specification import GraphMetric, TemplateGraphSpecification
+from cmk.gui.graphing._html_render import (
+    make_graph_data_range,
+    render_graphs_from_specification_html,
+)
+from cmk.gui.graphing._utils import CombinedSingleMetricSpec
+from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.base import Cell, Painter2
@@ -20,15 +28,12 @@ from cmk.gui.painter_options import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.plugins.metrics import html_render
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    CombinedGraphSpec,
+    GraphRenderOptions,
+    PainterParameters,
     Row,
-    TemplateGraphSpec,
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
@@ -136,26 +141,15 @@ multisite_builtin_views.update(
 )
 
 
-def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
-    row,
-    cell,
+def paint_time_graph_cmk(
+    row: Row,
+    cell: Cell,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
-    override_graph_render_options=None,
-):
-    graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
-        "template",
-        TemplateGraphSpec(
-            {
-                "site": row["site"],
-                "host_name": row["host_name"],
-                "service_description": row.get("service_description", "_HOST_"),
-            }
-        ),
-    )
-
+    override_graph_render_options: GraphRenderOptions | None = None,
+) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
     # b) the painter options set per user and view
@@ -185,7 +179,7 @@ def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
     if painter_option_pnp_timerange is not None:
         time_range = get_graph_timerange_from_painter_options()
 
-    graph_data_range = html_render.make_graph_data_range(time_range, graph_render_options)
+    graph_data_range = make_graph_data_range(time_range, graph_render_options)
 
     if is_mobile(request, response):
         graph_render_options.update(
@@ -214,21 +208,33 @@ def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
             "Maybe performance data processing is disabled."
         )
 
-    return "", html_render.render_graphs_from_specification_html(
-        graph_identification,
+    return "", render_graphs_from_specification_html(
+        TemplateGraphSpecification(
+            site=row["site"],
+            host_name=row["host_name"],
+            service_description=row.get("service_description", "_HOST_"),
+        ),
         graph_data_range,
         graph_render_options,
         resolve_combined_single_metric_spec,
+        # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
+        # Unfortunately, we have no access to this information here. Regarding the rows, we could
+        # use (site, host, service) as identifier, but for the columns, there does not seem to be
+        # any unique information. The view rendering is designed st. individuals cells are rendered
+        # completely independently of each other, based solely on the livestatus data and on the
+        # painter settings (which makes sense). The caching in graph.ts breaks this assumption. So
+        # for now, we randomize. See also CMK-13840.
+        graph_display_id=str(uuid4()),
     )
 
 
-def paint_cmk_graphs_with_timeranges(  # type: ignore[no-untyped-def]
-    row,
-    cell,
+def paint_cmk_graphs_with_timeranges(
+    row: Row,
+    cell: Cell,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
-):
+) -> tuple[Literal[""], HTML | str]:
     return paint_time_graph_cmk(
         row,
         cell,
@@ -260,7 +266,7 @@ def cmk_time_graph_params():
     )
 
 
-def _migrate_old_graph_render_options(value):
+def _migrate_old_graph_render_options(value: PainterParameters | None) -> PainterParameters:
     if value is None:
         value = {}
 
@@ -268,9 +274,9 @@ def _migrate_old_graph_render_options(value):
     if "graph_render_options" not in value:
         value = copy.deepcopy(value)
         value["graph_render_options"] = {
-            "show_legend": value.pop("show_legend", True),
-            "show_controls": value.pop("show_controls", True),
-            "show_time_range_previews": value.pop("show_time_range_previews", True),
+            "show_legend": value.pop("show_legend", True),  # type: ignore[typeddict-item]
+            "show_controls": value.pop("show_controls", True),  # type: ignore[typeddict-item]
+            "show_time_range_previews": value.pop("show_time_range_previews", True),  # type: ignore[typeddict-item]
         }
     return value
 

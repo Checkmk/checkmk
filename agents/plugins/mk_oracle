@@ -76,6 +76,10 @@ OPTIONS:
                         Note: These sections are executed as synchronous sections
                         The logfile is in the folder \$MK_VARDIR/log.
 
+  --no-spool        Writes output to stdout instead of the spool file if systemd is used.
+                        Note: The option doesn't influence the behavior of the script
+                        if xinetd is used to run the check_mk_agent.
+
   -s, --sections <section>,...
                         Execute only these sections.
                         Note: These sections are execute as synchronous sections
@@ -143,6 +147,15 @@ CONFIGURATION CUSTOM SQLS:
   There are global and local variables. The local variables have precedence and
   overwrite the global ones.
   The variable "\$ORACLE_SID" can be used within every section.
+
+  SQLS_DBUSER="<username>"
+  SQLS_DBPASSWORD="<password>"
+  SQLS_DBSYSCONNECT="SYSDBA|SYSOPER"
+  SQLS_TNSALIAS="<tnsalias>"
+                        Dedicated credentials that can be configured per
+                        section for custom_sqls.
+                        SQLS_DBSYSCONNECT needs to be set if the user is
+                        sysdba or sysoper. Otherwise just skip this option.
 
   SQLS_SECTIONS="<section>,..."
                         Registry of custom SQL sections. If this configuration
@@ -216,12 +229,7 @@ MK-ORA-USAGE
 #   |                                   |___/                              |
 #   '----------------------------------------------------------------------'
 
-if [ $# -eq 0 ]; then
-    MK_ORA_ON_CL=false
-else
-    MK_ORA_ON_CL=true
-fi
-
+MK_ORA_NOSPOOL=false
 MK_ORA_DEBUG=false
 MK_ORA_DEBUG_CONNECT=false
 MK_ORA_LOGGING=false
@@ -247,6 +255,11 @@ while test -n "$1"; do
 
         -l | --log)
             MK_ORA_LOGGING=true
+            shift
+            ;;
+
+        --no-spool)
+            MK_ORA_NOSPOOL=true
             shift
             ;;
 
@@ -2422,26 +2435,42 @@ run_cached() {
     MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
 
     if [ -s "${CACHEFILE}" ]; then
-
         # Output the file (even if it is outdated)
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        # prefix or insert cache info, unless already present.
+        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
         if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-            sed -e '/^<<<.*>>>/{p;d;}' -e "/^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
-            # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
             sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
-
     fi
 
-    # Check if the creation of the cache takes suspiciously long.
-    # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
+    # Error information about plugin, if available.
+    # Output independent of cachefile existance
+    [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
+
+    # Kill the process if it is running too long (cache file not accessed for more than TIMEOUT seconds).
+    # If killing succeeds, remove CACHFILE.new.PID.
+    # Remove CACHEFILE unconditionally.
+    # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
+    # It will be reported to the Check_MK agent service later on, by the sync part.
+    # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
     for cfile in "${CACHEFILE}.new."*; do
         [ -e "${cfile}" ] || break # no match
         if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
-            kill -9 "${cfile##*.new.}" # TODO: what about child processes?
-            rm -f "${cfile}" "${CACHEFILE}"
+            {
+                echo "<<<checkmk_cached_plugins:sep(124)>>>"
+                pid="${cfile##*.new.}"
+                printf "timeout|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
+                if [ -n "$(ps -o args= -p "${pid}")" ]; then
+                    printf "killfailed|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                else
+                    rm -f "${cfile}"
+                fi
+                rm -f "${CACHEFILE}"
+            } >"${CACHEFILE}".fail 2>&1
         fi
     done
 
@@ -2460,12 +2489,12 @@ run_cached() {
         if $MK_ORA_DEBUG; then
             cat <<HERE | "${THIS_SHELL}"
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
         else
             cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
 
         fi
@@ -2565,6 +2594,7 @@ mk_ora_db_connect() {
         logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
     fi
 
+    TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if [ "${ORADBUSER:0:2}" = '/@' ]; then
             P_TNSALIAS_P=$(eval echo "${ORADBUSER:2}")
@@ -2594,6 +2624,21 @@ mk_ora_db_connect() {
         fi
 
         TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
+
+        logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
+
+        if [ -f "${ORACLE_HOME}"/bin/tnsping ]; then
+            if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
+                TNSPINGOK=yes
+            else
+                unset TNSALIAS
+            fi
+        else
+            # if the binary tnsping does not exist we can not check whether the
+            # database is reachable or not, so we assume the database is
+            # reachable:
+            TNSPINGOK=yes
+        fi
     else
         if [ -z "$CFGTNSALIAS" ]; then
             unset TNSALIAS
@@ -2607,7 +2652,8 @@ mk_ora_db_connect() {
         "DB sys connect : $DBSYSCONNECT" \
         "DB host        : $DBHOST" \
         "DB port        : $DBPORT" \
-        "TNS alias      : $TNSALIAS"
+        "TNS alias      : $TNSALIAS" \
+        "TNS PING       : ${TNSPINGOK}"
 
     if [ ! "${ORACFGLINE}" ]; then
         # no configuration found
@@ -2625,7 +2671,7 @@ mk_ora_db_connect() {
             # connect with / and wallet
             ORADBUSER=""
             DBPASSWORD=""
-            if [ -z "$CFGTNSALIAS" ]; then
+            if [ -z "$CFGTNSALIAS" ] && [ "$TNSPINGOK" = 'no' ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
                 # or no alias is configured in CFGTNSALIAS
                 # defaults to localhost:1521/<ORACLE_SID>
@@ -2924,6 +2970,7 @@ export -f handle_custom_sql_errors
 
 set_up_tmpdirs() {
     ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle_tmp_dir"
+    # why don't we use /tmp to make cleanup easier?
     ORA_TASKS_TMPDIR="${ORA_TMPDIR}/tasks"
     mkdir -p "$ORA_TASKS_TMPDIR"
 }
@@ -3005,6 +3052,9 @@ main_queries() {
         _QUERY_PREFIX=$$
     fi
 
+    logging "[local] setting up intermediate query result directory '${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}'"
+    mkdir -p "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}"
+
     TASK_NR=0
     for sid in $SIDS; do
         if skip_sid "$sid"; then
@@ -3013,7 +3063,9 @@ main_queries() {
         fi
         ((TASK_NR++))
         logging "[${sid}] [local] starting background task '${TASK_NR}'"
-        (execute_queries_for_sid "$sid" >"$ORA_TASKS_TMPDIR/${_QUERY_PREFIX}-$sid") &
+        SID_QUERY_FILE="${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID-$sid"
+
+        (execute_queries_for_sid "$sid" >"${SID_QUERY_FILE}") &
         if [[ $(jobs -r -p | wc -l) -ge ${MAX_TASKS} ]]; then
             logging "[${sid}] [local] max parallel task running, waiting for new slot"
             if ((BASH_VERSINFO[0] > 4 || BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 3)); then
@@ -3022,12 +3074,24 @@ main_queries() {
                 wait
             fi
         fi
+
+        if [ ! -f "${SID_QUERY_FILE}" ]; then
+            logging "[local] No intermediate query result file '${SID_QUERY_FILE}' exists"
+        fi
     done
 
     wait
 
-    cat "$ORA_TASKS_TMPDIR/${_QUERY_PREFIX}"*
-    rm -f "$ORA_TASKS_TMPDIR"/*
+    cat "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID"*
+
+    cleanup_queries() {
+        logging "[local] cleaning up intermediate query result directory '${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}'"
+        rm -rf "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX:?}" >/dev/null 2>&1
+        logging "[local] cleaning up any old query result directories in '${ORA_TASKS_TMPDIR}'"
+        # in case process was previously stopped via kill -9 and could not clean up
+        find "${ORA_TASKS_TMPDIR}/*" -type d -mtime +1 -exec rm -r {} + >/dev/null 2>&1
+    }
+    trap cleanup_queries HUP INT QUIT ABRT ALRM TERM EXIT
 
     #   ---remote---------------------------------------------------------------
 
@@ -3062,13 +3126,15 @@ main_queries() {
 main() {
     # See werk 13732 for more details about this main function
 
-    if [ "$0" = "./mk_oracle" ]; then
-        parent_dir=$(basename "$(pwd)")
-    else
-        parent_dir=$(basename "$(dirname "$0")")
-    fi
+    parent_dir=$(basename "$(
+        cd "$(dirname "$0")" || {
+            echo "Can't access the parent directory" >&2
+            exit 1
+        }
+        pwd
+    )")
 
-    if $MK_ORA_ON_CL || [ "$parent_dir" = plugins ]; then
+    if $MK_ORA_NOSPOOL || [ "$parent_dir" = plugins ]; then
         # Does not work properly (async sections) on distros
         # where check_mk_agent.sync.service is a systemd service
         main_mode() { main_queries; }

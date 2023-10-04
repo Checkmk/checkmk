@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 import cmk.utils.paths
 
@@ -91,7 +91,6 @@ def test_default_config_from_plugins() -> None:
         "default_user_profile",
         "log_logon_failures",
         "lock_on_logon_failures",
-        "user_idle_timeout",
         "single_user_session",
         "password_policy",
         "user_localizations",
@@ -109,6 +108,7 @@ def test_default_config_from_plugins() -> None:
         "log_level",
         "log_rulehits",
         "rule_optimizer",
+        "session_mgmt",
         "mkeventd_service_levels",
         "wato_host_tags",
         "wato_aux_tags",
@@ -119,7 +119,6 @@ def test_default_config_from_plugins() -> None:
         "wato_upload_insecure_snapshots",
         "wato_hide_varnames",
         "wato_hide_help_in_lists",
-        "wato_activate_changes_concurrency",
         "wato_max_snapshots",
         "wato_num_hostspecs",
         "wato_num_itemspecs",
@@ -150,6 +149,7 @@ def test_default_config_from_plugins() -> None:
         "enable_login_via_get",
         "enable_community_translations",
         "default_temperature_unit",
+        "experimental_features",
     ]
 
     # The below lines are confusing and incorrect. The reason we need them is

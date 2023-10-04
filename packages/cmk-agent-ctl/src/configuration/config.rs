@@ -611,11 +611,13 @@ impl LegacyPullMarker {
     }
 }
 
-#[derive(StringEnum, PartialEq, Eq)]
+#[derive(StringEnum, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ConnectionMode {
     /// `push-agent`
+    #[serde(rename = "push-agent")]
     Push,
     /// `pull-agent`
+    #[serde(rename = "pull-agent")]
     Pull,
 }
 
@@ -1308,5 +1310,25 @@ mod test_registry {
             .to_str()
             .unwrap()
             .contains(reg.path().file_name().unwrap().to_str().unwrap()));
+    }
+
+    #[test]
+    fn test_mode_serialization() {
+        assert_eq!(
+            serde_json::to_string(&ConnectionMode::Pull).unwrap(),
+            "\"pull-agent\""
+        );
+        assert_eq!(
+            serde_json::to_string(&ConnectionMode::Push).unwrap(),
+            "\"push-agent\""
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"push-agent\"").unwrap(),
+            ConnectionMode::Push
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"pull-agent\"").unwrap(),
+            ConnectionMode::Pull
+        );
     }
 }

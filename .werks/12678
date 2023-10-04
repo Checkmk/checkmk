@@ -26,5 +26,5 @@ displayed alongside the failed plugin.</li>
 <li>The other way round: <tt><em>plugin</em>_2.py</tt> is deployed, but found no Python 2
 installation, and there is no <tt><i>plugin</i>.py</tt> counterpart. The reason "Missing Python 2
 installation" will be displayed alongside the failed plugin.</li>
-<ul>
+</ul>
 

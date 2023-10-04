@@ -13,6 +13,10 @@ import cmk.utils.version as cmk_version
 from cmk.utils.version import parse_check_mk_version, Version
 
 
+def test_version() -> None:
+    assert isinstance(cmk_version.__version__, str)
+
+
 class TestVersion:
     def test_stable(self) -> None:
         assert Version.from_str("1.2.3")
@@ -172,3 +176,19 @@ def test_omd_version_reads_from_version_link(
     # Is set dynamically by testlib.fake_version_and_paths
     assert cmk_version.orig_omd_version() == "2016.09.12.cee"  # type: ignore[attr-defined]
     link_path.unlink()
+
+
+class TestEdition:
+    @pytest.mark.parametrize(
+        "omd_version_str, expected",
+        [
+            ("1.4.0i1.cre", cmk_version.Edition.CRE),
+            ("1.4.0i1.cee", cmk_version.Edition.CEE),
+            ("2016.09.22.cee", cmk_version.Edition.CEE),
+            ("2.1.0p3.cme", cmk_version.Edition.CME),
+            ("2.1.0p3.cce", cmk_version.Edition.CCE),
+            ("2.1.0p3.cse", cmk_version.Edition.CSE),
+        ],
+    )
+    def test_from_version_string(self, omd_version_str: str, expected: cmk_version.Edition) -> None:
+        assert cmk_version.Edition.from_version_string(omd_version_str) is expected

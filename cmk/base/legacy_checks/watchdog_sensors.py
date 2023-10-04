@@ -73,10 +73,10 @@ def _parse_line(line, temp_unit):
     yield "dew", {"Dew point %s" % sensor_id: (line[5], temp_unit)}
 
 
-def parse_watchdog_sensors(info):
+def parse_watchdog_sensors(string_table):
     parsed = {}
 
-    general, data = info
+    general, data = string_table
     if not general:
         return parsed
 
@@ -138,10 +138,6 @@ check_info["watchdog_sensors"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21239.5.1"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21239.42.1"),
     ),
-    parse_function=parse_watchdog_sensors,
-    discovery_function=inventory_watchdog_sensors,
-    check_function=check_watchdog_sensors,
-    service_name="%s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.21239.5.1.1",
@@ -152,6 +148,10 @@ check_info["watchdog_sensors"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3", "4", "5", "6", "7", "8"],
         ),
     ],
+    parse_function=parse_watchdog_sensors,
+    service_name="%s",
+    discovery_function=inventory_watchdog_sensors,
+    check_function=check_watchdog_sensors,
 )
 
 # .
@@ -188,9 +188,10 @@ def check_watchdog_sensors_temp(item, params, parsed):
 
 
 check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
+    service_name="%s ",
+    sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_temp,
     check_function=check_watchdog_sensors_temp,
-    service_name="%s ",
     check_ruleset_name="temperature",
 )
 
@@ -225,19 +226,20 @@ def check_watchdog_sensors_humidity(item, params, parsed):
     yield 0, "%.1f%%" % humidity, [("humidity", humidity, warn, crit)]
 
     if humidity >= crit:
-        yield 2, "warn/crit at %s/%s" % (warn, crit)
+        yield 2, f"warn/crit at {warn}/{crit}"
     elif humidity <= crit_lower:
-        yield 2, "warn/crit at %s/%s" % (warn, crit)
+        yield 2, f"warn/crit at {warn}/{crit}"
     elif humidity >= warn:
-        yield 1, "warn/crit below %s/%s" % (warn, crit)
+        yield 1, f"warn/crit below {warn}/{crit}"
     elif humidity <= warn_lower:
-        yield 1, "warn/crit below %s/%s" % (warn, crit)
+        yield 1, f"warn/crit below {warn}/{crit}"
 
 
 check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="%s",
+    sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_humidity,
     check_function=check_watchdog_sensors_humidity,
-    service_name="%s",
     check_ruleset_name="humidity",
     check_default_parameters={
         "levels": (50, 55),
@@ -277,8 +279,9 @@ def check_watchdog_sensors_dew(item, params, parsed):
 
 
 check_info["watchdog_sensors.dew"] = LegacyCheckDefinition(
+    service_name="%s",
+    sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_dew,
     check_function=check_watchdog_sensors_dew,
-    service_name="%s",
     check_ruleset_name="temperature",
 )

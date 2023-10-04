@@ -10,15 +10,18 @@ The matching algorhytm for this rules did not check if the matched
 cluster did actually belong to the node.
 
 For example if you had the following clusters
-<pre>
+
+C+:
 ClusterA: Host1, Host2
 ClusterB: Host3, Host4
-</pre>
+C-:
+
 And these "Clustered services for overlapping cluster" rules
-<pre>
-Rule 1) Service1 -> ClusterA
-Rule 2) Service1 -> ClusterB
-</pre>
+
+C+:
+Rule 1) Service1 -&gt; ClusterA
+Rule 2) Service1 -&gt; ClusterB
+C-:
 
 If Host3 has a Service1, the rule number one would match and
 assign this service to ClusterA, ignoring the fact that this

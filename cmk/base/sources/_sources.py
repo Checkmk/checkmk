@@ -8,10 +8,11 @@
 from collections.abc import Mapping
 from typing import Final
 
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template
@@ -25,8 +26,8 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
-from cmk.checkengine import SourceInfo, SourceType
-from cmk.checkengine.type_defs import SectionNameCollection
+from cmk.checkengine.fetcher import SourceInfo, SourceType
+from cmk.checkengine.parser import SectionNameCollection
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

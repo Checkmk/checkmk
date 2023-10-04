@@ -39,7 +39,7 @@ def check_msexch_replhealth(item, _no_params, info):
     getit = False
     for line in info:
         if len(line) == 2:
-            key, val = [i.strip() for i in line]
+            key, val = (i.strip() for i in line)
             if key == "Check" and val == item:
                 getit = True
             elif key == "Result" and getit:
@@ -54,7 +54,7 @@ def check_msexch_replhealth(item, _no_params, info):
 
 
 check_info["msexch_replhealth"] = LegacyCheckDefinition(
+    service_name="Exchange Replication Health %s",
     discovery_function=inventory_msexch_replhealth,
     check_function=check_msexch_replhealth,
-    service_name="Exchange Replication Health %s",
 )

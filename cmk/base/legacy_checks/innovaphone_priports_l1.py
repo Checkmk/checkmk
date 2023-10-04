@@ -6,14 +6,19 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    equals,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+)
 
 
-def parse_innovaphone_priports_l1(info):
+def parse_innovaphone_priports_l1(string_table):
     parsed = {}
-    for item, state_s, sigloss_s, slip_s in info:
+    for item, state_s, sigloss_s, slip_s in string_table:
         parsed[item] = {
             "state": saveint(state_s),
             "sigloss": saveint(sigloss_s),
@@ -42,7 +47,13 @@ def check_innovaphone_priports_l1(item, params, parsed):
     yield 0 if l1state == 2 else 2, "Current state is %s" % states[l1state]
 
     l1sigloss = data["sigloss"]
-    siglos_per_sec = get_rate("innovaphone_priports_l1." + item, time.time(), l1sigloss)
+    siglos_per_sec = get_rate(
+        get_value_store(),
+        "innovaphone_priports_l1." + item,
+        time.time(),
+        l1sigloss,
+        raise_overflow=True,
+    )
     if siglos_per_sec > 0:
         yield 2, "Signal loss is %.2f/sec" % siglos_per_sec
 
@@ -53,12 +64,12 @@ def check_innovaphone_priports_l1(item, params, parsed):
 
 check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
-    parse_function=parse_innovaphone_priports_l1,
-    discovery_function=inventory_innovaphone_priports_l1,
-    check_function=check_innovaphone_priports_l1,
-    service_name="Port L1 %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.2.1",
         oids=["1", "2", "5", "9"],
     ),
+    parse_function=parse_innovaphone_priports_l1,
+    service_name="Port L1 %s",
+    discovery_function=inventory_innovaphone_priports_l1,
+    check_function=check_innovaphone_priports_l1,
 )

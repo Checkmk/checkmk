@@ -35,13 +35,13 @@ def check_mbg_lantime_ng_state(_no_item, params, info):
 
 check_info["mbg_lantime_ng_state"] = LegacyCheckDefinition(
     detect=DETECT_MBG_LANTIME_NG,
-    check_function=check_mbg_lantime_ng_state,
-    discovery_function=inventory_mbg_lantime_ng_state,
-    service_name="LANTIME State",
-    check_ruleset_name="mbg_lantime_state",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.2",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="LANTIME State",
+    discovery_function=inventory_mbg_lantime_ng_state,
+    check_function=check_mbg_lantime_ng_state,
+    check_ruleset_name="mbg_lantime_state",
     check_default_parameters=MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )

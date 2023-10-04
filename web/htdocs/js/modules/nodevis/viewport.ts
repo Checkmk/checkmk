@@ -1,11 +1,13 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import "nodevis/layout";
 
 import * as d3 from "d3";
-import {ZoomTransform} from "d3";
+import {HierarchyRectangularNode, ZoomTransform} from "d3";
 import {
     AbstractLayer,
     FixLayer,
@@ -68,8 +70,8 @@ export class LayeredViewport {
 
     //////////////////////////////////
     _svg_layers_selection: d3SelectionG;
-    _layers: {[name: string]: AbstractLayer} = {};
-    _selections_for_layers: {[name: string]: LayerSelections} = {};
+    _layers: Record<string, AbstractLayer> = {};
+    _selections_for_layers: Record<string, LayerSelections> = {};
     width = 0;
     height = 0;
 
@@ -209,7 +211,7 @@ export class LayeredViewport {
         // TODO: sort layer order
     }
 
-    get_overlay_configs(): {[name: string]: OverlayConfig} {
+    get_overlay_configs(): Record<string, OverlayConfig> {
         return this._overlay_configs;
     }
 
@@ -237,19 +239,19 @@ export class LayeredViewport {
         this._world.update_browser_url();
     }
 
-    enable_layer(layer_id): void {
+    enable_layer(layer_id: string): void {
         this._layers[layer_id].enable();
     }
 
-    disable_layer(layer_id): void {
+    disable_layer(layer_id: string): void {
         this._layers[layer_id].disable();
     }
 
-    get_layers(): {[name: string]: AbstractLayer} {
+    get_layers(): Record<string, AbstractLayer> {
         return this._layers;
     }
 
-    get_layer(layer_id): AbstractLayer {
+    get_layer(layer_id: string): AbstractLayer {
         return this._layers[layer_id];
     }
 
@@ -292,9 +294,9 @@ export class LayeredViewport {
         toggleboxes.classed("enabled", d => d.config.active);
     }
 
-    toggle_overlay_click(event): void {
+    toggle_overlay_click(event: MouseEvent): void {
         event.stopPropagation();
-        const target = d3.select(event.target);
+        const target = d3.select(event.target as HTMLElement);
         const layer_id = target.attr("layer_id");
         target.classed("enabled", !this._layers[layer_id].is_enabled());
         const overlay_config = this.get_overlay_configs()[layer_id] || {};
@@ -367,7 +369,7 @@ export class LayeredViewport {
             serialized_node_chunk.type,
             hierarchy,
             serialized_node_chunk.links,
-            // @ts-ignore
+            //@ts-ignore
             serialized_node_chunk.layout
         );
 
@@ -387,7 +389,7 @@ export class LayeredViewport {
         this._node_chunk_list = new_chunk_list;
     }
 
-    _filter_root_cause(node): void {
+    _filter_root_cause(node: NodevisNode): void {
         if (!node._children) return;
 
         const critical_children: NodevisNode[] = [];
@@ -424,10 +426,15 @@ export class LayeredViewport {
         const treemap_root = d3.hierarchy(partition_hierarchy);
         treemap_root.sum(d => d.count);
 
+        // @ts-ignore treemap_root is of type HierarchyNode<hierarchy_overview_type>...
+        // Could be that we define our own HierarchyNode in type_defs?
         d3.treemap().size([this.width, this.height])(treemap_root);
         for (const idx in treemap_root.children) {
-            const child = treemap_root.children[idx];
-            const node_chunk = this._node_chunk_list[idx];
+            const index = +idx;
+            const child = treemap_root.children[
+                index
+            ] as HierarchyRectangularNode<hierarchy_overview_type>;
+            const node_chunk: NodeChunk = this._node_chunk_list[index];
             node_chunk.coords = {
                 x: child.x0,
                 y: child.y0,
@@ -512,7 +519,7 @@ export class LayeredViewport {
         return this._node_chunk_list;
     }
 
-    get_chunk_of_node(node_in_chunk): NodeChunk | null {
+    get_chunk_of_node(node_in_chunk: NodevisNode): NodeChunk | null {
         const root_node = this._get_chunk_root(node_in_chunk);
         for (const idx in this._node_chunk_list) {
             if (this._node_chunk_list[idx].tree == root_node)
@@ -521,12 +528,12 @@ export class LayeredViewport {
         return null;
     }
 
-    _get_chunk_root(node): NodevisNode {
+    _get_chunk_root(node: NodevisNode): NodevisNode {
         if (!node.parent) return node;
         return this._get_chunk_root(node.parent);
     }
 
-    update_node_chunk_list(new_chunk) {
+    update_node_chunk_list(new_chunk: NodeChunk) {
         const chunk_id = new_chunk.tree.data.id;
         for (const idx in this._node_chunk_list) {
             const existing_chunk = this._node_chunk_list[idx];
@@ -551,7 +558,7 @@ export class LayeredViewport {
         this._node_chunk_list.push(new_chunk);
     }
 
-    _migrate_node_content(old_node, new_node) {
+    _migrate_node_content(old_node: NodevisNode, new_node: NodevisNode) {
         // Reuse computed coordinates from previous chunk data
         new_node.x = old_node.x;
         new_node.y = old_node.y;
@@ -560,13 +567,14 @@ export class LayeredViewport {
         new_node.data.user_interactions = old_node.data.user_interactions;
     }
 
-    _apply_user_interactions_to_chunk(chunk) {
+    _apply_user_interactions_to_chunk(chunk: NodeChunk) {
         chunk.nodes.forEach(node => {
             const bi_setting = node.data.user_interactions.bi;
             if (bi_setting === undefined) return;
 
             switch (bi_setting) {
                 case "collapsed":
+                    // @ts-ignore
                     node.children = null;
                     break;
                 case "root_cause":
@@ -577,7 +585,7 @@ export class LayeredViewport {
         this.update_node_chunk_descendants_and_links(chunk);
     }
 
-    update_node_chunk_descendants_and_links(node_chunk) {
+    update_node_chunk_descendants_and_links(node_chunk: NodeChunk) {
         // This feature is only supported/useful for bi visualization
         if (node_chunk.type != "bi") return;
 
@@ -594,7 +602,7 @@ export class LayeredViewport {
         node_chunk.links = chunk_links;
     }
 
-    recompute_node_chunk_descendants_and_links(node_chunk) {
+    recompute_node_chunk_descendants_and_links(node_chunk: NodeChunk) {
         this.update_node_chunk_descendants_and_links(node_chunk);
         const all_nodes = this.get_all_nodes();
         const all_links = this.get_all_links();
@@ -625,7 +633,7 @@ export class LayeredViewport {
         }
     }
 
-    zoomed(event) {
+    zoomed(event: d3.D3ZoomEvent<any, any>) {
         if (!this.data_to_show) return;
 
         this.last_zoom = event.transform;
@@ -644,7 +652,7 @@ export class LayeredViewport {
     }
 
     // Applies scale and x/y translation
-    translate_to_zoom(coords): Coords {
+    translate_to_zoom(coords: Coords): Coords {
         const translated = this.scale_to_zoom(coords);
         if ("x" in translated) translated.x = this.last_zoom.x + translated.x;
         if ("y" in translated) translated.y = this.last_zoom.y + translated.y;
@@ -772,7 +780,7 @@ export class LayeredViewport {
             .remove();
     }
 
-    _format_time(now): string {
+    _format_time(now: Date): string {
         return (
             now.toLocaleTimeString("de") +
             "." +

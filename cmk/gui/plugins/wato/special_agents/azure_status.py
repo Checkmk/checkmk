@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.azure_constants import AZURE_REGIONS
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
@@ -45,7 +46,7 @@ def _valuespec_special_agents_azure_status() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:azure_status",
+        name=RuleGroup.SpecialAgents("azure_status"),
         valuespec=_valuespec_special_agents_azure_status,
         doc_references={DocReference.AZURE: _("Monitoring Microsoft Azure")},
     )

@@ -29,7 +29,7 @@ def inventory_winperf_ts_sessions(info):
 def check_winperf_ts_sessions(_unused, params, info):
     if not info or len(info) == 1:
         return 3, "Performance counters not available"
-    total, active, inactive = [int(l[1]) for l in info[1:4]]
+    total, active, inactive = (int(l[1]) for l in info[1:4])
 
     # Tom Moore said, that the order of the columns has recently changed
     # in newer Windows versions (hooray!) and is now active, inactive, total.
@@ -55,8 +55,8 @@ def check_winperf_ts_sessions(_unused, params, info):
 
 
 check_info["winperf_ts_sessions"] = LegacyCheckDefinition(
-    check_function=check_winperf_ts_sessions,
-    discovery_function=inventory_winperf_ts_sessions,
     service_name="Sessions",
+    discovery_function=inventory_winperf_ts_sessions,
+    check_function=check_winperf_ts_sessions,
     check_ruleset_name="winperf_ts_sessions",
 )

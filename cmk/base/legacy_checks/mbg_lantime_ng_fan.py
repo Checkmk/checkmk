@@ -6,13 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 
-def parse_mbg_lantime_ng_fan(info):
+def parse_mbg_lantime_ng_fan(string_table):
     parsed = {}
     fan_states = {
         "0": (3, "not available"),
@@ -25,7 +25,7 @@ def parse_mbg_lantime_ng_fan(info):
         "2": (2, "yes"),
     }
 
-    for line in info:
+    for line in string_table:
         index, fan_status, fan_error = line
         if not index:
             continue
@@ -50,26 +50,31 @@ def parse_mbg_lantime_ng_fan(info):
     return parsed
 
 
-@get_parsed_item_data
+def discover_mbg_lantime_ng_fan(section):
+    yield from (
+        (item, {}) for item, data in section.items() if data["status"]["name"] != "not available"
+    )
+
+
 def check_mbg_lantime_ng_fan(item, _no_params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    fan_status = parsed["status"]
+    fan_status = data["status"]
     yield fan_status["state"], "Status: %s" % fan_status["name"]
 
-    fan_error = parsed["error"]
+    fan_error = data["error"]
     yield fan_error["state"], "Errors: %s" % fan_error["name"]
 
 
 check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
     detect=DETECT_MBG_LANTIME_NG,
-    check_function=check_mbg_lantime_ng_fan,
-    parse_function=parse_mbg_lantime_ng_fan,
-    discovery_function=discover(lambda k, value: value["status"]["name"] != "not available"),
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.1.2.1",
         oids=["1", "2", "3"],
     ),
+    parse_function=parse_mbg_lantime_ng_fan,
+    service_name="Fan %s",
+    discovery_function=discover_mbg_lantime_ng_fan,
+    check_function=check_mbg_lantime_ng_fan,
 )

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
 
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
@@ -11,7 +10,7 @@ from .utils.aruba import DETECT_WLC
 from .utils.wlc_clients import ClientsTotal, WlcClientsSection
 
 
-def parse_aruba_wlc_clients(string_table: List[StringTable]) -> WlcClientsSection[ClientsTotal]:
+def parse_aruba_wlc_clients(string_table: list[StringTable]) -> WlcClientsSection[ClientsTotal]:
     section: WlcClientsSection[ClientsTotal] = WlcClientsSection()
     for oid_fragment, num_clients_str in string_table[0]:
         ssid_name = bytes(int(x) for x in oid_fragment.split(".")[1:]).decode("ascii")

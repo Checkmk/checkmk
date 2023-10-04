@@ -2,14 +2,14 @@
 src = ["cmk", "tests"]
 target-version = "py311"
 ignore = [
-    "E402",  # module level import not on top of the file
-    "E501",  # line too long, 100s of fails. Fixable.
-    "E731",  # Do not assign a `lambda` expression, use a `def`
-    "E741",  # amgiguous variable name (l, x, etc.)
-    "E713",  # Test for membership should be `not in`
-    "E999",  # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
+    "E402", # module level import not on top of the file
+    "E501", # line too long, 100s of fails. Fixable.
+    "E731", # Do not assign a `lambda` expression, use a `def`
+    "E741", # amgiguous variable name (l, x, etc.)
+    "E713", # Test for membership should be `not in`
+    "E999", # SyntaxError, all due to missing "match" support in ruff. See: https://github.com/charliermarsh/ruff/issues/282
 
-    "S101",  # assert detected
+    "S101", # assert detected
 
     # Ignored in .flake8 but not here.
     # F403 undefined imports, all are fixed now, but we shouldn't add new ones.
@@ -35,13 +35,10 @@ select = ["E", "F", "YTT"]
 #   "D" - enforces docstring writing style. Ignore "D10,D4" for now.
 #   "COM" - enforce trailing comma. Lots of matches.
 unfixable = [
-    "F401",  # pylint: disable=unused-import. Clean up by hand.
+    "F401", # pylint: disable=unused-import. Clean up by hand.
 ]
 [per-file-ignores]
-"cmk/gui/config.py" = [
-    "F403",
-    "F405",
-]
+"cmk/gui/config.py" = ["F403", "F405"]
 [flake8-annotations]
 suppress-dummy-args = true
 [mccabe]
@@ -96,41 +93,54 @@ target-version = ['py311']
 plugins = ["pydantic.mypy"]
 # When all of these are true, we can enable --strict
 check_untyped_defs = true
-disallow_any_generics = false  # 1904 errors in 507 files
+disallow_any_generics = false      # 1904 errors in 507 files
 disallow_incomplete_defs = true
-disallow_subclassing_any = false  # 11 errors in 10 files
-disallow_untyped_calls = false  # 6427 errors in 1077 files
+disallow_subclassing_any = false   # 11 errors in 10 files
+disallow_untyped_calls = false     # 6427 errors in 1077 files
 disallow_untyped_decorators = true
-disallow_untyped_defs = false  # 6738 errors in 1571
-no_implicit_optional = true
-no_implicit_reexport = false  # 3026 errors in 1213 files
-strict_concatenate = true
+disallow_untyped_defs = false      # 6738 errors in 1571
+extra_checks = true
+no_implicit_reexport = true
 strict_equality = true
 warn_redundant_casts = true
-warn_return_any = false  # 821 errors in 304 files
+warn_return_any = false            # 622 errors in 267 files
 warn_unused_configs = true
-warn_unused_ignores = false  # 55 errors in 31 files
+warn_unused_ignores = false        # 25 errors in 8 files
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
-disallow_any_explicit = false  # 2854 errors in 836 files
-disallow_any_expr = false  # 112427 errors in 3304 files
-disallow_any_unimported = false  # 317 errors in 47 files
-warn_unreachable = false  # 240 errors in 133 files
+disallow_any_explicit = false   # 2854 errors in 836 files
+disallow_any_expr = false       # 112427 errors in 3304 files
+disallow_any_unimported = false # 291 errors in 46 files
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = false        # 240 errors in 133 files
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
 
 [[tool.mypy.overrides]]
 module = [
     "cmk.cee.bakery.*",
     "cmk.gui.background_job",
-    "cmk.gui.backup",
+    "cmk.gui.backup.backup",
     "cmk.gui.mobile.views",
+    "cmk.gui.plugins.wato.bi_config",
+    "cmk.gui.plugins.wato.utils.main_menu",
     "cmk.gui.views.layout",
-    "cmk.gui.views.painter",
+    "cmk.gui.wato.pages.bulk_discovery",
+    "cmk.gui.wato.pages.bulk_edit",
+    "cmk.gui.wato.pages.folders",
+    "cmk.gui.wato.pages.parentscan",
+    "cmk.gui.watolib.bulk_discovery",
+    "cmk.gui.watolib.config_sync",
+    "cmk.gui.watolib.main_menu",
+    "cmk.gui.watolib.network_scan",
     "cmk.notification_plugins.*",
     "cmk.update_config.*",
     "cmk.utils.crypto.*",
+    "cmk.utils.livestatus_helpers.*",
     "tests.gui_e2e.*",
-    "tests.testlib.event_console",
-    "tests.testlib.playwright.*",
+    "tests.testlib.*",
     "tests.unit.cmk.ec.*",
     "tests.unit.cmk.update_config.*",
 ]
@@ -148,11 +158,15 @@ warn_untyped_fields = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# --durations=20: Show the 20 slowest tests
-addopts = "--log-cli-level=INFO --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
-markers = [
-    "checks: Run all existing test cases for checks.",
-]
+# Live logs initially look like a good idea to pin down problems in the tests
+# quickly, but with the current state of our tests it's simply too much noise.
+# Even in a successful unit test run, you get more than 70 log messages
+# cluttering up the output and making it hard to use: saml2.client logs already
+# at load time, tons of our own tests emit warnings up to ERROR even when
+# successful, etc. etc. We might reconsinder lowering the live log level when we
+# have cleaned up things...
+addopts = "--log-cli-level=CRITICAL --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
+markers = ["checks: Run all existing test cases for checks."]
 # See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
 filterwarnings = [
     # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759
@@ -167,6 +181,8 @@ filterwarnings = [
     'ignore:^the load_module\(\) method is deprecated and slated for removal in Python 3.12; use exec_module\(\) instead$:DeprecationWarning',
     # Make marshmallow warnings errors, otherwise typos may go unnoticed.
     'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
+    # Fun fact: pkg_resources calls declare_namespace() itself when it processes namespace_packages.txt files.
+    'ignore:Deprecated call to `pkg_resources\.declare_namespace:DeprecationWarning:pkg_resources:0',
 ]
 # When writing a junit.xml, also write the output of a test to the junit
 # file in addition to the console.

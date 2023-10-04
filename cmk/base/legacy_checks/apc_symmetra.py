@@ -51,14 +51,14 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # 56: UPS Internal Communication Failure, 57-64: <Not Used>
 
 
-def parse_apc_symmetra(info):
-    sensor_info, info = info
+def parse_apc_symmetra(string_table):
+    sensor_info, string_table = string_table
     parsed = {}
 
     for name, temp in sensor_info:
         parsed.setdefault("temp", {})[name] = int(temp)
 
-    if not info:
+    if not string_table:
         return parsed
 
     # some numeric fields may be empty
@@ -74,7 +74,7 @@ def parse_apc_symmetra(info):
         battery_temp,
         battery_current,
         state_output_state,
-    ) = info[0]
+    ) = string_table[0]
 
     if state_output_state != "":
         # string contains a bitmask, convert to int
@@ -219,7 +219,7 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             "3": " (calibration in progress)",
         }.get(calib_result, " (calibration unexpected(%s))" % calib_result)
 
-        yield state, "Output status: %s%s%s" % (
+        yield state, "Output status: {}{}{}".format(
             state_readable,
             calib_text,
             " (self-test running)" if self_test_in_progress else "",
@@ -237,10 +237,10 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
         else:
             if battery_capacity < crit_cap:
                 state = 2
-                levelstxt = " (warn/crit below %.1f%%/%.1f%%)" % (warn_cap, crit_cap)
+                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
             elif battery_capacity < warn_cap:
                 state = 1
-                levelstxt = " (warn/crit below %.1f%%/%.1f%%)" % (warn_cap, crit_cap)
+                levelstxt = f" (warn/crit below {warn_cap:.1f}%/{crit_cap:.1f}%)"
 
         yield state, "Capacity: %d%%%s" % (battery_capacity, levelstxt), [
             ("capacity", battery_capacity, warn_cap, crit_cap, 0, 100)
@@ -270,20 +270,16 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
             perfdata = [("runtime", battery_time_remain / 60.0)]
 
         if state:
-            levelstxt = " (warn/crit below %s/%s)" % (
+            levelstxt = " (warn/crit below {}/{})".format(
                 get_age_human_readable(battery_time_warn),
                 get_age_human_readable(battery_time_crit),
             )
 
-        yield state, "Time remaining: %s%s" % (battery_time_remain_readable, levelstxt), perfdata
+        yield state, f"Time remaining: {battery_time_remain_readable}{levelstxt}", perfdata
 
 
 check_info["apc_symmetra"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_symmetra,
-    discovery_function=inventory_apc_symmetra,
-    check_function=check_apc_symmetra,
-    service_name="APC Symmetra status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
@@ -306,6 +302,10 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
             ],
         ),
     ],
+    parse_function=parse_apc_symmetra,
+    service_name="APC Symmetra status",
+    discovery_function=inventory_apc_symmetra,
+    check_function=check_apc_symmetra,
     check_ruleset_name="apc_symentra",
     check_default_parameters={
         "capacity": (95, 80),
@@ -347,9 +347,10 @@ def check_apc_symmetra_temp(item, params, parsed):
 
 
 check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
+    sections=["apc_symmetra"],
     discovery_function=inventory_apc_symmetra_temp,
     check_function=check_apc_symmetra_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels_battery": (50, 60),
@@ -378,9 +379,10 @@ def check_apc_symmetra_elphase(item, params, parsed):
 
 
 check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
+    service_name="Phase %s",
+    sections=["apc_symmetra"],
     discovery_function=inventory_apc_symmetra_elphase,
     check_function=check_apc_symmetra_elphase,
-    service_name="Phase %s",
     check_ruleset_name="ups_outphase",
     check_default_parameters={},
 )

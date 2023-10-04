@@ -4,21 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from typing import Any, Type
+from typing import Any
 
-from cmk.base.check_api import (
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
 from cmk.base.config import check_info
 
 
-def parse_aws_rds_limits(info):
+def parse_aws_rds_limits(string_table):
     limits_by_region: AWSLimitsByRegion = {}
-    for line in parse_aws(info):
+    for line in parse_aws(string_table):
         resource_key, resource_title, limit, amount, region = line
 
         if resource_key == "allocated_storage":
@@ -26,7 +21,7 @@ def parse_aws_rds_limits(info):
             factor = 1024**4 / 1000.0
             limit = limit * factor
             amount = amount * factor
-            human_readable_f: Callable[[Any], str] | Type[int] = get_bytes_human_readable
+            human_readable_f: Callable[[Any], str] | type[int] = get_bytes_human_readable
         else:
             human_readable_f = int
         limits_by_region.setdefault(region, []).append(
@@ -35,16 +30,21 @@ def parse_aws_rds_limits(info):
     return limits_by_region
 
 
-@get_parsed_item_data
-def check_aws_rds_limits(item, params, region_data):
-    return check_aws_limits("rds", params, region_data)
+def check_aws_rds_limits(item, params, parsed):
+    if not (region_data := parsed.get(item)):
+        return
+    yield from check_aws_limits("rds", params, region_data)
+
+
+def discover_aws_rds_limits(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["aws_rds_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_rds_limits,
-    discovery_function=discover(),
-    check_function=check_aws_rds_limits,
     service_name="AWS/RDS Limits %s",
+    discovery_function=discover_aws_rds_limits,
+    check_function=check_aws_rds_limits,
     check_ruleset_name="aws_rds_limits",
     check_default_parameters={
         "db_instances": (None, 80.0, 90.0),

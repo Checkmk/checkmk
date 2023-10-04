@@ -13,13 +13,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    SimpleEditMode,
-    SimpleListMode,
-    SimpleModeType,
-    WatoMode,
-)
 from cmk.gui.table import Table
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri_contextless
@@ -31,12 +24,20 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
+from cmk.gui.wato.pages.rulesets import VSExplicitConditions
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, UseHostFolder
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, RuleConditions, UseHostFolder
 from cmk.gui.watolib.rulespecs import RulespecGroup, ServiceRulespec
+
+from ._simple_modes import SimpleEditMode, SimpleListMode, SimpleModeType
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModePredefinedConditions)
+    mode_registry.register(ModeEditPredefinedCondition)
 
 
 class DummyRulespecGroup(RulespecGroup):
@@ -87,7 +88,6 @@ class PredefinedConditionModeType(SimpleModeType):
         return [ConfigDomainCore]
 
 
-@mode_registry.register
 class ModePredefinedConditions(SimpleListMode):
     @classmethod
     def name(cls) -> str:
@@ -195,7 +195,6 @@ class ModePredefinedConditions(SimpleListMode):
         return self._contact_groups.get(name, {"alias": name})["alias"]
 
 
-@mode_registry.register
 class ModeEditPredefinedCondition(SimpleEditMode):
     @classmethod
     def name(cls) -> str:

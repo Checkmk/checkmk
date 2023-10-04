@@ -4,14 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_item_state,
-    LegacyCheckDefinition,
-    set_item_state,
-)
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -59,9 +55,10 @@ def check_siemens_plc_temp(item, params, info):
 
 
 check_info["siemens_plc.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_temp,
     check_function=check_siemens_plc_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (70.0, 80.0),
@@ -101,9 +98,10 @@ def check_siemens_plc_flag(item, params, info):
 
 
 check_info["siemens_plc.flag"] = LegacyCheckDefinition(
+    service_name="Flag %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_flag,
     check_function=check_siemens_plc_flag,
-    service_name="Flag %s",
     check_ruleset_name="siemens_plc_flag",
 )
 
@@ -133,24 +131,24 @@ def check_siemens_plc_duration(item, params, info):
         if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0] + " " + line[
             2
         ] == item:
+            value_store = get_value_store()
             if line[1].startswith("hours"):
-                seconds = int(line[-1]) * 3600
+                seconds = float(line[-1]) * 3600
             else:
-                seconds = int(line[-1])
+                seconds = float(line[-1])
 
             perfdata = [(line[1], seconds)]
 
             key = "siemens_plc.duration.%s" % item
-            old_seconds = get_item_state(key, None)
+            old_seconds = value_store.get(key)
             if old_seconds is not None and old_seconds > seconds:
                 return (
                     2,
-                    "Reduced from %s to %s"
-                    % (get_age_human_readable(old_seconds), get_age_human_readable(seconds)),
+                    f"Reduced from {get_age_human_readable(old_seconds)} to {get_age_human_readable(seconds)}",
                     perfdata,
                 )
 
-            set_item_state(key, seconds)
+            value_store[key] = seconds
 
             state = 0
             warn, crit = params.get("duration", (None, None))
@@ -164,9 +162,10 @@ def check_siemens_plc_duration(item, params, info):
 
 
 check_info["siemens_plc.duration"] = LegacyCheckDefinition(
+    service_name="Duration %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_duration,
     check_function=check_siemens_plc_duration,
-    service_name="Duration %s",
     check_ruleset_name="siemens_plc_duration",
 )
 
@@ -190,14 +189,15 @@ def inventory_siemens_plc_counter(info):
 def check_siemens_plc_counter(item, params, info):
     for line in info:
         if line[1].startswith("counter") and line[0] + " " + line[2] == item:
+            value_store = get_value_store()
             value = int(line[-1])
             perfdata = [(line[1], value)]
 
             key = "siemens_plc.counter.%s" % item
-            old_value = get_item_state(key, None)
+            old_value = value_store.get(key)
             if old_value is not None and old_value > value:
-                return 2, "Reduced from %s to %s" % (old_value, value), perfdata
-            set_item_state(key, value)
+                return 2, f"Reduced from {old_value} to {value}", perfdata
+            value_store[key] = value
 
             state = 0
             warn, crit = params.get("levels", (None, None))
@@ -211,9 +211,10 @@ def check_siemens_plc_counter(item, params, info):
 
 
 check_info["siemens_plc.counter"] = LegacyCheckDefinition(
+    service_name="Counter %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_counter,
     check_function=check_siemens_plc_counter,
-    service_name="Counter %s",
     check_ruleset_name="siemens_plc_counter",
 )
 
@@ -242,9 +243,10 @@ def check_siemens_plc_info(item, _no_params, info):
 
 
 check_info["siemens_plc.info"] = LegacyCheckDefinition(
+    service_name="Info %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_info,
     check_function=check_siemens_plc_info,
-    service_name="Info %s",
 )
 
 # .
@@ -278,7 +280,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
 
 
 check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+    service_name="CPU state",
     discovery_function=inventory_siemens_plc_cpu_state,
     check_function=check_siemens_plc_cpu_state,
-    service_name="CPU state",
 )

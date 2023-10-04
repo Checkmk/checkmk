@@ -19,9 +19,9 @@ Good luck!
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import HostName
-from cmk.utils.type_defs.user_id import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.node_visualization import (
     _get_hostnames_for_query,
@@ -90,7 +90,7 @@ def test_ParentChildTopologyPage_get_hostnames_from_filters(
         return_value=(MockView, []),
     )
     mocker.patch(
-        "cmk.gui.plugins.visuals.utils.get_livestatus_filter_headers",
+        "cmk.gui.visuals._livestatus.get_livestatus_filter_headers",
         return_value=[],
     )
 

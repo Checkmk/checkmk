@@ -34,7 +34,7 @@ def check_hyperv_checkpoints(item, params, info):
             ("Last", "age", snapshots[-1]),
         ]:
             name, age = snapshot
-            infotext = "%s: %s (%s)" % (title, get_age_human_readable(age), name)
+            infotext = f"{title}: {get_age_human_readable(age)} ({name})"
             warn, crit = params.get(key, (None, None))
             if crit is not None and age >= crit:
                 state = 2
@@ -43,7 +43,7 @@ def check_hyperv_checkpoints(item, params, info):
             else:
                 state = 0
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_age_human_readable(warn),
                     get_age_human_readable(crit),
                 )
@@ -53,8 +53,8 @@ def check_hyperv_checkpoints(item, params, info):
 
 
 check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
-    check_function=check_hyperv_checkpoints,
-    discovery_function=inventory_hyperv_checkpoints,
     service_name="HyperV Checkpoints",
+    discovery_function=inventory_hyperv_checkpoints,
+    check_function=check_hyperv_checkpoints,
     check_ruleset_name="vm_snapshots",
 )

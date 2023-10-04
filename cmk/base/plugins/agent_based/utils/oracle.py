@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple, TypedDict
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import State
 
@@ -25,7 +27,7 @@ class OraErrors:
     [False, True, 'Found error in agent output "Message: Hello"', <State.UNKNOWN: 3>]
     """
 
-    def __init__(self, line: List[str]) -> None:
+    def __init__(self, line: list[str]) -> None:
         # Default values
         self.ignore = False
         self.has_error = False
@@ -81,44 +83,36 @@ def _error_summary_text(agent_output_string: str) -> str:
     return f'Found error in agent output "{agent_output_string}"'
 
 
-DataFiles = TypedDict(
-    "DataFiles",
-    {
-        "autoextensible": bool,
-        "file_online_status": str,
-        "name": str,
-        "status": str,
-        "ts_status": str,
-        "ts_type": str,
-        "block_size": Optional[int],
-        "size": Optional[int],
-        "max_size": Optional[int],
-        "used_size": Optional[int],
-        "free_space": Optional[int],
-        "increment_size": Optional[int],
-    },
-)
+class DataFiles(TypedDict):
+    autoextensible: bool
+    file_online_status: str
+    name: str
+    status: str
+    ts_status: str
+    ts_type: str
+    block_size: int | None
+    size: int | None
+    max_size: int | None
+    used_size: int | None
+    free_space: int | None
+    increment_size: int | None
 
-TableSpaces = TypedDict(
-    "TableSpaces",
-    {
-        "amount_missing_filenames": int,
-        "autoextensible": bool,
-        "datafiles": List[DataFiles],
-        "db_version": int,
-        "status": str,
-        "type": str,
-    },
-)
 
-ErrorSids = Dict[str, OraErrors]
-SectionTableSpaces = TypedDict(
-    "SectionTableSpaces",
-    {
-        "error_sids": ErrorSids,
-        "tablespaces": Dict[Tuple[str, str], TableSpaces],
-    },
-)
+class TableSpaces(TypedDict):
+    amount_missing_filenames: int
+    autoextensible: bool
+    datafiles: list[DataFiles]
+    db_version: int
+    status: str
+    type: str
+
+
+ErrorSids = dict[str, OraErrors]
+
+
+class SectionTableSpaces(TypedDict):
+    error_sids: ErrorSids
+    tablespaces: dict[tuple[str, str], TableSpaces]
 
 
 InstancePerformance = Mapping[str, Mapping[str, Any]]
@@ -135,7 +129,7 @@ class UnavailableDatafiles(NamedTuple):
 
 
 def check_unavailable_datafiles(
-    datafiles: List[DataFiles],
+    datafiles: list[DataFiles],
 ) -> UnavailableDatafiles:
     offline = []
     recover = []
@@ -166,7 +160,7 @@ class OnlineStatsResult(NamedTuple):
 
 
 def datafiles_online_stats(
-    datafiles: List[DataFiles],
+    datafiles: list[DataFiles],
     db_version: int,
 ) -> OnlineStatsResult | None:
     """

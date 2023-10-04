@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -195,7 +196,7 @@ def check_storeonce4x_appliances_summaries(item: str, section: Section) -> Check
                 continue
             yield Result(
                 state=state,
-                summary="%s %s (%s of %s)" % (summary_descr, descr, numbers, total),
+                summary=f"{summary_descr} {descr} ({numbers} of {total})",
             )
 
 

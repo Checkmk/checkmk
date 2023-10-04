@@ -9,9 +9,7 @@ from unittest import mock
 
 import pytest
 
-from tests.testlib.base import Scenario
-
-from cmk.utils.type_defs import HostName
+from cmk.utils.caching import cache_manager
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -32,16 +30,9 @@ def patch_cmk_utils_paths(monkeypatch, tmp_path):
 
 # Automatically refresh caches for each test
 @pytest.fixture(autouse=True, scope="function")
-def clear_config_caches(monkeypatch):
-    from cmk.utils.caching import config_cache as _config_cache
-    from cmk.utils.caching import runtime_cache as _runtime_cache
-
-    _config_cache.clear()
-    _runtime_cache.clear()
-
-    ts = Scenario()
-    ts.add_host(HostName("non-existent-testhost"))
-    ts.apply(monkeypatch)
+def clear_config_caches():
+    yield
+    cache_manager.clear()
 
 
 class _MockVSManager(typing.NamedTuple):

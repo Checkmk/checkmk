@@ -7,7 +7,7 @@ import base64
 from collections.abc import Collection
 from datetime import datetime
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
@@ -25,16 +25,19 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import connections_by_type, ConnectorType, get_connection
-from cmk.gui.plugins.wato.utils import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName, Users
+from cmk.gui.userdb import connections_by_type, ConnectorType, get_connection, get_user_attributes
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeUserMigrate)
+
+
 class ModeUserMigrate(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -262,7 +265,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
     ]
 
     builtin_attribute_choices: list[tuple[str, str]] = []
-    for name, attr in userdb.get_user_attributes():
+    for name, attr in get_user_attributes():
         builtin_attribute_choices.append((name, attr.valuespec().title() or attr.name()))
 
     return default_choices + builtin_attribute_choices

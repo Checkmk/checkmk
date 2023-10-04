@@ -20,11 +20,11 @@ def _sanitize_mac(string):
     return ":".join(hx_gen).replace(" ", "0")
 
 
-def parse_cisco_secure(info):
+def parse_cisco_secure(string_table):
     parsed = []
     # l[1] = Name, l[2] = Portstate
-    names = {l[0]: (l[1], l[2]) for l in info[0]}
-    for num, is_enabled, status, violation_count, lastmac in info[1]:
+    names = {l[0]: (l[1], l[2]) for l in string_table[0]}
+    for num, is_enabled, status, violation_count, lastmac in string_table[1]:
         mac = _sanitize_mac(lastmac)
         enabled_txt = {"1": "yes", "2": "no"}.get(is_enabled)
         try:
@@ -99,10 +99,6 @@ check_info["cisco_secure"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*")
     ),
-    parse_function=parse_cisco_secure,
-    check_function=check_cisco_secure,
-    discovery_function=inventory_cisco_secure,
-    service_name="Port Security",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
@@ -113,4 +109,8 @@ check_info["cisco_secure"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2", "9", "10"],
         ),
     ],
+    parse_function=parse_cisco_secure,
+    service_name="Port Security",
+    discovery_function=inventory_cisco_secure,
+    check_function=check_cisco_secure,
 )

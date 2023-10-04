@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import cast, Literal, Mapping, Optional, Tuple, Union
+from collections.abc import Mapping
+from typing import cast, Literal
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -14,7 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.kube import ContainerCount
 
-OptionalLevels = Union[Literal["no_levels"], Tuple[Literal["levels"], Tuple[int, int]]]
+OptionalLevels = Literal["no_levels"] | tuple[Literal["levels"], tuple[int, int]]
 KubeContainersLevelsUpperLower = Mapping[str, OptionalLevels]
 CountName = Literal["running", "waiting", "terminated", "total"]
 
@@ -48,7 +49,7 @@ def _get_levels(
     params: KubeContainersLevelsUpperLower,
     name: CountName,
     level_name: Literal["upper", "lower"],
-) -> Optional[Tuple[int, int]]:
+) -> tuple[int, int] | None:
     level = params.get(f"{name}_{level_name}", "no_levels")
     if level == "no_levels":
         return None

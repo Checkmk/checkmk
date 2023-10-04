@@ -1,18 +1,17 @@
-title: Mobileiron device: Mobileiron source host statistics
+title: Ivanti Neurons for MDM (formerly MobileIron Cloud): Overview
 agents: mobileiron
-catalog: app/mobileiron
+catalog: app/ivantineurons
 license: GPL
 distribution: check_mk
 description:
- The special agent mobileiron queries the mobileiron cloud instance
- through the REST API and then displays the status of each
- device via the piggyback mechanism.
+ The special agent Ivanti Neurons for MDM (formerly MobileIron Cloud) 
+ queries the cloud instance through the REST API.
 
- This check monitors the source host itself.
+ This check provides an overview of non-compliant devices 
+ managed by Ivanti Neurons for MDM.
 
- The monitored parameters are:
- - non_compliant
- - total_count
+ The monitored metrics are: total devices and non-compliant devices.
+ The alerting can be configured via percentage levels for non-compliant devices.
 
 discovery:
  One service is created

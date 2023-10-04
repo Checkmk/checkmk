@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import Dictionary, FixedValue, Integer, NetworkPort, TextInput
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_proxmox_ve():
@@ -58,7 +57,7 @@ def _valuespec_special_agents_proxmox_ve():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:proxmox_ve",
+        name=RuleGroup.SpecialAgents("proxmox_ve"),
         valuespec=_valuespec_special_agents_proxmox_ve,
     )
 )

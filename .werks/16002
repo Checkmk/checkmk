@@ -1,0 +1,12 @@
+Title: veeam_cdp_jobs: Fix parsing of last sync which may contain floats like '123,456'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695814041
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

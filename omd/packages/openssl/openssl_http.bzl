@@ -10,6 +10,6 @@ def openssl(version_str, sha256):
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,
-        build_file = "@omd_packages//packages/openssl:BUILD.openssl",
+        build_file = "@omd_packages//omd/packages/openssl:BUILD.openssl",
         strip_prefix = "openssl-" + version_str,
     )

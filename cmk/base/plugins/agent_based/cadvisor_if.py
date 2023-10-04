@@ -5,7 +5,7 @@
 
 import json
 import time
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

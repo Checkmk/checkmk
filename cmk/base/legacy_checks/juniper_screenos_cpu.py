@@ -43,13 +43,13 @@ def check_juniper_screenos_cpu(_no_item, params, info):
 
 check_info["juniper_screenos_cpu"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_SCREENOS,
-    check_function=check_juniper_screenos_cpu,
-    discovery_function=inventory_juniper_screenos_cpu,
-    check_ruleset_name="cpu_utilization",
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.16.1",
         oids=["2", "4"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_juniper_screenos_cpu,
+    check_function=check_juniper_screenos_cpu,
+    check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

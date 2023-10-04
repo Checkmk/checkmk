@@ -10,8 +10,8 @@ $(REDIS_BUILD):
 	$(BAZEL_BUILD) @redis//:skel
 
 $(REDIS_INSTALL): $(REDIS_BUILD)
-	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rx,Fo=rx bazel-bin/external/redis/bin $(DESTDIR)$(OMD_ROOT)/
-	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rwx,Fo=rx bazel-bin/external/redis/skeleton/ $(DESTDIR)$(OMD_ROOT)/skel
+	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rx,Fo=rx $(BAZEL_BIN_EXT)/redis/bin $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=Du=rwx,Dg=rwx,Do=rx,Fu=rwx,Fg=rwx,Fo=rx $(BAZEL_BIN_EXT)/redis/skeleton/ $(DESTDIR)$(OMD_ROOT)/skel
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && \
 	$(LN) -sf ../init.d/redis 85-redis

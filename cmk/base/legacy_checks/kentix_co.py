@@ -42,14 +42,14 @@ def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
 
 check_info["kentix_co"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_co,
-    discovery_function=inventory_kentix_co,
-    check_function=check_kentix_co,
-    service_name="Carbon Monoxide",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37954",
         oids=["2.1.4.1", "3.1.3.1"],
     ),
+    parse_function=parse_kentix_co,
+    service_name="Carbon Monoxide",
+    discovery_function=inventory_kentix_co,
+    check_function=check_kentix_co,
     check_ruleset_name="carbon_monoxide",
     check_default_parameters={
         "levels_ppm": (10, 25),

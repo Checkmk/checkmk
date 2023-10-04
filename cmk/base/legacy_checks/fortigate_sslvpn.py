@@ -4,15 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 
-def parse_fortigate_sslvpn(info):
+def parse_fortigate_sslvpn(string_table):
     parsed = {}
-    for domain_name, domain_info in zip(info[0], info[1]):
+    for domain_name, domain_info in zip(string_table[0], string_table[1]):
         parsed[domain_name[0]] = {
             "state": domain_info[0],
             "users": int(domain_info[1]),
@@ -23,8 +23,9 @@ def parse_fortigate_sslvpn(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_fortigate_sslvpn(_item, params, data):
+def check_fortigate_sslvpn(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if params is None:
         params = {}
 
@@ -53,13 +54,12 @@ def check_fortigate_sslvpn(_item, params, data):
     )
 
 
+def discover_fortigate_sslvpn(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    discovery_function=discover(),
-    check_function=check_fortigate_sslvpn,
-    parse_function=parse_fortigate_sslvpn,
-    service_name="VPN SSL %s",
-    check_ruleset_name="fortigate_sslvpn",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12356.101.3.2.1.1",
@@ -70,4 +70,9 @@ check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "6", "7"],
         ),
     ],
+    parse_function=parse_fortigate_sslvpn,
+    service_name="VPN SSL %s",
+    discovery_function=discover_fortigate_sslvpn,
+    check_function=check_fortigate_sslvpn,
+    check_ruleset_name="fortigate_sslvpn",
 )

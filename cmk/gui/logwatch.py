@@ -12,9 +12,8 @@ import livestatus
 from livestatus import SiteId
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import (
     Breadcrumb,
@@ -39,6 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageRegistry
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_to_html
@@ -58,7 +58,10 @@ from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("logwatch")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("logwatch", page_show)
+
+
 def page_show():
     site = request.var("site")  # optional site hint
     host_name = request.var("host", "")
@@ -561,8 +564,9 @@ def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
             return
 
     html.show_message(
-        "<b>%s</b><p>%s</p>"
-        % (_("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg)
+        "<b>{}</b><p>{}</p>".format(
+            _("Acknowledged %s") % ack_msg, _("Acknowledged all messages in %s.") % ack_msg
+        )
     )
     html.footer()
 

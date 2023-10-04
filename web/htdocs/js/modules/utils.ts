@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as ajax from "ajax";
 import * as selection from "selection";
@@ -55,7 +57,9 @@ export function execute_javascript_by_object(obj: HTMLElement) {
                 eval(aScripts[i].text);
                 current_script = null;
             } catch (e) {
-                alert(aScripts[i].text + "\nError:" + (e as any).message);
+                console.error(
+                    aScripts[i].text + "\nError:" + (e as any).message
+                );
             }
         }
     }
@@ -735,11 +739,14 @@ export function add_simplebar_scrollbar(scrollable_id: string) {
     );
 }
 
-export function add_simplebar_scrollbar_to_object(obj: Nullable<HTMLElement>) {
+export function add_simplebar_scrollbar_to_object(
+    obj: Nullable<HTMLElement>
+): SimpleBar | undefined {
     if (obj) {
         return new SimpleBar(obj);
     }
     console.log("Missing object for SimpleBar initiation.");
+    return undefined;
 }
 
 export function content_scrollbar(scrollable_id: string) {

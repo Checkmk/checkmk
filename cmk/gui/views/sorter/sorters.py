@@ -20,7 +20,6 @@ from cmk.gui.view_utils import get_labels
 
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
-    cmp_custom_variable,
     cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
@@ -42,7 +41,6 @@ def register_sorters(registry: SorterRegistry) -> None:
     registry.register(SorterServiceTags)
     registry.register(SorterHostLabels)
     registry.register(SorterServiceLabels)
-    registry.register(SorterServicelevel)
     registry.register(SorterSvcPerfVal01)
     registry.register(SorterSvcPerfVal02)
     registry.register(SorterSvcPerfVal03)
@@ -111,7 +109,6 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("svc_group_memberlist", cmp_string_list)
     declare_1to1_sorter("svc_acknowledged", cmp_simple_number)
     declare_1to1_sorter("svc_staleness", cmp_simple_number)
-    declare_1to1_sorter("svc_servicelevel", cmp_simple_number)
 
     # Host
     declare_1to1_sorter("alias", cmp_num_split)
@@ -146,7 +143,6 @@ def register_sorters(registry: SorterRegistry) -> None:
     declare_1to1_sorter("host_group_memberlist", cmp_string_list)
     declare_1to1_sorter("host_contacts", cmp_string_list)
     declare_1to1_sorter("host_contact_groups", cmp_string_list)
-    declare_1to1_sorter("host_servicelevel", cmp_simple_number)
 
     # Host group
     declare_1to1_sorter("hg_num_services", cmp_simple_number)
@@ -444,23 +440,6 @@ class SorterServiceLabels(ABCLabelSorter):
     @property
     def columns(self) -> Sequence[ColumnName]:
         return ["service_labels"]
-
-
-class SorterServicelevel(Sorter):
-    @property
-    def ident(self) -> str:
-        return "servicelevel"
-
-    @property
-    def title(self) -> str:
-        return _("Servicelevel")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["custom_variables"]
-
-    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
-        return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
 def cmp_service_name(column, r1, r2):

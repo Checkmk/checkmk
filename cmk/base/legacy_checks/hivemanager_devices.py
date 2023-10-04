@@ -42,7 +42,7 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
 
             perfdata = [("client_count", number_of_clients, warn, crit)]
             infotext = "Clients: %s" % number_of_clients
-            levels = " Warn/Crit at %s/%s" % (warn, crit)
+            levels = f" Warn/Crit at {warn}/{crit}"
 
             if number_of_clients >= crit:
                 yield 2, infotext + levels, perfdata
@@ -82,18 +82,14 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
                 "networkPolicy",
             ]
             yield 0, ", ".join(
-                [
-                    "%s: %s" % (x, y)
-                    for x, y in infos.items()
-                    if x in additional_informations and y != "-"
-                ]
+                [f"{x}: {y}" for x, y in infos.items() if x in additional_informations and y != "-"]
             )
 
 
 check_info["hivemanager_devices"] = LegacyCheckDefinition(
-    check_function=check_hivemanager_devices,
-    discovery_function=inventory_hivemanager_devices,
     service_name="Client %s",
+    discovery_function=inventory_hivemanager_devices,
+    check_function=check_hivemanager_devices,
     check_ruleset_name="hivemanager_devices",
     check_default_parameters={
         "alert_on_loss": True,

@@ -9,5 +9,5 @@ Version: 2.0.0i1
 Date: 1560240687
 
 When trying to use tag painters for grouping table views this resulted
-in an exception <tt>TypeError (<lambda>() takes exactly 2 arguments (1 given))</tt>
+in an exception `TypeError (<lambda>() takes exactly 2 arguments (1 given))`
 in 1.6.0b1.

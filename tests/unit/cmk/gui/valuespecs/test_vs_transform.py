@@ -5,6 +5,8 @@
 
 import pytest
 
+from cmk.utils.prediction import Seconds
+
 import cmk.gui.valuespec as vs
 
 from .utils import (
@@ -15,7 +17,7 @@ from .utils import (
 
 
 @pytest.fixture(name="transformed_age")
-def fixture_transformed_age() -> vs.Transform[vs.Seconds]:
+def fixture_transformed_age() -> vs.Transform[Seconds]:
     return vs.Transform(
         vs.Age(minvalue=1, default_value=60),
         to_valuespec=lambda v: int(v * 60),
@@ -83,25 +85,25 @@ class TestTransform:
 
     # TODO: render_input
 
-    def test_canonical_value(self, transformed_age: vs.Transform[vs.Seconds]) -> None:
+    def test_canonical_value(self, transformed_age: vs.Transform[Seconds]) -> None:
         assert transformed_age.canonical_value() == 1 / 60
 
-    def test_default_value(self, transformed_age: vs.Transform[vs.Seconds]) -> None:
+    def test_default_value(self, transformed_age: vs.Transform[Seconds]) -> None:
         assert transformed_age.default_value() == 60 / 60
 
-    def test_mask(self, transformed_age: vs.Transform[vs.Seconds]) -> None:
+    def test_mask(self, transformed_age: vs.Transform[Seconds]) -> None:
         assert transformed_age.mask(60) == 60
 
-    def test_value_to_html(self, transformed_age: vs.Transform[vs.Seconds]) -> None:
+    def test_value_to_html(self, transformed_age: vs.Transform[Seconds]) -> None:
         assert transformed_age.value_to_html(60) == "1 hours"
 
-    def test_from_html_vars(self, transformed_age: vs.Transform[vs.Seconds]) -> None:
+    def test_from_html_vars(self, transformed_age: vs.Transform[Seconds]) -> None:
         with request_var(age_minutes="1"):
             # normal age field (without transfrom) would return 60 as it saves
             # the age in seconds.
             assert transformed_age.from_html_vars("age") == 1
 
-    def test_validate(self, transformed_age: vs.Transform[vs.Seconds]) -> None:
+    def test_validate(self, transformed_age: vs.Transform[Seconds]) -> None:
         expect_validate_success_migrate_or_transform(transformed_age, 1)
         expect_validate_success_migrate_or_transform(transformed_age, 0.1)
         expect_validate_failure_migrate_or_transform(transformed_age, 0.0000001)

@@ -205,7 +205,7 @@ set_up_profiling() {
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
-            base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
+            base_name=$(echo "${section_func}" | sed "s/[^A-Za-z0-9.-]/_/g")
             profiling_logfile="'"${PROFILING_LOGFILE_DIR}"'/${base_name}.log"
 
             start="$(perl -MTime::HiRes=time -le "print time()")"
@@ -1173,10 +1173,14 @@ section_omd_core() {
     (
         cd /omd/sites || return
 
-        _sites_cmd() {
+        site_cmd() {
             # DO NOT ACCESS /omd/sites/${site}/bin/cmd directly.
             # bin might point anywhere -> priv escalation.
             printf "/omd/versions/%s/bin/%s" "$(realpath "${1}/version" | sed 's|.*/||')" "${2}"
+        }
+
+        waitmax_for_unixcat_with_site_ld_library_path() {
+            LD_LIBRARY_PATH="/omd/sites/${2}/lib:${LD_LIBRARY_PATH}" waitmax "${1}" "$(site_cmd "${2}" unixcat)" "/omd/sites/${2}/tmp/run/${3}"
         }
 
         echo '<<<livestatus_status:sep(59)>>>'
@@ -1184,7 +1188,7 @@ section_omd_core() {
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
                 echo "GET status" |
-                    waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live"
+                    waitmax_for_unixcat_with_site_ld_library_path 3 "${site}" "live"
             fi
         done
 
@@ -1204,7 +1208,7 @@ section_omd_core() {
             if [ -S "/omd/sites/${site}/tmp/run/mkeventd/status" ]; then
                 echo "[\"${site}\"]"
                 (echo "GET status" && echo "OutputFormat: json") |
-                    waitmax 3 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/mkeventd/status"
+                    waitmax_for_unixcat_with_site_ld_library_path 3 "${site}" "mkeventd/status"
             fi
         done
 
@@ -1212,7 +1216,7 @@ section_omd_core() {
         for site in *; do
             if [ -S "/omd/sites/${site}/tmp/run/live" ]; then
                 echo "[${site}]"
-                waitmax 5 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live" <<LimitString
+                waitmax_for_unixcat_with_site_ld_library_path 5 "${site}" "live" <<LimitString
 GET hosts
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1226,7 +1230,7 @@ StatsAnd: 2
 Stats: scheduled_downtime_depth > 0
 Filter: custom_variable_names < _REALNAME
 LimitString
-                waitmax 5 "$(_sites_cmd "${site}" unixcat)" "/omd/sites/${site}/tmp/run/live" <<LimitString
+                waitmax_for_unixcat_with_site_ld_library_path 5 "${site}" "live" <<LimitString
 GET services
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -1623,29 +1627,46 @@ run_cached() {
     NOW="$(get_epoch)"
     MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
 
-    if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
-
-        # Output the file (even if it is outdated)
-        CACHE_INFO="cached(${MTIME},${MAXAGE})"
-        # prefix or insert cache info, unless already present.
-        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
-        if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
-        else
-            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+    if ${MK_RUN_SYNC_PARTS}; then
+        if [ -s "${CACHEFILE}" ]; then
+            # Output the file (even if it is outdated)
+            CACHE_INFO="cached(${MTIME},${MAXAGE})"
+            # prefix or insert cache info, unless already present.
+            # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
+            if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
+                sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            else
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+            fi
         fi
 
+        # Error information about plugin, if available.
+        # Output independent of cachefile existance
+        [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-
-        # Check if the process is running too long (cache file not accessed for more than TIMEOUT seconds).
-        # If so, kill the process and remove the cache files (both)
+        # Kill the process if it is running too long (cache file not accessed for more than TIMEOUT seconds).
+        # If killing succeeds, remove CACHFILE.new.PID.
+        # Remove CACHEFILE unconditionally.
+        # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
+        # It will be reported to the Check_MK agent service later on, by the sync part.
+        # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
-                kill -9 "${cfile##*.new.}" # TODO: what about child processes?
-                rm -f "${cfile}" "${CACHEFILE}"
+                {
+                    echo "<<<checkmk_cached_plugins:sep(124)>>>"
+                    pid="${cfile##*.new.}"
+                    printf "timeout|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                    kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
+                    if [ -n "$(ps -o args= -p "${pid}")" ]; then
+                        printf "killfailed|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                    else
+                        rm -f "${cfile}"
+                    fi
+                    rm -f "${CACHEFILE}"
+                } >"${CACHEFILE}".fail 2>&1
             fi
         done
 
@@ -1663,7 +1684,7 @@ run_cached() {
             cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}.fail" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
         fi
 

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, MutableMapping, NamedTuple, Optional
+from collections.abc import MutableMapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_average, get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -20,7 +21,7 @@ class Section(NamedTuple):
     n_cores: int
 
 
-def parse_wmi_cpuload(string_table: StringTable) -> Optional[Section]:
+def parse_wmi_cpuload(string_table: StringTable) -> Section | None:
     wmi_tables = parse_wmi_table(string_table)
     if required_tables_missing(
         wmi_tables,
@@ -134,6 +135,10 @@ register.check_plugin(
     discovery_function=discover_wmi_cpuload,
     check_function=check_wmi_cpuload,
     service_name="Processor Queue",
-    check_default_parameters={},
+    check_default_parameters={
+        "levels1": None,
+        "levels5": None,
+        "levels15": None,
+    },
     check_ruleset_name="cpu_load",
 )

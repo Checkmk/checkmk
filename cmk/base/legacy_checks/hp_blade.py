@@ -40,17 +40,17 @@ def check_hp_blade_general(item, params, info):
     status = hp_blade_status2nagios_map[snmp_state]
     return (
         status,
-        "General Status is %s (Firmware: %s, S/N: %s)" % (snmp_state, info[0][0], info[0][2]),
+        f"General Status is {snmp_state} (Firmware: {info[0][0]}, S/N: {info[0][2]})",
     )
 
 
 check_info["hp_blade"] = LegacyCheckDefinition(
     detect=DETECT_HP_BLADE,
-    check_function=check_hp_blade_general,
-    discovery_function=inventory_hp_blade_general,
-    service_name="General Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.3.1.1.1",
         oids=["8", "16", "7"],
     ),
+    service_name="General Status",
+    discovery_function=inventory_hp_blade_general,
+    check_function=check_hp_blade_general,
 )

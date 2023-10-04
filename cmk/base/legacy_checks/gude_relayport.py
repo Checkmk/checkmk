@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
@@ -20,9 +20,17 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.10.1 0 --> GUDEADS-EPC822X-MIB::epc822XPowerApparent.1
 
 
-def parse_gude_relayport(info):
+def parse_gude_relayport(string_table):
     parsed = {}
-    for portname, portstate, active_power_str, current_str, volt_str, freq_str, appower_str in info:
+    for (
+        portname,
+        portstate,
+        active_power_str,
+        current_str,
+        volt_str,
+        freq_str,
+        appower_str,
+    ) in string_table:
         parsed.setdefault(
             portname,
             {
@@ -42,12 +50,12 @@ def parse_gude_relayport(info):
     return parsed
 
 
+def discover_gude_relayport(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["gude_relayport"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
-    parse_function=parse_gude_relayport,
-    discovery_function=discover(),
-    check_function=check_elphase,
-    service_name="Relay port %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.28507.38.1",
         oids=[
@@ -60,6 +68,10 @@ check_info["gude_relayport"] = LegacyCheckDefinition(
             "5.5.2.1.10",
         ],
     ),
+    parse_function=parse_gude_relayport,
+    service_name="Relay port %s",
+    discovery_function=discover_gude_relayport,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

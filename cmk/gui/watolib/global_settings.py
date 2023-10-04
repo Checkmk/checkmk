@@ -3,9 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from typing import Any
 
+from cmk.utils.version import edition, Edition
+
 import cmk.gui.watolib.config_domain_name as config_domain_name
+from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -29,8 +33,19 @@ def load_configuration_settings(
 
 
 def save_global_settings(
-    vars_: GlobalSettings, site_specific: bool = False, custom_site_path: str | None = None
+    vars_: GlobalSettings,
+    site_specific: bool = False,
+    custom_site_path: str | None = None,
+    get_global_settings_config: Callable[[], GlobalConfig] = get_global_config,
 ) -> None:
+    if edition() is Edition.CSE:
+        global_settings_config = get_global_settings_config().global_settings
+        vars_ = {
+            varname: value
+            for varname, value in vars_.items()
+            if global_settings_config.is_activated(varname)
+        }
+
     per_domain: dict[str, dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():

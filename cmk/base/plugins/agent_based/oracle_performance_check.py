@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
+from typing import Any
 
 import cmk.utils.oracle_constants as oracle_constants  # pylint: disable=cmk-module-layer-violation
 
@@ -103,7 +104,7 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
                 value = sga_info[sga_field.name]
                 yield Result(
                     state=State.OK,
-                    summary="%s: %s" % (sga_field.name, render.bytes(value)),
+                    summary=f"{sga_field.name}: {render.bytes(value)}",
                 )
                 perfdata.append(Metric(sga_field.metric, value))
 
@@ -137,7 +138,7 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
             ("oracle_free_buffer_wait", free_buffer_wait),
             ("oracle_buffer_busy_wait", buffer_busy_wait),
         ]:
-            rate = get_rate(value_store, "%s.buffer_pool_statistics.%s" % (item, what), now, val)
+            rate = get_rate(value_store, f"{item}.buffer_pool_statistics.{what}", now, val)
             perfdata.append(Metric(what, rate))
 
         if db_block_gets + consistent_gets > 0:
@@ -156,7 +157,7 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
             pin_hits_sum += pin_hits
 
         for what, val in [("oracle_pins_sum", pins_sum), ("oracle_pin_hits_sum", pin_hits_sum)]:
-            rate = get_rate(value_store, "%s.librarycache.%s" % (item, what), now, val)
+            rate = get_rate(value_store, f"{item}.librarycache.{what}", now, val)
             perfdata.append(Metric(what, rate))
 
         if pins_sum > 0:
@@ -206,7 +207,7 @@ def _get_subcheck_params(full_params: Mapping[str, Any], subcheck_name: str) -> 
 
 def _unit_formatter(unit: str) -> Callable[[float], str]:
     def _fmt(f: float) -> str:
-        return "%.2f%s" % (f, unit)
+        return f"{f:.2f}{unit}"
 
     return _fmt
 
@@ -224,7 +225,7 @@ def _check_oracle_db_time(
     params: Mapping[str, Any],
 ) -> CheckResult:
     def get_db_time_rate(perfvar, val):
-        return get_rate(value_store, "%s.sys_time_model.%s" % (item, perfvar), now, val)
+        return get_rate(value_store, f"{item}.sys_time_model.{perfvar}", now, val)
 
     # old agents deliver no data for sys_time_model!
     sys_time_model = item_data.get("sys_time_model")
@@ -355,11 +356,11 @@ def _check_oracle_performance_iostat_file(  # type: ignore[no-untyped-def]
             continue
         for i, field in enumerate(io_fields):
             data_index, metric_suffix, field_name = field
-            metric_name = "oracle_ios_f_%s_%s" % (iofile.id, metric_suffix)
+            metric_name = f"oracle_ios_f_{iofile.id}_{metric_suffix}"
 
             rate = get_rate(
                 value_store,
-                "%s.iostat_file.%s" % (item, metric_name),
+                f"{item}.iostat_file.{metric_name}",
                 now,
                 waitdata[data_index],
             )
@@ -385,9 +386,9 @@ def _check_oracle_performance_iostat_file(  # type: ignore[no-untyped-def]
             total_output = render.iobandwidth(total)
         else:
             total_readable = total
-            total_output = "%.2f%s" % (total_readable, unit)
+            total_output = f"{total_readable:.2f}{unit}"
 
-        yield Result(state=State.OK, summary="%s: %s" % (field_name, total_output))
+        yield Result(state=State.OK, summary=f"{field_name}: {total_output}")
         yield Metric("oracle_ios_f_total_%s" % metric_suffix, total)
 
 
@@ -487,11 +488,11 @@ def check_oracle_performance_waitclasses(
             (1, "waited", "wait class"),
             (3, "waited_fg", "wait class (FG)"),
         ]:
-            metric_name = "%s_%s" % (metric_start, metric_suffix)
+            metric_name = f"{metric_start}_{metric_suffix}"
             rate = (
                 get_rate(
                     value_store,
-                    "%s.sys_wait_class.%s" % (item, metric_name),
+                    f"{item}.sys_wait_class.{metric_name}",
                     now,
                     waitdata[data_index],
                 )
@@ -509,7 +510,7 @@ def check_oracle_performance_waitclasses(
                 metric_name=metric_name,
                 levels_upper=metric_params,
                 render_func=_unit_formatter("/s"),
-                label="%s %s" % (waitclass.name, infotext_suffix),
+                label=f"{waitclass.name} {infotext_suffix}",
                 notice_only=True,
             )
 

@@ -45,7 +45,7 @@ _TABLES = [
 ]
 
 
-def parse_cmctc_output(info):
+def parse_cmctc_output(string_table):
     def parse_output_sensor(table_idx, sensor):
         type_map = {
             # ID    Type                                    Unit      Perfkey
@@ -147,12 +147,12 @@ def parse_cmctc_output(info):
         if parsed["status"] == "not available":
             return None
 
-        name = "%s %s.%s" % (sensor_type, table_idx, index)
+        name = f"{sensor_type} {table_idx}.{index}"
 
         return name, parsed
 
     parsed = {}
-    for table_idx, sensor_block in zip(_TABLES, info):
+    for table_idx, sensor_block in zip(_TABLES, string_table):
         for sensor in sensor_block:
             parsed_sensor = parse_output_sensor(table_idx, sensor)
             if parsed_sensor:
@@ -196,10 +196,6 @@ def check_cmctc_output(item, params, parsed):
 
 check_info["cmctc_output"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    parse_function=parse_cmctc_output,
-    discovery_function=inventory_cmctc_output,
-    check_function=check_cmctc_output,
-    service_name="%s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.2606.4.2.{table}.6.2.1",
@@ -207,4 +203,8 @@ check_info["cmctc_output"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
+    parse_function=parse_cmctc_output,
+    service_name="%s",
+    discovery_function=inventory_cmctc_output,
+    check_function=check_cmctc_output,
 )

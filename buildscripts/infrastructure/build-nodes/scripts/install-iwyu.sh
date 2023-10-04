@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 INSTALL_PREFIX=""
 CLANG_VERSION=""
-TARGET_DIR=/opt
+TARGET_DIR="/opt"
 
 failure() {
     echo "$(basename "$0"):" "$@" >&2
@@ -84,6 +84,8 @@ case $CLANG_VERSION in
     13) TAG_NAME="13" LIB_VERSION="13" ;;
     14) TAG_NAME="14" LIB_VERSION="14" ;;
     15) TAG_NAME="15" LIB_VERSION="15" ;;
+    16) TAG_NAME="16" LIB_VERSION="16" ;;
+    17) TAG_NAME="17" LIB_VERSION="17" ;;
     *) failure "Unknown Clang version '${CLANG_VERSION}'" ;;
 esac
 

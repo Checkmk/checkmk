@@ -13,7 +13,11 @@ This werk fixes the following bug:
 Automatic agent updates are failing on Solaris. The agent updater will remove the old agent
 package and fail to install the newly downloaded package, leaving the Checkmk agent uninstalled.
 Along with some further information, you can find the message
-<pre>pkgadd: ERROR: unable to determine the current working directory, errno=2</pre>
+
+C:+
+pkgadd: ERROR: unable to determine the current working directory, errno=2
+C:-
+
 at <code>/var/lib/check_mk_agent/cmk-update-agent.log</code>.
 This only affects automatic updates, i.e. <code>cmk-update-agent</code> is invoked as
 a plugin. Manually triggered updates are not affected by this bug.

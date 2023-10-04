@@ -23,8 +23,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 cluster_info = {
     "status": "Status",
@@ -55,10 +56,10 @@ default_cluster_state = {
 }
 
 
-def parse_elasticsearch_cluster_health(info):
+def parse_elasticsearch_cluster_health(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         try:
             if any(s in line for s in cluster_info):
                 inst = parsed.setdefault("Info", {})
@@ -94,14 +95,14 @@ def check_elasticsearch_cluster_health(_no_item, params, parsed):
         infotext = values[1]
 
         if info == "cluster_name":
-            yield 0, "%s: %s" % (infotext, value)
+            yield 0, f"{infotext}: {value}"
         elif info == "status":
             default_state = infotext
             infotext = "Status:"
             if value in params:
-                yield params[value], "%s %s (State changed by rule)" % (infotext, value)
+                yield params[value], f"{infotext} {value} (State changed by rule)"
             else:
-                yield default_state, "%s %s" % (infotext, value)
+                yield default_state, f"{infotext} {value}"
         else:
             warn, crit = params.get(info) or (None, None)
             yield check_levels(
@@ -115,9 +116,9 @@ def check_elasticsearch_cluster_health(_no_item, params, parsed):
 
 check_info["elasticsearch_cluster_health"] = LegacyCheckDefinition(
     parse_function=parse_elasticsearch_cluster_health,
-    check_function=check_elasticsearch_cluster_health,
-    discovery_function=inventory_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Health",
+    discovery_function=inventory_elasticsearch_cluster_health,
+    check_function=check_elasticsearch_cluster_health,
     check_ruleset_name="elasticsearch_cluster_health",
 )
 
@@ -144,7 +145,7 @@ def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
                 float(value),
                 shard,
                 (None, None, warn, crit),
-                human_readable_func=get_percent_human_readable,
+                human_readable_func=render.percent,
                 infoname=infotext,
             )
         else:
@@ -158,10 +159,10 @@ def check_elasticsearch_cluster_health_shards(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health.shards"] = LegacyCheckDefinition(
-    parse_function=parse_elasticsearch_cluster_health,
-    check_function=check_elasticsearch_cluster_health_shards,
-    discovery_function=inventory_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Shards",
+    sections=["elasticsearch_cluster_health"],
+    discovery_function=inventory_elasticsearch_cluster_health,
+    check_function=check_elasticsearch_cluster_health_shards,
     check_ruleset_name="elasticsearch_cluster_shards",
     check_default_parameters={"active_shards_percent_as_number": (100.0, 50.0)},
 )
@@ -179,7 +180,7 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
             state = 0
             if value != "False":
                 state = 1
-            yield state, "%s: %s" % (infotext, value)
+            yield state, f"{infotext}: {value}"
         else:
             value = int(value)
             warn, crit = params.get(task) or (None, None)
@@ -187,9 +188,9 @@ def check_elasticsearch_cluster_health_tasks(_no_item, params, parsed):
 
 
 check_info["elasticsearch_cluster_health.tasks"] = LegacyCheckDefinition(
-    parse_function=parse_elasticsearch_cluster_health,
-    check_function=check_elasticsearch_cluster_health_tasks,
-    discovery_function=inventory_elasticsearch_cluster_health,
     service_name="Elasticsearch Cluster Tasks",
+    sections=["elasticsearch_cluster_health"],
+    discovery_function=inventory_elasticsearch_cluster_health,
+    check_function=check_elasticsearch_cluster_health_tasks,
     check_ruleset_name="elasticsearch_cluster_tasks",
 )

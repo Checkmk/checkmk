@@ -3,17 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+
+from cmk.base.plugins.agent_based.utils.citrix_state import parse_citrix_state, Section
 
 from .agent_based_api.v1 import Attributes, register
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-
-Section = Mapping[str, str]
-
-
-def parse_citrix_state(string_table: StringTable) -> Section:
-    return {key: " ".join(rest) for key, *rest in string_table}
-
+from .agent_based_api.v1.type_defs import InventoryResult
 
 register.agent_section(
     name="citrix_state",
@@ -31,7 +25,7 @@ def inventory_citrix_state(section: Section) -> InventoryResult:
                 ("catalog", "Catalog"),
                 ("agent_version", "AgentVersion"),
             )
-            if (v := section.get(kp)) is not None
+            if (v := section["instance"].get(kp)) is not None
         },
     )
 

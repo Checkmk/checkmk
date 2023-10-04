@@ -1,0 +1,12 @@
+Title: Removed StatsGroupBy header from Livestatus protocol
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1690536079
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The StatsGroupBy header has been deprecated for almost 13 years now,
+just use the Columns instead.

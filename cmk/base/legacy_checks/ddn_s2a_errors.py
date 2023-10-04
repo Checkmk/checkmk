@@ -9,8 +9,8 @@ from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
 
 
-def parse_ddn_s2a_errors(info):
-    preparsed = parse_ddn_s2a_api_response(info)
+def parse_ddn_s2a_errors(string_table):
+    preparsed = parse_ddn_s2a_api_response(string_table)
     return {
         "port_type": preparsed["port_type"],
         "link_failure_errs": list(map(int, preparsed["link_failure_errs"])),
@@ -98,8 +98,8 @@ def check_ddn_s2a_errors(item, params, parsed):
 
 check_info["ddn_s2a_errors"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_errors,
+    service_name="DDN S2A Port Errors %s",
     discovery_function=inventory_ddn_s2a_errors,
     check_function=check_ddn_s2a_errors,
-    service_name="DDN S2A Port Errors %s",
     check_ruleset_name="ddn_s2a_port_errors",
 )

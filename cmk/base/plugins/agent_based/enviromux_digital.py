@@ -6,6 +6,7 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.enviromux import (
     DETECT_ENVIROMUX,
+    DETECT_ENVIROMUX5,
     EnviromuxDigitalSection,
     parse_enviromux_digital,
 )
@@ -25,6 +26,22 @@ register.snmp_section(
         ],
     ),
     detect=DETECT_ENVIROMUX,
+)
+
+register.snmp_section(
+    name="enviromux5_digital",
+    parse_function=parse_enviromux_digital,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3699.1.1.10.1.6.1.1",
+        oids=[
+            "1",  # digInputIndex
+            "3",  # digInputDescription
+            "7",  # digInputValue
+            "9",  # digInputNormalValue
+        ],
+    ),
+    parsed_section_name="enviromux_digital",
+    detect=DETECT_ENVIROMUX5,
 )
 
 

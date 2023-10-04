@@ -15,7 +15,9 @@ from typing import Any, overload
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
-from cmk.utils.type_defs import CheckPluginNameStr
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.checkengine.checking import CheckPluginNameStr
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError
@@ -24,25 +26,35 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    get_search_expression,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
+    search_form,
 )
-from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry, search_form, WatoMode
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import ID
 from cmk.gui.watolib.check_mk_automations import get_check_information
+from cmk.gui.watolib.main_menu import MenuItem
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
+from ._tile_menu import TileMenuRenderer
 
-@mode_registry.register
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeCheckPlugins)
+    mode_registry.register(ModeCheckPluginSearch)
+    mode_registry.register(ModeCheckPluginTopic)
+    mode_registry.register(ModeCheckManPage)
+
+
 class ModeCheckPlugins(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -75,7 +87,7 @@ class ModeCheckPlugins(WatoMode):
             )
         )
 
-        menu = MainMenu()
+        menu = TileMenuRenderer()
         for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
             menu.add_item(
                 MenuItem(
@@ -92,7 +104,6 @@ class ModeCheckPlugins(WatoMode):
         menu.show()
 
 
-@mode_registry.register
 class ModeCheckPluginSearch(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -171,7 +182,6 @@ class ModeCheckPluginSearch(WatoMode):
         return list(collection.items())
 
 
-@mode_registry.register
 class ModeCheckPluginTopic(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -249,7 +259,7 @@ class ModeCheckPluginTopic(WatoMode):
 
         if len(self._path) == 1 and self._has_second_level:
             # For some topics we render a second level in the same optic as the first level
-            menu = MainMenu()
+            menu = TileMenuRenderer()
             for path_comp, subnode in self._manpages.items():
                 url = makeuri(request, [("topic", f"{self._path[0]}/{path_comp}")])
                 title = self._titles.get(path_comp, path_comp)
@@ -425,7 +435,6 @@ def _get_check_catalog(only_path: tuple[str, ...]) -> Mapping[str, Any]:
     return tree
 
 
-@mode_registry.register
 class ModeCheckManPage(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -467,7 +476,7 @@ class ModeCheckManPage(WatoMode):
             self._service_description = check_info["service_description"]
             ruleset_name = check_info.get("check_ruleset_name")
             self._ruleset: str | None = (
-                f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
+                RuleGroup.CheckgroupParameters(ruleset_name) if ruleset_name else None
             )
             self._check_default_parameters: object = check_info.get("check_default_parameters")
 
@@ -480,7 +489,7 @@ class ModeCheckManPage(WatoMode):
         elif self._check_plugin_name.startswith("check_"):  # Assume active check
             self._check_type = "active"
             self._service_description = "Active check"  # unused
-            self._ruleset = f"active_checks:{self._check_plugin_name[6:]}"
+            self._ruleset = RuleGroup.ActiveChecks(self._check_plugin_name[6:])
         else:
             raise MKUserError(
                 None,

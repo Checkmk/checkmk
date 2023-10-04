@@ -27,12 +27,12 @@ def check_f5_bigip_cpu_temp(item, params, info):
 
 check_info["f5_bigip_cpu_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_f5_bigip_cpu_temp,
-    discovery_function=inventory_f5_bigip_cpu_temp,
-    service_name="Temperature CPU %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.3.6.2.1",
         oids=["4", "2"],
     ),
+    service_name="Temperature CPU %s",
+    discovery_function=inventory_f5_bigip_cpu_temp,
+    check_function=check_f5_bigip_cpu_temp,
+    check_ruleset_name="temperature",
 )

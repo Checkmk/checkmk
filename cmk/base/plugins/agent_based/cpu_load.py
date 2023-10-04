@@ -18,7 +18,11 @@ register.check_plugin(
     service_name="CPU load",
     discovery_function=discover_cpu_load,
     check_function=check_cpu_load,
-    check_default_parameters={"levels": (5.0, 10.0)},
+    check_default_parameters={
+        "levels1": None,
+        "levels5": None,
+        "levels15": (5.0, 10.0),
+    },
     check_ruleset_name="cpu_load",
     sections=["cpu"],
 )

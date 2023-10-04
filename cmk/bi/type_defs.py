@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any, NotRequired
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 
@@ -28,10 +30,10 @@ class ComputationConfigDict(TypedDict):
     escalate_downtimes_as_warn: bool
 
 
-class AggrConfigDict(TypedDict, total=True):
+class AggrConfigDict(TypedDict):
     id: Any
     comment: str
-    customer: Any
+    customer: NotRequired[Any]
     groups: GroupConfigDict
     node: NodeDict
     computation_options: ComputationConfigDict
@@ -39,3 +41,5 @@ class AggrConfigDict(TypedDict, total=True):
 
 
 frozen_aggregations_dir = Path(cmk.utils.paths.var_dir) / "frozen_aggregations"
+
+HostState = int

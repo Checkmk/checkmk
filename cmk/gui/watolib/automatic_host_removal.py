@@ -7,12 +7,14 @@ import itertools
 import json
 import time
 from collections.abc import Iterable, Iterator, Sequence
-from typing import Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from livestatus import LocalConnection, SiteId
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
 
@@ -22,12 +24,11 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
-from cmk.gui.valuespec import Seconds
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 
@@ -93,7 +94,7 @@ def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
 
 def _hosts_to_be_removed(
     job_interface: BackgroundProcessInterface,
-) -> Iterator[tuple[SiteId, Iterator[CREHost]]]:
+) -> Iterator[tuple[SiteId, Iterator[Host]]]:
     yield from (
         (site_id, _hosts_to_be_removed_for_site(job_interface, site_id))
         for site_id in wato_site_ids()
@@ -103,7 +104,7 @@ def _hosts_to_be_removed(
 def _hosts_to_be_removed_for_site(
     job_interface: BackgroundProcessInterface,
     site_id: SiteId,
-) -> Iterator[CREHost]:
+) -> Iterator[Host]:
     if site_is_local(site_id):
         hostnames = _hosts_to_be_removed_local()
     else:
@@ -132,10 +133,10 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
     for hostname, check_mk_service_crit_since in _livestatus_query_local_candidates():
         try:
             rule_value = next(
-                ruleset_matcher.get_host_ruleset_values(
-                    match_object=RulesetMatchObject(hostname),
-                    ruleset=automatic_host_removal_ruleset,
-                    is_binary=False,
+                iter(
+                    ruleset_matcher.get_host_values(
+                        hostname, ruleset=automatic_host_removal_ruleset
+                    )
                 )
             )
         except StopIteration:
@@ -171,7 +172,7 @@ Filter: state = 2"""
 
 
 class _RemovalConditions(TypedDict):
-    checkmk_service_crit: Seconds
+    checkmk_service_crit: int  # seconds
 
 
 def _should_delete_host(

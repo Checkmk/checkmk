@@ -23,7 +23,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
             prefix = "[%s] " % descr
         else:
             prefix = ""
-        infotext = "%s%s: %s" % (prefix, group["GroupName"], group["GroupId"])
+        infotext = "{}{}: {}".format(prefix, group["GroupName"], group["GroupId"])
         if group["GroupId"] not in params:
             infotext += " (has changed)"
             state = 2
@@ -32,7 +32,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
 
 check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
     parse_function=parse_aws,
+    service_name="AWS/EC2 Security Groups",
     discovery_function=inventory_aws_ec2_security_groups,
     check_function=check_aws_ec2_security_groups,
-    service_name="AWS/EC2 Security Groups",
 )

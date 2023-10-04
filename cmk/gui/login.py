@@ -8,6 +8,7 @@ import contextlib
 import http.client
 from collections.abc import Iterator
 from datetime import datetime
+from urllib.parse import unquote
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -16,7 +17,8 @@ from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site, url_prefix
-from cmk.utils.type_defs import UserId
+from cmk.utils.urls import is_allowed_url
+from cmk.utils.user import UserId
 
 import cmk.gui.mobile
 import cmk.gui.userdb as userdb
@@ -32,9 +34,9 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.log import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.main import get_page_heading
-from cmk.gui.pages import Page, page_registry
-from cmk.gui.plugins.userdb.utils import active_connections_by_type
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.session import session, UserContext
+from cmk.gui.userdb import active_connections_by_type
 from cmk.gui.userdb.session import auth_cookie_name
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
@@ -44,6 +46,15 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
+
+
+def register(page_registry: PageRegistry) -> None:
+    # TODO: only overwrite this in cse specific files
+    if cmk_version.edition() == cmk_version.Edition.CSE:
+        page_registry.register_page("login")(SaasLoginPage)
+    else:
+        page_registry.register_page("login")(LoginPage)
+    page_registry.register_page("logout")(LogoutPage)
 
 
 @contextlib.contextmanager
@@ -96,6 +107,11 @@ def del_auth_cookie() -> None:
     response.unset_http_cookie(cookie_name)
 
 
+class SaasLoginPage(Page):
+    def page(self) -> None:
+        raise HTTPRedirect("cognito_sso.py")
+
+
 # TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not
 # ensured that a user exists after letting the user in. This is a problem for the following
 # code! We need to define a point where the following code can rely on an existing user
@@ -106,7 +122,6 @@ def del_auth_cookie() -> None:
 # - It calls connection.is_locked() but we don't
 
 
-@page_registry.register_page("login")
 class LoginPage(Page):
     def __init__(self) -> None:
         super().__init__()
@@ -133,7 +148,7 @@ class LoginPage(Page):
 
         self._show_login_page()
 
-    def _do_login(self) -> None:
+    def _do_login(self) -> None:  # pylint: disable=too-many-branches
         """handle the login form"""
         if not request.var("_login"):
             return
@@ -212,6 +227,14 @@ class LoginPage(Page):
                         f"user_change_pw.py?_origtarget={urlencode(origtarget)}&reason={change_reason}"
                     )
 
+                # If user pasted e.g. a view to a link in mobile mode, redirect
+                # to the correct page
+                if is_mobile(request, response) and "start_url" in origtarget:
+                    url = unquote(origtarget.split("start_url=")[1])
+                    if not is_allowed_url(url):
+                        url = default_origtarget
+                    raise HTTPRedirect(url)
+
                 raise HTTPRedirect(origtarget)
 
             userdb.on_failed_login(username, now)
@@ -231,7 +254,7 @@ class LoginPage(Page):
     def _show_login_page(self) -> None:
         html.render_headfoot = False
         html.add_body_css_class("login")
-        make_header(html, get_page_heading(), Breadcrumb(), javascripts=[])
+        make_header(html, get_page_heading(), Breadcrumb())
 
         default_origtarget = (
             "index.py"
@@ -392,7 +415,6 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
     html.close_div()
 
 
-@page_registry.register_page("logout")
 class LogoutPage(Page):
     def page(self) -> None:
         assert user.id is not None

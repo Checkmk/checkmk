@@ -7,12 +7,12 @@
 #include <ranges>
 #include <string>
 
-#include "cfg.h"
-#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
 #include "tools/_tgt.h"  // we need IsDebug
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;
@@ -245,6 +245,8 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
             auto async = entry[vars::kPluginAsync].as<bool>(false);
             auto run = entry[vars::kPluginRun].as<bool>(true);
             auto retry = entry[vars::kPluginRetry].as<int>(0);
+            auto repair_invalid_utf =
+                entry[vars::kPluginRepairInvalidUtf].as<bool>(false);
             auto timeout =
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
             auto cache_age = entry[vars::kPluginCacheAge].as<int>(0);
@@ -266,7 +268,8 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit> &exe_unit,
                     pattern, cache_age);
             }
 
-            exe_unit.emplace_back(pattern, timeout, age, retry, run);
+            exe_unit.emplace_back(pattern, timeout, repair_invalid_utf, age,
+                                  retry, run);
             exe_unit.back().assign(entry);
 
             exe_unit.back().assignGroup(group);
@@ -311,6 +314,8 @@ void Plugins::ExeUnit::apply(std::string_view filename,
         ApplyValueIfScalar(entry, retry_, vars::kPluginRetry);
         ApplyValueIfScalar(entry, cache_age_, vars::kPluginCacheAge);
         ApplyValueIfScalar(entry, timeout_, vars::kPluginTimeout);
+        ApplyValueIfScalar(entry, repair_invalid_utf_,
+                           vars::kPluginRepairInvalidUtf);
         ApplyValueIfScalar(entry, group_, vars::kPluginGroup);
         ApplyValueIfScalar(entry, user_, vars::kPluginUser);
         if (cache_age_ != 0 && !async_) {

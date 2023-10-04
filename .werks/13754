@@ -1,0 +1,13 @@
+Title: Support Diagnostics: Collect dumps from remote sites
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1687420630
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+It is possible (again) to select a remote site to collect the Support Diagnostics dump from.
+Collecting larger dumps no longer leads to an exception, as it did before Werk 13753.
+

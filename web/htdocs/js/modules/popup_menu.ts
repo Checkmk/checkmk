@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 //#   +--------------------------------------------------------------------+
 //#   | Floating popup menus with content fetched via AJAX calls           |
@@ -105,7 +107,7 @@ export function open_popup() {
 
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
-function handle_popup_close(event: Event | undefined) {
+function handle_popup_close(event: Event | undefined): true | void {
     const container = active_popup.container;
     const target = event!.target as HTMLElement;
 
@@ -422,7 +424,7 @@ export function add_to_visual(visual_type: string, visual_name: string) {
             if (response_body.substr(0, 2) == "OK") {
                 window.location.href = response_body.substr(3);
             } else {
-                alert("Failed to add element: " + response_body);
+                console.error("Failed to add element: " + response_body);
             }
         },
     });

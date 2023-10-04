@@ -48,9 +48,9 @@ from cmk.base.config import check_info
 # redundancy 2 other-MC-status-numeric 4754
 
 
-def parse_hp_msa_system(info):
+def parse_hp_msa_system(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if line[2] == "system-name":
             system_name = " ".join(line[3:])
             parsed[system_name] = {"item_type": line[0]}
@@ -64,7 +64,7 @@ def parse_hp_msa_system(info):
 
 check_info["hp_msa_system"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa_system,
+    service_name="System Health %s",
     discovery_function=inventory_hp_msa_health,
     check_function=check_hp_msa_health,
-    service_name="System Health %s",
 )

@@ -8,13 +8,13 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import (
+from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
-    get_bytes_human_readable,
-    get_percent_human_readable,
     get_rate,
-    MKCounterWrapped,
-    RAISE,
+    get_value_store,
+    IgnoreResultsError,
+    render,
 )
 
 # ==================================================================================================
@@ -101,6 +101,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
       present for the trend computation) the tuple (0, '', []) is
       returned.
     """
+    value_store = get_value_store()
 
     perfdata: list[
         (  #
@@ -121,9 +122,12 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
     # compute current rate in MB/s by computing delta since last check
     try:
         rate = get_rate(
-            f"{check}.{item}.delta", timestamp, used_mb, allow_negative=True, onwrap=RAISE
+            get_value_store(),
+            f"{check}.{item}.delta",
+            timestamp,
+            used_mb,
         )
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         # need more data for computing a trend
         return 0, "", []
 
@@ -131,7 +135,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         perfdata.append(("growth", rate * H24))
 
     # average trend in MB/s, initialized with zero (by default)
-    rate_avg = get_average(f"{check}.{item}.trend", timestamp, rate, range_sec / 60.0)
+    rate_avg = get_average(value_store, f"{check}.{item}.trend", timestamp, rate, range_sec / 60.0)
 
     trend = rate_avg * range_sec
     sign = "+" if trend > 0 else ""
@@ -191,8 +195,8 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
             problems.append(
                 "growing too fast (warn/crit at %s/%s per %.1f h)(!"
                 % (
-                    get_percent_human_readable(wa_perc),
-                    get_percent_human_readable(cr_perc),
+                    render.percent(wa_perc),
+                    render.percent(cr_perc),
                     range_hours,
                 )
             )
@@ -206,7 +210,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         100 * trend / size_mb,
         levels.get("trend_shrinking_perc"),
         range_hours,
-        get_percent_human_readable,
+        render.percent,
     )
     if tmp_state > 0:
         state = max(state, tmp_state)

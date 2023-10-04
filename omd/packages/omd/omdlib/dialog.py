@@ -31,10 +31,10 @@ from re import Pattern
 from tty import setraw
 from typing import TYPE_CHECKING
 
+from omdlib.type_defs import ConfigChoiceHasError
+
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
-
-from .config_hooks import ConfigChoiceHasError
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -119,10 +119,13 @@ def dialog_yesno(
     yeslabel: str = "yes",
     nolabel: str = "no",
     default_no: bool = False,
+    scrollbar: bool = False,
 ) -> bool:
     command: list[str] = ["--yes-label", yeslabel, "--no-label", nolabel]
     if default_no:
         command += ["--defaultno"]
+    if scrollbar:
+        command += ["--scrollbar"]
     state, _response = _run_dialog(command + ["--yesno", text, "0", "0"])
     return state
 

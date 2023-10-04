@@ -13,13 +13,13 @@
 #include <string>
 #include <tuple>
 
-#include "cfg.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "providers/ps.h"
 #include "providers/wmi.h"
 #include "tools/_raii.h"
 #include "tools/_win.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
 namespace rs = std::ranges;
 
 namespace cma::provider {

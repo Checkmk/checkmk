@@ -124,14 +124,13 @@ def get_size() -> tuple[int, int]:
     except io.UnsupportedOperation:
         pass  # When sys.stdout is StringIO() or similar, then .fileno() is not available
     except OSError as e:
-        if e.errno == errno.ENOTTY:
-            # Inappropriate ioctl for device: Occurs when redirecting output
-            pass
-        elif e.errno == errno.EINVAL:
-            # Invalid argument: Occurs e.g. when executing from cron
-            pass
-        else:
-            raise
+        match e.errno:
+            case errno.ENOTTY:  # Inappropriate ioctl for device: Occurs when redirecting output
+                pass
+            case errno.EINVAL:  # Invalid argument: Occurs e.g. when executing from cron
+                pass
+            case _:
+                raise
 
     return (24, 80)
 

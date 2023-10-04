@@ -110,19 +110,6 @@ def test_openapi_time_period_active_time_ranges(clients: ClientRegistry) -> None
         {"day": "tuesday", "time_ranges": [{"end": "23:59", "start": "00:00"}]}
     ]
 
-    resp3 = clients.TimePeriod.create(
-        time_period_data={
-            "name": "times_only",
-            "alias": "times_only",
-            "active_time_ranges": [{"time_ranges": [{"start": "18:11:34", "end": "23:45:59"}]}],
-            "exceptions": [{"date": "2020-01-01"}],
-        },
-    )
-
-    assert resp3.json["extensions"]["active_time_ranges"] == [
-        {"day": day, "time_ranges": [{"start": "18:11", "end": "23:45"}]} for day in days
-    ]
-
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_time_period_time_ranges(clients: ClientRegistry) -> None:
@@ -232,6 +219,10 @@ def test_openapi_timeperiod_builtin(clients: ClientRegistry) -> None:
         expect_ok=False,
     )
     assert resp.status_code == 405
+
+    resp = clients.TimePeriod.delete(time_period_id="24X7", expect_ok=False).assert_status_code(405)
+    assert resp.json["title"] == "Built-in time periods can not be deleted"
+    assert resp.json["detail"] == "The built-in time period '24X7' cannot be deleted."
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -500,3 +491,230 @@ def test_openapi_delete_dependent_downtime(clients: ClientRegistry) -> None:
 
     resp = clients.TimePeriod.delete("time_period_1", expect_ok=False).assert_status_code(409)
     assert resp.json["detail"].endswith("Time Period 2 (excluded)).")
+
+
+def test_openapi_time_period_24h_regression(clients: ClientRegistry) -> None:
+    """The REST API sadly couldn't handle 24:00 in times as the GUI can."""
+    clients.TimePeriod.create(
+        time_period_data={
+            "name": "all_of_monday",
+            "alias": "All of Monday",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [{"start": "00:00", "end": "24:00"}],
+                },
+            ],
+            "exceptions": [],
+            "exclude": [],
+        },
+    )
+    clients.TimePeriod.get(time_period_id="all_of_monday")
+    clients.TimePeriod.get_all()
+    clients.TimePeriod.edit(
+        time_period_id="all_of_monday", time_period_data={"alias": "Everything in Monday"}
+    )
+    clients.TimePeriod.delete(time_period_id="all_of_monday")
+
+
+def test_openapi_time_period_24h_is_end_of_day(clients: ClientRegistry) -> None:
+    resp = clients.TimePeriod.create(
+        time_period_data={
+            "name": "time_flowing_backwards",
+            "alias": "Time Flowing Backwards",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [{"start": "24:00", "end": "00:00"}],
+                },
+            ],
+            "exceptions": [],
+            "exclude": [],
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: active_time_ranges"
+    assert (
+        resp.json["fields"]["active_time_ranges"]["0"]["time_ranges"]["0"]["_schema"][0]
+        == "Start time (24:00) must be before end time (00:00)."
+    )
+
+
+def test_openapi_exclude_field(clients: ClientRegistry) -> None:
+    time_period_1: dict[str, object] = {
+        "name": "time_period_1",
+        "alias": "Time Period 1",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    dependent_time_period: dict[str, object] = {
+        "name": "time_period_2",
+        "alias": "Time Period 2",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "12:00", "end": "14:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": ["Time Period 1"],
+    }
+
+    name_dependent_time_period: dict[str, object] = {
+        "name": "time_period_3",
+        "alias": "Time Period 3",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "12:00", "end": "14:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": ["time_period_1"],
+    }
+
+    referenced_time_period_does_not_exist = clients.TimePeriod.create(
+        time_period_data=dependent_time_period, expect_ok=False
+    ).assert_status_code(400)
+    assert (
+        referenced_time_period_does_not_exist.json["detail"]
+        == "These fields have problems: exclude"
+    )
+    assert referenced_time_period_does_not_exist.json["title"] == "Bad Request"
+    assert "exclude" in referenced_time_period_does_not_exist.json["fields"]
+    assert len(referenced_time_period_does_not_exist.json["fields"]["exclude"]) == 1
+    assert referenced_time_period_does_not_exist.json["fields"]["exclude"]["0"] == [
+        "Time period alias does not exist: 'Time Period 1'"
+    ]
+
+    clients.TimePeriod.create(time_period_data=time_period_1)
+    clients.TimePeriod.create(time_period_data=dependent_time_period)
+    response_dependent_time_period = clients.TimePeriod.get(time_period_id="time_period_2")
+    assert (
+        response_dependent_time_period.json["extensions"]["exclude"]
+        == dependent_time_period["exclude"]
+    )
+
+    internal_time_period = load_timeperiod(name="time_period_2")
+    assert internal_time_period["exclude"] == ["time_period_1"]
+
+    referenced_time_period_by_name = clients.TimePeriod.create(
+        time_period_data=name_dependent_time_period, expect_ok=False
+    ).assert_status_code(400)
+    assert referenced_time_period_by_name.json["detail"] == "These fields have problems: exclude"
+    assert referenced_time_period_by_name.json["title"] == "Bad Request"
+    assert "exclude" in referenced_time_period_by_name.json["fields"]
+    assert len(referenced_time_period_by_name.json["fields"]["exclude"]) == 1
+    assert referenced_time_period_by_name.json["fields"]["exclude"]["0"] == [
+        "Time period alias does not exist: 'time_period_1'"
+    ]
+
+
+def test_openapi_timeperiod_update_exclude(clients: ClientRegistry) -> None:
+    time_period_alias_1 = "Time Period 1"
+    time_period_1: dict[str, object] = {
+        "name": "time_period_1",
+        "alias": time_period_alias_1,
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    time_period_alias_2 = "Time Period 2"
+    time_period_2: dict[str, object] = {
+        "name": "time_period_2",
+        "alias": time_period_alias_2,
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    time_period_3: dict[str, object] = {
+        "name": "time_period_3",
+        "alias": "Time Period 3",
+        "active_time_ranges": [
+            {
+                "day": "monday",
+                "time_ranges": [{"start": "14:00", "end": "18:00"}],
+            },
+        ],
+        "exceptions": [],
+        "exclude": [],
+    }
+
+    clients.TimePeriod.create(time_period_data=time_period_1)
+    clients.TimePeriod.create(time_period_data=time_period_2)
+    clients.TimePeriod.create(time_period_data=time_period_3)
+
+    res_empty_exclude = clients.TimePeriod.get(time_period_id="time_period_3")
+    assert res_empty_exclude.json["extensions"]["exclude"] == []
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3", time_period_data={"exclude": [time_period_alias_1]}
+    )
+    res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
+    assert res_update_time_period.json["extensions"]["exclude"] == [time_period_alias_1]
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3", time_period_data={"exclude": [time_period_alias_2]}
+    )
+    res_update_time_period = clients.TimePeriod.get(time_period_id="time_period_3")
+    assert res_update_time_period.json["extensions"]["exclude"] == [time_period_alias_2]
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3",
+        time_period_data={"exclude": ["I don't exist"]},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.TimePeriod.edit(
+        time_period_id="time_period_3",
+        time_period_data={"exclude": "This should be a list"},
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+invalid_timeperiod_names = (
+    "test_timeperiod\\n",
+    "test_timeperiod\n",
+    "test_time\nperiod",
+    "\ntest_timeperiod",
+)
+
+
+@pytest.mark.parametrize("timeperiod_name", invalid_timeperiod_names)
+def test_create_timeperiod_name_with_newline(
+    clients: ClientRegistry,
+    timeperiod_name: str,
+) -> None:
+    resp = clients.TimePeriod.create(
+        time_period_data={
+            "name": timeperiod_name,
+            "alias": "foobar",
+            "active_time_ranges": [{"day": "all"}],
+            "exceptions": [{"date": "2020-01-01"}],
+        },
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert (
+        resp.json["fields"]["name"][0]
+        == f"{timeperiod_name!r} does not match pattern '^[-a-z0-9A-Z_]+\\\\Z'."
+    )

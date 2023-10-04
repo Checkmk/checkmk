@@ -41,7 +41,7 @@ def check_apc_netbotz_other_sensors(_no_item, _no_params, info):
             if error_state == "0":
                 count_ok_sensors += 1
             else:
-                yield 2, "%s: %s" % (sensor_label, state_readable)
+                yield 2, f"{sensor_label}: {state_readable}"
 
     if count_ok_sensors > 0:
         yield 0, "%d sensors are OK" % count_ok_sensors
@@ -49,11 +49,11 @@ def check_apc_netbotz_other_sensors(_no_item, _no_params, info):
 
 check_info["apc_netbotz_other_sensors"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
-    discovery_function=inventory_apc_netbotz_other_sensors,
-    check_function=check_apc_netbotz_other_sensors,
-    service_name="Numeric sensors summary",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5528.100.4.2.10.1",
         oids=["4", "3", "7"],
     ),
+    service_name="Numeric sensors summary",
+    discovery_function=inventory_apc_netbotz_other_sensors,
+    check_function=check_apc_netbotz_other_sensors,
 )

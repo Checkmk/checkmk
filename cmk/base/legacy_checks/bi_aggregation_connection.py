@@ -10,12 +10,12 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_bi_aggregation_connection(info):
+def parse_bi_aggregation_connection(string_table):
     import ast
 
     fields = ["missing_sites", "missing_aggr", "generic_errors"]
     parsed = {}
-    for line in info:
+    for line in string_table:
         connection_info = ast.literal_eval(line[0])
         for field in fields:
             if connection_info[field]:
@@ -44,7 +44,7 @@ def check_bi_aggregation_connection(_no_item, _no_params, parsed):
 
 check_info["bi_aggregation_connection"] = LegacyCheckDefinition(
     parse_function=parse_bi_aggregation_connection,
+    service_name="BI Datasource Connection",
     discovery_function=discover_bi_aggregation_connection,
     check_function=check_bi_aggregation_connection,
-    service_name="BI Datasource Connection",
 )

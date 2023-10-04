@@ -19,7 +19,7 @@ import cmk.utils.profile
 import cmk.utils.store
 from cmk.utils.exceptions import MKException
 
-from cmk.gui import http, pages, sites
+from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
@@ -128,15 +128,6 @@ def _render_exception(e: Exception, title: str) -> Response:
     return response
 
 
-def default_response_headers(req: http.Request) -> dict[str, str]:
-    headers = {
-        # Disable caching for all our pages as they are mostly dynamically generated,
-        # user related and are required to be up-to-date on every refresh
-        "Cache-Control": "no-cache",
-    }
-    return headers
-
-
 _OUTPUT_FORMAT_MIME_TYPES = {
     "json": "application/json",
     "json_export": "application/json",
@@ -234,4 +225,5 @@ def _process_request(  # pylint: disable=too-many-branches
         if debug:
             raise
 
+    resp.set_caching_headers()
     return resp(environ, start_response)

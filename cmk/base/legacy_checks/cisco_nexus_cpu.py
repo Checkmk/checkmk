@@ -32,13 +32,13 @@ check_info["cisco_nexus_cpu"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "nx-os"),
         exists(".1.3.6.1.4.1.9.9.305.1.1.1.0"),
     ),
-    discovery_function=inventory_cisco_nexus_cpu,
-    check_function=check_cisco_nexus_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.305.1.1.1",
         oids=["0"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_cisco_nexus_cpu,
+    check_function=check_cisco_nexus_cpu,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={
         "util": (80.0, 90.0),

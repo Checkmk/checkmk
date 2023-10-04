@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, discover, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -38,13 +38,13 @@ from cmk.base.config import check_info
 # 1:online:control:9843-AE2:6860407:2:2:2:12
 
 
-def parse_ibm_svc_enclosure(info):
-    dflt_header = _get_ibm_svc_enclosure_dflt_header(info)
+def parse_ibm_svc_enclosure(string_table):
+    dflt_header = _get_ibm_svc_enclosure_dflt_header(string_table)
     if dflt_header is None:
         return {}
 
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:
@@ -95,11 +95,15 @@ def check_ibm_svc_enclosure(item, params, parsed):
         yield state, infotext
 
 
+def discover_ibm_svc_enclosure(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ibm_svc_enclosure"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_enclosure,
-    check_function=check_ibm_svc_enclosure,
-    discovery_function=discover(),
     service_name="Enclosure %s",
+    discovery_function=discover_ibm_svc_enclosure,
+    check_function=check_ibm_svc_enclosure,
     check_ruleset_name="ibm_svc_enclosure",
 )
 

@@ -676,6 +676,14 @@ div.page_menu_popup {
     &:first-of-type {
       padding-top: 0;
     }
+
+    .button {
+      margin: 0px 20px 0px 0px;
+
+      &.border_hot {
+        border: 1px solid $success-dimmed;
+      }
+    }
   }
 
   form span.checkbox {

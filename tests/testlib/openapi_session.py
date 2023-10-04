@@ -7,19 +7,19 @@ import logging
 import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple, NoReturn, Optional
+from typing import Any, AnyStr, NamedTuple
 
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
 
-from cmk.utils.type_defs import HTTPMethod
+from cmk.gui.http import HTTPMethod
 
 logger = logging.getLogger("rest-session")
 
 
 class RequestSessionRequestHandler(RequestHandler):
-    def __init__(self):
+    def __init__(self) -> None:
         self.session = requests.session()
 
     def request(
@@ -55,6 +55,7 @@ class UnexpectedResponse(RestSessionException):
 
     def __init__(self, status_code: int, response_text: str) -> None:
         super().__init__(f"[{status_code}] {response_text}")
+        self.status_code = status_code
 
 
 class AuthorizationFailed(RestSessionException):
@@ -190,12 +191,21 @@ class CMKOpenApiSession(requests.Session):
             raise UnexpectedResponse.from_response(response)
         return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
 
-    def get_user(self, username: str) -> tuple[dict[str, Any], str]:
+    def get_user(self, username: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the user details and the Etag header if the user was found
+            None if the user was not found
+        """
         response = self.get(f"/objects/user_config/{username}")
-        if response.status_code != 200:
+        if response.status_code not in (200, 404):
             raise UnexpectedResponse.from_response(response)
-
-        return response.json()["extensions"], response.headers["Etag"]
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
 
     def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
         response = self.put(
@@ -216,8 +226,8 @@ class CMKOpenApiSession(requests.Session):
     def create_folder(
         self,
         folder: str,
-        title: Optional[str] = None,
-        attributes: Optional[Mapping[str, Any]] = None,
+        title: str | None = None,
+        attributes: Mapping[str, Any] | None = None,
     ) -> None:
         if folder.count("/") > 1:
             parent_folder, folder_name = folder.rsplit("/", 1)
@@ -236,17 +246,27 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-    def get_folder(self, folder: str) -> list[dict[str, Any]]:
+    def get_folder(self, folder: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the folder details and the Etag header if the folder was found
+            None if the folder was not found
+        """
         response = self.get(f"/objects/folder_config/{folder.replace('/', '~')}")
-        if response.status_code != 200:
+        if response.status_code not in (200, 404):
             raise UnexpectedResponse.from_response(response)
-        return response.json()
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
 
     def create_host(
         self,
         hostname: str,
         folder: str = "/",
-        attributes: dict[str, Any] | None = None,
+        attributes: Mapping[str, Any] | None = None,
         bake_agent: bool = False,
     ) -> requests.Response:
         query_string = "?bake_agent=1" if bake_agent else ""
@@ -258,11 +278,40 @@ class CMKOpenApiSession(requests.Session):
             raise UnexpectedResponse.from_response(response)
         return response
 
-    def get_host(self, hostname: str) -> list[dict[str, Any]]:
-        response = self.get(f"/objects/host_config/{hostname}")
+    def bulk_create_hosts(
+        self,
+        entries: list[dict[str, Any]],
+        bake_agent: bool = False,
+        ignore_existing: bool = False,
+    ) -> list[dict[str, Any]]:
+        if ignore_existing:
+            existing_hosts = [_.get("id") for _ in self.get_hosts()]
+            entries = [_ for _ in entries if _.get("host_name") not in existing_hosts]
+        query_string = "?bake_agent=1" if bake_agent else ""
+        response = self.post(
+            f"/domain-types/host_config/actions/bulk-create/invoke{query_string}",
+            json={"entries": entries},
+        )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()
+        value: list[dict[str, Any]] = response.json()
+        return value
+
+    def get_host(self, hostname: str) -> tuple[dict[Any, str], str] | None:
+        """
+        Returns
+            a tuple with the host details and the Etag header if the host was found
+            None if the host was not found
+        """
+        response = self.get(f"/objects/host_config/{hostname}")
+        if response.status_code not in (200, 404):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == 404:
+            return None
+        return (
+            response.json()["extensions"],
+            response.headers["Etag"],
+        )
 
     def get_hosts(self) -> list[dict[str, Any]]:
         response = self.get("/domain-types/host_config/collections/all")
@@ -273,6 +322,14 @@ class CMKOpenApiSession(requests.Session):
 
     def delete_host(self, hostname: str) -> None:
         response = self.delete(f"/objects/host_config/{hostname}")
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
+    def bulk_delete_hosts(self, hostnames: list[str]) -> None:
+        response = self.post(
+            "/domain-types/host_config/actions/bulk-delete/invoke",
+            json={"entries": hostnames},
+        )
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
@@ -302,22 +359,67 @@ class CMKOpenApiSession(requests.Session):
         with self._wait_for_completion(timeout, "post"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
 
-    def discover_services(self, hostname: str, mode: str = "tabula_rasa") -> NoReturn:
+    def discover_services(
+        self,
+        hostname: str,
+        mode: str = "tabula_rasa",
+    ) -> None:
         response = self.post(
             "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": mode},
+            json={
+                "host_name": hostname,
+                "mode": mode,
+            },
             # We want to get the redirect response and handle that below. So don't let requests
             # handle that for us.
             allow_redirects=False,
         )
         if response.status_code == 302:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        raise UnexpectedResponse.from_response(response)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
 
-    def discover_services_and_wait_for_completion(self, hostname: str) -> None:
-        timeout = 60
+    def bulk_discover_services(
+        self,
+        hostnames: list[str],
+        mode: str = "new",
+        do_full_scan: bool = True,
+        bulk_size: int = 10,
+        ignore_errors: bool = True,
+        wait_for_completion: bool = False,
+    ) -> str:
+        response = self.post(
+            "/domain-types/discovery_run/actions/bulk-discovery-start/invoke",
+            json={
+                "hostnames": hostnames,
+                "mode": mode,
+                "do_full_scan": do_full_scan,
+                "bulk_size": bulk_size,
+                "ignore_errors": ignore_errors,
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        job_id: str = response.json()["id"]
+        while wait_for_completion and self.get_bulk_discovery_status(job_id) in (
+            "initialized",
+            "running",
+        ):
+            time.sleep(0.5)
+        return job_id
+
+    def get_bulk_discovery_status(self, job_id: str) -> str:
+        response = self.get(f"/objects/discovery_run/{job_id}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        status: str = response.json()["extensions"]["state"]
+        return status
+
+    def discover_services_and_wait_for_completion(
+        self, hostname: str, mode: str = "tabula_rasa", timeout: int = 60
+    ) -> None:
         with self._wait_for_completion(timeout, "get"):
-            self.discover_services(hostname)
+            self.discover_services(hostname, mode)
 
     @contextmanager
     def _wait_for_completion(
@@ -348,13 +450,13 @@ class CMKOpenApiSession(requests.Session):
                 time.sleep(0.5)
 
     def get_host_services(
-        self, hostname: str, pending: Optional[bool] = None, columns: Optional[list[str]] = None
+        self, hostname: str, pending: bool | None = None, columns: list[str] | None = None
     ) -> list[dict[str, Any]]:
         if pending is not None:
-            if columns:
-                columns.append("has_been_checked")
-            else:
+            if columns is None:
                 columns = ["has_been_checked"]
+            elif "has_been_checked" not in columns:
+                columns.append("has_been_checked")
         query_string = "?columns=" + "&columns=".join(columns) if columns else ""
         response = self.get(f"/objects/host/{hostname}/collections/services{query_string}")
         if response.status_code != 200:

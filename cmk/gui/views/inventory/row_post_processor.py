@@ -18,10 +18,10 @@ from cmk.gui.inventory import (
     LoadStructuredDataError,
 )
 from cmk.gui.painter.v0.base import Cell, JoinCell
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
+from cmk.gui.visuals.filter import Filter
 
 from ..sorter import SorterEntry
 
@@ -163,7 +163,7 @@ def _extract_table_rows(
         for (path, ident), painter_macros in painter_macros_by_path_and_ident.items():
             if tree := row["host_inventory"].get_tree(path):
                 table_rows_by_master_key.setdefault(master_key, []).extend(
-                    list(_find_table_rows(ident, painter_macros, tree.tree.table.rows))
+                    list(_find_table_rows(ident, painter_macros, tree.table.rows))
                 )
 
     return table_rows_by_master_key

@@ -12,6 +12,6 @@ def snap7(version_str, sha256):
             UPSTREAM_MIRROR_URL + filename,
         ],
         sha256 = sha256,
-        build_file = "@omd_packages//packages/snap7:BUILD.snap7.bazel",
+        build_file = "@omd_packages//omd/packages/snap7:BUILD.snap7.bazel",
         strip_prefix = "snap7-" + version_str,
     )

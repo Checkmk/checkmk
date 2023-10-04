@@ -25,13 +25,13 @@ from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
 
 check_info["pandacom_fc_temp"] = LegacyCheckDefinition(
     detect=DETECT_PANDACOM,
-    discovery_function=inventory_pandacom_module_temp,
-    check_function=check_pandacom_module_temp,
-    service_name="Temperature FC Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.3.3",
         oids=["1.1.2", "1.1.7", "2.1.13", "2.1.14"],
     ),
+    service_name="Temperature FC Module %s",
+    discovery_function=inventory_pandacom_module_temp,
+    check_function=check_pandacom_module_temp,
     check_ruleset_name="temperature",
     check_default_parameters=PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

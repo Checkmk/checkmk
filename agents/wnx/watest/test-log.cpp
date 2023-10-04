@@ -5,12 +5,12 @@
 #include <filesystem>
 #include <string>
 
-#include "cfg.h"
-#include "logger.h"
-#include "on_start.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
+#include "wnx/on_start.h"
+#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 using namespace std::string_literals;
@@ -456,7 +456,7 @@ TEST(LogTest, Functional) {
     fs::path logf = log_file_name;
     fs::remove(logf);
 
-    cma::OnStart(cma::AppType::test);
+    cma::OnStartTest();
     setup::ChangeLogFileName(wtools::ToUtf8(logf.wstring()));
 
     XLOG::l("simple test");

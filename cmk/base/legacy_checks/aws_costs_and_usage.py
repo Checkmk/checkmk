@@ -17,9 +17,9 @@ AWSCostAndUageMetrics = [
 ]
 
 
-def parse_aws_costs_and_usage(info):
+def parse_aws_costs_and_usage(string_table):
     parsed = {}
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         timeperiod = row["TimePeriod"]["Start"]
         for group in row.get("Groups", []):
             service_name = " ".join(group["Keys"])
@@ -68,15 +68,15 @@ def check_aws_costs_and_usage_summary(item, params, parsed):
             costs,
             "aws_costs_%s" % key,
             params.get("levels_%s" % key, (None, None)),
-            infoname="(%s) Total %s %s" % (timeperiod, title, unit),
+            infoname=f"({timeperiod}) Total {title} {unit}",
         )
 
 
 check_info["aws_costs_and_usage"] = LegacyCheckDefinition(
     parse_function=parse_aws_costs_and_usage,
+    service_name="AWS/CE %s",
     discovery_function=inventory_aws_costs_and_usage_summary,
     check_function=check_aws_costs_and_usage_summary,
-    service_name="AWS/CE %s",
     check_ruleset_name="aws_costs_and_usage",
 )
 
@@ -112,13 +112,14 @@ def check_aws_costs_and_usage_per_service(item, params, parsed):
             costs,
             "aws_costs_%s" % key,
             params.get("levels_%s" % key, (None, None)),
-            infoname="(%s) %s %s" % (timeperiod, title, unit),
+            infoname=f"({timeperiod}) {title} {unit}",
         )
 
 
 check_info["aws_costs_and_usage.per_service"] = LegacyCheckDefinition(
+    service_name="AWS/CE %s",
+    sections=["aws_costs_and_usage"],
     discovery_function=inventory_aws_costs_and_usage_per_service,
     check_function=check_aws_costs_and_usage_per_service,
-    service_name="AWS/CE %s",
     check_ruleset_name="aws_costs_and_usage",
 )

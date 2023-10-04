@@ -2,9 +2,9 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Iterable, Optional, Sequence, Tuple
+from collections.abc import Iterable, Sequence
 
-FSBlock = Tuple[str, float, float, str]
+FSBlock = tuple[str, float, float, str]
 FSBlocks = Sequence[FSBlock]
 
 from ..agent_based_api.v1 import all_of, any_of, exists, startswith
@@ -26,7 +26,7 @@ STATUS_MAP = {
 }
 
 
-def parse_physical_volumes(volume_data: Iterable) -> Tuple[Dict, Dict]:
+def parse_physical_volumes(volume_data: Iterable) -> tuple[dict, dict]:
     map_label = {}
     parsed_volumes = {}
 
@@ -36,7 +36,7 @@ def parse_physical_volumes(volume_data: Iterable) -> Tuple[Dict, Dict]:
 
         map_label[volume_id] = label
 
-        volume = "%s %s" % (volume_id, label)
+        volume = f"{volume_id} {label}"
         status = STATUS_MAP.get(status_id, "unidentified")
         size_mb = int(size) / 1048576.0 if size else None
         avail_mb = int(avail) / 1048576.0 if avail else None
@@ -45,7 +45,7 @@ def parse_physical_volumes(volume_data: Iterable) -> Tuple[Dict, Dict]:
     return map_label, parsed_volumes
 
 
-def parse_virtual_volumes(map_label: Dict, virtual_volumes: Iterable, quotas: Iterable) -> Dict:
+def parse_virtual_volumes(map_label: dict, virtual_volumes: Iterable, quotas: Iterable) -> dict:
     # Note: A virtual volume may have no quota or a quota without a limit
     # and usage.
     # Besides quotas for virtual volumes the quota table also contains
@@ -57,11 +57,11 @@ def parse_virtual_volumes(map_label: Dict, virtual_volumes: Iterable, quotas: It
         the first element of the virtual volume."""
         return ".".join([phys_volume_id] + virtual_volume_oid_end.split(".")[1:] + ["0"])
 
-    parsed: Dict[str, Tuple[Optional[float], Optional[float]]] = {}
-    map_quota_oid: Dict = {}
+    parsed: dict[str, tuple[float | None, float | None]] = {}
+    map_quota_oid: dict = {}
     for oid_end, phys_volume_id, virtual_volume_label in virtual_volumes:
         phys_volume_label = map_label[phys_volume_id]
-        volume = "%s on %s" % (virtual_volume_label, phys_volume_label)
+        volume = f"{virtual_volume_label} on {phys_volume_label}"
         parsed[volume] = None, None
 
         ref_oid_end = quota_oid_end(phys_volume_id, oid_end)

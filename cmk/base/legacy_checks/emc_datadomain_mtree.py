@@ -4,26 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
 
 
-def parse_emc_datadomain_mtree(info):
+def parse_emc_datadomain_mtree(string_table):
     return {
         line[0]: {"precompiled": int(float(line[1]) * 1024**3), "status_code": line[2]}
-        for line in info
+        for line in string_table
     }
 
 
-@get_parsed_item_data
-def check_emc_datadomain_mtree(_item, params, mtree_data):
+def check_emc_datadomain_mtree(item, params, parsed):
+    if not (mtree_data := parsed.get(item)):
+        return
     state_table = {
         "0": "unknown",
         "1": "deleted",
@@ -38,22 +34,27 @@ def check_emc_datadomain_mtree(_item, params, mtree_data):
     )
     yield (
         params.get(dev_state_str, 3),
-        "Status: %s, Precompiled: %s"
-        % (dev_state_str, get_bytes_human_readable(mtree_data["precompiled"])),
+        "Status: {}, Precompiled: {}".format(
+            dev_state_str, get_bytes_human_readable(mtree_data["precompiled"])
+        ),
         [("precompiled", mtree_data["precompiled"])],
     )
 
 
+def discover_emc_datadomain_mtree(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    parse_function=parse_emc_datadomain_mtree,
-    check_function=check_emc_datadomain_mtree,
-    discovery_function=discover(),
-    service_name="MTree %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.15.2.1.1",
         oids=["2", "3", "4"],
     ),
+    parse_function=parse_emc_datadomain_mtree,
+    service_name="MTree %s",
+    discovery_function=discover_emc_datadomain_mtree,
+    check_function=check_emc_datadomain_mtree,
     check_ruleset_name="emc_datadomain_mtree",
     check_default_parameters={
         "deleted": 2,

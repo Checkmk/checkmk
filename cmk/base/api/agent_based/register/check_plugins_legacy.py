@@ -14,9 +14,8 @@ from typing import Any
 
 from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
-from cmk.checkengine import Parameters
+from cmk.checkengine.parameters import Parameters
 
-from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import (
     CheckPlugin,
     CheckResult,
@@ -90,11 +89,12 @@ def _resolve_string_parameters(
         # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
         # are resolved now *before* they are written to the autochecks file, and earlier autochecks
         # files are resolved during cmk-update-config.
-        return eval(params_unresolved, context, context)  # pylint: disable=eval-used
+        return eval(  # nosec B307 # BNS:1c6cc2 # pylint: disable=eval-used
+            params_unresolved, context, context
+        )
     except Exception:
         raise ValueError(
-            "Invalid check parameter string '%s' found in discovered service %r"
-            % (params_unresolved, check_name)
+            f"Invalid check parameter string '{params_unresolved}' found in discovered service {check_name!r}"
         )
 
 
@@ -145,8 +145,6 @@ def _create_check_function(name: str, check_info_element: LegacyCheckDefinition)
             parameters = copy.deepcopy(parameters._data)
         kwargs["params"] = unwrap_parameters(parameters)
 
-        item_state.reset_wrapped_counters()  # not supported by the new API!
-
         if not requires_item:
             # this handles a very weird case, in which check plugins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
@@ -166,8 +164,6 @@ def _create_check_function(name: str, check_info_element: LegacyCheckDefinition)
                 break
 
             yield from _create_new_result(*subresult)
-
-        item_state.raise_counter_wrap()
 
     return check_result_generator
 
@@ -293,6 +289,9 @@ def create_check_plugin_from_legacy(
         )
 
     new_check_name = maincheckify(check_plugin_name)
+    sections = [check_plugin_name.split(".", 1)[0]]
+    if "." in check_plugin_name:
+        assert sections == check_info_element["sections"]
 
     discovery_function = _create_discovery_function(
         check_plugin_name,
@@ -307,7 +306,7 @@ def create_check_plugin_from_legacy(
 
     return create_check_plugin(
         name=new_check_name,
-        sections=[check_plugin_name.split(".", 1)[0]],
+        sections=sections,
         service_name=check_info_element["service_name"],
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!

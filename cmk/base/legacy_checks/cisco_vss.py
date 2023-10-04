@@ -84,7 +84,7 @@ def check_cisco_vss(item, params, info):
             state = 2
         else:
             state = 0
-        yield state, "chassis %s: %s" % (switch_id, cisco_vss_role_names[chassis_role])
+        yield state, f"chassis {switch_id}: {cisco_vss_role_names[chassis_role]}"
 
     yield 0, "%d VSL connections configured" % len(ports)
 
@@ -93,7 +93,7 @@ def check_cisco_vss(item, params, info):
             state = 0
         else:
             state = 2
-        yield state, "core switch %s: VSL %s" % (
+        yield state, "core switch {}: VSL {}".format(
             core_switch_id,
             cisco_vss_operstatus_names[operstatus],
         )
@@ -102,7 +102,7 @@ def check_cisco_vss(item, params, info):
             state = 0
         else:
             state = 2
-        yield state, "%s/%s ports operational" % (op_portcount, conf_portcount)
+        yield state, f"{op_portcount}/{conf_portcount} ports operational"
 
 
 check_info["cisco_vss"] = LegacyCheckDefinition(
@@ -114,9 +114,6 @@ check_info["cisco_vss"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.9.9.388.1.1.1.0"),
     ),
-    check_function=check_cisco_vss,
-    discovery_function=inventory_cisco_vss,
-    service_name="VSS Status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.388.1.2.2.1",
@@ -127,4 +124,7 @@ check_info["cisco_vss"] = LegacyCheckDefinition(
             oids=["2", "3", "5", "6"],
         ),
     ],
+    service_name="VSS Status",
+    discovery_function=inventory_cisco_vss,
+    check_function=check_cisco_vss,
 )

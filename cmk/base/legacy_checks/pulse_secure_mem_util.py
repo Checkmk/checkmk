@@ -6,9 +6,9 @@
 from collections.abc import Iterable, Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping[str, int]
@@ -39,20 +39,20 @@ def check_pulse_secure_mem(item, params, parsed):
                 metric,
                 params.get(metric),
                 infoname=info_name,
-                human_readable_func=get_percent_human_readable,
+                human_readable_func=render.percent,
             )
 
 
 check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=parse_pulse_secure_mem,
-    discovery_function=discover_pulse_secure_mem_util,
-    check_function=check_pulse_secure_mem,
-    service_name="Pulse Secure IVE memory utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["11", "24"],
     ),
+    parse_function=parse_pulse_secure_mem,
+    service_name="Pulse Secure IVE memory utilization",
+    discovery_function=discover_pulse_secure_mem_util,
+    check_function=check_pulse_secure_mem,
     check_ruleset_name="pulse_secure_mem_util",
     check_default_parameters={
         "mem_used_percent": (90, 95),

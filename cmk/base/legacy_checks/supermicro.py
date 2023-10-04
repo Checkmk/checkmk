@@ -77,13 +77,13 @@ def check_supermicro_health(_no_item, _no_params, info):
 
 check_info["supermicro"] = LegacyCheckDefinition(
     detect=DETECT_SUPERMICRO,
-    check_function=check_supermicro_health,
-    discovery_function=inventory_supermicro_health,
-    service_name="Overall Hardware Health",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10876.2",
         oids=["2", "3"],
     ),
+    service_name="Overall Hardware Health",
+    discovery_function=inventory_supermicro_health,
+    check_function=check_supermicro_health,
 )
 
 # .
@@ -139,9 +139,9 @@ def check_supermicro_sensors(item, _no_params, info):
                 perfvar = "temp"
             elif sensor_type == Type.Voltage:
                 if unit == "mV":
-                    reading, warn_upper, crit_upper = [
+                    reading, warn_upper, crit_upper = (
                         x / 1000.0 for x in (reading, warn_upper, crit_upper)
-                    ]
+                    )
                     unit = "V"
                 perfvar = "voltage"
             elif sensor_type == Type.Status:
@@ -150,7 +150,7 @@ def check_supermicro_sensors(item, _no_params, info):
 
             return (
                 worst_status(status_high, status_low, dev_status),
-                "%s%s" % (reading, unit),
+                f"{reading}{unit}",
                 [(perfvar, reading, warn_upper, crit_upper)] if perfvar else [],
             )
 
@@ -161,9 +161,9 @@ check_info["supermicro_sensors"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.10876.2.1.1.1.1",
         oids=["2", "3", "4", "5", "6", "11", "12"],
     ),
-    check_function=check_supermicro_sensors,
-    discovery_function=inventory_supermicro_sensors,
     service_name="Sensor %s",
+    discovery_function=inventory_supermicro_sensors,
+    check_function=check_supermicro_sensors,
 )
 
 # .
@@ -194,7 +194,7 @@ def check_supermicro_smart(item, _no_params, info):
     status_map = {"0": "Healthy", "1": "Warning", "2": "Critical", "3": "Unknown"}
     for serial, name, status in info:
         if format_item_supermicro_smart(name) == item:
-            return int(status), "(S/N %s) %s" % (serial, status_map[status])
+            return int(status), f"(S/N {serial}) {status_map[status]}"
     return None
 
 
@@ -204,7 +204,7 @@ check_info["supermicro_smart"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.10876.100.1.4.1",
         oids=["1", "2", "4"],
     ),
-    check_function=check_supermicro_smart,
-    discovery_function=inventory_supermicro_smart,
     service_name="SMART Health %s",
+    discovery_function=inventory_supermicro_smart,
+    check_function=check_supermicro_smart,
 )

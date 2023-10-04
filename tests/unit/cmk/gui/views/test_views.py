@@ -31,7 +31,7 @@ from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
-from cmk.gui.views.inventory import inventory_displayhints
+from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.sorter import sorter_registry
@@ -185,7 +185,7 @@ def test_registered_commands() -> None:
         "remove_comments": {
             "permission": "action.addcomment",
             "tables": ["comment"],
-            "title": "Remove comments",
+            "title": "Delete comments",
         },
         "remove_downtimes": {
             "permission": "action.downtimes",
@@ -210,12 +210,12 @@ def test_registered_commands() -> None:
         "clear_modified_attributes": {
             "permission": "action.clearmodattr",
             "tables": ["host", "service"],
-            "title": "Modified attributes",
+            "title": "Reset modified attributes",
         },
         "send_custom_notification": {
             "permission": "action.customnotification",
             "tables": ["host", "service"],
-            "title": "Custom notification",
+            "title": "Send custom notification",
         },
         "ec_archive_event": {
             "permission": "mkeventd.delete",
@@ -230,12 +230,12 @@ def test_registered_commands() -> None:
         "toggle_passive_checks": {
             "permission": "action.enablechecks",
             "tables": ["host", "service"],
-            "title": "Passive checks",
+            "title": "Enable/Disable passive checks",
         },
         "toggle_active_checks": {
             "permission": "action.enablechecks",
             "tables": ["host", "service"],
-            "title": "Active checks",
+            "title": "Enable/Disable active checks",
         },
         "fake_check_result": {
             "group": "fake_check",
@@ -246,7 +246,7 @@ def test_registered_commands() -> None:
         "notifications": {
             "permission": "action.notifications",
             "tables": ["host", "service"],
-            "title": "Notifications",
+            "title": "Enable/disable notifications",
         },
         "reschedule": {
             "permission": "action.reschedule",
@@ -266,7 +266,7 @@ def test_registered_commands() -> None:
         },
     }
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected.update(
             {
                 "edit_downtimes": {

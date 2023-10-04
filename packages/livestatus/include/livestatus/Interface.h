@@ -51,7 +51,6 @@ enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 class IContact {
 public:
     virtual ~IContact() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
     [[nodiscard]] virtual std::string email() const = 0;
@@ -76,7 +75,6 @@ public:
 class IContactGroup {
 public:
     virtual ~IContactGroup() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual bool isMember(const IContact &) const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
@@ -86,7 +84,7 @@ public:
 class IHost {
 public:
     virtual ~IHost() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
+    [[nodiscard]] virtual const void *handleForStateHistory() const = 0;
     [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
     [[nodiscard]] virtual std::string notificationPeriodName() const = 0;
     [[nodiscard]] virtual std::string servicePeriodName() const = 0;
@@ -205,7 +203,7 @@ public:
 class IService {
 public:
     virtual ~IService() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
+    [[nodiscard]] virtual const void *handleForStateHistory() const = 0;
     [[nodiscard]] virtual const IHost &host() const = 0;
     [[nodiscard]] virtual bool hasContact(const IContact &) const = 0;
 
@@ -322,7 +320,6 @@ public:
 class IHostGroup {
 public:
     virtual ~IHostGroup() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
     [[nodiscard]] virtual std::string notes() const = 0;
@@ -334,7 +331,6 @@ public:
 class IServiceGroup {
 public:
     virtual ~IServiceGroup() = default;
-    [[nodiscard]] virtual const void *handle() const = 0;
     [[nodiscard]] virtual std::string name() const = 0;
     [[nodiscard]] virtual std::string alias() const = 0;
     [[nodiscard]] virtual std::string notes() const = 0;
@@ -443,6 +439,8 @@ public:
     [[nodiscard]] virtual std::filesystem::path robotmk_html_log_directory()
         const = 0;
     [[nodiscard]] virtual std::filesystem::path logwatch_directory() const = 0;
+    [[nodiscard]] virtual std::filesystem::path prediction_directory()
+        const = 0;
     [[nodiscard]] virtual std::filesystem::path event_console_status_socket()
         const = 0;
     [[nodiscard]] virtual std::filesystem::path livestatus_socket() const = 0;

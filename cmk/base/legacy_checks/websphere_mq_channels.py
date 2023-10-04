@@ -17,13 +17,14 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_websphere_mq_channels(info):
+def parse_websphere_mq_channels(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2:
             messages, max_messages = 0, 0
             channel_name = line[0]
@@ -89,7 +90,7 @@ def check_websphere_mq_channels(item, params, parsed):
         if params.get("message_count_perc") and max_messages > 0:
             warn, crit = params["message_count_perc"]
             messages_perc = 1.0 * messages / max_messages
-            infotext = get_percent_human_readable(messages_perc)
+            infotext = render.percent(messages_perc)
             state = 0
 
             if messages_perc >= crit:
@@ -97,9 +98,9 @@ def check_websphere_mq_channels(item, params, parsed):
             elif messages_perc >= warn:
                 state = 1
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (
-                    get_percent_human_readable(warn),
-                    get_percent_human_readable(crit),
+                infotext += " (warn/crit at {}/{})".format(
+                    render.percent(warn),
+                    render.percent(crit),
                 )
 
             yield state, infotext
@@ -107,9 +108,9 @@ def check_websphere_mq_channels(item, params, parsed):
 
 check_info["websphere_mq_channels"] = LegacyCheckDefinition(
     parse_function=parse_websphere_mq_channels,
-    check_function=check_websphere_mq_channels,
-    discovery_function=inventory_websphere_mq_channels,
     service_name="MQ Channel %s",
+    discovery_function=inventory_websphere_mq_channels,
+    check_function=check_websphere_mq_channels,
     check_ruleset_name="websphere_mq_channels",
     check_default_parameters={
         "message_count": (900, 1000),

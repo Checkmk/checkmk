@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APINamespaceFactory,
     APIPodFactory,
@@ -12,19 +11,29 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
-from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    AnnotationNonPatternOption,
+    CheckmkHostSettings,
+)
+from cmk.special_agents.utils_kubernetes.agent_handlers.namespace_handler import (
+    _filter_pods_by_resource_quota_scope_selector,
+    create_namespace_api_sections,
+    create_resource_quota_api_sections,
+    filter_matching_namespace_resource_quota,
+    filter_pods_by_resource_quota_scopes,
+)
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
 def test_namespace_create_api_sections() -> None:
     namespace = APINamespaceFactory.build()
-    sections = agent.create_namespace_api_sections(
+    sections = create_namespace_api_sections(
         namespace,
         APIPodFactory.batch(1),
-        agent.CheckmkHostSettings(
+        CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
         ),
         "namespace",
     )
@@ -45,7 +54,7 @@ def test_resource_quota_write_api_sections() -> None:
             )
         )
     )
-    sections = agent.create_resource_quota_api_sections(
+    sections = create_resource_quota_api_sections(
         resource_quota,
         "namespace",
     )
@@ -64,7 +73,7 @@ def test_resource_quota_write_partial_sections() -> None:
             )
         )
     )
-    sections = agent.create_resource_quota_api_sections(
+    sections = create_resource_quota_api_sections(
         resource_quota,
         "namespace",
     )
@@ -86,7 +95,7 @@ def test_filter_matching_namespace_resource_quota() -> None:
         ),
     ]
 
-    matching_resource_quota = agent.filter_matching_namespace_resource_quota(
+    matching_resource_quota = filter_matching_namespace_resource_quota(
         namespace_name, resource_quotas
     )
 
@@ -100,10 +109,8 @@ def test_filter_terminating_pods_by_quota_scope() -> None:
         _pod_with_scopes_factory(name="pod-2", terminating=False),
     ]
 
-    terminating_pods = agent.filter_pods_by_resource_quota_scopes(
-        pods, [api.QuotaScope.Terminating]
-    )
-    non_terminating_pods = agent.filter_pods_by_resource_quota_scopes(
+    terminating_pods = filter_pods_by_resource_quota_scopes(pods, [api.QuotaScope.Terminating])
+    non_terminating_pods = filter_pods_by_resource_quota_scopes(
         pods, [api.QuotaScope.NotTerminating]
     )
 
@@ -117,8 +124,8 @@ def test_filter_pods_by_best_effort_quota_scope() -> None:
         _pod_with_scopes_factory(name="pod-2", best_effort=False),
     ]
 
-    best_effort_pods = agent.filter_pods_by_resource_quota_scopes(pods, [api.QuotaScope.BestEffort])
-    not_best_effort_pods = agent.filter_pods_by_resource_quota_scopes(
+    best_effort_pods = filter_pods_by_resource_quota_scopes(pods, [api.QuotaScope.BestEffort])
+    not_best_effort_pods = filter_pods_by_resource_quota_scopes(
         pods, [api.QuotaScope.NotBestEffort]
     )
 
@@ -133,7 +140,7 @@ def test_filter_pods_with_terminating_best_effort_quota_scope() -> None:
         _pod_with_scopes_factory(),
     ]
 
-    terminating_best_effort_pods = agent.filter_pods_by_resource_quota_scopes(
+    terminating_best_effort_pods = filter_pods_by_resource_quota_scopes(
         pods, scopes=[api.QuotaScope.Terminating, api.QuotaScope.BestEffort]
     )
 
@@ -149,7 +156,7 @@ def test_filter_terminating_pods_from_scope_selector_match_expression() -> None:
         _pod_with_scopes_factory(name="pod-2", terminating=False),
     ]
 
-    terminating_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    terminating_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -161,7 +168,7 @@ def test_filter_terminating_pods_from_scope_selector_match_expression() -> None:
             ]
         ),
     )
-    non_terminating_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    non_terminating_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -187,7 +194,7 @@ def test_filter_pods_with_best_effort_from_scope_selector_match_expression() -> 
         _pod_with_scopes_factory(name="pod-2", best_effort=False),
     ]
 
-    best_effort_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    best_effort_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -199,7 +206,7 @@ def test_filter_pods_with_best_effort_from_scope_selector_match_expression() -> 
             ]
         ),
     )
-    not_best_effort_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    not_best_effort_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -226,7 +233,7 @@ def test_filter_terminating_best_effort_pods_from_scope_selector_match_expressio
         _pod_with_scopes_factory(),
     ]
 
-    terminating_best_effort_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    terminating_best_effort_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -255,7 +262,7 @@ def test_filter_from_scope_selector_match_expression_with_does_not_exist_operato
         _pod_with_scopes_factory(name="pod-2"),
     ]
 
-    no_priority_class_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    no_priority_class_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -278,7 +285,7 @@ def test_filter_pods_with_priority_class_from_scope_selector_match_expression() 
         _pod_with_scopes_factory(priority_class="low"),
     ]
 
-    high_medium_pods = agent.filter_pods_by_resource_quota_scope_selector(
+    high_medium_pods = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[
@@ -291,7 +298,7 @@ def test_filter_pods_with_priority_class_from_scope_selector_match_expression() 
         ),
     )
 
-    high_medium_pods_from_not_in_operator = agent.filter_pods_by_resource_quota_scope_selector(
+    high_medium_pods_from_not_in_operator = _filter_pods_by_resource_quota_scope_selector(
         pods,
         api.ScopeSelector(
             match_expressions=[

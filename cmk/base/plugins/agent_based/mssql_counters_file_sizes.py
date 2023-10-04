@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, Metric, register, render
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -42,7 +43,7 @@ def _check_mssql_file_sizes(
         yield from check_levels(
             size,
             levels_upper=params.get(key),
-            render_func=lambda v, t=title: "%s%s: %s" % (node_info, t, render.bytes(v)),
+            render_func=lambda v, t=title: f"{node_info}{t}: {render.bytes(v)}",
             metric_name=key,
             boundaries=(0, None),
         )
@@ -61,7 +62,7 @@ def _check_mssql_file_sizes(
             label="Log files used",
             boundaries=(0, None),
         )
-        levels_upper = tuple((l / 100 * log_files_size for l in levels_upper))
+        levels_upper = tuple(l / 100 * log_files_size for l in levels_upper)
     else:
         yield from check_levels(
             log_files_used,

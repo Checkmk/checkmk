@@ -11,13 +11,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_average,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store
 
 
 def inventory_mongodb_flushing(info):
@@ -40,7 +36,7 @@ def check_mongodb_flushing(_no_item, params, info):
         avg_flush_time = float(info_dict["average_ms"]) / 1000.0
         flushed = int(info_dict["flushed"])
     except (ValueError, TypeError):
-        yield 3, "Invalid data: last_ms: %s, average_ms: %s, flushed:%s" % (
+        yield 3, "Invalid data: last_ms: {}, average_ms: {}, flushed:{}".format(
             info_dict["last_ms"],
             info_dict["average_ms"],
             info_dict["flushed"],
@@ -49,7 +45,9 @@ def check_mongodb_flushing(_no_item, params, info):
 
     if "average_time" in params:
         warn, crit, avg_interval = params["average_time"]
-        avg_ms_compute = get_average("flushes", time.time(), last_ms, avg_interval)
+        avg_ms_compute = get_average(
+            get_value_store(), "flushes", time.time(), last_ms, avg_interval
+        )
         yield check_levels(
             avg_ms_compute,
             None,
@@ -81,8 +79,8 @@ def _get_missing_keys(key_list, info_dict):
 
 
 check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,
     check_function=check_mongodb_flushing,
-    service_name="MongoDB Flushing",
     check_ruleset_name="mongodb_flushing",
 )

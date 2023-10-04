@@ -97,7 +97,7 @@ def check_hpux_tunables(info, params, tunable, descr):
             state = 0
 
         if state > 0:
-            yield state, "(warn/crit at %s/%s)" % (warn, crit)
+            yield state, f"(warn/crit at {warn}/{crit})"
 
     else:
         yield 3, "tunable not found in agent output"
@@ -128,9 +128,10 @@ def check_hpux_tunables_nkthread(_no_item, params, info):
 
 
 check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
+    service_name="Number of threads",
+    sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_nkthread,
     check_function=check_hpux_tunables_nkthread,
-    service_name="Number of threads",
     check_default_parameters={
         "levels": (80.0, 85.0),
     },
@@ -161,9 +162,10 @@ def check_hpux_tunables_nproc(_no_item, params, info):
 
 
 check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
+    service_name="Number of processes",
+    sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_nproc,
     check_function=check_hpux_tunables_nproc,
-    service_name="Number of processes",
     check_default_parameters={"levels": (90.0, 96.0)},
 )
 
@@ -192,9 +194,10 @@ def check_hpux_tunables_maxfiles_lim(_no_item, params, info):
 
 
 check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
+    service_name="Number of open files",
+    sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_maxfiles_lim,
     check_function=check_hpux_tunables_maxfiles_lim,
-    service_name="Number of open files",
     check_default_parameters={"levels": (85.0, 90.0)},
 )
 
@@ -223,9 +226,10 @@ def check_hpux_tunables_semmni(_no_item, params, info):
 
 
 check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
+    service_name="Number of IPC Semaphore IDs",
+    sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_semmni,
     check_function=check_hpux_tunables_semmni,
-    service_name="Number of IPC Semaphore IDs",
     check_default_parameters={"levels": (85.0, 90.0)},
 )
 
@@ -254,9 +258,10 @@ def check_hpux_tunables_shmseg(_no_item, params, info):
 
 
 check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
+    service_name="Number of shared memory segments",
+    sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_shmseg,
     check_function=check_hpux_tunables_shmseg,
-    service_name="Number of shared memory segments",
     check_default_parameters={"levels": (85.0, 90.0)},
 )
 
@@ -285,8 +290,9 @@ def check_hpux_tunables_semmns(_no_item, params, info):
 
 
 check_info["hpux_tunables.semmns"] = LegacyCheckDefinition(
+    service_name="Number of IPC Semaphores",
+    sections=["hpux_tunables"],
     discovery_function=inventory_hpux_tunables_semmns,
     check_function=check_hpux_tunables_semmns,
-    service_name="Number of IPC Semaphores",
     check_default_parameters={"levels": (85.0, 90.0)},
 )

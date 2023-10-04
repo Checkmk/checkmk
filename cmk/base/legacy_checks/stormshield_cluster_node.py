@@ -60,12 +60,12 @@ def check_stormshield_cluster_node(item, params, info):
             else:
                 yield 0, "Member is %s" % online_mapping[online]
             if statusforced == "1":
-                yield 1, "HA-State: %s (%s)" % (
+                yield 1, "HA-State: {} ({})".format(
                     active_mapping[active],
                     forced_mapping[statusforced],
                 )
             else:
-                yield 0, "HA-State: %s (%s)" % (
+                yield 0, "HA-State: {} ({})".format(
                     active_mapping[active],
                     forced_mapping[statusforced],
                 )
@@ -76,7 +76,7 @@ def check_stormshield_cluster_node(item, params, info):
             else:
                 yield 0, "Quality: %s" % quality
 
-            infotext = "Model: %s, Version: %s, Role: %s, Priority: %s, Serial: %s" % (
+            infotext = "Model: {}, Version: {}, Role: {}, Priority: {}, Serial: {}".format(
                 model,
                 version,
                 license_,
@@ -94,13 +94,13 @@ check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.11256.1.11.*"),
     ),
-    discovery_function=inventory_stormshield_cluster_node,
-    check_function=check_stormshield_cluster_node,
-    service_name="HA Member %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11.7.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
+    service_name="HA Member %s",
+    discovery_function=inventory_stormshield_cluster_node,
+    check_function=check_stormshield_cluster_node,
     check_ruleset_name="stormshield_quality",
     check_default_parameters={
         "quality": (80, 50),

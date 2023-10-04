@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -31,7 +33,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
         help_func=lambda: _("This rule selects the special agent for Salesforce."),
-        name="special_agents:salesforce",
+        name=RuleGroup.SpecialAgents("salesforce"),
         title=lambda: _("Salesforce"),
         valuespec=_valuespec_special_agents_salesforce,
     )

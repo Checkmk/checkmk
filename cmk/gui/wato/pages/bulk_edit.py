@@ -6,7 +6,7 @@
 cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from hashlib import sha256
 
 import cmk.gui.forms as forms
@@ -16,22 +16,32 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
-from cmk.gui.plugins.wato.utils import (
-    configure_attributes,
-    get_hostnames_from_checkboxes,
-    get_hosts_from_checkboxes,
-    mode_registry,
-)
-from cmk.gui.plugins.wato.utils.base_modes import redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request
+from cmk.gui.watolib.host_attributes import (
+    ABCHostAttribute,
+    collect_attributes,
+    host_attribute_registry,
+)
+from cmk.gui.watolib.hosts_and_folders import (
+    disk_or_search_folder_from_request,
+    Folder,
+    Host,
+    SearchFolder,
+)
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
+
+from ._bulk_actions import get_hostnames_from_checkboxes, get_hosts_from_checkboxes
+from ._host_attributes import configure_attributes
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBulkEdit)
+    mode_registry.register(ModeBulkCleanup)
+
+
 class ModeBulkEdit(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -76,7 +86,7 @@ class ModeBulkEdit(WatoMode):
 
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes(self._folder)
-        hosts = {host_name: self._folder.host(host_name) for host_name in host_names}
+        hosts = {host_name: self._folder.load_host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -111,13 +121,14 @@ class ModeBulkEdit(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent=self._folder)
+        configure_attributes(
+            False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
+        )
         forms.end()
         html.hidden_fields()
         html.end_form()
 
 
-@mode_registry.register
 class ModeBulkCleanup(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -155,20 +166,20 @@ class ModeBulkCleanup(WatoMode):
         user.need_permission("wato.edit_hosts")
         to_clean = self._bulk_collect_cleaned_attributes()
         if "contactgroups" in to_clean:
-            self._folder.need_permission("write")
+            self._folder.permissions.need_permission("write")
 
         hosts = get_hosts_from_checkboxes(self._folder)
 
         # Check all permissions before doing any edit
         for host in hosts:
-            host.need_permission("write")
+            host.permissions.need_permission("write")
 
         for host in hosts:
             host.clean_attributes(to_clean)
 
         return redirect(self._folder.url())
 
-    def _bulk_collect_cleaned_attributes(self):
+    def _bulk_collect_cleaned_attributes(self) -> list[str]:
         to_clean = []
         for attr in host_attribute_registry.attributes():
             attrname = attr.name()
@@ -183,7 +194,7 @@ class ModeBulkCleanup(WatoMode):
             _(
                 "You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
                 "explicit attribute values from hosts. The hosts will then inherit attributes "
-                "configured at the host list or folders or simply fall back to the builtin "
+                "configured at the host list or folders or simply fall back to the built-in "
                 "default values."
             )
             % len(hosts)
@@ -195,7 +206,7 @@ class ModeBulkCleanup(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _select_attributes_for_bulk_cleanup(self, hosts):
+    def _select_attributes_for_bulk_cleanup(self, hosts: Sequence[Host]) -> None:
         attributes = self._get_attributes_for_bulk_cleanup(hosts)
 
         for attr, is_inherited, num_haveit in attributes:
@@ -221,7 +232,9 @@ class ModeBulkCleanup(WatoMode):
         if not attributes:
             html.write_text(_("The selected hosts have no explicit attributes"))
 
-    def _get_attributes_for_bulk_cleanup(self, hosts):
+    def _get_attributes_for_bulk_cleanup(
+        self, hosts: Sequence[Host]
+    ) -> list[tuple[ABCHostAttribute, bool, int]]:
         attributes = []
         for attr in host_attribute_registry.get_sorted_host_attributes():
             attrname = attr.name()
@@ -232,7 +245,7 @@ class ModeBulkCleanup(WatoMode):
             # only show attributes that at least on host have set
             num_haveit = 0
             for host in hosts:
-                if host.has_explicit_attribute(attrname):
+                if attrname in host.attributes:
                     num_haveit += 1
 
             if not num_haveit:
@@ -240,10 +253,10 @@ class ModeBulkCleanup(WatoMode):
 
             # If the attribute is mandatory and no value is inherited
             # by file or folder, the attribute cannot be cleaned.
-            container = self._folder
+            container: Folder | SearchFolder | None = self._folder
             is_inherited = False
             while container:
-                if container.has_explicit_attribute(attrname):
+                if attrname in container.attributes:
                     is_inherited = True
                     break
                 container = container.parent()

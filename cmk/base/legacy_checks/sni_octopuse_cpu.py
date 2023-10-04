@@ -24,13 +24,13 @@ def check_octopus_cpu(_no_item, _no_params_info, info):
 
 check_info["sni_octopuse_cpu"] = LegacyCheckDefinition(
     detect=DETECT_SNI_OCTOPUSE,
-    check_function=check_octopus_cpu,
-    discovery_function=inventory_octopus_cpu,
-    service_name="CPU utilization",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.231.7.2.9.1",
             oids=["7"],
         )
     ],
+    service_name="CPU utilization",
+    discovery_function=inventory_octopus_cpu,
+    check_function=check_octopus_cpu,
 )

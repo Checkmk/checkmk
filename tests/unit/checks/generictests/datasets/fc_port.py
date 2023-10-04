@@ -8,6 +8,21 @@
 
 checkname = "fc_port"
 
+mock_item_state = {
+    "": {
+        "fc_port.rxelements.2" : (0, 80237629612),
+        "fc_port.txelements.2" : (0, 84217620116),
+        "fc_port.rxobjects.2" : (0, 44493250),
+        "fc_port.txobjects.2" : (0, 49398515),
+        "fc_port.rxcrcs.2" : (0, 0.0),
+        "fc_port.txcrcs.2" : (0, 0.0),
+        "fc_port.rxencoutframes.2": (0, 0),
+        "fc_port.txencoutframes.2": (0, 0),
+        "fc_port.c3discards.2": (0, 0),
+        "fc_port.notxcredits.2": (0, 6),
+    },
+}
+
 info = [
     [
         "1",

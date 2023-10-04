@@ -48,6 +48,7 @@ def test_registered_pages() -> None:
         "ajax_switch_help",
         "ajax_ui_theme",
         "ajax_userdb_sync",
+        "ajax_validate_filter",
         "ajax_visual_filter_list_get_choice",
         "ajax_vs_autocomplete",
         "ajax_vs_unit_resolver",
@@ -135,6 +136,7 @@ def test_registered_pages() -> None:
         "user_profile",
         "user_profile_replicate",
         "user_webauthn_register_begin",
+        "user_totp_register",
         "user_two_factor_overview",
         "user_two_factor_edit_credential",
         "user_webauthn_register_complete",
@@ -157,7 +159,7 @@ def test_registered_pages() -> None:
         "noauth:ajax_graph_images",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_pages += [
             "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",

@@ -334,19 +334,21 @@ async fn _pull_loop(
         let Ok(connection_attempt) = timeout(
             Duration::from_secs(PULL_ACTIVITY_TIMEOUT),
             listener.accept(),
-        ).await else {
-                // No connection within timeout. Refresh config and check if we're still active.
-                pull_state.refresh()?;
-                if !pull_state.is_active() {
-                    info!(
-                        "No pull connection registered, stop listening on {}.",
-                        listener.local_addr()?
-                    );
-                    return Ok(());
-                }
-                // If still active, don't return as this would close the socket - Just continue listening.
-                continue;
-            };
+        )
+        .await
+        else {
+            // No connection within timeout. Refresh config and check if we're still active.
+            pull_state.refresh()?;
+            if !pull_state.is_active() {
+                info!(
+                    "No pull connection registered, stop listening on {}.",
+                    listener.local_addr()?
+                );
+                return Ok(());
+            }
+            // If still active, don't return as this would close the socket - Just continue listening.
+            continue;
+        };
 
         let (stream, remote) = match connection_attempt {
             Ok(accepted) => accepted,

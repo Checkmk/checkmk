@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Optional, Sequence
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,12 +19,12 @@ class Secondaries:
 
 @dataclass(frozen=True)
 class ReplicaSet:
-    primary: Optional[str]
+    primary: str | None
     secondaries: Secondaries
     arbiters: Sequence[str]
 
 
-def _parse_concatenated_hosts(concatenated_hosts: Optional[str]) -> Sequence[str]:
+def _parse_concatenated_hosts(concatenated_hosts: str | None) -> Sequence[str]:
     """
     >>> _parse_concatenated_hosts(None)
     []

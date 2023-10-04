@@ -4,76 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final, Generic, TypeVar
 
 import cmk.utils.store as _store
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+__all__ = ["SectionStore"]
 
-__all__ = ["SectionStore", "PersistedSections", "TRawDataSection"]
-
-_AgentRawDataSection = Sequence[str]
-
-TRawDataSection = TypeVar("TRawDataSection", _AgentRawDataSection, SNMPRawDataSection)
+_T = TypeVar("_T")
 
 
-class PersistedSections(  # pylint: disable=too-many-ancestors
-    Generic[TRawDataSection],
-    MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]],
-):
-    __slots__ = ("_store",)
-
-    def __init__(
-        self, store: MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]]
-    ):
-        self._store: MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]] = store
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self._store!r})"
-
-    def __getitem__(self, key: SectionName) -> tuple[int, int, Sequence[TRawDataSection]]:
-        return self._store.__getitem__(key)
-
-    def __setitem__(
-        self, key: SectionName, value: tuple[int, int, Sequence[TRawDataSection]]
-    ) -> None:
-        return self._store.__setitem__(key, value)
-
-    def __delitem__(self, key: SectionName) -> None:
-        return self._store.__delitem__(key)
-
-    def __iter__(self) -> Iterator[SectionName]:
-        return self._store.__iter__()
-
-    def __len__(self) -> int:
-        return self._store.__len__()
-
-    @classmethod
-    def from_sections(
-        cls,
-        *,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
-    ) -> "PersistedSections[TRawDataSection]":
-        return cls(
-            {
-                section_name: persist_info + (section_content,)
-                for section_name, section_content in sections.items()
-                if (persist_info := lookup_persist(section_name)) is not None
-            }
-        )
-
-    def cached_at(self, section_name: SectionName) -> int:
-        entry = self[section_name]
-        if len(entry) == 2:
-            return 0  # epoch? why?
-        return entry[0]
-
-
-class SectionStore(Generic[TRawDataSection]):
+class SectionStore(Generic[_T]):
     def __init__(
         self,
         path: str | Path,
@@ -87,34 +30,31 @@ class SectionStore(Generic[TRawDataSection]):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.path!r}, logger={self._logger!r})"
 
-    def store(self, sections: PersistedSections[TRawDataSection]) -> None:
+    def store(self, sections: MutableSectionMap[tuple[int, int, _T]]) -> None:
         if not sections:
             self._logger.debug("No persisted sections")
             self.path.unlink(missing_ok=True)
             return
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        _store.save_object_to_file(
+        _store.save_object_to_pickle_file(
             self.path,
             {str(k): v for k, v in sections.items()},
-            pretty=False,
         )
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
-    def load(self) -> PersistedSections[TRawDataSection]:
-        raw_sections_data = _store.load_object_from_file(self.path, default={})
-        return PersistedSections[TRawDataSection](
-            {SectionName(k): v for k, v in raw_sections_data.items()}
-        )
+    def load(self) -> MutableSectionMap[tuple[int, int, _T]]:
+        raw_sections_data = _store.load_object_from_pickle_file(self.path, default={})
+        return {SectionName(k): v for k, v in raw_sections_data.items()}
 
     def update(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        cache_info: MutableMapping[SectionName, tuple[int, int]],
+        sections: SectionMap[_T],
+        cache_info: MutableSectionMap[tuple[int, int]],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         now: int,
         keep_outdated: bool,
-    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
+    ) -> SectionMap[_T]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
@@ -129,37 +69,42 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _update(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
+        sections: SectionMap[_T],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         *,
         now: int,
         keep_outdated: bool,
-    ) -> PersistedSections[TRawDataSection]:
+    ) -> MutableSectionMap[tuple[int, int, _T]]:
         # TODO: This is not race condition free when modifying the data. Either remove
         # the possible write here and simply ignore the outdated sections or lock when
         # reading and unlock after writing
         persisted_sections = self.load()
-        persisted_sections.update(
-            PersistedSections[TRawDataSection].from_sections(
-                sections=sections,
-                lookup_persist=lookup_persist,
-            )
-        )
+
+        new_sections = {
+            section_name: persist_info + (section_content,)
+            for section_name, section_content in sections.items()
+            if (persist_info := lookup_persist(section_name)) is not None
+        }
+        store_sections = bool(new_sections)
+        persisted_sections.update(new_sections)
+
         if not keep_outdated:
             for section_name in tuple(persisted_sections):
                 (_created_at, valid_until, _section_content) = persisted_sections[section_name]
                 if valid_until < now:
+                    store_sections = True
                     del persisted_sections[section_name]
 
-        self.store(persisted_sections)
+        if store_sections:
+            self.store(persisted_sections)
         return persisted_sections
 
     def _add_persisted_sections(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        cache_info: MutableMapping[SectionName, tuple[int, int]],
-        persisted_sections: PersistedSections[TRawDataSection],
-    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
+        sections: SectionMap[_T],
+        cache_info: MutableSectionMap[tuple[int, int]],
+        persisted_sections: MutableSectionMap[tuple[int, int, _T]],
+    ) -> SectionMap[_T]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)
@@ -167,7 +112,7 @@ class SectionStore(Generic[TRawDataSection]):
                 if section_name not in sections
             }
         )
-        result: MutableMapping[SectionName, Sequence[TRawDataSection]] = dict(sections.items())
+        result: MutableSectionMap[_T] = dict(sections.items())
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format

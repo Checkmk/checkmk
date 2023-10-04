@@ -37,14 +37,14 @@ def check_pulse_secure_cpu(item, params, parsed):
 
 check_info["pulse_secure_cpu_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=parse_pulse_secure_cpu_util,
-    discovery_function=discover_pulse_secure_cpu_util,
-    check_function=check_pulse_secure_cpu,
-    service_name="Pulse Secure IVE CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["10"],
     ),
+    parse_function=parse_pulse_secure_cpu_util,
+    service_name="Pulse Secure IVE CPU utilization",
+    discovery_function=discover_pulse_secure_cpu_util,
+    check_function=check_pulse_secure_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

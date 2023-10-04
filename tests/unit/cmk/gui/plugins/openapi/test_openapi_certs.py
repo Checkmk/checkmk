@@ -36,20 +36,21 @@ ZHJCNN5QlnOgbFF8RyRqVMkPp80jto0pbrCbeLZuFx4PxCmd17X4kQdMdecGXxv0
 """
 
 # CSR which was signed by a different public key than the one it contains
+# created by tampering with the agent controller's `make_csr` function
 _CSR_INVALID = """-----BEGIN CERTIFICATE REQUEST-----
-MIICVDCCATwCAQIwDzENMAsGA1UEAwwEaHVyejCCASIwDQYJKoZIhvcNAQEBBQAD
-ggEPADCCAQoCggEBAMoIqXeS86zKNwd3auWbBIsJZz6yQL4z3yVMzGuEwpMN8DBN
-UxEygrvjLJr9BV4+TRnoyxErAlFvaGevZHuhCyLFHPrTZFcKqPCqrmZ1yy4dD/Kp
-qhCbUH/ewMbrQdw5tQAJfeDmQU+RGAfoSWxnCqaclyeJ5WXRVw7oz/MN3Y2a+pkN
-vvK4pxhsy+5HeovGDY7ZI5jXEtbBjdvznp8q18NSG3A+fd/j1y1MKBw9Ni79DFMF
-EQGHNpc2L1PDAizfUOZlSgf/fAp3qSCBFchB2iYtLIACjXvNqT7HCPoOQ50rDPvo
-KeUSXlFflELGMVzBIfp+/sh+YtJJafHMYU40CBUCAwEAAaAAMA0GCSqGSIb3DQEB
-CwUAA4IBAQCFWE1BlX6+NGJqOuinHNoWteYwXzt2SxVb6FUD/q9SyC+QtEELWK/4
-Mh3atWu1Gl9Xlhkd9ycaOrRKvbW+atermcIF9f8iY8wJMsaGdemCrDZzTBlNUYu8
-p+taKwXrzoo7vJMSsx23BPJl7m6MZxgzLWXF6Sp7lH4DJTiZYM98nfb6JluRbPlg
-M+WTC90G/Fzn8S6OWmmFcAilVxHPrtpdPdD9s+hb4SMyMzHI+xcxF3nObwL9OGd4
-izSZOfdvQ+6nV8m1zeKV80QJPPAsigkQRJ4mN0r7HBkTdIU+rwiCKlitsePb5vyV
-nkrndRn3MoyHIO3cuT7inOlFb/VYPRWP
+MIICVTCCAT0CAQAwEDEOMAwGA1UEAwwFc3R1ZmYwggEiMA0GCSqGSIb3DQEBAQUA
+A4IBDwAwggEKAoIBAQC9gRz+9MuwTmzPyrNV+qj51YQoWSjCiA5vTFwftJ7Kjg9h
+KJ/UcirgtP20DtFloU7DG8CTbxCHMXpHnquugGv/GpmrttD/3CTdJXNEyK7Frh/K
+MTEgPZMq2dv9L+08Djbv/T2tShMbBpif7aCngU3ZmIpHhSLLUgC0f7/OaxVC8gWY
+EpUzbLdNJMOz4qGiB+H7nV4BGO8dT44eIKOtwH68ruTzQ7bqwKTZ1WFiKm71PPxK
+tBKMe89thtkeaz91k3YPri3mbO8R0t0rylN6kN2dIngJ/0OX1vnypuF2dsBZmKh+
+xfX/1Wx5L7Il6ZBtQaULqzO3p95K1cIXN2W7Ji+PAgMBAAGgADANBgkqhkiG9w0B
+AQsFAAOCAQEAiBPD5dZ2BNQYefG2OEvfqek1QPizwIf3dEUi7hoqZnGe31uyiiWX
+0Q0SyT/xVdOKrm0QDBQm3El/32DV9DanJNotEjOTFtK+gUan7lw7uDlk9nxhIJhm
+6uUsV3zBqdo44j/CkoMKfYxD2RwLn+mRUdnWkolgB68NCvdgNkuTE98kNoWca1Im
+mAtenKKgwZUsquCSfU6yNbCsWvvjfXoqhQ3la8zCmN/cRJPbtSByXhfA3k/dLMv3
+oPajdDb2p3SzEThY3odri+iLB5iPt/FdSGu4NZ/rbiImPbDznvq8IEZuU+9KMUxk
+0ry/GD3iBXZwX4USPLUl8rP+XOasltsgUQ==
 -----END CERTIFICATE REQUEST-----
 """
 
@@ -115,7 +116,7 @@ def test_root_cert_200(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.certs._serialized_root_cert",
+        "cmk.gui.plugins.openapi.endpoints.cert._serialized_root_cert",
         return_value="fake_root_cert",
     )
     resp = aut_user_auth_wsgi_app.call_method(
@@ -183,7 +184,7 @@ def test_csr_200(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.certs._serialized_signed_cert",
+        "cmk.gui.plugins.openapi.endpoints.cert._serialized_signed_cert",
         return_value="3pi4ghjwerihg",
     )
     aut_user_auth_wsgi_app.call_method(

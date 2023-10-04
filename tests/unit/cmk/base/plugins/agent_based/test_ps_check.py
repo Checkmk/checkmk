@@ -14,7 +14,7 @@ from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 
@@ -598,6 +598,8 @@ check_results = [
             state=State.OK,
             summary="Running for: 1 day 3 hours",
         ),
+        Metric("age_youngest", 100779.0),
+        Metric("age_oldest", 100779.0),
         Result(
             state=State.OK,
             notice=(
@@ -627,6 +629,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
         Result(
             state=State.OK,
             notice=(
@@ -646,6 +650,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 3 hours 54 minutes"),
+        Metric("age_youngest", 14050.0),
+        Metric("age_oldest", 14050.0),
         Result(
             state=State.OK,
             notice=(
@@ -689,6 +695,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 2 hours 37 minutes"),
+        Metric("age_youngest", 9459.0),
+        Metric("age_oldest", 9459.0),
         Result(
             state=State.OK,
             notice=(
@@ -708,6 +716,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 52 days 4 hours"),
+        Metric("age_youngest", 4510565.0),
+        Metric("age_oldest", 4510565.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -715,6 +725,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 0 seconds"),
+        Metric("age_youngest", 0.0),
+        Metric("age_oldest", 0.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 3"),
@@ -767,6 +779,8 @@ check_results = [
         Metric("pcpu", 0.0, levels=(90.0, 98.0)),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -778,6 +792,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -789,6 +805,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -804,6 +822,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -816,6 +836,8 @@ check_results = [
         Metric("pcpuavg", 0.0, levels=(90.0, 98.0)),
         Result(state=State.OK, summary="CPU: 0%, 15 min average: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -831,6 +853,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -846,6 +870,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -864,6 +890,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -878,6 +906,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 1"),
@@ -893,6 +923,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
     ],
     [
         Result(state=State.OK, summary="Processes: 3"),
@@ -1116,9 +1148,7 @@ def test_check_ps_common_cpu(data: cpu_config) -> None:
         Result(state=State.OK, summary="Resident memory: 30.0 KiB"),
         Metric("rss", 30),
     ]
-    assert output[8:] == [
-        Result(state=State.OK, summary="Running for: 3 hours 59 minutes"),
-    ]
+    assert output[8] == Result(state=State.OK, summary="Running for: 3 hours 59 minutes")
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -1292,7 +1322,7 @@ def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
     output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
-    cpu_util_s = ps_utils.render.percent(cpu_util)
+    cpu_util_s = render.percent(cpu_util)
     single_msg = "firefox with PID 25898 CPU: %s (warn/crit at 45.00%%/80.00%%)" % cpu_util_s
     reference = [
         Result(state=State.OK, summary="Processes: 4"),
@@ -1475,4 +1505,6 @@ def test_check_empty_command_line() -> None:
         Metric("pcpu", 0.0),
         Result(state=State.OK, summary="CPU: 0%"),
         Result(state=State.OK, summary="Running for: 1 day 5 hours"),
+        Metric("age_youngest", 106396.0),
+        Metric("age_oldest", 106396.0),
     ]

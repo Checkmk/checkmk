@@ -31,13 +31,13 @@ def check_nimble_volumes(item, params, info):
 
 check_info["nimble_volumes"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
-    discovery_function=inventory_nimble_volumes,
-    check_function=check_nimble_volumes,
-    service_name="Volume %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
         oids=["2", "3", "4", "6", "10"],
     ),
+    service_name="Volume %s",
+    discovery_function=inventory_nimble_volumes,
+    check_function=check_nimble_volumes,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

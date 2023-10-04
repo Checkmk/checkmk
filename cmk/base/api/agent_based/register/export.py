@@ -7,6 +7,8 @@
 from collections.abc import Callable
 from typing import overload
 
+from cmk.utils.check_utils import ParametersTypeAlias
+
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.register import (
@@ -30,7 +32,6 @@ from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SN
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
-    ParametersTypeAlias,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
@@ -110,7 +111,7 @@ def agent_section(
     )
 
     if is_registered_section_plugin(section_plugin.name):
-        raise ValueError("duplicate section definition: %s" % section_plugin.name)
+        raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
     add_section_plugin(section_plugin)
     if section_plugin.host_label_ruleset_name is not None:
@@ -234,7 +235,7 @@ def snmp_section(
     )
 
     if is_registered_section_plugin(section_plugin.name):
-        raise ValueError("duplicate section definition: %s" % section_plugin.name)
+        raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
     add_section_plugin(section_plugin)
     if section_plugin.host_label_ruleset_name is not None:
@@ -325,7 +326,7 @@ def check_plugin(
     )
 
     if is_registered_check_plugin(plugin.name):
-        raise ValueError("duplicate check plugin definition: %s" % plugin.name)
+        raise ValueError(f"duplicate check plugin definition: {plugin.name}")
 
     add_check_plugin(plugin)
     if plugin.discovery_ruleset_name is not None:
@@ -378,6 +379,6 @@ def inventory_plugin(
     )
 
     if is_registered_inventory_plugin(plugin.name):
-        raise ValueError("duplicate inventory plugin definition: %s" % plugin.name)
+        raise ValueError(f"duplicate inventory plugin definition: {plugin.name}")
 
     add_inventory_plugin(plugin)

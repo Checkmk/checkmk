@@ -44,7 +44,7 @@ from cmk.base.config import check_info
 Section = Sequence
 
 
-def parse_ibm_svc_disks(info):
+def parse_ibm_svc_disks(string_table):
     dflt_header = [
         "id",
         "status",
@@ -61,7 +61,7 @@ def parse_ibm_svc_disks(info):
         "drive_class_id",
     ]
     parsed = []
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         parsed.extend(rows)
     return parsed
 
@@ -79,7 +79,7 @@ def check_ibm_svc_disks(_no_item, params, parsed):
         capacity = data["capacity"]
 
         disk: dict[str, str | float] = {}
-        disk["identifier"] = "Enclosure: %s, Slot: %s, Type: %s" % (
+        disk["identifier"] = "Enclosure: {}, Slot: {}, Type: {}".format(
             data["enclosure_id"],
             data["slot_id"],
             data["tech_type"],
@@ -106,9 +106,9 @@ def check_ibm_svc_disks(_no_item, params, parsed):
 
 check_info["ibm_svc_disks"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_disks,
-    check_function=check_ibm_svc_disks,
-    discovery_function=discover_ibm_svc_disks,
     service_name="Disk Summary",
+    discovery_function=discover_ibm_svc_disks,
+    check_function=check_ibm_svc_disks,
     check_ruleset_name="netapp_disks",
     check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )

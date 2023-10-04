@@ -12,7 +12,6 @@
 #include <cctype>
 #include <iomanip>
 #include <sstream>
-#include <type_traits>
 
 #include "livestatus/OStreamStateSaver.h"
 
@@ -27,17 +26,6 @@ std::string unsafe_toupper(const std::string &str) {
     std::string result = str;
     std::transform(str.begin(), str.end(), result.begin(), ::toupper);
     return result;
-}
-
-bool starts_with(std::string_view input, std::string_view test) {
-    return input.size() >= test.size() &&
-           input.compare(0, test.size(), test) == 0;
-}
-
-bool ends_with(std::string_view input, std::string_view test) {
-    return input.size() >= test.size() &&
-           input.compare(input.size() - test.size(), std::string::npos, test) ==
-               0;
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {

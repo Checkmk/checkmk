@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
@@ -29,9 +29,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # .1.3.6.1.2.1.99.1.1.1.4.100006006 570 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006006
 
 
-def parse_arista_temp(info):
+def parse_arista_temp(string_table):
     parsed = {}
-    for sensor, precision, value in info:
+    for sensor, precision, value in string_table:
         if value and "temp" in sensor.lower():
             try:
                 parsed[sensor] = int(value) * float("1e-%s" % precision)
@@ -40,20 +40,25 @@ def parse_arista_temp(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_arista_temp(item, params, value):
-    return check_temperature(value, params, "temp")
+def check_arista_temp(item, params, parsed):
+    if (value := parsed.get(item)) is None:
+        return
+    yield check_temperature(value, params, "temp")
+
+
+def discover_arista_temp(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["arista_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
-    parse_function=parse_arista_temp,
-    check_function=check_arista_temp,
-    discovery_function=discover(),
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1",
         oids=["47.1.1.1.1.2", "99.1.1.1.3", "99.1.1.1.4"],
     ),
+    parse_function=parse_arista_temp,
+    service_name="Temperature %s",
+    discovery_function=discover_arista_temp,
+    check_function=check_arista_temp,
     check_ruleset_name="temperature",
 )

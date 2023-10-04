@@ -16,17 +16,9 @@ from cmk.utils.ms_teams_constants import (
 )
 from cmk.utils.site import url_prefix
 
-import cmk.gui.mkeventd as mkeventd
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HTTPProxyReference,
-    IndividualOrStoredPassword,
-    MigrateToIndividualOrStoredPassword,
-    notification_macro_help,
-    notification_parameter_registry,
-    NotificationParameter,
-)
+from cmk.gui.plugins.wato.utils import notification_macro_help
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -46,6 +38,13 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+)
+from cmk.gui.wato import (
+    HTTPProxyReference,
+    IndividualOrStoredPassword,
+    MigrateToIndividualOrStoredPassword,
+    notification_parameter_registry,
+    NotificationParameter,
 )
 from cmk.gui.watolib.password_store import passwordstore_choices
 
@@ -312,7 +311,7 @@ class NotificationParameterMail(NotificationParameter):
             ]
         )
 
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
 
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
@@ -1562,43 +1561,6 @@ $LONGSERVICEOUTPUT$
                         help=_("Is used to specify which domain the alert is related to."),
                         allow_empty=False,
                         size=68,
-                    ),
-                ),
-            ],
-        )
-
-
-@notification_parameter_registry.register
-class NotificationParameterMKEventDaemon(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "mkeventd"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            elements=[
-                (
-                    "facility",
-                    DropdownChoice(
-                        title=_("Syslog Facility to use"),
-                        help=_(
-                            "The notifications will be converted into syslog messages with "
-                            "the facility that you choose here. In the Event Console you can "
-                            "later create a rule matching this facility."
-                        ),
-                        choices=mkeventd.syslog_facilities,
-                    ),
-                ),
-                (
-                    "remote",
-                    IPv4Address(
-                        title=_("IP Address of remote Event Console"),
-                        help=_(
-                            "If you set this parameter then the notifications will be sent via "
-                            "syslog/UDP (port 514) to a remote Event Console or syslog server."
-                        ),
                     ),
                 ),
             ],

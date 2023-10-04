@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import time
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
 from typing import Any
@@ -14,7 +15,6 @@ from pytest import MonkeyPatch
 
 from tests.testlib import on_time
 
-from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
     _event_to_syslog_message,
     _log_to_syslog_message,
@@ -206,11 +206,7 @@ class TestEventsQuerier:
         events_querier: EventsQuerier,
     ) -> None:
         now = 1601310544
-        monkeypatch.setattr(
-            agent_datadog.time,
-            "time",
-            lambda: now,
-        )
+        monkeypatch.setattr(time, "time", lambda: now)
         assert events_querier._events_query_time_range() == (
             now - events_querier.max_age,
             now,

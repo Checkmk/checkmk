@@ -42,11 +42,12 @@ class ICore {
 public:
     virtual ~ICore() = default;
 
-    [[nodiscard]] virtual const IHost *find_host(const std::string &name) = 0;
+    [[nodiscard]] virtual const IHost *find_host(
+        const std::string &name) const = 0;
     [[nodiscard]] virtual const IHostGroup *find_hostgroup(
         const std::string &name) const = 0;
-    virtual std::unique_ptr<const IHost> getHostByDesignation(
-        const std::string &designation) = 0;
+    [[nodiscard]] virtual std::unique_ptr<const IHost> getHostByDesignation(
+        const std::string &designation) const = 0;
     virtual bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const = 0;
     virtual bool all_of_services(
@@ -54,17 +55,20 @@ public:
 
     [[nodiscard]] virtual const IService *find_service(
         const std::string &host_name,
-        const std::string &service_description) = 0;
-    virtual const IContactGroup *find_contactgroup(const std::string &name) = 0;
+        const std::string &service_description) const = 0;
+    [[nodiscard]] virtual const IContactGroup *find_contactgroup(
+        const std::string &name) const = 0;
 
-    virtual const IServiceGroup *find_servicegroup(const std::string &name) = 0;
+    [[nodiscard]] virtual const IServiceGroup *find_servicegroup(
+        const std::string &name) const = 0;
 
     [[nodiscard]] virtual const IContact *find_contact(
         const std::string &name) const = 0;
     virtual bool all_of_contacts(
         const std::function<bool(const IContact &)> &pred) const = 0;
 
-    virtual std::unique_ptr<const User> find_user(const std::string &name) = 0;
+    [[nodiscard]] virtual std::unique_ptr<const User> find_user(
+        const std::string &name) const = 0;
 
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     last_logfile_rotation() const = 0;
@@ -110,7 +114,7 @@ public:
     virtual bool all_of_service_groups(
         const std::function<bool(const IServiceGroup &)> &pred) const = 0;
 
-    virtual bool mkeventdEnabled() = 0;
+    [[nodiscard]] virtual bool mkeventdEnabled() const = 0;
 
     [[nodiscard]] virtual int32_t pid() const = 0;
     [[nodiscard]] virtual std::unique_ptr<const IGlobalFlags> globalFlags()
@@ -159,13 +163,13 @@ public:
     [[nodiscard]] virtual std::vector<std::string> metrics(
         const IService &, Logger *logger) const = 0;
 
-    virtual Encoding dataEncoding() = 0;
-    virtual size_t maxResponseSize() = 0;
-    virtual size_t maxCachedMessages() = 0;
+    [[nodiscard]] virtual Encoding dataEncoding() const = 0;
+    [[nodiscard]] virtual size_t maxResponseSize() const = 0;
+    [[nodiscard]] virtual size_t maxCachedMessages() const = 0;
 
-    virtual Logger *loggerCore() = 0;
-    virtual Logger *loggerLivestatus() = 0;
-    virtual Logger *loggerRRD() = 0;
+    [[nodiscard]] virtual Logger *loggerCore() const = 0;
+    [[nodiscard]] virtual Logger *loggerLivestatus() const = 0;
+    [[nodiscard]] virtual Logger *loggerRRD() const = 0;
 
     virtual Triggers &triggers() = 0;
 

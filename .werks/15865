@@ -1,0 +1,12 @@
+Title: Aruba 2930M: Fix detection
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689327181
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Some devices that include the product code in their system description have not been discovered.
+

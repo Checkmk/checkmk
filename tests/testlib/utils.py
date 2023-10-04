@@ -14,6 +14,7 @@ import sys
 import textwrap
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from pprint import pformat
 
 import pexpect  # type: ignore[import]
 
@@ -41,6 +42,10 @@ class PExpectDialog:
 
 def repo_path() -> Path:
     return Path(__file__).resolve().parent.parent.parent
+
+
+def qa_test_data_path() -> Path:
+    return Path(__file__).parent.parent.resolve() / Path("qa-test-data")
 
 
 def cmk_path() -> str:  # TODO: Use Path. Why do we need an alias?
@@ -327,6 +332,7 @@ def spawn_expect_process(
             LOGGER.debug(p)
             rc = 3
 
+    assert isinstance(rc, int)
     return rc
 
 
@@ -346,3 +352,35 @@ def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProc
             f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
         ) from e
     return proc
+
+
+def restart_httpd() -> None:
+    """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
+    creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
+    e.g. the controller from querying the agent receiver port.
+
+    Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
+    see e.g. sles-15sp4.
+    """
+
+    # When executed locally and un-dockerized, DISTRO may not be set
+    if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
+        execute(["sudo", "httpd", "-k", "restart"])
+
+
+def get_services_with_status(
+    host_data: dict, service_status: int, skipped_services: list | tuple = ()
+) -> list:
+    """Return a list of services in the given status which are not in the 'skipped' list."""
+    services_list = []
+    for service in host_data:
+        if host_data[service] == service_status and service not in skipped_services:
+            services_list.append(service)
+
+    LOGGER.debug(
+        "%s service(s) found in state %s:\n%s",
+        len(services_list),
+        service_status,
+        pformat(services_list),
+    )
+    return services_list

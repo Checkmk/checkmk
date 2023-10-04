@@ -5,7 +5,7 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -39,8 +39,8 @@ class Resource:
 
 @dataclass(frozen=True)
 class Section:
-    crs_nodename: Optional[str]
-    resources: Mapping[str, Mapping[Optional[str], Resource]]
+    crs_nodename: str | None
+    resources: Mapping[str, Mapping[str | None, Resource]]
 
 
 def parse_oracle_crs_res(string_table: StringTable) -> Section:
@@ -72,7 +72,7 @@ def parse_oracle_crs_res(string_table: StringTable) -> Section:
         else:
             entry[key.lower()] = value
 
-    resources: dict[str, Mapping[Optional[str], Resource]] = {}
+    resources: dict[str, Mapping[str | None, Resource]] = {}
     for resname, values in raw_ressources.items():
         resources[resname] = {node: Resource(**entry) for node, entry in values.items()}
     return Section(crs_nodename, resources)

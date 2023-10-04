@@ -1,0 +1,37 @@
+Title: Agent Bakery: "Bake revision" is now configurable
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1691413732
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This Werk is incompatible only for Checkmk 2.3, while the default behavior won't
+change for Checkmk 2.2 and lower.
+
+With Checkmk 2.0/Werk #11403 we introduced a new versioning scheme for
+baked agents that includes a so-called "Bake revision".<br>
+However, the big downside of this approach is that agents will lose their
+signature in many cases when baking new agents without signing.
+
+With this Werk, it's possible to deactivate/activate the bake revision by configuring
+the global setting <i>Setup/Apply bake revision</i>.
+
+Additionally, when agents are baked automatically due to an active
+<i>Setup/Automatically create monitoring agents</i> setting, starting with Checkmk 2.3,
+the bake revision won't increase.<br>
+By this, we avoid a situation where agent signatures are invalidated automatically.
+
+<b>Breaking change</b>: Due to the feedback of many users, the default behavior will
+change with Checkmk 2.3: The bake revision will be deactivated by default.<br>
+If you happen to rely on the versioning scheme mentioned in Werk #11403, you have to
+re-activate the bake revision manually.<br>
+For Checkmk up to 2.2, the bake revision will remain activated by default.
+
+<b>Breaking change</b>: As mentioned above, also starting with Checkmk 2.3, the bake
+revision (when activated at all) won't increase when agents are baked automatically on
+activate changes.<br>
+If your workflow relies on a versioning scheme with bake revision <i>and</i> on automatic
+baking, you have to switch to a different approach, e.g., bake agents regularly via REST-API.

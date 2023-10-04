@@ -6,10 +6,12 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
+    get_rate,
+    get_value_store,
     OIDEnd,
     render,
     SNMPTree,
@@ -26,7 +28,7 @@ qlogic_fcport_inventory_admstates = ["1", "3"]
 def qlogic_fcport_generate_port_id(port_id):
     major, minor = port_id.split(".", 1)
     minor = int(minor) - 1
-    port_id = "%s.%s" % (major, minor)
+    port_id = f"{major}.{minor}"
     return port_id
 
 
@@ -161,9 +163,19 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
             in_octets = int(c2_in_octets) + int(c3_in_octets)
             out_octets = int(c2_out_octets) + int(c3_out_octets)
 
-            in_octet_rate = get_rate("qlogic_fcport.in_octets.%s" % port_id, this_time, in_octets)
+            in_octet_rate = get_rate(
+                get_value_store(),
+                "qlogic_fcport.in_octets.%s" % port_id,
+                this_time,
+                in_octets,
+                raise_overflow=True,
+            )
             out_octet_rate = get_rate(
-                "qlogic_fcport.out_octets.%s" % port_id, this_time, out_octets
+                get_value_store(),
+                "qlogic_fcport.out_octets.%s" % port_id,
+                this_time,
+                out_octets,
+                raise_overflow=True,
             )
 
             message += ", In: %s" % render.iobandwidth(in_octet_rate)
@@ -176,9 +188,19 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
             in_frames = int(c2_in_frames) + int(c3_in_frames)
             out_frames = int(c2_out_frames) + int(c3_out_frames)
 
-            in_frame_rate = get_rate("qlogic_fcport.in_frames.%s" % port_id, this_time, in_frames)
+            in_frame_rate = get_rate(
+                get_value_store(),
+                "qlogic_fcport.in_frames.%s" % port_id,
+                this_time,
+                in_frames,
+                raise_overflow=True,
+            )
             out_frame_rate = get_rate(
-                "qlogic_fcport.out_frames.%s" % port_id, this_time, out_frames
+                get_value_store(),
+                "qlogic_fcport.out_frames.%s" % port_id,
+                this_time,
+                out_frames,
+                raise_overflow=True,
             )
 
             message += ", in frames: %s/s" % in_frame_rate
@@ -206,12 +228,18 @@ def check_qlogic_fcport(item, _no_params, info):  # pylint: disable=too-many-bra
                 ("F_RJT frames", "c2_frjt_frames", c2_frjt_frames),
             ]:
                 value = int(value)
-                per_sec = get_rate("qlogic_fcport.%s.%s" % (counter, port_id), this_time, value)
+                per_sec = get_rate(
+                    get_value_store(),
+                    f"qlogic_fcport.{counter}.{port_id}",
+                    this_time,
+                    value,
+                    raise_overflow=True,
+                )
                 perfdata.append((counter, per_sec))
                 error_sum += per_sec
 
                 if per_sec > 0:
-                    message += ", %s: %s/s" % (descr, per_sec)
+                    message += f", {descr}: {per_sec}/s"
             if error_sum == 0:
                 message += ", no protocol errors"
 
@@ -229,9 +257,6 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.12"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
     ),
-    check_function=check_qlogic_fcport,
-    discovery_function=inventory_qlogic_fcport,
-    service_name="FC Port %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.75.1",
         oids=[
@@ -263,5 +288,8 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
             "4.3.1.5",
         ],
     ),
+    service_name="FC Port %s",
+    discovery_function=inventory_qlogic_fcport,
+    check_function=check_qlogic_fcport,
     check_ruleset_name="qlogic_fcport",
 )

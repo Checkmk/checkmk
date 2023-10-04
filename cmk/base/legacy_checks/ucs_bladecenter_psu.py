@@ -5,7 +5,7 @@
 
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature_list
 from cmk.base.config import check_info
@@ -15,8 +15,8 @@ from cmk.base.config import check_info
 # equipmentPsuStats       Dn sys/chassis-1/psu-1/stats    AmbientTemp 17.000000   Output12vAvg 12.008000  Output3v3Avg 3.336000
 
 
-def ucs_bladecenter_psu_parse(info):
-    data = ucs_bladecenter.generic_parse(info)
+def ucs_bladecenter_psu_parse(string_table):
+    data = ucs_bladecenter.generic_parse(string_table)
     psu: dict[str, dict] = {}
 
     def get_item_name(key):
@@ -54,8 +54,9 @@ def inventory_ucs_bladecenter_psu(parsed):
             yield key, {}
 
 
-@get_parsed_item_data
-def check_ucs_bladecenter_psu(item, params, psu):
+def check_ucs_bladecenter_psu(item, params, parsed):
+    if not (psu := parsed.get(item)):
+        return
     value_3v = float(psu["Output3v3Avg"])
     value_12v = float(psu["Output12vAvg"])
 
@@ -85,9 +86,9 @@ def check_ucs_bladecenter_psu(item, params, psu):
 
 check_info["ucs_bladecenter_psu"] = LegacyCheckDefinition(
     parse_function=ucs_bladecenter_psu_parse,
+    service_name="Voltage %s",
     discovery_function=inventory_ucs_bladecenter_psu,
     check_function=check_ucs_bladecenter_psu,
-    service_name="Voltage %s",
     check_ruleset_name="ucs_bladecenter_chassis_voltage",
     check_default_parameters={
         "levels_3v_lower": (3.25, 3.20),
@@ -114,8 +115,9 @@ def inventory_ucs_bladecenter_psu_switch_power(parsed):
             yield key, {}
 
 
-@get_parsed_item_data
-def check_ucs_bladecenter_psu_switch_power(item, params, psu):
+def check_ucs_bladecenter_psu_switch_power(item, params, parsed):
+    if not (psu := parsed.get(item)):
+        return
     # Convert fields
     KEY_MAP = {"Current": "current", "PowerAvg": "power", "Voltage": "voltage"}
 
@@ -125,13 +127,14 @@ def check_ucs_bladecenter_psu_switch_power(item, params, psu):
             k, v = KEY_MAP[k], (float(v), None)
         psu_new[k] = v
 
-    return check_elphase(item, params, {item: psu_new})
+    yield from check_elphase(item, params, {item: psu_new})
 
 
 check_info["ucs_bladecenter_psu.switch_power"] = LegacyCheckDefinition(
+    service_name="Power Supply %s",
+    sections=["ucs_bladecenter_psu"],
     discovery_function=inventory_ucs_bladecenter_psu_switch_power,
     check_function=check_ucs_bladecenter_psu_switch_power,
-    service_name="Power Supply %s",
     check_ruleset_name="el_inphase",
 )
 
@@ -168,9 +171,10 @@ def check_ucs_bladecenter_psu_chassis_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_psu.chassis_temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
+    sections=["ucs_bladecenter_psu"],
     discovery_function=inventory_ucs_bladecenter_psu_chassis_temp,
     check_function=check_ucs_bladecenter_psu_chassis_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (35.0, 40.0),

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import (
@@ -18,7 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 
 
-def parse_huawei_switch_temp(string_table: List[StringTable]) -> Section:
+def parse_huawei_switch_temp(string_table: list[StringTable]) -> Section:
     return parse_huawei_physical_entity_values(string_table)
 
 
@@ -40,10 +39,6 @@ def check_huawei_switch_temp(
 
 check_info["huawei_switch_temp"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_temp,
-    discovery_function=discover_huawei_switch_temp,
-    check_function=check_huawei_switch_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -54,6 +49,10 @@ check_info["huawei_switch_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "11"],
         ),
     ],
+    parse_function=parse_huawei_switch_temp,
+    service_name="Temperature %s",
+    discovery_function=discover_huawei_switch_temp,
+    check_function=check_huawei_switch_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (80.0, 90.0),

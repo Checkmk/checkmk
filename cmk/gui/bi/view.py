@@ -10,9 +10,10 @@ from typing import Any, Literal
 from livestatus import OnlySites, SiteId
 
 from cmk.utils import store
-from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import short_service_state_name
 
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.bi.foldable_tree_renderer import (
@@ -23,21 +24,23 @@ from cmk.gui.bi.foldable_tree_renderer import (
     FoldableTreeRendererTree,
 )
 from cmk.gui.data_source import ABCDataSource, RowTable
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.painter.v0.base import Cell, CellSpec, CSVExportError, Painter
+from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.view_utils import CellSpec, CSVExportError
 from cmk.gui.views.command import (
     Command,
     command_group_registry,
@@ -48,6 +51,8 @@ from cmk.gui.views.command import (
     PermissionSectionAction,
 )
 from cmk.gui.views.command.base import CommandSpecWithoutSite
+from cmk.gui.visuals import get_livestatus_filter_headers
+from cmk.gui.visuals.filter import Filter
 
 from cmk.bi.aggregation import BIAggregation
 from cmk.bi.computer import BIAggregationFilter
@@ -866,6 +871,11 @@ class PainterAggrTreestateFrozenDiff(Painter):
         return render_tree_json(row)
 
 
+@request_memoize()
+def _get_cached_bi_manager():
+    return BIManager()
+
+
 def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     reference_name = row["aggr_id"]
     frozen_info = row["aggr_compiled_aggregation"].frozen_info
@@ -873,7 +883,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     original_aggr_group = row["aggr_group"]
     other_aggregation = frozen_info.based_on_aggregation_id
     other_branch = frozen_info.based_on_branch_title
-    bi_manager = BIManager()
+    bi_manager = _get_cached_bi_manager()
     found_aggr = bi_manager.compiler.get_aggregation_by_name(reference_name)
     if not found_aggr:
         raise MKGeneralException("Unable to find source aggregation for diff tree")
@@ -1088,6 +1098,14 @@ class CommandFreezeAggregation(Command):
         return _("Freeze aggregations")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Freeze aggregation?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Freeze")
+
+    @property
     def icon_name(self):
         return "bi_freeze"
 
@@ -1117,9 +1135,22 @@ class CommandFreezeAggregation(Command):
         return "aggr_frozen_diff"
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.div(
-            html.render_button(self._button_name, _("Freeze selected"), cssclass="hot"),
-            class_="group",
+        html.open_div(class_="group")
+        html.button(self._button_name, _("Freeze selected"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
+
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
+        return HTML(
+            _("Affected %s: %s")
+            % (
+                ungettext(
+                    "aggregation",
+                    "aggregations",
+                    len_action_rows,
+                ),
+                len_action_rows,
+            )
         )
 
     @property
@@ -1134,7 +1165,10 @@ class CommandFreezeAggregation(Command):
 
         if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:
             if compiled_aggregation.frozen_info:
-                return [compiled_aggregation.frozen_info.based_on_branch_title], ""
+                return (
+                    [compiled_aggregation.frozen_info.based_on_branch_title],
+                    self.confirm_dialog_options(cmdtag, row, len(action_rows)),
+                )
 
         return None
 
@@ -1142,13 +1176,6 @@ class CommandFreezeAggregation(Command):
         """Function that is called to execute this action"""
         assert isinstance(command, CommandSpecWithoutSite)
         (frozen_aggregations_dir / Path(command).name).unlink(missing_ok=True)
-
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        if len_action_rows == 1:
-            return _("freeze the following aggregation?")
-        return _("freeze the following %d aggregations?") % len_action_rows
 
 
 command_group_registry.register(CommandGroupAggregations)

@@ -9,9 +9,9 @@ from cmk.base.check_legacy_includes.aws import check_aws_elb_summary_generic, pa
 from cmk.base.config import check_info
 
 
-def parse_aws_elbv2_summary(info):
+def parse_aws_elbv2_summary(string_table):
     application_lbs, network_lbs = [], []
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         lb_type = row.get("Type")
         if lb_type == "application":
             application_lbs.append(row)
@@ -34,9 +34,9 @@ def check_aws_elbv2_summary_application(item, params, parsed):
 
 check_info["aws_elbv2_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_summary,
+    service_name="AWS/ApplicationELB Summary",
     discovery_function=inventory_aws_elbv2_summary_application,
     check_function=check_aws_elbv2_summary_application,
-    service_name="AWS/ApplicationELB Summary",
 )
 
 
@@ -53,7 +53,8 @@ def check_aws_elbv2_summary_network(item, params, parsed):
 
 
 check_info["aws_elbv2_summary.network"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB Summary",
+    sections=["aws_elbv2_summary"],
     discovery_function=inventory_aws_elbv2_summary_network,
     check_function=check_aws_elbv2_summary_network,
-    service_name="AWS/NetworkELB Summary",
 )

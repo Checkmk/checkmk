@@ -6,21 +6,16 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 
 Section = Mapping[str, Mapping]
 
 
-def parse_aws_s3(info):
+def parse_aws_s3(string_table):
     parsed: dict[str, dict] = {}
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         bucket = parsed.setdefault(row["Label"], {})
         try:
             bucket["LocationConstraint"] = row["LocationConstraint"]
@@ -52,12 +47,14 @@ def parse_aws_s3(info):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_aws_s3_objects(item, params, metrics):
+def check_aws_s3_objects(item, params, parsed):
+    if not (metrics := parsed.get(item)):
+        return
+
     bucket_sizes = metrics["BucketSizeBytes"]
     storage_infos = []
     for storage_type, value in bucket_sizes.items():
-        storage_infos.append("%s: %s" % (storage_type, get_bytes_human_readable(value)))
+        storage_infos.append(f"{storage_type}: {get_bytes_human_readable(value)}")
     sum_size = sum(bucket_sizes.values())
     yield check_levels(
         sum_size,
@@ -78,16 +75,16 @@ def check_aws_s3_objects(item, params, metrics):
 
     tag_infos = []
     for tag in metrics.get("Tagging", {}):
-        tag_infos.append("%s: %s" % (tag["Key"], tag["Value"]))
+        tag_infos.append("{}: {}".format(tag["Key"], tag["Value"]))
     if tag_infos:
         yield 0, "[Tags] %s" % ", ".join(tag_infos)
 
 
 check_info["aws_s3"] = LegacyCheckDefinition(
     parse_function=parse_aws_s3,
+    service_name="AWS/S3 Objects %s",
     discovery_function=lambda p: inventory_aws_generic(p, ["BucketSizeBytes", "NumberOfObjects"]),
     check_function=check_aws_s3_objects,
-    service_name="AWS/S3 Objects %s",
     check_ruleset_name="aws_s3_buckets_objects",
 )
 
@@ -126,15 +123,16 @@ def check_aws_s3_summary(item, params, parsed):
     )
 
     if largest_bucket:
-        yield 0, "Largest bucket: %s (%s)" % (
+        yield 0, "Largest bucket: {} ({})".format(
             largest_bucket,
             get_bytes_human_readable(largest_bucket_size),
         ), [("aws_largest_bucket_size", largest_bucket_size)]
 
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(
+    service_name="AWS/S3 Summary",
+    sections=["aws_s3"],
     discovery_function=discover_aws_s3_summary,
     check_function=check_aws_s3_summary,
-    service_name="AWS/S3 Summary",
     check_ruleset_name="aws_s3_buckets",
 )

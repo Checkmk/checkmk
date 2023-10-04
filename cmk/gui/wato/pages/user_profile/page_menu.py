@@ -5,6 +5,8 @@
 
 from collections.abc import Iterator
 
+import cmk.utils.version as cmk_version
+
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_simple_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
@@ -28,7 +30,9 @@ def page_menu_dropdown_user_related(
 def _page_menu_entries_related(
     page_name: str, show_shortcuts: bool = True
 ) -> Iterator[PageMenuEntry]:
-    if page_name != "user_change_pw":
+    is_cse_edition = cmk_version.edition() == cmk_version.Edition.CSE
+
+    if page_name != "user_change_pw" and not is_cse_edition:
         yield PageMenuEntry(
             title=_("Change password"),
             icon_name="topic_change_password",
@@ -36,7 +40,11 @@ def _page_menu_entries_related(
             is_shortcut=show_shortcuts,
         )
 
-    if page_name != "user_two_factor_overview" and user.may("general.manage_2fa"):
+    if (
+        page_name != "user_two_factor_overview"
+        and user.may("general.manage_2fa")
+        and not is_cse_edition
+    ):
         yield PageMenuEntry(
             title=_("Edit two-factor authentication"),
             icon_name="topic_2fa",

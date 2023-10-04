@@ -29,9 +29,9 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 # .1.3.6.1.4.1.9694.1.6.2.39.0 43 --> PRAVAIL-MIB::pravailOverrunDropRatePps.0
 
 
-def parse_pravail(info):
-    # peakflow SP and TMS have the same info in different oid ranges
-    valid = info[0]
+def parse_pravail(string_table):
+    # peakflow SP and TMS have the same string_table in different oid ranges
+    valid = string_table[0]
     return {
         "disk": valid[0],
         "memory": valid[1:3],
@@ -42,35 +42,38 @@ def parse_pravail(info):
 
 check_info["arbor_pravail"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Pravail"),
-    check_function=check_arbor_memory,
-    discovery_function=inventory_arbor_memory,
-    parse_function=parse_pravail,
-    service_name="Memory",
-    check_ruleset_name="memory_arbor",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.6.2",
         oids=["6.0", "7.0", "8.0", "1.0", "39.0"],
     ),
+    parse_function=parse_pravail,
+    service_name="Memory",
+    discovery_function=inventory_arbor_memory,
+    check_function=check_arbor_memory,
+    check_ruleset_name="memory_arbor",
     check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
-    check_function=check_arbor_disk_usage,
-    discovery_function=inventory_arbor_disk_usage,
     service_name="Disk Usage %s",
+    sections=["arbor_pravail"],
+    discovery_function=inventory_arbor_disk_usage,
+    check_function=check_arbor_disk_usage,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 check_info["arbor_pravail.host_fault"] = LegacyCheckDefinition(
-    check_function=check_arbor_host_fault,
-    discovery_function=inventory_arbor_host_fault,
     service_name="Host Fault",
+    sections=["arbor_pravail"],
+    discovery_function=inventory_arbor_host_fault,
+    check_function=check_arbor_host_fault,
 )
 
 check_info["arbor_pravail.drop_rate"] = LegacyCheckDefinition(
-    check_function=check_arbor_drop_rate,
-    discovery_function=inventory_arbor_drop_rate,
     service_name="%s drop rate",
+    sections=["arbor_pravail"],
+    discovery_function=inventory_arbor_drop_rate,
+    check_function=check_arbor_drop_rate,
     check_ruleset_name="generic_rate",
 )

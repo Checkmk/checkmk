@@ -8,7 +8,8 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
-from typing import Any, Dict, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
 
@@ -43,8 +44,8 @@ def merge_sections(
     section_livestatus_status: Mapping[str, Mapping[str, str]],
     section_omd_status: Mapping[str, Mapping],
     section_omd_info: Mapping[str, Mapping[str, Mapping]],
-) -> Dict[str, Dict]:
-    merged_section: Dict[str, Dict] = {"check_mk": {}, "sites": {}, "versions": {}}
+) -> dict[str, dict]:
+    merged_section: dict[str, dict] = {"check_mk": {}, "sites": {}, "versions": {}}
 
     # SECTION: livestatus_status
     for site, status in section_livestatus_status.items():
@@ -75,7 +76,7 @@ def merge_sections(
         }
 
     # SECTION: omd_status
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         services = [
             "nagios",
             "npcd",
@@ -151,7 +152,7 @@ def merge_sections(
     return merged_section
 
 
-def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
+def generate_inventory(merged_sections: dict[str, Any]) -> InventoryResult:
     for key, elem in merged_sections["sites"].items():
         yield TableRow(
             path=["software", "applications", "check_mk", "sites"],
@@ -177,9 +178,9 @@ def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
 
 
 def inventory_checkmk(
-    section_livestatus_status: Optional[Dict[str, Dict[str, str]]],
-    section_omd_status: Optional[Dict[str, Dict]],
-    section_omd_info: Optional[Dict[str, Dict[str, Dict]]],
+    section_livestatus_status: dict[str, dict[str, str]] | None,
+    section_omd_status: dict[str, dict] | None,
+    section_omd_info: dict[str, dict[str, dict]] | None,
 ) -> InventoryResult:
     merged_sections = merge_sections(
         section_livestatus_status or {},

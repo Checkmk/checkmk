@@ -2,9 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict
 
-TCPConnections = Dict[str, int]
+TCPConnections = dict[str, int]
 
 MAP_COUNTER_KEYS = {
     1: "ESTABLISHED",  # connection up and passing data

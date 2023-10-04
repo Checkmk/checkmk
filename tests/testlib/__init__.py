@@ -46,11 +46,14 @@ from tests.testlib.utils import (
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
+from cmk.base.plugins.commands import get_active_check
+
+from cmk.commands.v1 import ActiveService, EnvironmentConfig, HostConfig
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -108,15 +111,6 @@ def fake_version_and_paths() -> None:
     )
 
     # Unit test context: load all available modules
-    monkeypatch.setattr(
-        cmk_version,
-        "is_raw_edition",
-        lambda: not (is_enterprise_repo() and is_managed_repo() and is_cloud_repo()),
-    )
-    monkeypatch.setattr(cmk_version, "is_enterprise_edition", is_enterprise_repo)
-    monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
-    monkeypatch.setattr(cmk_version, "is_cloud_edition", is_cloud_repo)
-
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():
         if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:
@@ -168,7 +162,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
             return  # Success. Stop waiting...
         time.sleep(interval)
 
-    raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
 def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:
@@ -222,7 +216,7 @@ class WatchLog:
 
         return self
 
-    def __exit__(self, *exc_info):
+    def __exit__(self, *_exc_info: object) -> None:
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
                 if c.name() == "tail":
@@ -278,6 +272,7 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
         output = p.communicate()[0].strip()
         if not output:
             return []
+        assert isinstance(output, str)
         return output.split(" ")
 
     def finalizer() -> None:
@@ -337,9 +332,9 @@ class BaseCheck(abc.ABC):
         self.name = name
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
-        import cmk.checkengine.plugin_contexts  # pylint: disable=import-outside-toplevel
+        import cmk.base.api.agent_based.plugin_contexts  # pylint: disable=import-outside-toplevel
 
-        cmk.checkengine.plugin_contexts._hostname = HostName("non-existent-testhost")
+        cmk.base.api.agent_based.plugin_contexts._hostname = HostName("non-existent-testhost")
 
 
 class Check(BaseCheck):
@@ -360,13 +355,13 @@ class Check(BaseCheck):
             return self._migrated_plugin.check_default_parameters or {}
         return {}
 
-    def run_parse(self, info):
+    def run_parse(self, info):  # type: ignore[no-untyped-def]
         parse_func = self.info.get("parse_function")
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
         return parse_func(info)
 
-    def run_discovery(self, info):
+    def run_discovery(self, info):  # type: ignore[no-untyped-def]
         disco_func = self.info.get("discovery_function")
         if not disco_func:
             raise MissingCheckInfoError(
@@ -374,7 +369,7 @@ class Check(BaseCheck):
             )
         return disco_func(info)
 
-    def run_check(self, item, params, info):
+    def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
         check_func = self.info.get("check_function")
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
@@ -386,19 +381,27 @@ class ActiveCheck(BaseCheck):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
 
         super().__init__(name)
-        assert self.name.startswith(
-            "check_"
-        ), "Specify the full name of the active check, e.g. check_http"
-        self.info = config.active_check_info[self.name[len("check_") :]]
+        self.info = config.active_check_info.get(self.name[len("check_") :])
+        self.command = get_active_check(self.name)
 
-    def run_argument_function(self, params):
+    def run_argument_function(self, params):  # type: ignore[no-untyped-def]
+        assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["argument_function"](params)
 
-    def run_service_description(self, params):
+    def run_service_description(self, params):  # type: ignore[no-untyped-def]
+        assert self.info, "Active check has to be implemented in the legacy API"
         return self.info["service_description"](params)
 
-    def run_generate_icmp_services(self, host_config, params):
+    def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
+        assert self.info, "Active check has to be implemented in the legacy API"
         yield from self.info["service_generator"](host_config, params)
+
+    def run_service_function(
+        self, host_config: HostConfig, env_config: EnvironmentConfig, params: Mapping[str, object]
+    ) -> Iterator[ActiveService]:
+        assert self.command, "Active check has to be implemented in the new API"
+        parsed_params = self.command.parameter_parser(params)
+        yield from self.command.service_function(parsed_params, host_config, env_config)
 
 
 class SpecialAgent:
@@ -436,7 +439,7 @@ def set_timezone(timezone: str) -> Iterator[None]:
 def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
-        utctime = datetime.datetime.utcfromtimestamp(utctime)
+        utctime = datetime.datetime.fromtimestamp(utctime, tz=datetime.UTC)
 
     with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield

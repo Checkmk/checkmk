@@ -9,7 +9,6 @@ from collections.abc import Collection
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.userdb as userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -23,20 +22,9 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuEntry,
 )
-from cmk.gui.plugins.userdb.utils import (
-    get_connection,
-    load_connection_config,
-    save_connection_config,
-)
-from cmk.gui.plugins.wato.utils import (
-    MigrateNotUpdatedToIndividualOrStoredPassword,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
+from cmk.gui.userdb import get_connection, load_connection_config, save_connection_config
 from cmk.gui.userdb.ldap_connector import (
     ldap_attr_of_connection,
     ldap_attribute_plugins_elements,
@@ -56,6 +44,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
+    ID,
     Integer,
     LDAPDistinguishedName,
     ListOfStrings,
@@ -70,11 +59,19 @@ from cmk.gui.wato.pages.userdb_common import (
     connection_actions,
     get_affected_sites,
     render_connections_page,
-    validate_connection_id,
 )
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+from ._password_store_valuespecs import MigrateNotUpdatedToIndividualOrStoredPassword
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeLDAPConfig)
+    mode_registry.register(ModeEditLDAPConnection)
+
 
 # .
 #   .--Valuespec-----------------------------------------------------------.
@@ -145,15 +142,14 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         if self._new:
             id_element: DictionaryEntry = (
                 "id",
-                TextInput(
+                ID(
                     title=_("ID"),
                     help=_(
-                        "The ID of the connection must be a unique text. It will be used as an internal key "
-                        "when objects refer to the connection."
+                        "The ID of the connection must be a unique text, with the same requirements as an user id. "
+                        "It will be used as an internal key when objects refer to the connection."
                     ),
                     allow_empty=False,
                     size=12,
-                    validate=self._validate_ldap_connection_id,
                 ),
             )
         else:
@@ -167,7 +163,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         general_elements += [id_element]
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             general_elements += managed.customer_choice_element()
 
         general_elements += rule_option_elements()
@@ -629,9 +625,6 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         return other_elements
 
-    def _validate_ldap_connection_id(self, value, varprefix):
-        validate_connection_id(value, varprefix)
-
     def _validate_ldap_connection(self, value, varprefix):
         for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
             if role_id == "nested":
@@ -683,7 +676,6 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                 )
 
 
-@mode_registry.register
 class ModeLDAPConfig(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -721,7 +713,6 @@ class ModeLDAPConfig(WatoMode):
         )
 
 
-@mode_registry.register
 class ModeEditLDAPConnection(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -863,7 +854,7 @@ class ModeEditLDAPConnection(WatoMode):
                 )
             )
         else:
-            connection = userdb.get_connection(self._connection_id)
+            connection = get_connection(self._connection_id)
             assert isinstance(connection, LDAPUserConnector)
 
             for address in connection.servers():
@@ -879,9 +870,9 @@ class ModeEditLDAPConnection(WatoMode):
                             logger.exception("error testing LDAP %s for %s", title, address)
 
                         if state:
-                            img = html.render_icon("success", _("Success"))
+                            img = html.render_icon("checkmark", _("Success"))
                         else:
-                            img = html.render_icon("failed", _("Failed"))
+                            img = html.render_icon("cross", _("Failed"))
 
                         table.cell(_("Test"), title)
                         table.cell(_("State"), img)

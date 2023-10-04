@@ -23,7 +23,7 @@ def check_symantec_av_quarantine(_no_item, _no_params, info):
 
 
 check_info["symantec_av_quarantine"] = LegacyCheckDefinition(
-    check_function=check_symantec_av_quarantine,
-    discovery_function=inventory_symantec_av_quarantine,
     service_name="AV Quarantine",
+    discovery_function=inventory_symantec_av_quarantine,
+    check_function=check_symantec_av_quarantine,
 )

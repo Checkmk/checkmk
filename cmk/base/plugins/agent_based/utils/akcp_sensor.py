@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.humidity import (  # pylint: disable=cmk-module-layer-violation
-    check_humidity,
-)
-from cmk.base.check_legacy_includes.temperature import (  # pylint: disable=cmk-module-layer-violation
-    check_temperature,
-)
+from ..agent_based_api.v1 import get_value_store, Result, Service, State
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .humidity import check_humidity, CheckParams
+from .temperature import check_temperature, TempParamDict
 
 #   .--General-------------------------------------------------------------.
 #   |                                                  _                   |
@@ -30,12 +28,18 @@ akcp_sensor_level_states = {
     "7": (2, "sensor error"),
 }
 
+Section = list[list[str]]
 
-def inventory_akcp_sensor_no_params(info):
-    for line in info:
+
+def inventory_akcp_sensor_no_params(section: Section) -> DiscoveryResult:
+    for line in section:
         # "1" means online, "2" offline
         if line[-1] == "1":
-            yield line[0], None
+            yield Service(item=line[0])
+
+
+def parse_akcp_sensor(string_table: StringTable) -> Section:
+    return string_table
 
 
 # .
@@ -48,28 +52,31 @@ def inventory_akcp_sensor_no_params(info):
 #   |                                                  |___/               |
 #   +----------------------------------------------------------------------+
 
-akcp_humidity_defaultlevels = (30, 35, 60, 65)
+AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS = {
+    "levels": (60.0, 65.0),
+    "levels_lower": (30.0, 35.0),
+}
 
 
-def inventory_akcp_humidity(info):
-    for description, _percent, _status, online in info:
+def inventory_akcp_humidity(section: Section) -> DiscoveryResult:
+    for description, _percent, _status, online in section:
         if online == "1":
-            yield description, akcp_humidity_defaultlevels
+            yield Service(item=description)
 
 
-def check_akcp_humidity(item, params, info):
-    for description, percent, status, online in info:
+def check_akcp_humidity(item: str, params: CheckParams, section: Section) -> CheckResult:
+    for description, percent, status, online in section:
         if description == item:
             # Online is set to "2" if sensor is offline
             if online != "1":
-                yield 2, "sensor is offline"
+                yield Result(state=State.CRIT, summary="sensor is offline")
 
             if status in ["1", "7"]:
                 state, state_name = akcp_sensor_level_states[status]
-                yield state, "State: %s" % state_name
+                yield Result(state=State(state), summary=f"State: {state_name}")
 
             if percent:
-                yield check_humidity(int(percent), params)
+                yield from check_humidity(int(percent), params)
 
 
 # .
@@ -87,15 +94,15 @@ AKCP_TEMP_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def inventory_akcp_sensor_temp(info):
-    for line in info:
+def inventory_akcp_sensor_temp(section: Section) -> DiscoveryResult:
+    for line in section:
         # sensorProbeTempOnline or sensorTemperatureGoOffline has to be at last index
         # "1" means online, "2" offline
         if line[-1] == "1":
-            yield line[0], {}
+            yield Service(item=line[0])
 
 
-def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-branches
+def check_akcp_sensor_temp(item: str, params: TempParamDict, section: Section) -> CheckResult:
     for (
         description,
         degree,
@@ -107,53 +114,51 @@ def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-bran
         high_crit,
         degreeraw,
         online,
-    ) in info:
+    ) in section:
         if description == item:
             # Online is set to "2" if sensor is offline
             if online != "1":
-                return 2, "sensor is offline"
+                yield Result(state=State.CRIT, summary="sensor is offline")
 
             if status in ["1", "7"]:
                 state, state_name = akcp_sensor_level_states[status]
-                return state, "State: %s" % state_name
+                yield Result(state=State(state), summary=f"State: {state_name}")
 
             # Unit "F" or "0" stands for Fahrenheit and "C" or "1" for Celsius
             if unit.isdigit():
-                if unit == "0":
-                    unit_normalised = "f"
-                else:
-                    unit_normalised = "c"
-                low_crit, low_warn, high_warn, high_crit = list(
+                unit_normalised = "f" if unit == "0" else "c"
+                low_c, low_w, high_w, high_c = list(
                     map(float, (low_crit, low_warn, high_warn, high_crit))
                 )
             else:
                 unit_normalised = unit.lower()
                 if int(high_crit) > 100:
                     # Devices with "F" or "C" have the levels in degrees * 10
-                    low_crit, low_warn, high_warn, high_crit = (
+                    low_c, low_w, high_w, high_c = (
                         float(t) / 10 for t in (low_crit, low_warn, high_warn, high_crit)
                     )
                 else:
-                    low_crit, low_warn, high_warn, high_crit = (
+                    low_c, low_w, high_w, high_c = (
                         float(t) for t in (low_crit, low_warn, high_warn, high_crit)
                     )
 
             if degreeraw and degreeraw != "0":
                 temperature = float(degreeraw) / 10.0
             elif not degree:
-                return 3, "Temperature information not found"
+                yield Result(state=State.UNKNOWN, summary="Temperature information not found")
+                return
             else:
                 temperature = float(degree)
 
-            return check_temperature(
-                temperature,
-                params,
-                "akcp_sensor_temp_%s" % item,
-                unit_normalised,
-                (high_warn, high_crit),
-                (low_warn, low_crit),
+            yield from check_temperature(
+                reading=temperature,
+                params=params,
+                unique_name=f"akcp_sensor_temp_{item}",
+                value_store=get_value_store(),
+                dev_unit=unit_normalised,
+                dev_levels=(high_w, high_c),
+                dev_levels_lower=(low_w, low_c),
             )
-    return None
 
 
 # .
@@ -167,7 +172,7 @@ def check_akcp_sensor_temp(item, params, info):  # pylint: disable=too-many-bran
 #   +----------------------------------------------------------------------+
 
 
-def check_akcp_sensor_relay(item, _no_params, info):
+def check_akcp_sensor_relay(item: str, section: Section) -> CheckResult:
     # States for sensors with relays as they are defined in SPAGENT-MIB
     relay_states = {
         "1": (2, "no status"),
@@ -179,15 +184,14 @@ def check_akcp_sensor_relay(item, _no_params, info):
         "9": (0, "relay off"),
     }
 
-    for description, status, online in info:
+    for description, status, online in section:
         if description == item:
             # Online is set to "2" if sensor is offline
             if online != "1":
-                return 2, "sensor is offline"
+                yield Result(state=State.CRIT, summary="sensor is offline")
 
             state, state_name = relay_states[status]
-            return state, "State: %s" % state_name
-    return None
+            yield Result(state=State(state), summary=f"State: {state_name}")
 
 
 # .
@@ -201,7 +205,7 @@ def check_akcp_sensor_relay(item, _no_params, info):
 #   +----------------------------------------------------------------------+
 
 
-def check_akcp_sensor_drycontact(item, _no_params, info):
+def check_akcp_sensor_drycontact(item: str, section: Section) -> CheckResult:
     # States which are not configurable by user as they are defined in SPAGENT-MIB
     states = {
         "1": (2, "no status"),
@@ -210,7 +214,7 @@ def check_akcp_sensor_drycontact(item, _no_params, info):
         "9": (2, "output high"),
     }
 
-    for line in info:
+    for line in section:
         if item == line[0]:
             if len(line) == 5:
                 status, crit_desc, normal_desc, online = line[1:]
@@ -231,5 +235,4 @@ def check_akcp_sensor_drycontact(item, _no_params, info):
             else:
                 state, infotext = states[status]
 
-            return state, infotext
-    return None
+            yield Result(state=State(state), summary=infotext)

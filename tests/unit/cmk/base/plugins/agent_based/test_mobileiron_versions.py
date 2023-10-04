@@ -15,8 +15,8 @@ from cmk.base.plugins.agent_based.mobileiron_versions import (
     _try_calculation_age,
     check_mobileiron_versions,
     Params,
-    Section,
 )
+from cmk.base.plugins.agent_based.utils.mobileiron import Section
 
 DEVICE_DATA_ANDROID = parse_mobileiron(
     [

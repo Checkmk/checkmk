@@ -46,7 +46,7 @@ def check_nfsexports(item, _no_params, info):
 
 
 check_info["nfsexports"] = LegacyCheckDefinition(
-    check_function=check_nfsexports,
-    discovery_function=inventory_nfsexports,
     service_name="NFS export %s",
+    discovery_function=inventory_nfsexports,
+    check_function=check_nfsexports,
 )

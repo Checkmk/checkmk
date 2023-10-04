@@ -5,7 +5,8 @@
 
 
 from cmk.utils import version
-from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
+
+from cmk.gui.rest_api_types.site_connection import SiteConfig
 
 
 def default_config_example() -> SiteConfig:
@@ -57,7 +58,7 @@ def default_config_example() -> SiteConfig:
         },
     }
 
-    if version.is_managed_edition():
+    if version.edition() is version.Edition.CME:
         r["basic_settings"] = {
             "alias": "Die remote site 1",
             "site_id": "site_id_1",

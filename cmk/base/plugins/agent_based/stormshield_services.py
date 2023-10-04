@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -20,7 +21,7 @@ class StormshieldService(NamedTuple):
 Section = Mapping[str, StormshieldService]
 
 
-def parse_stormshield_services(string_table: List[List[str]]) -> Section:
+def parse_stormshield_services(string_table: list[list[str]]) -> Section:
     section = {}
     for name, state, r_uptime in string_table:
         try:

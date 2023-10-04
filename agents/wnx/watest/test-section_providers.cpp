@@ -5,11 +5,8 @@
 
 #include "pch.h"
 
-#include "agent_controller.h"
-#include "cfg.h"
 #include "common/version.h"
 #include "common/wtools.h"
-#include "install_api.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/internal.h"
@@ -17,9 +14,12 @@
 #include "providers/p_perf_counters.h"
 #include "providers/plugins.h"
 #include "providers/services.h"
-#include "service_processor.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
+#include "watest/test_tools.h"
+#include "wnx/agent_controller.h"
+#include "wnx/cfg.h"
+#include "wnx/install_api.h"
+#include "wnx/service_processor.h"
 
 namespace fs = std::filesystem;
 

@@ -12,12 +12,11 @@
 # Update manual stops:           0
 # Updates failed:                3333
 
-from typing import Dict
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, str]
+Section = dict[str, str]
 
 
 def parse_kaspersky_av_updates(string_table: StringTable) -> Section:

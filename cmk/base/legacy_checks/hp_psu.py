@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -16,8 +16,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_hp_psu(info):
-    parsed = {index: {"temp": int(temp), "status": dev_status} for index, dev_status, temp in info}
+def parse_hp_psu(string_table):
+    parsed = {
+        index: {"temp": int(temp), "status": dev_status} for index, dev_status, temp in string_table
+    }
     return parsed
 
 
@@ -36,19 +38,22 @@ def inventory_hp_psu_temp(parsed):
         yield index, {}
 
 
-@get_parsed_item_data
-def check_hp_psu_temp(item, params, data):
+def check_hp_psu_temp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # For some status, the device simply reports 0 as a temperature value.
     temp_unknown_status = ["8"]
     if data["status"] in temp_unknown_status and data["temp"] == 0:
-        return 3, "No temperature data available"
-    return check_temperature(data["temp"], params, item)
+        yield 3, "No temperature data available"
+    else:
+        yield check_temperature(data["temp"], params, item)
 
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(
+    service_name="Temperature Power Supply %s",
+    sections=["hp_psu"],
     discovery_function=inventory_hp_psu_temp,
     check_function=check_hp_psu_temp,
-    service_name="Temperature Power Supply %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (70.0, 80.0),
@@ -93,12 +98,12 @@ check_info["hp_psu"] = LegacyCheckDefinition(
             contains(".1.3.6.1.2.1.1.1.0", "5406rzl2"), contains(".1.3.6.1.2.1.1.1.0", "5412rzl2")
         ),
     ),
-    parse_function=parse_hp_psu,
-    discovery_function=inventory_hp_psu,
-    check_function=check_hp_psu,
-    service_name="Power Supply Status %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.55.1.1.1",
         oids=[OIDEnd(), "2", "4"],
     ),
+    parse_function=parse_hp_psu,
+    service_name="Power Supply Status %s",
+    discovery_function=inventory_hp_psu,
+    check_function=check_hp_psu,
 )

@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, Mapping, NamedTuple, Sequence, Tuple, TypedDict
+from collections.abc import Iterable, Mapping, Sequence
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.render import percent, timespan
@@ -50,9 +53,9 @@ register.agent_section(
 
 
 class CheckParams(TypedDict):
-    rta: Tuple[int, int]
-    rtstddev: Tuple[int, int]
-    pl: Tuple[int, int]
+    rta: tuple[int, int]
+    rtstddev: tuple[int, int]
+    pl: tuple[int, int]
 
 
 def discover_mtr(section) -> DiscoveryResult:  # type: ignore[no-untyped-def]

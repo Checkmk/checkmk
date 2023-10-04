@@ -5,7 +5,7 @@
 
 import os
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -15,7 +15,7 @@ from pytest import MonkeyPatch
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 _PIGGYBACK_MAX_CACHEFILE_AGE = 3600
 
@@ -24,7 +24,7 @@ _TEST_HOST_NAME = HostName("test-host")
 _PAYLOAD = b"<<<check_mk>>>\nlala\n"
 
 _REF_TIME = 1640000000.0
-_FREEZE_DATETIME = datetime.utcfromtimestamp(_REF_TIME + 10.0)
+_FREEZE_DATETIME = datetime.fromtimestamp(_REF_TIME + 10.0, tz=timezone.utc)
 
 
 @pytest.fixture(name="setup_files")

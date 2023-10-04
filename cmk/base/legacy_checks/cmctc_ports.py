@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
 # .1.3.6.1.4.1.2606.4.2.3.4.0 1
 
 
-def parse_cmctc_ports(info):
+def parse_cmctc_ports(string_table):
     def parse_single_port(port_info):
         type_map = {
             "1": "not available",
@@ -68,7 +68,7 @@ def parse_cmctc_ports(info):
     # cmctc_lcp uses port numbers the range 3-6.
     # Therefore, we start counting at 3 here as well
     # to stay consistent.
-    for number, (port_info,) in enumerate(info, 3):
+    for number, (port_info,) in enumerate(string_table, 3):
         parsed_port = parse_single_port(port_info)
         if parsed_port:
             description, entry = parsed_port
@@ -107,10 +107,6 @@ def check_cmctc_ports(item, _no_params, parsed):
 
 check_info["cmctc_ports"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    parse_function=parse_cmctc_ports,
-    discovery_function=inventory_cmctc_ports,
-    check_function=check_cmctc_ports,
-    service_name="Port %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.2606.4.2.{unit}",
@@ -123,4 +119,8 @@ check_info["cmctc_ports"] = LegacyCheckDefinition(
             "6",  # cmcTcStatusSensorUnit4
         ]
     ],
+    parse_function=parse_cmctc_ports,
+    service_name="Port %s",
+    discovery_function=inventory_cmctc_ports,
+    check_function=check_cmctc_ports,
 )

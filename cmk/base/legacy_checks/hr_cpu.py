@@ -41,13 +41,13 @@ def check_hr_cpu(_no_item, params, info):
 # Migration via cmk/update_config.py!
 check_info["hr_cpu"] = LegacyCheckDefinition(
     detect=ucd_hr_detection.HR,
-    discovery_function=inventory_hr_cpu,
-    check_function=check_hr_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.3.1",
         oids=["2"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_hr_cpu,
+    check_function=check_hr_cpu,
     check_ruleset_name="cpu_utilization_os",
     check_default_parameters={
         "util": (80.0, 90.0),

@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 import * as d3 from "d3";
 import {Simulation} from "d3";
 import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
@@ -46,7 +52,7 @@ export class ForceSimulation {
                 "force",
                 this._force_config.get_style_options(),
                 this._force_config.options,
-                (event, options) =>
+                (event: d3.D3DragEvent<any, any, any>, options) =>
                     this._force_config.changed_options(event, options),
                 event => {
                     this._force_config.changed_options(
@@ -241,7 +247,10 @@ export class ForceConfig {
         return default_options;
     }
 
-    changed_options(event, new_options: StyleOptionValues) {
+    changed_options(
+        _event: d3.D3DragEvent<any, any, any>,
+        new_options: StyleOptionValues
+    ) {
         this.options = new_options as ForceOptions;
         this._force_simulation.setup_forces();
         this._force_simulation.restart_with_alpha(0.5);
@@ -284,9 +293,9 @@ export class ForceConfig {
 }
 
 export class BIForceConfig extends ForceConfig {
-    description = "BI Force configuration";
+    override description = "BI Force configuration";
 
-    get_style_options(): StyleOptionSpecRange[] {
+    override get_style_options(): StyleOptionSpecRange[] {
         return [
             {
                 id: "center",

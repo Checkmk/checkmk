@@ -47,7 +47,7 @@ def check_cmciii_io(item: str, params: CheckParams, section: Section) -> type_de
 
     for key in ["Logic", "Delay", "Relay"]:
         if key in entry:
-            yield Result(state=State.OK, summary="%s: %s" % (key, entry[key]))
+            yield Result(state=State.OK, summary=f"{key}: {entry[key]}")
 
 
 register.check_plugin(

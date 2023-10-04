@@ -22,15 +22,15 @@ def update_hosts_and_folders(old_site_id: SiteId, new_site_id: SiteId, logger: L
     """
     for folder in folder_tree().all_folders().values():
         # 1. Update explicitly set site in folders
-        if folder.attribute("site") == old_site_id:
+        if folder.attributes.get("site") == old_site_id:
             logger.debug("Folder %s: Update explicitly set site", folder.alias_path())
-            folder.set_attribute("site", new_site_id)
+            folder.attributes["site"] = new_site_id
 
         # 2. Update explicitly set site in hosts
         for host in folder.hosts().values():
-            if host.attribute("site") == old_site_id:
+            if host.attributes.get("site") == old_site_id:
                 logger.debug("Host %s: Update explicitly set site", host.name())
-                host.set_attribute("site", new_site_id)
+                host.attributes["site"] = new_site_id
 
         # Always rewrite the host config: The host_tags need to be updated, even in case there is no
         # site_id explicitly set. Just to be sure everything is fine we also rewrite the folder

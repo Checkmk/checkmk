@@ -16,21 +16,21 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_power(info):
+def parse_ucs_c_rack_server_power(string_table):
     """
     Returns dict with indexed rack motherboards mapped to keys and consumed power,
     input current status and input voltage status as value.
     """
     parsed = {}
-    # The element count of info lines is under our control (agent output) and
+    # The element count of string_table lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
     # string. Handles invalid values provided by the XML API which cannot be
     # casted by setting corresponding values to None.
-    for _, dn, power, current, voltage in info:
+    for _, dn, power, current, voltage in string_table:
         motherboard = (
             dn.replace("dn ", "")
             .replace("sys/", "")
@@ -55,8 +55,9 @@ def parse_ucs_c_rack_server_power(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_power(item, params, data):
+def check_ucs_c_rack_server_power(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield check_levels(
         data["consumedPower"], "power", params["power_upper_levels"], unit="W", infoname="Power"
     )
@@ -64,12 +65,16 @@ def check_ucs_c_rack_server_power(item, params, data):
     yield 0, "Voltage: %s V" % data["inputVoltage"]
 
 
+def discover_ucs_c_rack_server_power(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ucs_c_rack_server_power"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_power,
-    discovery_function=discover(),
+    service_name="Motherboard Power Statistics %s",
+    discovery_function=discover_ucs_c_rack_server_power,
     check_function=check_ucs_c_rack_server_power,
     check_ruleset_name="power_multiitem",
-    service_name="Motherboard Power Statistics %s",
     check_default_parameters={
         "power_upper_levels": (90, 100),
     },

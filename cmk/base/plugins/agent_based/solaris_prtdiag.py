@@ -65,26 +65,27 @@
 #
 
 import time
-from typing import Mapping, NamedTuple, Union
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 class Section(NamedTuple):
-    bios: Mapping[str, Union[str, int]]
+    bios: Mapping[str, str | int]
     hardware: Mapping[str, str]
 
 
 def parse_solaris_prtdiag(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> Section:
-    bios: dict[str, Union[str, int]] = {}
+    bios: dict[str, str | int] = {}
     hardware = {}
     for line in string_table:
         if line[0].startswith("OBP"):
             bios_info = line[0].split()
-            bios["version"] = "%s %s" % (bios_info[0], bios_info[1])
+            bios["version"] = f"{bios_info[0]} {bios_info[1]}"
             formated_date = bios_info[2] + bios_info[3]
             bios["date"] = int(time.mktime(time.strptime(formated_date, "%Y/%m/%d%H:%M")))
             bios["vendor"] = "Oracle"

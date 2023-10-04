@@ -23,17 +23,13 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    VisualInfo,
-    VisualType,
-)
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
 from cmk.gui.visuals import view_title
+from cmk.gui.visuals.info import visual_info_registry, VisualInfo
+from cmk.gui.visuals.type import visual_type_registry, VisualType
 
 
 def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> list[PageMenuDropdown]:
@@ -168,19 +164,19 @@ def _get_ntop_page_menu_topics(view, host_address):
             entries=[
                 PageMenuEntry(
                     name="overview",
-                    title="Engaged alerts",
+                    title="Engaged Host",
                     icon_name="trans",
                     item=_get_ntop_entry_item_link(host_name, host_address, "engaged_alerts_tab"),
                 ),
                 PageMenuEntry(
                     name="overview",
-                    title="Past alerts",
+                    title="Past Host",
                     icon_name="trans",
                     item=_get_ntop_entry_item_link(host_name, host_address, "past_alerts_tab"),
                 ),
                 PageMenuEntry(
                     name="overview",
-                    title="Flow alerts",
+                    title="Past Flow",
                     icon_name="trans",
                     item=_get_ntop_entry_item_link(host_name, host_address, "flow_alerts_tab"),
                 ),
@@ -220,11 +216,15 @@ def _get_context_page_menu_topics(
     """Create the page menu topics for the given dropdown from the flat linked visuals list"""
     by_topic: dict[pagetypes.PagetypeTopics, list[PageMenuEntry]] = {}
 
+    host_name = singlecontext_request_vars.get("host")
+    service_description = singlecontext_request_vars.get("service")
+
     for visual_type, visual in sorted(
         dropdown_visuals, key=lambda i: (i[1]["sort_index"], i[1]["title"])
     ):
-        if visual.get("topic") == "bi" and not is_part_of_aggregation(
-            singlecontext_request_vars.get("host"), singlecontext_request_vars.get("service")
+        if visual.get("topic") == "bi" and (
+            host_name is not None
+            and not is_part_of_aggregation(host_name, service_description or "")
         ):
             continue
 
@@ -453,7 +453,7 @@ def _get_combined_graphs_entry(
 
 
 def _show_combined_graphs_context_button(view: View) -> bool:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return False
 
     if view.name == "service":

@@ -1,0 +1,19 @@
+Title: Fix visibility of cloned view, dashboard and report extensions
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1690269251
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Werk #15135 introduced the possibility to share views, dashboards and report
+definitions.
+
+If you cloned an installed extension and changed the configuration of the
+clone, opening the view, dashboard or report always showed the configuration
+of the extension.
+
+This has been fixed, please review your shared views, dashboards and reports if
+you used extensions.

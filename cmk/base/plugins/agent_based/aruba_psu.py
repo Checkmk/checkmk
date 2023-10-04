@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from enum import Enum
-from typing import Mapping, NamedTuple, Tuple, TypedDict
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     all_of,
@@ -25,10 +28,10 @@ from .utils.temperature import check_temperature, TempParamDict, TempParamType
 
 
 class PSUWattageParams(TypedDict, total=False):
-    levels_abs_upper: Tuple[float, float]
-    levels_abs_lower: Tuple[float, float]
-    levels_perc_upper: Tuple[float, float]
-    levels_perc_lower: Tuple[float, float]
+    levels_abs_upper: tuple[float, float]
+    levels_abs_lower: tuple[float, float]
+    levels_perc_upper: tuple[float, float]
+    levels_perc_lower: tuple[float, float]
 
 
 default_psu_temperature_parameters = TempParamDict(

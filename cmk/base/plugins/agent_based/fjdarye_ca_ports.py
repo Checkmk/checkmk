@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, List, Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
 
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
@@ -29,7 +30,7 @@ FjdaryeCAPortsSection = Mapping[str, Mapping[str, float | str]]
 
 
 def parse_fjdarye_ca_ports(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> FjdaryeCAPortsSection:
     map_modes = {
         "11": "CA",

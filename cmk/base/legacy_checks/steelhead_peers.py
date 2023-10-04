@@ -22,17 +22,17 @@ def inventory_steelhead_peers(info):
 def check_steelhead_peers(item, _no_params, info):
     for host, version, client, client_type in info:
         if host == item:
-            return 0, "Version: %s, Client Address: %s (%s)" % (version, client, client_type)
+            return 0, f"Version: {version}, Client Address: {client} ({client_type})"
     return 2, "Peer not connected"
 
 
 check_info["steelhead_peers"] = LegacyCheckDefinition(
     detect=DETECT_STEELHEAD,
-    check_function=check_steelhead_peers,
-    discovery_function=inventory_steelhead_peers,
-    service_name="Peer %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2.6.1.1",
         oids=["2", "3", "4", "5"],
     ),
+    service_name="Peer %s",
+    discovery_function=inventory_steelhead_peers,
+    check_function=check_steelhead_peers,
 )

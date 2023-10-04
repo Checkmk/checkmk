@@ -22,6 +22,7 @@ import statistics
 import time
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager
+from types import TracebackType
 from typing import Any, Literal
 from unittest import mock
 
@@ -368,7 +369,12 @@ program_start num_hosts num_services core_pid edition'
             single_conn.__enter__()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         if exc_type:
             raise
         for single_conn in self.connections.values():
@@ -628,7 +634,7 @@ class MockSingleSiteConnection:
 
         self.socket = FakeSocket(self)
 
-    def _format_sent_queries(self):
+    def _format_sent_queries(self) -> str:
         if not self._sent_queries:
             return f"\n\nNo queries were sent to site {self._site_name}."
         formatted_queries = "\n".join(["* " + repr(query.decode()) for query in self._sent_queries])
@@ -738,7 +744,7 @@ def _show_columns(query: str) -> bool:
 
 def _default_tables() -> dict[TableName, ResultList]:
     # Just that parse_check_mk_version is happy we replace the dashes with dots.
-    _today = str(dt.datetime.utcnow().date()).replace("-", ".")
+    _today = str(dt.datetime.now(tz=dt.timezone.utc).date()).replace("-", ".")
     _program_start_timestamp = int(time.time())
     return {
         "status": [

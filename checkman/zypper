@@ -10,7 +10,8 @@ description:
 
  The check gets critical if there are security updates available.
  It gets warning, if there are other updates available or if package
- locks exist (created by {zypper addlock}).
+ locks exist (created by {zypper addlock}). This is configurable via
+ the rule {Zypper Updates}.
 
 discovery:
  One service is created for each system where the {mk_zypper}

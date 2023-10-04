@@ -6,7 +6,7 @@
 
 #include "stdafx.h"
 
-#include "modules.h"
+#include "wnx/modules.h"
 
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -16,14 +16,14 @@
 #include <ranges>
 #include <string>
 
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "zip.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
+#include "wnx/zip.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;

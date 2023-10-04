@@ -33,13 +33,13 @@ def check_alcatel_temp(item, params, info):
 
 check_info["alcatel_temp"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL,
-    check_function=check_alcatel_temp,
-    discovery_function=inventory_alcatel_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.800.1.1.1.3.1.1.3.1",
         oids=["4", "5"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_alcatel_temp,
+    check_function=check_alcatel_temp,
+    check_ruleset_name="temperature",
     check_default_parameters=ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

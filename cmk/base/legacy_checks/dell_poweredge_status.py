@@ -15,9 +15,6 @@ from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
 
 check_info["dell_poweredge_status"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,
-    check_function=check_dell_poweredge_status,
-    discovery_function=inventory_dell_poweredge_status,
-    service_name="PowerEdge Health",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5",
         oids=[
@@ -30,4 +27,7 @@ check_info["dell_poweredge_status"] = LegacyCheckDefinition(
             "4.300.10.1.49.1",
         ],
     ),
+    service_name="PowerEdge Health",
+    discovery_function=inventory_dell_poweredge_status,
+    check_function=check_dell_poweredge_status,
 )

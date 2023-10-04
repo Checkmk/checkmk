@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_bytes_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
     discover_azure_by_metrics,
@@ -34,9 +34,10 @@ def check_azure_databases_storage(_item, params, resource):
 
 
 check_info["azure_databases.storage"] = LegacyCheckDefinition(
+    service_name="DB %s Storage",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_storage_percent"),
     check_function=check_azure_databases_storage,
-    service_name="DB %s Storage",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -56,9 +57,10 @@ def check_azure_databases_deadlock(_item, params, resource):
 
 
 check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
+    service_name="DB %s Deadlocks",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_deadlock"),
     check_function=check_azure_databases_deadlock,
-    service_name="DB %s Deadlocks",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -77,14 +79,14 @@ def check_azure_databases_cpu(_item, params, resource):
     if cpu_percent is not None:
         if "cpu_percent_levels" in params:
             util_params["levels"] = params["cpu_percent_levels"]
-        for y in check_cpu_util(cpu_percent.value, util_params):
-            yield y
+        yield from check_cpu_util(cpu_percent.value, util_params)
 
 
 check_info["azure_databases.cpu"] = LegacyCheckDefinition(
+    service_name="DB %s CPU",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_cpu_percent"),
     check_function=check_azure_databases_cpu,
-    service_name="DB %s CPU",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -110,9 +112,10 @@ def check_azure_databases_dtu(_item, params, resource):
 
 
 check_info["azure_databases.dtu"] = LegacyCheckDefinition(
+    service_name="DB %s DTU",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_dtu_consumption_percent"),
     check_function=check_azure_databases_dtu,
-    service_name="DB %s DTU",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -138,11 +141,12 @@ def check_azure_databases_connections(_item, params, resource):
 
 
 check_info["azure_databases.connections"] = LegacyCheckDefinition(
+    service_name="DB %s Connections",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics(
         "average_connection_successful", "average_connection_failed"
     ),
     check_function=check_azure_databases_connections,
-    service_name="DB %s Connections",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -155,14 +159,18 @@ check_info["azure_databases.connections"] = LegacyCheckDefinition(
 @get_data_or_go_stale
 def check_azure_databases(_item, _no_params, resource):
     for k, v in iter_resource_attributes(resource):
-        yield 0, "%s: %s" % (k, v)
+        yield 0, f"{k}: {v}"
+
+
+def discover_azure_databases(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["azure_databases"] = LegacyCheckDefinition(
     parse_function=parse_resources,
-    discovery_function=discover(),
-    check_function=check_azure_databases,
     service_name="DB %s",
+    discovery_function=discover_azure_databases,
+    check_function=check_azure_databases,
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),

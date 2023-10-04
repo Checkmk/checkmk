@@ -20,10 +20,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_splunk_health(info):
+def parse_splunk_health(string_table):
     parsed = {}
 
-    for state_detail in info:
+    for state_detail in string_table:
         try:
             if len(state_detail) == 2:
                 name, health = state_detail
@@ -57,11 +57,11 @@ def check_splunk_health(_no_item, params, parsed):
         except KeyError:
             continue
 
-        yield params[health], "%s: %s" % (key, health)
+        yield params[health], f"{key}: {health}"
 
         for name in sorted(parsed[key]["feature"]):
             if name != "Overall state":
-                long_output += "%s - State: %s\n" % (
+                long_output += "{} - State: {}\n".format(
                     name.replace("_", " "),
                     parsed[key]["feature"][name],
                 )
@@ -71,9 +71,9 @@ def check_splunk_health(_no_item, params, parsed):
 
 check_info["splunk_health"] = LegacyCheckDefinition(
     parse_function=parse_splunk_health,
-    check_function=check_splunk_health,
-    discovery_function=inventory_splunk_health,
     service_name="Splunk Health",
+    discovery_function=inventory_splunk_health,
+    check_function=check_splunk_health,
     check_ruleset_name="splunk_health",
     check_default_parameters={
         "green": 0,

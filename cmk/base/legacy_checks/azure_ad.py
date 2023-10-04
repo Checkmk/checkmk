@@ -6,22 +6,18 @@
 
 # mypy: disable-error-code="var-annotated"
 
+import json
 import time
 from calendar import timegm
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
-from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR, json
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
 
 
-def parse_azure_ad(info):
+def parse_azure_ad(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         key = line[0]
         value = AZURE_AGENT_SEPARATOR.join(line[1:])
         if key == "users_count":
@@ -64,8 +60,9 @@ def discover_ad_users(parsed):
         yield None, {}
 
 
-@get_parsed_item_data
-def check_azure_users(item, _no_params, data):
+def check_azure_users(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     count = data.get("count")
     if count is not None:
         yield check_levels(
@@ -79,9 +76,9 @@ def check_azure_users(item, _no_params, data):
 
 check_info["azure_ad"] = LegacyCheckDefinition(
     parse_function=parse_azure_ad,
+    service_name="AD Users",
     discovery_function=discover_ad_users,
     check_function=check_azure_users,
-    service_name="AD Users",
 )
 
 # .
@@ -109,8 +106,9 @@ def discover_sync(parsed):
     ]
 
 
-@get_parsed_item_data
-def check_azure_sync(item, params, data):
+def check_azure_sync(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     sync_enabled = data.get("onPremisesSyncEnabled")
     if sync_enabled is None:
         yield 1, "Synchronization has been disabled"
@@ -132,9 +130,9 @@ def check_azure_sync(item, params, data):
 
 
 check_info["azure_ad.sync"] = LegacyCheckDefinition(
-    parse_function=parse_azure_ad,
+    service_name="AD Sync %s",
+    sections=["azure_ad"],
     discovery_function=discover_sync,
     check_function=check_azure_sync,
-    service_name="AD Sync %s",
     check_ruleset_name="azure_ad",
 )

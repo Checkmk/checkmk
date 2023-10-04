@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Callable, Dict, Generator, List, Mapping, Optional, Tuple, Union
+from collections.abc import Callable, Generator, Mapping
 
 from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = List[Tuple[str, StringTable]]
+Section = list[tuple[str, StringTable]]
 
-Converter = Union[str, Tuple[str, Callable[[str], Union[str, float, None]]]]
+Converter = str | tuple[str, Callable[[str], str | float | None]]
 
 
 def parse_dmidecode(string_table: StringTable) -> Section:
@@ -115,7 +115,7 @@ def inventory_dmidecode(section: Section) -> InventoryResult:
 
 def _dispatch_subsection(
     title: str,
-    lines: List[List[str]],
+    lines: list[list[str]],
     memory_array_number: int,
 ) -> InventoryResult:
     if title == "BIOS Information":
@@ -143,7 +143,7 @@ def _dispatch_subsection(
         return
 
 
-def _make_inventory_bios(lines: List[List[str]]) -> Attributes:
+def _make_inventory_bios(lines: list[list[str]]) -> Attributes:
     return Attributes(
         path=["software", "bios"],
         inventory_attributes=_make_dict(
@@ -159,7 +159,7 @@ def _make_inventory_bios(lines: List[List[str]]) -> Attributes:
     )
 
 
-def _make_inventory_system(lines: List[List[str]]) -> Attributes:
+def _make_inventory_system(lines: list[list[str]]) -> Attributes:
     return Attributes(
         path=["hardware", "system"],
         inventory_attributes=_make_dict(
@@ -176,7 +176,7 @@ def _make_inventory_system(lines: List[List[str]]) -> Attributes:
     )
 
 
-def _make_inventory_chassis(lines: List[List[str]]) -> Attributes:
+def _make_inventory_chassis(lines: list[list[str]]) -> Attributes:
     return Attributes(
         path=["hardware", "chassis"],
         inventory_attributes=_make_dict(
@@ -190,7 +190,7 @@ def _make_inventory_chassis(lines: List[List[str]]) -> Attributes:
 
 
 # Note: This node is also being filled by lnx_cpuinfo
-def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, None, None]:
+def _make_inventory_processor(lines: list[list[str]]) -> Generator[Attributes, None, None]:
     vendor_map = {
         "GenuineIntel": "intel",
         "Intel(R) Corporation": "intel",
@@ -216,7 +216,7 @@ def _make_inventory_processor(lines: List[List[str]]) -> Generator[Attributes, N
     )
 
 
-def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int) -> Attributes:
+def _make_inventory_physical_mem_array(lines: list[list[str]], array_number: int) -> Attributes:
     # We expect several possible arrays
     return Attributes(
         path=["hardware", "memory", "arrays", str(array_number)],
@@ -233,7 +233,7 @@ def _make_inventory_physical_mem_array(lines: List[List[str]], array_number: int
 
 
 def _make_inventory_mem_device(
-    lines: List[List[str]],
+    lines: list[list[str]],
     array_number: int,
 ) -> Generator[TableRow, None, None]:
     device = _make_dict(
@@ -270,10 +270,10 @@ def _make_inventory_mem_device(
 
 
 def _make_dict(
-    lines: List[List[str]],
+    lines: list[list[str]],
     converter_map: Mapping[str, Converter],
-) -> Dict[str, Union[float, str, None]]:
-    dict_: Dict[str, Union[float, str, None]] = {}
+) -> dict[str, float | str | None]:
+    dict_: dict[str, float | str | None] = {}
     for name, raw_value, *_rest in lines:
         if name not in converter_map or raw_value == "Not Specified":
             continue
@@ -305,14 +305,14 @@ register.inventory_plugin(
 #
 
 
-def _parse_date(value: str) -> Optional[float]:
+def _parse_date(value: str) -> float | None:
     try:
         return time.mktime(time.strptime(value, "%m/%d/%Y"))
     except ValueError:
         return None
 
 
-def _parse_size(v: str) -> Optional[float]:  # into Bytes (int)
+def _parse_size(v: str) -> float | None:  # into Bytes (int)
     if not v or v == "Unknown":
         return None
 
@@ -328,7 +328,7 @@ def _parse_size(v: str) -> Optional[float]:  # into Bytes (int)
     return int(parts[0])
 
 
-def _parse_speed(v: str) -> Optional[float]:  # into Hz (float)
+def _parse_speed(v: str) -> float | None:  # into Hz (float)
     if not v or v == "Unknown":
         return None
 
@@ -344,7 +344,7 @@ def _parse_speed(v: str) -> Optional[float]:  # into Hz (float)
     return None
 
 
-def _parse_voltage(v: str) -> Optional[float]:
+def _parse_voltage(v: str) -> float | None:
     if not v or v == "Unknown":
         return None
 

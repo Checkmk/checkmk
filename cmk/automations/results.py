@@ -9,29 +9,27 @@ from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, astuple, dataclass
-from typing import Any, TypeAlias, TypedDict, TypeVar
+from typing import Any, TypeAlias, TypeVar
+
+from typing_extensions import TypedDict
 
 from cmk.utils import version as cmk_version
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
-from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    Item,
-    LegacyCheckParameters,
-    MetricTuple,
-    ParametersTypeAlias,
-    ServiceDetails,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.servicename import Item, ServiceName
 
+from cmk.checkengine.checking import CheckPluginNameStr
+from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 Gateway: TypeAlias = tuple[
@@ -114,26 +112,6 @@ class DiscoveryPre22NameResult(ServiceDiscoveryResult):
 
 
 result_type_registry.register(DiscoveryPre22NameResult)
-
-
-@dataclass(frozen=True)
-class CheckPreviewEntry:
-    check_source: str
-    check_plugin_name: str
-    ruleset_name: RulesetName | None
-    item: Item
-    discovered_parameters: LegacyCheckParameters
-    effective_parameters: LegacyCheckParameters
-    description: str
-    state: int | None
-    output: str
-    # Service discovery never uses the perfdata in the check table. That entry
-    # is constantly discarded, yet passed around(back and forth) as part of the
-    # discovery result in the request elements. Some perfdata VALUES are not parsable
-    # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
-    metrics: list[MetricTuple]
-    labels: dict[str, str]
-    found_on_nodes: list[HostName]
 
 
 @dataclass
@@ -542,7 +520,7 @@ result_type_registry.register(CreateDiagnosticsDumpResult)
 
 @dataclass
 class BakeAgentsResult(ABCAutomationResult):
-    warnings_as_json: str
+    output: str | None
 
     @staticmethod
     def automation_call() -> str:

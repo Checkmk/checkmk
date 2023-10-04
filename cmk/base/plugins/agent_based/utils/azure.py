@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from datetime import datetime
-from typing import Any, Callable, Generator, Iterable, Mapping, NamedTuple, Sequence
+from typing import Any, NamedTuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..agent_based_api.v1 import check_levels, IgnoreResultsError, render, Service
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -30,8 +31,8 @@ class Resource(NamedTuple):
     kind: str | None = None
     location: str | None = None
     tags: Mapping[str, str] = {}
-    properties: Mapping = {}
-    specific_info: Mapping = {}
+    properties: Mapping[Any, Any] = {}
+    specific_info: Mapping[Any, Any] = {}
     metrics: Mapping[str, AzureMetric] = {}
     subscription: str | None = None
 
@@ -58,8 +59,8 @@ class FrontendIpConfiguration(BaseModel):
     id: str
     name: str
     privateIPAllocationMethod: str
-    privateIPAddress: str | None
-    public_ip_address: PublicIP | None
+    privateIPAddress: str | None = Field(None)
+    public_ip_address: PublicIP | None = Field(None)
 
 
 Section = Mapping[str, Resource]

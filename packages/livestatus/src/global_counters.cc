@@ -6,6 +6,7 @@
 #include "livestatus/global_counters.h"
 
 #include <chrono>
+#include <compare>
 #include <mutex>
 #include <optional>
 #include <ratio>

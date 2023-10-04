@@ -8,9 +8,11 @@ import functools
 from collections.abc import Callable, Generator
 from typing import Any
 
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName
+from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -29,7 +31,6 @@ from cmk.base.api.agent_based.register.utils import (
     validate_function_arguments,
     validate_ruleset_type,
 )
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

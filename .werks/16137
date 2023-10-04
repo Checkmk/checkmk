@@ -1,0 +1,76 @@
+Title: user_config: allow update of custom user attributes
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1695731850
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue reported, where you could create a user
+with custom attributes, but you could not update the user's custom
+attributes.
+
+E.g.
+
+Calling this endpoint with the following payload would work, providing
+the custom attribute 'attr_1' exists.
+
+POST check_mk/api/v1/domain-types/user_config/collections/all
+
+C+:
+{
+        "username": "user_1",
+        "fullname": "user_1",
+        "auth_option": {
+            "auth_type": "password",
+            "password": "password_with_at_least_12_characters"
+        },
+        "disable_login": false,
+        "contact_options": {
+            "email": "user@example.com"
+        },
+        "pager_address": "",
+        "idle_timeout": {"option": "global"},
+        "roles": ["user"],
+        "authorized_sites": ["heute"],
+        "contactgroups": ["all"],
+        "disable_notifications": {"disable": false},
+        "language": "de",
+        "temperature_unit": "celsius",
+        "interface_options": {
+            "interface_theme": "dark"
+        }
+        "attr_1": "some_text",
+}
+C-:
+
+However, attempting to modify this user with the edit user endpoint
+
+PUT check_mk/api/v1/objects/user_config/user_1
+
+C+:
+{
+    "attr1": "edited_text"
+}
+C-:
+
+would fail and return a response like so
+
+C+:
+{
+    "title": "Bad Request",
+    "status": 400,
+    "detail": "These fields have problems: _schema",
+    "fields": {
+        "_schema": [
+            "Unknown Attribute: 'attr_1'"
+        ]
+    }
+}
+C-:
+
+We now check for custom user attributes on the update endpoint and allow them
+if they exist, just like the create user endpoint.
+

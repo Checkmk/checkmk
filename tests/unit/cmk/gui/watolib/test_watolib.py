@@ -33,7 +33,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_config_domains += [
             "dcd",
             "mknotifyd",
@@ -67,7 +67,7 @@ def test_registered_automation_commands() -> None:
         "rename-hosts-uuid-link",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_automation_commands += [
             "execute-dcd-command",
             "get-agent-requests",
@@ -151,6 +151,7 @@ def test_registered_configvars() -> None:
         "rule_optimizer",
         "selection_livetime",
         "service_view_grouping",
+        "session_mgmt",
         "show_livestatus_errors",
         "show_mode",
         "sidebar_notify_interval",
@@ -179,12 +180,10 @@ def test_registered_configvars() -> None:
         "use_new_descriptions_for",
         "user_downtime_timeranges",
         "user_icons_and_actions",
-        "user_idle_timeout",
         "user_localizations",
         "view_action_defaults",
         "virtual_host_trees",
         "wato_activation_method",
-        "wato_activate_changes_concurrency",
         "wato_activate_changes_comment_mode",
         "wato_hide_filenames",
         "wato_hide_folders_without_read_permissions",
@@ -203,9 +202,10 @@ def test_registered_configvars() -> None:
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",
+        "experimental_features",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_vars += [
             "agent_bakery_logging",
             "agent_deployment_enabled",
@@ -216,6 +216,7 @@ def test_registered_configvars() -> None:
             "alert_handler_timeout",
             "alert_logging",
             "bake_agents_on_restart",
+            "apply_bake_revision",
             "cmc_authorization",
             "cmc_check_helpers",
             "cmc_check_timeout",
@@ -299,7 +300,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_groups += [
             "Dynamic configuration",
             "Automatic agent updates",

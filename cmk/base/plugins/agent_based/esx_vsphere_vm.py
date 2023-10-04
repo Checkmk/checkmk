@@ -2,7 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
@@ -19,7 +19,7 @@ from .utils.esx_vsphere import (
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
-    grouped_values: Dict[str, List[str]] = {}
+    grouped_values: dict[str, list[str]] = {}
     for line in string_table:
         # Do not monitor VM templates
         if line[0] == "config.template" and line[1] == "true":
@@ -125,7 +125,7 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
 
 def _parse_esx_datastore_section(
     vm_values: Mapping[str, Sequence[str]]
-) -> List[ESXDataStore] | None:
+) -> list[ESXDataStore] | None:
     """Parse datastores specific values
 
     # datastore_entries looks like:

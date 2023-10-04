@@ -3,9 +3,9 @@
 //
 #include "pch.h"
 
-#include "firewall.h"
-#include "logger.h"
-#include "on_start.h"
+#include "wnx/firewall.h"
+#include "wnx/logger.h"
+#include "wnx/on_start.h"
 #include "tools/_misc.h"
 
 namespace cma::fw {

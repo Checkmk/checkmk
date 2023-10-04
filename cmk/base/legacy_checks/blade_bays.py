@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE
 # mypy: disable-error-code="var-annotated"
 
 
-def parse_blade_bays(info):
+def parse_blade_bays(string_table):
     map_states = {
         "0": (0, "standby"),
         "1": (0, "on"),
@@ -22,11 +22,11 @@ def parse_blade_bays(info):
     }
 
     parsed = {}
-    for power_domain, block in zip((1, 2), info):
+    for power_domain, block in zip((1, 2), string_table):
         for oid, name, state, ty, identifier, power_str, power_max_str in block:
             itemname = "PD%d %s" % (power_domain, name)
             if itemname in parsed:
-                itemname = "%s %s" % (itemname, oid)
+                itemname = f"{itemname} {oid}"
 
             try:
                 power = int(power_str.rstrip("W"))
@@ -63,19 +63,16 @@ def check_blade_bays(item, params, parsed):
     state, state_readable = data["device_state"]
     yield state, "Status: %s" % state_readable
 
-    for res in check_elphase(item, params, parsed):
-        yield res
+    yield from check_elphase(item, params, parsed)
 
     data = parsed[item]
-    yield 0, "Max. power: %s W, Type: %s, ID: %s" % (data["power_max"], data["type"], data["id"])
+    yield 0, "Max. power: {} W, Type: {}, ID: {}".format(
+        data["power_max"], data["type"], data["id"]
+    )
 
 
 check_info["blade_bays"] = LegacyCheckDefinition(
     detect=DETECT_BLADE,
-    parse_function=parse_blade_bays,
-    discovery_function=inventory_blade_bays,
-    check_function=check_blade_bays,
-    service_name="BAY %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2.3.51.2.2.10.2.1.1",
@@ -86,4 +83,8 @@ check_info["blade_bays"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "5", "6", "2", "1", "7", "8"],
         ),
     ],
+    parse_function=parse_blade_bays,
+    service_name="BAY %s",
+    discovery_function=inventory_blade_bays,
+    check_function=check_blade_bays,
 )

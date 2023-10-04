@@ -27,20 +27,20 @@ def check_mongodb_locks(_no_item, params, info):
         param_name = "clients" if what.startswith("active") else "queue"
         warn, crit = None, None
         state = 0
-        if "%s_%s_locks" % (param_name, name) in params:
-            warn, crit = params["%s_%s_locks" % (param_name, name)]
+        if f"{param_name}_{name}_locks" in params:
+            warn, crit = params[f"{param_name}_{name}_locks"]
             if count >= crit:
                 state = 2
             elif count >= warn:
                 state = 1
-        yield state, "%s-%s: %s" % (param_name.title(), name.title(), count), [
-            ("%s_%s_locks" % (param_name, name), count, warn, crit)
+        yield state, f"{param_name.title()}-{name.title()}: {count}", [
+            (f"{param_name}_{name}_locks", count, warn, crit)
         ]
 
 
 check_info["mongodb_locks"] = LegacyCheckDefinition(
+    service_name="MongoDB Locks",
     discovery_function=inventory_mongodb_locks,
     check_function=check_mongodb_locks,
-    service_name="MongoDB Locks",
     check_ruleset_name="mongodb_locks",
 )

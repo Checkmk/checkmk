@@ -109,12 +109,12 @@ def check_hpux_multipath(item, params, info):
                 hpux_multipath_format_pathstatus(params),
             ),
         )
-    return (0, "%s: %s" % (disk, hpux_multipath_format_pathstatus(pathcounts)))
+    return (0, f"{disk}: {hpux_multipath_format_pathstatus(pathcounts)}")
 
 
 check_info["hpux_multipath"] = LegacyCheckDefinition(
-    check_function=check_hpux_multipath,
-    discovery_function=inventory_hpux_multipath,
     service_name="Multipath %s",
+    discovery_function=inventory_hpux_multipath,
+    check_function=check_hpux_multipath,
     check_ruleset_name="hpux_multipath",
 )

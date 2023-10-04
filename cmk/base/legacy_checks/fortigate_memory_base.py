@@ -16,10 +16,10 @@ fortigate_memory_base_default_levels = {
 }
 
 
-def parse_fortigate_memory_base(info):
+def parse_fortigate_memory_base(string_table):
     try:
-        total = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
-        used = float(info[0][0]) / 100.0 * total
+        total = int(string_table[0][1]) * 1024  # value from device is in kb, we need bytes
+        used = float(string_table[0][0]) / 100.0 * total
     except (IndexError, ValueError):
         return ()
     return used, total
@@ -49,14 +49,14 @@ def check_fortigate_memory_base(_item, params, parsed):
 
 check_info["fortigate_memory_base"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    parse_function=parse_fortigate_memory_base,
-    check_function=check_fortigate_memory_base,
-    discovery_function=inventory_fortigate_memory_base,
-    service_name="Memory",
-    check_ruleset_name="memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.1",
         oids=["4", "5"],
     ),
+    parse_function=parse_fortigate_memory_base,
+    service_name="Memory",
+    discovery_function=inventory_fortigate_memory_base,
+    check_function=check_fortigate_memory_base,
+    check_ruleset_name="memory",
     check_default_parameters=fortigate_memory_base_default_levels,
 )

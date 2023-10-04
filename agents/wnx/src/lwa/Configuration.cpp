@@ -5,7 +5,7 @@
 
 #include "stdafx.h"
 
-#include "Configuration.h"
+#include "lwa/Configuration.h"
 
 #include <ws2spi.h>
 
@@ -17,17 +17,17 @@
 #include <fstream>
 #include <regex>
 
-#include "Configurable.h"
-#include "Logger.h"
+#include "lwa/Configurable.h"
+#include "lwa/stringutil.h"
+#include "lwa/types.h"
+#include "wnx/cfg.h"
+#include "wnx/cvt.h"
+#include "wnx/logger.h"
+
 #define memmove MemMove
 void MemMove(void *dst, const void *src, size_t count);
 #include "SimpleIni.h"
 #undef memmove
-
-#include "cfg.h"
-#include "cvt.h"
-#include "stringutil.h"
-#include "types.h"
 
 namespace fs = std::filesystem;
 

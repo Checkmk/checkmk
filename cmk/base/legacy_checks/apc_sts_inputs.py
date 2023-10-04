@@ -6,7 +6,7 @@
 
 from itertools import cycle
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
@@ -36,25 +36,24 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 # .1.3.6.1.4.1.705.2.4.16.0 499 --> MG-SNMP-STS-MIB::stsmgSource2Frequency.0
 
 
-def parse_apc_sts_inputs(info):
+def parse_apc_sts_inputs(string_table):
     return {
         f"Source {src} Phase {phs}": {
             "voltage": int(voltage) / 10.0,
             "current": int(current) / 10.0,
             "power": int(power),
         }
-        for src, block in enumerate(info, 1)
+        for src, block in enumerate(string_table, 1)
         for (voltage, current, power), phs in zip(block, cycle((1, 2, 3)))
     }
 
 
+def discover_apc_sts_inputs(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["apc_sts_inputs"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
-    parse_function=parse_apc_sts_inputs,
-    discovery_function=discover(),
-    check_function=check_elphase,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.705.2.3.2.1",
@@ -65,5 +64,10 @@ check_info["apc_sts_inputs"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    parse_function=parse_apc_sts_inputs,
+    service_name="Input %s",
+    discovery_function=discover_apc_sts_inputs,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
     check_default_parameters={},
 )

@@ -44,10 +44,10 @@ def check_dell_om_sensors(item, params, info):
 
             temp = int(reading) / 10.0
 
-            dev_warn, dev_crit, dev_warn_lower, dev_crit_lower = [
+            dev_warn, dev_crit, dev_warn_lower, dev_crit_lower = (
                 float(v) / 10 if v else None
                 for v in [dev_warn, dev_crit, dev_warn_lower, dev_crit_lower]
-            ]
+            )
             if not dev_warn_lower:
                 dev_warn_lower = dev_crit_lower
             if not dev_warn:
@@ -65,14 +65,13 @@ def check_dell_om_sensors(item, params, info):
 
 check_info["dell_om_sensors"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_sensors,
-    discovery_function=inventory_dell_om_sensors,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
-    # There is no other way to find out that openmanage is present.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.700.20.1",
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_dell_om_sensors,
+    check_function=check_dell_om_sensors,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (50.0, 60.0)},
 )

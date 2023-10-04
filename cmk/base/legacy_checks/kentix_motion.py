@@ -13,7 +13,7 @@ import time
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any, List
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -31,7 +31,7 @@ class Sensor:
 Section = Mapping[str, Sensor]
 
 
-def parse_kentix_motion(string_table: List[StringTable]) -> Section:
+def parse_kentix_motion(string_table: list[StringTable]) -> Section:
     return {
         index: Sensor(
             value=int(value),
@@ -84,11 +84,6 @@ def check_kentix_motion(
 
 check_info["kentix_motion"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_motion,
-    discovery_function=inventory_kentix_motion,
-    check_function=check_kentix_motion,
-    service_name="Motion Detector %s",
-    check_ruleset_name="motion",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.5",
@@ -99,4 +94,9 @@ check_info["kentix_motion"] = LegacyCheckDefinition(
             oids=["0", "1", "2"],
         ),
     ],
+    parse_function=parse_kentix_motion,
+    service_name="Motion Detector %s",
+    discovery_function=inventory_kentix_motion,
+    check_function=check_kentix_motion,
+    check_ruleset_name="motion",
 )

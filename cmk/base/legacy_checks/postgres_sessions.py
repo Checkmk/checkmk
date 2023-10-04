@@ -19,14 +19,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_postgres_sessions(info):
+def parse_postgres_sessions(string_table):
     parsed = {}
     instance_name = ""
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
@@ -53,7 +54,7 @@ def check_postgres_sessions(item, params, parsed):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     data = parsed[item]
     idle = data["total"]
@@ -64,7 +65,7 @@ def check_postgres_sessions(item, params, parsed):
         ("total", total),
         ("running", running),
     ]:
-        infotext = "%s: %s" % (key.title(), val)
+        infotext = f"{key.title()}: {val}"
         warn, crit = params.get(key, (None, None))
         state = 0
         if crit is not None and val >= crit:
@@ -72,14 +73,14 @@ def check_postgres_sessions(item, params, parsed):
         elif warn is not None and val >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit})"
         yield state, infotext, [(key, val, warn, crit)]
 
 
 check_info["postgres_sessions"] = LegacyCheckDefinition(
     parse_function=parse_postgres_sessions,
+    service_name="PostgreSQL Daemon Sessions %s",
     discovery_function=inventory_postgres_sessions,
     check_function=check_postgres_sessions,
-    service_name="PostgreSQL Daemon Sessions %s",
     check_ruleset_name="postgres_instance_sessions",
 )

@@ -25,11 +25,11 @@ def check_packeteer_ps_status(_no_item, _no_params, info):
 
 check_info["packeteer_ps_status"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
-    discovery_function=inventory_packeteer_ps_status,
-    check_function=check_packeteer_ps_status,
-    service_name="Power Supply Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2334.2.1.5",
         oids=["8", "10"],
     ),
+    service_name="Power Supply Status",
+    discovery_function=inventory_packeteer_ps_status,
+    check_function=check_packeteer_ps_status,
 )

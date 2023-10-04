@@ -12,11 +12,11 @@ from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL
 
 check_info["alcatel_cpu"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL,
-    check_function=check_alcatel_cpu,
-    discovery_function=inventory_alcatel_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.800.1.2.1.16.1.1.1",
         oids=["13"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_alcatel_cpu,
+    check_function=check_alcatel_cpu,
 )

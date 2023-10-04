@@ -34,11 +34,11 @@ def check_dell_chassis_io(_no_item, _no_params, info):
 
 check_info["dell_chassis_io"] = LegacyCheckDefinition(
     detect=DETECT_CHASSIS,
-    check_function=check_dell_chassis_io,
-    discovery_function=inventory_dell_chassis_io,
-    service_name="Overall IO Module Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.3.1",
         oids=["2"],
     ),
+    service_name="Overall IO Module Status",
+    discovery_function=inventory_dell_chassis_io,
+    check_function=check_dell_chassis_io,
 )

@@ -48,10 +48,10 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_rabbitmq_cluster(info):
+def parse_rabbitmq_cluster(string_table):
     parsed = {}
 
-    for clusters in info:
+    for clusters in string_table:
         try:
             cluster = json.loads(clusters[0])
         except IndexError:
@@ -122,14 +122,14 @@ def check_rabbitmq_cluster(_no_item, params, parsed):
         ("erlang_version"),
     ]:
         info_value = info_data.get(info_key)
-        yield 0, "%s: %s" % (info_key.replace("_", " ").capitalize(), info_value)
+        yield 0, "{}: {}".format(info_key.replace("_", " ").capitalize(), info_value)
 
 
 check_info["rabbitmq_cluster"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_cluster,
-    check_function=check_rabbitmq_cluster,
-    discovery_function=inventory_rabbitmq_cluster,
     service_name="RabbitMQ Cluster",
+    discovery_function=inventory_rabbitmq_cluster,
+    check_function=check_rabbitmq_cluster,
 )
 
 
@@ -162,9 +162,10 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
 
 
 check_info["rabbitmq_cluster.messages"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_cluster_messages,
-    discovery_function=inventory_rabbitmq_cluster_messages,
     service_name="RabbitMQ Cluster Messages",
+    sections=["rabbitmq_cluster"],
+    discovery_function=inventory_rabbitmq_cluster_messages,
+    check_function=check_rabbitmq_cluster_messages,
     check_ruleset_name="rabbitmq_cluster_messages",
 )
 
@@ -212,8 +213,9 @@ def _handle_output(params, value, key, infotext, hr_func):
 
 
 check_info["rabbitmq_cluster.stats"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_cluster_stats,
-    discovery_function=inventory_rabbitmq_cluster_stats,
     service_name="RabbitMQ Cluster Stats",
+    sections=["rabbitmq_cluster"],
+    discovery_function=inventory_rabbitmq_cluster_stats,
+    check_function=check_rabbitmq_cluster_stats,
     check_ruleset_name="rabbitmq_cluster_stats",
 )

@@ -38,7 +38,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import cast, IO, Literal, Set
+from typing import cast, IO, Literal
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -54,7 +54,7 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
@@ -63,22 +63,6 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
-    active_connections,
-    add_internal_attributes,
-    CheckCredentialsResult,
-    connections_by_type,
-    ConnectorType,
-    get_connection,
-    get_user_attributes,
-    load_cached_profile,
-    load_roles,
-    new_user_template,
-    release_users_lock,
-    user_connector_registry,
-    user_sync_config,
-    UserConnector,
-)
 from cmk.gui.site_config import has_wato_slave_sites
 from cmk.gui.type_defs import Users, UserSpec
 from cmk.gui.valuespec import (
@@ -96,10 +80,33 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
-if cmk_version.is_managed_edition():
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+from ._connections import active_connections, connections_by_type, get_connection
+from ._connector import CheckCredentialsResult, ConnectorType, UserConnector, UserConnectorRegistry
+from ._roles import load_roles
+from ._user_attribute import get_user_attributes
+from ._user_spec import add_internal_attributes, new_user_template
+from ._user_sync import user_sync_config
+from .store import load_cached_profile, release_users_lock
+
+if cmk_version.edition() is cmk_version.Edition.CME:
+    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore[assignment]
+    default_customer_id = None  # type: ignore[assignment]
+
+
+def register(
+    user_connector_registry: UserConnectorRegistry,
+) -> None:
+    user_connector_registry.register(LDAPUserConnector)
+
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginMail)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginAlias)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginAuthExpire)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginPager)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToContactgroups)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupAttributes)
+    ldap_attribute_plugin_registry.register(LDAPAttributePluginGroupsToRoles)
+
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -212,7 +219,6 @@ def _get_ad_locator():
     return FasterDetectLocator()
 
 
-@user_connector_registry.register
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
@@ -915,7 +921,13 @@ class LDAPUserConnector(UserConnector):
                     _('The configured User-ID attribute "%s" does not exist for the user "%s"')
                     % (user_id_attr, dn)
                 )
-            user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
+
+            try:
+                user_id = self._sanitize_user_id(ldap_user[user_id_attr][0])
+            except ValueError as e:
+                self._logger.warning(f"  SKIP SYNC {e}")
+                continue
+
             if user_id:
                 ldap_user["dn"] = dn  # also add the DN
                 result[user_id] = cast(UserSpec, ldap_user)
@@ -1059,8 +1071,7 @@ class LDAPUserConnector(UserConnector):
             if filt_attr == "cn":
                 result = self._ldap_search(
                     self.get_group_dn(),
-                    "(&%s(cn=%s))"
-                    % (self._ldap_filter("groups"), ldap.filter.escape_filter_chars(filter_val)),
+                    f"(&{self._ldap_filter('groups')}(cn={ldap.filter.escape_filter_chars(filter_val)}))",
                     ["dn", "cn"],
                     self._config["group_scope"],
                 )
@@ -1296,8 +1307,8 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = new_user_template(self.id)
                 mode_create = True
-                if cmk_version.is_managed_edition():
-                    user["customer"] = self._config.get("customer", managed.default_customer_id)
+                if cmk_version.edition() is cmk_version.Edition.CME:
+                    user["customer"] = self._config.get("customer", default_customer_id)
 
             return mode_create, user
 
@@ -1331,8 +1342,7 @@ class LDAPUserConnector(UserConnector):
 
             if self._create_users_only_on_login() and mode_create:
                 self._logger.info(
-                    '  SKIP SYNC "%s" (Only create user of "%s" connector on login)'
-                    % (user_id, user_connection_id)
+                    f'  SKIP SYNC "{user_id}" (Only create user of "{user_connection_id}" connector on login)'
                 )
                 continue
 
@@ -1356,8 +1366,7 @@ class LDAPUserConnector(UserConnector):
                         continue  # added suffix, still name conflict
                 else:
                     self._logger.info(
-                        '  SKIP SYNC "%s" (name conflict with user from "%s" connector)'
-                        % (user_id, user_connection_id)
+                        f'  SKIP SYNC "{user_id}" (name conflict with user from "{user_connection_id}" connector)'
                     )
                     continue  # name conflict, different connector
 
@@ -1430,7 +1439,7 @@ class LDAPUserConnector(UserConnector):
 
         self._set_last_sync_time()
 
-    def _find_changed_user_keys(self, keys: Set[str], user: Mapping, new_user: Mapping) -> dict:
+    def _find_changed_user_keys(self, keys: set[str], user: Mapping, new_user: Mapping) -> dict:
         changed = {}
         for key in keys:
             # Skip user notification rules, not relevant here
@@ -1628,7 +1637,7 @@ class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[type[LDAPAt
 
 
 class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
-    """Base class for all builtin based sync plugins"""
+    """Base class for all built-in based sync plugins"""
 
     @property
     def is_builtin(self) -> bool:
@@ -1696,7 +1705,7 @@ def register_user_attribute_sync_plugins() -> None:
                         ),
                     ],
                 ),
-                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: ldap_sync_simple(
+                "sync_func": lambda self, connection, plugin, params, user_id, ldap_user, user: _ldap_sync_simple(
                     user_id, ldap_user, user, plugin, self.needed_attributes(connection, params)[0]
                 ),
             },
@@ -1720,7 +1729,7 @@ def ldap_attr_of_connection(connection_id, attr):
 def ldap_filter_of_connection(connection_id, *args, **kwargs):
     connection = get_connection(connection_id)
     if not connection:
-        # Handle "new connection" situation where there is no connection object existant yet.
+        # Handle "new connection" situation where there is no connection object existent yet.
         # The default type is "Active directory", so we use it here.
         return ldap_filter_map["ad"].get(args[0], "(objectclass=*)")
 
@@ -1728,7 +1737,7 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
     return connection._ldap_filter(*args, **kwargs)
 
 
-def ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str) -> dict:
+def _ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, attr: str) -> dict:
     if attr in ldap_user:
         attr_value = ldap_user[attr][0]
         # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
@@ -1738,7 +1747,7 @@ def ldap_sync_simple(user_id: str, ldap_user: dict, user: dict, user_attr: str, 
     return {}
 
 
-def get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]]:
+def _get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]]:
     choices: list[tuple[str | None, str]] = []
 
     if add_this:
@@ -1757,13 +1766,13 @@ def get_connection_choices(add_this: bool = True) -> list[tuple[str | None, str]
 # depending on the LDAP server to communicate with
 # OPENLDAP _member_attr() -> memberuid
 # AD _member_attr() -> member
-def get_group_member_cmp_val(connection, user_id, ldap_user):
+def _get_group_member_cmp_val(connection, user_id, ldap_user):
     return user_id.lower() if connection._member_attr() == "memberuid" else ldap_user["dn"]
 
 
-def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
+def _get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_connection_ids):
     # Figure out how to check group membership.
-    user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
+    user_cmp_val = _get_group_member_cmp_val(connection, user_id, ldap_user)
 
     # Get list of LDAP connections to query
     connections = {connection}
@@ -1815,13 +1824,12 @@ def _group_membership_parameters():
                 ),
                 # TODO typing: ListChoice doesn't actually allow None in the choice tuples
                 # (aka ListChoiceChoice), yet that's what we get here.
-                choices=lambda: get_connection_choices(add_this=False),  # type: ignore
+                choices=lambda: _get_connection_choices(add_this=False),  # type: ignore
             ),
         ),
     ]
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -1887,7 +1895,6 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -1919,7 +1926,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
         ldap_user: dict,
         user: dict,
     ) -> dict:
-        return ldap_sync_simple(
+        return _ldap_sync_simple(
             user_id,
             ldap_user,
             user,
@@ -1955,7 +1962,6 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
     """Checks whether or not the user auth must be invalidated
 
@@ -2082,7 +2088,6 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -2096,7 +2101,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
     def help(self):
         return _(
             "This plugin synchronizes a field of the users LDAP account to the pager attribute "
-            "of the Setup user accounts, which is then forwarded to the monitoring core and can be used"
+            "of the Setup user accounts, which is then forwarded to the monitoring core and can be used "
             "for notifications. By default the LDAP attribute <tt>mobile</tt> is used."
         )
 
@@ -2115,7 +2120,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
         ldap_user: dict,
         user: dict,
     ) -> dict:
-        return ldap_sync_simple(
+        return _ldap_sync_simple(
             user_id,
             ldap_user,
             user,
@@ -2151,7 +2156,6 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -2187,7 +2191,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         cg_names = load_contact_group_information().keys()
 
         return {
-            "contactgroups": get_groups_of_user(
+            "contactgroups": _get_groups_of_user(
                 connection,
                 user_id,
                 ldap_user,
@@ -2216,7 +2220,6 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
     """Populate user attributes based on group memberships within LDAP"""
 
@@ -2260,7 +2263,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         cg_names = list({g["cn"] for g in params["groups"]})
 
         # Get the group names the user is member of
-        groups = get_groups_of_user(
+        groups = _get_groups_of_user(
             connection,
             user_id,
             ldap_user,
@@ -2354,7 +2357,6 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
 #   '----------------------------------------------------------------------'
 
 
-@ldap_attribute_plugin_registry.register
 class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
     @property
     def ident(self) -> str:
@@ -2394,7 +2396,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         # posixGroup objects use the memberUid attribute to specify the group
         # memberships. This is the username instead of the users DN. So the
         # username needs to be used for filtering here.
-        user_cmp_val = get_group_member_cmp_val(connection, user_id, ldap_user)
+        user_cmp_val = _get_group_member_cmp_val(connection, user_id, ldap_user)
 
         roles = []
 
@@ -2492,7 +2494,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                                         ),
                                         DropdownChoice(
                                             title=_("Search<nobr> </nobr>in"),
-                                            choices=get_connection_choices,
+                                            choices=_get_connection_choices,
                                             default_value=None,
                                         ),
                                     ],

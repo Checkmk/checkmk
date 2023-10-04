@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _valuespec_special_agents_storeonce4x():
@@ -46,7 +45,7 @@ def _valuespec_special_agents_storeonce4x():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:storeonce4x",
+        name=RuleGroup.SpecialAgents("storeonce4x"),
         valuespec=_valuespec_special_agents_storeonce4x,
     )
 )

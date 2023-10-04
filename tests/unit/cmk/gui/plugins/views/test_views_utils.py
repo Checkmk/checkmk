@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import base as painter_base

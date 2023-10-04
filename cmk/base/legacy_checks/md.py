@@ -117,10 +117,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_md(info):  # pylint: disable=too-many-branches
+def parse_md(string_table):  # pylint: disable=too-many-branches
     parsed = {}
     instance = {}
-    for line in (l for l in info if l):
+    for line in (l for l in string_table if l):
         if len(line) >= 5 and line[0].startswith("md") and line[1] == ":":
             if line[3].startswith("(") and line[3].endswith(")"):
                 raid_state = line[2] + line[3]
@@ -195,13 +195,13 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
     spare_disks = data["spare_disks"]
     failed_disks = data["failed_disks"]
     active_disks = data["active_disks"]
-    yield 0, "Spare: %s, Failed: %s, Active: %s" % (spare_disks, failed_disks, active_disks)
+    yield 0, f"Spare: {spare_disks}, Failed: {failed_disks}, Active: {active_disks}"
 
     num_disks = data.get("num_disks")
     expected_disks = data.get("expected_disks")
     working_disks = data.get("working_disks")
     if num_disks is not None and expected_disks is not None and working_disks is not None:
-        infotext = "Status: %s/%s, %s" % (num_disks, expected_disks, working_disks)
+        infotext = f"Status: {num_disks}/{expected_disks}, {working_disks}"
         if num_disks == expected_disks and active_disks == working_disks.count("U"):
             yield 0, infotext
         else:
@@ -230,16 +230,16 @@ def check_md(item, _no_params, parsed):  # pylint: disable=too-many-branches
     if "check_values" in data:
         header = "[Check]"
         infotexts.append("Status: %s" % data["check_values"])
-        yield 0, "%s %s" % (header, ", ".join(infotexts))
+        yield 0, "{} {}".format(header, ", ".join(infotexts))
 
     elif infotexts:
-        yield 1, "%s %s" % (header, ", ".join(infotexts))
+        yield 1, "{} {}".format(header, ", ".join(infotexts))
 
 
 check_info["md"] = LegacyCheckDefinition(
     parse_function=parse_md,
+    service_name="MD Softraid %s",
     discovery_function=inventory_md,
     check_function=check_md,
-    service_name="MD Softraid %s",
     check_ruleset_name="raid",
 )

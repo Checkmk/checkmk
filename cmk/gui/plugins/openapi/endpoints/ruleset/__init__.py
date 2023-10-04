@@ -14,11 +14,11 @@ from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
+from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively, visible_ruleset, visible_rulesets
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
@@ -59,7 +59,7 @@ def list_rulesets(param):
         rulesets = all_sets
 
     ruleset_collection: list[DomainObject] = []
-    for ruleset in rulesets.get_rulesets().values():
+    for ruleset in visible_rulesets(rulesets.get_rulesets()).values():
         ruleset_collection.append(_serialize_ruleset(ruleset))
 
     # We don't do grouping like in the GUI. This would not add any value here.
@@ -85,16 +85,20 @@ def show_ruleset(param):
     ruleset_name = param["ruleset_name"]
     user.need_permission("wato.rulesets")
 
+    ruleset_problem = problem(
+        title="Unknown ruleset.",
+        detail=f"The ruleset of name {ruleset_name!r} is not known.",
+        status=404,
+    )
     try:
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(ruleset_name).get(
             ruleset_name
         )
     except KeyError:
-        raise ProblemException(
-            title="Unknown ruleset.",
-            detail=f"The ruleset of name {ruleset_name!r} is not known.",
-            status=404,
-        )
+        return ruleset_problem
+
+    if not visible_ruleset(ruleset.rulespec.name):
+        return ruleset_problem
 
     return serve_json(_serialize_ruleset(ruleset))
 

@@ -64,7 +64,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, st
 # also only one sensor group is supported with this plugin!
 
 
-def parse_security_master(info):  # pylint: disable=too-many-branches
+def parse_security_master(string_table):  # pylint: disable=too-many-branches
     supported_sensors = {
         50: "temp",
         60: "humidity",
@@ -73,7 +73,7 @@ def parse_security_master(info):  # pylint: disable=too-many-branches
 
     parsed = {"temp": {}, "humidity": {}, "smoke": {}}
 
-    for oid, sensor in info[0]:
+    for oid, sensor in string_table[0]:
         if ".5.0" not in str(oid):
             continue
 
@@ -82,7 +82,7 @@ def parse_security_master(info):  # pylint: disable=too-many-branches
         num = oid.split(".")[0]
         value, sensor_id, warn_low, warn_high, crit_low, crit_high, alarm = (None,) * 7
 
-        for oid_second, sensor_second in info[0]:
+        for oid_second, sensor_second in string_table[0]:
             if num + ".1.0" == oid_second:
                 sensor_id = saveint(sensor_second[0].encode("utf-8").hex())
             elif num + ".2.0" == oid_second:
@@ -143,16 +143,16 @@ def check_security_master(item, _no_params, parsed):
 
 check_info["security_master"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.35491"),
-    parse_function=parse_security_master,
-    check_function=check_security_master,
-    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
-    service_name="Sensor %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.35491.30",
             oids=[OIDEnd(), "3"],
         )
     ],
+    parse_function=parse_security_master,
+    service_name="Sensor %s",
+    discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
+    check_function=check_security_master,
 )
 
 #   .--humidity------------------------------------------------------------.
@@ -181,9 +181,10 @@ def check_security_master_humidity(item, params, parsed):
 
 
 check_info["security_master.humidity"] = LegacyCheckDefinition(
+    service_name="Sensor %s",
+    sections=["security_master"],
     discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
     check_function=check_security_master_humidity,
-    service_name="Sensor %s",
     check_ruleset_name="humidity",
 )
 
@@ -217,9 +218,10 @@ def check_security_master_temperature(item, params, parsed):
 
 
 check_info["security_master.temp"] = LegacyCheckDefinition(
+    service_name="Sensor %s",
+    sections=["security_master"],
     discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "temp"),
     check_function=check_security_master_temperature,
-    service_name="Sensor %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "device_levels_handling": "worst",  # this variable is required, in order to define,

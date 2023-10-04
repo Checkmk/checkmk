@@ -6,8 +6,8 @@
 import math
 
 import cmk.utils.debug
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import AgentRawData
 
 
 def our_uptime() -> float:

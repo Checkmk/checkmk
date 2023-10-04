@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -13,7 +13,7 @@ Section = Mapping[str, Mapping[str, str]]
 
 
 # No idea why we need this. Devices respond with '10 Â°C'.
-_FIXUP_ENCODING = (("°".encode("utf-8").decode("latin-1"), "°"),)
+_FIXUP_ENCODING = (("°".encode().decode("latin-1"), "°"),)
 
 
 def parse_allnet_ip_sensoric(string_table: StringTable) -> Section:

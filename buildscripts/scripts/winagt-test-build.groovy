@@ -16,9 +16,6 @@ def main() {
         windows.build(
             TARGET: "agent_no_sign"
         );
-        windows.build(
-            TARGET: "cmk_agent_ctl_no_sign"
-        );
     }
 }
 

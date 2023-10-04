@@ -50,7 +50,7 @@ def check_ucd_processes(item, _no_params, info):
                 state = 2
                 if pr_err_msg:
                     infotext += ", %s" % pr_err_msg
-                infotext += " (lower/upper crit at %s/%s)" % (pr_min_str, pr_max_str)
+                infotext += f" (lower/upper crit at {pr_min_str}/{pr_max_str})"
 
             return state, infotext, [("processes", int(pr_count_str))]
     return None
@@ -58,11 +58,11 @@ def check_ucd_processes(item, _no_params, info):
 
 check_info["ucd_processes"] = LegacyCheckDefinition(
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
-    discovery_function=inventory_ucd_processes,
-    check_function=check_ucd_processes,
-    service_name="Processes %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.2.1",
         oids=["2", "3", "4", "5", "100", "101"],
     ),
+    service_name="Processes %s",
+    discovery_function=inventory_ucd_processes,
+    check_function=check_ucd_processes,
 )

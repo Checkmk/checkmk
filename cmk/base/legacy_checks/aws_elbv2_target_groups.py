@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import parse_aws
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 #'TargetGroups': [
 #        {
@@ -43,9 +44,9 @@ from cmk.base.config import check_info
 #        },
 
 
-def parse_aws_elbv2_target_groups(info):
+def parse_aws_elbv2_target_groups(string_table):
     application_target_groups, network_target_groups = [], []
-    for load_balancer_type, target_groups in parse_aws(info):
+    for load_balancer_type, target_groups in parse_aws(string_table):
         if load_balancer_type == "application":
             application_target_groups.extend(target_groups)
         elif load_balancer_type == "network":
@@ -55,7 +56,7 @@ def parse_aws_elbv2_target_groups(info):
 
 def check_aws_elbv2_target_groups(item, params, target_groups):
     if len(target_groups) == 0:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     target_groups_by_state = {}
     for target_group in target_groups:
@@ -71,7 +72,7 @@ def check_aws_elbv2_target_groups(item, params, target_groups):
             state = 2
         else:
             state = 3
-        yield state, "%s (%s)" % (state_readable, len(groups))
+        yield state, f"{state_readable} ({len(groups)})"
 
 
 def inventory_aws_application_elb_target_groups(parsed):
@@ -88,9 +89,9 @@ def check_aws_application_elb_target_groups(item, params, parsed):
 
 check_info["aws_elbv2_target_groups"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_target_groups,
+    service_name="AWS/ApplicationELB Target Groups",
     discovery_function=inventory_aws_application_elb_target_groups,
     check_function=check_aws_application_elb_target_groups,
-    service_name="AWS/ApplicationELB Target Groups",
 )
 
 
@@ -107,7 +108,8 @@ def check_aws_network_elb_target_groups(item, params, parsed):
 
 
 check_info["aws_elbv2_target_groups.network"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB Target Groups",
+    sections=["aws_elbv2_target_groups"],
     discovery_function=inventory_aws_network_elb_target_groups,
     check_function=check_aws_network_elb_target_groups,
-    service_name="AWS/NetworkELB Target Groups",
 )

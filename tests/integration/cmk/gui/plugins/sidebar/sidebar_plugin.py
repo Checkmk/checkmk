@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
+from cmk.gui.sidebar import SidebarSnapin, snapin_registry
 
 
-@snapin_registry.register
 class CurrentTime(SidebarSnapin):
     @staticmethod
     def type_name():
@@ -26,3 +25,6 @@ class CurrentTime(SidebarSnapin):
 
     def show(self):
         pass
+
+
+snapin_registry.register(CurrentTime)

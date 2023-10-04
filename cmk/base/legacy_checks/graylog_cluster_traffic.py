@@ -66,8 +66,8 @@ def check_graylog_cluster_traffic(_no_item, params, parsed):
 
 check_info["graylog_cluster_traffic"] = LegacyCheckDefinition(
     parse_function=deserialize_and_merge_json,
-    check_function=check_graylog_cluster_traffic,
-    discovery_function=discover_graylog_cluster_traffic,
     service_name="Graylog Cluster Traffic",
+    discovery_function=discover_graylog_cluster_traffic,
+    check_function=check_graylog_cluster_traffic,
     check_ruleset_name="graylog_cluster_traffic",
 )

@@ -77,11 +77,11 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
 
             levels_label = ""
             if state > 0:
-                levels_label = " (levels at %s/%s)" % (warn_label, crit_label)
+                levels_label = f" (levels at {warn_label}/{crit_label})"
 
             if max_available > 0:
                 perfdata = [("mem_%s" % mem_type, used, warn, crit, 0, max_available)]
-                yield state, "Used: %s of %s (%.2f%%)%s" % (
+                yield state, "Used: {} of {} ({:.2f}%){}".format(
                     get_bytes_human_readable(used),
                     get_bytes_human_readable(max_available),
                     used_percent,
@@ -101,8 +101,8 @@ def check_appdynamics_memory(item, params, info):  # pylint: disable=too-many-br
 
 
 check_info["appdynamics_memory"] = LegacyCheckDefinition(
+    service_name="AppDynamics Memory %s",
     discovery_function=inventory_appdynamics_memory,
     check_function=check_appdynamics_memory,
-    service_name="AppDynamics Memory %s",
     check_ruleset_name="jvm_memory",
 )

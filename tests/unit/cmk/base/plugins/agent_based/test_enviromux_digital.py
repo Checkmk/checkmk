@@ -11,8 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.enviromux_digital import (
     check_enviromux_digital,
     discover_enviromux_digital,
-    parse_enviromux_digital,
 )
+from cmk.base.plugins.agent_based.utils.enviromux import parse_enviromux_digital
 
 STRING_TABLE = [
     ["0", "Digital Input #1", "1", "1"],

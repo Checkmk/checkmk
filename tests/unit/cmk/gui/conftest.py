@@ -37,9 +37,10 @@ from tests.testlib.rest_api_client import (
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
 
@@ -47,6 +48,7 @@ import cmk.gui.config as config_module
 import cmk.gui.login as login
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
+import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui import hooks, http, main_modules, userdb
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import dashlet_registry
@@ -54,6 +56,7 @@ from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
+from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
@@ -143,11 +146,23 @@ def set_config(**kwargs: Any) -> Iterator[None]:
         for key, val in kwargs.items():
             setattr(active_config, key, val)
 
+    def fake_load_single_global_wato_setting(
+        varname: str,
+        deflt: typing.Any | None = None,
+    ) -> typing.Any:
+        return kwargs.get(varname, deflt)
+
     try:
         config_module.register_post_config_load_hook(_set_config)
         if kwargs:
             # NOTE: patch.multiple doesn't want to receive an empty kwargs dict and will crash.
-            with mock.patch.multiple(active_config, **kwargs):
+            with (
+                mock.patch.multiple(active_config, **kwargs),
+                mock.patch(
+                    "cmk.gui.wsgi.applications.utils.load_single_global_wato_setting",
+                    new=fake_load_single_global_wato_setting,
+                ),
+            ):
                 yield
         else:
             yield
@@ -233,8 +248,7 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("sys.exit")
-    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSite._detach_from_parent")
-    mocker.patch("cmk.gui.watolib.activate_changes.ActivateChangesSite._close_apache_fds")
+    mocker.patch("cmk.gui.watolib.activate_changes._close_apache_fds")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._detach_from_parent")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._open_stdout_and_stderr")
     mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
@@ -359,7 +373,7 @@ def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleR
     def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
         with flask_app.test_client() as client:
             client.get(auth_request)
-            infos = userdb.load_session_infos(session.user.ident)
+            infos = load_session_infos(session.user.ident)
 
             # When `in_the_past` is a positive integer, the resulting session will have happened
             # that many seconds in the past.
@@ -422,7 +436,7 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     yield
     groups.delete_group("windows", "host")
     groups.delete_group("routers", "service")
-    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "get_rule_stats_from_ec", lambda: {})  # type: ignore[attr-defined]
+    monkeypatch.setattr(mkeventd, "get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact")
 
 

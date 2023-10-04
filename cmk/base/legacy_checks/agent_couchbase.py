@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 
 def agent_couchbase_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
-) -> Sequence[Union[str, tuple[str, str, str]]]:
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
+) -> Sequence[str | tuple[str, str, str]]:
     args = []
 
     for bucket in params.get("buckets", []):

@@ -6,7 +6,7 @@
 
 /// Jenkins artifacts: ???
 /// Other artifacts: ???
-/// Depends on: Buster / Debian 10 package
+/// Depends on: Jammy Ubuntu 22.04, see check_mk/docker_image/Dockerfile
 
 
 def main() {
@@ -17,6 +17,7 @@ def main() {
         "SET_BRANCH_LATEST_TAG",
         "PUSH_TO_REGISTRY",
         "PUSH_TO_REGISTRY_ONLY",
+        "BUILD_IMAGE_WITHOUT_CACHE",
     ]);
 
     check_environment_variables([
@@ -54,7 +55,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building the CMK docker image
         """.stripMargin());
@@ -104,8 +105,13 @@ def main() {
                             /// to have an arbitrary location, so we have to provide
                             /// `download` inside the checkout_dir
                             sh("""buildscripts/scripts/build-cmk-container.sh \
-                                ${branch_name} ${EDITION} ${cmk_version} \
-                                ${source_dir} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
+                                ${branch_name} \
+                                ${EDITION} \
+                                ${cmk_version} \
+                                ${source_dir} \
+                                ${SET_LATEST_TAG} \
+                                ${SET_BRANCH_LATEST_TAG} \
+                                ${BUILD_IMAGE_WITHOUT_CACHE} \
                                 build""");
                         }
 
@@ -124,6 +130,8 @@ def main() {
 
                         if (branch_name.contains("sandbox") ) {
                             print("Skip uploading ${filename} due to sandbox branch");
+                        } else if ("${EDITION}" == "saas"){
+                            print("Skip uploading ${filename} due to saas edition");
                         } else {
                             stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(
@@ -145,6 +153,7 @@ def main() {
                             ${source_dir} \
                             ${SET_LATEST_TAG} \
                             ${SET_BRANCH_LATEST_TAG} \
+                            ${BUILD_IMAGE_WITHOUT_CACHE} \
                             push""");
                     }
                 }

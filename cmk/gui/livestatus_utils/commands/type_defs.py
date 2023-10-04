@@ -2,7 +2,7 @@
 # Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Literal, Union
+from typing import Literal
 
 HostCommand = Literal[
     "ACKNOWLEDGE_HOST_PROBLEM",
@@ -81,11 +81,11 @@ EnterpriseOtherCommand = Literal[
     "SEGFAULT",
 ]
 
-LivestatusCommand = Union[
-    HostCommand,
-    ServiceCommand,
-    OtherCommand,
-    EnterpriseHostCommand,
-    EnterpriseServiceCommand,
-    EnterpriseOtherCommand,
-]
+LivestatusCommand = (
+    HostCommand
+    | ServiceCommand
+    | OtherCommand
+    | EnterpriseHostCommand
+    | EnterpriseServiceCommand
+    | EnterpriseOtherCommand
+)

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Final
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
@@ -165,6 +166,7 @@ def parse_oracle_instance(string_table: StringTable) -> Section:
             # <<<oracle_instance:sep(124)>>>
             # ORA-99999 tnsping failed for +ASM1
             and not (line[0].startswith("ORA-") and line[0][4].isdigit() and len(line[0]) < 16)
+            and not len(line) == 1
             and (data := _parse_agent_line(line))
         )
     }

@@ -1,0 +1,16 @@
+Title: Fix the dataset for specific "Site/Host overview" dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1689149007
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In distributed setups, several dashboards showed the "Site overview" dashlet where the "Host overview" makes more sense.
+This is fixed to always showing hosts, i.e. the "Host overview" dashlet in the following dashboards:
+LI: all cloud VM dashboards (AWS, Azure, GCP)
+LI: most Kubernetes dashboards (Cluster, Deployment, DaemonSet, StatefulSet, Namespace)
+LI: site specific dashboards titled: "Site dashboard <tt>site_name</tt>"
+

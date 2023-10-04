@@ -187,13 +187,15 @@ class State:
         self._save()
 
     def _save(self) -> None:
+        dumped = json.dumps(
+            self.current_state.model_dump(),
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "),
+        )
         store.save_text_to_file(
             self.path,
-            self.current_state.json(
-                sort_keys=True,
-                indent=4,
-                separators=(",", ": "),
-            ),
+            dumped,
         )
 
 

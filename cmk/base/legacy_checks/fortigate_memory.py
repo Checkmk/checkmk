@@ -4,16 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    contains,
+    exists,
+    render,
+    SNMPTree,
+)
 
 fortigate_memory_default_levels = (70, 80)
 
 
-def parse_fortigate_memory(info):
+def parse_fortigate_memory(string_table):
     try:
-        return int(info[0][0])
+        return int(string_table[0][0])
     except ValueError:
         return None
 
@@ -52,19 +58,19 @@ def check_fortigate_memory(item, params, current_reading):
         "mem_usage",
         (warn, crit),
         infoname="Usage",
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
     )
 
 
 check_info["fortigate_memory"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "fortigate"), exists(".1.3.6.1.4.1.12356.1.9.0")),
-    parse_function=parse_fortigate_memory,
-    check_function=check_fortigate_memory,
-    discovery_function=inventory_fortigate_memory,
-    service_name="Memory",
-    check_ruleset_name="memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.1",
         oids=["9"],
     ),
+    parse_function=parse_fortigate_memory,
+    service_name="Memory",
+    discovery_function=inventory_fortigate_memory,
+    check_function=check_fortigate_memory,
+    check_ruleset_name="memory",
 )

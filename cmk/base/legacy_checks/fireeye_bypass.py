@@ -29,11 +29,11 @@ def check_fireeye_bypass(_no_item, params, info):
 
 check_info["fireeye_bypass"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_bypass,
-    check_function=check_fireeye_bypass,
-    service_name="Bypass Mail Rate",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["41"],
     ),
+    service_name="Bypass Mail Rate",
+    discovery_function=inventory_bypass,
+    check_function=check_fireeye_bypass,
 )

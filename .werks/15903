@@ -1,0 +1,15 @@
+Title: cisco_temperature, cisco_temperature_dom: Improved check state and summary if sensor status not ok
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689153551
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The cisco_temperature and cisco_temperature_dom checks currently only consider sensors with the state "ok". If a sensor becomes "unavailable" or "non-operational", the check becomes "UNKNOWN" with the summary "Item not found in monitoring data".
+With this werk, the summary will now report the status of the sensor instead.
+For the "unavailable" sensor status, the check state will still change to "UNKNOWN", for "non-operational" status it will be CRIT.
+
+The discovery is not affected by this and will still only discover "ok" sensors.

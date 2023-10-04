@@ -2,11 +2,15 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from pydantic_factories import ModelFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube import factory
 
-from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim_handler import (
+    create_pvc_sections,
+    group_parsed_pvcs_by_namespace,
+    group_serialized_volumes_by_namespace,
+)
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
@@ -29,7 +33,7 @@ class AttachedVolumeFactory(ModelFactory):
 def test_group_serialized_volumes_by_namespace():
     namespace_name = api.NamespaceName("ns1")
     volumes = AttachedVolumeFactory.batch(size=3, namespace=namespace_name)
-    namespaced_grouped_volumes = agent.group_serialized_volumes_by_namespace(iter(volumes))
+    namespaced_grouped_volumes = group_serialized_volumes_by_namespace(iter(volumes))
 
     assert namespaced_grouped_volumes == {
         namespace_name: {v.persistent_volume_claim: v for v in volumes}
@@ -41,7 +45,7 @@ def test_group_parsed_pvcs_by_namespace():
     api_pvc = factory.PersistentVolumeClaimFactory.build(
         metadata=factory.MetaDataFactory.build(namespace=namespace_name, factory_use_construct=True)
     )
-    grouped_pvc = agent.group_parsed_pvcs_by_namespace([api_pvc])
+    grouped_pvc = group_parsed_pvcs_by_namespace([api_pvc])
     assert len(grouped_pvc) == 1
     assert (namespace_group := grouped_pvc.get(namespace_name)) is not None
     assert len(namespace_group) == 1
@@ -66,7 +70,7 @@ def test_create_pvc_sections():
     volume = AttachedVolumeFactory.build()
 
     sections = list(
-        agent.create_pvc_sections(
+        create_pvc_sections(
             piggyback_name="default",
             attached_pvc_names=[attached_pvc_name],
             api_pvcs={api_pvc.metadata.name: api_pvc},

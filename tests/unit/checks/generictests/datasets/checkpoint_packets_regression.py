@@ -7,7 +7,19 @@
 # mypy: disable-error-code=var-annotated
 checkname = "checkpoint_packets"
 
-info = [[["1", "2", "3", "4"]], ["5", "6"]]
+
+mock_item_state = {
+    "": {
+        "accepted": (1572247078.0, 0),
+        "rejected": (1572247078.0, 0),
+        "dropped": (1572247078.0, 0),
+        "logged": (1572247078.0, 0),
+        "espencrypted": (1572247078.0, 0),
+        "espdecrypted": (1572247078.0, 0),
+    },
+}
+
+info = [[["120", "180", "210", "4"]], ["0", "60"]]
 
 discovery = {"": [(None, {})]}
 
@@ -24,10 +36,10 @@ checks = {
                 "espdecrypted": (100000, 200000),
             },
             [
-                (0, "Accepted: 0.0 pkts/s", [("accepted", 0.0, 100000, 200000, 0, None)]),
-                (0, "Rejected: 0.0 pkts/s", [("rejected", 0.0, 100000, 200000, 0, None)]),
-                (0, "Dropped: 0.0 pkts/s", [("dropped", 0.0, 100000, 200000, 0, None)]),
-                (0, "Logged: 0.0 pkts/s", [("logged", 0.0, 100000, 200000, 0, None)]),
+                (0, "Accepted: 2.0 pkts/s", [("accepted", 2.0, 100000, 200000, 0, None)]),
+                (0, "Rejected: 3.0 pkts/s", [("rejected", 3.0, 100000, 200000, 0, None)]),
+                (0, "Dropped: 3.5 pkts/s", [("dropped", 3.5, 100000, 200000, 0, None)]),
+                (0, "Logged: 0.1 pkts/s", [("logged", 0.06666666666667, 100000, 200000, 0, None)]),
                 (0, "EspEncrypted: 0.0 pkts/s", [("espencrypted", 0.0, 100000, 200000, 0, None)]),
             ],
         )

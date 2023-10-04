@@ -25,11 +25,11 @@ def check_stulz_alerts(item, _no_params, info):
 
 check_info["stulz_alerts"] = LegacyCheckDefinition(
     detect=DETECT_STULZ,
-    check_function=check_stulz_alerts,
-    discovery_function=inventory_stulz_alerts,
-    service_name="Alerts %s ",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.4.4.1.1.1.1010",
         oids=[OIDEnd(), "1"],
     ),
+    service_name="Alerts %s ",
+    discovery_function=inventory_stulz_alerts,
+    check_function=check_stulz_alerts,
 )

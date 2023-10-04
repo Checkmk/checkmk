@@ -27,7 +27,7 @@ import uuid
 from collections.abc import Mapping, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Any, cast, Literal, overload, Union
+from typing import Any, cast, Literal, overload
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -68,9 +68,9 @@ from cmk.utils.notify_types import (
     UUIDs,
 )
 from cmk.utils.regex import regex
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import ContactgroupName
 
 import cmk.base.config as config
 import cmk.base.core
@@ -83,14 +83,14 @@ try:
 except ImportError:
     keepalive = None  # type: ignore[assignment]
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger("cmk.base.notify")
 
 _log_to_stdout = False
 notify_mode = "notify"
 
-NotificationTableEntry = dict[str, Union[NotificationPluginNameStr, list]]
+NotificationTableEntry = dict[str, NotificationPluginNameStr | list]
 NotificationTable = list[NotificationTableEntry]
 
 Event = str
@@ -1052,9 +1052,8 @@ def rbn_match_notification_comment(rule: EventRule, context: EventContext) -> st
         r = regex(rule["match_notification_comment"])
         notification_comment = context.get("NOTIFICATIONCOMMENT", "")
         if not r.match(notification_comment):
-            return (
-                "The beginning of the notification comment '%s' is not matched by the regex '%s'"
-                % (notification_comment, rule["match_notification_comment"])
+            return "The beginning of the notification comment '{}' is not matched by the regex '{}'".format(
+                notification_comment, rule["match_notification_comment"]
             )
     return None
 

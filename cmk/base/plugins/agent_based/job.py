@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Callable, Dict, Final, List, Mapping, Optional, Tuple, TypedDict
+from collections.abc import Callable, Mapping
+from typing import Any, Final
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State, type_defs
 
@@ -38,18 +41,18 @@ _METRIC_TRANSLATION: Final = {
     "sys": "system_time",
 }
 
-Metrics = Dict[str, float]
+Metrics = dict[str, float]
 
 
 class Job(TypedDict, total=False):
     running: bool
     exit_code: int
     start_time: float
-    running_start_time: List[int]
+    running_start_time: list[int]
     metrics: Metrics
 
 
-Section = Dict[str, Job]
+Section = dict[str, Job]
 
 
 def _job_parse_real_time(s: str) -> float:
@@ -62,7 +65,7 @@ def _job_parse_real_time(s: str) -> float:
     return float(parts[-1]) + min_sec + hour_sec
 
 
-def _job_parse_metrics(line: List[str]) -> Tuple[str, float]:
+def _job_parse_metrics(line: list[str]) -> tuple[str, float]:
     name, value = line
     name = _METRIC_TRANSLATION.get(name, name)
     value = value.replace(",", ".")
@@ -77,7 +80,7 @@ def _job_parse_metrics(line: List[str]) -> Tuple[str, float]:
 
 def _get_jobname_and_running_state(
     string_table: type_defs.StringTable,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """determine whether the job is running. some jobs are flagged as
     running jobs, but are in fact not (i.e. they are pseudo running), for
     example killed jobs.
@@ -168,7 +171,7 @@ def discover_job(section: Section) -> type_defs.DiscoveryResult:
             yield Service(item=jobname)
 
 
-_METRIC_SPECS: Mapping[str, Tuple[str, Callable]] = {
+_METRIC_SPECS: Mapping[str, tuple[str, Callable]] = {
     "real_time": ("Real time", render.timespan),
     "user_time": ("User time", render.timespan),
     "system_time": ("System time", render.timespan),
@@ -197,8 +200,8 @@ def _check_job_levels(  # type: ignore[no-untyped-def]
 
 def _process_job_stats(
     job: Job,
-    age_levels: Optional[Tuple[int, int]],
-    exit_code_to_state_map: Dict[int, State],
+    age_levels: tuple[int, int] | None,
+    exit_code_to_state_map: dict[int, State],
     now: float,
 ) -> type_defs.CheckResult:
     yield Result(
@@ -223,7 +226,7 @@ def _process_job_stats(
             % (
                 count,
                 " is" if count == 1 else "s are",
-                ", ".join((render.datetime(t) for t in start_times)),
+                ", ".join(render.datetime(t) for t in start_times),
             ),
         )
     else:

@@ -17,14 +17,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_cisco_asa_conn(info):
+def parse_cisco_asa_conn(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         parsed[line[0]] = [line[1]]
-    for line in info[2]:
+    for line in string_table[2]:
         parsed[line[0]].append(line[1])
         parsed[line[0]].append(line[2])
-    for line in info[1]:
+    for line in string_table[1]:
         parsed[line[0]].append(line[1])
 
     return parsed
@@ -61,7 +61,7 @@ def check_cisco_asa_conn(item, _no_params, parsed):
             else:  # CRIT if no IP is assigned
                 yield 2, "IP: Not found!"
 
-            state, state_readable = translate_status[values[2]]
+            state, state_readable = translate_status.get(values[2], (3, "N/A"))
             yield state, "Status: %s" % state_readable
 
 
@@ -71,10 +71,6 @@ check_info["cisco_asa_conn"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco firewall services"),
         contains(".1.3.6.1.2.1.1.1.0", "cisco pix security"),
     ),
-    parse_function=parse_cisco_asa_conn,
-    discovery_function=inventory_cisco_asa_conn,
-    check_function=check_cisco_asa_conn,
-    service_name="Connection %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.31.1.1.1",
@@ -89,4 +85,8 @@ check_info["cisco_asa_conn"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "7", "8"],
         ),
     ],
+    parse_function=parse_cisco_asa_conn,
+    service_name="Connection %s",
+    discovery_function=inventory_cisco_asa_conn,
+    check_function=check_cisco_asa_conn,
 )

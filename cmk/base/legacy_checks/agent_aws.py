@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
@@ -72,7 +73,7 @@ def _proxy_args(details: Mapping[str, Any]) -> Sequence[Any]:
 
 
 def agent_aws_arguments(  # pylint: disable=too-many-branches
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[Any]:
     args = [
         "--access-key-id",
@@ -82,14 +83,17 @@ def agent_aws_arguments(  # pylint: disable=too-many-branches
         *(_proxy_args(params["proxy_details"]) if "proxy_details" in params else []),
     ]
 
-    if params.get("assume_role"):
+    global_service_region = params.get("access", {}).get("global_service_region")
+    if global_service_region is not None:
+        args += ["--global-service-region", global_service_region]
+
+    role_arn_id = params.get("access", {}).get("role_arn_id")
+    if role_arn_id:
         args += ["--assume-role"]
-        role_arn_id = params["assume_role"].get("role_arn_id")
-        if role_arn_id:
-            if role_arn_id[0]:
-                args += ["--role-arn", role_arn_id[0]]
-            if role_arn_id[1]:
-                args += ["--external-id", role_arn_id[1]]
+        if role_arn_id[0]:
+            args += ["--role-arn", role_arn_id[0]]
+        if role_arn_id[1]:
+            args += ["--external-id", role_arn_id[1]]
 
     regions = params.get("regions")
     if regions:

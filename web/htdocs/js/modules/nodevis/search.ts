@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import {
     NodevisWorld,
@@ -17,15 +19,15 @@ export class SearchAggregationsPlugin extends ToolbarPluginBase {
         return new SearchAggregationsPlugin(world, "Search aggregations");
     }
 
-    id() {
+    override id() {
         return "bi_search_aggregations";
     }
 
-    has_toggle_button(): boolean {
+    override has_toggle_button(): boolean {
         return false;
     }
 
-    render_content(): void {
+    override render_content(): void {
         if (this._div_selection == null) return;
 
         this._div_selection

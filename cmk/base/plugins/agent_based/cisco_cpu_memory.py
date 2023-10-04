@@ -2,7 +2,10 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, List, Mapping, TypedDict
+from collections.abc import Mapping
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -22,7 +25,7 @@ def _to_bytes(raw: str) -> int:
     return int(float(raw) * 1024)
 
 
-def parse_cisco_cpu_memory_multiitem(string_table: List[StringTable]) -> Section:
+def parse_cisco_cpu_memory_multiitem(string_table: list[StringTable]) -> Section:
     ph_idx_to_desc = {
         idx: desc[4:] if desc.lower().startswith("cpu ") else desc for idx, desc in string_table[1]
     }

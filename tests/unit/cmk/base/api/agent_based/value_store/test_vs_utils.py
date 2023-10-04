@@ -10,10 +10,9 @@ from unittest.mock import Mock
 import pytest
 
 from cmk.utils import store
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ServiceID
 
 from cmk.base.api.agent_based.value_store._utils import (
     _DiskSyncedMapping,

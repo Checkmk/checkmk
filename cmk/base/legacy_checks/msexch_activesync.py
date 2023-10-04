@@ -26,8 +26,8 @@ def check_msexch_activesync(_no_item, _no_params, parsed):
 
 
 check_info["msexch_activesync"] = LegacyCheckDefinition(
-    discovery_function=discover_msexch_activesync,
-    check_function=check_msexch_activesync,
     parse_function=parse_wmi_table,
     service_name="Exchange ActiveSync",
+    discovery_function=discover_msexch_activesync,
+    check_function=check_msexch_activesync,
 )

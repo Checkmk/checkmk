@@ -42,8 +42,8 @@ def check_statgrab_cpu(_no_item, params, info):
 
 
 check_info["statgrab_cpu"] = LegacyCheckDefinition(
-    check_function=check_statgrab_cpu,
-    discovery_function=inventory_statgrab_cpu,
     service_name="CPU utilization",
+    discovery_function=inventory_statgrab_cpu,
+    check_function=check_statgrab_cpu,
     check_ruleset_name="cpu_iowait",
 )

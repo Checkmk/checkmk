@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -28,7 +29,7 @@ def discovery_mssql_counters_cache_hits(
     """
     want_counters = {"cache_hit_ratio", "log_cache_hit_ratio", "buffer_cache_hit_ratio"}
     yield from (
-        Service(item="%s %s %s" % (obj, instance, counter))
+        Service(item=f"{obj} {instance} {counter}")
         for (obj, instance), counters in section.items()
         for counter in counters
         if counter in want_counters
@@ -46,7 +47,7 @@ def _check_common(
     base = get_int(counters, "%s_base" % counter)
     yield from check_levels(
         (100 * value / base) if base != 0 else 0,
-        render_func=lambda v: "%s%s" % (node_name and "[%s] " % node_name, render.percent(v)),
+        render_func=lambda v: "{}{}".format(node_name and "[%s] " % node_name, render.percent(v)),
         metric_name=counter,
     )
 

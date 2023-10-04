@@ -47,13 +47,13 @@ from cmk.base.check_api import (
 from cmk.base.config import check_info
 
 
-def parse_mkbackup(info):
+def parse_mkbackup(string_table):
     import json
 
     parsed = {}
 
     job, json_data = None, ""
-    for l in info:
+    for l in string_table:
         line = " ".join(l)
         if line.startswith("[[["):
             head = line[3:-3].split(":")
@@ -142,16 +142,16 @@ def check_mkbackup_system(item, _no_params, parsed):
 
 check_info["mkbackup"] = LegacyCheckDefinition(
     parse_function=parse_mkbackup,
+    service_name="Backup %s",
     discovery_function=inventory_mkbackup_system,
     check_function=check_mkbackup_system,
-    service_name="Backup %s",
 )
 
 
 def inventory_mkbackup_site(parsed):
     for site_id, jobs in parsed.get("site", {}).items():
         for job_id in jobs:
-            yield "%s backup %s" % (site_id, job_id), {}
+            yield f"{site_id} backup {job_id}", {}
 
 
 def check_mkbackup_site(item, _no_params, parsed):
@@ -164,7 +164,8 @@ def check_mkbackup_site(item, _no_params, parsed):
 
 
 check_info["mkbackup.site"] = LegacyCheckDefinition(
+    service_name="OMD %s",
+    sections=["mkbackup"],
     discovery_function=inventory_mkbackup_site,
     check_function=check_mkbackup_site,
-    service_name="OMD %s",
 )

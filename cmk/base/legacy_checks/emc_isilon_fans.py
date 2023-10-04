@@ -35,13 +35,13 @@ def check_emc_isilon_fans(item, params, info):
 
 check_info["emc_isilon_fans"] = LegacyCheckDefinition(
     detect=DETECT_ISILON,
-    check_function=check_emc_isilon_fans,
-    discovery_function=inventory_emc_isilon_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.53.1",
         oids=["3", "4"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_emc_isilon_fans,
+    check_function=check_emc_isilon_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={"lower": (3000, 2500)},
 )

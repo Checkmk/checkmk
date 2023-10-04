@@ -11,8 +11,8 @@ from pathlib import Path
 
 from livestatus import LivestatusColumn, LivestatusOutputFormat, LivestatusResponse, SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostName
 
 from cmk.bi.lib import (
     ABCBIStatusFetcher,
@@ -83,15 +83,13 @@ class BIStructureFetcher:
         return self._hosts
 
     def get_cached_program_starts(self) -> set[SiteProgramStart]:
-        cached_program_starts = set()
-        for _path_object, (site_id, timestamp) in self._get_site_data_files():
-            cached_program_starts.add((site_id, timestamp))
-        return cached_program_starts
+        return {
+            (site_id, timestamp)
+            for _path_object, (site_id, timestamp) in self._get_site_data_files()
+        }
 
     def update_data(self, required_program_starts: set[SiteProgramStart]) -> None:
-        missing_program_starts = required_program_starts - self.get_cached_program_starts()
-
-        if missing_program_starts:
+        if missing_program_starts := required_program_starts - self.get_cached_program_starts():
             self._fetch_missing_data(missing_program_starts)
 
         self._read_cached_data(required_program_starts)
@@ -125,7 +123,7 @@ class BIStructureFetcher:
         ):
             host_service_lookup.setdefault(row[1], []).append(row[2:])
 
-        site_data: dict[SiteId, dict] = {x: {} for x in only_sites.keys()}
+        site_data: dict[SiteId, dict] = {x: {} for x in only_sites}
         for (
             site,
             host_name,
@@ -320,6 +318,12 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
     # Get all status information for the required_hosts
     def _get_status_info(self, required_elements: set[RequiredBIElement]) -> BIStatusInfo:
+        if not required_elements:
+            # There is no reason to start a query if no elements are required
+            # Even worse, without any required_elements the query would have no filter restrictions
+            # and return all hosts
+            return {}
+
         # Query each site only for hosts that that site provides
         req_hosts: set[HostName] = set()
         req_sites: set[SiteId] = set()
@@ -330,11 +334,9 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
         # TODO: the cmc slows down if the host filter gets too big
         #       fetch all hosts if the filter exceeds 1000 hosts
-        host_filter = ""
-        for host in req_hosts:
-            host_filter += "Filter: name = %s\n" % host
+        host_filter = "".join(f"Filter: name = {host}\n" for host in req_hosts)
         if len(req_hosts) > 1:
-            host_filter += "Or: %d\n" % len(req_hosts)
+            host_filter += f"Or: {len(req_hosts)}\n"
 
         query = "GET hosts\nColumns: %s\n" % " ".join(self.get_status_columns()) + host_filter
         return self.create_bi_status_data(

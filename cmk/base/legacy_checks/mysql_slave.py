@@ -7,10 +7,8 @@
 # mypy: disable-error-code="arg-type"
 
 from cmk.base.check_api import (
-    discover,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
@@ -18,9 +16,9 @@ from cmk.base.config import check_info
 
 
 @mysql_parse_per_item
-def parse_mysql_slave(info):
+def parse_mysql_slave(string_table):
     data: dict[str, int | bool | None] = {}
-    for line in info:
+    for line in string_table:
         if not line[0].endswith(":"):
             continue
 
@@ -36,8 +34,13 @@ def parse_mysql_slave(info):
     return data
 
 
-@get_parsed_item_data
-def check_mysql_slave(_no_item, params, data):
+def discover_mysql_slave(section):
+    yield from ((item, {}) for item, data in section.items() if data)
+
+
+def check_mysql_slave(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     state = 0
     perfdata = []
     output = []
@@ -75,13 +78,13 @@ def check_mysql_slave(_no_item, params, data):
         output.append("Slave-SQL: not running(!!)")
         state = 2
 
-    return state, ", ".join(output), perfdata
+    yield state, ", ".join(output), perfdata
 
 
 check_info["mysql_slave"] = LegacyCheckDefinition(
     parse_function=parse_mysql_slave,
-    discovery_function=discover(lambda k, v: bool(v)),
-    check_function=check_mysql_slave,
     service_name="MySQL DB Slave %s",
+    discovery_function=discover_mysql_slave,
+    check_function=check_mysql_slave,
     check_ruleset_name="mysql_slave",
 )

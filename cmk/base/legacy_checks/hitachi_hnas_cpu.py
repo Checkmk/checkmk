@@ -38,12 +38,12 @@ def check_hitachi_hnas_cpu(item, params, info):
 
 check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_cpu,
-    discovery_function=inventory_hitachi_hnas_cpu,
-    service_name="CPU utilization PNode %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.1.2.1",
         oids=["1", "3"],
     ),
+    service_name="CPU utilization PNode %s",
+    discovery_function=inventory_hitachi_hnas_cpu,
+    check_function=check_hitachi_hnas_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )

@@ -1,0 +1,12 @@
+Title: cisco_asa_conn: Fix translation of an empty interface status -> "UNKNOWN, Status: N/A"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1695810748
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

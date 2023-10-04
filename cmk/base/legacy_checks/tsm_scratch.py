@@ -14,9 +14,9 @@ from cmk.base.config import check_info
 tsm_scratch_default_levels = (5, 7)
 
 
-def parse_tsm_scratch(info):
+def parse_tsm_scratch(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) != 3:
             continue
 
@@ -27,7 +27,7 @@ def parse_tsm_scratch(info):
             continue
 
         if inst != "default":
-            item = "%s / %s" % (inst, library)
+            item = f"{inst} / {library}"
         else:
             item = library
 
@@ -59,7 +59,7 @@ def check_tsm_scratch(item, params, parsed):
 
 check_info["tsm_scratch"] = LegacyCheckDefinition(
     parse_function=parse_tsm_scratch,
+    service_name="Scratch Pool %s",
     discovery_function=inventory_tsm_scratch,
     check_function=check_tsm_scratch,
-    service_name="Scratch Pool %s",
 )

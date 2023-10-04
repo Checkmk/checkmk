@@ -6,14 +6,14 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
 
-def parse_seh_ports(info):
+def parse_seh_ports(string_table):
     parsed = {}
-    for oid_end, tag, status, port_number in info[0]:
+    for oid_end, tag, status, port_number in string_table[0]:
         oid_index = oid_end.split(".")[0]
         if tag != "":
             parsed.setdefault(oid_index, {}).update(tag=tag)
@@ -27,11 +27,12 @@ def inventory_seh_ports(parsed):
         yield key, {"status_at_discovery": port.get("status")}
 
 
-@get_parsed_item_data
-def check_seh_ports(item, params, data):
+def check_seh_ports(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for key in ("tag", "status"):
         if key in data:
-            yield 0, "%s: %s" % (key.title(), data[key])
+            yield 0, f"{key.title()}: {data[key]}"
 
     if params.get("status_at_discovery") != data.get("status"):
         yield 1, "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown")
@@ -39,14 +40,14 @@ def check_seh_ports(item, params, data):
 
 check_info["seh_ports"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1229.1.1"),
-    parse_function=parse_seh_ports,
-    discovery_function=inventory_seh_ports,
-    check_function=check_seh_ports,
-    service_name="Port %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1229.2.50.2.1",
             oids=[OIDEnd(), "10", "26", "27"],
         )
     ],
+    parse_function=parse_seh_ports,
+    service_name="Port %s",
+    discovery_function=inventory_seh_ports,
+    check_function=check_seh_ports,
 )

@@ -1,0 +1,18 @@
+Title: mk_postgres: addition of option to specify instance name
+Class: fix
+Compatible: compat
+Component: core
+Date: 1690981131
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The migration of the postgres_instances check plugin to the new CheckAPI broke the discovery
+mechanism of the plugin as it previously allowed an instance to have no specified name. This
+werk introduces the option to specify an explicit name for an instance. The mk_postgres plugin
+is adjusted accordingly and raises an error if the name cannot be inferred from .env file. To
+benefit from this change and also resolve the error, the user should adjust or bake the config
+file again and roll out the newly adapted plugin.
+

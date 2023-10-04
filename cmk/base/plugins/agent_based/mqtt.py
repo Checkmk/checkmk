@@ -5,7 +5,8 @@
 
 import json
 import time
-from typing import Callable, Mapping, NamedTuple, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,

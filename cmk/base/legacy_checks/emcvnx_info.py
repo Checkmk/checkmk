@@ -51,20 +51,20 @@ from cmk.base.config import check_info
 # [... more software packages follow ...]
 
 
-def parse_emcvnx_info(info):
+def parse_emcvnx_info(string_table):
     parsed = {
-        "info": [],
+        "string_table": [],
         "storage": [],
         "link": [],
         "config": [],
         "io": [],
     }
     key_to_subcheck = {
-        "System Fault LED": "info",
-        "Server IP Address": "info",
-        "System Date": "info",
-        "System Time": "info",
-        "Serial Number For The SP": "info",
+        "System Fault LED": "string_table",
+        "Server IP Address": "string_table",
+        "System Date": "string_table",
+        "System Time": "string_table",
+        "Serial Number For The SP": "string_table",
         "Storage Processor": "storage",
         "Storage Processor Network Name": "storage",
         "Storage Processor IP Address": "storage",
@@ -97,7 +97,7 @@ def parse_emcvnx_info(info):
         "Write_cache_blocks_flushed": "io",
     }
 
-    preparsed, errors = preparse_emcvnx_info(info)
+    preparsed, errors = preparse_emcvnx_info(string_table)
 
     for key, value in preparsed:
         subcheck = key_to_subcheck.get(key)
@@ -137,14 +137,14 @@ def check_emcvnx_info(item, _no_params, parsed):
         status = 0
         if key == "System Fault LED" and value != "OFF":
             status = 2
-        yield status, "%s: %s" % (key, value)
+        yield status, f"{key}: {value}"
 
 
 check_info["emcvnx_info"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_info,
+    service_name="EMC VNX Info",
     discovery_function=lambda x: inventory_emcvnx_info(x, "info"),
     check_function=check_emcvnx_info,
-    service_name="EMC VNX Info",
 )
 
 #   .--Storage-------------------------------------------------------------.
@@ -160,13 +160,14 @@ check_info["emcvnx_info"] = LegacyCheckDefinition(
 def check_emcvnx_storage(item, params, parsed):
     output, _ = parsed
     for key, value in output["storage"]:
-        yield 0, "%s: %s" % (key, value)
+        yield 0, f"{key}: {value}"
 
 
 check_info["emcvnx_info.storage"] = LegacyCheckDefinition(
+    service_name="EMC VNX Storage Processor",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "storage"),
     check_function=check_emcvnx_storage,
-    service_name="EMC VNX Storage Processor",
 )
 
 #   .--Link----------------------------------------------------------------.
@@ -185,13 +186,14 @@ def check_emcvnx_link(item, params, parsed):
         status = 0
         if key == "Link Status" and value != "Link-Up":
             status = 2
-        yield status, "%s: %s" % (key, value)
+        yield status, f"{key}: {value}"
 
 
 check_info["emcvnx_info.link"] = LegacyCheckDefinition(
+    service_name="EMC VNX Link",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "link"),
     check_function=check_emcvnx_link,
-    service_name="EMC VNX Link",
 )
 
 #   .--Config--------------------------------------------------------------.
@@ -207,13 +209,14 @@ check_info["emcvnx_info.link"] = LegacyCheckDefinition(
 def check_emcvnx_config(item, params, parsed):
     output, _ = parsed
     for key, value in output["config"]:
-        yield 0, "%s: %s" % (key, value)
+        yield 0, f"{key}: {value}"
 
 
 check_info["emcvnx_info.config"] = LegacyCheckDefinition(
+    service_name="EMC VNX Config",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "config"),
     check_function=check_emcvnx_config,
-    service_name="EMC VNX Config",
 )
 
 #   .--IO------------------------------------------------------------------.
@@ -232,11 +235,12 @@ def check_emcvnx_io(item, params, parsed):
         status = 0
         if key == "Hard errors" and value != "N/A":
             status = 2
-        yield status, "%s: %s" % (key, value)
+        yield status, f"{key}: {value}"
 
 
 check_info["emcvnx_info.io"] = LegacyCheckDefinition(
+    service_name="EMC VNX IO",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "io"),
     check_function=check_emcvnx_io,
-    service_name="EMC VNX IO",
 )

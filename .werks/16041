@@ -1,0 +1,15 @@
+Title: New permissions "Discard changes" and "Discard foreign changes"
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1690888391
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+We introduce two new permissions that let administrators allow/disallow users to discard changes.
+LI: "Discard changes" lets a user discard their own pending changes; defaults to "yes" for the role "normal monitoring user".
+LI: "Discard foreign changes" lets a user discard other users' pending changes (foreign changes); defaults to "no" for the role "normal monitoring user".
+
+You can find the two permissions for any role under <tt>Setup > Users > Roles & permissions</tt> in the section "Setup".

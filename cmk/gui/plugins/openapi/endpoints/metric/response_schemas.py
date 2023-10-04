@@ -38,7 +38,7 @@ class MetricSchema(BaseSchema):
 class GraphCollectionSchema(BaseSchema):
     time_range = Nested(
         TimeRange,
-        description="The time range withing the samples of the response lie.",
+        description="The time range within the samples of the response lie.",
         required=True,
         example={"time_range": {"start": "1970-01-01T00:00:00Z", "end": "1970-01-01T00:00:30Z"}},
     )

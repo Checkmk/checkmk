@@ -9,11 +9,9 @@ import logging
 from collections.abc import Mapping
 from typing import Any, final, Generic, Literal, TypeVar
 
-from cmk.utils.exceptions import MKFetcherError
+import cmk.utils.resulttype as result
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import result
-
-from cmk.snmplib.type_defs import TRawData
 
 __all__ = ["Fetcher", "Mode"]
 
@@ -31,9 +29,10 @@ class Mode(enum.Enum):
 
 
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
+_TRawData = TypeVar("_TRawData")
 
 
-class Fetcher(Generic[TRawData], abc.ABC):
+class Fetcher(Generic[_TRawData], abc.ABC):
     """Interface to the data fetchers."""
 
     def __init__(self, *, logger: logging.Logger) -> None:
@@ -57,7 +56,7 @@ class Fetcher(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     @final
-    def __enter__(self) -> "Fetcher[TRawData]":
+    def __enter__(self) -> "Fetcher[_TRawData]":
         return self
 
     @final
@@ -75,19 +74,23 @@ class Fetcher(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     @final
-    def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
+    def fetch(self, mode: Mode) -> result.Result[_TRawData, Exception]:
         """Return the data from the source, either cached or from IO."""
         try:
             return result.OK(self._fetch(mode))
+        except MKTimeout:
+            raise
         except Exception as exc:
             return result.Error(exc)
 
-    def _fetch(self, mode: Mode) -> TRawData:
+    def _fetch(self, mode: Mode) -> _TRawData:
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
 
         try:
             self.open()
             raw_data = self._fetch_from_io(mode)
+        except MKTimeout:
+            raise
         except MKFetcherError:
             raise
         except Exception as exc:
@@ -96,6 +99,6 @@ class Fetcher(Generic[TRawData], abc.ABC):
         return raw_data
 
     @abc.abstractmethod
-    def _fetch_from_io(self, mode: Mode) -> TRawData:
+    def _fetch_from_io(self, mode: Mode) -> _TRawData:
         """Override this method to contact the source and return the raw data."""
         raise NotImplementedError()

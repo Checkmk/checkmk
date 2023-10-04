@@ -9,7 +9,7 @@ import pytest
 
 from cmk.utils.crypto.password import PasswordHash
 from cmk.utils.store.htpasswd import Entries, Htpasswd
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 
 @pytest.fixture(name="htpasswd_file")

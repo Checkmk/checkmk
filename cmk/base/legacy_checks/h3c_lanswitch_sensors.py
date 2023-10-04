@@ -15,8 +15,8 @@ Section = Mapping[str, str]
 def parse_h3c_lanswitch_sensors(string_table: list[list[list[str]]]) -> Section:
     return {
         h3c_lanswitch_genitem(device_class, item): state
-        for device_class, info in zip(("Fan", "Powersupply"), string_table)
-        for item, state in info
+        for device_class, string_table in zip(("Fan", "Powersupply"), string_table)
+        for item, state in string_table
     }
 
 
@@ -33,19 +33,15 @@ def check_h3c_lanswitch_sensors(
     # the values are:   active     (1), deactive   (2), not-install  (3), unsupport    (4)
     match status:
         case "2":
-            yield 2, "Sensor %s status is %s" % (item, status)
+            yield 2, f"Sensor {item} status is {status}"
         case "1":
-            yield 0, "Sensor %s status is %s" % (item, status)
+            yield 0, f"Sensor {item} status is {status}"
         case _:
-            yield 1, "Sensor % status is %s" % (item, status)
+            yield 1, f"Sensor {item: }tatus is {status}"
 
 
 check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
-    parse_function=parse_h3c_lanswitch_sensors,
-    discovery_function=inventory_h3c_lanswitch_sensors,
-    check_function=check_h3c_lanswitch_sensors,
-    service_name="%s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.43.45.1.2.23.1.9.1.1.1",
@@ -56,6 +52,10 @@ check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2"],
         ),
     ],
+    parse_function=parse_h3c_lanswitch_sensors,
+    service_name="%s",
+    discovery_function=inventory_h3c_lanswitch_sensors,
+    check_function=check_h3c_lanswitch_sensors,
 )
 
 

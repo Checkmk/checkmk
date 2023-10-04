@@ -1,9 +1,8 @@
 
 #include "stdafx.h"
 
-#include "service_processor.h"
+#include "wnx/service_processor.h"
 
-#include <cfg_details.h>
 #include <fcntl.h>
 #include <io.h>
 #include <sensapi.h>
@@ -12,22 +11,24 @@
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
 
-#include "agent_controller.h"
-#include "cap.h"
-#include "commander.h"
 #include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
 #include "common/yaml.h"
-#include "external_port.h"
-#include "firewall.h"
-#include "install_api.h"
 #include "providers/perf_counters_cl.h"
-#include "realtime.h"
 #include "tools/_process.h"
-#include "upgrade.h"
-#include "windows_service_api.h"
+#include "wnx/agent_controller.h"
+#include "wnx/cap.h"
+#include "wnx/cfg_details.h"
+#include "wnx/commander.h"
+#include "wnx/extensions.h"
+#include "wnx/external_port.h"
+#include "wnx/firewall.h"
+#include "wnx/install_api.h"
+#include "wnx/realtime.h"
+#include "wnx/upgrade.h"
+#include "wnx/windows_service_api.h"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
@@ -306,10 +307,11 @@ void ServiceProcessor::informDevice(rt::Device &rt_device,
         return;
     }
 
-    auto s_view = tools::ToView(sections);
+    const std::vector<std::string_view> s_view{sections.begin(),
+                                               sections.end()};
 
     const auto rt_port = cfg::groups::g_global.realtimePort();
-    auto password = cfg::groups::g_global.realtimePassword();
+    const auto password = cfg::groups::g_global.realtimePassword();
     const auto rt_timeout = cfg::groups::g_global.realtimeTimeout();
 
     rt_device.connectFrom(ip_addr, rt_port, s_view, password, rt_timeout);
@@ -377,7 +379,7 @@ void ServiceProcessor::resetOhm() noexcept {
     cmd_line += std::wstring(provider::ohm::kResetCommand);
     XLOG::l.i("I'm going to execute '{}'", wtools::ToUtf8(cmd_line));
 
-    tools::RunStdCommand(cmd_line, true);
+    tools::RunStdCommand(cmd_line, tools::WaitForEnd::yes);
 }
 
 bool ServiceProcessor::stopRunningOhmProcess() noexcept {
@@ -741,6 +743,14 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         } else {
             mc_.LoadDefault();
         }
+
+        std::vector<cfg::extensions::ProcessInfo> processes;
+        if (is_service) {
+            processes = cfg::extensions::StartAll(
+                cfg::extensions::GetAll(cfg::GetLoadedConfig()));
+        }
+
+        ON_OUT_OF_SCOPE(cfg::extensions::KillAll(processes));
 
         preStartBinaries();
 

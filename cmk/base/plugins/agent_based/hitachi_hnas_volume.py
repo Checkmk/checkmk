@@ -2,7 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -23,8 +24,8 @@ STATE_MAP = {
 
 
 class Section(NamedTuple):
-    volumes: Dict[str, Tuple[str, Optional[float], Optional[float], str]]
-    virtual_volumes: Dict[str, Tuple[Optional[float], Optional[float]]]
+    volumes: dict[str, tuple[str, float | None, float | None, str]]
+    virtual_volumes: dict[str, tuple[float | None, float | None]]
 
 
 def parse_hitachi_hnas_volume(string_table):
@@ -90,7 +91,7 @@ register.snmp_section(
 
 
 def discovery_hitachi_hnas_volume(
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
     yield from df_discovery(params, list(section.volumes.keys()))
@@ -172,7 +173,7 @@ register.check_plugin(
 
 
 def discovery_hitachi_hnas_virtual_volume(
-    params: List[Mapping[str, Any]],
+    params: list[Mapping[str, Any]],
     section: Section,
 ) -> DiscoveryResult:
     yield from df_discovery(params, list(section.virtual_volumes.keys()))

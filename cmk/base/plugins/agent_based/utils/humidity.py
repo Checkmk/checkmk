@@ -3,13 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Optional, Tuple, Union
+from collections.abc import Mapping
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, render, type_defs
 
-CheckParams = Union[
-    None, Mapping[str, Any], Optional[List[float]], Tuple[float, float, float, float]
-]
+CheckParams = None | Mapping[str, Any] | list[float] | None | tuple[float, float, float, float]
 
 
 def check_humidity(humidity: float, params: CheckParams) -> type_defs.CheckResult:

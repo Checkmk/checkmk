@@ -1,0 +1,15 @@
+Title: agent_ibmsvc: option -i/--modules not recognized without --accept-any-hostkey
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1690381469
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The information regarding 'Retrieve information about...' provided for the `ibmsvc` special agent
+would be ignored if 'Accept any SSH Host Key' was unchecked.
+This change makes the information about modules be used unconditionally.
+

@@ -31,16 +31,16 @@ def check_blade_bx_powermod(item, _no_param, info):
         if not index == item:
             continue
         state_readable, state = power_status[status]
-    return state, "%s Status is %s" % (product_name, state_readable)
+    return state, f"{product_name} Status is {state_readable}"
 
 
 check_info["blade_bx_powermod"] = LegacyCheckDefinition(
     detect=DETECT_BLADE_BX,
-    discovery_function=inventory_blade_bx_powermod,
-    check_function=check_blade_bx_powermod,
-    service_name="Power Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.2.4.1",
         oids=["1", "2", "4"],
     ),
+    service_name="Power Module %s",
+    discovery_function=inventory_blade_bx_powermod,
+    check_function=check_blade_bx_powermod,
 )

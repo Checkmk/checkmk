@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -23,7 +23,7 @@ class Section(NamedTuple):
     current: int
 
 
-def parse_checkpoint_connections(string_table: StringTable) -> Optional[Section]:
+def parse_checkpoint_connections(string_table: StringTable) -> Section | None:
     """
     >>> parse_checkpoint_connections([["19190"]])
     Section(current=19190)

@@ -6,14 +6,14 @@
 
 #include <filesystem>
 
-#include "cap.h"
-#include "cfg.h"
-#include "read_file.h"
-#include "test_tools.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/read_file.h"
+#include "watest/test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "upgrade.h"
+#include "wnx/upgrade.h"
 
 namespace fs = std::filesystem;
 
@@ -928,7 +928,7 @@ TEST(UpgradeTest, StopStartStopOhmComponent) {
     }
     ASSERT_TRUE(fs::exists(ohm))
         << "OpenHardwareMonitor not installed, please, add it to the Legacy Agent folder";
-    auto ret = RunDetachedProcess(ohm.wstring());
+    auto ret = tools::RunDetachedProcess(ohm.wstring());
     ASSERT_TRUE(ret);
 
     auto status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
@@ -941,7 +941,7 @@ TEST(UpgradeTest, StopStartStopOhmComponent) {
                            SERVICE_STOPPED, 5000);
     EXPECT_EQ(status, SERVICE_STOPPED);
 
-    ret = RunDetachedProcess(ohm.wstring());
+    ret = tools::RunDetachedProcess(ohm.wstring());
     ASSERT_TRUE(ret);
     tools::sleep(1000);
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
@@ -1005,7 +1005,7 @@ TEST(UpgradeTest, FindLwa_Simulation) {
         << "OpenHardwareMonitor not installed, please, add it to the Legacy Agent folder";
 
     // start
-    RunDetachedProcess(ohm.wstring());
+    tools::RunDetachedProcess(ohm.wstring());
     tools::sleep(1000);
     auto status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                                 SERVICE_RUNNING, 5000);

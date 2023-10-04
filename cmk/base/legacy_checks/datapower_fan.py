@@ -42,7 +42,7 @@ def check_datapower_fan(item, _no_params, section):
 
 
 check_info["datapower_fan"] = LegacyCheckDefinition(
+    service_name="Fan %s",
     discovery_function=inventory_datapower_fan,
     check_function=check_datapower_fan,
-    service_name="Fan %s",
 )

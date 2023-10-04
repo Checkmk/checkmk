@@ -15,9 +15,9 @@ AWSELBHealthMap = {
 }
 
 
-def parse_aws_elb_health(info):
+def parse_aws_elb_health(string_table):
     try:
-        return parse_aws(info)[-1]
+        return parse_aws(string_table)[-1]
     except IndexError:
         return {}
 
@@ -49,7 +49,7 @@ def check_aws_elb_health(item, params, parsed):
 
 check_info["aws_elb_health"] = LegacyCheckDefinition(
     parse_function=parse_aws_elb_health,
+    service_name="AWS/ELB Health ",
     discovery_function=discover_aws_elb_health,
     check_function=check_aws_elb_health,
-    service_name="AWS/ELB Health ",
 )

@@ -20,12 +20,13 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
-from typing import Any
+from typing import Any, Literal, NamedTuple
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
 from cmk.utils import password_store
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
 from cmk.special_agents.utils import DataCache, vcrtrace
@@ -37,7 +38,7 @@ LOGGER = logging.getLogger()  # root logger for now
 
 AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
-NOW = datetime.datetime.utcnow()
+NOW = datetime.datetime.now(tz=datetime.UTC)
 
 ALL_METRICS: dict[str, list[tuple]] = {
     # to add a new metric, just add a made up name, run the
@@ -219,6 +220,18 @@ def parse_arguments(argv: Sequence[str]) -> Args:
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
     parser.add_argument("--secret", required=True, help="Azure authentication secret")
+
+    parser.add_argument(
+        "--proxy",
+        type=str,
+        default=None,
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the Azure API. If not set, the environment settings "
+            "will be used."
+        ),
+    )
+
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument(
         "--require-tag",
@@ -252,6 +265,13 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         default=[],
         nargs="*",
         help="List of services to monitor",
+    )
+    parser.add_argument(
+        "--authority",
+        default="global",
+        choices=["global", "china"],
+        required=True,
+        help="Authority to be used",
     )
     args = parser.parse_args(argv)
 
@@ -320,22 +340,65 @@ class ApiErrorFactory:
             return ApiError(error_data)
 
 
-class BaseApiClient(abc.ABC):
-    AUTHORITY = "https://login.microsoftonline.com"
+class _AuthorityURLs(NamedTuple):
+    login: str
+    resource: str
+    base: str
 
-    def __init__(self, base_url) -> None:  # type: ignore[no-untyped-def]
+
+def _get_graph_authority_urls(authority: Literal["global", "china"]) -> _AuthorityURLs:
+    if authority == "global":
+        return _AuthorityURLs(
+            "https://login.microsoftonline.com",
+            "https://graph.microsoft.com",
+            "https://graph.microsoft.com/v1.0/",
+        )
+    if authority == "china":
+        return _AuthorityURLs(
+            "https://login.partner.microsoftonline.cn",
+            "https://microsoftgraph.chinacloudapi.cn",
+            "https://microsoftgraph.chinacloudapi.cn/v1.0/",
+        )
+    raise ValueError("Unknown authority %r" % authority)
+
+
+def _get_mgmt_authority_urls(
+    authority: Literal["global", "china"], subscription: str
+) -> _AuthorityURLs:
+    if authority == "global":
+        return _AuthorityURLs(
+            "https://login.microsoftonline.com",
+            "https://management.azure.com",
+            f"https://management.azure.com/subscriptions/{subscription}/",
+        )
+    if authority == "china":
+        return _AuthorityURLs(
+            "https://login.partner.microsoftonline.cn",
+            "https://management.chinacloudapi.cn",
+            f"https://management.chinacloudapi.cn/subscriptions/{subscription}/",
+        )
+    raise ValueError("Unknown authority %r" % authority)
+
+
+class BaseApiClient(abc.ABC):
+    def __init__(
+        self,
+        authority_urls: _AuthorityURLs,
+        http_proxy_config: HTTPProxyConfig,
+    ) -> None:
         self._ratelimit = float("Inf")
         self._headers: dict = {}
-        self._base_url = base_url
-
-    @property
-    @abc.abstractmethod
-    def resource(self):
-        pass
+        self._login_url = authority_urls.login
+        self._resource_url = authority_urls.resource
+        self._base_url = authority_urls.base
+        self._http_proxy_config = http_proxy_config
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext(f"{self.AUTHORITY}/{tenant}")
-        token = context.acquire_token_with_client_credentials(self.resource, client, secret)
+        context = adal.AuthenticationContext(
+            f"{self._login_url}/{tenant}",
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
+        token = context.acquire_token_with_client_credentials(self._resource_url, client, secret)
         self._headers.update(
             {
                 "Authorization": "Bearer %s" % token["accessToken"],
@@ -414,7 +477,14 @@ class BaseApiClient(abc.ABC):
         return data
 
     def _request_json_from_url(self, method, url, *, body=None, params=None):
-        response = requests.request(method, url, json=body, params=params, headers=self._headers)
+        response = requests.request(
+            method,
+            url,
+            json=body,
+            params=params,
+            headers=self._headers,
+            proxies=self._http_proxy_config.to_requests_proxies(),
+        )
         self._update_ratelimit(response)
         json_data = response.json()
         LOGGER.debug("response: %r", json_data)
@@ -430,14 +500,6 @@ class BaseApiClient(abc.ABC):
 
 
 class GraphApiClient(BaseApiClient):
-    def __init__(self) -> None:
-        base_url = "%s/v1.0/" % self.resource
-        super().__init__(base_url)
-
-    @property
-    def resource(self):
-        return "https://graph.microsoft.com"
-
     def users(self, data=None, uri=None):
         if data is None:
             data = []
@@ -473,10 +535,6 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
-    def __init__(self, subscription) -> None:  # type: ignore[no-untyped-def]
-        base_url = f"{self.resource}/subscriptions/{subscription}/"
-        super().__init__(base_url)
-
     @staticmethod
     def _get_available_metrics_from_exception(
         desired_names: str, api_error: ApiError, resource_id: str
@@ -496,10 +554,6 @@ class MgmtApiClient(BaseApiClient):
             return None
 
         return ",".join(sorted(retry_names))
-
-    @property
-    def resource(self):
-        return "https://management.azure.com"
 
     def resourcegroups(self):
         return self._get("resourcegroups", key="value", params={"api-version": "2019-05-01"})
@@ -867,9 +921,8 @@ def process_vm(mgmt_client, vmach, args):
     inst_view = mgmt_client.vmview(vmach.info["group"], vmach.info["name"])
     vmach.info["specific_info"] = filter_keys(inst_view, use_keys)
 
-    if args.piggyback_vms not in ("grouphost",):
+    if args.piggyback_vms == "self":
         vmach.piggytargets.remove(vmach.info["group"])
-    if args.piggyback_vms in ("self",):
         vmach.piggytargets.append(vmach.info["name"])
 
 
@@ -1302,9 +1355,7 @@ def get_group_labels(mgmt_client: MgmtApiClient, monitored_groups: Sequence[str]
         name = group["name"]
         tags = group.get("tags", {})
         if name in monitored_groups:
-            # label is being renamed to "cmk/azure/resource_group", remove for version 2.3.0
-            deprecated_label = {"resource_group": name}
-            group_labels[name] = {**tags, **deprecated_label, **{"cmk/azure/resource_group": name}}
+            group_labels[name] = {**tags, **{"cmk/azure/resource_group": name}}
 
     return group_labels
 
@@ -1416,8 +1467,11 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args):
-    graph_client = GraphApiClient()
+def main_graph_client(args: Args) -> None:
+    graph_client = GraphApiClient(
+        _get_graph_authority_urls(args.authority),
+        deserialize_http_proxy_config(args.proxy),
+    )
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client, AzureSection("ad"), args)
@@ -1555,8 +1609,11 @@ def process_resource_health(
         yield section
 
 
-def main_subscription(args, selector, subscription):
-    mgmt_client = MgmtApiClient(subscription)
+def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
+    mgmt_client = MgmtApiClient(
+        _get_mgmt_authority_urls(args.authority, subscription),
+        deserialize_http_proxy_config(args.proxy),
+    )
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
@@ -1599,10 +1656,9 @@ def main(argv=None):
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return
+
     LOGGER.debug("%s", selector)
-
     main_graph_client(args)
-
     for subscription in args.subscriptions:
         main_subscription(args, selector, subscription)
 

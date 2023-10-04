@@ -47,11 +47,11 @@ def check_cisco_ucs_lun(_no_item, _no_params, info):
 
 check_info["cisco_ucs_lun"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_cisco_ucs_lun,
-    discovery_function=inventory_cisco_ucs_lun,
-    service_name="LUN",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.8.1",
         oids=["14", "13", "9"],
     ),
+    service_name="LUN",
+    discovery_function=inventory_cisco_ucs_lun,
+    check_function=check_cisco_ucs_lun,
 )

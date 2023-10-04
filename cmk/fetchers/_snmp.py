@@ -7,23 +7,138 @@ import copy
 import dataclasses
 import logging
 import time
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.type_defs import SectionName
+import cmk.utils.debug
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
+from cmk.utils.hostaddress import HostName
+from cmk.utils.log import console
+from cmk.utils.sectionname import SectionMap, SectionName
 
-import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.snmp_scan import gather_available_raw_section_names
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib import (
+    BackendSNMPTree,
+    get_snmp_table,
+    SNMPBackend,
+    SNMPHostConfig,
+    SNMPRawData,
+    SNMPRawDataElem,
+    SNMPRowInfo,
+)
 
 from cmk.fetchers import Fetcher, Mode
 
-from .cache import PersistedSections, SectionStore
+from ._snmpscan import gather_available_raw_section_names
+from .cache import SectionStore
 from .snmp import make_backend, SNMPPluginStore
 
 __all__ = ["SNMPFetcher", "SNMPSectionMeta"]
+
+
+class WalkCache(
+    MutableMapping[str, tuple[bool, SNMPRowInfo]]
+):  # pylint: disable=too-many-ancestors
+    """A cache on a per-fetchoid basis
+
+    This cache is different from section stores in that is per-fetchoid,
+    which means it deduplicates fetch operations across section definitions.
+
+    The fetched data is always saved to a file *if* the respective OID is marked as being cached
+    by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
+    is true).
+    """
+
+    __slots__ = ("_store", "_path")
+
+    def __init__(self, host_name: HostName) -> None:
+        self._store: MutableMapping[str, tuple[bool, SNMPRowInfo]] = {}
+        self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
+
+    def _read_row(self, path: Path) -> SNMPRowInfo:
+        return store.load_object_from_file(path, default=None)
+
+    def _write_row(self, path: Path, rowinfo: SNMPRowInfo) -> None:
+        return store.save_object_to_file(path, rowinfo, pretty=False)
+
+    @staticmethod
+    def _oid2name(fetchoid: str) -> str:
+        return f"OID{fetchoid}"
+
+    @staticmethod
+    def _name2oid(basename: str) -> str:
+        return basename[3:]
+
+    def _iterfiles(self) -> Iterable[Path]:
+        return self._path.iterdir() if self._path.is_dir() else ()
+
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}({self._store!r})"
+
+    def __getitem__(self, key: str) -> tuple[bool, SNMPRowInfo]:
+        return self._store.__getitem__(key)
+
+    def __setitem__(self, key: str, value: tuple[bool, SNMPRowInfo]) -> None:
+        return self._store.__setitem__(key, value)
+
+    def __delitem__(self, key: str) -> None:
+        return self._store.__delitem__(key)
+
+    def __iter__(self) -> Iterator[str]:
+        return self._store.__iter__()
+
+    def __len__(self) -> int:
+        return self._store.__len__()
+
+    def clear(self) -> None:
+        for path in self._iterfiles():
+            path.unlink(missing_ok=True)
+
+    def load(
+        self,
+        *,
+        trees: Iterable[BackendSNMPTree],
+    ) -> None:
+        """Try to read the OIDs data from cache files"""
+        # Do not load the cached data if *any* plugin needs live data
+        do_not_load = {
+            f"{tree.base}.{oid.column}"
+            for tree in trees
+            for oid in tree.oids
+            if not oid.save_to_cache
+        }
+
+        for path in self._iterfiles():
+            fetchoid = self._name2oid(path.name)
+            if fetchoid in do_not_load:
+                continue
+
+            console.vverbose(f"  Loading {fetchoid} from walk cache {path}\n")
+            try:
+                read_walk = self._read_row(path)
+            except MKTimeout:
+                raise
+            except Exception:
+                console.vverbose(f"  Failed to load {fetchoid} from walk cache {path}\n")
+                if cmk.utils.debug.enabled():
+                    raise
+                continue
+
+            if read_walk is not None:
+                # 'False': no need to store this value: it is already stored!
+                self._store[fetchoid] = (False, read_walk)
+
+    def save(self) -> None:
+        self._path.mkdir(parents=True, exist_ok=True)
+
+        for fetchoid, (save_flag, rowinfo) in self._store.items():
+            if not save_flag:
+                continue
+
+            path = self._path / self._oid2name(fetchoid)
+            console.vverbose(f"  Saving walk of {fetchoid} to walk cache {path}\n")
+            self._write_row(path, rowinfo)
 
 
 @dataclasses.dataclass(init=False)
@@ -67,7 +182,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def __init__(
         self,
         *,
-        sections: Mapping[SectionName, SNMPSectionMeta],
+        sections: SectionMap[SNMPSectionMeta],
         on_error: OnError,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
@@ -80,7 +195,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
-        self._section_store = SectionStore[SNMPRawDataSection](
+        self._section_store = SectionStore[SNMPRawDataElem](
             section_store_path,
             logger=self._logger,
         )
@@ -227,11 +342,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             raise MKFetcherError("missing backend")
 
         now = int(time.time())
-        persisted_sections = (
-            self._section_store.load()
-            if mode is Mode.CHECKING
-            else PersistedSections[SNMPRawDataSection]({})
-        )
+        persisted_sections = self._section_store.load() if mode is Mode.CHECKING else {}
         section_names = self._get_selection(mode)
         section_names |= self._detect(
             select_from=self._get_detected_sections(mode) - section_names, backend=self._backend
@@ -240,7 +351,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             # Nothing to discover? That can't be right.
             raise MKFetcherError("Got no data")
 
-        walk_cache = snmp_table.WalkCache(self._backend.hostname)
+        walk_cache = WalkCache(self._backend.hostname)
         if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load(
@@ -254,7 +365,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             walk_cache.clear()
             walk_cache_msg = "SNMP walk cache cleared"
 
-        fetched_data: dict[SectionName, Sequence[SNMPRawDataSection]] = {}
+        fetched_data: dict[SectionName, SNMPRawDataElem] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]
@@ -264,7 +375,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                 self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
                 fetched_data[section_name] = [
-                    snmp_table.get_snmp_table(
+                    get_snmp_table(
                         section_name=section_name,
                         tree=tree,
                         walk_cache=walk_cache,

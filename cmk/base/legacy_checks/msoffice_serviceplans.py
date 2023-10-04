@@ -51,8 +51,8 @@ def check_msoffice_serviceplans(item, params, info):
 
 
 check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
+    service_name="MS Office Serviceplans %s",
     discovery_function=inventory_msoffice_serviceplans,
     check_function=check_msoffice_serviceplans,
-    service_name="MS Office Serviceplans %s",
     check_ruleset_name="msoffice_serviceplans",
 )

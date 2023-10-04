@@ -92,7 +92,7 @@ def test_user_change_password_success(
         ("", "new", "cmk", "need to change your password"),
         ("cmk", "", "cmk", "new password must differ"),
         # Regression for Werk 14392 -- spaces are not stripped:
-        ("new", "new  ", "cmk", "new passwords do not match"),
+        ("new", "new  ", "cmk", "New passwords don't match"),
     ],
 )
 def test_user_change_password_errors(
@@ -127,10 +127,10 @@ def test_user_change_password_incompatible_with_policy(
 @pytest.mark.parametrize(
     "new_pw,new_pw_conf,expect_error_contains",
     [
-        ("", "new", "passwords do not match"),
-        ("", "    ", "passwords do not match"),
+        ("", "new", "Passwords don't match"),
+        ("", "    ", "Passwords don't match"),
         # Regression for Werk 14392 -- spaces are not stripped:
-        ("new", "new  ", "passwords do not match"),
+        ("new", "new  ", "Passwords don't match"),
     ],
 )
 def test_edit_user_change_password_errors(

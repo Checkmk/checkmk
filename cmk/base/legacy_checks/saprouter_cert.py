@@ -33,14 +33,14 @@ from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_saprouter_cert(info):
+def parse_saprouter_cert(string_table):
     def parse_date(list_):
         time_struct = time.strptime(" ".join(list_), "%b %d %H:%M:%S %Y")
         return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
 
     parsed = {}
     validity = None
-    for line in info:
+    for line in string_table:
         if line[0] == "Validity":
             validity = "valid"
             parsed.setdefault(validity, {})
@@ -77,7 +77,7 @@ def check_saprouter_cert(_no_item, params, parsed):
         validity_age = not_after - time.time()
 
         warn, crit = params["validity_age"]
-        infotext = "Valid from %s to %s, %s to go" % (
+        infotext = "Valid from {} to {}, {} to go".format(
             not_before_readable,
             not_after_readable,
             get_age_human_readable(validity_age),
@@ -90,7 +90,7 @@ def check_saprouter_cert(_no_item, params, parsed):
             state = 1
 
         if state:
-            infotext += " (warn/crit below %s/%s)" % (
+            infotext += " (warn/crit below {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
@@ -104,9 +104,9 @@ def check_saprouter_cert(_no_item, params, parsed):
 
 check_info["saprouter_cert"] = LegacyCheckDefinition(
     parse_function=parse_saprouter_cert,
+    service_name="SAP router certificate",
     discovery_function=inventory_saprouter_cert,
     check_function=check_saprouter_cert,
-    service_name="SAP router certificate",
     check_ruleset_name="saprouter_cert_age",
     check_default_parameters={
         "validity_age": (86400 * 30, 86400 * 7),

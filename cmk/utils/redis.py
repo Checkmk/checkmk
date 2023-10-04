@@ -60,8 +60,8 @@ def query_redis(
     ttl_query_lock: int = 5,
     ttl_update_lock: int = 10,
 ) -> QueryData:
-    query_lock = client.lock("%s.query_lock" % data_key, timeout=ttl_query_lock)
-    update_lock = client.lock("%s.update_lock" % data_key, timeout=ttl_update_lock)
+    query_lock = client.lock(f"{data_key}.query_lock", timeout=ttl_query_lock)
+    update_lock = client.lock(f"{data_key}.update_lock", timeout=ttl_update_lock)
     try:
         query_lock.acquire()
         integrity_result = integrity_callback()

@@ -4,13 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import postgres
 
 # OLD FORMAT - with idle filter
@@ -71,7 +67,7 @@ def check_postgres_connections(item, params, parsed):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     transformed_params = _transform_params(params)
 
@@ -121,16 +117,16 @@ def check_postgres_connections(item, params, parsed):
             used_perc,
             None,
             (warn, crit),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Used %s percentage" % connection_type,
         )
 
 
 check_info["postgres_connections"] = LegacyCheckDefinition(
     parse_function=postgres.parse_dbs,
-    check_function=check_postgres_connections,
-    discovery_function=inventory_postgres_connections,
     service_name="PostgreSQL Connections %s",
+    discovery_function=inventory_postgres_connections,
+    check_function=check_postgres_connections,
     check_ruleset_name="db_connections",
     check_default_parameters={
         "levels_perc_active": (80.0, 90.0),  # Levels at 80%/90% of maximum

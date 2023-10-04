@@ -10,6 +10,7 @@ from typing import Any, Literal
 from livestatus import SiteConfigurations
 
 from cmk.utils.tags import TagConfigSpec
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -368,8 +369,12 @@ class CREConfig:
 
     default_user_profile: UserSpec = field(default_factory=make_default_user_profile)
     log_logon_failures: bool = True
-    lock_on_logon_failures: int | None = None
-    user_idle_timeout: int | None = 5400
+    lock_on_logon_failures: int | None = 10
+    session_mgmt: dict[str, Any] = field(
+        default_factory=lambda: {
+            "user_idle_timeout": 5400,
+        }
+    )
     single_user_session: int | None = None
     password_policy: dict[str, Any] = field(
         default_factory=lambda: {
@@ -449,7 +454,7 @@ class CREConfig:
         ]
     )
 
-    # Override toplevel and sort_index settings of builtin icons
+    # Override toplevel and sort_index settings of built-in icons
     builtin_icon_visibility: dict = field(default_factory=dict)
 
     trusted_certificate_authorities: dict[str, Any] = field(
@@ -469,7 +474,7 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    mkeventd_enabled: bool = True
+    mkeventd_enabled: bool = edition() is not Edition.CSE  # disabled in CSE
     mkeventd_pprint_rules: bool = False
     mkeventd_notify_contactgroup: str = ""
     mkeventd_notify_facility: int = 16
@@ -517,7 +522,6 @@ class CREConfig:
     wato_upload_insecure_snapshots: bool = False
     wato_hide_varnames: bool = True
     wato_hide_help_in_lists: bool = True
-    wato_activate_changes_concurrency: str = "auto"
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15
@@ -600,3 +604,6 @@ class CREConfig:
 
     # new in 2.1
     config_storage_format: Literal["standard", "raw", "pickle"] = "pickle"
+
+    # Experimental feature flags
+    experimental_features: dict[str, Any] = field(default_factory=dict)

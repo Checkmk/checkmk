@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 
-def parse_brocade_mlx_temp(info):
+def parse_brocade_mlx_temp(string_table):
     parsed = {}
-    for temp_descr, temp_value in info:
+    for temp_descr, temp_value in string_table:
         if temp_value and temp_value != "0":
             item = (
                 temp_descr.replace("temperature", "")
@@ -43,14 +43,14 @@ def check_brocade_mlx_temp(item, params, parsed):
 
 check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
     detect=DETECT_MLX,
-    parse_function=parse_brocade_mlx_temp,
-    check_function=check_brocade_mlx_temp,
-    discovery_function=inventory_brocade_mlx_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.1.2.13.1.1",
         oids=["3", "4"],
     ),
+    parse_function=parse_brocade_mlx_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_brocade_mlx_temp,
+    check_function=check_brocade_mlx_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (105.0, 110.0)},
 )

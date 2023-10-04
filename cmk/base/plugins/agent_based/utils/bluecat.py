@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result, State, type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
-ClusterSection = Mapping[str, Optional[Section]]
+ClusterSection = Mapping[str, Section | None]
 
 DETECT_BLUECAT = equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315.2.1")
 
@@ -29,7 +30,7 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: type_defs.StringTable) -> Optional[Section]:
+def parse_bluecat(string_table: type_defs.StringTable) -> Section | None:
     """
     >>> parse_bluecat([['1', '2']])
     {'oper_state': 1, 'leases': 2}
@@ -79,7 +80,7 @@ def check_bluecat_operational_state(
         leases = section["leases"]
         yield Result(
             state=State.OK,
-            summary="%s lease%s per second" % (leases, "" if leases == 1 else "s"),
+            summary="{} lease{} per second".format(leases, "" if leases == 1 else "s"),
         )
         yield Metric(
             "leases",
@@ -89,14 +90,14 @@ def check_bluecat_operational_state(
 
 class OKNodeResults(NamedTuple):
     name: str
-    results: Sequence[Union[IgnoreResults, Metric, Result]]
+    results: Sequence[IgnoreResults | Metric | Result]
 
 
 def cluster_check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
-    results: Dict[str, Sequence[Union[IgnoreResults, Metric, Result]]] = {}
+    results: dict[str, Sequence[IgnoreResults | Metric | Result]] = {}
     ok_node_results = None
     overall_state = State.OK
 
@@ -138,7 +139,7 @@ def cluster_check_bluecat_operational_state(
             if isinstance(result, Result):
                 result = Result(
                     state=result.state,
-                    summary="%s on %s" % (result.summary, ok_node_results.name),
+                    summary=f"{result.summary} on {ok_node_results.name}",
                 )
             yield result
     else:

@@ -62,7 +62,7 @@ def check_docsis_cm_status(item, params, info):
             # TX Power
             tx_power_dbmv = float(tx_power) / 10
             warn, crit = params["tx_power"]
-            levels = " (warn/crit at %.1f/%.1f dBmV)" % (warn, crit)
+            levels = f" (warn/crit at {warn:.1f}/{crit:.1f} dBmV)"
             state = 0
             infotext = "TX Power is %.1f dBmV" % tx_power_dbmv
             if tx_power_dbmv <= crit:
@@ -82,13 +82,13 @@ check_info["docsis_cm_status"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4115.900.2.0.0.0.0.0"),
     ),
-    check_function=check_docsis_cm_status,
-    discovery_function=inventory_docsis_cm_status,
-    service_name="Cable Modem %s Status",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.10.127.1.2.2.1",
         oids=[OIDEnd(), "1", "3"],
     ),
+    service_name="Cable Modem %s Status",
+    discovery_function=inventory_docsis_cm_status,
+    check_function=check_docsis_cm_status,
     check_ruleset_name="docsis_cm_status",
     check_default_parameters={
         "tx_power": (20.0, 10.0),

@@ -1,0 +1,28 @@
+Title: Custom extensions: Avoid duplicate graphs in the user interface due to `graph_info.append`
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1692187683
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk only concerns developers of custom Checkmk extensions.
+
+There are currently two ways for registering custom graph definitions:
+
+C+:
+graph_info["GRAPH_ID"] = GRAPH_DEFINITION
+C-:
+
+and
+
+C+:
+graph_info.append(GRAPH_DEFINITION)
+C-:
+
+Using the latter might have lead to duplicate graphs in the user interface. As of this werk, this is
+fixed.
+

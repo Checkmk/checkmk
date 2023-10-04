@@ -9,17 +9,18 @@ import pprint
 import re
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import ContactgroupName
+from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.escaping import escape_to_html
+from cmk.gui.watolib.mode import mode_registry
 
 # TODO: Clean up all call sites in the GUI and only use them in Setup config file loading code
 ALL_HOSTS = cmk.utils.rulesets.tuple_rulesets.ALL_HOSTS
@@ -51,42 +52,6 @@ def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
             thelist[nr] = "!" + newname
             did_rename = True
     return did_rename
-
-
-class HostContactGroupSpec(TypedDict):
-    groups: list[ContactgroupName]
-    recurse_perms: bool
-    use: bool
-    use_for_services: bool
-    recurse_use: bool
-
-
-LegacyContactGroupSpec = tuple[bool, list[ContactgroupName]]
-
-
-# TODO: Find a better place later
-def convert_cgroups_from_tuple(
-    value: HostContactGroupSpec | LegacyContactGroupSpec,
-) -> HostContactGroupSpec:
-    """Convert old tuple representation to new dict representation of folder's group settings"""
-    if isinstance(value, dict):
-        if "use_for_services" in value:
-            return value
-        return {
-            "groups": value["groups"],
-            "recurse_perms": value["recurse_perms"],
-            "use": value["use"],
-            "use_for_services": False,
-            "recurse_use": value["recurse_use"],
-        }
-
-    return {
-        "groups": value[1],
-        "recurse_perms": False,
-        "use": value[0],
-        "use_for_services": False,
-        "recurse_use": False,
-    }
 
 
 # TODO: Find a better place later
@@ -135,13 +100,13 @@ def may_edit_ruleset(varname: str) -> bool:
     if varname in [
         "custom_checks",
         "datasource_programs",
-        "agent_config:mrpe",
-        "agent_config:agent_paths",
-        "agent_config:runas",
-        "agent_config:only_from",
+        RuleGroup.AgentConfig("mrpe"),
+        RuleGroup.AgentConfig("agent_paths"),
+        RuleGroup.AgentConfig("runas"),
+        RuleGroup.AgentConfig("only_from"),
     ]:
         return user.may("wato.rulesets") and user.may("wato.add_or_modify_executables")
-    if varname == "agent_config:custom_files":
+    if varname == RuleGroup.AgentConfig("custom_files"):
         return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
     return user.may("wato.rulesets")
 
@@ -171,3 +136,7 @@ def format_php(data: object, lvl: int = 1) -> str:
         s += format_php(str(data))
 
     return s
+
+
+def ldap_connections_are_configurable() -> bool:
+    return mode_registry.get("ldap_config") is not None

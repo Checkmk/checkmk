@@ -4,20 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import fnmatch
+from collections.abc import Callable, Generator, Iterable, Mapping, MutableMapping, Sequence
 from enum import Enum
-from typing import (
-    Any,
-    Callable,
-    Generator,
-    Iterable,
-    Literal,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    NewType,
-    Sequence,
-    Union,
-)
+from typing import Any, Literal, NamedTuple, NewType
 
 from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -78,7 +67,7 @@ DfSection = tuple[BlocksSubsection, InodesSubsection]
 
 # Filesystems to ignore.
 # They should not be sent by agent anyway and will indeed not be sent on Linux beginning with 1.6.0
-EXCLUDED_MOUNTPOINTS = ("/dev",)
+EXCLUDED_MOUNTPOINTS = ("/dev", "")
 
 FILESYSTEM_DEFAULT_LEVELS: Mapping[str, Any] = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -194,8 +183,16 @@ def _adjust_levels(
     relative_size = filesystem_size / reference_size
     true_factor = (relative_size**factor) / relative_size
 
-    warn_percent = Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
-    crit_percent = Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+    warn_percent = (
+        Percent(max(_adjust_level(levels.warn_percent, true_factor), minimum_levels[0]))
+        if factor != 1.0
+        else levels.warn_percent
+    )
+    crit_percent = (
+        Percent(max(_adjust_level(levels.crit_percent, true_factor), minimum_levels[1]))
+        if factor != 1.0
+        else levels.crit_percent
+    )
 
     if isinstance(levels, LevelsFreeSpace):
         return LevelsFreeSpace(
@@ -377,7 +374,7 @@ def check_inodes(
     levels: Mapping[str, Any],
     inodes_total: float,
     inodes_avail: float,
-) -> Generator[Union[Metric, Result], None, None]:
+) -> Generator[Metric | Result, None, None]:
     """
     >>> levels = {
     ...     "inodes_levels": (10, 5),

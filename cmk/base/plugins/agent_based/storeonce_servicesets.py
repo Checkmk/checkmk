@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -99,7 +100,7 @@ def check_storeonce_servicesets(item: str, section: storeonce.SectionServiceSets
     ]:
         yield Result(
             state=storeonce.STATE_MAP[values["%s Level" % component]],
-            notice="%s: %s" % (component, values[component]),
+            notice=f"{component}: {values[component]}",
         )
 
 

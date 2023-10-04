@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import datetime
 import os
 import shlex
 import subprocess
@@ -18,7 +19,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
 
 from .config import Config
-from .event import Event
+from .event import Event, scrub_string
 from .query import OperatorName, QueryGET
 from .settings import Settings
 
@@ -42,7 +43,7 @@ HistoryWhat = Literal[
     "CHANGESTATE",
 ]
 
-Columns = Sequence[tuple[str, float | int | str | list]]
+Columns = Sequence[tuple[str, float | int | str | list[object]]]
 
 
 class History:
@@ -109,8 +110,6 @@ class History:
 #   '----------------------------------------------------------------------'
 
 try:
-    import datetime
-
     from pymongo import DESCENDING
     from pymongo.connection import Connection  # type: ignore[import]
     from pymongo.errors import OperationFailure
@@ -358,16 +357,15 @@ def _add_files(history: History, event: Event, what: HistoryWhat, who: str, addi
 
 
 def quote_tab(col: Any) -> bytes:
-    ty = type(col)
-    if ty in [float, int]:
-        return str(col).encode("utf-8")
-    if ty is bool:
+    if isinstance(col, bool):
         return b"1" if col else b"0"
-    if ty in [tuple, list]:
-        col = b"\1" + b"\1".join([quote_tab(e) for e in col])
-    elif col is None:
-        col = b"\2"
-    elif ty is str:
+    if isinstance(col, (float, int)):
+        return str(col).encode("utf-8")
+    if isinstance(col, (tuple, list)):
+        return b"\1" + b"\1".join(quote_tab(e) for e in col)
+    if col is None:
+        return b"\2"
+    if isinstance(col, str):
         col = col.encode("utf-8")
 
     return col.replace(b"\t", b" ")
@@ -402,26 +400,18 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
 def _current_history_period(config: Config) -> int:
     """Return timestamp of the beginning of the current history period."""
-    lt = time.localtime()
-    ts = time.mktime(
-        time.struct_time(
-            (
-                lt.tm_year,
-                lt.tm_mon,
-                lt.tm_mday,
-                0,  # tm_hour
-                0,  # tm_min
-                0,  # tm_sec
-                lt.tm_wday,
-                lt.tm_yday,
-                lt.tm_isdst,
-                lt.tm_zone,
-                lt.tm_gmtoff,
+
+    today = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    return int(
+        (
+            today
+            - datetime.datetime(1970, 1, 1)
+            - datetime.timedelta(
+                days=today.weekday() if config["history_rotation"] == "weekly" else 0
             )
-        )
+        ).total_seconds()
     )
-    offset = lt.tm_wday * 86400 if config["history_rotation"] == "weekly" else 0
-    return int(ts) - offset
 
 
 def _expire_logfiles(
@@ -450,7 +440,7 @@ def _expire_logfiles(
             logger.warning(f"Error expiring log files: {e}")
 
 
-# Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
+# Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.
 _GREPABLE_COLUMNS = {
     "event_id",
     "event_text",
@@ -704,17 +694,3 @@ def _get_logfile_timespan(path: Path) -> tuple[float | None, float | None]:
     except Exception:
         last_entry = None
     return first_entry, last_entry
-
-
-def scrub_string(s: str) -> str:
-    """Rip out/replace any characters which have a special meaning in the UTF-8
-    encoded history files, see e.g. quote_tab. In theory this shouldn't be
-    necessary, because there are a bunch of bytes which are not contained in any
-    valid UTF-8 string, but following Murphy's Law, those are not used in
-    Checkmk. To keep backwards compatibility with old history files, we have no
-    choice and continue to do it wrong... :-/"""
-
-    return s.translate(_scrub_string_unicode_table)
-
-
-_scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}

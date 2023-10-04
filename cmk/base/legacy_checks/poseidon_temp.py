@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_poseidon_temp(info):
+def parse_poseidon_temp(string_table):
     parsed = {}
-    if not info:
+    if not string_table:
         return None
-    for name, state, value_string in info:
+    for name, state, value_string in string_table:
         try:
             temp = float(value_string.replace("C", ""))
         except ValueError:
@@ -23,8 +23,9 @@ def parse_poseidon_temp(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_poseidon_temp(item, params, data):
+def check_poseidon_temp(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     sensor_states = {
         "0": "invalid",
         "1": "normal",
@@ -36,7 +37,7 @@ def check_poseidon_temp(item, params, data):
     mk_status = 0
     if sensor_state_value != "1":
         mk_status = 2
-    yield mk_status, "Sensor %s, State %s" % (item, sensor_state_txt)
+    yield mk_status, f"Sensor {item}, State {sensor_state_txt}"
 
     temp = data.get("temp")
     if temp:
@@ -45,16 +46,20 @@ def check_poseidon_temp(item, params, data):
         yield 3, "No data for Sensor %s found" % item
 
 
+def discover_poseidon_temp(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["poseidon_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
-    parse_function=parse_poseidon_temp,
-    check_function=check_poseidon_temp,
-    discovery_function=discover(),
-    service_name="Temperatur: %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.3.3.3.1",
         oids=["2", "4", "5"],
     ),
+    parse_function=parse_poseidon_temp,
+    service_name="Temperatur: %s",
+    discovery_function=discover_poseidon_temp,
+    check_function=check_poseidon_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={},
 )

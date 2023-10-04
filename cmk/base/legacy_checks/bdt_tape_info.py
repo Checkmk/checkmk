@@ -15,16 +15,16 @@ def inventory_bdt_tape_info(info):
 
 def check_bdt_tape_info(_no_item, _no_params, info):
     for name, value in zip(["Name", "Description", "Vendor", "Agent Version"], info[0]):
-        yield 0, "%s: %s" % (name, value)
+        yield 0, f"{name}: {value}"
 
 
 check_info["bdt_tape_info"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.10893.2.101"),
-    discovery_function=inventory_bdt_tape_info,
-    check_function=check_bdt_tape_info,
-    service_name="Tape Library Info",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20884.10893.2.101.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="Tape Library Info",
+    discovery_function=inventory_bdt_tape_info,
+    check_function=check_bdt_tape_info,
 )

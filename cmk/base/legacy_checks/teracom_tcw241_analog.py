@@ -6,7 +6,7 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
@@ -18,11 +18,11 @@ AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple
 _TABLES = ["1", "2", "3", "4"]
 
 
-def parse_tcw241_analog(info):
+def parse_tcw241_analog(string_table):
     """
-    parse info data and create list of namedtuples for 4 analog sensors.
+    parse string_table data and create list of namedtuples for 4 analog sensors.
 
-    expected info structure:
+    expected string_table structure:
         list of 4 analog sensors:
             [description, maximum , minimum]
             ..
@@ -33,11 +33,11 @@ def parse_tcw241_analog(info):
     converted to list structure:
         [AnalogSensor(description maximum minimum voltage)]
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: list of namedtuples for analog sensors
     """
     try:
-        sensor_parameter, voltages = info[:4], info[4][0]
+        sensor_parameter, voltages = string_table[:4], string_table[4][0]
     except IndexError:
         return {}
 
@@ -64,8 +64,7 @@ def parse_tcw241_analog(info):
     return info_dict
 
 
-@get_parsed_item_data
-def check_tcw241_analog(item, params, sensor):
+def check_tcw241_analog(item, params, parsed):
     """
     Check sensor data if value is in range
 
@@ -74,7 +73,9 @@ def check_tcw241_analog(item, params, sensor):
     :param sensor: analog sensor data
     :return: status
     """
-    return check_levels(
+    if not (sensor := parsed.get(item)):
+        return
+    yield check_levels(
         sensor.voltage,
         "voltage",
         (sensor.minimum, sensor.maximum),
@@ -83,12 +84,12 @@ def check_tcw241_analog(item, params, sensor):
     )
 
 
+def discover_teracom_tcw241_analog(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
-    parse_function=parse_tcw241_analog,
-    check_function=check_tcw241_analog,
-    discovery_function=discover(),
-    service_name="Analog Sensor %s",
     fetch=[
         *(
             SNMPTree(
@@ -106,4 +107,8 @@ check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
             oids=["1.0", "2.0", "3.0", "4.0"],
         ),
     ],
+    parse_function=parse_tcw241_analog,
+    service_name="Analog Sensor %s",
+    discovery_function=discover_teracom_tcw241_analog,
+    check_function=check_tcw241_analog,
 )

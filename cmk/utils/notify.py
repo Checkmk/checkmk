@@ -10,15 +10,18 @@ import time
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType, TypedDict
+from typing import Final, Literal, NewType
+
+from typing_extensions import TypedDict
 
 import livestatus
 
-import cmk.utils.defines
+import cmk.utils.statename as statename
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.notify_types import EventContext, NotificationContext
+from cmk.utils.notify_types import EventContext
+from cmk.utils.notify_types import NotificationContext as NotificationContext
 
 logger = logging.getLogger("cmk.utils.notify")
 
@@ -55,21 +58,24 @@ class NotificationViaPlugin(TypedDict):
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
-    return cmk.utils.defines.service_state_name(exit_code, "UNKNOWN")
+    return statename.service_state_name(exit_code, "UNKNOWN")
 
 
 def find_wato_folder(context: NotificationContext) -> str:
-    for tag in context.get("HOSTTAGS", "").split():
-        if tag.startswith("/wato/"):
-            return tag[6:].rstrip("/")
-    return ""
+    return next(
+        (
+            tag[6:].rstrip("/")
+            for tag in context.get("HOSTTAGS", "").split()
+            if tag.startswith("/wato/")
+        ),
+        "",
+    )
 
 
 def notification_message(plugin: NotificationPluginName, context: NotificationContext) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
-    service = context.get("SERVICEDESC")
-    if service:
+    if service := context.get("SERVICEDESC"):
         what = "SERVICE NOTIFICATION"
         spec = f"{hostname};{service}"
         state = context["SERVICESTATE"]
@@ -98,8 +104,7 @@ def notification_progress_message(
 ) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
-    service = context.get("SERVICEDESC")
-    if service:
+    if service := context.get("SERVICEDESC"):
         what = "SERVICE NOTIFICATION PROGRESS"
         spec = f"{hostname};{service}"
     else:
@@ -124,8 +129,7 @@ def notification_result_message(
 ) -> str:
     contact = context["CONTACTNAME"]
     hostname = context["HOSTNAME"]
-    service = context.get("SERVICEDESC")
-    if service:
+    if service := context.get("SERVICEDESC"):
         what = "SERVICE NOTIFICATION RESULT"
         spec = f"{hostname};{service}"
     else:
@@ -199,7 +203,7 @@ def create_spoolfile(
 
 
 def log_to_history(message: str) -> None:
-    _livestatus_cmd("LOG;%s" % message)
+    _livestatus_cmd(f"LOG;{message}")
 
 
 def _livestatus_cmd(command: str) -> None:

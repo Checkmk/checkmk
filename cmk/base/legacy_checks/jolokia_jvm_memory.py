@@ -6,24 +6,18 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_jolokia_jvm_memory(info):
+def parse_jolokia_jvm_memory(string_table):
     parsed = {}
-    for instance, mbean, data in parse_jolokia_json_output(info):
+    for instance, mbean, data in parse_jolokia_json_output(string_table):
         type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
         parsed_data.update(data)
@@ -51,14 +45,13 @@ def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
         perc_val,
         None,
         params.get("perc_%s" % mem_type),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
     )
 
 
-@discover
-def discover_jolokia_jvm_memory(_instance, data):
-    return bool(data.get("Memory"))
+def discover_jolokia_jvm_memory(section):
+    yield from ((item, {}) for item, data in section.items() if data.get("Memory"))
 
 
 def _iter_type_value_max(mem_data):
@@ -85,20 +78,20 @@ def _iter_type_value_max(mem_data):
         yield "total", heap + nonheap, totalmax
 
 
-@get_parsed_item_data
-def check_jolokia_jvm_memory(_item, params, instance_data):
+def check_jolokia_jvm_memory(item, params, parsed):
+    if not (instance_data := parsed.get(item)):
+        return
     mem_data = instance_data.get("Memory", {})
 
     for mem_type, value, value_max in _iter_type_value_max(mem_data):
-        for subresult in _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
-            yield subresult
+        yield from _jolokia_check_abs_and_perc(mem_type, value, value_max, params)
 
 
 check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
     parse_function=parse_jolokia_jvm_memory,
+    service_name="JVM %s Memory",
     discovery_function=discover_jolokia_jvm_memory,
     check_function=check_jolokia_jvm_memory,
-    service_name="JVM %s Memory",
     check_ruleset_name="jvm_memory",
     check_default_parameters={
         "perc_heap": (80.0, 90.0),
@@ -123,7 +116,7 @@ def discover_jolokia_jvm_memory_pools(parsed):
         for data in instance_info.get("MemoryPool", {}).values():
             pool = data.get("Name")
             if pool:
-                yield "%s Memory Pool %s" % (instance, pool), {}
+                yield f"{instance} Memory Pool {pool}", {}
 
 
 def _get_jolokia_jvm_mempool_data(item, parsed):
@@ -144,8 +137,7 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
     value_max = usage.get("max", -1)
     value_max = value_max if value_max > 0 else None
-    for subresult in _jolokia_check_abs_and_perc("used", usage["used"], value_max, params):
-        yield subresult
+    yield from _jolokia_check_abs_and_perc("used", usage["used"], value_max, params)
 
     init = usage.get("init")
     if init is not None:
@@ -157,9 +149,10 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
+    service_name="JVM %s",
+    sections=["jolokia_jvm_memory"],
     discovery_function=discover_jolokia_jvm_memory_pools,
     check_function=check_jolokia_jvm_memory_pools,
-    service_name="JVM %s",
     check_ruleset_name="jvm_memory_pools",
     check_default_parameters={
         "perc_used": (80.0, 90.0),

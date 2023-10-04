@@ -135,7 +135,7 @@ def test_discover_storcli_vdrives(
                 Result(state=State.OK, summary="Drive is consistent"),
                 Result(state=State.UNKNOWN, summary="State is Unkn (unknown[Unkn])"),
             ],
-            id="If the drive state is not known, the check result is UKNOWN and provides a description.",
+            id="If the drive state is not known, the check result is UKKNOWN and provides a description.",
         ),
     ],
 )

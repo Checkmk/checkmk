@@ -12,16 +12,16 @@ from pytest import MonkeyPatch
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
 import cmk.base.config as config
 from cmk.base.config import ConfigCache
 
 
-class _AutochecksMocker(config.AutochecksManager):
+class _AutochecksMocker(AutochecksManager):
     def __init__(self) -> None:
         super().__init__()
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
@@ -35,7 +35,7 @@ class Scenario:
 
     @staticmethod
     def _get_config_cache() -> ConfigCache:
-        cc = config.get_config_cache()
+        cc = config.reset_config_cache()
         assert isinstance(cc, ConfigCache)
         return cc
 
@@ -118,7 +118,7 @@ class Scenario:
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
 
-    # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+    # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
     def _get_effective_tag_config(
@@ -193,7 +193,7 @@ class CEEScenario(Scenario):
 
     @staticmethod
     def _get_config_cache() -> config.CEEConfigCache:
-        cc = config.get_config_cache()
+        cc = config.reset_config_cache()
         assert isinstance(cc, config.CEEConfigCache)
         return cc
 

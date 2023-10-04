@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal
 
 from marshmallow import fields, Schema
+from typing_extensions import TypedDict
 
-from cmk.utils.type_defs import HTTPMethod
+from cmk.gui.http import HTTPMethod
 
 URL = str
 
@@ -16,6 +17,7 @@ DomainType = Literal[
     "activation_run",
     "agent",
     "agent_binary",
+    "audit_log",
     "bi_aggregation",
     "bi_pack",
     "bi_rule",
@@ -35,6 +37,7 @@ DomainType = Literal[
     "licensing",
     "license_usage",
     "metric",
+    "notification_rule",
     "password",
     "rule",
     "ruleset",
@@ -163,7 +166,7 @@ RestfulEndpointName = Literal[
     ".../version",
 ]  # fmt: off
 
-LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
+LinkRelation = CmkEndpointName | RestfulEndpointName
 
 PropertyFormat = Literal[
     # String values
@@ -208,11 +211,11 @@ class ObjectProperty(TypedDict, total=False):
     extensions: dict[str, Any]
 
 
-Serializable = Union[dict[str, Any], CollectionObject, ObjectProperty]
+Serializable = dict[str, Any] | CollectionObject | ObjectProperty
 ETagBehaviour = Literal["input", "output", "both"]
 
 SchemaClass = type[Schema]
-SchemaInstanceOrClass = Union[Schema, SchemaClass]
+SchemaInstanceOrClass = Schema | SchemaClass
 OpenAPISchemaType = Literal["string", "array", "object", "boolean", "integer", "number"]
 
 # Used to blacklist some endpoints in certain locations
@@ -303,12 +306,12 @@ OpenAPIParameter = TypedDict(
         "required": bool,
         "allowEmptyValue": bool,
         "example": Any,
-        "schema": Union[SchemaType, type[Schema]],
+        "schema": SchemaType | type[Schema],
     },
     total=False,
 )
 
-RawParameter = Union[MarshmallowFieldParams, type[Schema]]
+RawParameter = MarshmallowFieldParams | type[Schema]
 
 
 class PathItem(TypedDict, total=False):

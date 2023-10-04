@@ -28,7 +28,8 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import islice
-from typing import Any, ClassVar, NamedTuple, Optional, Pattern
+from re import Pattern
+from typing import Any, ClassVar, NamedTuple
 
 from .agent_based_api.v1 import Metric, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -59,11 +60,11 @@ class ParsedLine:
     sec_regex: ClassVar[Pattern] = regex(r"Debian-Security:|Ubuntu[^/]*/[^/]*-\bsecurity\b")
     action: str
     package: str
-    old_version: Optional[str]
-    update_metadata: Optional[str]
+    old_version: str | None
+    update_metadata: str | None
 
     @classmethod
-    def try_from_str(cls, line: str) -> Optional["ParsedLine"]:
+    def try_from_str(cls, line: str) -> "ParsedLine | None":
         """Parse a line of the agent output, returning the parts
         >>> assert ParsedLine.try_from_str(
         ...     "Remv default-java-plugin [2:1.8-58]"
@@ -163,7 +164,7 @@ def _data_is_valid(string_table: StringTable) -> bool:
     )
 
 
-def parse_apt(string_table: StringTable) -> Optional[Section]:
+def parse_apt(string_table: StringTable) -> Section | None:
     sanitized_string_table = _sanitize_string_table(string_table)
     if len(sanitized_string_table) == 0:
         return Section(updates=[], removals=[], sec_updates=[])

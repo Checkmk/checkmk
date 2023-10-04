@@ -27,7 +27,7 @@ def check_huawei_osn_laser(item, params, info):
             state = 0
 
         if state:
-            return state, "(warn/crit below %s/%s dBm)" % (warn, crit)
+            return state, f"(warn/crit below {warn}/{crit} dBm)"
         return 0, None
 
     for line in info:
@@ -54,18 +54,18 @@ def check_huawei_osn_laser(item, params, info):
             fec_before = line[3]
             fec_after = line[4]
             if not fec_before == "" and not fec_after == "":
-                yield 0, "FEC Correction before/after: %s/%s" % (fec_before, fec_after)
+                yield 0, f"FEC Correction before/after: {fec_before}/{fec_after}"
 
 
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_OSN,
-    discovery_function=inventory_huawei_osn_laser,
-    check_function=check_huawei_osn_laser,
-    service_name="Laser %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",
         oids=["6.200", "2.200", "2.203", "2.252", "2.253"],
     ),
+    service_name="Laser %s",
+    discovery_function=inventory_huawei_osn_laser,
+    check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
     check_default_parameters={
         "levels_low_in": (-160.0, -180.0),

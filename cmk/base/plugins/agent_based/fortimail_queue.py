@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional, Tuple
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.render import bytes as render_bytes
@@ -33,7 +33,7 @@ def discover_fortimail_queue(section: Section) -> DiscoveryResult:
 
 def check_fortimail_queue(
     item: str,
-    params: Mapping[str, Optional[Tuple[float, float]]],
+    params: Mapping[str, tuple[float, float] | None],
     section: Section,
 ) -> CheckResult:
     if not (queue_data := section.get(item)):

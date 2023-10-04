@@ -27,12 +27,12 @@ def check_emc_vplex_cpu(item, params, info):
 
 check_info["emc_vplex_cpu"] = LegacyCheckDefinition(
     detect=DETECT_VPLEX,
-    check_function=check_emc_vplex_cpu,
-    discovery_function=inventory_emc_vplex_cpu,
-    service_name="CPU Utilization %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1139.21.2.2",
         oids=["1.1.3", "3.1.1"],
     ),
+    service_name="CPU Utilization %s",
+    discovery_function=inventory_emc_vplex_cpu,
+    check_function=check_emc_vplex_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )

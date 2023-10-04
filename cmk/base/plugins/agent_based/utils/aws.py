@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -55,11 +56,11 @@ class AWSMetric:
 
 
 LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
-AWSLimitsByRegion = Dict[str, List]
+AWSLimitsByRegion = dict[str, list]
 
 
 def discover_lambda_functions(
-    section_aws_lambda_summary: Optional[LambdaSummarySection],
+    section_aws_lambda_summary: LambdaSummarySection | None,
 ) -> DiscoveryResult:
     if section_aws_lambda_summary is None:
         return
@@ -106,7 +107,7 @@ def check_aws_limits(
             limit_ref = p_limit
 
         if is_valid_aws_limits_perf_data(resource_key):
-            yield Metric(name="aws_%s_%s" % (aws_service, resource_key), value=amount)
+            yield Metric(name=f"aws_{aws_service}_{resource_key}", value=amount)
 
         if not limit_ref:
             continue
@@ -148,12 +149,12 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
 def extract_aws_metrics_by_labels(  # type: ignore[no-untyped-def]
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
-    extra_keys: Optional[Iterable[str]] = None,
+    extra_keys: Iterable[str] | None = None,
     convert_sum_stats_to_rate=True,
-) -> Mapping[str, Dict[str, Any]]:
+) -> Mapping[str, dict[str, Any]]:
     if extra_keys is None:
         extra_keys = []
-    values_by_labels: Dict[str, Dict[str, Any]] = {}
+    values_by_labels: dict[str, dict[str, Any]] = {}
     for row in section:
         row_id = row["Id"].lower()
         row_label = row["Label"]
@@ -284,16 +285,16 @@ class LambdaCloudwatchMetrics:
     Errors: float
     Invocations: float
     Throttles: float
-    ConcurrentExecutions: Optional[float] = None
-    DeadLetterErrors: Optional[float] = None
-    DestinationDeliveryFailures: Optional[float] = None
-    IteratorAge: Optional[float] = None
-    PostRuntimeExtensionsDuration: Optional[float] = None
-    ProvisionedConcurrencyInvocations: Optional[float] = None
-    ProvisionedConcurrencySpilloverInvocations: Optional[float] = None
-    ProvisionedConcurrencyUtilization: Optional[float] = None
-    ProvisionedConcurrentExecutions: Optional[float] = None
-    UnreservedConcurrentExecutions: Optional[float] = None
+    ConcurrentExecutions: float | None = None
+    DeadLetterErrors: float | None = None
+    DestinationDeliveryFailures: float | None = None
+    IteratorAge: float | None = None
+    PostRuntimeExtensionsDuration: float | None = None
+    ProvisionedConcurrencyInvocations: float | None = None
+    ProvisionedConcurrencySpilloverInvocations: float | None = None
+    ProvisionedConcurrencyUtilization: float | None = None
+    ProvisionedConcurrentExecutions: float | None = None
+    UnreservedConcurrentExecutions: float | None = None
 
     def __post_init__(self) -> None:
         # convert timespans from milliseconds to canonical seconds
@@ -323,14 +324,14 @@ LambdaQueryStats = Sequence[Mapping[str, str]]
 class LambdaInsightMetrics:
     max_memory_used_bytes: float
     count_cold_starts_in_percent: float
-    max_init_duration_seconds: Optional[float] = None
+    max_init_duration_seconds: float | None = None
 
     @staticmethod
     def from_metrics(query_stats: LambdaQueryStats) -> "LambdaInsightMetrics":
         max_memory_used_bytes: float
         count_cold_starts: int
         count_invocations: int
-        max_init_duration_seconds: Optional[float] = None
+        max_init_duration_seconds: float | None = None
         for metric in query_stats:
             if metric["field"] == "max_memory_used_bytes":
                 max_memory_used_bytes = float(metric["value"])

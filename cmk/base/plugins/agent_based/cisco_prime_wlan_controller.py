@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Generator, Mapping
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, Final, Generator, Mapping, NamedTuple, Optional, Tuple
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -38,30 +39,30 @@ class WlanController(NamedTuple):
     type: str
     software_version: str
     ip_address: str
-    location: Optional[str]
+    location: str | None
     group_name: str
-    mobility_group_name: Optional[str]
+    mobility_group_name: str | None
     alarm_status: AlarmStatus
     access_points_count: int
     client_count: int
     reachability_status: bool
-    last_backup: Optional[datetime]
+    last_backup: datetime | None
 
 
-def get_controllers(controller_data: Dict[str, Any]) -> Generator[Dict[str, Any], None, None]:
+def get_controllers(controller_data: dict[str, Any]) -> Generator[dict[str, Any], None, None]:
     for entity in controller_data["queryResponse"]["entity"]:
         dto_type = entity["@dtoType"]
         yield entity[dto_type]
 
 
-def get_last_backup(last_backup: Optional[str]) -> Optional[datetime]:
+def get_last_backup(last_backup: str | None) -> datetime | None:
     if not last_backup:
         return None
 
     return datetime.strptime(last_backup, "%Y-%m-%dT%H:%M:%S.%f%z")
 
 
-def parse_cisco_prime_wlan_controller(string_table: StringTable) -> Dict[str, WlanController]:
+def parse_cisco_prime_wlan_controller(string_table: StringTable) -> dict[str, WlanController]:
     controller_data = json.loads(string_table[0][0])
 
     return {
@@ -89,12 +90,12 @@ register.agent_section(
 )
 
 
-def discovery_wlan_controller(section: Dict[str, WlanController]) -> DiscoveryResult:
+def discovery_wlan_controller(section: dict[str, WlanController]) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_wlan_controller_metadata(item: str, section: Dict[str, WlanController]) -> CheckResult:
+def check_wlan_controller_metadata(item: str, section: dict[str, WlanController]) -> CheckResult:
     data = section.get(item)
     if not data:
         return
@@ -123,7 +124,7 @@ register.check_plugin(
 
 
 def check_wlan_controller_alarm_status(
-    item: str, section: Dict[str, WlanController]
+    item: str, section: dict[str, WlanController]
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -143,7 +144,7 @@ register.check_plugin(
 
 
 def check_wlan_controller_access_points(
-    item: str, params: Mapping[str, Tuple[float, float]], section: Dict[str, WlanController]
+    item: str, params: Mapping[str, tuple[float, float]], section: dict[str, WlanController]
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -170,7 +171,7 @@ register.check_plugin(
 
 
 def check_wlan_controller_clients(
-    item: str, params: Mapping[str, Tuple[float, float]], section: Dict[str, WlanController]
+    item: str, params: Mapping[str, tuple[float, float]], section: dict[str, WlanController]
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -197,7 +198,7 @@ register.check_plugin(
 
 
 def check_wlan_controller_reachability(
-    item: str, section: Dict[str, WlanController]
+    item: str, section: dict[str, WlanController]
 ) -> CheckResult:
     data = section.get(item)
     if not data:
@@ -220,7 +221,7 @@ register.check_plugin(
 
 
 def check_wlan_controller_last_backup(
-    item: str, params: Mapping[str, Tuple[float, float]], section: Dict[str, WlanController]
+    item: str, params: Mapping[str, tuple[float, float]], section: dict[str, WlanController]
 ) -> CheckResult:
     data = section.get(item)
     if not data:

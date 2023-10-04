@@ -16,13 +16,14 @@ from typing import Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.crash_handler as crash_handler
 import cmk.gui.pages
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
+from cmk.gui.graphing._utils import MKCombinedGraphLimitExceededError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -41,16 +42,16 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.metrics.utils import MKCombinedGraphLimitExceededError
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.html import HTML, HTMLInput
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.view import View
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import get_permitted_views
+from cmk.gui.visuals.filter import Filter
+from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 from .breadcrumb import dashboard_breadcrumb
@@ -105,7 +106,7 @@ def _get_default_dashboard_name() -> str:
     They will see the dashboard that has been built for operators and is built to show only the host
     and service problems that are relevant for the user.
     """
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return "main"  # problems = main in raw edition
     return "main" if user.may("general.see_all") and user.may("dashboard.main") else "problems"
 
@@ -281,9 +282,9 @@ def dashlet_container(dashlet: Dashlet) -> Iterator[None]:
 
 def _render_dashlet(
     board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int
-) -> tuple[str | HTML, HTMLInput]:
-    content: HTMLInput = ""
-    title: str | HTML = ""
+) -> tuple[HTML | str, HTML | str]:
+    content: HTML | str = ""
+    title: HTML | str = ""
     missing_infos = visuals.missing_context_filters(
         set(board["mandatory_context_filters"]), board["context"]
     )
@@ -335,7 +336,7 @@ def _render_dashlet_content(
         return output_funnel.drain()
 
 
-def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
+def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTML | str:
     if isinstance(e, (MKMissingDataError, MKCombinedGraphLimitExceededError)):
         return html.render_message(str(e))
 
@@ -398,7 +399,7 @@ def _get_mandatory_filters(
 ) -> Iterable[str]:
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
-        for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
+        for info, _unused in visual_info_registry[info_key]().single_spec:
             yield info
 
     # Get required context filters set in the dashboard config
@@ -465,7 +466,7 @@ def _page_menu(
 
 
 def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type: ignore[no-untyped-def]
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
     else:
         linked_dashboards = ["main", "problems", "checkmk"]
@@ -546,7 +547,7 @@ def _dashboard_edit_entries(
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
         yield PageMenuEntry(
-            title=_("Clone builtin dashboard"),
+            title=_("Clone built-in dashboard"),
             icon_name="edit",
             item=make_simple_link(makeuri(request, [("edit", 1)])),
         )
@@ -726,7 +727,7 @@ def get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]],
 @dataclass
 class PageMenuEntryCEEOnly(PageMenuEntry):
     def __post_init__(self) -> None:
-        if cmk_version.is_raw_edition():
+        if cmk_version.edition() is cmk_version.Edition.CRE:
             self.is_enabled = False
             self.disabled_tooltip = _("Enterprise feature")
 
@@ -1068,7 +1069,7 @@ def get_dashlet_type(dashlet_spec: DashletConfig) -> type[Dashlet]:
     return dashlet_registry[dashlet_spec["type"]]
 
 
-def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: str | HTML) -> None:
+def draw_dashlet(dashlet: Dashlet, content: HTML | str, title: HTML | str) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in

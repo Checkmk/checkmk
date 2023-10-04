@@ -37,11 +37,11 @@ def check_infoblox_dns_stats(_no_item, _no_params, info):
 
 check_info["infoblox_dns_stats"] = LegacyCheckDefinition(
     detect=DETECT_INFOBLOX,
-    discovery_function=inventory_infoblox_statistics,
-    check_function=check_infoblox_dns_stats,
-    service_name="DNS statistics",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.3.1.1.1",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
+    service_name="DNS statistics",
+    discovery_function=inventory_infoblox_statistics,
+    check_function=check_infoblox_dns_stats,
 )

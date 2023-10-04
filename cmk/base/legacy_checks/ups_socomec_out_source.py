@@ -48,11 +48,11 @@ def check_ups_socomec_out_source(_no_item, _no_params, info):
 
 check_info["ups_socomec_out_source"] = LegacyCheckDefinition(
     detect=DETECT_SOCOMEC,
-    discovery_function=inventory_ups_socomec_out_source,
-    check_function=check_ups_socomec_out_source,
-    service_name="Output Source",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4",
         oids=["1"],
     ),
+    service_name="Output Source",
+    discovery_function=inventory_ups_socomec_out_source,
+    check_function=check_ups_socomec_out_source,
 )

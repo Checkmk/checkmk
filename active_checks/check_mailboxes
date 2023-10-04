@@ -66,7 +66,11 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
 
 def check_mailboxes(args: Args) -> CheckResult:
-    args.fetch_password = args.fetch_password or getpass()
+    # Currently only EWS uses fetch_tenant_id, don't use getpass() if set
+    # because of "warning: password input may be echoed."
+    args.fetch_password = (
+        args.fetch_password if args.fetch_tenant_id or args.fetch_password else getpass()
+    )
     if args.fetch_protocol == "POP3":
         raise RuntimeError("check_mailboxes does not operate on POP servers, sorry.")
     if type(args.crit_age_newest) is not type(args.warn_age_newest):

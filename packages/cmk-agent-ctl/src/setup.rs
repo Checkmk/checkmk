@@ -17,6 +17,7 @@ use log::info;
 #[cfg(unix)]
 use nix::unistd;
 use std::env;
+use std::env::ArgsOs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
@@ -267,13 +268,13 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
     Ok(paths)
 }
 
-pub fn init() -> AnyhowResult<(cli::Cli, PathResolver)> {
+pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
     if !is_os_supported() {
         eprintln!("This OS is unsupported");
         std::process::exit(1);
     }
     // Parse args as first action to directly exit from --help or malformatted arguments
-    let cli = cli::Cli::parse();
+    let cli = cli::Cli::parse_from(args);
     #[cfg(windows)]
     misc::validate_elevation()?;
 

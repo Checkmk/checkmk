@@ -11,8 +11,15 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.utils.version import RType, Version
 
-from .. import has_content, load_raw_files, sort_by_version_and_component, WerkTranslator
-from ..werk import Class, Compatibility, Edition, Werk
+from .. import has_content, load_raw_files
+from ..werk import (
+    Class,
+    Compatibility,
+    Edition,
+    sort_by_version_and_component,
+    Werk,
+    WerkTranslator,
+)
 
 
 class SimpleWerk(NamedTuple):
@@ -66,12 +73,11 @@ def get_werks_by_edition(werks: list[Werk], edition: Edition) -> WerksByEdition:
 
 
 def main(args: argparse.Namespace) -> None:
-    werks_list = [werk.to_werk() for werk in load_raw_files(args.werk_dir)]
-
+    werks_list = load_raw_files(args.werk_dir)
     version_werks = [werk for werk in werks_list if werk.version == args.version]
 
     werks = {}
-    for edition in [Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME]:
+    for edition in [Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME, Edition.CSE]:
         werks[edition.value] = get_werks_by_edition(version_werks, edition)
 
     env = Environment(

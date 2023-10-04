@@ -30,17 +30,17 @@ def check_cisco_ucs_psu(item, _no_params, info):
             state, state_readable = map_operability.get(
                 status, (3, "Unknown, status code %s" % status)
             )
-            return state, "Status: %s, Model: %s, SN: %s" % (state_readable, model, serial)
+            return state, f"Status: {state_readable}, Model: {model}, SN: {serial}"
     return None
 
 
 check_info["cisco_ucs_psu"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_cisco_ucs_psu,
-    discovery_function=inventory_cisco_ucs_psu,
-    service_name="PSU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.15.56.1",
         oids=["2", "8", "13", "6"],
     ),
+    service_name="PSU %s",
+    discovery_function=inventory_cisco_ucs_psu,
+    check_function=check_cisco_ucs_psu,
 )

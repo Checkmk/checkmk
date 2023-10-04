@@ -10,18 +10,16 @@ import copy
 import sys
 
 import pytest
-from mock import Mock, patch
 
 if sys.version_info[0] == 2:
+    from mock import Mock, patch
+
     import agents.plugins.mk_postgres_2 as mk_postgres  # pylint: disable=syntax-error
 else:
+    from unittest.mock import Mock, patch
+
     import agents.plugins.mk_postgres as mk_postgres
 
-try:
-    from typing import Dict, Optional  # noqa: F401
-except ImportError:
-    # We need typing only for testing
-    pass
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -42,7 +40,7 @@ VALID_CONFIG_WITH_INSTANCES = [
     "",
     "not a comment but trash",
     "DBUSER=user_yz",
-    "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass",
+    "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass{sep}",
 ]
 VALID_CONFIG_WITH_PG_BINARY_PATH = [
     "PG_BINARY_PATH=C:\\PostgreSQL\\15\\bin\\psql.exe",
@@ -103,7 +101,10 @@ class TestLinux:
     @patch("subprocess.Popen")
     def test_postgres_binary_path_fallback(self, mock_Popen):
         process_mock = Mock()
-        attrs = {"communicate.side_effect": [("usr/mydb-12.3/bin", None)]}
+        attrs = {
+            "communicate.side_effect": [("usr/mydb-12.3/bin", None)],
+            "returncode": 0,
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
         instance = {
@@ -113,7 +114,7 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert myPostgresOnLinux.psql_binary_path == "usr/mydb-12.3/bin"
@@ -163,7 +164,8 @@ class TestLinux:
                 ("/usr/lib/postgres/psql", None),
                 ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -173,7 +175,7 @@ class TestLinux:
             "pg_database": "postgres",
             "pg_port": "5432",
             "pg_passfile": "",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
@@ -199,13 +201,14 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
                 ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -235,14 +238,15 @@ class TestLinux:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
             "version": "12.3",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
                 ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -262,6 +266,7 @@ class TestLinux:
                     None,
                 ),
             ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -300,7 +305,8 @@ class TestLinux:
                 ("/usr/lib/postgres/psql", None),
                 ("postgres\ndb1", None),
                 ("12.3.6", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -317,7 +323,10 @@ class TestLinux:
                     % ps_instance,
                 ]
             )
-        attrs = {"communicate.side_effect": [("\n".join(proc_list), None)]}
+        attrs = {
+            "communicate.side_effect": [("\n".join(proc_list), None)],
+            "returncode": 0,
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 
@@ -383,7 +392,8 @@ class TestWindows:
             "communicate.side_effect": [
                 ("postgres\x00db1\x00".encode("utf-8"), b"ok"),
                 (b"12.1", b"ok"),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -393,7 +403,7 @@ class TestWindows:
             "name": "data",
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
@@ -421,13 +431,14 @@ class TestWindows:
             "pg_user": "myuser",
             "pg_passfile": "c:\\User\\.pgpass",
             "pg_version": "12.1",
-        }  # type: Dict[str, Optional[str]]
+        }  # type: dict[str, str | None]
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
                 (b"postgres\x00db1\x00", b"ok"),
                 (b"12.1.5\x00", b"ok"),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock

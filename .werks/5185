@@ -27,14 +27,14 @@ column where you should see 86400s as first value (-> 1 day). If you see a value
 should fix the issue as follows.
 
 <ul>
-<li>Navigate to "WATO > Host & Service parameters > Monitoring configuration > Normal check 
+<li>Navigate to "WATO > Host &amp; Service parameters > Monitoring configuration > Normal check
 interval for service checks".</li>
 <li>Create a new rule with the following settings:</li>
 <li>Description: Restrict HW/SW-Inventory to once a day</li>
 <li>Value: 1 day</li>
 <li>Services: <tt>Check_MK HW/SW Inventory$</tt></li>
 <li>Activate the changes via WATO</li>
-<li>
+</ul>
 
 After this you should check the service detail page again and see the 86400s interval.
 

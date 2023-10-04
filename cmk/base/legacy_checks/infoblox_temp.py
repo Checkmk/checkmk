@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
 # Suggested by customer
 
 
-def parse_infoblox_temp(info):
+def parse_infoblox_temp(string_table):
     map_states = {
         "1": (0, "working"),
         "2": (1, "warning"),
@@ -40,7 +40,9 @@ def parse_infoblox_temp(info):
 
     parsed = {}
     # Just for a better handling
-    for index, state, descr in list(zip(["", "1", "2", ""], info[0][0], info[1][0]))[1:]:
+    for index, state, descr in list(
+        zip(["", "1", "2", ""], string_table[0][0], string_table[1][0])
+    )[1:]:
         if ":" not in descr:
             continue
 
@@ -48,7 +50,7 @@ def parse_infoblox_temp(info):
         r_val, unit = val_str.split()
         val = float(r_val)
 
-        what_name = "%s %s" % (name, index)
+        what_name = f"{name} {index}"
         parsed.setdefault(
             what_name.strip(),
             {
@@ -82,10 +84,6 @@ def check_infoblox_temp(item, params, parsed):
 
 check_info["infoblox_temp"] = LegacyCheckDefinition(
     detect=DETECT_INFOBLOX,
-    parse_function=parse_infoblox_temp,
-    discovery_function=inventory_infoblox_temp,
-    check_function=check_infoblox_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2",
@@ -96,6 +94,10 @@ check_info["infoblox_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "39", "40", "41"],
         ),
     ],
+    parse_function=parse_infoblox_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_infoblox_temp,
+    check_function=check_infoblox_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 50.0),

@@ -10,5 +10,5 @@ $(UNIXCAT_BUILD):
 	$(TOUCH) $@
 
 $(UNIXCAT_INSTALL): $(UNIXCAT_BUILD)
-	install -m 755 $(UNIXCAT_PACKAGE)/build/src/unixcar $(DESTDIR)$(OMD_ROOT)/bin/
+	install -m 755 $(UNIXCAT_PACKAGE)/build/src/unixcat $(DESTDIR)$(OMD_ROOT)/bin/
 	$(TOUCH) $@

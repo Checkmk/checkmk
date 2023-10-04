@@ -30,13 +30,13 @@ def check_apc_symmetra_ext_temp(item, params, info):
 
 check_info["apc_symmetra_ext_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_apc_symmetra_ext_temp,
-    discovery_function=inventory_apc_symmetra_ext_temp,
-    service_name="Temperature External %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.2.3.2.1",
         oids=["1", "3", "4", "5"],
     ),
+    service_name="Temperature External %s",
+    discovery_function=inventory_apc_symmetra_ext_temp,
+    check_function=check_apc_symmetra_ext_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

@@ -13,6 +13,9 @@ CMK_VERSION="2.3.0b1"
 
 # gets optional socket as argument
 do_query() {
+    # workaround because in some cases /root/.my.cnf or /root/.mylogin.cnf are still considered despite the
+    # --defaults-file option (SUP-10993)
+    HOME=/dev/null
 
     # we use the sockets full name as instance name:
     INSTANCE_HEADER="[[$2]]"
@@ -20,22 +23,22 @@ do_query() {
     # Check if mysqld is running and root password setup
     echo "<<<mysql_ping>>>"
     echo "$INSTANCE_HEADER"
-    mysqladmin --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
+    mysqladmin --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} ping 2>&1 || return
 
     echo "<<<mysql>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "show global status ; show global variables ;"
 
     echo "<<<mysql_capacity>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
+    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -sN \
         -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
             FROM information_schema.TABLES GROUP BY table_schema"
 
     echo "<<<mysql_slave>>>"
     echo "$INSTANCE_HEADER"
-    mysql --defaults-extra-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
+    mysql --defaults-file="$MK_CONFDIR"/mysql.cfg ${1:+--socket="$1"} -s \
         -e "show slave status\G"
 
 }

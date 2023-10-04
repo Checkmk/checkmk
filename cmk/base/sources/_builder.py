@@ -14,17 +14,24 @@ from typing import assert_never, Final
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawDataSection
+from cmk.snmplib import SNMPBackendEnum, SNMPRawDataElem
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine import Parser, SNMPParser, SourceInfo
-from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
+from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.parser import (
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    Parser,
+    SectionNameCollection,
+    SNMPParser,
+)
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -62,7 +69,7 @@ def make_parser(
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             hostname,
-            SectionStore[SNMPRawDataSection](
+            SectionStore[SNMPRawDataElem](
                 make_persisted_section_dir(
                     source.hostname,
                     fetcher_type=source.fetcher_type,
@@ -80,7 +87,7 @@ def make_parser(
 
     return config_cache.make_agent_parser(
         hostname,
-        SectionStore[AgentRawDataSection](
+        SectionStore[Sequence[AgentRawDataSectionElem]](
             make_persisted_section_dir(
                 source.hostname, fetcher_type=source.fetcher_type, ident=source.ident
             ),
@@ -116,7 +123,7 @@ class _Builder:
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
 
-        assert not self.config_cache.is_cluster(self.host_name)
+        assert host_name not in self.config_cache.all_configured_clusters()
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
@@ -339,7 +346,7 @@ def make_sources(
     file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    if config_cache.is_cluster(host_name):
+    if host_name in config_cache.all_configured_clusters():
         # Cluster hosts do not have any actual data sources
         # Instead all data is provided by the nodes
         return ()

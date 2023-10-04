@@ -3,24 +3,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, SDPath, SDValue
+from cmk.utils.structured_data import (
+    _RetentionInterval,
+    ImmutableAttributes,
+    ImmutableDeltaAttributes,
+    ImmutableDeltaTable,
+    ImmutableDeltaTree,
+    ImmutableTable,
+    ImmutableTree,
+    SDPath,
+)
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.gui.inventory.filters import FilterInvtableVersion
 from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
-from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _DeltaTreeValueInfo,
+    _InventoryTreeValueInfo,
     _register_sorter,
+    _sort_delta_pairs,
+    _sort_delta_rows,
+    _sort_pairs,
+    _sort_rows,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
@@ -337,7 +352,7 @@ def test_make_node_displayhint(
     expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
 ) -> None:
-    hints = DISPLAY_HINTS.get_hints(path)
+    hints = DISPLAY_HINTS.get_tree_hints(path)
 
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
@@ -438,7 +453,7 @@ def test_make_node_displayhint_from_hint(
     expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
 ) -> None:
-    hints = DISPLAY_HINTS.get_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
+    hints = DISPLAY_HINTS.get_tree_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
 
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
@@ -460,29 +475,105 @@ def test_make_node_displayhint_from_hint(
 
 
 @pytest.mark.parametrize(
-    "rows, expected",
+    "table, expected",
     [
-        ([], []),
-        ([{}], [{}]),
+        (ImmutableTable(), []),
         (
+            ImmutableTable(
+                key_columns=["sid"],
+                rows_by_ident={
+                    ("SID 2",): {
+                        "sid": "SID 2",
+                        "flashback": "Flashback 2",
+                        "other": "Other 2",
+                    },
+                    ("SID 1",): {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                    (None,): {"sid": None, "flashback": None, "other": None},
+                },
+                retentions={
+                    ("SID 2",): {"sid": _RetentionInterval(1, 2, 3, "previous")},
+                },
+            ),
             [
-                {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
-                {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
-            ],
-            [
-                {"flashback": "Flashback 1", "other": "Other 1", "sid": "SID 1"},
-                {"flashback": "Flashback 2", "other": "Other 2", "sid": "SID 2"},
+                [
+                    _InventoryTreeValueInfo("sid", "SID 1", None),
+                    _InventoryTreeValueInfo("changed", None, None),
+                    _InventoryTreeValueInfo("foo", None, None),
+                    _InventoryTreeValueInfo("flashback", "Flashback 1", None),
+                    _InventoryTreeValueInfo("other", "Other 1", None),
+                ],
+                [
+                    _InventoryTreeValueInfo("sid", "SID 2", 6),
+                    _InventoryTreeValueInfo("changed", None, None),
+                    _InventoryTreeValueInfo("foo", None, None),
+                    _InventoryTreeValueInfo("flashback", "Flashback 2", None),
+                    _InventoryTreeValueInfo("other", "Other 2", None),
+                ],
             ],
         ),
     ],
 )
 def test_sort_table_rows_displayhint(
-    rows: Sequence[Mapping[SDKey, SDValue]], expected: Sequence[Mapping[SDKey, SDValue]]
+    table: ImmutableTable,
+    expected: Sequence[Sequence[_InventoryTreeValueInfo]],
 ) -> None:
-    raw_path = ".software.applications.oracle.dataguard_stats:"
-    path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    hints = DISPLAY_HINTS.get_hints(path)
-    assert hints.sort_rows(rows, hints.make_columns(rows, ["sid"])) == expected
+    assert _sort_rows(table, ["sid", "changed", "foo", "flashback", "other"]) == expected
+
+
+@pytest.mark.parametrize(
+    "delta_table, expected",
+    [
+        (ImmutableDeltaTable(), []),
+        (
+            ImmutableDeltaTable(
+                key_columns=["sid"],
+                rows=[
+                    {
+                        "sid": ("SID 2", None),
+                        "flashback": (None, "Flashback 2"),
+                        "other": ("Other 2", "Other 2"),
+                        "changed": ("Changed 21", "Changed 22"),
+                    },
+                    {
+                        "sid": ("SID 1", None),
+                        "flashback": (None, "Flashback 1"),
+                        "other": ("Other 1", "Other 1"),
+                        "changed": ("Changed 11", "Changed 12"),
+                    },
+                    {
+                        "sid": ("SID 3", "SID 3"),
+                        "flashback": ("Flashback 3", "Flashback 3"),
+                        "other": (None, None),
+                        "changed": (None, None),
+                    },
+                ],
+            ),
+            [
+                [
+                    _DeltaTreeValueInfo("sid", ("SID 1", None)),
+                    _DeltaTreeValueInfo("changed", ("Changed 11", "Changed 12")),
+                    _DeltaTreeValueInfo("foo", (None, None)),
+                    _DeltaTreeValueInfo("flashback", (None, "Flashback 1")),
+                    _DeltaTreeValueInfo("other", ("Other 1", "Other 1")),
+                ],
+                [
+                    _DeltaTreeValueInfo("sid", ("SID 2", None)),
+                    _DeltaTreeValueInfo("changed", ("Changed 21", "Changed 22")),
+                    _DeltaTreeValueInfo("foo", (None, None)),
+                    _DeltaTreeValueInfo("flashback", (None, "Flashback 2")),
+                    _DeltaTreeValueInfo("other", ("Other 2", "Other 2")),
+                ],
+            ],
+        ),
+    ],
+)
+def test_sort_deltatable_rows_displayhint(
+    delta_table: ImmutableDeltaTable,
+    expected: Sequence[Sequence[_DeltaTreeValueInfo]],
+) -> None:
+    assert (
+        _sort_delta_rows(delta_table, ["sid", "changed", "foo", "flashback", "other"]) == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -539,7 +630,7 @@ def test_sort_table_rows_displayhint(
     ],
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
+    hint = DISPLAY_HINTS.get_tree_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
     assert hint.short == expected.short
@@ -611,7 +702,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_column_hint(inventory_path.key or "")
+    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).get_column_hint(
+        inventory_path.key or ""
+    )
 
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
@@ -621,26 +714,62 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 
 
 @pytest.mark.parametrize(
-    "pairs, expected",
+    "attributes, expected",
     [
-        ({}, []),
+        (ImmutableAttributes(), []),
         (
-            {"namespace": "Namespace", "name": "Name", "object": "Object", "other": "Other"},
+            ImmutableAttributes(
+                pairs={
+                    "b": "B",
+                    "d": "D",
+                    "c": "C",
+                    "a": "A",
+                },
+                retentions={"c": _RetentionInterval(1, 2, 3, "previous")},
+            ),
             [
-                ("object", "Object"),
-                ("name", "Name"),
-                ("namespace", "Namespace"),
-                ("other", "Other"),
+                _InventoryTreeValueInfo("a", "A", None),
+                _InventoryTreeValueInfo("b", "B", None),
+                _InventoryTreeValueInfo("d", "D", None),
+                _InventoryTreeValueInfo("c", "C", 6),
             ],
         ),
     ],
 )
 def test_sort_attributes_pairs_displayhint(
-    pairs: Mapping[SDKey, SDValue], expected: Sequence[tuple[SDKey, SDValue]]
+    attributes: ImmutableAttributes,
+    expected: Sequence[_InventoryTreeValueInfo],
 ) -> None:
-    raw_path = ".software.applications.kube.metadata."
-    path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    assert DISPLAY_HINTS.get_hints(path).sort_pairs(pairs) == expected
+    assert _sort_pairs(attributes, ["a", "b", "d", "c"]) == expected
+
+
+@pytest.mark.parametrize(
+    "delta_attributes, expected",
+    [
+        (ImmutableDeltaAttributes(), []),
+        (
+            ImmutableDeltaAttributes(
+                pairs={
+                    "b": ("B", None),
+                    "d": (None, "D"),
+                    "c": ("C", "C"),
+                    "a": ("A1", "A2"),
+                }
+            ),
+            [
+                _DeltaTreeValueInfo("a", ("A1", "A2")),
+                _DeltaTreeValueInfo("b", ("B", None)),
+                _DeltaTreeValueInfo("d", (None, "D")),
+                _DeltaTreeValueInfo("c", ("C", "C")),
+            ],
+        ),
+    ],
+)
+def test_sort_delta_attributes_pairs_displayhint(
+    delta_attributes: ImmutableDeltaAttributes,
+    expected: Sequence[_DeltaTreeValueInfo],
+) -> None:
+    assert _sort_delta_pairs(delta_attributes, ["a", "b", "d", "c"]) == expected
 
 
 @pytest.mark.parametrize(
@@ -688,7 +817,7 @@ def test_sort_attributes_pairs_displayhint(
     ],
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_hints(path).get_attribute_hint(key)
+    hint = DISPLAY_HINTS.get_tree_hints(path).get_attribute_hint(key)
 
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
@@ -744,7 +873,9 @@ def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_attribute_hint(inventory_path.key or "")
+    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).get_attribute_hint(
+        inventory_path.key or ""
+    )
 
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
@@ -771,7 +902,7 @@ def test_make_attribute_displayhint_from_hint(
     ],
 )
 def test_replace_placeholder(abc_path: SDPath, path: SDPath, expected_title: str) -> None:
-    assert DISPLAY_HINTS.get_hints(abc_path).replace_placeholders(path) == expected_title
+    assert DISPLAY_HINTS.get_tree_hints(abc_path).replace_placeholders(path) == expected_title
 
 
 @pytest.mark.parametrize(

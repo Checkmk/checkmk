@@ -41,8 +41,7 @@ def check_job(job, s, sid, street, street_nr, city, regex):
 
     if job == "ADDRESS":
         sendstring = (
-            "exec:session=%s;request_type=check_address;in_str=%s;in_hno=%s;in_city=%s\n"
-            % (
+            "exec:session={};request_type=check_address;in_str={};in_hno={};in_city={}\n".format(
                 sid,
                 street,
                 street_nr,

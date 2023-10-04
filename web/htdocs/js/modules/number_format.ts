@@ -1,3 +1,9 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 abstract class UnitPrefixes {
     static _BASE: number;
     static _PREFIXES: string[];
@@ -18,13 +24,23 @@ abstract class UnitPrefixes {
 }
 
 export class SIUnitPrefixes extends UnitPrefixes {
-    static _BASE = 1000;
-    static _PREFIXES: string[] = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
+    static override _BASE = 1000;
+    static override _PREFIXES: string[] = [
+        "",
+        "k",
+        "M",
+        "G",
+        "T",
+        "P",
+        "E",
+        "Z",
+        "Y",
+    ];
 }
 
 export class IECUnitPrefixes extends UnitPrefixes {
-    static _BASE = 1024;
-    static _PREFIXES: string[] = [
+    static override _BASE = 1024;
+    static override _PREFIXES: string[] = [
         "",
         "Ki",
         "Mi",
@@ -183,9 +199,13 @@ export function frexpb(x: number, base: number) {
     return [mantissa, exp];
 }
 
-export function approx_age(secs: number): string {
-    if (secs < 0) return approx_age(-1 * secs);
+export function approx_age(secs: number, negative = false): string {
+    if (secs < 0) return approx_age(-1 * secs, true);
+    if (negative) return "-" + calculate_approx_age_value(secs);
+    return calculate_approx_age_value(secs);
+}
 
+function calculate_approx_age_value(secs: number): string {
     if (0 < secs && secs < 1) return physical_precision(secs, 3, "s");
 
     if (secs < 10) return secs.toFixed(2) + " s";

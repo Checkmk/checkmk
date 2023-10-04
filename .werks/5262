@@ -10,8 +10,8 @@ Class: fix
 Werk #5261 introduced a bug that made it impossible to bake new agents for some specific rulesets.
 This would result in error messages like the following:
 
-<pre>
+C+:
 "TypeError: key ('custom', 'win_certificates/lib/local/win_certificates.ps1') is not a string"
-</pre>
+C-:
 
 After an update, no further action is required.

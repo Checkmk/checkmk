@@ -14,22 +14,15 @@
 import json
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_age_human_readable,
-    get_item_state,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-    set_item_state,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 
-def parse_jira_custom_svc(info):
+def parse_jira_custom_svc(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         custom_svc = json.loads(" ".join(line))
 
         for service in custom_svc:
@@ -45,8 +38,9 @@ def parse_jira_custom_svc(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_jira_custom_svc(item, params, item_data):
+def check_jira_custom_svc(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     if not item_data:
         return
 
@@ -82,7 +76,7 @@ def check_jira_custom_svc(item, params, item_data):
             avg_total = item_data.get("avg_total")
             avg_sum = item_data.get("avg_sum")
             if avg_total is not None and avg_sum is not None:
-                yield 0, "(Summed up values: %s / Total search results: %s)" % (avg_sum, avg_total)
+                yield 0, f"(Summed up values: {avg_sum} / Total search results: {avg_total})"
 
         else:
             diff_key = "%s_diff" % computation
@@ -100,15 +94,16 @@ def check_jira_custom_svc(item, params, item_data):
             )
 
 
-# get_rate() and get_average() do not help here
 def _get_value_diff(diff_name, svc_value, timespan):
     this_time = time.time()
-    old_state = get_item_state(diff_name, None)
+    value_store = get_value_store()
+
+    old_state = value_store.get(diff_name)
 
     # first call: take current value as diff or assume 0.0
     if old_state is None:
         diff_val = 0
-        set_item_state(diff_name, (this_time, svc_value))
+        value_store[diff_name] = (this_time, svc_value)
         return diff_val
 
     # Get previous value and time difference
@@ -118,15 +113,19 @@ def _get_value_diff(diff_name, svc_value, timespan):
         diff_val = svc_value - last_val
     else:
         diff_val = 0
-        set_item_state(diff_name, (this_time, svc_value))
+        value_store[diff_name] = (this_time, svc_value)
 
     return diff_val
 
 
+def discover_jira_custom_svc(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["jira_custom_svc"] = LegacyCheckDefinition(
     parse_function=parse_jira_custom_svc,
-    check_function=check_jira_custom_svc,
-    discovery_function=discover(),
     service_name="Jira %s",
+    discovery_function=discover_jira_custom_svc,
+    check_function=check_jira_custom_svc,
     check_ruleset_name="jira_custom_svc",
 )

@@ -80,8 +80,8 @@ setversion:
 		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
 		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
 		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
-	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
-	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/src/engine/install_api.h
+	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/include/common/wnx_version.h
+	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/include/wnx/install_api.h
 	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
 	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
@@ -114,10 +114,15 @@ $(RPM_PACKAGE): $(BUILDROOT_STAMP)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDDIR)
 
 $(DEB_PACKAGE): $(BUILDROOT_STAMP)
-	rm $(DEB_BUILDDIR) -rf
-	mkdir -p $(DEB_BUILDDIR)/control
-	cp -r $(DEB_TOPDIR)/control $(DEB_BUILDDIR)/
-	touch "$(DEB_BUILDDIR)/control/md5sum"
+	rm "$(DEB_BUILDDIR)" -rf
+	mkdir -p "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/conffiles" "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/control" "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/debian-binary" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/postinst" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/preinst" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/prerm" "$(DEB_BUILDDIR)/control"
+	install -m 644 /dev/null "$(DEB_BUILDDIR)/control/md5sum"
 	cd $(BUILDROOT); find . -type f | while read -r filename; do \
 	    md5sum "$${filename}" | sed 's|./||' >> "$(DEB_BUILDDIR)/control/md5sum"; \
 	done

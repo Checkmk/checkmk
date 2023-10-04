@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -69,7 +70,7 @@ def _check_netapp_api_luns(
         expected = str(params.get("read_only")).lower()
         yield Result(
             state=State.WARN,
-            summary="read-only is %s (expected: %s)" % (lun.get("read-only"), expected),
+            summary="read-only is {} (expected: {})".format(lun.get("read-only"), expected),
         )
 
     size_total_bytes = int(lun["size"])

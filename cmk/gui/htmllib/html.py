@@ -10,7 +10,7 @@ import pprint
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, overload
+from typing import Any, Literal, overload
 
 from flask import current_app, session
 
@@ -54,6 +54,7 @@ from .tag_rendering import (
     render_end_tag,
     render_start_tag,
 )
+from .type_defs import RequireConfirmation
 
 
 class HTMLGenerator(HTMLWriter):
@@ -69,7 +70,6 @@ class HTMLGenerator(HTMLWriter):
         self._logger = log.logger.getChild("html")
         self._header_sent = False
         self._body_classes = ["main"]
-        self._default_javascripts = ["main"]
         self.have_help = False
 
         # Forms
@@ -86,19 +86,11 @@ class HTMLGenerator(HTMLWriter):
 
     def set_focus(self, varname: str) -> None:
         self.final_javascript(
-            "cmk.utils.set_focus_by_name(%s, %s)"
-            % (json.dumps(self.form_name), json.dumps(varname))
+            f"cmk.utils.set_focus_by_name({json.dumps(self.form_name)}, {json.dumps(varname)})"
         )
 
     def set_focus_by_id(self, dom_id: str) -> None:
         self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
-
-    def clear_default_javascript(self) -> None:
-        del self._default_javascripts[:]
-
-    def add_default_javascript(self, name: str) -> None:
-        if name not in self._default_javascripts:
-            self._default_javascripts.append(name)
 
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
         self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
@@ -217,17 +209,19 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
-        fname = HTMLGenerator._css_filename_for_browser(theme.url("theme"))
-        if fname is not None:
-            self.stylesheet(fname)
+        css_filepath = theme.url("theme.css")
+        if current_app.debug:
+            HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)
+        self.stylesheet(HTMLGenerator._append_cache_busting_query(css_filepath))
 
         self._add_custom_style_sheet()
 
         # Load all scripts
-        for js in self._default_javascripts + list(javascripts):
-            filename_for_browser = self.javascript_filename_for_browser(js)
-            if filename_for_browser:
-                self.javascript_file(filename_for_browser)
+        for js in javascripts:
+            js_filepath = f"js/{js}_min.js"
+            if current_app.debug:
+                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+            self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
 
         self.set_js_csrf_token()
 
@@ -267,46 +261,40 @@ class HTMLGenerator(HTMLWriter):
                         plugin_stylesheets.add(entry.name)
         return plugin_stylesheets
 
-    # Make the browser load specified javascript files. We have some special handling here:
-    # a) files which can not be found shall not be loaded
-    # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
-    def javascript_filename_for_browser(self, jsname: str) -> str | None:
-        filename_for_browser = f"js/{jsname}_min-{cmk_version.__version__}.js"
-        try:
-            HTMLGenerator._exists_in_web_dirs(filename_for_browser)
-        except FileNotFoundError:
-            if current_app.debug:
-                raise RuntimeError(f"{jsname} could not be found.")
-            return None
-
-        return filename_for_browser
-
     @staticmethod
-    def _exists_in_web_dirs(file_name: str) -> None:
-        path = _path(cmk.utils.paths.web_dir) / file_name
-        local_path = _path(cmk.utils.paths.local_web_dir) / file_name
+    def _verify_file_exists_in_web_dirs(file_path: str) -> None:
+        path = _path(cmk.utils.paths.web_dir) / "htdocs" / file_path
+        local_path = _path(cmk.utils.paths.local_web_dir) / "htdocs" / file_path
         file_missing = not (path.exists() or local_path.exists())
-        if file_missing and current_app.debug:
+        if file_missing:
             raise FileNotFoundError(f"Neither {path} nor {local_path} exist.")
 
     @staticmethod
-    def _css_filename_for_browser(css: str) -> str | None:
-        HTMLGenerator._exists_in_web_dirs(f"htdocs/{css}.css")
-        return f"{css}-{cmk_version.__version__}.css"
+    def _append_cache_busting_query(filename: str) -> str:
+        return f"{filename}?v={cmk_version.__version__}"
 
     def html_head(
-        self, title: str, javascripts: Sequence[str] | None = None, force: bool = False
+        self,
+        title: str,
+        main_javascript: str = "main",
+        force: bool = False,
     ) -> None:
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
             self.open_html()
-            self._head(title, javascripts)
+            self._head(
+                title,
+                [main_javascript],
+            )
             self._header_sent = True
 
     def body_start(
-        self, title: str = "", javascripts: Sequence[str] | None = None, force: bool = False
+        self,
+        title: str = "",
+        main_javascript: Literal["main", "side"] = "main",
+        force: bool = False,
     ) -> None:
-        self.html_head(title, javascripts, force)
+        self.html_head(title, main_javascript, force)
         self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
 
     def _get_body_css_classes(self) -> list[str]:  # TODO: Sequence!
@@ -346,10 +334,15 @@ class HTMLGenerator(HTMLWriter):
         method: str = "GET",
         onsubmit: str | None = None,
         add_transid: bool = True,
+        require_confirmation: RequireConfirmation | None = None,
     ) -> None:
         self.form_name = name
         self.form_vars = []
         self.form_has_submit_button = False
+
+        data_cmk_form_confirmation = None
+        if require_confirmation:
+            data_cmk_form_confirmation = require_confirmation.serialize()
 
         if action is None:
             action = requested_file_name(self.request) + ".py"
@@ -360,6 +353,7 @@ class HTMLGenerator(HTMLWriter):
             action=action,
             method=method,
             onsubmit=onsubmit,
+            data_cmk_form_confirmation=data_cmk_form_confirmation,
             enctype="multipart/form-data" if method.lower() == "post" else None,
         )
 
@@ -379,13 +373,6 @@ class HTMLGenerator(HTMLWriter):
             self.input(name="_save", type_="submit", cssclass="hidden_submit")
         self.close_form()
         self.form_name = None
-
-    def add_confirm_on_submit(self, form_name: str, msg: str) -> None:
-        """Adds a confirm dialog to a form that is shown before executing a form submission"""
-        self.javascript(
-            "cmk.forms.add_confirm_on_submit(%s, %s)"
-            % (json.dumps("form_%s" % form_name), json.dumps(escaping.escape_text(msg)))
-        )
 
     def in_form(self) -> bool:
         return self.form_name is not None
@@ -610,12 +597,16 @@ class HTMLGenerator(HTMLWriter):
     def show_user_errors(self) -> None:
         """Show all previously created user errors"""
         if user_errors:
-            self.show_error(
-                HTMLWriter.render_br().join(
-                    escaping.escape_to_html_permissive(s, escape_links=False)
-                    for s in user_errors.values()
-                )
+            self.write_html(self.render_user_errors())
+
+    def render_user_errors(self) -> HTML:
+        """Render all previously created user errors"""
+        return self.render_error(
+            HTMLWriter.render_br().join(
+                escaping.escape_to_html_permissive(s, escape_links=False)
+                for s in user_errors.values()
             )
+        )
 
     # TODO: Try and thin out this method's list of parameters - remove unused ones
     def text_input(
@@ -1328,8 +1319,7 @@ class HTMLGenerator(HTMLWriter):
         self.write_html(
             HTMLGenerator.render_element_dragger(
                 dragging_tag,
-                drop_handler="function(new_index){return %s(%s, new_index);})"
-                % (drop_handler, json.dumps(handler_args)),
+                drop_handler=f"function(new_index){{return {drop_handler}({json.dumps(handler_args)}, new_index);}})",
             )
         )
 
@@ -1341,8 +1331,7 @@ class HTMLGenerator(HTMLWriter):
             HTMLGenerator.render_icon("drag", _("Move this entry")),
             href="javascript:void(0)",
             class_=["element_dragger"],
-            onmousedown="cmk.element_dragging.start(event, this, %s, %s"
-            % (json.dumps(dragging_tag.upper()), drop_handler),
+            onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
         )
 
 

@@ -1579,15 +1579,30 @@ def test_parse_wmi_cpuload(
                     state=State.OK,
                     summary="15 min load per core: 1.58 (2 logical cores)",
                 ),
+                Result(
+                    state=State.OK,
+                    notice="1 min load: 12.00",
+                ),
                 Metric(
                     "load1",
                     12.0,
                     boundaries=(0.0, 2.0),
                 ),
+                Result(
+                    state=State.OK,
+                    notice="1 min load per core: 6.00 (2 logical cores)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="5 min load: 5.21",
+                ),
                 Metric(
                     "load5",
                     5.2138605028359475,
-                    boundaries=(0.0, 2.0),
+                ),
+                Result(
+                    state=State.OK,
+                    notice="5 min load per core: 2.61 (2 logical cores)",
                 ),
             ],
             id="OK counter",
@@ -1600,28 +1615,15 @@ def test_parse_wmi_cpuload(
                 n_cores=2,
             ),
             [
-                Result(
-                    state=State.OK,
-                    summary="15 min load: 12.00",
-                ),
-                Metric(
-                    "load15",
-                    12.0,
-                ),
-                Result(
-                    state=State.OK,
-                    summary="15 min load per core: 6.00 (2 logical cores)",
-                ),
-                Metric(
-                    "load1",
-                    12.0,
-                    boundaries=(0.0, 2.0),
-                ),
-                Metric(
-                    "load5",
-                    12.0,
-                    boundaries=(0.0, 2.0),
-                ),
+                Result(state=State.OK, summary="15 min load: 12.00"),
+                Metric("load15", 12.0),
+                Result(state=State.OK, summary="15 min load per core: 6.00 (2 logical cores)"),
+                Result(state=State.OK, notice="1 min load: 12.00"),
+                Metric("load1", 12.0, boundaries=(0.0, 2.0)),
+                Result(state=State.OK, notice="1 min load per core: 6.00 (2 logical cores)"),
+                Result(state=State.OK, notice="5 min load: 12.00"),
+                Metric("load5", 12.0),
+                Result(state=State.OK, notice="5 min load per core: 6.00 (2 logical cores)"),
             ],
             id="counter reset",
         ),
@@ -1644,7 +1646,11 @@ def test_check_wmi_cpuload_ok_counter(
     assert (
         list(
             check_wmi_cpuload(
-                {},
+                {
+                    "levels1": None,
+                    "levels5": None,
+                    "levels15": None,
+                },
                 section,
             )
         )

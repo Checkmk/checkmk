@@ -5,7 +5,6 @@
 
 import logging
 from collections.abc import Sequence
-from typing import Type
 
 import pytest
 
@@ -19,6 +18,8 @@ from cmk.special_agents.agent_azure import (
 )
 
 ARGV = [
+    "--authority",
+    "global",
     "--tenant",
     "tenant-id",
     "--client",
@@ -50,10 +51,12 @@ ARGS = Args(
     dump_config=False,
     timeout=10,
     piggyback_vms="grouphost",
+    authority="global",
     subscriptions=["subscription-id"],
     client="client-id",
     tenant="tenant-id",
     secret="secret",
+    proxy=None,
     require_tag=["tag1"],
     require_tag_value=[["tag2", "value2"]],
     explicit_config=["group=test-group", "resources=Resource1,Resource2"],
@@ -79,10 +82,12 @@ ARGS = Args(
                 "argparse: client = 'client-id'",
                 "argparse: tenant = 'tenant-id'",
                 "argparse: secret = '****'",
+                "argparse: proxy = None",
                 "argparse: require_tag = ['tag1']",
                 "argparse: require_tag_value = [['tag2', 'value2']]",
                 "argparse: explicit_config = ['group=test-group', 'resources=Resource1,Resource2']",
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
+                "argparse: authority = 'global'",
             ],
         ),
     ],
@@ -120,7 +125,7 @@ def test_parse_arguments(
     ],
 )
 def test_explicit_config_incorrect_config(
-    config: Sequence[str], error_type: Type[Exception], error_message: str
+    config: Sequence[str], error_type: type[Exception], error_message: str
 ) -> None:
     with pytest.raises(error_type, match=error_message):
         ExplicitConfig(config)

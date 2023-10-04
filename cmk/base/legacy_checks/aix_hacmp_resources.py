@@ -16,13 +16,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_aix_hacmp_resources(info):
+def parse_aix_hacmp_resources(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         joined_line = " ".join(line)
         if (
             "There is no cluster definition" in joined_line
@@ -40,8 +40,9 @@ def inventory_aix_hacmp_resources(parsed):
     return [(key, None) for key in parsed]
 
 
-@get_parsed_item_data
-def check_aix_hacmp_resources(item, params, data):
+def check_aix_hacmp_resources(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if params is None:
         expected_behaviour = "first"
     else:
@@ -51,24 +52,24 @@ def check_aix_hacmp_resources(item, params, data):
     infotext = []
     for node_name, resource_state in data:
         resource_states.append(resource_state)
-        infotext.append("%s on node %s" % (resource_state, node_name))
+        infotext.append(f"{resource_state} on node {node_name}")
 
     state = 0
     if expected_behaviour == "first":
         if resource_states[0] != "online":
             state = 2
     elif expected_behaviour == "any":
-        if not any((resource_state == "online" for resource_state in resource_states)):
+        if not any(resource_state == "online" for resource_state in resource_states):
             state = 2
 
-    return state, ", ".join(infotext)
+    yield state, ", ".join(infotext)
 
 
 check_info["aix_hacmp_resources"] = LegacyCheckDefinition(
     parse_function=parse_aix_hacmp_resources,
+    service_name="HACMP RG %s",
     discovery_function=inventory_aix_hacmp_resources,
     check_function=check_aix_hacmp_resources,
-    service_name="HACMP RG %s",
     check_ruleset_name="hacmp_resources",
     check_default_parameters={
         "expect_online_on": "first",

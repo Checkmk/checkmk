@@ -31,9 +31,6 @@ def check_ra32e_switch(item, params, info):
 
 check_info["ra32e_switch"] = LegacyCheckDefinition(
     detect=DETECT_RA32E,
-    discovery_function=inventory_ra32e_switch,
-    check_function=check_ra32e_switch,
-    service_name="Switch %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20916.1.8.1.3",
         oids=[
@@ -55,5 +52,8 @@ check_info["ra32e_switch"] = LegacyCheckDefinition(
             "16",
         ],
     ),
+    service_name="Switch %s",
+    discovery_function=inventory_ra32e_switch,
+    check_function=check_ra32e_switch,
     check_ruleset_name="switch_contact",
 )

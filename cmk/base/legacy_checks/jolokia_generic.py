@@ -5,32 +5,43 @@
 
 
 import time
+from collections.abc import Callable, Iterable, Mapping
+from typing import Literal
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+Section = Mapping[str, Mapping[str, float | str]]
+
+DiscoveryResult = Iterable[tuple[str, dict]]
 
 
-def parse_jolokia_generic(info):
+def parse_jolokia_generic(string_table: StringTable) -> Section:
     value: str | float
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             instance, mbean, value, type_ = jolokia_basic_split(line, 4)
             if type_ in ("rate", "number"):
                 value = float(value)
         except ValueError:
             continue
-        item = "%s MBean %s" % (instance, mbean)
+        item = f"{instance} MBean {mbean}"
         parsed[item] = {"value": value, "type": type_}
 
     return parsed
+
+
+def discover_type(
+    type_: Literal["string", "rate", "number"]
+) -> Callable[[Section], DiscoveryResult]:
+    def _discover_bound_type(section: Section) -> DiscoveryResult:
+        yield from ((item, {}) for item, data in section.items() if data.get("type") == type_)
+
+    return _discover_bound_type
 
 
 # .
@@ -44,22 +55,25 @@ def parse_jolokia_generic(info):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_jolokia_generic_string(_item, params, data):
+def check_jolokia_generic_string(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     value = data["value"]
 
     search_strings = params.get("match_strings", [])
     for search_string, status in search_strings:
         if search_string in value:
-            return status, "%s: %s matches" % (value, search_string)
+            yield status, f"{value}: {search_string} matches"
+            return
 
-    return params.get("default_status", 0), value
+    yield params.get("default_status", 0), value
 
 
 check_info["jolokia_generic.string"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda key, data: data.get("type") == "string"),
-    check_function=check_jolokia_generic_string,
     service_name="JVM %s",
+    sections=["jolokia_generic"],
+    discovery_function=discover_type("string"),
+    check_function=check_jolokia_generic_string,
     check_ruleset_name="generic_string",
 )
 
@@ -74,17 +88,19 @@ check_info["jolokia_generic.string"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_jolokia_generic_rate(item, params, data):
-    rate = get_rate(item, time.time(), data["value"])
+def check_jolokia_generic_rate(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    rate = get_rate(get_value_store(), item, time.time(), data["value"], raise_overflow=True)
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    return check_levels(rate, "generic_rate", levels)
+    yield check_levels(rate, "generic_rate", levels)
 
 
 check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda key, data: data.get("type") == "rate"),
-    check_function=check_jolokia_generic_rate,
     service_name="JVM %s",
+    sections=["jolokia_generic"],
+    discovery_function=discover_type("rate"),
+    check_function=check_jolokia_generic_rate,
     check_ruleset_name="generic_rate",
 )
 
@@ -99,16 +115,18 @@ check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_jolokia_generic(_item, params, data):
+def check_jolokia_generic(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    return check_levels(data["value"], "generic_number", levels)
+    yield check_levels(data["value"], "generic_number", levels)
+    return
 
 
 check_info["jolokia_generic"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda key, data: data.get("type") == "number"),
-    check_function=check_jolokia_generic,
     parse_function=parse_jolokia_generic,
     service_name="JVM %s",
+    discovery_function=discover_type("number"),
+    check_function=check_jolokia_generic,
     check_ruleset_name="generic_number",
 )

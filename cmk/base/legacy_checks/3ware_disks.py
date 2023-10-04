@@ -58,7 +58,7 @@ def check_3ware_disks(item, _no_params, info):
         size_type = line[4]
         disk_type = line[5]
         model = line[-1]
-        infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % (
+        infotext = "{} (unit: {}, size: {},{}, type: {}, model: {})".format(
             status,
             unit_type,
             size,
@@ -78,8 +78,8 @@ def check_3ware_disks(item, _no_params, info):
 # declare the check to Checkmk
 
 check_info["3ware_disks"] = LegacyCheckDefinition(
-    check_function=check_3ware_disks,
-    discovery_function=inventory_3ware_disks,
     service_name="RAID 3ware disk %s",
+    discovery_function=inventory_3ware_disks,
+    check_function=check_3ware_disks,
     check_ruleset_name="raid_disk",
 )

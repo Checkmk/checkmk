@@ -8,8 +8,8 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 
@@ -48,7 +48,7 @@ def test_registered_automations() -> None:
         "update-host-labels",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         needed_automations += [
             "bake-agents",
         ]

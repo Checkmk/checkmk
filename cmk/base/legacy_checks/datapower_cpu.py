@@ -23,13 +23,13 @@ def check_datapower_cpu(_no_item, params, info):
 
 check_info["datapower_cpu"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_cpu,
-    check_function=check_datapower_cpu,
-    service_name="CPU Utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.14",
         oids=["2"],
     ),
+    service_name="CPU Utilization",
+    discovery_function=inventory_datapower_cpu,
+    check_function=check_datapower_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

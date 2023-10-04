@@ -126,7 +126,7 @@ def ibm_mq_depth(cur_depth, max_depth, params):
             elif used_perc >= warn_perc:
                 state_perc = 1
             if state_perc:
-                levelstext.append("%s%%/%s%%" % (warn_perc, crit_perc))
+                levelstext.append(f"{warn_perc}%/{crit_perc}%")
             state = max(state, state_perc)
 
     if state:
@@ -157,7 +157,7 @@ def ibm_mq_agent_timestamp(item, parsed):
 def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
     if not (mq_date and mq_time):
         return (0, label + ": n/a", [])
-    mq_datetime = "%s %s" % (mq_date, mq_time.replace(".", ":"))
+    mq_datetime = "{} {}".format(mq_date, mq_time.replace(".", ":"))
     input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
     age = (agent_timestamp - input_time).total_seconds()
     return check_levels(
@@ -183,16 +183,15 @@ def ibm_mq_get_qtime(qtime, label, key):
     else:
         time_in_seconds = int(qtime) / 1000000
         info_value = get_age_human_readable(time_in_seconds)
-    infotext = "%s: %s" % (label, info_value)
+    infotext = f"{label}: {info_value}"
     perfdata = [(key, time_in_seconds, None, None)]
     return (0, infotext, perfdata)
 
 
 check_info["ibm_mq_queues"] = LegacyCheckDefinition(
-    # section is already migrated!
+    service_name="IBM MQ Queue %s",
     discovery_function=inventory_ibm_mq_queues,
     check_function=check_ibm_mq_queues,
-    service_name="IBM MQ Queue %s",
     check_ruleset_name="ibm_mq_queues",
     check_default_parameters={},
 )

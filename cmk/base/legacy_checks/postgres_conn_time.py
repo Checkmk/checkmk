@@ -14,14 +14,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_postgres_conn_time(info):
+def parse_postgres_conn_time(string_table):
     parsed = {}
     instance_name = ""
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
@@ -42,12 +43,12 @@ def check_postgres_conn_time(item, _no_params, parsed):
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    raise IgnoreResultsError("Login into database failed")
 
 
 check_info["postgres_conn_time"] = LegacyCheckDefinition(
     parse_function=parse_postgres_conn_time,
+    service_name="PostgreSQL Connection Time %s",
     discovery_function=inventory_postgres_conn_time,
     check_function=check_postgres_conn_time,
-    service_name="PostgreSQL Connection Time %s",
 )

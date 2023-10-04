@@ -7,23 +7,18 @@
 # mypy: disable-error-code="arg-type"
 
 import cmk.base.plugins.agent_based.utils.docker as docker
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_docker_node_disk_usage(info):
-    disk_usage = docker.parse_multiline(info).data
+def parse_docker_node_disk_usage(string_table):
+    disk_usage = docker.parse_multiline(string_table).data
     return {r.get("type"): r for r in disk_usage if r is not None}
 
 
-@get_parsed_item_data
-def check_docker_node_disk_usage(_no_item, params, data):
+def check_docker_node_disk_usage(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for key, human_readable_func in (
         ("size", get_bytes_human_readable),
         ("reclaimable", get_bytes_human_readable),
@@ -41,10 +36,14 @@ def check_docker_node_disk_usage(_no_item, params, data):
         )
 
 
+def discover_docker_node_disk_usage(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["docker_node_disk_usage"] = LegacyCheckDefinition(
     parse_function=parse_docker_node_disk_usage,
-    discovery_function=discover(),
-    check_function=check_docker_node_disk_usage,
     service_name="Docker disk usage - %s",
+    discovery_function=discover_docker_node_disk_usage,
+    check_function=check_docker_node_disk_usage,
     check_ruleset_name="docker_node_disk_usage",
 )

@@ -33,7 +33,7 @@ from cmk.base.config import check_info
 # id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
 
 
-def parse_ibm_svc_portsas(info):
+def parse_ibm_svc_portsas(string_table):
     dflt_header = [
         "id",
         "port_id",
@@ -49,13 +49,13 @@ def parse_ibm_svc_portsas(info):
         "adapter_port_id",
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:
             continue
         if "node_id" in data and "adapter_location" in data and "adapter_port_id" in data:
-            item_name = "Node %s Slot %s Port %s" % (
+            item_name = "Node {} Slot {} Port {}".format(
                 data["node_id"],
                 data["adapter_location"],
                 data["adapter_port_id"],
@@ -85,16 +85,16 @@ def check_ibm_svc_portsas(item, params, parsed):
     else:
         state = 2
 
-    infotext += ", Speed: %s, Type: %s" % (data["port_speed"], data["type"])
+    infotext += ", Speed: {}, Type: {}".format(data["port_speed"], data["type"])
 
     yield state, infotext
 
 
 check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_portsas,
-    check_function=check_ibm_svc_portsas,
-    discovery_function=inventory_ibm_svc_portsas,
     service_name="SAS %s",
+    discovery_function=inventory_ibm_svc_portsas,
+    check_function=check_ibm_svc_portsas,
     check_default_parameters={
         "current_state": "offline",
     },

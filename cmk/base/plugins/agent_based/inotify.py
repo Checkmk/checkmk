@@ -5,8 +5,9 @@
 
 import os
 import time
-from collections import defaultdict
-from typing import Counter, Literal, Mapping, NamedTuple
+from collections import Counter, defaultdict
+from collections.abc import Mapping
+from typing import Literal, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,

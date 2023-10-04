@@ -38,7 +38,7 @@ def check_liebert_maintenance(_no_item, params, parsed):
     if None in (month, year):
         return
 
-    yield 0, "Next maintenance: %s/%s" % (month, year)
+    yield 0, f"Next maintenance: {month}/{year}"
 
     time_left_seconds = time.mktime((year, month, 0, 0, 0, 0, 0, 0, 0)) - time.time()
 
@@ -49,13 +49,13 @@ def check_liebert_maintenance(_no_item, params, parsed):
 
 check_info["liebert_maintenance"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_int_without_unit,
-    discovery_function=inventory_liebert_maintenance,
-    check_function=check_liebert_maintenance,
-    service_name="Maintenance",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.4868", "20.1.2.1.4868", "10.1.2.1.4869", "20.1.2.1.4869"],
     ),
-    check_default_parameters={"levels": (10, 5)},  # Remaining days until next maintenance
+    parse_function=parse_liebert_int_without_unit,
+    service_name="Maintenance",
+    discovery_function=inventory_liebert_maintenance,
+    check_function=check_liebert_maintenance,
+    check_default_parameters={"levels": (10, 5)},  # Remaining days until next maintenance,
 )

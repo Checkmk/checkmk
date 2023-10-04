@@ -49,11 +49,6 @@ import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
 from urllib.request import urlopen
 
-try:
-    from typing import List  # noqa: F401 # pylint: disable=unused-import
-except ImportError:
-    pass
-
 
 def check_digest(data, expected):
     digest = hashlib.sha256(data.read()).hexdigest()
@@ -222,7 +217,7 @@ def display_on_segment(conn, settings, text):
     )
 
     br = BrickletSegmentDisplay4x7(segment_display, conn)
-    segments = []  # type: List
+    segments = []  # type: list
     for letter in text:
         if len(segments) >= 4:
             break
@@ -285,7 +280,7 @@ def read_config(env):
 
     if os.path.isfile(cfg_path):
         with open(cfg_path) as opened_file:
-            exec(opened_file.read(), settings, settings)
+            exec(opened_file.read(), settings, settings)  # nosec B102 # BNS:a29406
     return settings
 
 

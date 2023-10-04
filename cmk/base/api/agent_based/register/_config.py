@@ -6,11 +6,13 @@
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
@@ -27,8 +29,8 @@ registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
 # N O T E: This currently contains discovery *and* host_label rulesets.
 # The rules are deliberately put the same dictionary, as we allow for
 # the host_label_function and the discovery_function to share a ruleset.
-# We provide seperate API functions however, should the need arise to
-# seperate them.
+# We provide separate API functions however, should the need arise to
+# separate them.
 stored_rulesets: dict[RuleSetName, Sequence[RuleSpec]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
@@ -110,13 +112,11 @@ def get_relevant_raw_sections(
     parsed_section_names: set[ParsedSectionName] = set()
 
     for check_plugin_name in check_plugin_names:
-        check_plugin = get_check_plugin(check_plugin_name)
-        if check_plugin:
+        if check_plugin := get_check_plugin(check_plugin_name):
             parsed_section_names.update(check_plugin.sections)
 
     for inventory_plugin_name in inventory_plugin_names:
-        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
-        if inventory_plugin:
+        if inventory_plugin := get_inventory_plugin(inventory_plugin_name):
             parsed_section_names.update(inventory_plugin.sections)
 
     return {

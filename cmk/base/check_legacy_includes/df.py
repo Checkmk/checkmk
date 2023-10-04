@@ -5,19 +5,19 @@
 
 # pylint: disable=chained-comparison,unused-import
 
-from typing import Any
-
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
-from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
+from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.utils.df import check_filesystem_levels, check_inodes
 from cmk.base.plugins.agent_based.utils.df import (  # noqa: F401
-    check_filesystem_levels,
-    check_inodes,
-    FILESYSTEM_DEFAULT_LEVELS,
-    FILESYSTEM_DEFAULT_PARAMS,
-    INODES_DEFAULT_PARAMS,
-    mountpoints_in_group,
-    TREND_DEFAULT_PARAMS,
+    FILESYSTEM_DEFAULT_LEVELS as FILESYSTEM_DEFAULT_LEVELS,
 )
+from cmk.base.plugins.agent_based.utils.df import (
+    FILESYSTEM_DEFAULT_PARAMS as FILESYSTEM_DEFAULT_PARAMS,
+)
+from cmk.base.plugins.agent_based.utils.df import INODES_DEFAULT_PARAMS as INODES_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group as mountpoints_in_group
+from cmk.base.plugins.agent_based.utils.df import TREND_DEFAULT_PARAMS as TREND_DEFAULT_PARAMS
 
 from .size_trend import size_trend
 
@@ -171,7 +171,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
     perfdata.append(("fs_size", size_mb, None, None, 0, None))
 
     if show_reserved:
-        reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
+        reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
         reserved_hr = get_bytes_human_readable(reserved_mb * 1024**2)
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #

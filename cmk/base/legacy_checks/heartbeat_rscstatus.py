@@ -13,9 +13,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_heartbeat_rscstatus(info):
+def parse_heartbeat_rscstatus(string_table):
     try:
-        return info[0][0]
+        return string_table[0][0]
     except IndexError:
         return None
 
@@ -40,13 +40,13 @@ def check_heartbeat_rscstatus(_no_item, params, heartbeat_rsc_status):
     if expected_state == heartbeat_rsc_status:
         yield 0, "Current state: %s" % heartbeat_rsc_status
     else:
-        yield 2, "Current state: %s (Expected: %s)" % (heartbeat_rsc_status, expected_state)
+        yield 2, f"Current state: {heartbeat_rsc_status} (Expected: {expected_state})"
 
 
 check_info["heartbeat_rscstatus"] = LegacyCheckDefinition(
     parse_function=parse_heartbeat_rscstatus,
-    check_function=check_heartbeat_rscstatus,
-    discovery_function=inventory_heartbeat_rscstatus,
     service_name="Heartbeat Ressource Status",
+    discovery_function=inventory_heartbeat_rscstatus,
+    check_function=check_heartbeat_rscstatus,
     check_ruleset_name="heartbeat_rscstatus",
 )

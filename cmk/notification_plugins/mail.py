@@ -27,6 +27,7 @@ from urllib.request import urlopen
 
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
+from cmk.utils.html import replace_state_markers as format_plugin_output
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 from cmk.notification_plugins import utils
@@ -538,7 +539,7 @@ def multipart_mail(
     for what, name, contents, how in attach:
         part = (
             MIMEImage(contents, name=name)
-            if what == "img"  #
+            if what == "img"
             else MIMEApplication(contents, name=name)
         )
         part.add_header("Content-ID", "<%s>" % name)
@@ -591,24 +592,20 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
         except smtplib.SMTPHeloError as e:
             retry_possible = True  # server is acting up, this may be fixed quickly
             sys.stderr.write(
-                'protocol error from "%s": %s\n'
-                % (smarthost, _ensure_str_error_message(e.smtp_error))
+                f'protocol error from "{smarthost}": {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPSenderRefused as e:
             sys.stderr.write(
-                'server didn\'t accept from-address "%s" refused: %s\n'
-                % (from_address, _ensure_str_error_message(e.smtp_error))
+                f'server didn\'t accept from-address "{from_address}" refused: {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPAuthenticationError as e:
             sys.stderr.write(
-                'authentication failed on "%s": %s\n'
-                % (smarthost, _ensure_str_error_message(e.smtp_error))
+                f'authentication failed on "{smarthost}": {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPDataError as e:
             retry_possible = True  # unexpected error - give retry a chance
             sys.stderr.write(
-                'unexpected error code from "%s": %s\n'
-                % (smarthost, _ensure_str_error_message(e.smtp_error))
+                f'unexpected error code from "{smarthost}": {_ensure_str_error_message(e.smtp_error)}\n'
             )
         except smtplib.SMTPException as e:
             retry_possible = True  # who knows what went wrong, a retry might just work
@@ -646,7 +643,7 @@ def send_mail_smtp_impl(
 
     conn = (
         smtplib.SMTP_SSL(smarthost, port)
-        if encryption == "ssl_tls"  #
+        if encryption == "ssl_tls"
         else smtplib.SMTP(smarthost, port)
     )
 
@@ -843,14 +840,14 @@ def extend_context(context: dict[str, str]) -> None:
     )
 
     if "HOSTOUTPUT" in context:
-        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+        context["HOSTOUTPUT_HTML"] = format_plugin_output(context["HOSTOUTPUT"])
     if context["WHAT"] == "SERVICE":
-        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+        context["SERVICEOUTPUT_HTML"] = format_plugin_output(context["SERVICEOUTPUT"])
 
         long_serviceoutput = (
             context["LONGSERVICEOUTPUT"].replace("\\n", "<br>").replace("\n", "<br>")
         )
-        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
+        context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(long_serviceoutput)
 
     # Compute the subject of the mail
     if context["WHAT"] == "HOST":
@@ -929,11 +926,7 @@ def body_templates(
 
         if (whence in ("both", what)) and (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
-            tmpl_html += '<tr class="{}0"><td class=left>{}</td><td>{}</td></tr>'.format(
-                even,
-                title,
-                html,
-            )
+            tmpl_html += f'<tr class="{even}0"><td class=left>{title}</td><td>{html}</td></tr>'
             even = "odd" if even == "even" else "even"
 
     return "".join(tmpl_txt), "".join(tmpl_html)

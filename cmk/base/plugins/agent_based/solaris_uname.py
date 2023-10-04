@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -28,7 +28,7 @@ def inventory_solaris_uname(section: Section) -> InventoryResult:
             "vendor": "Oracle",
             "type": section["System"],
             "version": section["Release"],
-            "name": "%s %s" % (section["System"], section["Release"]),
+            "name": "{} {}".format(section["System"], section["Release"]),
             "kernel_version": section["KernelID"],
             "hostname": section["Node"],
         },

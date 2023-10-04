@@ -1,0 +1,19 @@
+Title: check_mk_agent: Fix crash in AIX and Solaris agents if agent profiling is on
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1687762249
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+AIX and Solaris agents would previously crash if agent profiling was activated
+with LOG_SECTION_TIME=true.
+The error in the agent output was:
+C+:
+./mk_filestats.py.log: cannot create [No such file or directory]
+C-:
+
+
+

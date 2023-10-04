@@ -30,18 +30,18 @@ vsphere_object_names = {
 }
 
 
-def parse_esx_vsphere_objects(info):
+def parse_esx_vsphere_objects(string_table):
     parsed = {}
     Obj = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "Obj", ["name", "hostsystem", "state"]
     )
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
         if len(line) < 4:
             line += [""] * (4 - len(line))
         obj_type = vsphere_object_names.get(line[0], "Unknown Object")
-        name = "%s %s" % (obj_type, line[1])
+        name = f"{obj_type} {line[1]}"
         obj = Obj(name, line[2], line[3])
         parsed[obj.name] = obj
 
@@ -92,9 +92,9 @@ def check_esx_vsphere_objects(item, params, parsed):
 
 check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
     parse_function=parse_esx_vsphere_objects,
+    service_name="%s",
     discovery_function=inventory_esx_vsphere_objects,
     check_function=check_esx_vsphere_objects,
-    service_name="%s",
     check_ruleset_name="esx_vsphere_objects",
     check_default_parameters={
         "states": {
@@ -126,7 +126,7 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
     for distribution in params.get("distribution", []):
         ruled_vms = distribution.get("vm_names", [])
-        hosts = sorted(set(vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms))
+        hosts = sorted({vm.hostsystem for vm in virtualmachines if vm.name[3:] in ruled_vms})
         count = len(hosts)
         if count < distribution["hosts_count"]:
             yield distribution.get("state", 2), (
@@ -136,8 +136,9 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
 
 check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
+    service_name="Object count",
+    sections=["esx_vsphere_objects"],
     discovery_function=inventory_esx_vsphere_objects_count,
     check_function=check_esx_vsphere_objects_count,
-    service_name="Object count",
     check_ruleset_name="esx_vsphere_objects_count",
 )

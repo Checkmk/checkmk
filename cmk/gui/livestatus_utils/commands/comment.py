@@ -16,9 +16,11 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
+
+SHORT_COLUMNS = [Comments.id, Comments.is_service]
 
 
 class CommentQueryException(Exception):
@@ -45,6 +47,7 @@ class Comment:
     entry_time: str
     service_description: str
     is_service: bool
+    site: str
 
     def __post_init__(self):
         self.persistent = bool(self.persistent)
@@ -99,6 +102,8 @@ def get_comments(
 
     if service_description:
         q = q.filter(Comments.service_description == service_description)
+
+    connection.prepend_site = True
 
     results = {com["id"]: Comment(**com) for com in q.iterate(connection)}
 
@@ -241,15 +246,21 @@ def add_service_comment(
     )
 
 
-def delete_comments(connection: MultiSiteConnection, query: Query) -> None:
+def delete_comments(
+    connection: MultiSiteConnection, query: QueryExpression, site_id: SiteId
+) -> None:
+    """Delete a comment"""
+    prev = connection.only_sites[:] if isinstance(connection.only_sites, list) else None
+    connection.only_sites = [site_id]
     with detailed_connection(connection) as conn:
-        results = [(row["id"], row["is_service"], row["site"]) for row in query.iterate(conn)]
+        comments = Query(SHORT_COLUMNS, query).fetchall(conn)
 
-    for comment_id, is_service, site in results:
-        if is_service:
-            delete_service_comment(connection, comment_id, site)
+    for comment in comments:
+        if comment["is_service"]:
+            delete_service_comment(connection, comment["id"], comment["site"])
         else:
-            delete_host_comment(connection, comment_id, site)
+            delete_host_comment(connection, comment["id"], comment["site"])
+    connection.only_sites = prev
 
 
 def delete_host_comment(connection: MultiSiteConnection, comment_id: int, site_id: SiteId) -> None:

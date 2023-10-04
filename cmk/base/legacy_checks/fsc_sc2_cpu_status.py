@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 check_info["fsc_sc2_cpu_status"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
-    discovery_function=inventory_fsc_sc2_cpu_status,
-    check_function=check_fsc_sc2_cpu_status,
-    service_name="FSC %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.4.1",
         oids=["3", "4", "5", "8", "13"],
     ),
+    service_name="FSC %s",
+    discovery_function=inventory_fsc_sc2_cpu_status,
+    check_function=check_fsc_sc2_cpu_status,
 )

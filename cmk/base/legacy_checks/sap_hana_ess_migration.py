@@ -9,8 +9,9 @@
 import datetime
 
 import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # With reference to SQL sample output (see internal ticket SUP-253)
 sap_hana_ess_migration_state_map = {
@@ -20,9 +21,9 @@ sap_hana_ess_migration_state_map = {
 }
 
 
-def parse_sap_hana_ess_migration(info):
+def parse_sap_hana_ess_migration(string_table):
     parsed = {}
-    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         if not lines:
             parsed[sid_instance] = {"log": "", "timestamp": "not available"}
             continue
@@ -47,10 +48,11 @@ def inventory_sap_hana_ess_migration(parsed):
         yield item, {}
 
 
-@get_parsed_item_data
-def check_sap_hana_ess_migration(item, params, data):
+def check_sap_hana_ess_migration(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if not data or "log" not in data or not data["log"]:
-        raise MKCounterWrapped("Login into database failed.")
+        raise IgnoreResultsError("Login into database failed.")
 
     key = None
     for ident in sap_hana_ess_migration_state_map:
@@ -60,13 +62,13 @@ def check_sap_hana_ess_migration(item, params, data):
     states = sap_hana_ess_migration_state_map.get(
         key, {"cmk_state": 3, "state_readable": "Unknown [%s]" % data["log"]}
     )
-    infotext = "ESS State: %s Timestamp: %s" % (states["state_readable"], data["timestamp"])
-    return states["cmk_state"], infotext
+    infotext = "ESS State: {} Timestamp: {}".format(states["state_readable"], data["timestamp"])
+    yield states["cmk_state"], infotext
 
 
 check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(
     parse_function=parse_sap_hana_ess_migration,
+    service_name="SAP HANA ESS Migration %s",
     discovery_function=inventory_sap_hana_ess_migration,
     check_function=check_sap_hana_ess_migration,
-    service_name="SAP HANA ESS Migration %s",
 )

@@ -30,11 +30,11 @@ check_info["blade_powermod"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Management Module"),
         contains(".1.3.6.1.2.1.1.1.0", "BladeCenter Advanced Management Module"),
     ),
-    check_function=check_blade_powermod,
-    discovery_function=inventory_blade_powermod,
-    service_name="Power Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.2.4.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="Power Module %s",
+    discovery_function=inventory_blade_powermod,
+    check_function=check_blade_powermod,
 )

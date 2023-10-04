@@ -51,8 +51,7 @@ def main() {
             "testbuild",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
-            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS=",
-             "BAZEL_CACHE_URL=", "BAZEL_CACHE_USER=", "BAZEL_CACHE_PASSWORD="],
+            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="],
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
@@ -100,7 +99,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building for the following distros:<br>
         |${distros}<br>
@@ -185,10 +184,14 @@ def main() {
     }
     parallel agent_builds;
 
-    shout("create_and_upload_bom");
+    // With the current bazelization this job regularly breaks. Lets be tolerant...
+    // This should be mandatory as soon as we enter the beta phase!
+    catchError(buildResult: "SUCCESS", stageResult: "FAILURE") {
+        shout("create_and_upload_bom");
 
-    // TODO creates stages - put them on top level
-    create_and_upload_bom(WORKSPACE, branch_version, VERSION);
+        // TODO creates stages - put them on top level
+        create_and_upload_bom(WORKSPACE, branch_version, VERSION);
+    }
 
     shout("create_source_package");
     docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
@@ -250,8 +253,11 @@ def main() {
                     def distro_dir = "${WORKSPACE}/checkout";
 
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+                        // For the package build we need a higher ulimit
+                        // * Bazel opens many files which can lead to crashes
+                        // * See CMK-12159
                         docker.image("${distro}:${docker_tag}").inside(
-                                "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
+                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
                                 sh("rm -rf ${distro_dir}")
@@ -312,7 +318,7 @@ def main() {
     parallel package_builds;
 
     stage("Upload") {
-        currentBuild.description = (
+        currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
@@ -332,13 +338,11 @@ def main() {
     }
 }
 
-
 def get_agent_list(edition) {
     return (edition == "raw" ?
         ["windows"] :
         ["au-linux-64bit", "au-linux-32bit", "windows"]);
 }
-
 
 def build_linux_agent_updater(agent, edition, branch_version, registry) {
     print("FN build_linux_agent_updater(agent=${agent}, edition=${edition}, branch_version=${branch_version}, registry=${registry})");
@@ -441,8 +445,9 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def patch_script = "create_unsign_msi_patch.sh"
         def patch_file = "unsign-msi.patch"
         def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"
+        def ext_files = "robotmk_ext.exe"
 	    def hashes_file = "windows_files_hashes.txt"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files},${hashes_file}"
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files},${ext_files},${hashes_file}"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {

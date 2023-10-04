@@ -1,0 +1,26 @@
+Title: Agent bakery API now available in Checkmk Raw Edition (CRE)
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1689778889
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk only concerns developers of custom agent bakery plugins.
+
+The agent bakery API, which allows for registering custom bakery plugins, is now available in the
+CRE. This facilitates custom plugin development, since bakery plugins can now be developed in the
+context of our GitHub repository with full IDE support. The new import path for the bakery API
+reads:
+C+:
+from cmk.base.plugins.bakery.bakery_api.v1 import register, Plugin, ...
+C-:
+
+Note that the old import path is still valid and will continue working. Furthermore, the path in the
+hierarchy of the <i>local</i> folder for custom bakery plugins remains unchanged. Hence, MKPs do not
+need to be adjusted.
+
+Finally, note that this does of course not mean that the actual bakery functionality is available in
+the CRE. Registering a bakery plugin in the CRE will have no effect.

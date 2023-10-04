@@ -10,11 +10,11 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_salesforce(info):
+def parse_salesforce(string_table):
     import json
 
     pre_parsed = []
-    for line in info:
+    for line in string_table:
         pre_parsed.append(json.loads(" ".join(line)))
 
     parsed = {}
@@ -55,12 +55,12 @@ def check_salesforce_instances(item, params, parsed):
             ("releaseVersion", "Release Version"),
         ]:
             if data.get(key):
-                yield 0, "%s: %s" % (title, data[key])
+                yield 0, f"{title}: {data[key]}"
 
 
 check_info["salesforce_instances"] = LegacyCheckDefinition(
     parse_function=parse_salesforce,
+    service_name="Salesforce Instance %s",
     discovery_function=inventory_salesforce_instances,
     check_function=check_salesforce_instances,
-    service_name="Salesforce Instance %s",
 )

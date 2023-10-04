@@ -3,14 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.metrics.utils import (
-    GB,
-    MAX_NUMBER_HOPS,
-    MB,
-    perfometer_info,
-    skype_mobile_devices,
-    TB,
-)
+from cmk.gui.graphing import perfometer_info
+from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, TB
 
 # .
 #   .--Perf-O-Meters-------------------------------------------------------.
@@ -33,11 +27,6 @@ from cmk.gui.plugins.metrics.utils import (
 # dual        -> two Perf-O-Meters next to each other, the first one from right to left
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
-
-# Optional keys:
-# "sort_group" -> When sorting perfometer the first criteria used is either this optional performeter
-#                 group or the perfometer ID. The sort_group can be used to group different perfometers
-#                 which show equal data for sorting them together in a single sort domain.
 
 perfometer_info.append(
     {
@@ -679,6 +668,7 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["mem_used", "swap_used", "caches", "mem_free", "swap_free"],
         "label": ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
+        "total": "mem_total",
     }
 )
 
@@ -752,17 +742,13 @@ perfometer_info.append(
     }
 )
 
-# TODO total : None?
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["shared_locks", "exclusive_locks"],
-        "total": None,
+        "type": "logarithmic",
+        "metric": "connections",
+        "half_value": 50,
+        "exponent": 2,
     }
-)
-
-perfometer_info.append(
-    {"type": "logarithmic", "metric": "connections", "half_value": 50, "exponent": 2}
 )
 
 perfometer_info.append(
@@ -895,7 +881,12 @@ perfometer_info.append(
 )
 
 perfometer_info.append(
-    {"type": "logarithmic", "metric": "running_sessions", "half_value": 10, "exponent": 2}
+    {
+        "type": "logarithmic",
+        "metric": "running_sessions",
+        "half_value": 10,
+        "exponent": 2,
+    }
 )
 
 perfometer_info.append(
@@ -918,11 +909,11 @@ perfometer_info.append(
     }
 )
 
-# TODO: max fehlt
 perfometer_info.append(
     {
         "type": "linear",
         "segments": ["sort_overflow"],
+        "total": 100.0,
     }
 )
 
@@ -1392,13 +1383,13 @@ perfometer_info.append(
         "perfometers": [
             {
                 "type": "linear",
-                "segments": ["qos_dropped_bytes_rate"],
-                "total": "qos_dropped_bytes_rate:max",
+                "segments": ["qos_dropped_bits_rate"],
+                "total": "qos_dropped_bits_rate:max",
             },
             {
                 "type": "linear",
-                "segments": ["qos_outbound_bytes_rate"],
-                "total": "qos_outbound_bytes_rate:max",
+                "segments": ["qos_outbound_bits_rate"],
+                "total": "qos_outbound_bits_rate:max",
             },
         ],
     }
@@ -1638,20 +1629,6 @@ perfometer_info.append(
         "metric": "oracle_sga_size,oracle_pga_total_pga_allocated,+",
         "half_value": 16589934592.0,
         "exponent": 2,
-    }
-)
-
-
-def get_skype_mobile_perfometer_segments():
-    return ["active_sessions_%s" % device for device, _name, _color in skype_mobile_devices]
-
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": get_skype_mobile_perfometer_segments(),
-        # there is no limit and no way to determine the max so far for
-        # all segments
     }
 )
 
@@ -1954,13 +1931,6 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "linear",
-        "segments": ["fragmentation"],
-    }
-)
-
-perfometer_info.append(
-    {
         "type": "logarithmic",
         "metric": "items_count",
         "half_value": 1000,
@@ -2203,4 +2173,13 @@ perfometer_info.append(
         ),
         "total": 100.0,
     },
+)
+
+perfometer_info.append(
+    {
+        "type": "logarithmic",
+        "metric": "test_runtime",
+        "half_value": 864000.0,
+        "exponent": 2,
+    }
 )

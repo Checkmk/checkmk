@@ -2,8 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIControllerFactory,
     APIPodFactory,
@@ -12,13 +10,20 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
-from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import pod_lifecycle_phase
+from cmk.special_agents.utils_kubernetes.agent_handlers.pod_handler import (
+    _conditions,
+    _container_specs,
+    _info,
+    _init_container_specs,
+    _start_time,
+)
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 def test_pod_conditions_with_no_conditions_present() -> None:
     pod = APIPodFactory.build(status=PodStatusFactory.build(conditions=None))
-    assert agent.pod_conditions(pod.status) is None
+    assert _conditions(pod.status) is None
 
 
 def test_pod_conditions_with_conditions_present() -> None:
@@ -60,7 +65,7 @@ def test_pod_conditions_with_conditions_present() -> None:
             ]
         )
     )
-    section_pod_conditions = agent.pod_conditions(pod.status)
+    section_pod_conditions = _conditions(pod.status)
 
     assert isinstance(section_pod_conditions, section.PodConditions)
     assert section_pod_conditions == section.PodConditions(
@@ -81,7 +86,7 @@ def test_pod_conditions_with_conditions_present() -> None:
 
 def test_pod_container_specs() -> None:
     pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[]))
-    section_pod_container_specs = agent.pod_container_specs(pod.spec)
+    section_pod_container_specs = _container_specs(pod.spec)
 
     assert section_pod_container_specs == section.ContainerSpecs(containers={})
 
@@ -101,7 +106,7 @@ def test_pod_init_container_specs() -> None:
             ]
         )
     )
-    section_pod_init_container_specs = agent.pod_init_container_specs(pod.spec)
+    section_pod_init_container_specs = _init_container_specs(pod.spec)
 
     assert isinstance(section_pod_init_container_specs, section.ContainerSpecs)
     assert section_pod_init_container_specs == section.ContainerSpecs(
@@ -114,12 +119,12 @@ def test_pod_init_container_specs() -> None:
 def test_pod_start_time_with_no_start_time_present() -> None:
     pod = APIPodFactory.build(status=PodStatusFactory.build(start_time=None))
 
-    assert agent.pod_start_time(pod.status) is None
+    assert _start_time(pod.status) is None
 
 
 def test_pod_start_time_with_start_time_present() -> None:
     pod = APIPodFactory.build(status=PodStatusFactory.build(start_time=100))
-    section_pod_start_time = agent.pod_start_time(pod.status)
+    section_pod_start_time = _start_time(pod.status)
 
     assert isinstance(section_pod_start_time, section.StartTime)
     assert section_pod_start_time == section.StartTime(start_time=api.Timestamp(100))
@@ -127,7 +132,7 @@ def test_pod_start_time_with_start_time_present() -> None:
 
 def test_pod_lifecycle_phase() -> None:
     pod = APIPodFactory.build(status=PodStatusFactory.build(phase=api.Phase.RUNNING))
-    section_pod_lifecycle_phase = agent.pod_lifecycle_phase(pod.status)
+    section_pod_lifecycle_phase = pod_lifecycle_phase(pod.status)
 
     assert isinstance(section_pod_lifecycle_phase, section.PodLifeCycle)
     assert section_pod_lifecycle_phase == section.PodLifeCycle(phase=api.Phase.RUNNING)
@@ -161,7 +166,7 @@ def test_pod_info() -> None:
         ],
         uid="pod-uid",
     )
-    section_pod_info = agent.pod_info(
+    section_pod_info = _info(
         pod,
         cluster_name="cluster-name",
         kubernetes_cluster_hostname="host",

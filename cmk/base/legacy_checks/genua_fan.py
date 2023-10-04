@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.fan import check_fan
@@ -14,7 +13,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
 
 
-def inventory_genua_fan(string_table: List[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
+def inventory_genua_fan(string_table: list[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:
     for tree in string_table:
         if not tree:
             continue
@@ -49,10 +48,6 @@ def check_genua_fan(item, params, info):
 
 check_info["genua_fan"] = LegacyCheckDefinition(
     detect=DETECT_GENUA,
-    discovery_function=inventory_genua_fan,
-    check_function=check_genua_fan,
-    check_ruleset_name="hw_fans",
-    service_name="FAN %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.1.1.1",
@@ -63,6 +58,10 @@ check_info["genua_fan"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    service_name="FAN %s",
+    discovery_function=inventory_genua_fan,
+    check_function=check_genua_fan,
+    check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (2000, 1000),
         "upper": (8000, 8400),

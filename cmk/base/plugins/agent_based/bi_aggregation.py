@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.utils.type_defs import state_markers  # pylint: disable=cmk-module-layer-violation
+from cmk.checkengine.checkresults import state_markers  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -39,7 +40,7 @@ def render_bi_infos(infos) -> None | list[str]:  # type: ignore[no-untyped-def]
     lines = []
     if "error" in own_infos:
         lines.append(
-            "%s %s" % (state_markers[own_infos["error"]["state"]], own_infos["error"]["output"])
+            "{} {}".format(state_markers[own_infos["error"]["state"]], own_infos["error"]["output"])
         )
     if "custom" in own_infos:
         lines.append(own_infos["custom"]["output"])

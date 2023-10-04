@@ -72,7 +72,7 @@ def inventory_cisco_hsrp(info):
         # if the group is in a working state (both routers see and talk to each other),
         # inventorize HSRP group name+IP and the standby state as seen from "this" box.
         if hsrp_state in [5, 6]:
-            vip_grp = "%s-%s" % (vip, hsrp_grp)
+            vip_grp = f"{vip}-{hsrp_grp}"
             inventory.append((vip_grp, (hsrp_grp, hsrp_state)))
 
     return inventory
@@ -87,7 +87,7 @@ def check_cisco_hsrp(item, params, info):
         hsrp_state = int(hsrp_state)
 
         if "-" in item:
-            vip_grp = "%s-%s" % (vip, hsrp_grp)
+            vip_grp = f"{vip}-{hsrp_grp}"
         else:
             vip_grp = vip
 
@@ -108,18 +108,18 @@ def check_cisco_hsrp(item, params, info):
                 state = 2
                 msgtxt = "Redundancy Group %s" % hsrp_grp
 
-            return state, "%s, Status: %s" % (msgtxt, hsrp_states.get(hsrp_state, "unknown"))
+            return state, "{}, Status: {}".format(msgtxt, hsrp_states.get(hsrp_state, "unknown"))
 
     return 3, "HSRP Group not found in Agent output"
 
 
 check_info["cisco_hsrp"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.106.1.1.1.0")),
-    discovery_function=inventory_cisco_hsrp,
-    check_function=check_cisco_hsrp,
-    service_name="HSRP Group %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.106.1.2.1.1",
         oids=[OIDEnd(), "11", "13", "14", "15", "16"],
     ),
+    service_name="HSRP Group %s",
+    discovery_function=inventory_cisco_hsrp,
+    check_function=check_cisco_hsrp,
 )

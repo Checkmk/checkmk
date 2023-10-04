@@ -43,7 +43,7 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
             max_warning_level, max_critical_level = params["magic_maxlevels"]
             warn = min(warn, max_warning_level)
             crit = min(crit, max_critical_level)
-        levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+        levels_text = f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
         warn_bytes = warn * size_bytes / 100
         crit_bytes = crit * size_bytes / 100
 
@@ -52,6 +52,6 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
         output_as_percentage = False
         warn_bytes = warn * 1024 * 1024
         crit_bytes = crit * 1024 * 1024
-        levels_text = " (warn/crit at %s/%s)" % (render.bytes(warn_bytes), render.bytes(crit_bytes))
+        levels_text = f" (warn/crit at {render.bytes(warn_bytes)}/{render.bytes(crit_bytes)})"
 
     return warn_bytes, crit_bytes, levels_text, output_as_percentage

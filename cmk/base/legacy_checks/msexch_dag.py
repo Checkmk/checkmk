@@ -131,24 +131,25 @@ def check_msexch_dag_dbcopy(item, params, info):
     inv_key, inv_val = params
     for line in info:
         if len(line) == 2:
-            key, val = [i.strip() for i in line]
+            key, val = (i.strip() for i in line)
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == inv_key:
                 if val == inv_val:
                     state = 0
-                    infotxt = "%s is %s" % (inv_key, val)
+                    infotxt = f"{inv_key} is {val}"
                 else:
                     state = 1
-                    infotxt = "%s changed from %s to %s" % (inv_key, inv_val, val)
+                    infotxt = f"{inv_key} changed from {inv_val} to {val}"
                 return state, infotxt
     return None
 
 
 check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
+    service_name="Exchange DAG DBCopy for %s",
+    sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_dbcopy,
     check_function=check_msexch_dag_dbcopy,
-    service_name="Exchange DAG DBCopy for %s",
 )
 
 # .
@@ -172,7 +173,7 @@ def check_msexch_dag_contentindex(item, _no_params, info):
     getit = False
     for line in info:
         if len(line) == 2:
-            key, val = [i.strip() for i in line]
+            key, val = (i.strip() for i in line)
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "ContentIndexState":
@@ -185,9 +186,10 @@ def check_msexch_dag_contentindex(item, _no_params, info):
 
 
 check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
+    service_name="Exchange DAG ContentIndex of %s",
+    sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_contentindex,
     check_function=check_msexch_dag_contentindex,
-    service_name="Exchange DAG ContentIndex of %s",
 )
 
 # .
@@ -214,7 +216,7 @@ def check_msexch_dag_copyqueue(item, params, info):
     getit = False
     for line in info:
         if len(line) == 2:
-            key, val = [i.strip() for i in line]
+            key, val = (i.strip() for i in line)
             if key == "DatabaseName" and val == item:
                 getit = True
             elif getit and key == "CopyQueueLength":
@@ -233,8 +235,9 @@ def check_msexch_dag_copyqueue(item, params, info):
 
 
 check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
+    service_name="Exchange DAG CopyQueue of %s",
+    sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_copyqueue,
     check_function=check_msexch_dag_copyqueue,
-    service_name="Exchange DAG CopyQueue of %s",
     check_ruleset_name="msexch_copyqueue",
 )

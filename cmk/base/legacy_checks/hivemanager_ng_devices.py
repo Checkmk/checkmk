@@ -19,9 +19,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_hivemanager_ng_devices(info):
+def parse_hivemanager_ng_devices(string_table):
     parsed = {}
-    for device in info:
+    for device in string_table:
         data = dict(element.split("::") for element in device)
 
         data["connected"] = data["connected"] == "True"
@@ -53,10 +53,10 @@ def check_hivemanager_ng_devices(item, params, parsed):
     warn, crit = params["max_clients"]
     if clients >= crit:
         status = 2
-        infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        infotext += f" (warn/crit at {warn}/{crit})"
     elif clients >= warn:
         status = 1
-        infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        infotext += f" (warn/crit at {warn}/{crit})"
     perfdata = [("connections", clients, warn, crit)]
     yield status, infotext, perfdata
 
@@ -67,14 +67,14 @@ def check_hivemanager_ng_devices(item, params, parsed):
         ("lastUpdated", "last updated"),
     ]
     for key, text in informational:
-        yield 0, "%s: %s" % (text, device[key])
+        yield 0, f"{text}: {device[key]}"
 
 
 check_info["hivemanager_ng_devices"] = LegacyCheckDefinition(
     parse_function=parse_hivemanager_ng_devices,
-    check_function=check_hivemanager_ng_devices,
-    discovery_function=inventory_hivemanager_ng_devices,
     service_name="Client %s",
+    discovery_function=inventory_hivemanager_ng_devices,
+    check_function=check_hivemanager_ng_devices,
     check_ruleset_name="hivemanager_ng_devices",
     check_default_parameters={
         "max_clients": (25, 50),

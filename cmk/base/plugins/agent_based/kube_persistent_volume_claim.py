@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import time
-from typing import Any, Iterator, Mapping, MutableMapping, TypedDict
+from collections.abc import Iterator, Mapping, MutableMapping
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,

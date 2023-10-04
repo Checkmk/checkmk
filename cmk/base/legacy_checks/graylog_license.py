@@ -71,7 +71,7 @@ def check_graylog_license(_no_item, params, parsed):
             if str(data) != expected:
                 state = params.get(key, 2)
 
-            yield state, "%s: %s" % (infotext, _handle_readable_output(data))
+            yield state, f"{infotext}: {_handle_readable_output(data)}"
 
     traffic_limit = license_data.get("license", {}).get("enterprise", {}).get("traffic_limit")
     if traffic_limit is not None:
@@ -96,7 +96,9 @@ def check_graylog_license(_no_item, params, parsed):
     ]:
         value = license_data.get("license", {}).get(key)
         if value is not None:
-            yield 0, "%s: %s" % (" ".join(key.split("_")).title(), _handle_readable_output(value))
+            yield 0, "{}: {}".format(
+                " ".join(key.split("_")).title(), _handle_readable_output(value)
+            )
 
     remote_check = license_data.get("license", {}).get("enterprise", {}).get("require_remote_check")
     if remote_check is not None:
@@ -109,9 +111,9 @@ def _handle_readable_output(value):
 
 check_info["graylog_license"] = LegacyCheckDefinition(
     parse_function=parse_graylog_agent_data,
-    check_function=check_graylog_license,
-    discovery_function=inventory_graylog_license,
     service_name="Graylog License",
+    discovery_function=inventory_graylog_license,
+    check_function=check_graylog_license,
     check_ruleset_name="graylog_license",
     check_default_parameters={
         "no_enterprise": 0,

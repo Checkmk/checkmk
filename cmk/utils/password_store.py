@@ -44,7 +44,9 @@ import sys
 from collections.abc import Mapping
 from contextlib import suppress
 from pathlib import Path
-from typing import Literal, NoReturn, TypedDict, Union
+from typing import Literal, NoReturn
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -54,8 +56,7 @@ from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedC
 from cmk.utils.exceptions import MKGeneralException
 
 PasswordLookupType = Literal["password", "store"]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-PasswordId = Union[str, tuple[PasswordLookupType, str]]
+PasswordId = str | tuple[PasswordLookupType, str]
 
 
 class Password(TypedDict):
@@ -100,12 +101,12 @@ def replace_passwords() -> None:
     for password_spec in pwstore_args.split(","):
         parts = password_spec.split("@")
         if len(parts) != 3:
-            bail_out("pwstore: Invalid --pwstore entry: %s" % password_spec)
+            bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
 
         try:
             num_arg, pos_in_arg, password_id = int(parts[0]), int(parts[1]), parts[2]
         except ValueError:
-            bail_out("pwstore: Invalid format: %s" % password_spec)
+            bail_out(f"pwstore: Invalid format: {password_spec}")
 
         try:
             arg = sys.argv[num_arg]
@@ -115,7 +116,7 @@ def replace_passwords() -> None:
         try:
             password = passwords[password_id]
         except KeyError:
-            bail_out("pwstore: Password '%s' does not exist" % password_id)
+            bail_out(f"pwstore: Password '{password_id}' does not exist")
 
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 

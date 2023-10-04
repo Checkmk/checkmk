@@ -4,13 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.crypto.password import Password
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
-from cmk.gui.plugins.userdb.utils import (
-    CheckCredentialsResult,
-    user_connector_registry,
-    UserConnector,
-)
+from cmk.gui.userdb import CheckCredentialsResult, user_connector_registry, UserConnector
 
 
 @user_connector_registry.register

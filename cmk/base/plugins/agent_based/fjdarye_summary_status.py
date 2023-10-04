@@ -10,7 +10,7 @@
 # <oid>.1: Index
 # <oid>.3: Status
 
-from typing import List, NewType, Optional
+from typing import NewType
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -35,7 +35,7 @@ FJDARYE_SUM_STATUS = {
 FjdaryeDeviceStatus = NewType("FjdaryeDeviceStatus", str)
 
 
-def parse_fjdarye_sum(string_table: List[StringTable]) -> Optional[FjdaryeDeviceStatus]:
+def parse_fjdarye_sum(string_table: list[StringTable]) -> FjdaryeDeviceStatus | None:
     for row in string_table:
         for status in row:
             if len(status) == 1:
@@ -56,12 +56,12 @@ register.snmp_section(
 )
 
 
-def discover_fjdarye_sum(section: Optional[FjdaryeDeviceStatus]) -> DiscoveryResult:
+def discover_fjdarye_sum(section: FjdaryeDeviceStatus | None) -> DiscoveryResult:
     if section:
         yield Service()
 
 
-def check_fjdarye_sum(section: Optional[FjdaryeDeviceStatus]) -> CheckResult:
+def check_fjdarye_sum(section: FjdaryeDeviceStatus | None) -> CheckResult:
     if section is not None:
         yield FJDARYE_SUM_STATUS.get(
             section, Result(state=State.UNKNOWN, summary="Status: unknown")

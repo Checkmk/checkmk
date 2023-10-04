@@ -7,7 +7,7 @@
 context type of the new dashboard selectable."""
 
 from cmk.gui import visuals
-from cmk.gui.plugins.visuals.utils import visual_info_registry
+from cmk.gui.visuals.info import visual_info_registry
 
 
 def page_create_dashboard() -> None:

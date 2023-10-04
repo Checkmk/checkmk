@@ -1,0 +1,13 @@
+Title: Fix redirect for mobile views on login
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1691747202
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If a user used a link to a view in Checkmk mobile before the login, the
+redirect was always made to the main page.
+

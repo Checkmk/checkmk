@@ -8,6 +8,7 @@ from cmk.base.plugins.agent_based.utils.enviromux import (
     check_enviromux_temperature,
     check_enviromux_voltage,
     DETECT_ENVIROMUX,
+    DETECT_ENVIROMUX5,
     discover_enviromux_humidity,
     discover_enviromux_temperature,
     discover_enviromux_voltage,
@@ -32,6 +33,24 @@ register.snmp_section(
         ],
     ),
     detect=DETECT_ENVIROMUX,
+)
+
+register.snmp_section(
+    name="enviromux5_external",
+    parse_function=parse_enviromux,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3699.1.1.10.1.5.1.1",
+        oids=[
+            "1",  # extSensorIndex
+            "2",  # extSensorType
+            "3",  # extSensorDescription
+            "7",  # extSensorValue
+            "11",  # extSensorMinThreshold
+            "12",  # extSensorMaxThreshold
+        ],
+    ),
+    parsed_section_name="enviromux_external",
+    detect=DETECT_ENVIROMUX5,
 )
 # .
 #   .--temperature---------------------------------------------------------.

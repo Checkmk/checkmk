@@ -5,9 +5,9 @@
 
 #include <string>  // for string
 
-#include "cfg.h"
 #include "providers/mrpe.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
@@ -76,7 +76,13 @@ TEST_F(SectionProviderMrpeFixture, Construction) {
     EXPECT_TRUE(mrpe.generateContent().empty());
 }
 
-TEST_F(SectionProviderMrpeFixture, RunCachedComponent) {
+TEST_F(SectionProviderMrpeFixture, CheckConfigTimeout) {
+    MrpeProvider mrpe;
+    mrpe.loadConfig();
+    ASSERT_EQ(mrpe.timeout(), 60);
+}
+
+TEST_F(SectionProviderMrpeFixture, RunCachedComponent_DISABLED) {
     MrpeProvider mrpe;
     auto yaml = cfg::GetLoadedConfig();
 

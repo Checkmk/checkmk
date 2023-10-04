@@ -94,17 +94,17 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
 
             return (
                 status,
-                "Sensor %s is at %s and reports status %s"
-                % (sensor_id, sensor_message, sensor_status_descr),
+                f"Sensor {sensor_id} is at {sensor_message} and reports status {sensor_status_descr}",
                 perfdata,
             )
     return 3, "No sensor %s found" % item
 
 
 check_info["qlogic_sanbox.temp"] = LegacyCheckDefinition(
-    check_function=check_qlogic_sanbox_temp,
-    discovery_function=inventory_qlogic_sanbox_temp,
     service_name="Temperature Sensor %s",
+    sections=["qlogic_sanbox"],
+    discovery_function=inventory_qlogic_sanbox_temp,
+    check_function=check_qlogic_sanbox_temp,
 )
 
 # .
@@ -161,12 +161,13 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
             else:
                 status = 3
 
-            return status, "Power Supply %s reports status %s" % (sensor_id, sensor_status_descr)
+            return status, f"Power Supply {sensor_id} reports status {sensor_status_descr}"
     return 3, "No sensor %s found" % item
 
 
 check_info["qlogic_sanbox.psu"] = LegacyCheckDefinition(
-    check_function=check_qlogic_sanbox_psu,
-    discovery_function=inventory_qlogic_sanbox_psu,
     service_name="PSU %s",
+    sections=["qlogic_sanbox"],
+    discovery_function=inventory_qlogic_sanbox_psu,
+    check_function=check_qlogic_sanbox_psu,
 )

@@ -7,7 +7,7 @@ import os
 
 import pytest
 
-import omdlib.main
+from omdlib.contexts import RootContext, SiteContext
 
 
 # Explicitly don't patch the base path here
@@ -17,7 +17,7 @@ def omd_base_path() -> None:
 
 
 def test_root_context() -> None:
-    site = omdlib.main.RootContext()
+    site = RootContext()
     assert site.name is None
     assert site.dir == "/"
     assert site.real_dir == "/"
@@ -25,7 +25,7 @@ def test_root_context() -> None:
 
 
 def test_site_context(monkeypatch: pytest.MonkeyPatch) -> None:
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
     assert site.name == "dingeling"
     assert site.dir == "/omd/sites/dingeling"
     assert site.real_dir == "/opt/omd/sites/dingeling"
@@ -35,13 +35,13 @@ def test_site_context(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_site_context_version(monkeypatch: pytest.MonkeyPatch) -> None:
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
     monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
     assert site.version == "2018.08.11.cee"
 
 
 def test_site_context_replacements() -> None:
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
 
     assert site.replacements["###SITE###"] == "dingeling"
     assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
@@ -52,10 +52,10 @@ def test_site_context_replacements() -> None:
 def test_site_context_exists(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/sites/dingeling")
 
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
     assert site.exists()
 
-    site = omdlib.main.SiteContext("dingelang")
+    site = SiteContext("dingelang")
     assert not site.exists()
 
 
@@ -64,15 +64,15 @@ def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
         os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
     )
 
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
     assert site.is_empty()
 
-    site = omdlib.main.SiteContext("dingelang")
+    site = SiteContext("dingelang")
     assert not site.is_empty()
 
 
 def test_site_context_is_autostart(monkeypatch: pytest.MonkeyPatch) -> None:
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
 
     with pytest.raises(Exception) as e:
         site.is_autostart()
@@ -91,8 +91,8 @@ def test_site_context_is_autostart(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_site_context_is_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/apache/dingeling.conf")
-    site = omdlib.main.SiteContext("dingeling")
+    site = SiteContext("dingeling")
     assert not site.is_disabled()
 
-    site = omdlib.main.SiteContext("dingelang")
+    site = SiteContext("dingelang")
     assert site.is_disabled()

@@ -5,7 +5,7 @@
 
 from collections.abc import Iterable
 
-from cmk.utils.type_defs import state_markers
+from cmk.checkengine.checkresults import state_markers
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,

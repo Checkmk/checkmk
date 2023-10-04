@@ -4,36 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Collection, Iterable, Mapping
+from collections.abc import Callable, Collection, Iterable, Sequence
 from itertools import chain
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
+from cmk.utils.hostaddress import HostName
+from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import HostName, MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.metrics.utils import (
+from cmk.gui.graphing._utils import (
     get_graph_templates,
-    graph_info,
+    graph_templates_internal,
     metric_info,
     metrics_of_query,
     registered_metrics,
     translated_metrics_from_row,
 )
-from cmk.gui.plugins.visuals.utils import (
+from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.type_defs import Choices
+from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
+from cmk.gui.utils.user_errors import user_errors
+from cmk.gui.valuespec import autocompleter_registry, Labels
+from cmk.gui.visuals import (
     get_only_sites_from_context,
     livestatus_query_bare,
     livestatus_query_bare_string,
 )
-from cmk.gui.type_defs import Choices, Sequence
-from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
-from cmk.gui.valuespec import autocompleter_registry, Labels
-from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_vs_autocomplete")(PageVsAutocomplete)
 
 
 def __live_query_to_choices(
@@ -79,6 +85,11 @@ def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     context["hostregex"] = {"host_regex": value or "."}
     query = livestatus_query_bare_string("host", context, ["host_name"], "reload")
 
+    # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the
+    # livestatus query cannot be run -> return the given value
+    # Rendering of the error msgs is handled in JS
+    if user_errors:
+        return [(value, value)]
     return _sorted_unique_lq(query, 200, value, params)
 
 
@@ -87,11 +98,11 @@ def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
-    all_hosts: dict[HostName, CREHost] = Host.all()
+    all_hosts: dict[HostName, Host] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
-        if match_pattern.search(host_name) is not None and host_object.may("read"):
+        if match_pattern.search(host_name) is not None and host_object.permissions.may("read"):
             match_list.append((host_name, host_name))
 
     if not any(x[0] == value for x in match_list):
@@ -163,8 +174,13 @@ def monitored_service_description_autocompleter(value: str, params: dict) -> Cho
     context.pop("service", None)
     context["serviceregex"] = {"service_regex": value or "."}
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
-    result = _sorted_unique_lq(query, 200, value, params)
-    return result
+
+    # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the
+    # livestatus query cannot be run -> return the given value
+    # Rendering of the error msgs is handled in JS
+    if user_errors:
+        return [(value, value)]
+    return _sorted_unique_lq(query, 200, value, params)
 
 
 @autocompleter_registry.register_expression("wato_folder_choices")
@@ -276,13 +292,10 @@ def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
         metric_id = metric_or_graph_id.replace("METRIC_", "")
         return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
-    def _graph_template_title(graph_template: Mapping) -> str:
-        return str(graph_template.get("title", "")) or _metric_title_from_id(graph_template["id"])
-
     yield from (
         (
-            template["id"],
-            _graph_template_title(template),
+            template.id,
+            template.title or _metric_title_from_id(template.id),
         )
         for template in get_graph_templates(translated_metrics_from_row(row))
     )
@@ -297,14 +310,9 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
         choices: Iterable[tuple[str, str]] = (
             (
                 graph_id,
-                str(
-                    graph_details.get(
-                        "title",
-                        graph_id,
-                    )
-                ),
+                graph_details.title or graph_details.id,
             )
-            for graph_id, graph_details in graph_info.items()
+            for graph_id, graph_details in graph_templates_internal().items()
         )
 
     else:
@@ -340,7 +348,6 @@ def validate_autocompleter_data(api_request):
         raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
 
 
-@page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
         api_request = self.webapi_request()

@@ -16,7 +16,7 @@ wouldn't get updated if the package had to be repackaged for a bakery revision u
 
 This resulted in the agent updater being unable to update affected hosts
 and exiting with message <tt>signature #<i>n</i> is invalid</tt>, and the
-matching <i>Check_MK</i> service showing a <i>WARN</t> state.
+matching <i>Check_MK</i> service showing a <i>WARN</i> state.
 
 Signatures will be fixed and updates will continue to work after first
 bake&sign action after applying this Werk.

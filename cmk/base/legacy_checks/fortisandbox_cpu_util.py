@@ -35,12 +35,12 @@ def check_fortisandbox_cpu_util(_no_item, params, info):
 
 check_info["fortisandbox_cpu_util"] = LegacyCheckDefinition(
     detect=DETECT_FORTISANDBOX,
-    discovery_function=discover_fortisandbox_cpu_util,
-    check_function=check_fortisandbox_cpu_util,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.3.1",
         oids=["3"],
     ),
+    service_name="CPU utilization",
+    discovery_function=discover_fortisandbox_cpu_util,
+    check_function=check_fortisandbox_cpu_util,
     check_ruleset_name="cpu_utilization",
 )

@@ -9,7 +9,7 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.gui.watolib.host_label_sync import (
     get_host_labels_entry_of_host,

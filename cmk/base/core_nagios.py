@@ -24,33 +24,26 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.servicename import ServiceName
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import (
-    CheckPluginNameStr,
-    ContactgroupName,
-    HostAddress,
-    HostgroupName,
-    HostName,
-    ServicegroupName,
-    ServiceName,
-)
 
-from cmk.checkengine import plugin_contexts
-from cmk.checkengine.check_table import FilterMode
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.command_config as command_config
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
     CollectedHostLabels,
@@ -249,7 +242,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 ) -> ObjectSpec:
     ip = attrs["address"]
 
-    if config_cache.is_cluster(hostname):
+    if hostname in config_cache.all_configured_clusters():
         nodes = config_cache.get_cluster_nodes_for_config(hostname)
         attrs.update(config_cache.get_cluster_attributes(hostname, nodes))
 
@@ -262,7 +255,9 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     host_spec = {
         "host_name": hostname,
         "use": (
-            config.cluster_template if config_cache.is_cluster(hostname) else config.host_template
+            config.cluster_template
+            if hostname in config_cache.all_configured_clusters()
+            else config.host_template
         ),
         "address": (
             ip if ip else ip_lookup.fallback_ip_for(config_cache.default_address_family(hostname))
@@ -306,7 +301,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         config_cache,
         hostname,
         ip,
-        config_cache.is_cluster(hostname),
+        hostname in config_cache.all_configured_clusters(),
         "ping",
         host_check_via_service_status,
         host_check_via_custom_check,
@@ -325,7 +320,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         host_spec["contact_groups"] = ",".join(contactgroups)
         cfg.contactgroups_to_define.update(contactgroups)
 
-    if not config_cache.is_cluster(hostname):
+    if hostname not in config_cache.all_configured_clusters():
         # Parents for non-clusters
 
         # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
@@ -335,7 +330,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 
-    elif config_cache.is_cluster(hostname):
+    elif hostname in config_cache.all_configured_clusters():
         # Special handling of clusters
         host_spec["parents"] = ",".join(nodes)
 
@@ -344,11 +339,25 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     for key, value in config_cache.extra_host_attributes(hostname).items():
         if key == "cmk_agent_connection":
             continue
-        if config_cache.is_cluster(hostname) and key == "parents":
+        if hostname in config_cache.all_configured_clusters() and key == "parents":
             continue
         host_spec[key] = value
 
     return host_spec
+
+
+def transform_active_service_command(
+    cfg: NagiosConfig, service_data: command_config.ActiveServiceData
+) -> str:
+    if config.simulation_mode:
+        cfg.custom_commands_to_define.add("check-mk-simulation")
+        return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
+
+    if service_data.command == "check-mk-custom":
+        cfg.custom_commands_to_define.add("check-mk-custom")
+        return f"{service_data.command}!{service_data.command_line}"
+
+    return service_data.command_display
 
 
 def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
@@ -376,7 +385,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     def get_dependencies(hostname: HostName, servicedesc: ServiceName) -> str:
         result = ""
-        for dep in config.service_depends_on(hostname, servicedesc):
+        for dep in config.service_depends_on(config_cache, hostname, servicedesc):
             result += _format_nagios_object(
                 "servicedependency",
                 {
@@ -397,8 +406,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     for service in sorted(host_check_table.values(), key=lambda s: s.sort_key()):
         if not service.description:
             config_warnings.warn(
-                "Skipping invalid service with empty description (plugin: %s) on host %s"
-                % (service.check_plugin_name, hostname)
+                f"Skipping invalid service with empty description (plugin: {service.check_plugin_name}) on host {hostname}"
             )
             continue
 
@@ -456,87 +464,64 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         license_counter["services"] += 1
 
     # legacy checks via active_checks
-    actchecks = []
-    for plugin_name, entries in config_cache.active_checks(hostname):
-        cfg.active_checks_to_define.add(plugin_name)
-        act_info = config.active_check_info[plugin_name]
-        for params in entries:
-            actchecks.append((plugin_name, act_info, params))
+    active_services = []
+
+    active_check_config = command_config.ActiveCheckConfig(
+        hostname,
+        host_attrs,
+        stored_passwords=stored_passwords,
+        escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
+    )
+
+    active_checks = config_cache.active_checks(hostname)
+    actchecks = [name for name, params in active_checks if params]
+    for service_data in active_check_config.get_active_service_data(
+        config_cache.ruleset_matcher, active_checks
+    ):
+        if do_omit_service(hostname, service_data.description):
+            continue
+
+        if (existing_plugin := used_descriptions.get(service_data.description)) is not None:
+            core_config.duplicate_service_warning(
+                checktype="active",
+                description=service_data.description,
+                host_name=hostname,
+                first_occurrence=existing_plugin,
+                second_occurrence=(f"active({service_data.plugin_name})", None),
+            )
+            continue
+
+        used_descriptions[service_data.description] = (
+            f"active({service_data.plugin_name})",
+            service_data.description,
+        )
+
+        service_spec = {
+            "use": "check_mk_perf,check_mk_default",
+            "host_name": hostname,
+            "service_description": service_data.description,
+            "check_command": transform_active_service_command(cfg, service_data),
+            "active_checks_enabled": str(1),
+        }
+        service_spec.update(
+            core_config.get_service_attributes(hostname, service_data.description, config_cache)
+        )
+        service_spec.update(
+            _extra_service_conf_of(cfg, config_cache, hostname, service_data.description)
+        )
+
+        cfg.active_checks_to_define.add(service_data.plugin_name)
+        active_services.append(service_spec)
 
     if actchecks:
         cfg.write("\n\n# Active checks\n")
-        for acttype, act_info, params in actchecks:
-            # Make hostname available as global variable in argument functions
-            with plugin_contexts.current_host(hostname):
-                for description, args in config.iter_active_check_services(
-                    acttype,
-                    act_info,
-                    hostname,
-                    host_attrs["alias"],
-                    host_attrs,
-                    params,
-                    stored_passwords,
-                ):
-                    if not description:
-                        config_warnings.warn(
-                            f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
-                        )
-                        continue
 
-                    if do_omit_service(hostname, description):
-                        continue
+        for service_spec in active_services:
+            cfg.write(_format_nagios_object("service", service_spec))
+            license_counter["services"] += 1
 
-                    # quote ! and \ for Nagios
-                    escaped_args = args.replace("\\", "\\\\").replace("!", "\\!")
-
-                    if description in used_descriptions:
-                        cn, _ = used_descriptions[description]
-                        # If we have the same active check again with the same description,
-                        # then we do not regard this as an error, but simply ignore the
-                        # second one. That way one can override a check with other settings.
-                        if cn == "active(%s)" % acttype:
-                            continue
-
-                        core_config.duplicate_service_warning(
-                            checktype="active",
-                            description=description,
-                            host_name=hostname,
-                            first_occurrence=used_descriptions[description],
-                            second_occurrence=("active(%s)" % acttype, None),
-                        )
-                        continue
-
-                    # TODO: is this right? description on the right, not item?
-                    used_descriptions[description] = ("active(" + acttype + ")", description)
-
-                    if host_attrs["address"] in ["0.0.0.0", "::"]:
-                        command_name = "check-mk-custom"
-                        command = (
-                            command_name
-                            + '!echo "CRIT - Failed to lookup IP address and no explicit IP address configured" && exit 2'
-                        )
-                        cfg.custom_commands_to_define.add(command_name)
-                    else:
-                        command = f"check_mk_active-{acttype}!{escaped_args}"
-
-                    service_spec = {
-                        "use": "check_mk_perf,check_mk_default",
-                        "host_name": hostname,
-                        "service_description": description,
-                        "check_command": _simulate_command(cfg, command),
-                        "active_checks_enabled": str(1),
-                    }
-                    service_spec.update(
-                        core_config.get_service_attributes(hostname, description, config_cache)
-                    )
-                    service_spec.update(
-                        _extra_service_conf_of(cfg, config_cache, hostname, description)
-                    )
-                    cfg.write(_format_nagios_object("service", service_spec))
-                    license_counter["services"] += 1
-
-                    # write service dependencies for active checks
-                    cfg.write(get_dependencies(hostname, description))
+            # write service dependencies for active checks
+            cfg.write(get_dependencies(hostname, service_spec["service_description"]))
 
     # Legacy checks via custom_checks
     custchecks = config_cache.custom_checks(hostname)
@@ -550,7 +535,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             description = config.get_final_service_description(
-                hostname, entry["service_description"]
+                config_cache.ruleset_matcher, hostname, entry["service_description"]
             )
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")
@@ -715,7 +700,7 @@ def _add_ping_service(
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
     ping_command = "check-mk-ping"
-    if config_cache.is_cluster(host_name):
+    if host_name in config_cache.all_configured_clusters():
         assert node_ips is not None
         arguments += " -m 1 " + node_ips
     else:
@@ -1100,7 +1085,7 @@ class HostCheckStore:
                 dfile=str(compiled_filename),
                 doraise=True,
             )
-            os.chmod(compiled_filename, 0o750)
+            os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
 
         console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 
@@ -1154,7 +1139,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_agent_based_inventory_plugin_names,
     ) = _get_needed_plugin_names(config_cache, hostname)
 
-    if config_cache.is_cluster(hostname):
+    if hostname in config_cache.all_configured_clusters():
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise TypeError()
@@ -1285,7 +1270,7 @@ if '-d' in sys.argv:
         {},
         {},
     )
-    if config_cache.is_cluster(hostname):
+    if hostname in config_cache.all_configured_clusters():
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise TypeError()
@@ -1379,7 +1364,7 @@ def _get_needed_plugin_names(
     # plugins are not.
     needed_agent_based_check_plugin_names = config_cache.check_table(
         host_name,
-        filter_mode=FilterMode.INCLUDE_CLUSTERED,
+        filter_mode=config.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     ).needed_check_names()
 

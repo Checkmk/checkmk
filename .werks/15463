@@ -15,5 +15,5 @@ It's now possible to define a name containing "%s" in both section and group nam
 using single file aggregation.
 
 In that case, the services of files that don't belong to a group will be named
-"<SECTION NAME> <FILE NAME>" and the services of grouped files
-"<SECTION NAME> <GROUP NAME> <FILE NAME>".
+`<SECTION NAME> <FILE NAME>` and the services of grouped files
+`<SECTION NAME> <GROUP NAME> <FILE NAME>`.

@@ -7,10 +7,15 @@
 import socket
 import time
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    render,
+    SNMPTree,
+)
 
 # Current server status
 # vserver["status"]
@@ -63,9 +68,9 @@ def get_ip_address_human_readable(ip_addr):
     return "-"
 
 
-def parse_f5_bigip_vserver(info):
+def parse_f5_bigip_vserver(string_table):
     vservers: dict[str, dict] = {}
-    for line in info:
+    for line in string_table:
         instance = vservers.setdefault(
             line[0],
             {
@@ -120,7 +125,7 @@ def get_aggregated_values(vserver):
     # Calculate counters
     for what in aggregation:
         for idx, entry in enumerate(vserver[what]):
-            rate = get_rate("%s.%s" % (what, idx), now, entry)
+            rate = get_rate(get_value_store(), f"{what}.{idx}", now, entry, raise_overflow=True)
             aggregation[what] += rate
 
     # Calucate min/max/sum/mean values
@@ -155,15 +160,16 @@ def iter_counter_params():
                 yield direction, unit, boundary, hr_function
 
 
-@get_parsed_item_data
-def check_f5_bigip_vserver(_item, params, data):
+def check_f5_bigip_vserver(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     # Need compatibility to version with _no_params
     if params is None:
         params = {}
 
     enabled_state = int(data["enabled"] not in MAP_ENABLED)
     enabled_txt = MAP_ENABLED.get(data["enabled"], "in unknown state")
-    yield enabled_state, "Virtual Server with IP %s is %s" % (data["ip_address"], enabled_txt)
+    yield enabled_state, "Virtual Server with IP {} is {}".format(data["ip_address"], enabled_txt)
 
     state_map = params.get("state", {})
     state, state_readable = MAP_SERVER_STATUS.get(
@@ -177,7 +183,7 @@ def check_f5_bigip_vserver(_item, params, data):
     if data["status"] == "3" and detail.lower() == "the children pool member(s) are down":
         state = state_map.get("children_pool_members_down_if_not_available", 0)
 
-    yield state, "State %s, Detail: %s" % (state_readable, detail)
+    yield state, f"State {state_readable}, Detail: {detail}"
 
     aggregation = get_aggregated_values(data)
 
@@ -195,8 +201,8 @@ def check_f5_bigip_vserver(_item, params, data):
         yield 0, "Connections rate: %.2f/sec" % aggregation["connections_rate"]
 
     for direction, unit, boundary, hr_function in iter_counter_params():
-        key = "if_%s_%s" % (direction, unit)
-        levels = params.get("%s%s" % (key, boundary))
+        key = f"if_{direction}_{unit}"
+        levels = params.get(f"{key}{boundary}")
         if levels is None or key not in aggregation:
             continue
         if boundary == "_lower" and isinstance(levels, tuple):
@@ -214,11 +220,6 @@ def check_f5_bigip_vserver(_item, params, data):
 
 check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_f5_bigip_vserver,
-    check_function=check_f5_bigip_vserver,
-    discovery_function=inventory_f5_bigip_vserver,
-    check_ruleset_name="f5_bigip_vserver",
-    service_name="Virtual Server %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.10",
         oids=[
@@ -239,4 +240,9 @@ check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
             "2.3.1.25",
         ],
     ),
+    parse_function=parse_f5_bigip_vserver,
+    service_name="Virtual Server %s",
+    discovery_function=inventory_f5_bigip_vserver,
+    check_function=check_f5_bigip_vserver,
+    check_ruleset_name="f5_bigip_vserver",
 )

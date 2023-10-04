@@ -41,11 +41,11 @@ def check_hp_eml_sum(_no_item, _no_param, info):
 
 check_info["hp_eml_sum"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11.10.2.1.3.20"),
-    check_function=check_hp_eml_sum,
-    discovery_function=inventory_hp_eml_sum,
-    service_name="Summary Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.36.1.1.5.1.1",
         oids=["3", "7", "9", "10", "11"],
     ),
+    service_name="Summary Status",
+    discovery_function=inventory_hp_eml_sum,
+    check_function=check_hp_eml_sum,
 )

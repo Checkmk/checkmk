@@ -4,15 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 
 def agent_cisco_prime_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
-) -> Sequence[Union[str, tuple[str, str, str]]]:
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
+) -> Sequence[str | tuple[str, str, str]]:
     param_host = params.get("host")
     if param_host == "host_name":
         host = hostname
@@ -31,7 +32,7 @@ def agent_cisco_prime_arguments(
         str(elem)  # non-str get ignored silently - so turn all elements into `str`
         for chunk in (
             ("--hostname", host),
-            ("-u", "%s:%s" % (basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
+            ("-u", "{}:{}".format(basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
             if basic_auth
             else (),
             ("--port", params["port"]) if "port" in params else (),  #

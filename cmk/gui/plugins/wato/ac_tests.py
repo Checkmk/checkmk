@@ -18,13 +18,14 @@ from livestatus import LocalConnection, SiteConfiguration, SiteId
 from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import local_checks_dir, local_inventory_dir
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
 import cmk.gui.userdb.ldap_connector as ldap
 import cmk.gui.utils
-from cmk.gui.backup import Config as BackupConfig
+from cmk.gui.backup.handler import Config as BackupConfig
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import (
@@ -34,6 +35,7 @@ from cmk.gui.site_config import (
     sitenames,
     wato_slave_sites,
 )
+from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.userdb import htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.watolib.analyze_configuration import (
@@ -298,10 +300,10 @@ class ACTestLDAPSecured(ACTest):
 
     # TODO: Only test master site?
     def is_relevant(self) -> bool:
-        return bool([c for _cid, c in userdb.active_connections() if c.type() == "ldap"])
+        return bool([c for _cid, c in active_connections_() if c.type() == "ldap"])
 
     def execute(self) -> Iterator[ACSingleResult]:
-        for connection_id, connection in userdb.active_connections():
+        for connection_id, connection in active_connections_():
             if connection.type() != "ldap":
                 continue
 
@@ -1208,10 +1210,10 @@ class ACTestESXDatasources(ACTest):
 
     def _get_rules(self):
         collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-            "special_agents:vsphere"
+            RuleGroup.SpecialAgents("vsphere")
         )
 
-        ruleset = collection.get("special_agents:vsphere")
+        ruleset = collection.get(RuleGroup.SpecialAgents("vsphere"))
         return ruleset.get_rules()
 
     def is_relevant(self) -> bool:
@@ -1318,8 +1320,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
     def help(self) -> str:
         return _(
             "This check returns CRIT if the parameter <b>State in case of restricted address mismatch</b> "
-            "in the ruleset <b>Checkmk Agent installation auditing</b> is configured and differs from default "
-            "state <b>WARN</b>. "
+            "in the ruleset <b>Checkmk Agent installation auditing</b> is configured and differs from "
+            "states <b>WARN</b> (default) or <b>CRIT</b>. "
             "With the above setting you can overwrite the default service state. This will help "
             "you to reduce above warnings during the update process of your Checkmk sites "
             "and agents. "
@@ -1353,13 +1355,13 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
 
     def _get_rules(self):
         ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            "checkgroup_parameters:agent_update"
-        ).get("checkgroup_parameters:agent_update")
+            RuleGroup.CheckgroupParameters("agent_update")
+        ).get(RuleGroup.CheckgroupParameters("agent_update"))
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
             (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])
             for folder, _rule_index, rule in ruleset.get_rules()
-            if rule.value.get("restricted_address_mismatch") != 1
+            if rule.value.get("restricted_address_mismatch", 1) not in (1, 2)
         ]
 
 

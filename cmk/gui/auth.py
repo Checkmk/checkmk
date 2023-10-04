@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import base64
 import hmac
-import traceback
+import re
 import uuid
 from collections.abc import Callable
 from datetime import datetime
@@ -16,7 +16,7 @@ from typing import Literal
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config
@@ -25,7 +25,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import AuthenticationFailureEvent, logger
 from cmk.gui.type_defs import AuthType
-from cmk.gui.userdb.session import auth_cookie_name, generate_auth_hash
+from cmk.gui.userdb.session import generate_auth_hash
 from cmk.gui.utils.urls import requested_file_name
 
 auth_logger = logger.getChild("auth")
@@ -43,12 +43,9 @@ def check_auth() -> tuple[UserId, AuthType]:
     if not active_config.user_login and not is_site_login():
         raise MKAuthException("Site can't be logged into.")
 
-    # NOTE: To push this list into the global namespace, the ordering of the methods need to
-    #       be taken into account.
     auth_methods: list[tuple[AuthFunction, AuthType]] = [
         # NOTE: This list is sorted from the more general to the most specific auth methods.
         #       The most specific to succeed will be used in the end.
-        (_check_auth_by_cookie, "cookie"),
         (_check_auth_by_custom_http_header, "http_header"),
         (_check_auth_by_remote_user, "web_server"),
         (_check_auth_by_basic_header, "basic_auth"),
@@ -89,7 +86,13 @@ def check_auth() -> tuple[UserId, AuthType]:
 def is_site_login() -> bool:
     """Determine if login is a site login for connecting central and remote
     site. This login has to be allowed even if site login on remote site is not
-    permitted by rule "Direct login to Web GUI allowed" """
+    permitted by rule "Direct login to Web GUI allowed".  This also applies to
+    all rest-api requests, they should also be allowed in this scenario otherwise
+    the agent-receiver won't work."""
+
+    if re.match("/[^/]+/check_mk/api/", request.path) is not None:
+        return True
+
     if requested_file_name(request) == "login":
         if (origtarget_var := request.var("_origtarget")) is None:
             return False
@@ -289,40 +292,6 @@ def _parse_bearer_token(token: str) -> tuple[str, str]:
     """
     user_id, password = token.strip().split(" ", 1)
     return user_id, password
-
-
-def _check_auth_by_cookie() -> UserId | None:
-    """Check if session cookie exists and if it is valid
-
-    Returns:
-        a UserId if a user was successfully authenticated
-        None if not authenticated or no auth cookie is found
-    """
-
-    cookie_name = auth_cookie_name()
-    if not (cookie := _get_request_cookie(cookie_name)):
-        return None
-
-    try:
-        username, session_id, _cookie_hash = parse_and_check_cookie(cookie)
-        userdb.on_access(username, session_id, datetime.now())
-        return username
-    except MKAuthException:
-        # Why and how does this happen and why we can't do it another way.
-        # Suppress cookie validation errors from other sites cookies
-        auth_logger.debug(
-            f"Exception while checking cookie {cookie_name}: {traceback.format_exc()}"
-        )
-
-    return None
-
-
-def _get_request_cookie(cookie_name: str) -> str | None:
-    """Get the cookie from the request.
-
-    This is an internal method extracted for ease of unit testing parse_and_check_cookie().
-    """
-    return request.cookies.get(cookie_name, default=None, type=str)
 
 
 def _check_auth_by_automation_credentials_in_request_values() -> UserId | None:

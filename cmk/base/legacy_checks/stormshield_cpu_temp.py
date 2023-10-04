@@ -25,11 +25,11 @@ def check_stormshield_cpu_temp(item, params, info):
 
 check_info["stormshield_cpu_temp"] = LegacyCheckDefinition(
     detect=DETECT_STORMSHIELD,
-    discovery_function=inventory_stormshield_cpu_temp,
-    check_function=check_stormshield_cpu_temp,
-    service_name="CPU Temp %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.10.7.1",
         oids=["1", "2"],
     ),
+    service_name="CPU Temp %s",
+    discovery_function=inventory_stormshield_cpu_temp,
+    check_function=check_stormshield_cpu_temp,
 )

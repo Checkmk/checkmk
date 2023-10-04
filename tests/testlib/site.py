@@ -18,13 +18,22 @@ import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Final, Generator, Literal
+from pprint import pformat
+from typing import Final, Literal
 
 import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import cmc_path, cme_path, cmk_path, execute, is_containerized
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.utils import (
+    cmc_path,
+    cme_path,
+    cmk_path,
+    is_containerized,
+    PExpectDialog,
+    restart_httpd,
+    spawn_expect_process,
+)
+from tests.testlib.version import CMKVersion, version_from_env, version_gte
 from tests.testlib.web_session import CMKWebSession
 
 import livestatus
@@ -147,7 +156,8 @@ class Site:
                     check=True,
                 )
                 raise Exception(
-                    f"Config did not update within {timeout} seconds.\nOutput of ps -ef (to check if core is actually running):\n{ps_proc.stdout}"
+                    f"Config did not update within {timeout} seconds.\nOutput of ps -ef "
+                    f"(to check if core is actually running):\n{ps_proc.stdout}"
                 )
             time.sleep(0.2)
 
@@ -162,7 +172,12 @@ class Site:
         self.wait_for_core_reloaded(before_restart)
 
     def send_host_check_result(
-        self, hostname: str, state: int, output: str, expected_state: int | None = None
+        self,
+        hostname: str,
+        state: int,
+        output: str,
+        expected_state: int | None = None,
+        wait_timeout: int = 20,
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -172,7 +187,11 @@ class Site:
             f"[{command_timestamp:.0f}] PROCESS_HOST_CHECK_RESULT;{hostname};{state};{output}"
         )
         self._wait_for_next_host_check(
-            hostname, last_check_before, command_timestamp, expected_state
+            hostname,
+            last_check_before,
+            command_timestamp,
+            expected_state,
+            wait_timeout,
         )
 
     def send_service_check_result(
@@ -182,35 +201,90 @@ class Site:
         state: int,
         output: str,
         expected_state: int | None = None,
+        wait_timeout: int = 20,
     ) -> None:
         if expected_state is None:
             expected_state = state
         last_check_before = self._last_service_check(hostname, service_description)
         command_timestamp = self._command_timestamp(last_check_before)
         self.live.command(
-            f"[{command_timestamp:.0f}] PROCESS_SERVICE_CHECK_RESULT;{hostname};{service_description};{state};{output}"
+            f"[{command_timestamp:.0f}] PROCESS_SERVICE_CHECK_RESULT;{hostname};"
+            f"{service_description};{state};{output}"
         )
         self._wait_for_next_service_check(
-            hostname, service_description, last_check_before, command_timestamp, expected_state
+            hostname,
+            service_description,
+            last_check_before,
+            command_timestamp,
+            expected_state,
+            wait_timeout,
         )
 
-    def schedule_check(self, hostname: str, service_description: str, expected_state: int) -> None:
+    def schedule_check(
+        self,
+        hostname: str,
+        service_description: str,
+        expected_state: int | None = None,
+        wait_timeout: int = 20,
+    ) -> None:
         logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
         logger.debug("%s;%s last check before %r", hostname, service_description, last_check_before)
 
         command_timestamp = self._command_timestamp(last_check_before)
 
-        command = f"[{command_timestamp:.0f}] SCHEDULE_FORCED_SVC_CHECK;{hostname};{service_description};{command_timestamp:.0f}"
+        command = (
+            f"[{command_timestamp:.0f}] SCHEDULE_FORCED_SVC_CHECK;{hostname};"
+            f"{service_description};{command_timestamp:.0f}"
+        )
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
+
         self.live.command(command)
 
         self._wait_for_next_service_check(
-            hostname, service_description, last_check_before, command_timestamp, expected_state
+            hostname,
+            service_description,
+            last_check_before,
+            command_timestamp,
+            expected_state,
+            wait_timeout,
         )
 
-    def _command_timestamp(self, last_check_before: float) -> float:
+    def reschedule_services(self, hostname: str, max_count: int = 10) -> None:
+        """Reschedule services in the test-site for a given host until no pending services are
+        found."""
+        count = 0
+        pending_services = self.get_host_services(hostname, pending=True)
+
+        # reschedule services
+        self.schedule_check(hostname, "Check_MK", 0)
+
+        while len(pending_services) > 0 and count < max_count:
+            logger.info(
+                "The following services in %s host were found with pending status:\n%s.\n"
+                "Rescheduling checks...",
+                hostname,
+                pformat(pending_services),
+            )
+            self.schedule_check(hostname, "Check_MK", 0)
+            pending_services = self.get_host_services(hostname, pending=True)
+            count += 1
+
+        assert len(pending_services) == 0
+
+    def get_host_services(self, hostname: str, pending: bool = False) -> dict:
+        """Return dict with key=service and value=status for all services in the given site and host.
+
+        If pending=True, return the pending services only.
+        """
+        services = {}
+        for service in self.openapi.get_host_services(hostname, columns=["state"], pending=pending):
+            services[service["extensions"]["description"]] = service["extensions"]["state"]
+        return services
+
+    @staticmethod
+    def _command_timestamp(last_check_before: float) -> float:
         # Ensure the next check result is not in same second as the previous check
         timestamp = time.time()
         while int(last_check_before) == int(timestamp):
@@ -219,19 +293,25 @@ class Site:
         return timestamp
 
     def _wait_for_next_host_check(
-        self, hostname: str, last_check_before: float, command_timestamp: float, expected_state: int
+        self,
+        hostname: str,
+        last_check_before: float,
+        command_timestamp: float,
+        expected_state: int | None = None,
+        wait_timeout: int = 20,
     ) -> None:
-        wait_timeout = 20
-        last_check, state, plugin_output = self.live.query_row(
+        query: str = (
             "GET hosts\n"
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
             f"WaitObject: {hostname}\n"
             f"WaitTimeout: {wait_timeout*1000:d}\n"
+            f"WaitTrigger: check\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
-            f"WaitCondition: state = {expected_state}\n"
-            "WaitTrigger: check\n"
         )
+        if expected_state is not None:
+            query += f"WaitCondition: state = {expected_state}\n"
+        last_check, state, plugin_output = self.live.query_row(query)
         self._verify_next_check_output(
             command_timestamp,
             last_check,
@@ -248,10 +328,10 @@ class Site:
         service_description: str,
         last_check_before: float,
         command_timestamp: float,
-        expected_state: int,
+        expected_state: int | None = None,
+        wait_timeout: int = 20,
     ) -> None:
-        wait_timeout = 20
-        last_check, state, plugin_output = self.live.query_row(
+        query: str = (
             "GET services\n"
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
@@ -259,10 +339,12 @@ class Site:
             f"WaitObject: {hostname};{service_description}\n"
             f"WaitTimeout: {wait_timeout*1000:d}\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
-            f"WaitCondition: state = {expected_state}\n"
             "WaitCondition: has_been_checked = 1\n"
             "WaitTrigger: check\n"
         )
+        if expected_state is not None:
+            query += f"WaitCondition: state = {expected_state}\n"
+        last_check, state, plugin_output = self.live.query_row(query)
         self._verify_next_check_output(
             command_timestamp,
             last_check,
@@ -273,22 +355,25 @@ class Site:
             wait_timeout,
         )
 
+    @staticmethod
     def _verify_next_check_output(
-        self,
         command_timestamp: float,
         last_check: float,
         last_check_before: float,
         state: int,
-        expected_state: int,
+        expected_state: int | None,
         plugin_output: str,
-        wait_timeout: int,
+        wait_timeout: int = 20,
     ) -> None:
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
-        assert last_check > last_check_before, (
-            f"Check result not processed within {wait_timeout} seconds "
-            f"(last check before reschedule: {last_check_before:.0f}, "
-            f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
-        )
+        if not last_check > last_check_before:
+            raise TimeoutError(
+                f"Check result not processed within {wait_timeout} seconds "
+                f"(last check before reschedule: {last_check_before:.0f}, "
+                f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
+            )
+        if expected_state is None:
+            return
         assert (
             state == expected_state
         ), f"Expected {expected_state} state, got {state} state, output {plugin_output}"
@@ -321,10 +406,7 @@ class Site:
 
         if preserve_env:
             # Skip the test cases calling this for some distros
-            if os.environ.get("DISTRO") in (
-                "centos-7",
-                "centos-8",
-            ):
+            if os.environ.get("DISTRO") in ("centos-8",):
                 pytest.skip("preserve env not possible in this environment")
             sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
             su_env_args = ["--whitelist-environment", ",".join(preserve_env)]
@@ -334,20 +416,11 @@ class Site:
 
         kwargs.setdefault("encoding", "utf-8")
         cmd_txt = " ".join(
-            [
-                "sudo",
-            ]
+            ["sudo"]
             + sudo_env_args
-            + [
-                "su",
-                "-l",
-                self.id,
-            ]
+            + ["su", "-l", self.id]
             + su_env_args
-            + [
-                "-c",
-                shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
-            ]
+            + ["-c", shlex.quote(shlex.join(cmd))]
         )
         logger.info("Executing: %s", cmd_txt)
         kwargs["shell"] = True
@@ -371,6 +444,7 @@ class Site:
         stdout, stderr = p.communicate(input)
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, p.args, stdout, stderr)
+        assert isinstance(stdout, str)
         return stdout
 
     @contextmanager
@@ -418,13 +492,14 @@ class Site:
         stdout = p.communicate()[0]
         if p.returncode != 0:
             raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-        return stdout if stdout is not None else ""
+        return stdout if isinstance(stdout, str) else ""
 
     def read_binary_file(self, rel_path: str) -> bytes:
         p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
         stdout = p.communicate()[0]
         if p.returncode != 0:
             raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.returncode))
+        assert isinstance(stdout, bytes)
         return stdout
 
     def delete_file(self, rel_path: str) -> None:
@@ -517,6 +592,7 @@ class Site:
         assert p.wait() == 0
         if not output:
             return []
+        assert isinstance(output, str)
         return output.split("\n")
 
     def system_temp_dir(self) -> Iterator[str]:
@@ -549,14 +625,16 @@ class Site:
 
     def install_cmk(self) -> None:
         if not self.version.is_installed():
-            logger.info("Install Checkmk version %s", self.version.version)
+            logger.info("Installing Checkmk version %s", self.version.version_directory())
             completed_process = subprocess.run(
                 [
                     f"{cmk_path()}/scripts/run-pipenv",
                     "run",
                     f"{cmk_path()}/tests/scripts/install-cmk.py",
                 ],
-                env=dict(os.environ, VERSION=self.version.version),
+                env=dict(
+                    os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
+                ),
                 check=False,
             )
             if completed_process.returncode != 0:
@@ -613,7 +691,7 @@ class Site:
                 self._enable_cmc_debug_logging()
                 self._enable_cmc_tooling(tool=None)
                 self._disable_cmc_log_rotation()
-                self._enabled_liveproxyd_debug_logging()
+                self._enable_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
             self._enable_gui_debug_logging()
             self._tune_nagios()
@@ -658,6 +736,7 @@ class Site:
     def _update_with_f12_files(self) -> None:
         paths = [
             cmk_path() + "/omd/packages/omd",
+            cmk_path() + "/omd/packages/maintenance",
             cmk_path() + "/omd/packages/check_mk/skel/etc/init.d",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
@@ -673,6 +752,7 @@ class Site:
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
             cmk_path() + "/agent-receiver",
+            cmk_path() + "/active_checks",
         ]
 
         if self.version.is_raw_edition():
@@ -715,17 +795,26 @@ class Site:
                     logger.info("Executing .f12 in '%s' ... FAILED:\n%s", path, exc.output)
                     raise
                 logger.info("Executing .f12 in '%s' ... DONE", path)
+        assert self.is_stopped()
 
-        assert (
-            self.execute(["cmk-update-config"]).wait() == 0
-        ), "Failed to execute cmk-update-config"
+        logger.info("Executing cmk-update-config ...")
+        try:
+            self.check_output(["cmk-update-config"])
+        except subprocess.CalledProcessError as exc:
+            logger.error(
+                "Executing cmk-update-config ... FAILED:\nstdout: %s\nstderr: %s\n",
+                exc.output,
+                exc.stderr,
+            )
+            raise
+        assert self.is_stopped()
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
         p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         assert p.wait() == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
 
-    def _enabled_liveproxyd_debug_logging(self) -> None:
+    def _enable_liveproxyd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/liveproxyd.d")
         # 15 = verbose
         # 10 = debug
@@ -758,7 +847,8 @@ class Site:
 
         self.write_text_file(
             "etc/default/cmc",
-            f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet --log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
+            f'CMC_DAEMON_PREPEND="/opt/bin/valgrind --tool={tool} --quiet '
+            f'--log-file=$OMD_ROOT/var/log/cmc-{tool}.log"\n',
         )
 
     def _set_number_of_apache_processes(self) -> None:
@@ -868,6 +958,7 @@ class Site:
 
     def start(self) -> None:
         if not self.is_running():
+            logger.info("Starting site")
             assert self.omd("start") == 0
             # print("= BEGIN PROCESSES AFTER START ==============================")
             # self.execute(["ps", "aux"]).wait()
@@ -887,6 +978,8 @@ class Site:
                 time.sleep(0.2)
 
             self.ensure_running()
+        else:
+            logger.info("Site is already running")
 
         assert os.path.ismount(
             self.path("tmp")
@@ -895,6 +988,7 @@ class Site:
     def stop(self) -> None:
         if self.is_stopped():
             return  # Nothing to do
+        logger.info("Stopping site")
 
         # logger.debug("= BEGIN PROCESSES BEFORE =======================================")
         # os.system("ps -fwwu %s" % self.id)  # nosec
@@ -929,19 +1023,24 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
-            == 0
-        )
+        return self._omd_status() == 0
 
     def is_stopped(self) -> bool:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
-            == 1
-        )
+        return self._omd_status() == 1
+
+    def _omd_status(self) -> int:
+        def _fmt_output(msg: str) -> str:
+            return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
+
+        try:
+            self.check_output(["/usr/bin/omd", "status", "--bare"])
+            return 0
+        except subprocess.CalledProcessError as e:
+            logger.info("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
+            return e.returncode
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:
@@ -959,7 +1058,7 @@ class Site:
             self.start()
             logger.debug("Started site")
 
-    def get_config(self, key: str) -> str:
+    def get_config(self, key: str, default: str = "") -> str:
         p = self.execute(
             ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -967,7 +1066,7 @@ class Site:
         logger.debug("omd config: %s is set to %r", key, stdout.strip())
         if stderr:
             logger.error(stderr)
-        return stdout.strip()
+        return stdout.strip() or default
 
     def core_name(self) -> Literal["cmc", "nagios"]:
         return "nagios" if self.version.is_raw_edition() else "cmc"
@@ -999,6 +1098,7 @@ class Site:
         assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
 
     def prepare_for_tests(self) -> None:
+        logger.info("Prepare for tests")
         self.verify_cmk()
 
         if self.enforce_english_gui:
@@ -1025,7 +1125,9 @@ class Site:
         r = web.get("user_profile.py")
         assert "Edit profile" in r.text, "Body: %s" % r.text
 
-        user_spec, etag = self.openapi.get_user("cmkadmin")
+        if (user := self.openapi.get_user("cmkadmin")) is None:
+            raise Exception("User cmkadmin not found!")
+        user_spec, etag = user
         user_spec["language"] = "en"
         user_spec.pop("enforce_password_change", None)
         self.openapi.edit_user("cmkadmin", user_spec, etag)
@@ -1037,27 +1139,29 @@ class Site:
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
-        start_again = False
+        # Check if livestatus is already enabled and has correct TLS setting
+        if self.get_config("LIVESTATUS_TCP").rstrip() == "on" and (
+            self.get_config("LIVESTATUS_TCP_TLS", "off") == ("on" if encrypted else "off")
+        ):
+            return
 
-        if not self.is_stopped():
-            start_again = True
-            self.stop()
-
+        restart_site = self.is_running()
+        self.stop()
         self.set_config("LIVESTATUS_TCP", "on")
-        self._gather_livestatus_port()
+        self.gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
         self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
-
-        if start_again:
+        if restart_site:
             self.start()
 
-    def set_livestatus_port_from_config(self) -> None:
-        self._livestatus_port = int(self.get_config("LIVESTATUS_TCP_PORT"))
+    def gather_livestatus_port(self, from_config: bool = False) -> None:
+        if from_config and (config_port := int(self.get_config("LIVESTATUS_TCP_PORT", "0"))):
+            self._livestatus_port = config_port
+        else:
+            self._livestatus_port = self.get_free_port_from(9123)
 
-    def _gather_livestatus_port(self) -> None:
-        self._livestatus_port = self.get_free_port_from(9123)
-
-    def get_free_port_from(self, port: int) -> int:
+    @staticmethod
+    def get_free_port_from(port: int) -> int:
         used_ports = set()
         for cfg_path in Path("/omd/sites").glob("*/etc/omd/site.conf"):
             with cfg_path.open() as cfg_file:
@@ -1071,6 +1175,10 @@ class Site:
 
         logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
+
+    def toggle_liveproxyd(self, enabled: bool = True) -> None:
+        self.set_config("LIVEPROXYD", "on" if enabled else "off", with_restart=True)
+        assert self.file_exists("tmp/run/liveproxyd.pid") == enabled
 
     def save_results(self) -> None:
         if not is_containerized():
@@ -1126,6 +1234,7 @@ class Site:
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
+        logger.info("Activate changes and wait for reload...")
         self.ensure_running()
         try:
             site = remote_site or self
@@ -1167,8 +1276,8 @@ class Site:
     def is_global_flag_disabled(self, column: str) -> bool:
         return self._get_global_flag(column) == 0
 
-    def _get_global_flag(self, column: str) -> Literal[1, 0]:
-        return self.live.query_value(f"GET status\nColumns: {column}\n") == 1
+    def _get_global_flag(self, column: str) -> bool:
+        return bool(self.live.query_value(f"GET status\nColumns: {column}\n") == 1)
 
 
 class SiteFactory:
@@ -1182,7 +1291,7 @@ class SiteFactory:
         enforce_english_gui: bool = True,
     ) -> None:
         self.version = version
-        self._base_ident = prefix or "s_%s_" % version.branch[:6]
+        self._base_ident = prefix if prefix is not None else "s_%s_" % version.branch[:6]
         self._sites: MutableMapping[str, Site] = {}
         self._index = 1
         self._update_from_git = update_from_git
@@ -1194,21 +1303,221 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(self, name: str) -> Site:
-        if f"{self._base_ident}{name}" in self._sites:
-            return self._sites[f"{self._base_ident}{name}"]
-        # For convenience, allow to retrieve site by name or full ident
-        if name in self._sites:
-            return self._sites[name]
-        return self._new_site(name)
+    def get_site(self, name: str, init_livestatus: bool = True) -> Site:
+        site = self._site_obj(name)
 
-    def get_existing_site(self, name: str) -> Site:
-        if f"{self._base_ident}{name}" in self._sites:
-            return self._sites[f"{self._base_ident}{name}"]
-        # For convenience, allow to retrieve site by name or full ident
-        if name in self._sites:
-            return self._sites[name]
-        return self._site_obj(name)
+        site.create()
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site(name)
+
+        if init_livestatus:
+            site.open_livestatus_tcp(encrypted=False)
+
+        site.start()
+        site.prepare_for_tests()
+
+        # There seem to be still some changes that want to be activated
+        site.activate_changes_and_wait_for_core_reload()
+
+        logger.debug("Created site %s", site.id)
+        return site
+
+    def get_existing_site(self, name: str, init_livestatus: bool = True) -> Site:
+        site = self._site_obj(name)
+
+        if not site.exists():
+            return site
+
+        if init_livestatus:
+            site.gather_livestatus_port(from_config=True)
+        site.start()
+        logger.debug("Reused site %s", site.id)
+        return site
+
+    def restore_site_from_backup(self, backup_path: Path, name: str, reuse: bool = False) -> Site:
+        self._base_ident = ""
+        site = self._site_obj(name)
+
+        if not reuse:
+            assert (
+                not site.exists()
+            ), f"Site {name} already existing. Please remove it before restoring it from a backup."
+
+        site.install_cmk()
+        logger.info("Creating %s site from backup...", name)
+
+        omd_restore_cmd = (
+            ["sudo", "/usr/bin/omd", "restore"]
+            + (["--reuse", "--kill"] if reuse else [])
+            + [backup_path]
+        )
+
+        completed_process = subprocess.run(
+            omd_restore_cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
+        )
+
+        assert completed_process.returncode == 0
+
+        site = self.get_existing_site(site.id)
+        site.start()
+        restart_httpd()
+
+        return site
+
+    def interactive_create(self, name: str, logfile_path: str = "/tmp/omd_install.out") -> Site:
+        """Interactive site creation via Pexpect"""
+        self._base_ident = ""
+        site = self._site_obj(name)
+        site.install_cmk()
+
+        rc = spawn_expect_process(
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-V",
+                self.version.version_directory(),
+                "create",
+                "--admin-password",
+                site.admin_password,
+                "--apache-reload",
+                name,
+            ],
+            dialogs=[],
+            logfile_path=logfile_path,
+        )
+
+        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+
+        with open(logfile_path) as logfile:
+            logger.debug("OMD automation logfile: %s", logfile.read())
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site(site.id)
+
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+
+        # start the site after manually installing it
+        site.start()
+
+        assert site.is_running(), "Site is not running!"
+        logger.info("Test-site %s is up", site.id)
+
+        restart_httpd()
+
+        return site
+
+    def interactive_update(
+        self,
+        test_site: Site,
+        target_version: CMKVersion,
+        min_version: CMKVersion,
+        conflict_mode: str = "keepold",
+        logfile_path: str = "/tmp/sep.out",
+    ) -> Site:
+        """Update the test-site with the given target-version, if supported.
+
+        Such update process is performed interactively via Pexpect.
+        """
+        self.version = target_version
+        site = self.get_existing_site(test_site.id)
+        site.install_cmk()
+        site.stop()
+
+        logger.info(
+            "Updating %s site from %s version to %s version...",
+            test_site.id,
+            test_site.version.version,
+            target_version.version_directory(),
+        )
+
+        pexpect_dialogs = []
+        if self._version_supported(test_site.version.version, min_version.version):
+            logger.info("Updating to a supported version.")
+            pexpect_dialogs.extend(
+                [
+                    PExpectDialog(
+                        expect=(
+                            f"You are going to update the site {test_site.id} "
+                            f"from version {test_site.version.version_directory()} "
+                            f"to version {target_version.version_directory()}."
+                        ),
+                        send="u\r",
+                    )
+                ]
+            )
+        else:  # update-process not supported. Still, verify the correct message is displayed
+            logger.info(
+                "Updating from version %s to version %s is not supported",
+                min_version,
+                target_version,
+            )
+            pexpect_dialogs.extend(
+                [
+                    PExpectDialog(
+                        expect=(
+                            f"ERROR: You are trying to update from "
+                            f"{test_site.version.version_directory()} to "
+                            f"{target_version.version_directory()} which is not supported."
+                        ),
+                        send="\r",
+                    )
+                ]
+            )
+
+        pexpect_dialogs.extend(
+            [PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True)]
+        )
+
+        rc = spawn_expect_process(
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-V",
+                target_version.version_directory(),
+                "update",
+                f"--conflict={conflict_mode}",
+                test_site.id,
+            ],
+            dialogs=pexpect_dialogs,
+            logfile_path=logfile_path,
+        )
+        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+
+        with open(logfile_path) as logfile:
+            logger.debug("OMD automation logfile: %s", logfile.read())
+
+        # refresh the site object after creating the site
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id)
+
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+
+        # start the site after manually installing it
+        site.start()
+
+        assert site.is_running(), "Site is not running!"
+        logger.info("Site %s is up", site.id)
+
+        restart_httpd()
+
+        assert site.version.version == target_version.version, "Version mismatch during update!"
+        assert (
+            site.version.edition.short == target_version.edition.short
+        ), "Edition mismatch during update!"
+
+        return site
+
+    @staticmethod
+    def _version_supported(version: str, min_version: str) -> bool:
+        """Check if the given version is supported for updating."""
+        return version_gte(version, min_version)
 
     def get_test_site(
         self,
@@ -1216,48 +1525,46 @@ class SiteFactory:
         description: str = "",
         auto_cleanup: bool = True,
         auto_restart_httpd: bool = False,
-    ) -> Generator[Site, None, None]:
-        """Return a fully setup test site (for use in site fixtures)."""
+        init_livestatus: bool = True,
+        save_results: bool = True,
+    ) -> Iterator[Site]:
+        """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
+        # by default, the site will be cleaned up if REUSE=1 is not set
+        # you can also explicitly set CLEANUP=[0|1] though (for debug purposes)
         cleanup_site = (
             not reuse_site
             if os.environ.get("CLEANUP") is None
             else os.environ.get("CLEANUP") == "1"
         )
-        site_to_return = self.get_existing_site(name)
-        if site_to_return.exists():
+        site = self.get_existing_site(name)
+        if site.exists():
             if reuse_site:
-                logger.info('Reusing existing site "%s" (REUSE=1)', site_to_return.id)
+                logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
             else:
-                logger.info('Dropping existing site "%s" (REUSE=0)', site_to_return.id)
-                site_to_return.rm()
-        if not site_to_return.exists():
-            site_to_return = self.get_site(name)
+                logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
+                site.rm()
+        if not site.exists():
+            site = self.get_site(name, init_livestatus)
 
         if auto_restart_httpd:
-            # When executed locally and undockerized, the DISTRO may not be set
-            if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
-                # On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually
-                # restart httpd after creating a new site. Otherwise, the REST API won't be
-                # reachable via port 80, preventing e.g. the controller from querying the
-                # agent receiver port.
-                # Note: the mere presence of httpd is not enough to determine
-                # whether we have to restart or not, see eg. sles-15sp4.
-                execute(["sudo", "httpd", "-k", "restart"])
+            restart_httpd()
+
         logger.info(
             'Site "%s" is ready!%s',
-            site_to_return.id,
+            site.id,
             f" [{description}]" if description else "",
         )
 
         try:
-            yield site_to_return
+            yield site
         finally:
             # teardown: saving results and removing site
-            site_to_return.save_results()
+            if save_results:
+                site.save_results()
             if auto_cleanup and cleanup_site:
-                logger.info('Dropping site "%s" (CLEANUP=1)', site_to_return.id)
-                site_to_return.rm()
+                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:
@@ -1277,7 +1584,14 @@ class SiteFactory:
         return new_ident
 
     def _site_obj(self, name: str) -> Site:
+        if f"{self._base_ident}{name}" in self._sites:
+            return self._sites[f"{self._base_ident}{name}"]
+        # For convenience, allow to retrieve site by name or full ident
+        if name in self._sites:
+            return self._sites[name]
+
         site_id = f"{self._base_ident}{name}"
+
         return Site(
             version=self.version,
             site_id=site_id,
@@ -1286,20 +1600,6 @@ class SiteFactory:
             update=self._update,
             enforce_english_gui=self._enforce_english_gui,
         )
-
-    def _new_site(self, name: str) -> Site:
-        site = self._site_obj(name)
-
-        site.create()
-        self._sites[site.id] = site
-
-        site.open_livestatus_tcp(encrypted=False)
-        site.start()
-        site.prepare_for_tests()
-        # There seem to be still some changes that want to be activated
-        site.activate_changes_and_wait_for_core_reload()
-        logger.debug("Created site %s", site.id)
-        return site
 
     def save_results(self) -> None:
         logger.info("Saving results")
@@ -1316,10 +1616,11 @@ class SiteFactory:
 def get_site_factory(
     *,
     prefix: str,
+    version: CMKVersion | None = None,
     update_from_git: bool | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
-    version = version_from_env(
+    version = version or version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
         fallback_branch=fallback_branch,
@@ -1367,6 +1668,6 @@ class PythonHelper:
             return self.site.check_output(["python3", str(self.site_path)], input)
 
     @contextmanager
-    def execute(self) -> Iterator[subprocess.Popen]:
+    def execute(self, *args, **kwargs) -> Iterator[subprocess.Popen]:  # type: ignore[no-untyped-def]
         with self.copy_helper():
-            yield self.site.execute(["python3", str(self.site_path)])
+            yield self.site.execute(["python3", str(self.site_path)], *args, **kwargs)

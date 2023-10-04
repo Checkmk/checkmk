@@ -34,10 +34,10 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.escaping import escape_to_html_permissive
+from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
     Checkbox,
@@ -51,12 +51,18 @@ from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import folder_from_request
+from cmk.gui.watolib.mode import mode_url, redirect, WatoMode
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
 
+from cmk.gui.watolib.mode import ModeRegistry
 
-@mode_registry.register
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeBulkImport)
+
+
 class ModeBulkImport(WatoMode):
     @classmethod
     def name(cls) -> str:

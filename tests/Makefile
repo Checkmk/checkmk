@@ -20,6 +20,7 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/special_agents \
     ../cmk/update_config \
     ../cmk/utils \
+    ../cmk_metrics \
     ../agent-receiver \
     ../omd/packages/omd \
 	../cmk/active_checks \
@@ -43,11 +44,15 @@ RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
     test-integration \
+    test-plugins-integration \
     test-composition \
     test-update \
+    test-schemathesis-openapi \
+    test-plugins \
     test-gui-crawl \
     test-xss-crawl \
-    test-gui-e2e
+    test-gui-e2e \
+    test-extension-compatibility
 PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
 
 # Since the unit tests (that are written for Python 3) are executed with Python
@@ -66,9 +71,9 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
-	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
-	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
-	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
+	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
+	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
+	test-unit-neb test-unit-core
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -105,6 +110,7 @@ help:
 	@echo "test-pipenv-deps                    - Run pipenv dependency issue test"
 	@echo "test-pylint                         - Run pylint based tests"
 	@echo "test-shellcheck                     - Run shellcheck tests"
+	@echo "test-shellcheck-docker              - Run shellcheck tests in docker"
 	@echo "test-unit                           - Run unit tests"
 	@echo "test-unit-docker                    - Run unit tests in docker"
 	@echo "test-unit-resilience                - Run unit tests multiple times and in random order"
@@ -112,15 +118,8 @@ help:
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-shell                     - Run shell unit tests"
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
-	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
-	@echo "test-tidy-core                      - Run clang tidy for core"
-	@echo "test-tidy-docker                    - Run clang tidy for core and livestatus in docker"
-	@echo "test-iwyu-livestatus                - Run the iwyu tool for livestatus"
-	@echo "test-iwyu-core                      - Run the iwyu tool for the core"
-	@echo "test-iwyu-docker                    - Run the iwyu tool for both in docker"
-	@echo "test-unit-livestatus                - Run unit tests for livestatus"
-	@echo "test-unit-core                      - Run unit tests for core"
-	@echo "*-livestatus-docker                 - Run any of the livestatus tests in docker"
+	@echo "test-unit-neb                       - Run unit tests for neb"
+	@echo "test-unit-cmc                       - Run unit tests for cmc"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -208,16 +207,16 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
-	cd ..; npm ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
+	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
 
 test-typescript-types:
-	cd ..; npm ci && scripts/check-typescript-types.sh
+	cd ..; scripts/npm-ci && scripts/check-typescript-types.sh
 
 test-lint-js:
-	cd ..; npm ci && scripts/check-js-lint.sh
+	cd ..; scripts/npm-ci && scripts/check-js-lint.sh
 
 test-build-js:
-	npm ci && ENTERPRISE=yes MANAGED=no npm run build
+	cd ..; scripts/npm-ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js
@@ -232,7 +231,7 @@ test-typescript-types-docker:
 	../scripts/run-in-docker.sh make --quiet test-typescript-types
 
 test-format-css:
-	cd ..; scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
+	cd ..; scripts/npm-ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
 
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
@@ -261,11 +260,23 @@ test-gui-e2e: prepare-playwright
 test-integration:
 	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
+test-plugins-integration:
+	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
+
 test-composition:
 	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
 
+test-extension-compatibility:
+	$(PYTEST) -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
+
 test-update:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)
+
+test-schemathesis-openapi:
+	$(PYTEST) -T openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath openapi)
+
+test-plugins:
+	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
@@ -332,6 +343,9 @@ test-pylint-docker:
 test-shellcheck:
 	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
 
+test-shellcheck-docker:
+	../scripts/run-in-docker.sh make --quiet test-shellcheck
+
 test-cycles:
 	$(CYCLES) \
 		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver \
@@ -387,35 +401,11 @@ test-unit-shell:
 test-unit-shell-docker:
 	../scripts/run-in-docker.sh make test-unit-shell
 
-%-livestatus-docker:
-	../scripts/run-in-docker.sh make GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-livestatus
+test-unit-neb:
+	cd ../packages/neb/test && ./.f12
 
-%-core-docker:
-	../scripts/run-in-docker.sh make GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
-
-test-tidy-livestatus:
-	cd ../livestatus/src && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
-
-test-tidy-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
-
-test-tidy-docker:
-	../scripts/run-in-docker.sh make -C .. tidy CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)"
-
-test-iwyu-livestatus:
-	cd ../livestatus/src && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
-
-test-iwyu-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
-
-test-iwyu-docker:
-	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
-
-test-unit-livestatus:
-	cd ../livestatus/src/test && ./.f12
-
-test-unit-core:
-	cd ../enterprise/core/src/test && ./.f12
+test-unit-cmc:
+	cd ../packages/cmc/test && ./.f12
 
 test-find-dirty-files-in-git:
 	scripts/find_dirty_files_in_git

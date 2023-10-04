@@ -12,7 +12,7 @@ import pytest
 
 from tests.testlib.snmp import get_parsed_snmp_section
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -50,6 +50,16 @@ UPS_POWER_0 = """
 .1.3.6.1.2.1.33.1.4.4.1.2.2  230
 .1.3.6.1.2.1.33.1.4.4.1.2.3  229
 .1.3.6.1.2.1.33.1.4.4.1.4.1  2300
+.1.3.6.1.2.1.33.1.4.4.1.4.2  3500
+.1.3.6.1.2.1.33.1.4.4.1.4.3  4800
+"""
+
+# power is 0
+UPS_POWER_1 = """
+.1.3.6.1.2.1.33.1.4.4.1.2.1  230
+.1.3.6.1.2.1.33.1.4.4.1.2.2  230
+.1.3.6.1.2.1.33.1.4.4.1.2.3  229
+.1.3.6.1.2.1.33.1.4.4.1.4.1  0
 .1.3.6.1.2.1.33.1.4.4.1.4.2  3500
 .1.3.6.1.2.1.33.1.4.4.1.4.3  4800
 """
@@ -181,6 +191,14 @@ def test_power_discover(
                 Metric("power", 3500.0),
             ],
             id="ups-power-2-crit",
+        ),
+        pytest.param(
+            UPS_POWER_1,
+            SectionName("ups_power"),
+            "1",
+            {},
+            [Result(state=State.OK, summary="Power: 0 W"), Metric("power", 0.0)],
+            id="ups-power is 0",
         ),
     ],
 )

@@ -23,9 +23,9 @@ from cmk.base.config import check_info
 Section = Mapping[str, str | int]
 
 
-def parse_mongodb_mem(info):
+def parse_mongodb_mem(string_table):
     parsed: dict[str, str | int] = {}
-    for line in info:
+    for line in string_table:
         key, value = line[0], " ".join(line[1:])
         try:
             parsed[key] = int(value)
@@ -63,8 +63,8 @@ def check_mongodb_mem(_no_item, params, parsed):
 
 check_info["mongodb_mem"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_mem,
+    service_name="Memory used MongoDB",
     discovery_function=discover_mongodb_mem,
     check_function=check_mongodb_mem,
-    service_name="Memory used MongoDB",
     check_ruleset_name="mongodb_mem",
 )

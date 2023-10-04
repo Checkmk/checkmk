@@ -29,7 +29,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -432,6 +432,51 @@ def _verify_compatibility(response: requests.Response) -> None:
         )
 
 
+def verify_request_compatibility(ignore_license_compatibility: bool) -> None:
+    # - _version and _edition_short were added with 1.5.0p10 to the login call only
+    # - x-checkmk-version and x-checkmk-edition were added with 2.0.0p1
+    # Prefer the headers and fall back to the request variables for now.
+    central_version = (
+        request.headers["x-checkmk-version"]
+        if "x-checkmk-version" in request.headers
+        else request.get_ascii_input_mandatory("_version")
+    )
+    central_edition_short = (
+        request.headers["x-checkmk-edition"]
+        if "x-checkmk-edition" in request.headers
+        else request.get_ascii_input_mandatory("_edition_short")
+    )
+    central_license_state = parse_license_state(request.headers.get("x-checkmk-license-state", ""))
+    remote_version = cmk_version.__version__
+    remote_edition_short = cmk_version.edition().short
+    remote_license_state = get_license_state()
+
+    compatibility = compatible_with_central_site(
+        central_version,
+        central_edition_short,
+        central_license_state,
+        remote_version,
+        remote_edition_short,
+        remote_license_state,
+    )
+
+    if ignore_license_compatibility and isinstance(compatibility, LicenseStateIncompatible):
+        return
+
+    if not isinstance(compatibility, cmk_version.VersionsCompatible):
+        raise MKGeneralException(
+            make_incompatible_info(
+                central_version,
+                central_edition_short,
+                central_license_state,
+                remote_version,
+                remote_edition_short,
+                remote_license_state,
+                compatibility,
+            )
+        )
+
+
 def parse_license_state(raw_license_state: str) -> LicenseState | None:
     try:
         return LicenseState[raw_license_state]
@@ -475,8 +520,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
         "_login": "1",
         "_username": name,
         "_password": password,
-        "_origtarget": "automation_login.py?_version=%s&_edition_short=%s"
-        % (cmk_version.__version__, cmk_version.edition().short),
+        "_origtarget": f"automation_login.py?_version={cmk_version.__version__}&_edition_short={cmk_version.edition().short}",
         "_plain_error": "1",
     }
     response = get_url(
@@ -496,7 +540,10 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
     except SyntaxError:
         raise MKAutomationException(response)
     if isinstance(eval_response, dict):
-        if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
+        if (
+            cmk_version.edition() is cmk_version.Edition.CME
+            and eval_response["edition_short"] != "cme"
+        ):
             raise MKUserError(
                 None,
                 _(
@@ -757,6 +804,15 @@ def compatible_with_central_site(
         return cmk_version.VersionsIncompatible("Central or remote site are below 2.0.0p1.")
 
     if not isinstance(
+        version_compatibility := cmk_version.versions_compatible(
+            cmk_version.Version.from_str(central_version),
+            cmk_version.Version.from_str(remote_version),
+        ),
+        cmk_version.VersionsCompatible,
+    ):
+        return version_compatibility
+
+    if not isinstance(
         licensing_compatibility := is_distributed_setup_compatible_for_licensing(
             central_edition=_edition_from_short(central_edition_short),
             central_license_state=central_license_state,
@@ -767,7 +823,4 @@ def compatible_with_central_site(
     ):
         return licensing_compatibility
 
-    return cmk_version.versions_compatible(
-        cmk_version.Version.from_str(central_version),
-        cmk_version.Version.from_str(remote_version),
-    )
+    return cmk_version.VersionsCompatible()

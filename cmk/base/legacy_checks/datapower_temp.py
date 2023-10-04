@@ -43,14 +43,14 @@ def check_datapower_temp(item, params, info):
 
 check_info["datapower_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_temp,
-    check_function=check_datapower_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.141.1",
         oids=["1", "2", "3", "5", "6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_datapower_temp,
+    check_function=check_datapower_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (65.0, 70.0),  # 70C recommended alarm level by IBM
     },

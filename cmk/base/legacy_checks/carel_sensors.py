@@ -40,7 +40,7 @@ carel_temp_defaultlevels = {
 }
 
 
-def carel_sensors_parse(info):
+def carel_sensors_parse(string_table):
     oid_parse = {
         "1.0": "Room",
         "2.0": "Outdoor",
@@ -63,7 +63,7 @@ def carel_sensors_parse(info):
     }
 
     parsed = {}
-    for oidend, value in info:
+    for oidend, value in string_table:
         sensor_name = oid_parse.get(oidend)
         if sensor_name is not None and value is not None and value != "0" and value != "-9999":
             parsed[sensor_name] = float(value) / 10
@@ -88,13 +88,13 @@ check_info["carel_sensors"] = LegacyCheckDefinition(
         any_of(contains(".1.3.6.1.2.1.1.1.0", "pCO"), endswith(".1.3.6.1.2.1.1.1.0", "armv4l")),
         exists(".1.3.6.1.4.1.9839.1.1.0"),
     ),
-    parse_function=carel_sensors_parse,
-    discovery_function=inventory_carel_sensors_temp,
-    check_function=check_carel_sensors_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",
         oids=[OIDEnd(), "2"],
     ),
+    parse_function=carel_sensors_parse,
+    service_name="Temperature %s",
+    discovery_function=inventory_carel_sensors_temp,
+    check_function=check_carel_sensors_temp,
+    check_ruleset_name="temperature",
 )

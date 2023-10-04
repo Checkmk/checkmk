@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -34,7 +34,7 @@ def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
                     "instance": sid_instance,
                     "version": line[2],
                 }
-            section["%s %s" % (item_name, sid_instance)] = item_data
+            section[f"{item_name} {sid_instance}"] = item_data
 
     return section
 
@@ -75,7 +75,7 @@ def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckRe
 
 def cluster_check_sap_hana_status(
     item: str,
-    section: Mapping[str, Optional[sap_hana.ParsedSection]],
+    section: Mapping[str, sap_hana.ParsedSection | None],
 ) -> CheckResult:
     yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():

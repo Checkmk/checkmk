@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based import netapp_api_cpu, netapp_api_vf_stats
+from cmk.base.plugins.agent_based import netapp_api_vf_stats
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.utils.netapp_api import CPUSection
 
 SECTION_NETAPP_API_VF_STATS = {
     "vfiler0": {
@@ -37,9 +38,7 @@ SECTION_NETAPP_API_VF_STATS = {
     }
 }
 
-SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
-    "7mode": {"num_processors": "2", "cpu_busy": "153993540928"}
-}
+SECTION_NETAPP_API_CPU: CPUSection = {"7mode": {"num_processors": "2", "cpu_busy": "153993540928"}}
 
 
 @pytest.mark.parametrize(

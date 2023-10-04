@@ -10,11 +10,11 @@
 #include <string>
 #include <string_view>
 
-#include "cfg.h"
 #include "common/cmdline_info.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "providers/p_perf_counters.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
 
 namespace cma::provider {
 

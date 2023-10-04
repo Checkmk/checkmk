@@ -30,20 +30,20 @@ def check_blade_bx_blades(item, _no_params, info):
         if id_ == item:
             state, state_readable = status_codes[status]
             if name:
-                name_info = "[%s, Serial: %s]" % (name, serial)
+                name_info = f"[{name}, Serial: {serial}]"
             else:
                 name_info = "[Serial: %s]" % serial
-            return state, "%s Status: %s" % (name_info, state_readable)
+            return state, f"{name_info} Status: {state_readable}"
     return None
 
 
 check_info["blade_bx_blades"] = LegacyCheckDefinition(
     detect=DETECT_BLADE_BX,
-    discovery_function=inventory_blade_bx_blades,
-    check_function=check_blade_bx_blades,
-    service_name="Blade %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.4.2.1.1",
         oids=["1", "2", "5", "21"],
     ),
+    service_name="Blade %s",
+    discovery_function=inventory_blade_bx_blades,
+    check_function=check_blade_bx_blades,
 )

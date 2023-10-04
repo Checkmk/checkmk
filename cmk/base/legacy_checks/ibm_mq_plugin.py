@@ -14,9 +14,9 @@ from cmk.base.config import check_info
 # runmqsc|Not executable
 
 
-def parse_ibm_mq_plugin(info):
+def parse_ibm_mq_plugin(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         key = line[0].strip()
         value = line[1].strip()
         parsed[key] = value
@@ -36,7 +36,7 @@ def check_tool(tool_name, parsed):
     status, text = 0, parsed[tool_name]
     if text != "OK":
         status = 2
-    return status, "%s: %s" % (tool_name, text)
+    return status, f"{tool_name}: {text}"
 
 
 def check_ibm_mq_plugin(_no_item, params, parsed):
@@ -51,8 +51,8 @@ def check_ibm_mq_plugin(_no_item, params, parsed):
 
 check_info["ibm_mq_plugin"] = LegacyCheckDefinition(
     parse_function=parse_ibm_mq_plugin,
-    check_function=check_ibm_mq_plugin,
-    discovery_function=inventory_ibm_mq_plugin,
     service_name="IBM MQ Plugin",
+    discovery_function=inventory_ibm_mq_plugin,
+    check_function=check_ibm_mq_plugin,
     check_ruleset_name="ibm_mq_plugin",
 )

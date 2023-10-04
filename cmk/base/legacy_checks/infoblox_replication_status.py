@@ -42,7 +42,7 @@ def check_infoblox_replication_status(item, _no_params, info):
             else:
                 state = 2
 
-            return state, "Status: %s, Queue from master: %s (%s), Queue to master: %s (%s)" % (
+            return state, "Status: {}, Queue from master: {} ({}), Queue to master: {} ({})".format(
                 status_readable,
                 queue_from_master,
                 time_from_master,
@@ -54,11 +54,11 @@ def check_infoblox_replication_status(item, _no_params, info):
 
 check_info["infoblox_replication_status"] = LegacyCheckDefinition(
     detect=DETECT_INFOBLOX,
-    discovery_function=inventory_infoblox_replication_status,
-    check_function=check_infoblox_replication_status,
-    service_name="Replication %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.2.1.2.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
+    service_name="Replication %s",
+    discovery_function=inventory_infoblox_replication_status,
+    check_function=check_infoblox_replication_status,
 )

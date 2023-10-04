@@ -8,13 +8,16 @@ from __future__ import annotations
 
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Final, Self, TypedDict
+from typing import Any, Final, Self
+
+from typing_extensions import TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName, SectionName
 
 Labels = Mapping[str, str]
 
@@ -32,11 +35,11 @@ class _Label:
     def __init__(self, name: str, value: str) -> None:
         if not isinstance(name, str):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
-        self.name: Final = str(name)
+        self.name: Final = name
 
         if not isinstance(value, str):
             raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
-        self.value: Final = str(value)
+        self.value: Final = value
 
     @property
     def label(self) -> str:

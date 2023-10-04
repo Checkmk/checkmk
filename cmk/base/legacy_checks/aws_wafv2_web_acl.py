@@ -6,22 +6,20 @@
 
 import re
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_wafv2_web_acl(info):
-    metrics = extract_aws_metrics_by_labels(["AllowedRequests", "BlockedRequests"], parse_aws(info))
+def parse_aws_wafv2_web_acl(string_table):
+    metrics = extract_aws_metrics_by_labels(
+        ["AllowedRequests", "BlockedRequests"], parse_aws(string_table)
+    )
     try:
         return list(metrics.values())[-1]
     except IndexError:
@@ -30,7 +28,7 @@ def parse_aws_wafv2_web_acl(info):
 
 def check_aws_wafv2_web_acl(item, params, parsed):
     if len(parsed) == 0:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     metric_ids = ["AllowedRequests", "BlockedRequests"]
     # the metrics used here are only reported if they are not zero
@@ -67,16 +65,16 @@ def check_aws_wafv2_web_acl(item, params, parsed):
             "aws_wafv2_%s_perc" % "_".join(metric_id_split),
             params.get("%s_perc" % "_".join(metric_id_split)),
             infoname="Percentage %s" % " ".join(metric_id_split),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
 
 check_info["aws_wafv2_web_acl"] = LegacyCheckDefinition(
     parse_function=parse_aws_wafv2_web_acl,
+    service_name="AWS/WAFV2 Web ACL Requests",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, ["AllowedRequests", "BlockedRequests"], requirement=any
     ),
     check_function=check_aws_wafv2_web_acl,
-    service_name="AWS/WAFV2 Web ACL Requests",
     check_ruleset_name="aws_wafv2_web_acl",
 )

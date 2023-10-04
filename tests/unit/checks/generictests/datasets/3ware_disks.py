@@ -10,6 +10,13 @@
 checkname = "3ware_disks"
 
 
+mock_item_state = {
+    "": {
+       "packets_rate": (0, 150512),
+    }
+}
+
+
 info = [
     ["p0", "OK", "u0", "465.76", "GB", "SATA", "0", "-", "ST3500418AS"],
     ["p1", "VERIFYING", "u0", "465.76", "GB", "SATA", "1", "-", "ST3500418AS"],

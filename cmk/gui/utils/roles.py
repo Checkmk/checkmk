@@ -6,7 +6,7 @@
 from typing import Final, Literal
 
 from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.permissions as permissions
 from cmk.gui.config import active_config

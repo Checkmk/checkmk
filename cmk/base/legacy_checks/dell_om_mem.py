@@ -54,12 +54,11 @@ def check_dell_om_mem(item, _no_params, info):
 
 check_info["dell_om_mem"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_mem,
-    discovery_function=inventory_dell_om_mem,
-    service_name="Memory Module %s",
-    # There is no other way to find out that openmanage is present.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.1100.50.1",
         oids=["8.1", "5.1", "14.1", "20.1"],
     ),
+    service_name="Memory Module %s",
+    discovery_function=inventory_dell_om_mem,
+    check_function=check_dell_om_mem,
 )

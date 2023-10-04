@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.license import license_check_levels
 from cmk.base.config import check_info
 
@@ -37,12 +37,12 @@ rds_licenses_product_versionid_map = {
 }
 
 
-def parse_rds_licenses(info):
+def parse_rds_licenses(string_table):
     parsed = {}
-    if not info:
+    if not string_table:
         return parsed
-    headers = info[0]
-    for line in info[1:]:
+    headers = string_table[0]
+    for line in string_table[1:]:
         data = dict(zip(headers, line))
         version_id = data.get("ProductVersionID")
         if version_id not in rds_licenses_product_versionid_map:
@@ -53,8 +53,9 @@ def parse_rds_licenses(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_rds_licenses(item, params, data):
+def check_rds_licenses(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     total = 0
     used = 0
     for pack in data:
@@ -63,13 +64,17 @@ def check_rds_licenses(item, params, data):
         total += pack_total
         used += pack_issued
 
-    return license_check_levels(total, used, params)
+    yield license_check_levels(total, used, params)
+
+
+def discover_rds_licenses(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["rds_licenses"] = LegacyCheckDefinition(
     parse_function=parse_rds_licenses,
-    discovery_function=discover(),
-    check_function=check_rds_licenses,
     service_name="RDS Licenses %s",
+    discovery_function=discover_rds_licenses,
+    check_function=check_rds_licenses,
     check_ruleset_name="rds_licenses",
 )

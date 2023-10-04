@@ -4,17 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.config import special_agent_info
 
 
 def agent_ibmsvc_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
-    args = ["-u", params["user"]]
+    args = ["-u", params["user"], "-i", ",".join(params["infos"])]
     if params["accept-any-hostkey"] is True:
-        args += ["--accept-any-hostkey", "-i", ",".join(params["infos"])]
+        args += ["--accept-any-hostkey"]
 
     args.append(ipaddress or hostname)
     return args

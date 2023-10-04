@@ -46,13 +46,14 @@ void Renderer::output(double value) {
 void Renderer::output(const RowFragment &value) { _os << value._str; }
 
 void Renderer::outputUnicodeChar(char32_t value) {
-    if (value < 0x10000U) {
-        outputHex('u', 4, value);
+    const uint_least32_t number{value};
+    if (number < 0x10000U) {
+        outputHex('u', 4, number);
     } else if (useSurrogatePairs()) {
-        outputHex('u', 4, 0xd800U | (((value - 0x10000U) >> 10) & 0x3ffU));
-        outputHex('u', 4, 0xdc00U | ((value - 0x10000U) & 0x3ffU));
+        outputHex('u', 4, 0xd800U | (((number - 0x10000U) >> 10) & 0x3ffU));
+        outputHex('u', 4, 0xdc00U | ((number - 0x10000U) & 0x3ffU));
     } else {
-        outputHex('U', 8, value);
+        outputHex('U', 8, number);
     }
 }
 

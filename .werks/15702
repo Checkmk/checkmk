@@ -1,0 +1,25 @@
+Title: UNIX agents/mk_oracle: Validate termination of cached plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1688562129
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Many UNIX agents (linux, solaris, aix, freebsd, openwrt) as well as the mk_oracle agent plugin
+share the same functionality when running asynchronous/cached plugins:<br>
+After they got invoked as subprocesses, they will be watched by subsequent calls of the agent.<br>
+If they're still running after twice the cache time, they'll be terminated with <tt>kill -9</tt>.
+
+Previously, the termination has not been verified.<br>
+As a result, in situations where a processes couldn't be terminated with <tt>kill -9</tt>,
+the agent created new processes unlimitedly.
+
+This situation is now mitigated by checking for success after terminating a timed out process.<br>
+If the termination failed, no further process of the same plugin will be started.
+
+Additionally, timed out processes, as well as processes that failed to be terminated,
+will now be reported to the monitoring server.<br>
+Affected plugins will be displayed at the "Check_MK Agent" service, alongside a <tt>WARN</tt> state.

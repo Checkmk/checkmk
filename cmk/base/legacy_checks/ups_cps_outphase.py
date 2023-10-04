@@ -5,7 +5,9 @@
 
 
 from collections.abc import Iterable, Mapping
-from typing import Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
@@ -41,13 +43,13 @@ def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
 
 check_info["ups_cps_outphase"] = LegacyCheckDefinition(
     detect=DETECT_UPS_CPS,
-    parse_function=parse_ups_cps_outphase,
-    discovery_function=inventory_ups_cps_outphase,
-    check_function=check_elphase,
-    service_name="UPS Output Phase %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.4.2",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_ups_cps_outphase,
+    service_name="UPS Output Phase %s",
+    discovery_function=inventory_ups_cps_outphase,
+    check_function=check_elphase,
     check_ruleset_name="ups_outphase",
 )

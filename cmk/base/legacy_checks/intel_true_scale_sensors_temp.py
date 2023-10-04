@@ -33,7 +33,7 @@ from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
 # .1.3.6.1.4.1.10222.2.1.9.8.1.8.1.2.2 31 --> ICS-CHASSIS-MIB::icsChassisSensorSlotValue.1.2.2
 
 
-def parse_intel_true_scale_sensors(info):
+def parse_intel_true_scale_sensors(string_table):
     map_slot_types = {
         "0": "unspecified",
         "1": "switch master",
@@ -78,7 +78,7 @@ def parse_intel_true_scale_sensors(info):
         "5": (3, "disabled"),
     }
 
-    slots, sensors = info
+    slots, sensors = string_table
     parsed = {}
     for slot_id, slot_ty in slots:
         parsed.setdefault("slot %s" % slot_id, {"slot_type": map_slot_types[slot_ty]})
@@ -100,7 +100,7 @@ def parse_intel_true_scale_sensors(info):
         sensor_ty = map_sensor_types[ty]
         parsed[slot_name].setdefault(sensor_ty, [])
         parsed[slot_name][sensor_ty].append(
-            ("%s %s" % (sensor_id, sensor_name), float(reading_str) * factor, kwargs)
+            (f"{sensor_id} {sensor_name}", float(reading_str) * factor, kwargs)
         )
 
     return parsed
@@ -133,10 +133,6 @@ def check_intel_true_scale_sensors_temp(item, params, parsed):
 
 check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
     detect=DETECT_INTEL_TRUE_SCALE,
-    parse_function=parse_intel_true_scale_sensors,
-    discovery_function=inventory_intel_true_scale_sensors_temp,
-    check_function=check_intel_true_scale_sensors_temp,
-    service_name="Temperature sensors %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.10222.2.1.2.9.1",
@@ -147,4 +143,8 @@ check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2", "3", "7", "8"],
         ),
     ],
+    parse_function=parse_intel_true_scale_sensors,
+    service_name="Temperature sensors %s",
+    discovery_function=inventory_intel_true_scale_sensors_temp,
+    check_function=check_intel_true_scale_sensors_temp,
 )

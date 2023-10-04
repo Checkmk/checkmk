@@ -47,6 +47,7 @@ if ! type "${1}" >/dev/null 2>&1; then
 fi
 
 cleanup() {
+    # shellcheck disable=SC2317 # shellcheck doesn't understand trap
     rm "${RUNNING_FILE}" 2>/dev/null
 }
 

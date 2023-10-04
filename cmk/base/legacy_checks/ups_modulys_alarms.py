@@ -61,11 +61,11 @@ def check_ups_modulys_alarms(_no_item, _no_params, info):
 
 check_info["ups_modulys_alarms"] = LegacyCheckDefinition(
     detect=DETECT_UPS_MODULYS,
-    discovery_function=inventory_ups_modulys_alarms,
-    check_function=check_ups_modulys_alarms,
-    service_name="UPS Alarms",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4",
         oids=[OIDEnd(), "9"],
     ),
+    service_name="UPS Alarms",
+    discovery_function=inventory_ups_modulys_alarms,
+    check_function=check_ups_modulys_alarms,
 )

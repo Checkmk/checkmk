@@ -33,12 +33,12 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 #   '----------------------------------------------------------------------'
 
 
-def parse_fireeye_raid(info):
+def parse_fireeye_raid(string_table):
     # We only discover in case of a raid system
     parsed = {}
-    if len(info[1]) > 1:
-        for diskname, diskstatus, diskhealth in info[1]:
-            parsed.setdefault("raid", info[0][0])
+    if len(string_table[1]) > 1:
+        for diskname, diskstatus, diskhealth in string_table[1]:
+            parsed.setdefault("raid", string_table[0][0])
             parsed.setdefault("disks", [])
             parsed["disks"].append([diskname, diskstatus, diskhealth])
 
@@ -50,15 +50,11 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
     for text, (state, state_readable) in check_fireeye_states(
         [(status, "Status"), (health, "Health")]
     ).items():
-        yield state, "%s: %s" % (text, state_readable)
+        yield state, f"{text}: {state_readable}"
 
 
 check_info["fireeye_raid"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_fireeye_raid,
-    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
-    check_function=check_fireeye_raid,
-    service_name="RAID status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.25597.11.2.1",
@@ -69,6 +65,10 @@ check_info["fireeye_raid"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    parse_function=parse_fireeye_raid,
+    service_name="RAID status",
+    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
+    check_function=check_fireeye_raid,
 )
 
 # .
@@ -88,11 +88,12 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
             for text, (state, state_readable) in check_fireeye_states(
                 [(diskstatus, "Disk status"), (diskhealth, "Health")]
             ).items():
-                yield state, "%s: %s" % (text, state_readable)
+                yield state, f"{text}: {state_readable}"
 
 
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(
+    service_name="Disk status %s",
+    sections=["fireeye_raid"],
     discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
     check_function=check_fireeye_raid_disks,
-    service_name="Disk status %s",
 )

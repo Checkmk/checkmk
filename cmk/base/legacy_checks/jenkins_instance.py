@@ -23,10 +23,10 @@ MAP_INSTANCE_STATE = {
 }
 
 
-def parse_jenkins_instance(info):
+def parse_jenkins_instance(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         parsed.update(json.loads(line[0]))
 
     return parsed
@@ -56,12 +56,12 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
         elif parsed_data is None:
             state = 3
 
-        yield state, "%s: %s" % (infotext, MAP_INSTANCE_STATE[parsed_data])
+        yield state, f"{infotext}: {MAP_INSTANCE_STATE[parsed_data]}"
 
 
 check_info["jenkins_instance"] = LegacyCheckDefinition(
     parse_function=parse_jenkins_instance,
-    check_function=check_jenkins_instance,
-    discovery_function=inventory_jenkins_instance,
     service_name="Jenkins Instance",
+    discovery_function=inventory_jenkins_instance,
+    check_function=check_jenkins_instance,
 )

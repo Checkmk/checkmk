@@ -46,9 +46,11 @@ if [ "$USER" != "jenkins" ]; then
         "
 else
     # Needed for .cargo which is shared between workspaces
-    SHARED_CARGO_FOLDER="/home/jenkins/shared_cargo_folder/"
-    mkdir -p "${SHARED_CARGO_FOLDER}"
-    CARGO_JENKINS_MOUNT="-v ${SHARED_CARGO_FOLDER}:${REPO_DIR}/shared_cargo_folder"
+    SHARED_CARGO_FOLDER="${HOME}/shared_cargo_folder"
+    LOCAL_CARGO_FOLDER="${REPO_DIR}/shared_cargo_folder"
+    mkdir -p "${SHARED_CARGO_FOLDER}" # in case it does not exist yet
+    mkdir -p "${LOCAL_CARGO_FOLDER}"  # will be created with root-ownership instead
+    CARGO_JENKINS_MOUNT="-v ${SHARED_CARGO_FOLDER}:${LOCAL_CARGO_FOLDER}"
 
     # We're using git reference clones, see also jenkins/global-defaults.yml in checkmk_ci.
     # That's why we need to mount the reference repos.
@@ -57,6 +59,7 @@ else
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
+"${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}" --check
 : "${IMAGE_ID:="$("${REPO_DIR}"/buildscripts/docker_image_aliases/resolve.py "${IMAGE_ALIAS}")"}"
 : "${TERMINAL_FLAG:="$([ -t 0 ] && echo ""--interactive --tty"" || echo "")"}"
 
@@ -100,6 +103,7 @@ docker run -a stdout -a stderr \
     -e BAZEL_CACHE_PASSWORD \
     -e GERRIT_BRANCH \
     -e CI \
+    -e GCC_TOOLCHAIN \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"

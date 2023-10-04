@@ -15,7 +15,6 @@ import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
-import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.sites
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
@@ -30,6 +29,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
@@ -54,8 +54,9 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
     ConfigDomainLiveproxy,
 )
+from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.watolib.utils import ldap_connections_are_configurable, multisite_dir
 
 
 class SiteManagement:
@@ -204,7 +205,7 @@ class SiteManagement:
                     "list",
                     _("Sync with the following LDAP connections"),
                     ListChoice(
-                        choices=userdb_utils.connection_choices,
+                        choices=connection_choices,
                         allow_empty=False,
                     ),
                 ),
@@ -301,8 +302,9 @@ class SiteManagement:
                 )
 
         # User synchronization
-        user_sync_valuespec = cls.user_sync_valuespec(site_id)
-        user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
+        if ldap_connections_are_configurable():
+            user_sync_valuespec = cls.user_sync_valuespec(site_id)
+            user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
@@ -399,7 +401,7 @@ class SiteManagement:
 class SiteManagementFactory:
     @staticmethod
     def factory() -> SiteManagement:
-        if cmk_version.is_raw_edition():
+        if cmk_version.edition() is cmk_version.Edition.CRE:
             cls: type[SiteManagement] = CRESiteManagement
         else:
             cls = CEESiteManagement
@@ -730,7 +732,7 @@ def _update_distributed_wato_file(sites):
         if site.get("replication"):
             distributed = True
         if site_is_local(siteid):
-            cmk.gui.watolib.activate_changes.create_distributed_wato_files(
+            create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
                 is_remote=False,

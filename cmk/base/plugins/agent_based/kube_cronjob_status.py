@@ -5,7 +5,8 @@
 import enum
 import json
 import time
-from typing import Any, assert_never, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, assert_never
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

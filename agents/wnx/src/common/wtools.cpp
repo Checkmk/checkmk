@@ -1,11 +1,10 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "wtools.h"
-
-#include <WinSock2.h>
+#include "common/wtools.h"
 
 #include <Psapi.h>
+#include <WinSock2.h>
 #include <comdef.h>
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -19,13 +18,13 @@
 #include <random>
 #include <string>
 
-#include "cap.h"
-#include "cfg.h"
 #include "common/wtools_runas.h"
 #include "common/wtools_user_control.h"
-#include "logger.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
 #pragma comment(lib, "wbemuuid.lib")
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "Sensapi.lib")
@@ -128,6 +127,7 @@ std::wstring GetProcessPath(uint32_t pid) noexcept {
 /// \b returns count of killed processes, -1 if dir is bad
 int KillProcessesByDir(const fs::path &dir) noexcept {
     constexpr size_t minimum_path_len = 12;
+    XLOG::d.i("Processing dir '{}'", dir);
 
     if (dir.wstring().size() < minimum_path_len) {
         // safety: we do not want to kill as admin something important
@@ -144,8 +144,9 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
         }
 
         fs::path p{exe};
-        const auto shift = fs::relative(p, dir).wstring();
-        if (!shift.empty() && shift[0] != L'.') {
+        std::error_code ec;
+        const auto shift = fs::relative(p, dir, ec).wstring();
+        if (!ec && !shift.empty() && shift[0] != L'.') {
             XLOG::d.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;
@@ -159,11 +160,27 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
 void KillProcessesByFullPath(const fs::path &path) noexcept {
     ScanProcessList([path](const PROCESSENTRY32W &entry) {
         const auto pid = entry.th32ProcessID;
-        const auto exe = fs::path{wtools::GetProcessPath(pid)};
+        const auto exe = fs::path{GetProcessPath(pid)};
 
         if (exe == path) {
             XLOG::d.i("Killing process '{}'", exe);
             KillProcess(pid, 99);
+        }
+        return true;
+    });
+}
+
+void KillProcessesByPathEndAndPid(const fs::path &path_end,
+                                  uint32_t need_pid) noexcept {
+    ScanProcessList([&](const PROCESSENTRY32W &entry) {
+        const auto pid = entry.th32ProcessID;
+        const auto exe = fs::path{GetProcessPath(pid)};
+
+        if ((exe.wstring().ends_with(path_end.wstring()) || exe == path_end) &&
+            pid == need_pid) {
+            XLOG::d.i("Killing process '{}' with pid {}", exe, pid);
+            KillProcess(pid, 99);
+            return false;
         }
         return true;
     });
@@ -199,8 +216,8 @@ uint32_t AppRunner::goExecAsJob(std::wstring_view command_line) noexcept {
         prepareResources(command_line, true);
 
         auto [pid, jh, ph] = cma::tools::RunStdCommandAsJob(
-            command_line.data(), TRUE, stdio_.getWrite(), stderr_.getWrite(), 0,
-            0);
+            command_line.data(), cma::tools::InheritHandle::yes,
+            stdio_.getWrite(), stderr_.getWrite(), 0, 0);
         // store data to reuse
         process_id_ = pid;
         job_handle_ = jh;
@@ -269,8 +286,11 @@ uint32_t AppRunner::goExec(std::wstring_view command_line,
         prepareResources(command_line, use_pipe == UsePipe::yes);
 
         process_id_ = cma::tools::RunStdCommand(
-            command_line, false, TRUE, stdio_.getWrite(), stderr_.getWrite(),
-            CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0);
+                          command_line, cma::tools::WaitForEnd::no,
+                          cma::tools::InheritHandle::yes, stdio_.getWrite(),
+                          stderr_.getWrite(),
+                          CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0)
+                          .value_or(0);
         if (process_id_ != 0) {
             return process_id_;
         }
@@ -2765,7 +2785,7 @@ fs::path MakeCmdFileInTemp(std::wstring_view name,
 
 fs::path ExecuteCommands(std::wstring_view name,
                          const std::vector<std::wstring> &commands,
-                         bool wait_for_end) {
+                         ExecuteMode mode) {
     XLOG::d.i("'{}' Starting executing commands [{}]", ToUtf8(name),
               commands.size());
     if (commands.empty()) {
@@ -2774,7 +2794,10 @@ fs::path ExecuteCommands(std::wstring_view name,
 
     auto to_exec = MakeCmdFileInTemp(name, commands);
     if (!to_exec.empty()) {
-        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), wait_for_end);
+        auto pid = cma::tools::RunStdCommand(to_exec.wstring(),
+                                             mode == ExecuteMode::sync
+                                                 ? cma::tools::WaitForEnd::yes
+                                                 : cma::tools::WaitForEnd::no);
         if (pid != 0) {
             XLOG::d.i("Process is started '{}'  with pid [{}]", to_exec, pid);
             return to_exec;
@@ -2786,17 +2809,7 @@ fs::path ExecuteCommands(std::wstring_view name,
     return {};
 }
 
-fs::path ExecuteCommandsAsync(std::wstring_view name,
-                              const std::vector<std::wstring> &commands) {
-    return ExecuteCommands(name, commands, false);
-}
-
-fs::path ExecuteCommandsSync(std::wstring_view name,
-                             const std::vector<std::wstring> &commands) {
-    return ExecuteCommands(name, commands, true);
-}
-
-//- simple scanner of Windows(tm) multi_sz strings
+/// simple scanner of Win32 multi_sz strings
 const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end) {
     if (pos == nullptr || end == nullptr) {
         XLOG::l(XLOG_FUNC + "-Bad data");
@@ -2845,12 +2858,12 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
 
 std::wstring ToCanonical(std::wstring_view raw_app_name) {
     constexpr int buf_size = 16 * 1024 + 1;
-    auto buf = std::make_unique<wchar_t[]>(buf_size);
-    auto expand_size =
+    const auto buf = std::make_unique<wchar_t[]>(buf_size);
+    const auto expand_size =
         ::ExpandEnvironmentStringsW(raw_app_name.data(), buf.get(), buf_size);
 
     std::error_code ec;
-    auto p =
+    const auto p =
         fs::weakly_canonical(expand_size > 0 ? buf.get() : raw_app_name, ec);
 
     if (ec.value() == 0) {
@@ -2873,15 +2886,11 @@ struct SidStore {
     bool makeEveryone() { return assignEveryone(); }
 
 private:
-    //
-    // Win32 wrapper
-    //
-
     bool assignAdmin() {
         SID_IDENTIFIER_AUTHORITY sia_admin = SECURITY_NT_AUTHORITY;
         constexpr UCHAR count{2};
 
-        if (InitializeSid(sid_, &sia_admin, count) == FALSE) {
+        if (::InitializeSid(sid_, &sia_admin, count) == FALSE) {
             return false;
         }
         count_ = count;
@@ -2894,7 +2903,7 @@ private:
         SID_IDENTIFIER_AUTHORITY sia_creator = SECURITY_CREATOR_SID_AUTHORITY;
         constexpr UCHAR count{1};
 
-        if (InitializeSid(sid_, &sia_creator, count) == FALSE) {
+        if (::InitializeSid(sid_, &sia_creator, count) == FALSE) {
             return false;
         }
         count_ = count;
@@ -2906,7 +2915,7 @@ private:
         SID_IDENTIFIER_AUTHORITY sia_world = SECURITY_WORLD_SID_AUTHORITY;
         constexpr UCHAR count{1};
 
-        if (InitializeSid(sid_, &sia_world, count) == FALSE) {
+        if (::InitializeSid(sid_, &sia_world, count) == FALSE) {
             return false;
         }
         count_ = count;
@@ -2920,12 +2929,13 @@ private:
 };
 
 ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
-    auto acl_size = sizeof ACL + 2 * sizeof ACCESS_ALLOWED_ACE - sizeof DWORD +
-                    GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
-                    GetSidLengthRequired(static_cast<UCHAR>(second.count()));
+    const auto acl_size =
+        sizeof ACL + 2 * sizeof ACCESS_ALLOWED_ACE - sizeof DWORD +
+        GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
+        GetSidLengthRequired(static_cast<UCHAR>(second.count()));
 
     // alloc
-    auto acl = static_cast<ACL *>(ProcessHeapAlloc(acl_size));
+    const auto acl = static_cast<ACL *>(ProcessHeapAlloc(acl_size));
 
     // init
     if (acl != nullptr &&
@@ -3038,16 +3048,16 @@ std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type) {
 namespace {
 
 std::pair<size_t, bool> ReadHandle(std::span<char> buffer, HANDLE h) {
-    auto store = buffer.data();
+    const auto store = buffer.data();
     DWORD read_in_fact = 0;
-    auto count = static_cast<DWORD>(buffer.size());
+    const auto count = static_cast<DWORD>(buffer.size());
     return {read_in_fact, ::ReadFile(h, store, count, &read_in_fact, nullptr)};
 }
 
 // add content of file to the buffer
 bool AppendHandleContent(std::vector<char> &buffer, HANDLE h,
                          size_t count) noexcept {
-    auto buf_size = buffer.size();
+    const auto buf_size = buffer.size();
     try {
         buffer.resize(buf_size + count);
     } catch (const std::exception &e) {
@@ -3071,7 +3081,7 @@ bool AppendHandleContent(std::vector<char> &buffer, HANDLE h,
 std::vector<char> ReadFromHandle(HANDLE handle) {
     std::vector<char> buf;
     while (true) {
-        auto read_count = wtools::DataCountOnHandle(handle);
+        const auto read_count = wtools::DataCountOnHandle(handle);
         if (read_count == 0) {  // no data or error
             break;
         }
@@ -3084,12 +3094,12 @@ std::vector<char> ReadFromHandle(HANDLE handle) {
 
 std::string RunCommand(std::wstring_view cmd) {
     wtools::AppRunner ar;
-    auto ret = ar.goExecAsJob(cmd);
+    const auto ret = ar.goExecAsJob(cmd);
     if (ret == 0) {
         XLOG::d("Failed to run '{}'", ToUtf8(cmd));
         return {};
     }
-    auto pid = ar.processId();
+    const auto pid = ar.processId();
     auto timeout = 20'000ms;
     constexpr auto grane = 50ms;
     std::string r;
@@ -3151,7 +3161,7 @@ public:
         reallocateBuffer(size);
 
         while (true) {
-            auto ret = ::GetTcpTable2(table_, &size, TRUE);
+            const auto ret = ::GetTcpTable2(table_, &size, TRUE);
             switch (ret) {
                 case ERROR_INSUFFICIENT_BUFFER:
                     reallocateBuffer(size);
@@ -3194,9 +3204,9 @@ private:
 }  // namespace
 
 bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port) {
-    MibTcpTable2Wrapper table;
     const auto p_port = ::htons(peer_port);
     const auto r_port = ::htons(port);
+    const MibTcpTable2Wrapper table;
     for (size_t i = 0; i < table.count(); ++i) {
         const auto *row = table.row(i);
         if (row == nullptr) {
@@ -3216,9 +3226,9 @@ bool CheckProcessUsePort(uint16_t port, uint32_t pid, uint16_t peer_port) {
 }
 
 std::optional<uint32_t> GetConnectionPid(uint16_t port, uint16_t peer_port) {
-    MibTcpTable2Wrapper table;
     const auto p_port = ::htons(peer_port);
     const auto r_port = ::htons(port);
+    const MibTcpTable2Wrapper table;
     for (size_t i = 0; i < table.count(); ++i) {
         const auto *row = table.row(i);
         if (row == nullptr) {
@@ -3450,6 +3460,31 @@ void InternalUsersDb::killAll() {
 size_t InternalUsersDb::size() const {
     std::lock_guard lk(users_lock_);
     return users_.size();
+}
+
+inline std::string ToUtf8(const std::wstring_view src,
+                          unsigned long &error_code) noexcept {
+    const auto in_len = static_cast<int>(src.length());
+    const auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, src.data(), in_len,
+                                               nullptr, 0, nullptr, nullptr);
+    if (out_len == 0) {
+        error_code = ::GetLastError();
+        return {};
+    }
+
+    std::string str;
+    str.resize(out_len);
+
+    const auto result = ::WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, src.data(), static_cast<int>(src.size()),
+        str.data(), out_len, nullptr, nullptr);
+    if (result == 0) {
+        error_code = ::GetLastError();
+        return {};
+    }
+    // some older engines may have problems if we do not have trailing zero
+    AddSafetyEndingNull(str);
+    return str;
 }
 
 }  // namespace wtools

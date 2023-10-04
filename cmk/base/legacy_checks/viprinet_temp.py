@@ -18,12 +18,12 @@ def check_viprinet_temp(item, params, info):
 
 check_info["viprinet_temp"] = LegacyCheckDefinition(
     detect=DETECT_VIPRINET,
-    check_function=check_viprinet_temp,
-    discovery_function=lambda info: len(info) > 0 and [("CPU", None), ("System", None)] or [],
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.2",
         oids=["3", "4"],
     ),
+    service_name="Temperature %s",
+    discovery_function=lambda info: len(info) > 0 and [("CPU", None), ("System", None)] or [],
+    check_function=check_viprinet_temp,
+    check_ruleset_name="temperature",
 )

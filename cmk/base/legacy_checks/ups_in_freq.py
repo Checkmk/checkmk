@@ -12,9 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
 
-def parse_ups_in_freq(info):
+def parse_ups_in_freq(string_table):
     parsed = {}
-    for name, freq_str in info:
+    for name, freq_str in string_table:
         try:
             freq = int(freq_str) / 10.0
         except ValueError:
@@ -40,20 +40,20 @@ def check_ups_in_freq(item, params, parsed):
     elif freq < warn:
         state = 1
     if state:
-        infotext += " (warn/crit below %s Hz/%s Hz)" % (warn, crit)
+        infotext += f" (warn/crit below {warn} Hz/{crit} Hz)"
     return state, infotext, [("in_freq", freq, warn, crit, 30, 70)]
 
 
 check_info["ups_in_freq"] = LegacyCheckDefinition(
     detect=DETECT_UPS_GENERIC,
-    parse_function=parse_ups_in_freq,
-    discovery_function=discover_ups_in_freq,
-    check_function=check_ups_in_freq,
-    service_name="IN frequency phase %s",
-    check_ruleset_name="efreq",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.3.3.1",
         oids=[OIDEnd(), "2"],
     ),
+    parse_function=parse_ups_in_freq,
+    service_name="IN frequency phase %s",
+    discovery_function=discover_ups_in_freq,
+    check_function=check_ups_in_freq,
+    check_ruleset_name="efreq",
     check_default_parameters={"levels_lower": (45, 40)},
 )

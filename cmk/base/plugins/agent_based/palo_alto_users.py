@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional, Tuple
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -20,7 +21,7 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.palo_alto import DETECT_PALO_ALTO
 
-LEVEL_TYPE = Optional[Tuple[float, float]]
+LEVEL_TYPE = tuple[float, float] | None
 
 
 @dataclass(frozen=True)
@@ -55,7 +56,7 @@ def discover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def _abs_and_rel_levels(levels: Tuple[str, LEVEL_TYPE]) -> Tuple[LEVEL_TYPE, LEVEL_TYPE]:
+def _abs_and_rel_levels(levels: tuple[str, LEVEL_TYPE]) -> tuple[LEVEL_TYPE, LEVEL_TYPE]:
     match levels:
         case "ignore":
             return None, None
@@ -98,16 +99,16 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
 
 def cluster_check(
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> CheckResult:
     yield from check(
         params,
         Section(
             num_users=sum(
-                (node_section.num_users if node_section else 0 for node_section in section.values())
+                node_section.num_users if node_section else 0 for node_section in section.values()
             ),
             max_users=sum(
-                (node_section.max_users if node_section else 0 for node_section in section.values())
+                node_section.max_users if node_section else 0 for node_section in section.values()
             ),
         ),
     )

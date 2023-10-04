@@ -47,8 +47,7 @@ def check_hp_blade_manager(item, params, info):
             if line[3] != expected_role:
                 return (
                     2,
-                    "Unexpected role: %s (Expected: %s)"
-                    % (hp_blade_role_map[int(line[3])], hp_blade_role_map[int(expected_role)]),
+                    f"Unexpected role: {hp_blade_role_map[int(line[3])]} (Expected: {hp_blade_role_map[int(expected_role)]})",
                 )
 
             # The SNMP answer is not fully compatible to the MIB file. The value of 0 will
@@ -59,19 +58,18 @@ def check_hp_blade_manager(item, params, info):
             status = hp_blade_status2nagios_map[snmp_state]
             return (
                 status,
-                "Enclosure Manager condition is %s (Role: %s, S/N: %s)"
-                % (snmp_state, hp_blade_role_map[int(line[3])], line[4]),
+                f"Enclosure Manager condition is {snmp_state} (Role: {hp_blade_role_map[int(line[3])]}, S/N: {line[4]})",
             )
     return (3, "item not found in snmp data")
 
 
 check_info["hp_blade_manager"] = LegacyCheckDefinition(
     detect=DETECT_HP_BLADE,
-    check_function=check_hp_blade_manager,
-    discovery_function=inventory_hp_blade_manager,
-    service_name="Manager %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.3.1.6.1",
         oids=["3", "10", "12", "9", "8"],
     ),
+    service_name="Manager %s",
+    discovery_function=inventory_hp_blade_manager,
+    check_function=check_hp_blade_manager,
 )

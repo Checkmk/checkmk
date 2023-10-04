@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -122,8 +123,8 @@ _CTR_TO_IF_FIELDS = {
 
 
 def convert_esx_counters_if(section: Section) -> interfaces.Section[interfaces.InterfaceWithRates]:
-    rates: Dict[str, Dict[str, int]] = {}
-    mac_addresses: Dict[str, str] = {}
+    rates: dict[str, dict[str, int]] = {}
+    mac_addresses: dict[str, str] = {}
 
     for name, instances in section.items():
         if name.startswith("net."):
@@ -237,8 +238,8 @@ def _sum_instance_counts(counts: SubSectionCounter) -> float:
     return summed_avgs
 
 
-def _max_latency(latencies: SubSectionCounter) -> Optional[int]:
-    all_latencies: List[int] = []
+def _max_latency(latencies: SubSectionCounter) -> int | None:
+    all_latencies: list[int] = []
     for data in latencies.values():
         multivalues, _unit = data[0]
         all_latencies.extend(map(int, multivalues))

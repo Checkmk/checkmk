@@ -490,7 +490,7 @@ def update_js_dependencies(rows: list[list[str]], verbose: bool = False) -> list
     )
     license_links = get_license_links()
 
-    with os.popen("npx license-checker --json --start ../../") as os_output:
+    with os.popen("npx license-checker --json --start ../../", "r", 1) as os_output:
         license_json = json.loads(os_output.read())
 
     found_rows: list[list[str]] = []

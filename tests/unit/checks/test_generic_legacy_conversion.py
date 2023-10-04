@@ -8,7 +8,7 @@ import pytest
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 
@@ -98,14 +98,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "aix_paging",
         "aix_sap_processlist",
         "akcp_daisy_temp",
-        "akcp_exp_drycontact",
-        "akcp_exp_humidity",
-        "akcp_exp_smoke",
-        "akcp_exp_temp",
-        "akcp_exp_water",
-        "akcp_sensor_drycontact",
-        "akcp_sensor_humidity",
-        "akcp_sensor_temp",
         "alcatel_cpu",
         "alcatel_cpu_aos7",
         "alcatel_fans",
@@ -265,6 +257,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "bintec_brrp_status",
         "bintec_cpu",
         "bintec_info",
+        "bintec_sensors",
         "bintec_sensors.fan",
         "bintec_sensors.temp",
         "bintec_sensors.voltage",
@@ -288,6 +281,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "bluenet_meter",
         "bluenet_sensor",
         "bluenet_sensor.hum",
+        "brocade",
         "brocade.fan",
         "brocade.power",
         "brocade.temp",
@@ -358,7 +352,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cisco_power",
         "cisco_prime_wifi_access_points",
         "cisco_prime_wifi_connections",
-        "cisco_qos",
         "cisco_redundancy",
         "cisco_secure",
         "cisco_srst_call_legs",
@@ -387,9 +380,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "citrix_licenses",
         "citrix_serverload",
         "citrix_sessions",
-        "citrix_state.controller",
-        "citrix_state.hosting_server",
-        "citrix_state",
         "climaveneta_alarm",
         "climaveneta_fan",
         "climaveneta_temp",
@@ -399,7 +389,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cmciii_lcp_fans",
         "cmciii_lcp_water",
         "cmciii_lcp_waterflow",
-        "cmctc.temp",
+        "cmctc_temp",
         "cmctc_config",
         "cmctc_lcp",
         "cmctc_lcp.access",
@@ -641,6 +631,7 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "f5_bigip_psu",
         "f5_bigip_snat",
         "f5_bigip_vserver",
+        "fast_lta_headunit",
         "fast_lta_headunit.status",
         "fast_lta_headunit.replication",
         "fast_lta_silent_cubes",
@@ -995,7 +986,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mcafee_emailgateway_entities",
         "mcafee_emailgateway_smtp",
         "mcafee_emailgateway_spam_mcafee",
-        "mcafee_webgateway",
         "mcafee_webgateway_info",
         "md",
         "megaraid_bbu",
@@ -1163,7 +1153,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "perle_modules_mgt",
         "perle_psmu",
         "perle_psmu.fan",
-        "pfsense_counter",
         "pfsense_if",
         "pfsense_status",
         "plesk_backups",
@@ -1179,7 +1168,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "postgres_sessions",
         "postgres_stat_database",
         "postgres_stat_database.size",
-        "postgres_version",
         "printer_supply_ricoh",
         "prometheus_custom",
         "pse_poe",

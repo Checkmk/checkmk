@@ -137,9 +137,10 @@ def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
 
 
 check_info["emcvnx_raidgroups.list_luns"] = LegacyCheckDefinition(
+    service_name="RAID Group %s LUNs",
+    sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups,
     check_function=check_emcvnx_raidgroups_list_luns,
-    service_name="RAID Group %s LUNs",
 )
 
 # .
@@ -174,9 +175,10 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
 
 
 check_info["emcvnx_raidgroups.list_disks"] = LegacyCheckDefinition(
+    service_name="RAID Group %s Disks",
+    sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups,
     check_function=check_emcvnx_raidgroups_list_disks,
-    service_name="RAID Group %s Disks",
 )
 
 # .
@@ -228,9 +230,10 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
 
 
 check_info["emcvnx_raidgroups.capacity"] = LegacyCheckDefinition(
+    service_name="RAID Group %s Capacity",
+    sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups_capacity,
     check_function=check_emcvnx_raidgroups_capacity,
-    service_name="RAID Group %s Capacity",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
@@ -282,9 +285,10 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
 
 
 check_info["emcvnx_raidgroups.capacity_contiguous"] = LegacyCheckDefinition(
+    service_name="RAID Group %s Capacity Contiguous",
+    sections=["emcvnx_raidgroups"],
     discovery_function=inventory_emcvnx_raidgroups_capacity_contiguous,
     check_function=check_emcvnx_raidgroups_capacity_contiguous,
-    service_name="RAID Group %s Capacity Contiguous",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

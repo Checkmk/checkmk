@@ -1,0 +1,23 @@
+Title: Predictive Levels: Supress levels for constant values
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692771193
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+This change affects users of the option <tt>In relation to standard deviation</tt> from
+<tt>Predictive Levels</tt>.
+
+<tt>Predictive Levels</tt> are computed by considering every data point matching the configured
+reference period. If the data never changes across these points in time, then the standard deviation
+is zero. Thus, the predicted levels will precisely equal to the predicted value. Previously, this
+would result in a CRIT. This happened no matter the levels set via <tt>In relation to standard
+deviation</tt>.
+
+While the described behaviour is self-consistent, most of these alarms are undesired and diminish
+the usefulness of <tt>Predictive Levels</tt>.
+
+With this Werk, no levels are applied, if the standard deviation is zero.

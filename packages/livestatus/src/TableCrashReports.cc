@@ -7,7 +7,6 @@
 
 #include <filesystem>
 #include <memory>
-#include <sstream>
 
 #include "livestatus/Column.h"
 #include "livestatus/CrashReport.h"
@@ -29,10 +28,10 @@ TableCrashReports::TableCrashReports(ICore *mc) : Table(mc) {
         offsets, [](const CrashReport &r) { return r._component; }));
     addDynamicColumn(std::make_unique<DynamicFileColumn<CrashReport>>(
         "file", "Files related to the crash report (crash.info, etc.)", offsets,
-        [mc] { return mc->paths()->crash_reports_directory(); },
-        [](const CrashReport & /*r*/, const std::string &args) {
-            return std::filesystem::path{args};
-        }));
+        [mc](const CrashReport & /*r*/) {
+            return mc->paths()->crash_reports_directory();
+        },
+        [](const std::string &args) { return std::filesystem::path{args}; }));
 }
 
 std::string TableCrashReports::name() const { return "crashreports"; }

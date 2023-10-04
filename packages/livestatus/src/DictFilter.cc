@@ -6,6 +6,7 @@
 #include "livestatus/DictFilter.h"
 
 #include <algorithm>
+#include <compare>
 #include <cstddef>
 #include <tuple>
 #include <unordered_map>
@@ -13,6 +14,7 @@
 
 #include "livestatus/RegExp.h"
 #include "livestatus/Row.h"
+#include "livestatus/opids.h"
 
 namespace {
 constexpr const char *whitespace = " \t\n\v\f\r";

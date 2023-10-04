@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (
@@ -284,7 +285,7 @@ register.check_plugin(
 
 def discover_docker_container_status_uptime(
     section_docker_container_status: Section | None,
-    section_uptime: Optional[uptime.Section],
+    section_uptime: uptime.Section | None,
 ) -> DiscoveryResult:
     if section_uptime:
         for _service in uptime.discover(section_uptime):
@@ -306,7 +307,7 @@ def discover_docker_container_status_uptime(
 def check_docker_container_status_uptime(
     params: Mapping[str, Any],
     section_docker_container_status: Section | None,
-    section_uptime: Optional[uptime.Section],
+    section_uptime: uptime.Section | None,
 ) -> CheckResult:
     if not section_docker_container_status:
         return
@@ -321,11 +322,13 @@ def check_docker_container_status_uptime(
         return
 
     # assumed format: 2019-06-05T08:58:06.893459004Z
-    utc_start = datetime.datetime.strptime(started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z")
+    utc_start = datetime.datetime.strptime(
+        started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z"
+    ).astimezone(tz=datetime.UTC)
 
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
-        uptime_sec = (datetime.datetime.utcnow() - utc_start).total_seconds()
+        uptime_sec = (datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds()
         yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
         yield from uptime.check(params, uptime.Section(0, None))

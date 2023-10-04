@@ -8,7 +8,7 @@ from cmk.gui.plugins.wato import (  # type: ignore[attr-defined]  # pylint: disa
     HostRulespec,
     rulespec_registry,
 )
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupHostsMonitoringRulesVarious
+from cmk.gui.plugins.wato.utils import RulespecGroupHostsMonitoringRulesVarious
 from cmk.gui.valuespec import Dictionary
 
 

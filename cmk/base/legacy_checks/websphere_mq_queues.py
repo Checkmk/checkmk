@@ -38,14 +38,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 websphere_mq_queues_default_levels = {
     "message_count": (1000, 1200),
@@ -53,9 +48,9 @@ websphere_mq_queues_default_levels = {
 }
 
 
-def parse_websphere_mq_queues(info):
+def parse_websphere_mq_queues(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
 
@@ -94,7 +89,7 @@ def inventory_websphere_mq_queues(parsed):
 def check_websphere_mq_queues(item, params, parsed):
     data = parsed.get(item)
     if data is None:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     if isinstance(params, tuple):
         params = {
@@ -121,7 +116,7 @@ def check_websphere_mq_queues(item, params, parsed):
             used_perc,
             None,
             params.get("message_count_perc", (None, None)),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Of max. %d messages" % max_depth,
         )
 
@@ -132,7 +127,7 @@ def check_websphere_mq_queues(item, params, parsed):
         params = params.get("messages_not_processed", {})
 
         if cur_depth and lgetdate and lgettime:
-            time_str = "%s %s" % (lgetdate, lgettime)
+            time_str = f"{lgetdate} {lgettime}"
             time_diff = data["time_on_client"] - time.mktime(
                 time.strptime(time_str, "%Y-%m-%d %H.%M.%S")
             )
@@ -158,8 +153,8 @@ def check_websphere_mq_queues(item, params, parsed):
 
 check_info["websphere_mq_queues"] = LegacyCheckDefinition(
     parse_function=parse_websphere_mq_queues,
+    service_name="MQ Queue %s",
     discovery_function=inventory_websphere_mq_queues,
     check_function=check_websphere_mq_queues,
-    service_name="MQ Queue %s",
     check_ruleset_name="websphere_mq",
 )

@@ -16,7 +16,7 @@ import cmk.utils.paths as paths
 from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
-from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.plugin_loader import import_plugins
 
 from cmk.automations.results import ABCAutomationResult
 
@@ -53,7 +53,7 @@ class Automations:
             if automation.needs_checks:
                 with redirect_stdout(open(os.devnull, "w")):
                     log.setup_console_logging()
-                    config.load_all_agent_based_plugins(
+                    config.load_all_plugins(
                         check_api.get_check_api_context,
                         local_checks_dir=paths.local_checks_dir,
                         checks_dir=paths.checks_dir,
@@ -114,4 +114,4 @@ class Automation(abc.ABC):
 
 automations = Automations()
 
-load_plugins(__file__, __package__)
+import_plugins(__file__, __package__)

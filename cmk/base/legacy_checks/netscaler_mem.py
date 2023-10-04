@@ -40,12 +40,12 @@ def check_netscaler_mem(_no_item, params, info):
 
 check_info["netscaler_mem"] = LegacyCheckDefinition(
     detect=SNMP_DETECT,
-    check_function=check_netscaler_mem,
-    discovery_function=inventory_netscaler_mem,
-    service_name="Memory",
-    check_ruleset_name="netscaler_mem",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41",
         oids=["2", "4"],
     ),
+    service_name="Memory",
+    discovery_function=inventory_netscaler_mem,
+    check_function=check_netscaler_mem,
+    check_ruleset_name="netscaler_mem",
 )

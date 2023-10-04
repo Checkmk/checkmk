@@ -8,26 +8,21 @@
 
 import collections
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "LvmLvsEntry", ["data", "meta"]
 )
 
 
-def parse_lvm_lvs(info):
-    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ""}
+def parse_lvm_lvs(string_table):
+    possible_items = {f"{line[1]}/{line[4]}" for line in string_table if line[4] != ""}
 
     parsed = {}
-    for line in info:
-        item = "%s/%s" % (line[1], line[0])
+    for line in string_table:
+        item = f"{line[1]}/{line[0]}"
         if item not in possible_items:
             continue
 
@@ -38,29 +33,35 @@ def parse_lvm_lvs(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_lvm_lvs(item, params, entry):
+def check_lvm_lvs(item, params, parsed):
+    if not (entry := parsed.get(item)):
+        return
+
     yield check_levels(
         entry.data,
         "data_usage",
         params["levels_data"],
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Data usage",
     )
     yield check_levels(
         entry.meta,
         "meta_usage",
         params["levels_meta"],
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Meta usage",
     )
 
 
+def discover_lvm_lvs(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["lvm_lvs"] = LegacyCheckDefinition(
     parse_function=parse_lvm_lvs,
-    discovery_function=discover(),
-    check_function=check_lvm_lvs,
     service_name="LVM LV Pool %s",
+    discovery_function=discover_lvm_lvs,
+    check_function=check_lvm_lvs,
     check_ruleset_name="lvm_lvs_pools",
     check_default_parameters={
         "levels_data": (80.0, 90.0),

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional, Tuple
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -12,7 +12,7 @@ from .utils.fortinet import DETECT_FORTIMAIL
 Section = Mapping[str, float]
 
 
-def parse_fortimail_cpu_load(string_table: StringTable) -> Optional[Section]:
+def parse_fortimail_cpu_load(string_table: StringTable) -> Section | None:
     """
     >>> parse_fortimail_cpu_load([["5"]])
     {'cpu_load': 5.0}
@@ -25,7 +25,7 @@ def discovery_fortimail_cpu_load(section: Section) -> DiscoveryResult:
 
 
 def check_fortimail_cpu_load(
-    params: Mapping[str, Optional[Tuple[float, float]]],
+    params: Mapping[str, tuple[float, float] | None],
     section: Section,
 ) -> CheckResult:
     yield from check_levels(

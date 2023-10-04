@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple, TypedDict
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -71,7 +74,7 @@ netscaler_vserver_entitytypes = {
 
 
 class VServer(TypedDict, total=False):
-    service_state: Tuple[int, str]
+    service_state: tuple[int, str]
     entity_service_type: str
     protocol: str
     socket: str
@@ -85,7 +88,7 @@ class VServer(TypedDict, total=False):
 Section = Mapping[str, VServer]
 
 
-def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
+def _to_vserver(line: Iterable[str]) -> tuple[str, VServer]:
     """
     >>> import pprint
     >>> pprint.pprint(_to_vserver([
@@ -120,7 +123,7 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
             svr_entitytype, "unknown (%s)" % svr_entitytype
         ),
         "protocol": netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
-        "socket": "%s:%s" % (ip, port),
+        "socket": f"{ip}:{port}",
         "request_rate": int(request_rate),
         "rx_bytes": int(rx_bytes),
         "tx_bytes": int(tx_bytes),
@@ -130,7 +133,7 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
     return full_name or name, vserver
 
 
-def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Section:
+def parse_netscaler_vserver(string_table: list[type_defs.StringTable]) -> Section:
     """
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[
@@ -321,7 +324,7 @@ def check_netscaler_vserver(
 def cluster_check_netscaler_vserver(
     item: str,
     params: Mapping[str, Any],
-    section: Mapping[str, Optional[Section]],
+    section: Mapping[str, Section | None],
 ) -> type_defs.CheckResult:
     """
     >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}

@@ -8,17 +8,17 @@ import time
 
 import cmk.utils.render
 import cmk.utils.tty as tty
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import tmp_dir
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine import SourceType
-from cmk.checkengine.check_table import LegacyCheckParameters
+from cmk.checkengine.fetcher import SourceType
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config
@@ -98,11 +98,10 @@ def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
     return "No agent"
 
 
-def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
-    config_cache = config.get_config_cache()
-
+def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
+    # pylint: disable=too-many-branches
     out.output("\n")
-    if config_cache.is_cluster(hostname):
+    if hostname in config_cache.all_configured_clusters():
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise RuntimeError()
@@ -114,7 +113,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        hostname, family=config_cache.default_address_family(hostname)
+        config_cache, hostname, family=config_cache.default_address_family(hostname)
     )
 
     addresses: str | None = ""
@@ -124,6 +123,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
         try:
             secondary = str(
                 _ip_address_for_dump_host(
+                    config_cache,
                     hostname,
                     family=config_cache.default_address_family(hostname),
                 )
@@ -152,7 +152,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
-    if config_cache.is_cluster(hostname):
+    if hostname in config_cache.all_configured_clusters():
         parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:
             raise RuntimeError()
@@ -236,16 +236,16 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
 
 
 def _ip_address_for_dump_host(
+    config_cache: ConfigCache,
     host_name: HostName,
     *,
     family: socket.AddressFamily,
 ) -> HostAddress | None:
-    config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception:
         return (
             HostAddress("")
-            if config_cache.is_cluster(host_name)
+            if host_name in config_cache.all_configured_clusters()
             else ip_lookup.fallback_ip_for(family)
         )

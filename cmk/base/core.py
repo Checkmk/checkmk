@@ -17,12 +17,12 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
-import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
+from cmk.base.config import ConfigCache
 from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
@@ -51,6 +51,7 @@ class CoreAction(enum.Enum):
 
 
 def do_reload(
+    config_cache: ConfigCache,
     core: MonitoringCore,
     hosts_to_update: set[HostName] | None = None,
     *,
@@ -58,6 +59,7 @@ def do_reload(
     duplicates: Sequence[HostName],
 ) -> None:
     do_restart(
+        config_cache,
         core,
         action=CoreAction.RELOAD,
         hosts_to_update=hosts_to_update,
@@ -67,6 +69,7 @@ def do_reload(
 
 
 def do_restart(
+    config_cache: ConfigCache,
     core: MonitoringCore,
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
@@ -79,7 +82,7 @@ def do_restart(
         with activation_lock(mode=locking_mode):
             core_config.do_create_config(
                 core=core,
-                config_cache=config.get_config_cache(),
+                config_cache=config_cache,
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
                 skip_config_locking_for_bakery=skip_config_locking_for_bakery,

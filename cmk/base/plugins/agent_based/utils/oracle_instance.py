@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Literal, Mapping, Optional, Union
+from collections.abc import Mapping
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -34,21 +35,21 @@ class Instance(BaseModel):
     version: str
     openmode: str
     logins: str
-    archiver: Optional[str] = None
-    up_seconds: Optional[int] = None
-    log_mode: Optional[str] = None
-    database_role: Optional[str] = None
-    force_logging: Optional[str] = None
-    name: Optional[str] = None
-    db_creation_time: Optional[str] = None
+    archiver: str | None = None
+    up_seconds: int | None = None
+    log_mode: str | None = None
+    database_role: str | None = None
+    force_logging: str | None = None
+    name: str | None = None
+    db_creation_time: str | None = None
     pluggable: str = "FALSE"
-    con_id: Optional[str] = None
-    pname: Optional[str] = None
-    popenmode: Optional[str] = None
-    prestricted: Optional[str] = None
-    ptotal_size: Optional[int] = None
-    pup_seconds: Optional[int] = None
-    host_name: Optional[str] = None
+    con_id: str | None = None
+    pname: str | None = None
+    popenmode: str | None = None
+    prestricted: str | None = None
+    ptotal_size: int | None = None
+    pup_seconds: int | None = None
+    host_name: str | None = None
     old_agent: bool = False
 
     @property
@@ -75,4 +76,4 @@ class Instance(BaseModel):
         return f"{self.name}.{self.pname}" if self.pdb else str(self.name)
 
 
-Section = Mapping[str, Union[InvalidData, GeneralError, Instance]]
+Section = Mapping[str, InvalidData | GeneralError | Instance]

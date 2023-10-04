@@ -36,7 +36,7 @@ def build(Map args) {
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
                 "call run.cmd --all --sign tribe29.pfx ${args.PASSWORD}",
-                "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe,windows_files_hashes.txt"] :
+                "cmk-agent-ctl.exe,check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,check_mk.yml,watest32.exe,watest64.exe,unit_tests_results.zip,OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe,robotmk_ext.exe,windows_files_hashes.txt"] :
             (args.TARGET == "agent_no_sign") ? [
                  "agents/wnx",
                  "call run.cmd --all",
@@ -45,6 +45,10 @@ def build(Map args) {
                 "packages/cmk-agent-ctl",
                 "call run.cmd --all",
                  ""] :
+            (args.TARGET == "check_sql_no_sign") ? [
+                "packages/check-sql",
+                "call run.cmd --all",
+                 "check-sql.exe"] :
             (args.TARGET == "test_unit") ? [
                  "agents/wnx",
                  "call run.cmd --test",
@@ -56,7 +60,7 @@ def build(Map args) {
             raise("${args.TARGET} is not known!")
         )
 
-        timeout(time: 15, unit: 'MINUTES') {
+        timeout(time: 30, unit: 'MINUTES') {
             dir(subdir) {
                 bat(command);
             }

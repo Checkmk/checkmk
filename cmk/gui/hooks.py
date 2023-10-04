@@ -41,6 +41,11 @@ def register_builtin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=True)
 
 
+# TODO: Kept for compatibility with pre-1.6 Setup plugins
+def register_hook(name: str, func: Callable) -> None:
+    register_from_plugin(name, func)
+
+
 def register_from_plugin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=False)
 

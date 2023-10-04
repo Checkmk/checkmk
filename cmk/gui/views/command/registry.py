@@ -33,6 +33,7 @@ def register_legacy_command(spec: dict[str, Any]) -> None:
             "_spec": spec,
             "ident": property(lambda s: s._ident),
             "title": property(lambda s: s._spec["title"]),
+            "confirm_button": property(lambda s: s._spec.get("confirm_button", "Submit")),
             "permission": property(lambda s: permission_registry[s._spec["permission"]]),
             "tables": property(lambda s: s._spec["tables"]),
             "render": lambda s: s._spec["render"](),

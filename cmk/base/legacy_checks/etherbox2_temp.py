@@ -32,7 +32,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # suggested by customer
 
 
-def parse_etherbox2_temp(info):
+def parse_etherbox2_temp(string_table):
     # We have to use xxx.7.1.2.a to know if a temperature sensor
     # is connected:
     # - if oid(xxx.7.1.2.{a}) == 5.fff and oid(xxx.7.1.2.{a+1}) == 2.fff
@@ -42,7 +42,7 @@ def parse_etherbox2_temp(info):
     # Furthermore we cannot only use xxx.9.1.2.{a} < 0 (or something like that)
     # because the temperature can drop below 0.
     parsed = {}
-    sensor_indicators, sensors = info
+    sensor_indicators, sensors = string_table
     for sensor_index, sensor in enumerate(sensors):
         indicator_index = 2 * sensor_index
         if (
@@ -68,10 +68,6 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
     detect=all_of(
         equals(".1.3.6.1.2.1.1.1.0", ""), contains(".1.3.6.1.4.1.14848.2.1.1.1.0", "Version 1.2")
     ),
-    parse_function=parse_etherbox2_temp,
-    discovery_function=inventory_etherbox2_temp,
-    check_function=check_etherbox2_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14848.2.1.7.1",
@@ -82,6 +78,10 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2"],
         ),
     ],
+    parse_function=parse_etherbox2_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_etherbox2_temp,
+    check_function=check_etherbox2_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),

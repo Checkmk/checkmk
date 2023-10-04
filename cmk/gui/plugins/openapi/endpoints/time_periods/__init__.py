@@ -16,10 +16,8 @@ import http.client
 from collections.abc import Mapping
 from typing import Any
 
-from marshmallow.utils import from_iso_time
-
-import cmk.utils.defines as defines
-from cmk.utils.timeperiod import TimeperiodSpec
+import cmk.utils.dateutils as dateutils
+from cmk.utils.timeperiod import TimeperiodSpec, TimeperiodSpecs
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -35,11 +33,13 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod
 from cmk.gui.watolib.timeperiods import (
     delete_timeperiod,
     load_timeperiod,
     load_timeperiods,
-    save_timeperiod,
+    modify_timeperiod,
+    TimePeriodBuiltInError,
     TimePeriodInUseError,
     TimePeriodNotFoundError,
 )
@@ -98,7 +98,7 @@ def create_timeperiod(params: Mapping[str, Any]) -> Response:
     time_period = _to_checkmk_format(
         alias=body["alias"], periods=periods, exceptions=exceptions, exclude=body.get("exclude", [])
     )
-    save_timeperiod(name, time_period)
+    _create_timeperiod(name, time_period)
     return _serve_time_period(_get_time_period_domain_object(name, _to_api_format(time_period)))
 
 
@@ -128,7 +128,7 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
 
-    parsed_time_period = _to_api_format(time_period, internal_format=True)
+    parsed_time_period = _to_api_format(time_period)
 
     updated_time_period = _to_checkmk_format(
         alias=body.get("alias", parsed_time_period["alias"]),
@@ -139,7 +139,7 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
         exclude=body.get("exclude", parsed_time_period["exclude"]),
     )
     api_format_response = _to_api_format(updated_time_period)
-    save_timeperiod(name, updated_time_period)
+    modify_timeperiod(name, updated_time_period)
     return _serve_time_period(_get_time_period_domain_object(name, api_format_response))
 
 
@@ -151,7 +151,7 @@ def update_timeperiod(params: Mapping[str, Any]) -> Response:
     etag="input",
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
-    additional_status_codes=[409],
+    additional_status_codes=[405, 409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a time period"""
@@ -162,6 +162,12 @@ def delete(params: Mapping[str, Any]) -> Response:
         delete_timeperiod(name)
     except TimePeriodNotFoundError:
         return time_period_not_found_problem(name)
+    except TimePeriodBuiltInError:
+        return problem(
+            status=405,
+            title="Built-in time periods can not be deleted",
+            detail=f"The built-in time period '{name}' cannot be deleted.",
+        )
     except TimePeriodInUseError as e:
         return problem(
             status=409,
@@ -222,7 +228,7 @@ def _serve_time_period(time_period: DomainObject) -> Response:
 
 
 def _to_api_format(  # type: ignore[no-untyped-def]
-    time_period: TimeperiodSpec, builtin_period: bool = False, internal_format: bool = False
+    time_period: TimeperiodSpec, builtin_period: bool = False
 ):
     """Convert time_period to API format as specified in request schema
 
@@ -231,8 +237,6 @@ def _to_api_format(  # type: ignore[no-untyped-def]
             time period which has the internal checkmk format
         builtin_period:
             bool specifying if the time period is a built-in time period
-        internal_format:
-            bool which determines if the time ranges should be compatible for internal processing
 
     Examples:
         >>> _to_api_format({'alias': 'Test All days 8x5', '2021-04-01': [('14:00', '15:00')],
@@ -245,22 +249,23 @@ def _to_api_format(  # type: ignore[no-untyped-def]
     """
     time_period_readable: dict[str, Any] = {"alias": time_period["alias"]}
     if not builtin_period:
-        time_period_readable["exclude"] = time_period.get("exclude", [])
+        time_period_readable["exclude"] = []
+        all_time_periods = load_timeperiods()
+        time_period_readable["exclude"] = [
+            _time_period_alias_from_name(time_period_name, all_time_periods)  # type: ignore
+            for time_period_name in time_period.get("exclude", [])  # type: ignore
+        ]
 
     active_time_ranges = _active_time_ranges_readable(
-        {key: time_period[key] for key in time_period if key in defines.weekday_ids()}
+        {key: time_period[key] for key in time_period if key in dateutils.weekday_ids()}
     )
     exceptions = _exceptions_readable(
         {
             key: time_period[key]
             for key in time_period
-            if key not in ["alias", "exclude", *defines.weekday_ids()]
+            if key not in ["alias", "exclude", *dateutils.weekday_ids()]
         }
     )
-
-    if internal_format:
-        active_time_ranges = _convert_to_dt(active_time_ranges)
-        exceptions = _convert_to_dt(exceptions)
 
     time_period_readable["active_time_ranges"] = active_time_ranges
     time_period_readable["exceptions"] = exceptions
@@ -279,13 +284,13 @@ def _daily_time_ranges(active_time_ranges: list[dict[str, Any]]) -> dict[str, li
 
     Examples:
         >>> _daily_time_ranges(
-        ... [{"day": "monday", "time_ranges": [{"start": dt.time(12), "end": dt.time(14)}]}])
+        ... [{"day": "monday", "time_ranges": [{"start": "12:00", "end": "14:00"}]}])
         {'monday': [('12:00', '14:00')], 'tuesday': [], 'wednesday': [], 'thursday': [], \
 'friday': [], 'saturday': [], 'sunday': []}
 
     """
 
-    result: dict[str, list[TIME_RANGE]] = {day: [] for day in defines.weekday_ids()}
+    result: dict[str, list[TIME_RANGE]] = {day: [] for day in dateutils.weekday_ids()}
     for active_time_range in active_time_ranges:
         period = active_time_range["day"]  # weekday or week
         time_ranges = [
@@ -323,19 +328,6 @@ def _active_time_ranges_readable(days: dict[str, Any]) -> list[dict[str, Any]]:
             temp.append({"start": time_range[0], "end": time_range[1]})
         if temp:
             result.append({"day": day, "time_ranges": temp})
-    return result
-
-
-def _convert_to_dt(exceptions: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    result = []
-
-    def convert_to_dt(time_range: dict[str, str]) -> dict[str, dt.time]:
-        return {k: from_iso_time(v) for k, v in time_range.items()}
-
-    for exception in exceptions:
-        period = {k: v for k, v in exception.items() if k != "time_ranges"}
-        period["time_ranges"] = [convert_to_dt(entry) for entry in exception["time_ranges"]]
-        result.append(period)
     return result
 
 
@@ -378,12 +370,12 @@ def _time_readable(mk_time: str) -> str:
     return f"{mk_time[0]}:{minutes}"
 
 
-def _format_time_range(time_range: dict[str, dt.time]) -> TIME_RANGE:
+def _format_time_range(time_range: dict[str, str]) -> TIME_RANGE:
     """Convert time iso format to Checkmk format"""
     return _mk_time_format(time_range["start"]), _mk_time_format(time_range["end"])
 
 
-def _mk_time_format(time_or_str: str | dt.time) -> str:
+def _mk_time_format(time_string: str) -> str:
     """
 
     Examples:
@@ -395,21 +387,10 @@ def _mk_time_format(time_or_str: str | dt.time) -> str:
         '09:00'
 
     """
-    if isinstance(time_or_str, str):
-        parts = time_or_str.split(":")
-        try:
-            time = dt.time(int(parts[0]), int(parts[1]))
-        except ValueError:
-            raise ProblemException(
-                400,
-                title="Invalid time format",
-                detail=f"{time_or_str} is not a valid time format.",
-            )
-    elif isinstance(time_or_str, dt.time):
-        time = time_or_str
-    else:
-        raise NotImplementedError()
-    return f"{time.hour:02d}:{time.minute:02d}"
+    time_components = time_string.split(":")
+    hours = time_components[0]
+    minutes = time_components[1]
+    return f"{hours}:{minutes}"
 
 
 def _mk_date_format(exception_date: dt.date) -> str:
@@ -433,10 +414,37 @@ def _to_checkmk_format(
     exceptions: dict[str, Any],
     exclude: list[str],
 ) -> TimeperiodSpec:
-    time_period: dict[str, Any] = {"alias": alias}
+    time_period: dict[str, Any] = {"alias": alias, "exclude": []}
     time_period.update(exceptions)
     time_period.update(periods)
-    if exclude is None:
-        exclude = []
-    time_period["exclude"] = exclude
+
+    if exclude:
+        time_periods_by_alias: dict[str, str] = {
+            time_period["alias"]: name for name, time_period in load_timeperiods().items()  # type: ignore
+        }
+
+        time_period["exclude"] = [
+            _time_period_name_from_alias(time_period_alias, time_periods_by_alias)
+            for time_period_alias in exclude
+        ]
+
     return time_period
+
+
+def _time_period_name_from_alias(alias: str, time_periods_by_alias: Mapping[str, str]) -> str:
+    if alias not in time_periods_by_alias:
+        raise TimePeriodNotFoundError(alias)
+
+    return time_periods_by_alias[alias]
+
+
+def _time_period_alias_from_name(name: str, time_periods: TimeperiodSpecs) -> str:
+    if name not in time_periods:
+        raise TimePeriodNotFoundError(name)
+
+    alias = time_periods[name]["alias"]
+
+    if isinstance(alias, list):
+        raise ValueError("Alias is not a string")
+
+    return alias

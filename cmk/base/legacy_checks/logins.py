@@ -31,8 +31,8 @@ def check_logins(_no_item, params, info):
 
 
 check_info["logins"] = LegacyCheckDefinition(
-    check_function=check_logins,
-    discovery_function=inventory_logins,
     service_name="Logins",
+    discovery_function=inventory_logins,
+    check_function=check_logins,
     check_ruleset_name="logins",
 )

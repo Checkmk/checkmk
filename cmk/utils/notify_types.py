@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Literal, Mapping, NewType, Sequence, TypedDict, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, NewType
 
+from typing_extensions import TypedDict
+
+from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs.host import HostName
 
 __all__ = [
     # Types
@@ -416,7 +419,7 @@ SortOrder = Literal[
 NoProxy = tuple[Literal["no_proxy"], None]
 EnvProxy = tuple[Literal["environment"], Literal["environment"]]
 UrlProxy = tuple[Literal["url"], str]
-ProxyUrl = Union[NoProxy, EnvProxy, UrlProxy]
+ProxyUrl = NoProxy | EnvProxy | UrlProxy
 
 WebHookUrl = tuple[
     Literal["webhook_url", "store"],

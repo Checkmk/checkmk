@@ -1,0 +1,33 @@
+Title: user: read permissions are now checked in the request schema before delete/edit/create user
+Class: security
+Compatible: incomp
+Component: rest-api
+Date: 1686842665
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+Prior to this Werk an authenticated user was able to enumerate username with the RestAPI.
+
+We found this vulnerability internally.
+
+<b>Affected Versions</b>:
+LI: 2.2.0
+
+<b>Indicators of Compromise</b>:
+You can check <tt>var/log/apache/access_log</tt> for a unusual amount of requests to the user_config RestAPI endpoints.
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 4.4 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N</tt>.
+
+We assigned CVE-2023-22359 to this vulnerability.
+
+<b>Changes</b>:
+When calling either of the following endpoints, a 401 will be returned if
+the client user doesn't have permission to read users.
+POST /domain-types/user_config/collections/all
+PUT /objects/user_config/{username}
+DELETE /objects/user_config/{username}

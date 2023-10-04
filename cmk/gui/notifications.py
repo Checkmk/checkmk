@@ -29,7 +29,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     permission_section_registry,
@@ -41,6 +41,10 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_page
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("clear_failed_notifications")(ClearFailedNotificationPage)
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -191,7 +195,6 @@ def _may_see_failed_notifications() -> bool:
     )
 
 
-@page_registry.register_page("clear_failed_notifications")
 class ClearFailedNotificationPage(Page):
     def __init__(self) -> None:
         if not _may_see_failed_notifications():

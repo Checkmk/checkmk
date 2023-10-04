@@ -32,8 +32,7 @@ def check_bintec_cpu(_no_item, params, info):
     yield 0, "system: %.1f%%" % system
     yield 0, "streams: %.1f%%" % streams, [("streams", streams)]
 
-    for res in check_cpu_util(util, params):
-        yield res
+    yield from check_cpu_util(util, params)
 
 
 # Migration NOTE: Create a separate section, but a common check plugin for
@@ -42,12 +41,12 @@ def check_bintec_cpu(_no_item, params, info):
 # Migration via cmk/update_config.py!
 check_info["bintec_cpu"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4."),
-    discovery_function=inventory_bintec_cpu,
-    check_function=check_bintec_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.17.4.1.1",
         oids=["15", "16", "17"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_bintec_cpu,
+    check_function=check_bintec_cpu,
     check_ruleset_name="cpu_utilization_os",
 )

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional, Tuple
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import (
     all_of,
@@ -27,7 +28,7 @@ class Section(NamedTuple):
     z1: int
 
 
-def parse_zertificon_mail_queues(string_table: StringTable) -> Optional[Section]:
+def parse_zertificon_mail_queues(string_table: StringTable) -> Section | None:
     """
     >>> parse_zertificon_mail_queues([["1", "2", "3", "4", "5", "6", "7"]])
     Section(postfix=1, incoming=2, active=3, deferred=4, hold=5, maildrop=6, z1=7)
@@ -74,7 +75,7 @@ def discover_zertificon_mail_queues(section: Section) -> DiscoveryResult:
 
 
 def check_zertificon_mail_queues(
-    params: Mapping[str, Tuple[int, int]],
+    params: Mapping[str, tuple[int, int]],
     section: Section,
 ) -> CheckResult:
     yield from check_levels(

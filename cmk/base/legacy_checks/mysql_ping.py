@@ -6,7 +6,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -26,17 +26,23 @@ def parse_mysql_ping(string_table: StringTable) -> Mapping[str, Any]:
     return mysql_parse_per_item(_parse_mysql_ping_item)(string_table)
 
 
-@get_parsed_item_data
-def check_mysql_ping(_no_item, _no_params, data):
+def check_mysql_ping(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     message = " ".join(data[0])
     if message == "mysqld is alive":
-        return 0, "MySQL Daemon is alive"
-    return 2, message
+        yield 0, "MySQL Daemon is alive"
+    else:
+        yield 2, message
+
+
+def discover_mysql_ping(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["mysql_ping"] = LegacyCheckDefinition(
     parse_function=parse_mysql_ping,
-    discovery_function=discover(),
-    check_function=check_mysql_ping,
     service_name="MySQL Instance %s",
+    discovery_function=discover_mysql_ping,
+    check_function=check_mysql_ping,
 )

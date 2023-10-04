@@ -7,17 +7,19 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,
-    CheckPreviewEntry,
     result_type_registry,
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
+
+from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations
 
@@ -25,7 +27,9 @@ from cmk.base.automations import automations
 def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
-    automations_missing = {"bake-agents"} if cmk_version.is_raw_edition() else set()
+    automations_missing = (
+        {"bake-agents"} if cmk_version.edition() is cmk_version.Edition.CRE else set()
+    )
     assert set(result_type_registry) - automations_missing == set(automations._automations)
 
 

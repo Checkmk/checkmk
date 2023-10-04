@@ -8,6 +8,14 @@
 
 checkname = "msexch_autodiscovery"
 
+
+mock_item_state = {
+    "": {
+        "RequestsPersec_": (0, 19086),
+    },
+}
+
+
 info = [
     [
         "Caption",

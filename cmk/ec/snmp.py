@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from logging import Logger
 from pathlib import Path
 from typing import Any
@@ -24,6 +24,7 @@ import pysnmp.smi.rfc1902  # type: ignore[import]
 import pysnmp.smi.view  # type: ignore[import]
 from pyasn1.type.base import SimpleAsn1Type
 
+import cmk.utils.paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import Age
 
@@ -34,28 +35,25 @@ VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]
 VarBinds = Iterable[VarBind]
 
 
-class SNMPTrapEngine:
+class SNMPTrapParser:
     # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
-    class ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
+    class _ECNotificationReceiver(pysnmp.entity.rfc3413.ntfrcv.NotificationReceiver):
         pduTypes = (pysnmp.proto.api.v1.TrapPDU.tagSet, pysnmp.proto.api.v2c.SNMPv2TrapPDU.tagSet)
 
-    def __init__(
-        self,
-        settings: Settings,
-        config: Config,
-        logger: Logger,
-        callback: Callable[[Iterable[tuple[str, str]], str], None],
-    ) -> None:
+    def __init__(self, settings: Settings, config: Config, logger: Logger) -> None:
         self._logger = logger
         if settings.options.snmptrap_udp is None:
             return
         self.snmp_engine = pysnmp.entity.engine.SnmpEngine()
         self._initialize_snmp_credentials(config)
-        self._snmp_receiver = SNMPTrapEngine.ECNotificationReceiver(
-            self.snmp_engine, self._handle_snmptrap
-        )
+        # NOTE: pysnmp has a really strange notification receiver API: The constructor call below
+        # effectively registers the callback (2nd argument) at the SNMP engine. The resulting
+        # receiver instance is kept alive by the registration itself, so there is no need to store
+        # it anywhere here. The callback stores the parsed trap in _varbinds_and_ipaddress when
+        # parse() is called.
+        SNMPTrapParser._ECNotificationReceiver(self.snmp_engine, self._handle_snmptrap)
+        self._varbinds_and_ipaddress: tuple[Iterable[tuple[str, str]], str] | None = None
         self._snmp_trap_translator = SNMPTrapTranslator(settings, config, logger)
-        self._callback = callback
 
         # Hand over our logger to PySNMP
         pysnmp.debug.setLogger(pysnmp.debug.Debug("all", printer=logger.debug))
@@ -153,19 +151,22 @@ class SNMPTrapEngine:
                     securityEngineId=pysnmp.proto.api.v2c.OctetString(hexValue=engine_id),
                 )
 
-    def process_snmptrap(self, message: bytes, sender_address: tuple[str, int]) -> None:
-        """Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
-        and processing. PySNMP is calling the registered call back (self._handle_snmptrap) back."""
+    def parse(
+        self, data: bytes, sender_address: tuple[str, int]
+    ) -> tuple[Iterable[tuple[str, str]], str] | None:
+        """Let PySNMP parse the given trap data. The _handle_snmptrap() callback below collects the result."""
         self._logger.log(
             VERBOSE, "Trap received from %s:%d. Checking for acceptance now.", sender_address
         )
+        self._varbinds_and_ipaddress = None
         self.snmp_engine.setUserContext(sender_address=sender_address)
         self.snmp_engine.msgAndPduDsp.receiveMessage(
             snmpEngine=self.snmp_engine,
             transportDomain=(),
             transportAddress=sender_address,
-            wholeMsg=message,
+            wholeMsg=data,
         )
+        return self._varbinds_and_ipaddress
 
     def _handle_snmptrap(
         self,
@@ -180,7 +181,8 @@ class SNMPTrapEngine:
         ipaddress: str = self.snmp_engine.getUserContext("sender_address")[0]
         self._log_snmptrap_details(context_engine_id, context_name, var_binds, ipaddress)
         trap = self._snmp_trap_translator.translate(ipaddress, var_binds)
-        self._callback(trap, ipaddress)
+        # NOTE: There can be only one trap per PDU, so we don't run into the risk of overwriting previous info.
+        self._varbinds_and_ipaddress = trap, ipaddress
 
     def _log_snmptrap_details(
         self,
@@ -192,7 +194,7 @@ class SNMPTrapEngine:
         if self._logger.isEnabledFor(VERBOSE):
             self._logger.log(
                 VERBOSE,
-                'Trap accepted from %s (ContextEngineId "%s", SNMPContextName "%s")',
+                'Trap accepted from %s (ContextEngineId "%s", SNMPContext "%s")',
                 ipaddress,
                 context_engine_id.prettyPrint(),
                 context_name.prettyPrint(),
@@ -237,23 +239,20 @@ class SNMPTrapTranslator:
         self._logger = logger
         match config["translate_snmptraps"]:
             case False:
+                self._mib_resolver: pysnmp.smi.view.MibViewController | None = None
                 self.translate = self._translate_simple
-            case (True, {}):
-                self._init_translate_via_mibs(
-                    settings.paths.compiled_mibs_dir.value,
-                    load_texts=False,
+            case (True, {**extra}) if not extra:  # matches empty dict
+                self._mib_resolver = self._construct_resolver(
+                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=False
                 )
+                self.translate = self._translate_via_mibs
             case (True, {"add_description": True}):
-                self._init_translate_via_mibs(
-                    settings.paths.compiled_mibs_dir.value,
-                    load_texts=True,
+                self._mib_resolver = self._construct_resolver(
+                    self._logger, settings.paths.compiled_mibs_dir.value, load_texts=True
                 )
+                self.translate = self._translate_via_mibs
             case _:
                 raise Exception("invalid SNMP trap translation")
-
-    def _init_translate_via_mibs(self, path: Path, *, load_texts: bool) -> None:
-        self._mib_resolver = self._construct_resolver(self._logger, path, load_texts=load_texts)
-        self.translate = self._translate_via_mibs
 
     @staticmethod
     def _construct_resolver(
@@ -263,7 +262,12 @@ class SNMPTrapTranslator:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
             # we need compiled Mib Dir and explicit system Mib Dir
-            for source in [str(mibs_dir), "/usr/share/snmp/mibs"]:
+            for source in [
+                cmk.utils.paths.local_mib_dir,
+                cmk.utils.paths.mib_dir,
+                "/usr/share/snmp/mibs",
+                str(mibs_dir),
+            ]:
                 builder.addMibSources(*[pysnmp.smi.builder.DirMibSource(source)])
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs

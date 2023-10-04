@@ -24,16 +24,16 @@ def check_checkpoint_fan(item, params, info):
     for name, value, unit, dev_status in info:
         if format_item_checkpoint_fan(name) == item:
             state, state_readable = checkpoint_sensorstatus_to_nagios[dev_status]
-            yield state, "Status: %s, %s %s" % (state_readable, value, unit)
+            yield state, f"Status: {state_readable}, {value} {unit}"
 
 
 check_info["checkpoint_fan"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_fan,
-    discovery_function=inventory_checkpoint_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.2.1",
         oids=["2", "3", "4", "6"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_checkpoint_fan,
+    check_function=check_checkpoint_fan,
 )

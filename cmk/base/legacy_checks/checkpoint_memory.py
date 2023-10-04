@@ -44,13 +44,13 @@ def check_checkpoint_memory(item, params, info):
 
 check_info["checkpoint_memory"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_checkpoint_memory,
-    check_function=check_checkpoint_memory,
-    service_name="Memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.4",
         oids=["3", "4"],
     ),
+    service_name="Memory",
+    discovery_function=inventory_checkpoint_memory,
+    check_function=check_checkpoint_memory,
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

@@ -51,7 +51,7 @@ def check_3ware_units(item, _no_params, info):
             if complete != "-":
                 complete_txt = " complete: %s%%" % complete
 
-            infotext = "%s (type: %s, size: %sGB%s)" % (status, unit_type, size, complete_txt)
+            infotext = f"{status} (type: {unit_type}, size: {size}GB{complete_txt})"
 
             if status in ["OK", "VERIFYING"]:
                 return (0, "unit status is " + infotext)
@@ -64,8 +64,8 @@ def check_3ware_units(item, _no_params, info):
 # declare the check to Checkmk
 
 check_info["3ware_units"] = LegacyCheckDefinition(
-    check_function=check_3ware_units,
-    discovery_function=inventory_3ware_units,
     service_name="RAID 3ware unit %s",
+    discovery_function=inventory_3ware_units,
+    check_function=check_3ware_units,
     check_ruleset_name="raid",
 )

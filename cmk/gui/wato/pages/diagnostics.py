@@ -37,6 +37,7 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
     serialize_wato_parameters,
 )
+from cmk.utils.site import omd_site
 
 from cmk.automations.results import CreateDiagnosticsDumpResult
 
@@ -48,7 +49,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -59,8 +60,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry
-from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import get_activation_site_choices
@@ -77,6 +77,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
+from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
@@ -86,7 +87,11 @@ _CHECKMK_FILES_NOTE = _(
 )
 
 
-@mode_registry.register
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+    page_registry.register_page("download_diagnostics_dump")(PageDownloadDiagnosticsDump)
+    mode_registry.register(ModeDiagnostics)
+
+
 class ModeDiagnostics(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -315,7 +320,7 @@ class ModeDiagnostics(WatoMode):
             ),
         ]
 
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             elements.append(
                 (
                     OPT_PERFORMANCE_GRAPHS,
@@ -389,7 +394,7 @@ class ModeDiagnostics(WatoMode):
             ),
         ]
 
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             elements.append(
                 (
                     OPT_COMP_CMC,
@@ -627,9 +632,13 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         #        results.append(chunk_result)
 
         if len(results) > 1:
-            result = _merge_results(results)
+            result = _merge_results(site, results)
+            # The remote tarfiles will be downloaded and the link will point to the local site.
+            download_site_id = omd_site()
         elif len(results) == 1:
             result = results[0]
+            # When there is only one chunk, the download link will point to the remote site.
+            download_site_id = site
         else:
             job_interface.send_result_message(_("Got no result to create dump file"))
             return
@@ -640,7 +649,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
             tarfile_path = result.tarfile_path
             download_url = makeuri_contextless(
                 request,
-                [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],
+                [("site", download_site_id), ("tarfile_name", str(Path(tarfile_path).name))],
                 filename="download_diagnostics_dump.py",
             )
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
@@ -652,7 +661,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
             job_interface.send_result_message(_("Creating dump file failed"))
 
 
-def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-untyped-def]
+def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-untyped-def]
     output: str = ""
     tarfile_created: bool = False
     tarfile_paths: list[str] = []
@@ -660,7 +669,14 @@ def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-u
         output += result.output
         if result.tarfile_created:
             tarfile_created = True
-            tarfile_paths.append(result.tarfile_path)
+            if site_is_local(site):
+                tarfile_localpath = result.tarfile_path
+            else:
+                tarfile_localpath = _get_tarfile_from_remotesite(
+                    SiteId(site),
+                    Path(result.tarfile_path).name,
+                )
+            tarfile_paths.append(tarfile_localpath)
 
     return CreateDiagnosticsDumpResult(
         output=output,
@@ -669,10 +685,15 @@ def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-u
     )
 
 
+def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str) -> str:
+    tarfile_localpath = _create_file_path()
+    with open(tarfile_localpath, "wb") as file:
+        file.write(_get_diagnostics_dump_file(site, tarfile_name))
+    return tarfile_localpath
+
+
 def _join_sub_tars(tarfile_paths: list[str]) -> str:
-    tarfile_path = str(
-        cmk.utils.paths.diagnostics_dir.joinpath(str(uuid.uuid4())).with_suffix(".tar.gz")
-    )
+    tarfile_path = _create_file_path()
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:
             with tarfile.open(name=filepath, mode="r:gz") as sub_tar:
@@ -684,7 +705,14 @@ def _join_sub_tars(tarfile_paths: list[str]) -> str:
     return tarfile_path
 
 
-@page_registry.register_page("download_diagnostics_dump")
+def _create_file_path() -> str:
+    return str(
+        cmk.utils.paths.diagnostics_dir.joinpath("sddump_" + str(uuid.uuid4())).with_suffix(
+            ".tar.gz"
+        )
+    )
+
+
 class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
         if not user.may("wato.diagnostics"):
@@ -694,25 +722,11 @@ class PageDownloadDiagnosticsDump(Page):
 
         site = SiteId(request.get_ascii_input_mandatory("site"))
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
-        file_content = self._get_diagnostics_dump_file(site, tarfile_name)
+        file_content = _get_diagnostics_dump_file(site, tarfile_name)
 
         response.set_content_type("application/x-tgz")
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, tarfile_name)
         response.set_data(file_content)
-
-    def _get_diagnostics_dump_file(self, site: SiteId, tarfile_name: str) -> bytes:
-        if site_is_local(site):
-            return _get_diagnostics_dump_file(tarfile_name)
-
-        raw_response = do_remote_automation(
-            get_site_config(site),
-            "diagnostics-dump-get-file",
-            [
-                ("tarfile_name", tarfile_name),
-            ],
-        )
-        assert isinstance(raw_response, bytes)
-        return raw_response
 
 
 @automation_command_registry.register
@@ -721,13 +735,28 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
         return "diagnostics-dump-get-file"
 
     def execute(self, api_request: str) -> bytes:
-        return _get_diagnostics_dump_file(api_request)
+        return _get_local_diagnostics_dump_file(api_request)
 
     def get_request(self) -> str:
         return request.get_ascii_input_mandatory("tarfile_name")
 
 
-def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
+def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str) -> bytes:
+    if site_is_local(site):
+        return _get_local_diagnostics_dump_file(tarfile_name)
+
+    raw_response = do_remote_automation(
+        get_site_config(site),
+        "diagnostics-dump-get-file",
+        [
+            ("tarfile_name", tarfile_name),
+        ],
+    )
+    assert isinstance(raw_response, bytes)
+    return raw_response
+
+
+def _get_local_diagnostics_dump_file(tarfile_name: str) -> bytes:
     _validate_diagnostics_dump_tarfile_name(tarfile_name)
     tarfile_path = cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name)
     with tarfile_path.open("rb") as f:

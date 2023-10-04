@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -108,7 +109,7 @@ def check_storeonce_clusterinfo_cluster(section: Section) -> CheckResult:
     for component in ("Cluster Health", "Replication Health"):
         yield Result(
             state=storeonce.STATE_MAP[section["%s Level" % component]],
-            notice="%s: %s" % (component, section[component]),
+            notice=f"{component}: {section[component]}",
         )
 
 

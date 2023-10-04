@@ -5,13 +5,14 @@
 
 import pytest
 
-from tests.testlib import Check
-
-from .checktestlib import CheckResult
+from cmk.base.legacy_checks.elasticsearch_cluster_health import (
+    check_elasticsearch_cluster_health,
+    check_elasticsearch_cluster_health_shards,
+    check_elasticsearch_cluster_health_tasks,
+    parse_elasticsearch_cluster_health,
+)
 
 pytestmark = pytest.mark.checks
-
-CHECK_NAME = "elasticsearch_cluster_health"
 
 
 @pytest.mark.parametrize(
@@ -37,29 +38,26 @@ CHECK_NAME = "elasticsearch_cluster_health"
                 ["task_max_waiting_in_queue_millis", "0"],
                 ["active_shards_percent_as_number", "100.0"],
             ],
-            CheckResult(
-                [
-                    (0, "Name: elasticsearch", None),
-                    (0, "Data nodes: 5", [("number_of_data_nodes", 5)]),
-                    (0, "Nodes: 5", [("number_of_nodes", 5)]),
-                    (1, "Status: yellow", None),
-                ]
-            ),
+            [
+                (0, "Name: elasticsearch"),
+                (0, "Data nodes: 5", [("number_of_data_nodes", 5, None, None)]),
+                (0, "Nodes: 5", [("number_of_nodes", 5, None, None)]),
+                (1, "Status: yellow"),
+            ],
         ),
         (
             {"green": 0, "red": 2, "yellow": 3},
             None,
             [["status", "yellow"]],
-            CheckResult(
-                (3, "Status: yellow (State changed by rule)", None),
-            ),
+            [
+                (3, "Status: yellow (State changed by rule)"),
+            ],
         ),
     ],
 )
 def test_check_function(parameters, item, info, expected_result):
-    check = Check(CHECK_NAME)
-    parsed = check.run_parse(info)
-    assert CheckResult(check.run_check(item, parameters, parsed)) == expected_result
+    parsed = parse_elasticsearch_cluster_health(info)
+    assert list(check_elasticsearch_cluster_health(item, parameters, parsed)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -121,9 +119,10 @@ def test_check_function(parameters, item, info, expected_result):
     ],
 )
 def test_shards_check_function(parameters, item, info, expected_result):
-    check = Check("elasticsearch_cluster_health.shards")
-    parsed = check.run_parse(info)
-    assert list(check.run_check(item, parameters, parsed)) == expected_result
+    parsed = parse_elasticsearch_cluster_health(info)
+    assert (
+        list(check_elasticsearch_cluster_health_shards(item, parameters, parsed)) == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -173,6 +172,7 @@ def test_shards_check_function(parameters, item, info, expected_result):
     ],
 )
 def test_tasks_check_function(parameters, item, info, expected_result):
-    check = Check("elasticsearch_cluster_health.tasks")
-    parsed = check.run_parse(info)
-    assert list(check.run_check(item, parameters, parsed)) == expected_result
+    parsed = parse_elasticsearch_cluster_health(info)
+    assert (
+        list(check_elasticsearch_cluster_health_tasks(item, parameters, parsed)) == expected_result
+    )

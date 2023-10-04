@@ -1,0 +1,12 @@
+Title: apc_symmetra: Improve wording in ruleset
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687507035
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The rule 'Levels of battery parameters after calibration' was actually referring to the time after diagnostics and not calibration.
+This has now been corrected and it's clearer what the rule refers to.

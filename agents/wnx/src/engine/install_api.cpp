@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 
-#include "install_api.h"
+#include "wnx/install_api.h"
 
 #include <msi.h>
 
@@ -12,11 +12,11 @@
 #include <ranges>
 #include <string>
 
-#include "cfg.h"
-#include "cma_core.h"
-#include "common/wtools.h"  // converts
-#include "logger.h"
+#include "common/wtools.h"   // converts
 #include "tools/_process.h"  // start process
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
 
 #pragma comment(lib, "msi.lib")
 namespace fs = std::filesystem;
@@ -545,7 +545,8 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         }
 
         auto command = eu.getCommand();
-        return {command, tools::RunStdCommand(command, false) != 0};
+        return {command,
+                tools::RunStdCommand(command, tools::WaitForEnd::no) != 0};
     } catch (const std::exception &e) {
         auto log_text = fmt::format(
             "Unexpected exception '{}' during attempt to execute agent update",

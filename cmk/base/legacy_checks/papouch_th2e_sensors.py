@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # .1.3.6.1.4.1.18248.20.1.2.1.1.3.3 0
 
 
-def parse_papouch_th2e_sensors(info):
+def parse_papouch_th2e_sensors(string_table):
     map_sensor_type = {
         "1": "temp",
         "2": "humidity",
@@ -52,7 +52,7 @@ def parse_papouch_th2e_sensors(info):
     }
 
     parsed = {}
-    for oidend, state, reading_str, unit in info:
+    for oidend, state, reading_str, unit in string_table:
         if state != "3":
             sensor_ty = map_sensor_type[oidend]
             sensor_unit = map_units[unit]
@@ -92,7 +92,7 @@ def check_papouch_th2e_sensors_temp(item, params, parsed, what):
         return check_temperature(
             reading,
             params,
-            "papouch_th2e_sensors_%s_%s" % (what, item),
+            f"papouch_th2e_sensors_{what}_{item}",
             dev_unit=unit,
             dev_status=state,
             dev_status_name=state_readable,
@@ -104,15 +104,15 @@ check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "th2e"), startswith(".1.3.6.1.2.1.1.2.0", ".0.10.43.6.1.4.1")
     ),
-    parse_function=parse_papouch_th2e_sensors,
-    discovery_function=lambda parsed: inventory_papouch_th2e_sensors_temp(parsed, "temp"),
-    check_function=lambda item, params, parsed: check_papouch_th2e_sensors_temp(
-        item, params, parsed, "temp"
-    ),
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.18248.20.1.2.1.1",
         oids=[OIDEnd(), "1", "2", "3"],
+    ),
+    parse_function=parse_papouch_th2e_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_papouch_th2e_sensors_temp(parsed, "temp"),
+    check_function=lambda item, params, parsed: check_papouch_th2e_sensors_temp(
+        item, params, parsed, "temp"
     ),
     check_ruleset_name="temperature",
 )
@@ -129,11 +129,12 @@ check_info["papouch_th2e_sensors"] = LegacyCheckDefinition(
 
 
 check_info["papouch_th2e_sensors.dewpoint"] = LegacyCheckDefinition(
+    service_name="Dew point %s",
+    sections=["papouch_th2e_sensors"],
     discovery_function=lambda parsed: inventory_papouch_th2e_sensors_temp(parsed, "dewpoint"),
     check_function=lambda item, params, parsed: check_papouch_th2e_sensors_temp(
         item, params, parsed, "dewpoint"
     ),
-    service_name="Dew point %s",
     check_ruleset_name="temperature",
 )
 
@@ -164,8 +165,9 @@ def check_papouch_th2e_sensors_humidity(item, params, parsed):
 
 
 check_info["papouch_th2e_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
+    sections=["papouch_th2e_sensors"],
     discovery_function=inventory_papouch_th2e_sensors_humidity,
     check_function=check_papouch_th2e_sensors_humidity,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )

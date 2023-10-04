@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
-from typing import Mapping
+from collections.abc import Mapping
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -52,31 +52,35 @@ def parse_alcatel_power(string_table: StringTable) -> Section:
     }
 
 
-@discover
-def inventory_alcatel_power(_oidend, device):
-    return (
-        device.power_type != alcatel_power_no_power_supply_info
-        and device.oper_state_readable != "not present"
+def discover_alcatel_power(section):
+    yield from (
+        (item, {})
+        for item, device in section.items()
+        if (
+            device.power_type != alcatel_power_no_power_supply_info
+            and device.oper_state_readable != "not present"
+        )
     )
 
 
-@get_parsed_item_data
-def check_alcatel_power(item, _no_params, device):
+def check_alcatel_power(item, _no_params, parsed):
+    if not (device := parsed.get(item)):
+        return
     if device.oper_state_readable == "up":
         state = 0
     else:
         state = 2
-    yield state, "[%s] Operational status: %s" % (device.power_type, device.oper_state_readable)
+    yield state, f"[{device.power_type}] Operational status: {device.oper_state_readable}"
 
 
 check_info["alcatel_power"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL,
-    parse_function=parse_alcatel_power,
-    check_function=check_alcatel_power,
-    discovery_function=inventory_alcatel_power,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.800.1.1.1.1.1.1.1",
         oids=[OIDEnd(), "2", "36"],
     ),
+    parse_function=parse_alcatel_power,
+    service_name="Power Supply %s",
+    discovery_function=discover_alcatel_power,
+    check_function=check_alcatel_power,
 )

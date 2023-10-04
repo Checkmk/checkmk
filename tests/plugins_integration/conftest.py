@@ -1,18 +1,19 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import logging
-from collections.abc import Generator
-from pathlib import Path
+import os
+import re
+from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.utils import execute
 
-LOGGER = logging.getLogger(__name__)
+from tests.plugins_integration import checks
+
+logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
@@ -20,110 +21,176 @@ def pytest_addoption(parser):
         "--update-checks",
         action="store_true",
         default=False,
-        help="Store checks-output files to be used as static references",
+        help="Store updated check output as static references",
     )
-
+    parser.addoption(
+        "--add-checks",
+        action="store_true",
+        default=False,
+        help="Store added check output as static references",
+    )
     parser.addoption(
         "--skip-cleanup",
         action="store_true",
         default=False,
-        help="Skip cleanup process after tests' execution",
+        help="Skip cleanup process after test execution",
+    )
+    parser.addoption(
+        "--skip-masking",
+        action="store_true",
+        default=False,
+        help="Skip regexp masking during check validation",
+    )
+    parser.addoption(
+        "--bulk-mode",
+        action="store_true",
+        default=False,
+        help="Enable bulk mode execution",
+    )
+    parser.addoption(
+        "--chunk-index",
+        action="store",
+        type=int,
+        default=0,
+        help="Chunk index for bulk mode",
+    )
+    parser.addoption(
+        "--chunk-size",
+        action="store",
+        type=int,
+        default=100,
+        help="Chunk size for bulk mode",
+    )
+    parser.addoption(
+        "--host-names",
+        action="store",
+        help="Host name allow list",
+    )
+    parser.addoption(
+        "--check-names",
+        action="store",
+        help="Check name allow list",
+    )
+    parser.addoption(
+        "--data-dir",
+        action="store",
+        help="Data dir path",
+    )
+    parser.addoption(
+        "--dump-dir",
+        action="store",
+        help="Dump dir path",
+    )
+    parser.addoption(
+        "--response-dir",
+        action="store",
+        help="Response dir path",
+    )
+    parser.addoption(
+        "--diff-dir",
+        action="store",
+        help="Diff dir path",
+    )
+    parser.addoption(
+        "--dump-types",
+        action="store",
+        help='Selected dump types to process (default: "agent,snmp")',
     )
 
 
 def pytest_configure(config):
-    config.addinivalue_line("markers", "update_checks: run test marked as update_checks")
+    # parse options that control the test execution
+    checks.config.mode = (
+        checks.CheckModes.UPDATE
+        if config.getoption("--update-checks")
+        else checks.CheckModes.ADD
+        if config.getoption("--add-checks")
+        else checks.CheckModes.DEFAULT
+    )
+    checks.config.skip_masking = config.getoption("--skip-masking")
+    checks.config.data_dir = config.getoption(name="--data-dir")
+    checks.config.dump_dir = config.getoption(name="--dump-dir")
+    checks.config.response_dir = config.getoption(name="--response-dir")
+    checks.config.diff_dir = config.getoption(name="--diff-dir")
+    checks.config.host_names = config.getoption(name="--host-names")
+    checks.config.check_names = config.getoption(name="--check-names")
+    checks.config.dump_types = config.getoption(name="--dump-types")
+
+    checks.config.load()
 
 
 def pytest_collection_modifyitems(config, items):
-    skip_update_checks = pytest.mark.skip(
-        reason="Test used to store checks output. Selectable with --update-checks"
-    )
-    skip_check_tests = pytest.mark.skip(
-        reason="Only tests marked as 'update_checks' have been selected"
-    )
-    for item in items:
-        if ("update_checks" in item.keywords) == config.getoption("--update-checks"):
-            continue
-        item.add_marker(
-            skip_update_checks if "update_checks" in item.keywords else skip_check_tests
-        )
+    """Enable or disable tests based on their bulk mode"""
+    BULK_MODE = config.getoption(name="--bulk-mode")
+    items[:] = [_ for _ in items if _.name.startswith("test_bulk") == BULK_MODE]
+    if BULK_MODE:
+        chunk_index = config.getoption(name="--chunk-index")
+        chunk_size = config.getoption(name="--chunk-size")
+        items[:] = items[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
+    print(f"selected {len(items)} items")
 
 
 @pytest.fixture(name="test_site", scope="session")
-def get_site() -> Generator[Site, None, None]:
-    yield from get_site_factory(prefix="plugins_").get_test_site()
-
-
-@pytest.fixture(scope="session")
-def setup(test_site: Site, request: pytest.FixtureRequest) -> Generator:
+def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
+    for site in get_site_factory(prefix="plugins_").get_test_site():
+        dump_path = site.path("var/check_mk/dumps")
+        # NOTE: the snmpwalks folder cannot be changed!
+        walk_path = site.path("var/check_mk/snmpwalks")
+        # create dump folder in the test site
+        logger.info('Creating folder "%s"...', dump_path)
+        rc = site.execute(["mkdir", "-p", dump_path]).wait()
+        assert rc == 0
 
-    agent_output_path = test_site.path("var/check_mk/agent_output")
+        logger.info("Injecting agent-output...")
+        for dump_name in checks.get_host_names():
+            assert (
+                execute(
+                    [
+                        "sudo",
+                        "cp",
+                        "-f",
+                        f"{checks.config.dump_dir}/{dump_name}",
+                        f"{walk_path}/{dump_name}"
+                        if re.search(r"\bsnmp\b", dump_name)
+                        else f"{dump_path}/{dump_name}",
+                    ]
+                ).returncode
+                == 0
+            )
 
-    # create agent-output folders in the test site
-    LOGGER.info('Creating folder "%s"...', agent_output_path)
-    rc = test_site.execute(["mkdir", "-p", agent_output_path]).wait()
-    assert rc == 0
-
-    injected_output = str(Path(__file__).parent.resolve() / "agent_output")
-    host_folder = "/agents"
-
-    LOGGER.info("Injecting agent-output...")
-    assert execute(["sudo", "cp", "-r", f"{injected_output}/.", agent_output_path]).returncode == 0
-
-    try:
-        test_site.openapi.get_folder(host_folder)
-    except UnexpectedResponse as e:
-        if not str(e).startswith("[404]"):
-            raise e
-        test_site.openapi.create_folder(host_folder)
-    test_site.openapi.create_rule(
-        ruleset_name="datasource_programs",
-        value=f"cat {agent_output_path}/<HOST>",
-        folder=host_folder,
-    )
-    hosts = [
-        _
-        for _ in test_site.check_output(["ls", "-1", agent_output_path]).split("\n")
-        if _ and not _.startswith(".")
-    ]
-    for host in hosts:
-        try:
-            test_site.openapi.get_host(host)
-        except UnexpectedResponse as e:
-            if not str(e).startswith("[404]"):
-                raise e
-            test_site.openapi.create_host(
-                host,
+        for dump_type in checks.config.dump_types:  # type: ignore
+            host_folder = f"/{dump_type}"
+            if site.openapi.get_folder(host_folder):
+                logger.info('Host folder "%s" already exists!', host_folder)
+            else:
+                logger.info('Creating host folder "%s"...', host_folder)
+                site.openapi.create_folder(host_folder)
+            ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
+            logger.info('Creating rule "%s"...', ruleset_name)
+            site.openapi.create_rule(
+                ruleset_name=ruleset_name,
+                value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
                 folder=host_folder,
-                attributes={"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"},
-                bake_agent=False,
             )
-        test_site.openapi.discover_services_and_wait_for_completion(host)
-    test_site.activate_changes_and_wait_for_core_reload()
+            logger.info('Rule "%s" created!', ruleset_name)
 
-    for host in hosts:
-        LOGGER.info("Checking for pending services on host %s...", host)
-        pending_checks = test_site.openapi.get_host_services(host, pending=True)
-        while len(pending_checks) > 0:
-            LOGGER.info(
-                "The following pending services were found on host %s: %s. Rescheduling checks...",
-                host,
-                ",".join([_.get("extensions", {}).get("description") for _ in pending_checks]),
-            )
-            for check in pending_checks:
-                try:
-                    test_site.schedule_check(
-                        host, check.get("extensions", {}).get("description"), 0
-                    )
-                except AssertionError:
-                    pass
-            pending_checks = test_site.openapi.get_host_services(host, pending=True)
+        yield site
 
+        if os.getenv("CLEANUP", "1") == "1" and not request.config.getoption("--skip-cleanup"):
+            # cleanup existing agent-output folder in the test site
+            logger.info('Removing folder "%s"...', dump_path)
+            assert execute(["sudo", "rm", "-rf", dump_path]).returncode == 0
+
+
+@pytest.fixture(name="bulk_setup", scope="session")
+def _bulk_setup(test_site: Site, pytestconfig: pytest.Config) -> Iterator:
+    """Setup multiple test hosts."""
+    logger.info("Getting host names...")
+    chunk_index = pytestconfig.getoption(name="--chunk-index")
+    chunk_size = pytestconfig.getoption(name="--chunk-size")
+    host_names = checks.get_host_names()[chunk_index * chunk_size : (chunk_index + 1) * chunk_size]
+    checks.setup_hosts(test_site, host_names)
     yield
-
-    if not request.config.getoption("--skip-cleanup"):
-        # cleanup existing agent-output folder in the test site
-        LOGGER.info('Removing folder "%s"...', agent_output_path)
-        assert execute(["sudo", "rm", "-rf", agent_output_path]).returncode == 0
+    if os.getenv("CLEANUP", "1") == "1" and not pytestconfig.getoption("--skip-cleanup"):
+        checks.cleanup_hosts(test_site, host_names)

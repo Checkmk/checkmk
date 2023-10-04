@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Generator, Iterable, Mapping, Sequence
 from dataclasses import dataclass, fields
-from typing import Dict, Generator, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -29,10 +29,10 @@ class ServiceStatistics:
     critical: int
 
 
-CMKSiteStatisticsSection = Mapping[str, Tuple[HostStatistics, ServiceStatistics]]
+CMKSiteStatisticsSection = Mapping[str, tuple[HostStatistics, ServiceStatistics]]
 
 
-def _timeout_and_delta_position(*lines_stats: Sequence[str]) -> Tuple[bool, int]:
+def _timeout_and_delta_position(*lines_stats: Sequence[str]) -> tuple[bool, int]:
     for delta_position, line_stats in enumerate(
         lines_stats,
         start=1,
@@ -57,7 +57,7 @@ def parse_cmk_site_statistics(string_table: StringTable) -> CMKSiteStatisticsSec
                                  unknown=0,
                                  critical=1))}
     """
-    section: Dict[str, Tuple[HostStatistics, ServiceStatistics]] = {}
+    section: dict[str, tuple[HostStatistics, ServiceStatistics]] = {}
 
     current_position = 0
     while True:
@@ -89,8 +89,8 @@ register.agent_section(
 
 
 def discover_cmk_site_statistics(
-    section_cmk_site_statistics: Optional[CMKSiteStatisticsSection],
-    section_livestatus_status: Optional[LivestatusSection],
+    section_cmk_site_statistics: CMKSiteStatisticsSection | None,
+    section_livestatus_status: LivestatusSection | None,
 ) -> DiscoveryResult:
     if section_cmk_site_statistics:
         yield from (Service(item=site_name) for site_name in section_cmk_site_statistics)
@@ -147,7 +147,7 @@ def _service_results(service_stats: ServiceStatistics) -> Iterable[Result]:
 
 
 def _metrics_from_stats(
-    stats: Union[HostStatistics, ServiceStatistics],
+    stats: HostStatistics | ServiceStatistics,
     metrics_prefix: str,
 ) -> Iterable[Metric]:
     for field in fields(stats):
@@ -159,9 +159,9 @@ def _metrics_from_stats(
 
 def check_cmk_site_statistics(
     item: str,
-    section_cmk_site_statistics: Optional[CMKSiteStatisticsSection],
-    section_livestatus_status: Optional[LivestatusSection],
-) -> Generator[Union[Metric, Result], None, None]:
+    section_cmk_site_statistics: CMKSiteStatisticsSection | None,
+    section_livestatus_status: LivestatusSection | None,
+) -> Generator[Metric | Result, None, None]:
     if not section_cmk_site_statistics or item not in section_cmk_site_statistics:
         return
     host_stats, service_stats = section_cmk_site_statistics[item]

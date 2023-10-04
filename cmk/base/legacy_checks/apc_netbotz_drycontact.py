@@ -41,13 +41,13 @@
 # .1.3.6.1.4.1.318.1.1.10.4.3.2.1.8.2.6 2
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
 
 
-def parse_apc_netbotz_drycontact(info):
+def parse_apc_netbotz_drycontact(string_table):
     parsed = {}
 
     state_map = {
@@ -57,7 +57,7 @@ def parse_apc_netbotz_drycontact(info):
         "4": ("Not applicable", 3),
     }
 
-    for idx, inst, loc, state in info:
+    for idx, inst, loc, state in string_table:
         parsed[inst + " " + idx] = {
             "location": loc,
             "state": state_map.get(state, ("unknown[%s]" % state, 3)),
@@ -66,25 +66,30 @@ def parse_apc_netbotz_drycontact(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_apc_netbotz_drycontact(item, params, data):
+def check_apc_netbotz_drycontact(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     state_readable, state = data["state"]
     loc = data["location"]
     if loc:
         loc_info = "[%s] " % loc
     else:
         loc_info = ""
-    return state, "%sState: %s" % (loc_info, state_readable)
+    yield state, f"{loc_info}State: {state_readable}"
+
+
+def discover_apc_netbotz_drycontact(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["apc_netbotz_drycontact"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_netbotz_drycontact,
-    discovery_function=discover(),
-    check_function=check_apc_netbotz_drycontact,
-    service_name="DryContact %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.3.2.1",
         oids=[OIDEnd(), "3", "4", "5"],
     ),
+    parse_function=parse_apc_netbotz_drycontact,
+    service_name="DryContact %s",
+    discovery_function=discover_apc_netbotz_drycontact,
+    check_function=check_apc_netbotz_drycontact,
 )

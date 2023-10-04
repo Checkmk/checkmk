@@ -13,7 +13,7 @@ from tests.testlib import on_time
 
 from cmk.ec.event import (
     _split_syslog_nonnil_sd_and_message,
-    create_event_from_line,
+    create_event_from_syslog_message,
     parse_iso_8601_timestamp,
     parse_rfc5424_syslog_info,
     parse_syslog_info,
@@ -24,11 +24,11 @@ from cmk.ec.event import (
 
 
 @pytest.mark.parametrize(
-    "line,expected",
+    "data,expected",
     [
         (
             # Variant 1: plain syslog message without priority/facility
-            "May 26 13:45:01 Klapprechner CRON[8046]:  message",
+            b"May 26 13:45:01 Klapprechner CRON[8046]:  message",
             {
                 "priority": 5,
                 "facility": 1,
@@ -43,7 +43,7 @@ from cmk.ec.event import (
             },
         ),
         (
-            "Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET",
+            b"Feb 13 08:41:07 pfsp: The configuration was changed on leader blatldc1-xxx to version 1.1366 by blatldc1-xxx/admin at 2019-02-13 09:41:02 CET",
             {
                 "application": "pfsp",
                 "core_host": None,
@@ -59,7 +59,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 2: syslog message including facility (RFC 3164)
-            "<78>May 26 13:45:01 Klapprechner CRON[8046]:  message",
+            b"<78>May 26 13:45:01 Klapprechner CRON[8046]:  message",
             {
                 "application": "CRON",
                 "core_host": None,
@@ -74,7 +74,39 @@ from cmk.ec.event import (
             },
         ),
         (
-            "<134>Jan 24 10:04:57 xygtldc-blaaa-pn02 pfsp: The configuration was changed on leader xygtldc-blaaa-pn02 to version 1111111 by xygtldc-blaaa-pn02/admin at 2019-01-18 11:04:54 CET",
+            # Variant 2: zypper SLES15 without forwarding(?)
+            b"<10>Aug 31 14:34:18 localhost RPM[1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
+            },
+        ),
+        (
+            # Variant 2a: zypper SLES15
+            b"<10>Aug 31 14:34:18 localhost [RPM][1386]: foo bar baz",
+            {
+                "application": "RPM",
+                "core_host": None,
+                "facility": 1,
+                "host": "localhost",
+                "host_in_downtime": False,
+                "ipaddress": "127.0.0.1",
+                "priority": 2,
+                "text": "foo bar baz",
+                "time": 1535718858.0,
+                "pid": 1386,
+            },
+        ),
+        (
+            b"<134>Jan 24 10:04:57 xygtldc-blaaa-pn02 pfsp: The configuration was changed on leader xygtldc-blaaa-pn02 to version 1111111 by xygtldc-blaaa-pn02/admin at 2019-01-18 11:04:54 CET",
             {
                 "application": "pfsp",
                 "core_host": None,
@@ -90,7 +122,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 3: local Nagios alert posted by mkevent -n
-            "<154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che",
+            b"<154>@1341847712;5;Contact Info; MyHost My Service: CRIT - This che",
             {
                 "application": "My Service",
                 "contact": "Contact Info",
@@ -108,7 +140,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 4: remote Nagios alert posted by mkevent -n -> syslog
-            "<154>Jul  9 17:28:32 Klapprechner @1341847712;5;Contact Info;  MyHost My Service: CRIT - This che",
+            b"<154>Jul  9 17:28:32 Klapprechner @1341847712;5;Contact Info;  MyHost My Service: CRIT - This che",
             {
                 "application": "My Service",
                 "contact": "Contact Info",
@@ -126,7 +158,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 5: syslog message (RFC3339), subseconds + Zulu time
-            "<166>2013-04-05T13:49:31.625Z esx Vpxa: message....",
+            b"<166>2013-04-05T13:49:31.625Z esx Vpxa: message....",
             {
                 "application": "Vpxa",
                 "core_host": None,
@@ -142,7 +174,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 5: syslog message (RFC3339), timezone offset
-            "<166>2013-04-05T13:49:31+02:00 esx Vpxa: message....",
+            b"<166>2013-04-05T13:49:31+02:00 esx Vpxa: message....",
             {
                 "application": "Vpxa",
                 "core_host": None,
@@ -158,7 +190,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 6: syslog message without date / host:
-            "<5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan",
+            b"<5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan",
             {
                 "application": "SYSTEM_INFO",
                 "core_host": None,
@@ -174,7 +206,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 7: logwatch.ec event forwarding
-            "<78>@1341847712 Klapprechner /var/log/syslog: message....",
+            b"<78>@1341847712 Klapprechner /var/log/syslog: message....",
             {
                 "application": "/var/log/syslog",
                 "core_host": None,
@@ -190,7 +222,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 7a: Event simulation
-            "<78>@1341847712;3 Klapprechner /var/log/syslog: bzong",
+            b"<78>@1341847712;3 Klapprechner /var/log/syslog: bzong",
             {
                 "application": "/var/log/syslog",
                 "core_host": None,
@@ -207,7 +239,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 8: syslog message from sophos firewall
-            "<84>2015:03:25-12:02:06 gw pluto[7122]: listening for IKE messages",
+            b"<84>2015:03:25-12:02:06 gw pluto[7122]: listening for IKE messages",
             {
                 "application": "pluto",
                 "core_host": None,
@@ -222,7 +254,7 @@ from cmk.ec.event import (
             },
         ),
         pytest.param(
-            "<134>1 2016-06-02T12:49:05.125Z chrissw7 ChrisApp - TestID - coming from  java code",
+            b"<134>1 2016-06-02T12:49:05.125Z chrissw7 ChrisApp - TestID - coming from  java code",
             {
                 "application": "ChrisApp",
                 "core_host": None,
@@ -238,7 +270,9 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424)",
         ),
         pytest.param(
-            "<134>1 2016-06-02T12:49:05+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code",
+            "<134>1 2016-06-02T12:49:05+02:00 chrissw7 ChrisApp - TestID - \ufeffcoming from  java code".encode(
+                "utf-8"
+            ),
             {
                 "application": "ChrisApp",
                 "core_host": None,
@@ -254,7 +288,9 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) with BOM",
         ),
         pytest.param(
-            '<134>1 2016-06-02T12:49:05.125+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code',
+            '<134>1 2016-06-02T12:49:05.125+02:00 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Application" eventID="1011"] \ufeffcoming \ufefffrom  java code'.encode(
+                "utf-8"
+            ),
             {
                 "application": "ChrisApp",
                 "core_host": None,
@@ -270,7 +306,7 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) with structured data",
         ),
         pytest.param(
-            r'<134>1 2016-06-02T12:49:05-01:30 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
+            rb'<134>1 2016-06-02T12:49:05-01:30 chrissw7 ChrisApp - TestID [exampleSDID@32473 iut="3" eventSource="Appli\] cation" eventID="1\"011"][xyz@123 a="b"] coming from  java code',
             {
                 "application": "ChrisApp",
                 "core_host": None,
@@ -286,7 +322,9 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) with mean structured data, no override",
         ),
         pytest.param(
-            r'<134>1 2016-06-02T12:49:05.5+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code',
+            r'<134>1 2016-06-02T12:49:05.5+02:00 chrissw7 ChrisApp - TestID [Checkmk@18662 sl="0" ipaddress="1.2.3.4" host="host with spaces" application="weird Ƈ ƒ"][exampleSDID@32473 iut="3" eventSource="\"App[lication" eventID="1011\]"] coming from  java code'.encode(
+                "utf-8"
+            ),
             {
                 "application": "weird Ƈ ƒ",
                 "core_host": None,
@@ -303,7 +341,7 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) with structured data and override",
         ),
         pytest.param(
-            "<134>1 2021-06-02T13:54:35+00:00 heute /var/log/syslog - - [Checkmk@18662] Jun 2 15:54:24 klappjohe systemd[540514]: Stopped target Main User Target.",
+            b"<134>1 2021-06-02T13:54:35+00:00 heute /var/log/syslog - - [Checkmk@18662] Jun 2 15:54:24 klappjohe systemd[540514]: Stopped target Main User Target.",
             {
                 "application": "/var/log/syslog",
                 "core_host": None,
@@ -319,7 +357,7 @@ from cmk.ec.event import (
             id="variant 9: syslog message (RFC 5424) from logwatch forwarding",
         ),
         pytest.param(
-            r'<138>1 2022-11-22T12:36:46+00:00 sup-12385 - - - [Checkmk@18662 application="c:\\Users\\SA-Prd-RPAAdmin5\\AppData\\Local\\UiPath\\Logs\\2022-11-21_Execution.log"] error 16',
+            rb'<138>1 2022-11-22T12:36:46+00:00 sup-12385 - - - [Checkmk@18662 application="c:\\Users\\SA-Prd-RPAAdmin5\\AppData\\Local\\UiPath\\Logs\\2022-11-21_Execution.log"] error 16',
             {
                 "application": "c:\\Users\\SA-Prd-RPAAdmin5\\AppData\\Local\\UiPath\\Logs\\2022-11-21_Execution.log",
                 "core_host": None,
@@ -336,7 +374,7 @@ from cmk.ec.event import (
         ),
         (
             # Variant 10:
-            "2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up year month day hh:mm:ss timezone HOSTNAME KeyAgent:",
+            b"2016 May 26 15:41:47 IST XYZ Ebra: %LINEPROTO-5-UPDOWN: Line protocol on Interface Ethernet45 (XXX.ASAD.Et45), changed state to up year month day hh:mm:ss timezone HOSTNAME KeyAgent:",
             {
                 "application": "Ebra",
                 "core_host": None,
@@ -352,11 +390,77 @@ from cmk.ec.event import (
         ),
     ],
 )
-def test_create_event_from_line(line: str, expected: Mapping[str, Any]) -> None:
+def test_create_event_from_syslog_message(data: bytes, expected: Mapping[str, Any]) -> None:
     address = ("127.0.0.1", 1234)
     logger = logging.getLogger("cmk.mkeventd")
     with on_time(1550000000.0, "CET"):
-        assert create_event_from_line(line, address, logger, verbose=True) == expected
+        assert create_event_from_syslog_message(data, address, logger) == expected
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        pytest.param(
+            b"May 26 13:45:01 Klapprechner CRON[8046]:  message",
+            {
+                "priority": 5,
+                "facility": 1,
+                "text": "message",
+                "pid": 8046,
+                "core_host": None,
+                "host_in_downtime": False,
+                "application": "CRON",
+                "host": "Klapprechner",
+                "time": 1685101501.0,  # Fri May 26 2023 13:45:01 GMT+0200
+                "ipaddress": "127.0.0.1",
+            },
+        ),
+    ],
+)
+def test_create_event_from_syslog_message_with_DST(
+    data: bytes, expected: Mapping[str, Any]
+) -> None:
+    address = ("127.0.0.1", 1234)
+    logger = logging.getLogger("cmk.mkeventd")
+
+    with on_time(1675748161, "CET"):  # february when there is no DST
+        assert create_event_from_syslog_message(data, address, logger) == expected
+
+    with on_time(1688704561, "CET"):  # July when there is DST
+        assert create_event_from_syslog_message(data, address, logger) == expected
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        pytest.param(
+            b"Feb 08 13:15:01 Klapprechner CRON[8046]:  message",
+            {
+                "priority": 5,
+                "facility": 1,
+                "text": "message",
+                "pid": 8046,
+                "core_host": None,
+                "host_in_downtime": False,
+                "application": "CRON",
+                "host": "Klapprechner",
+                "time": 1675858501.0,  # Wed Feb 08 2023 13:15:13 GMT+0100
+                "ipaddress": "127.0.0.1",
+            },
+        ),
+    ],
+)
+def test_create_event_from_syslog_message_without_DST(
+    data: bytes, expected: Mapping[str, Any]
+) -> None:
+    address = ("127.0.0.1", 1234)
+    logger = logging.getLogger("cmk.mkeventd")
+
+    with on_time(1675748161, "CET"):  # february when there is no DST
+        assert create_event_from_syslog_message(data, address, logger) == expected
+
+    with on_time(1688704561, "CET"):  # July when there is DST
+        assert create_event_from_syslog_message(data, address, logger) == expected
 
 
 @pytest.mark.parametrize(

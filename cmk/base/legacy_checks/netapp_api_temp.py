@@ -72,8 +72,8 @@ def check_netapp_api_temp(item, params, parsed):
 
 check_info["netapp_api_temp"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_temp,
+    service_name="Temperature %s",
     discovery_function=inventory_netapp_api_temp,
     check_function=check_netapp_api_temp,
     check_ruleset_name="temperature",
-    service_name="Temperature %s",
 )

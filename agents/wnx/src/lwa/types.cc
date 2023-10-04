@@ -5,7 +5,7 @@
 
 #include "stdafx.h"
 
-#include "types.h"
+#include "lwa/types.h"
 
 #include <WinSock2.h>
 
@@ -13,9 +13,9 @@
 #include <cstring>
 #include <string>
 
-#include "cfg.h"
-#include "logger.h"
-#include "stringutil.h"
+#include "lwa/stringutil.h"
+#include "wnx/cfg.h"
+#include "wnx/logger.h"
 namespace fs = std::filesystem;
 
 template <>

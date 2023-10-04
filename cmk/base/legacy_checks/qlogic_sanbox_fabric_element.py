@@ -27,7 +27,7 @@ def check_qlogic_sanbox_fabric_element(item, _no_params, info):
                 return 1, "Fabric Element %s is testing" % fe_id
             if fe_status == "4":
                 return 2, "Fabric Element %s is faulty" % fe_id
-            return 3, "Fabric Element %s is in unidentified status %s" % (fe_id, fe_status)
+            return 3, f"Fabric Element {fe_id} is in unidentified status {fe_status}"
 
     return 3, "No Fabric Element %s found" % item
 
@@ -37,11 +37,11 @@ check_info["qlogic_sanbox_fabric_element"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.8"),
     ),
-    check_function=check_qlogic_sanbox_fabric_element,
-    discovery_function=inventory_qlogic_sanbox_fabric_element,
-    service_name="Fabric Element %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.75.1.1.4.1",
         oids=["4", OIDEnd()],
     ),
+    service_name="Fabric Element %s",
+    discovery_function=inventory_qlogic_sanbox_fabric_element,
+    check_function=check_qlogic_sanbox_fabric_element,
 )

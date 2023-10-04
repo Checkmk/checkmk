@@ -6,18 +6,14 @@
 
 # mypy: disable-error-code="no-untyped-def,list-item"
 
-from cmk.base.check_api import (
-    get_item_state,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    set_item_state,
-)
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
 
 
-def parse_ddn_s2a_statsdelay(info):
-    parsed = parse_ddn_s2a_api_response(info)
+def parse_ddn_s2a_statsdelay(string_table):
+    parsed = parse_ddn_s2a_api_response(string_table)
 
     for key in ["host_reads", "host_writes", "disk_reads", "disk_writes"]:
         parsed[key] = list(map(int, parsed[key]))
@@ -75,7 +71,7 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         infotext = infotext_formatstring % value
         if levels:
             warn, crit = levels
-            levelstext = " (warn/crit at %.2f/%.2f s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} s)"
             perfdata = [(perfname, value, warn, crit)]
             if value >= crit:
                 status = 2
@@ -90,6 +86,8 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
             status = 0
         return status, infotext, perfdata
 
+    value_store = get_value_store()
+
     time_intervals = parsed["time_interval_in_seconds"]
     if item == "Disk":
         reads = parsed["disk_reads"]
@@ -98,25 +96,25 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         reads = parsed["host_reads"]
         writes = parsed["host_writes"]
 
-    old_intervals = get_item_state("time_intervals")
-    old_reads = get_item_state("reads")
-    old_writes = get_item_state("writes")
+    old_intervals = value_store.get("time_intervals")
+    old_reads = value_store.get("reads")
+    old_writes = value_store.get("writes")
 
-    set_item_state("time_intervals", time_intervals)
-    set_item_state("reads", reads)
-    set_item_state("writes", writes)
+    value_store["time_intervals"] = time_intervals
+    value_store["reads"] = reads
+    value_store["writes"] = writes
 
     if old_intervals is None:
-        raise MKCounterWrapped("Initializing")
+        raise IgnoreResultsError("Initializing")
     if old_intervals != time_intervals:
-        raise MKCounterWrapped(
+        raise IgnoreResultsError(
             "Histograms not comparable - Time intervals have changed. Reinitializing."
         )
 
     reads_since_last_check = subtract_histograms(reads, old_reads)
     writes_since_last_check = subtract_histograms(writes, old_writes)
     if is_zero(reads_since_last_check) and is_zero(writes_since_last_check):
-        raise MKCounterWrapped("No writes or reads since last check")
+        raise IgnoreResultsError("No writes or reads since last check")
 
     if not is_zero(reads_since_last_check):
         read_min = histogram_min(time_intervals, reads_since_last_check)
@@ -155,9 +153,9 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
 check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_statsdelay,
+    service_name="DDN S2A Delay %s",
     discovery_function=inventory_ddn_s2a_statsdelay,
     check_function=check_ddn_s2a_statsdelay,
-    service_name="DDN S2A Delay %s",
     check_ruleset_name="ddn_s2a_wait",
     check_default_parameters={
         "read_avg": (0.1, 0.2),

@@ -10,17 +10,17 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 
-def parse_brocade_mlx_power(info):
+def parse_brocade_mlx_power(string_table):
     parsed = {}
 
-    if len(info[1]) > 0:
+    if len(string_table[1]) > 0:
         # .1.3.6.1.4.1.1991.1.1.1.2.2.1
-        for power_id, power_desc, power_state in info[1]:
+        for power_id, power_desc, power_state in string_table[1]:
             if power_state != "1":
                 parsed[power_id] = {"desc": power_desc, "state": power_state}
     else:
         # .1.3.6.1.4.1.1991.1.1.1.2.1.1
-        for power_id, power_desc, power_state in info[0]:
+        for power_id, power_desc, power_state in string_table[0]:
             if power_state != "1":
                 parsed[power_id] = {"desc": power_desc, "state": power_state}
     return parsed
@@ -52,10 +52,6 @@ def check_brocade_mlx_power(item, _no_params, parsed):
 
 check_info["brocade_mlx_power"] = LegacyCheckDefinition(
     detect=DETECT_MLX,
-    parse_function=parse_brocade_mlx_power,
-    check_function=check_brocade_mlx_power,
-    discovery_function=inventory_brocade_mlx_power,
-    service_name="Power supply %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1991.1.1.1.2.1.1",
@@ -66,4 +62,8 @@ check_info["brocade_mlx_power"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    parse_function=parse_brocade_mlx_power,
+    service_name="Power supply %s",
+    discovery_function=inventory_brocade_mlx_power,
+    check_function=check_brocade_mlx_power,
 )

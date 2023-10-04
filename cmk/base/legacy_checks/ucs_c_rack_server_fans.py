@@ -8,14 +8,14 @@
 # equipmentFan<TAB>dn sys/rack-unit-1/fan-module-1-1/fan-1<TAB>id 1<TAB>model <TAB>operability operable
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_fans(info):
+def parse_ucs_c_rack_server_fans(string_table):
     parsed = {}
 
-    for fan in info:
+    for fan in string_table:
         try:
             key_value_pairs = [kv.split(" ", 1) for kv in fan[1:]]
             fan = (
@@ -32,8 +32,9 @@ def parse_ucs_c_rack_server_fans(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_fans(item, _no_params, data):
+def check_ucs_c_rack_server_fans(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     operability_to_status_mapping = {
         "unknown": 3,
         "operable": 0,
@@ -49,9 +50,13 @@ def check_ucs_c_rack_server_fans(item, _no_params, data):
     yield status, status_readable
 
 
+def discover_ucs_c_rack_server_fans(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ucs_c_rack_server_fans"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_fans,
-    discovery_function=discover(),
-    check_function=check_ucs_c_rack_server_fans,
     service_name="Fan %s",
+    discovery_function=discover_ucs_c_rack_server_fans,
+    check_function=check_ucs_c_rack_server_fans,
 )

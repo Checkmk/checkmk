@@ -5,7 +5,9 @@
 
 from dataclasses import asdict, dataclass
 from enum import Enum, unique
-from typing import Final, Optional, Tuple, TypedDict
+from typing import Final
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import (
     any_of,
@@ -41,8 +43,8 @@ DETECT_UPS_CPS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3808.1.1.1")
 
 
 class UpsParameters(TypedDict, total=False):
-    battime: Tuple[int, int]
-    capacity: Tuple[int, int]
+    battime: tuple[int, int]
+    capacity: tuple[int, int]
 
 
 CHECK_DEFAULT_PARAMETERS: Final[UpsParameters] = {
@@ -53,18 +55,18 @@ CHECK_DEFAULT_PARAMETERS: Final[UpsParameters] = {
 
 @dataclass
 class Battery:
-    seconds_on_bat: Optional[int] = None
-    seconds_left: Optional[int] = None
-    percent_charged: Optional[int] = None
-    on_battery: Optional[bool] = None
-    fault: Optional[bool] = None
-    replace: Optional[bool] = None
-    low: Optional[bool] = None
-    not_charging: Optional[bool] = None
-    low_condition: Optional[bool] = None
-    on_bypass: Optional[bool] = None
-    backup: Optional[bool] = None
-    overload: Optional[bool] = None
+    seconds_on_bat: int | None = None
+    seconds_left: int | None = None
+    percent_charged: int | None = None
+    on_battery: bool | None = None
+    fault: bool | None = None
+    replace: bool | None = None
+    low: bool | None = None
+    not_charging: bool | None = None
+    low_condition: bool | None = None
+    on_bypass: bool | None = None
+    backup: bool | None = None
+    overload: bool | None = None
 
 
 @unique
@@ -80,29 +82,29 @@ class BatteryState(Enum):
     overload = "Overload"
 
 
-def optional_int(value: str, *, factor: int = 1) -> Optional[int]:
+def optional_int(value: str, *, factor: int = 1) -> int | None:
     if value.strip() == "":
         return None
     return int(value.strip()) * factor
 
 
-def optional_yes_or_no(value: str) -> Optional[bool]:
+def optional_yes_or_no(value: str) -> bool | None:
     return True if value.strip() == "1" else False if value.strip() == "2" else None
 
 
 def discover_ups_capacity(
-    section_ups_battery_capacity: Optional[Battery],
-    section_ups_on_battery: Optional[Battery],
-    section_ups_seconds_on_battery: Optional[Battery],
+    section_ups_battery_capacity: Battery | None,
+    section_ups_on_battery: Battery | None,
+    section_ups_seconds_on_battery: Battery | None,
 ) -> type_defs.DiscoveryResult:
     yield Service()
 
 
 def check_ups_capacity(
     params: UpsParameters,
-    section_ups_battery_capacity: Optional[Battery],
-    section_ups_on_battery: Optional[Battery],
-    section_ups_seconds_on_battery: Optional[Battery],
+    section_ups_battery_capacity: Battery | None,
+    section_ups_on_battery: Battery | None,
+    section_ups_seconds_on_battery: Battery | None,
 ) -> type_defs.CheckResult:
     """Check battery capacity in percent and minutes remaining.
     Apply WARN/CRIT levels and minutes-remaining metric only if on battery.
@@ -120,7 +122,7 @@ def check_ups_capacity(
     yield from _output_seconds_on_battery(battery.seconds_on_bat)
 
 
-def _assemble_battery(*sections: Optional[Battery]) -> Battery:
+def _assemble_battery(*sections: Battery | None) -> Battery:
     merged_dict = {
         key: value  #
         for section in sections
@@ -141,9 +143,9 @@ def _is_on_battery(battery: Battery) -> bool:
 
 
 def _output_time_remaining(
-    seconds_left: Optional[int],
+    seconds_left: int | None,
     on_battery: bool,
-    levels: Tuple[int, int],
+    levels: tuple[int, int],
 ) -> type_defs.CheckResult:
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
@@ -163,9 +165,9 @@ def _output_time_remaining(
 
 
 def _output_percent_charged(
-    percent_charged: Optional[int],
+    percent_charged: int | None,
     on_battery: bool,
-    levels: Tuple[int, int],
+    levels: tuple[int, int],
 ) -> type_defs.CheckResult:
     if percent_charged is None:
         return
@@ -178,7 +180,7 @@ def _output_percent_charged(
     )
 
 
-def _output_seconds_on_battery(seconds_on_bat: Optional[int]) -> type_defs.CheckResult:
+def _output_seconds_on_battery(seconds_on_bat: int | None) -> type_defs.CheckResult:
     # Output time on battery
     if seconds_on_bat is not None and seconds_on_bat > 0:
         yield Result(
@@ -188,17 +190,17 @@ def _output_seconds_on_battery(seconds_on_bat: Optional[int]) -> type_defs.Check
 
 
 def discover_ups_battery_state(
-    section_ups_battery_warnings: Optional[Battery],
-    section_ups_on_battery: Optional[Battery],
-    section_ups_seconds_on_battery: Optional[Battery],
+    section_ups_battery_warnings: Battery | None,
+    section_ups_on_battery: Battery | None,
+    section_ups_seconds_on_battery: Battery | None,
 ) -> type_defs.DiscoveryResult:
     yield Service()
 
 
 def check_ups_battery_state(
-    section_ups_battery_warnings: Optional[Battery],
-    section_ups_on_battery: Optional[Battery],
-    section_ups_seconds_on_battery: Optional[Battery],
+    section_ups_battery_warnings: Battery | None,
+    section_ups_on_battery: Battery | None,
+    section_ups_seconds_on_battery: Battery | None,
 ) -> CheckResult:
     battery = _assemble_battery(
         section_ups_battery_warnings,

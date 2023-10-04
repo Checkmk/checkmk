@@ -32,8 +32,8 @@ def check_sansymphony_alerts(_no_item, params, info):
 
 
 check_info["sansymphony_alerts"] = LegacyCheckDefinition(
-    check_function=check_sansymphony_alerts,
-    discovery_function=inventory_sansymphony_alerts,
     service_name="sansymphony Alerts",
+    discovery_function=inventory_sansymphony_alerts,
+    check_function=check_sansymphony_alerts,
     check_ruleset_name="sansymphony_alerts",
 )

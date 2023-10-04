@@ -7,11 +7,11 @@
 #include <processthreadsapi.h>  // for GetCurrentProcess, SetPriorityClass
 #include <winbase.h>            // for HIGH_PRIORITY_CLASS
 
-#include "carrier.h"  // for CarrierDataHeader, CoreCarrier, DataType, DataType::kLog, carrier
+#include "wnx/carrier.h"  // for CarrierDataHeader, CoreCarrier, DataType, DataType::kLog, carrier
 #include "common/wtools.h"  // for SecurityLevel, SecurityLevel::admin, SecurityLevel::standard
 #include "gtest/gtest.h"  // for InitGoogleTest, RUN_ALL_TESTS
-#include "logger.h"       // for ColoredOutputOnStdio
-#include "on_start.h"     // for OnStart, AppType, AppType::test
+#include "wnx/logger.h"       // for ColoredOutputOnStdio
+#include "wnx/on_start.h"     // for OnStart, AppType, AppType::test
 
 using namespace std::chrono_literals;
 
@@ -38,11 +38,10 @@ int wmain(int argc, wchar_t **argv) {
     XLOG::setup::ColoredOutputOnStdio(true);
 
     ::SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    if (!cma::OnStart(cma::AppType::test)) {
+    if (!cma::OnStartTest()) {
         std::cout << "Fail Create Folders\n";
         return 33;
     }
-    OnStart(cma::AppType::test);
     ::testing::InitGoogleTest(&argc, argv);
 #if defined(_DEBUG)
     //::testing::GTEST_FLAG(filter) = "EventLogTest*";

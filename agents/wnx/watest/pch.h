@@ -13,8 +13,8 @@
 #ifndef PCH_H
 #define PCH_H
 
-#include "../engine/stdafx_defines.h"  // this is not very nice approach, still we want to test Engine with same definitions.
-                                       // --- We just reuse header file
+#include "wnx/stdafx_defines.h"  // this is not very nice approach, still we want to test Engine with same definitions.
+                                 // --- We just reuse header file
 
 // NOTE: This code block is used to speed compilation.
 // Sets usually for msbuild in script using environment variable

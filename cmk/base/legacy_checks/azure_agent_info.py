@@ -9,9 +9,10 @@
 import json
 import time
 
-from cmk.base.check_api import check_levels, get_item_state, LegacyCheckDefinition, set_item_state
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 
 def _update_remaining_reads(parsed, value):
@@ -33,9 +34,9 @@ def _update_remaining_reads(parsed, value):
         pass
 
 
-def parse_azure_agent_info(info):
+def parse_azure_agent_info(string_table):
     parsed = {}
-    for row in info:
+    for row in string_table:
         key = row[0]
         value = AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
 
@@ -68,12 +69,13 @@ def discovery_azure_agent_info(parsed):
 
 def agent_bailouts(bailouts):
     now = time.time()
+    value_store = get_value_store()
     for status, text in bailouts:
         if text.startswith("Usage client"):
             # Usage API is unreliable.
             # Only use state if this goes on for more than an hour.
-            first_seen = get_item_state(text, default=now)
-            set_item_state(text, first_seen)
+            first_seen = value_store.get(text, now)
+            value_store[text] = first_seen
             status = 0 if (now - first_seen < 3600) else status
         yield status, text
 
@@ -128,16 +130,15 @@ def agent_issues(issues, params):
         )
 
     for i in sorted(issues.get("exception", []), key=lambda x: x["msg"]):
-        yield 0, "\nIssue in %s: Exception: %s (!!)" % (i["issued_by"], i["msg"])
+        yield 0, "\nIssue in {}: Exception: {} (!!)".format(i["issued_by"], i["msg"])
     for i in sorted(issues.get("warning", []), key=lambda x: x["msg"]):
-        yield 0, "\nIssue in %s: Warning: %s (!)" % (i["issued_by"], i["msg"])
+        yield 0, "\nIssue in {}: Warning: {} (!)".format(i["issued_by"], i["msg"])
     for i in sorted(issues.get("info", []), key=lambda x: x["msg"]):
-        yield 0, "\nIssue in %s: Info: %s" % (i["issued_by"], i["msg"])
+        yield 0, "\nIssue in {}: Info: {}".format(i["issued_by"], i["msg"])
 
 
 def check_azure_agent_info(_no_item, params, parsed):
-    for subresult in agent_bailouts(parsed.get("agent-bailout", [])):
-        yield subresult
+    yield from agent_bailouts(parsed.get("agent-bailout", []))
 
     reads = parsed.get("remaining-reads")
     if reads is not None:
@@ -152,8 +153,7 @@ def check_azure_agent_info(_no_item, params, parsed):
     if resource_infos[0]:
         yield 1, resource_infos[0]
 
-    for subresult in agent_issues(parsed.get("issues", {}), params):
-        yield subresult
+    yield from agent_issues(parsed.get("issues", {}), params)
 
     if resource_infos[1]:
         yield 0, "\n%s" % resource_infos[1]
@@ -161,9 +161,9 @@ def check_azure_agent_info(_no_item, params, parsed):
 
 check_info["azure_agent_info"] = LegacyCheckDefinition(
     parse_function=parse_azure_agent_info,
+    service_name="Azure Agent Info",
     discovery_function=discovery_azure_agent_info,
     check_function=check_azure_agent_info,
-    service_name="Azure Agent Info",
     check_ruleset_name="azure_agent_info",
     check_default_parameters={
         "warning_levels": (1, 10),

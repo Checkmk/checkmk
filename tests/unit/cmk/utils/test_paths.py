@@ -84,6 +84,9 @@ def _check_paths(root: str, namespace_dict: Mapping[str, object]) -> None:
             assert value.startswith(root)
             continue
 
+        if var == "cse_config_dir":
+            continue
+
         assert isinstance(value, Path)
         required_prefix = _NON_STD_PREFIX.get(var, "%s") % root
         assert str(value).startswith(required_prefix), repr((var, value, required_prefix))

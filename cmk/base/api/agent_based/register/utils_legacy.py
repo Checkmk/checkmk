@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, NotRequired, TypedDict
+from typing import Any, NotRequired
+
+from typing_extensions import TypedDict
 
 from cmk.base.api.agent_based.checking_classes import Service
 from cmk.base.api.agent_based.section_classes import SNMPTree
@@ -17,6 +19,7 @@ _DiscoveredParameters = Mapping | tuple | str | None
 class LegacyCheckDefinition(TypedDict):
     detect: NotRequired[SNMPDetectSpecification]
     fetch: NotRequired[list[SNMPTree] | SNMPTree]
+    sections: NotRequired[list[str]]
     check_function: NotRequired[Callable]
     discovery_function: NotRequired[
         Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]] | Iterable[Service]]

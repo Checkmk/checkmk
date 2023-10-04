@@ -45,13 +45,7 @@ then
     VERSION=$(cat /etc/redhat-release)
     if [ "${VERSION:0:6}" = CentOS ]
     then
-        if [ "${VERSION:0:24}" = "CentOS Linux release 6.0" ]; then
-            echo "CENTOS${SEP}6"
-            exit 0
-        elif [ "${VERSION:0:22}" = "CentOS Linux release 7" ]; then
-            echo "CENTOS${SEP}7"
-            exit 0
-        elif [ "${VERSION:0:22}" = "CentOS Linux release 8" ]; then
+        if [ "${VERSION:0:22}" = "CentOS Linux release 8" ]; then
             echo "CENTOS${SEP}8"
             exit 0
         fi

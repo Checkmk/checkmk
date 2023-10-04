@@ -85,7 +85,7 @@ def inventory_aix_lvm(info):
     for vg, volumes in parse_aix_lvm(info).items():
         for lv in volumes:
             # inventory.append(("%s/%s" % (vg, lv), ('%s' % volumes[lv][4],)))
-            inventory.append(("%s/%s" % (vg, lv), None))
+            inventory.append((f"{vg}/{lv}", None))
     return inventory
 
 
@@ -137,10 +137,10 @@ def check_aix_lvm(item, _no_params, info):
 
 
 check_info["aix_lvm"] = LegacyCheckDefinition(
-    check_function=check_aix_lvm,
-    discovery_function=inventory_aix_lvm,
     service_name="Logical Volume %s",
     # "group"              : "",
     # "default_levels_variable" : "services_default_levels",
-    # first check we have a vendor mib from W&T, then check for the model in their MIB.
+    # first check we have a vendor mib from W&T, then check for the model in their MIB.,
+    discovery_function=inventory_aix_lvm,
+    check_function=check_aix_lvm,
 )

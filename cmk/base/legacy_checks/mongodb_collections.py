@@ -21,9 +21,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
 
-def parse_mongodb_collections(info):
-    if info:
-        return json.loads(str(info[0][0]))
+def parse_mongodb_collections(string_table):
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 
@@ -36,7 +36,7 @@ def inventory_mongodb_collections(databases_dict):
     db_coll_list = []
     for db_name in databases_dict:
         db_coll_list += [
-            ("%s.%s" % (db_name, coll_name), {})
+            (f"{db_name}.{coll_name}", {})
             for coll_name in databases_dict.get(db_name).get("collstats", [])
         ]
     return db_coll_list
@@ -167,7 +167,7 @@ def _mongodb_collections_long_output(data):
     for index in _mongodb_collections_get_indexes_as_list(data):
         timestamp_for_humans = _mongodb_collections_timestamp_human_readable(index[2] / 1000.0)
         long_output.append(
-            "-- Index '%s' used %s times since %s" % (index[0], index[1], timestamp_for_humans)
+            f"-- Index '{index[0]}' used {index[1]} times since {timestamp_for_humans}"
         )
 
     return "\n" + "\n".join(long_output)
@@ -220,9 +220,9 @@ def _mongodb_collections_get_as_int(data, key):
 
 check_info["mongodb_collections"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_collections,
+    service_name="MongoDB Collection: %s",
     discovery_function=inventory_mongodb_collections,
     check_function=check_mongodb_collections,
-    service_name="MongoDB Collection: %s",
     check_ruleset_name="mongodb_collections",
     check_default_parameters={"levels_nindexes": (62, 65)},
 )

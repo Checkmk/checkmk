@@ -56,7 +56,8 @@ class CrashReportStore:
 
             if fname == "crash.info":
                 store.save_text_to_file(
-                    crash.crash_dir() / fname, str(json.dumps(value, cls=RobustJSONEncoder)) + "\n"
+                    crash.crash_dir() / fname,
+                    json.dumps(value, cls=RobustJSONEncoder) + "\n",
                 )
             else:
                 assert isinstance(value, bytes)
@@ -70,10 +71,8 @@ class CrashReportStore:
 
         # Remove all files of former crash reports
         for f in crash_dir.iterdir():
-            try:
+            with suppress(OSError):
                 f.unlink()
-            except OSError:
-                pass
 
     def _cleanup_old_crashes(self, base_dir: Path) -> None:
         """Simple cleanup mechanism: For each crash type we keep up to X crashes"""
@@ -146,7 +145,7 @@ class ABCCrashReport(abc.ABC):
         attributes = {
             "crash_info": _get_generic_crash_info(cls.type(), details or {}),
         }
-        attributes.update(type_specific_attributes or {})
+        attributes |= type_specific_attributes or {}
         return cls(**attributes)
 
     @classmethod
@@ -228,7 +227,7 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
         try:
             exc_txt = exc_value.args[0].decode("utf-8")
         except UnicodeDecodeError:
-            exc_txt = "b%s" % repr(exc_value.args[0])
+            exc_txt = f"b{repr(exc_value.args[0])}"
     elif len(exc_value.args) == 1:
         exc_txt = str(exc_value.args[0])
     else:
@@ -252,14 +251,12 @@ def _get_generic_crash_info(type_name: str, details: Mapping[str, Any]) -> Crash
 
 def _get_local_vars_of_last_exception() -> str:
     local_vars = {}
-    try:
+
+    # Suppressing to handle case where sys.exc_info has no crash information
+    # (https://docs.python.org/2/library/sys.html#sys.exc_info)
+    with suppress(IndexError):
         for key, val in inspect.trace()[-1][0].f_locals.items():
             local_vars[key] = _format_var_for_export(val)
-    except IndexError:
-        # Handle case where sys.exc_info has no crash information
-        # (https://docs.python.org/2/library/sys.html#sys.exc_info)
-        pass
-
     # This needs to be encoded as the local vars might contain binary data which can not be
     # transported using JSON.
     return base64.b64encode(

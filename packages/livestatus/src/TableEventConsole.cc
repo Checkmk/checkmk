@@ -16,9 +16,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
-#include <variant>  // IWYU pragma: keep
 
-#include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
@@ -50,8 +48,8 @@ public:
         : EventConsoleConnection(mc->loggerLivestatus(),
                                  mc->paths()->event_console_status_socket())
         , mc_{mc}
-        , table_{table}
-        , query_{query}
+        , table_{&table}
+        , query_{&query}
         , is_authorized_{std::move(is_authorized)} {}
 
 private:
@@ -62,12 +60,12 @@ private:
         emitColumnsHeader(os);
         emitTimeRangeFilter(os);
         emitGreppingFilter(os);
-        os << std::endl;
+        os << "\n";
     }
 
     void emitGET(std::ostream &os) const {
         // skip "eventconsole" prefix :-P
-        os << "GET " << table_.name().substr(12);
+        os << "GET " << table_->name().substr(12);
     }
 
     static void emitOutputFormat(std::ostream &os) {
@@ -77,7 +75,7 @@ private:
     void emitColumnsHeader(std::ostream &os) {
         os << "\nColumns:";
         // Initially we consider all columns used in the query...
-        auto all = query_.allColumns();
+        auto column_names = query_->allColumnNames();
         // ... then we add some special columns which we might need irrespective
         // of the actual query...
         static std::unordered_set<std::string> special_columns{
@@ -87,26 +85,26 @@ private:
             "event_contact_groups_precedence",
             // see  isAuthorizedForEventViaContactGroups
             "event_contact_groups"};
-        table_.any_column([&](const auto &col) {
-            if (special_columns.find(col->name()) != special_columns.end()) {
-                all.insert(col);
+        table_->any_column([&](const auto &col) {
+            if (special_columns.contains(col->name())) {
+                column_names.insert(col->name());
             }
             return false;
         });
         // .. and then we ignore all host-related columns, they are implicitly
         // joined later via ECRow._host later.
-        for (const auto &c : all) {
-            if (!mk::starts_with(c->name(), "host_")) {
-                os << " " << c->name();
+        for (const auto &name : column_names) {
+            if (!name.starts_with("host_")) {
+                os << " " << name;
             }
         }
     }
 
     void emitTimeRangeFilter(std::ostream &os) {
-        if (auto glb = query_.greatestLowerBoundFor("history_time")) {
+        if (auto glb = query_->greatestLowerBoundFor("history_time")) {
             os << "\nFilter: history_time >= " << *glb;
         }
-        if (auto lub = query_.leastUpperBoundFor("history_time")) {
+        if (auto lub = query_->leastUpperBoundFor("history_time")) {
             os << "\nFilter: history_time <= " << *lub;
         }
     }
@@ -115,7 +113,7 @@ private:
         for (const auto &column_name : grepping_filters) {
             auto conjuncts =
                 query_
-                    .partialFilter(
+                    ->partialFilter(
                         column_name,
                         [&column_name](const std::string &columnName) {
                             return column_name == columnName;
@@ -146,11 +144,11 @@ private:
                     }
                 }
             }
-            if (auto svr = query_.stringValueRestrictionFor(column_name)) {
+            if (auto svr = query_->stringValueRestrictionFor(column_name)) {
                 os << "\nFilter: " << column_name << " = " << *svr;
             } else {
-                auto glb = query_.greatestLowerBoundFor(column_name);
-                auto lub = query_.leastUpperBoundFor(column_name);
+                auto glb = query_->greatestLowerBoundFor(column_name);
+                auto lub = query_->leastUpperBoundFor(column_name);
                 if (glb && lub && glb == lub) {
                     os << "\nFilter: " << column_name << " = " << *glb;
                 }
@@ -164,7 +162,7 @@ private:
     void receiveReply(std::istream &is) override {
         bool is_header = true;
         std::vector<std::string> headers;
-        do {
+        while (true) {
             std::string line;
             std::getline(is, line);
             if (!is || line.empty()) {
@@ -176,17 +174,17 @@ private:
                 is_header = false;
             } else {
                 ECRow row{mc_, headers, columns};
-                if (is_authorized_(row) && !query_.processDataset(Row{&row})) {
+                if (is_authorized_(row) && !query_->processDataset(Row{&row})) {
                     return;
                 }
             }
-        } while (true);
+        }
     }
 
     ICore *mc_;
-    const Table &table_;
-    Query &query_;
-    const std::function<bool(const ECRow &)> is_authorized_;
+    const Table *table_;
+    Query *query_;
+    std::function<bool(const ECRow &)> is_authorized_;
 };
 }  // namespace
 

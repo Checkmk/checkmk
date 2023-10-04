@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -17,23 +17,27 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 # as in the documentation 'Summit-X460-G2-DS.pdf'
 
 
-def parse_netextreme_psu(info):
+def parse_netextreme_psu(string_table):
     try:
-        return {"1": {"power": float(info[0][0]) * pow(10, int(info[0][1]))}}
+        return {"1": {"power": float(string_table[0][0]) * pow(10, int(string_table[0][1]))}}
     except (IndexError, ValueError):
         return {}
 
 
+def discover_netextreme_psu(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["netextreme_psu"] = LegacyCheckDefinition(
     detect=DETECT_NETEXTREME,
-    parse_function=parse_netextreme_psu,
-    discovery_function=discover(),
-    check_function=check_elphase,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.40",
         oids=["1", "2"],
     ),
+    parse_function=parse_netextreme_psu,
+    service_name="Power Supply %s",
+    discovery_function=discover_netextreme_psu,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "power": (110, 120),

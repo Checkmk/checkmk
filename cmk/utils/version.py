@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import Any, Final, NamedTuple, Self
 
 import cmk.utils.paths
-from cmk.utils.i18n import _
 
 
 class _EditionValue(NamedTuple):
@@ -40,6 +39,10 @@ class Edition(_EditionValue, enum.Enum):
     CSE = _EditionValue("cse", "saas", "Checkmk Saas Edition")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
+    @classmethod
+    def from_version_string(cls, raw: str) -> Edition:
+        return cls[raw.split(".")[-1].upper()]
+
 
 @cache
 def omd_version() -> str:
@@ -50,31 +53,11 @@ def omd_version() -> str:
 @cache
 def edition() -> Edition:
     try:
-        return Edition[omd_version().split(".")[-1].upper()]
+        return Edition.from_version_string(omd_version())
     except KeyError:
         # Without this fallback CI jobs may fail.
         # The last job known to fail was we the building of the sphinx documentation
         return Edition.CRE
-
-
-def is_enterprise_edition() -> bool:
-    return edition() is Edition.CEE
-
-
-def is_cloud_edition() -> bool:
-    return edition() is Edition.CCE
-
-
-def is_raw_edition() -> bool:
-    return edition() is Edition.CRE
-
-
-def is_managed_edition() -> bool:
-    return edition() is Edition.CME
-
-
-def is_saas_edition() -> bool:
-    return edition() is Edition.CSE
 
 
 def is_cma() -> bool:
@@ -142,12 +125,15 @@ class _Release:
             return f"-{self.value}"
         return f"{self.r_type.name}{self.value}"
 
+    def is_unspecified(self) -> bool:
+        return self.r_type is RType.na
+
     @classmethod
     def unspecified(cls) -> Self:
         return cls(RType.na, 0)
 
 
-@dataclass(order=True)
+@dataclass(order=True, frozen=True)
 class _BaseVersion:
     major: int
     minor: int
@@ -180,7 +166,7 @@ class Version:
     @classmethod
     def _parse_release_version(cls, vstring: str) -> Self:
         if not (match := cls._RGX_STABLE.fullmatch(vstring)):
-            raise ValueError('Invalid version string "%s"' % vstring)
+            raise ValueError(f'Invalid version string "{vstring}"')
 
         match match.group(1, 2, 3, 4, 5):
             case major, minor, sub, None, None:
@@ -196,7 +182,7 @@ class Version:
     @classmethod
     def _parse_daily_version(cls, vstring: str) -> Self:
         if not (match := cls._RGX_DAILY.fullmatch(vstring)):
-            raise ValueError('Invalid version string "%s"' % vstring)
+            raise ValueError(f'Invalid version string "{vstring}"')
 
         (major, minor, sub, year, month, day) = match.group(1, 2, 3, 4, 5, 6)
 
@@ -351,14 +337,6 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def base_version_parts(version: str) -> tuple[int, int, int]:
-    match = re.match(r"(\d+).(\d+).(\d+)", version)
-    if not match or len(match.groups()) != 3:
-        raise ValueError(_("Unable to parse version: %r") % version)
-    groups = match.groups()
-    return int(groups[0]), int(groups[1]), int(groups[2])
-
-
 def is_daily_build_of_master(version: str) -> bool:
     """
     >>> f = is_daily_build_of_master
@@ -378,36 +356,6 @@ def is_daily_build_of_master(version: str) -> bool:
     True
     """
     return re.match(r"\d{4}.\d{2}.\d{2}(?:-sandbox.+)?$", version) is not None
-
-
-def is_same_major_version(this_version: str, other_version: str) -> bool:
-    """
-    Nightly branch builds e.g. 2.0.0-2022.01.01 are treated as 2.0.0.
-
-    >>> c = is_same_major_version
-    >>> c("2.0.0-2022.01.01", "2.0.0p3")
-    True
-    >>> c("2022.01.01", "2.0.0p3")
-    True
-    >>> c("2022.01.01", "1.6.0p3")
-    True
-    >>> c("1.6.0", "1.6.0p2")
-    True
-    >>> c("1.7.0", "1.6.0")
-    False
-    >>> c("1.6.0", "1.7.0")
-    False
-    >>> c("2.1.0i1", "2.1.0p2")
-    True
-    >>> c("2.1.0", "2.1.0")
-    True
-    """
-    # We can not decide which is the current base version of the master daily builds. For this
-    # reason we always treat them to be compatbile.
-    if is_daily_build_of_master(this_version) or is_daily_build_of_master(other_version):
-        return True
-
-    return base_version_parts(this_version)[:-1] == base_version_parts(other_version)[:-1]
 
 
 class VersionsCompatible:
@@ -486,30 +434,21 @@ def versions_compatible(
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version.from_str("2.2.0p1"), Version.from_str("2.3.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version.from_str("2.2.0p8"), Version.from_str("2.3.0i1")), VersionsCompatible)
     True
     >>> str(c(Version.from_str("2.2.0b1000"), Version.from_str("2.3.0i1")))
-    'This target version requires at least 2.2.0p1'
+    'This target version requires at least 2.2.0p...'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
-    if any(
-        (
-            is_daily_build_of_master(str(from_v)),
-            is_daily_build_of_master(str(to_v)),
-        )
-    ):
+    if from_v.base is None or to_v.base is None:
         return VersionsCompatible()
 
-    from_v_parts = base_version_parts(str(from_v))
-    to_v_parts = base_version_parts(str(to_v))
-
-    # Same major version is allowed
-    if from_v_parts == to_v_parts:
+    if from_v.base == to_v.base:
         return VersionsCompatible()
 
     # Newer major to older is not allowed
-    if from_v_parts > to_v_parts:
+    if from_v.base > to_v.base:
         return VersionsIncompatible(
             "Target version too old (older major version is not supported)."
         )
@@ -548,23 +487,23 @@ def versions_compatible(
         "Target version too new (one major version jump at maximum)."
     )
 
-    if to_v_parts[0] - from_v_parts[0] > 1:
+    if to_v.base.major - from_v.base.major > 1:
         return target_too_new  # preprev 1st number
 
     last_major_releases = {
-        1: (1, 6, 0),
+        1: _BaseVersion(1, 6, 0),
     }
 
-    if to_v_parts[0] - from_v_parts[0] == 1 and to_v_parts[1] == 0:
+    if to_v.base.major - from_v.base.major == 1 and to_v.base.minor == 0:
         # prev major (e.g. last 1.x.0 before 2.0.0)
-        if last_major_releases[from_v_parts[0]] == from_v_parts:
+        if last_major_releases[from_v.base.major] == from_v.base:
             return _check_minimum_patch_release(from_v, to_v)
         return target_too_new  # preprev 1st number
 
-    if to_v_parts[0] == from_v_parts[0]:
-        if to_v_parts[1] - from_v_parts[1] > 1:
+    if to_v.base.major == from_v.base.major:
+        if to_v.base.minor - from_v.base.minor > 1:
             return target_too_new  # preprev in 2nd number
-        if to_v_parts[1] - from_v_parts[1] == 1:
+        if to_v.base.minor - from_v.base.minor == 1:
             return _check_minimum_patch_release(from_v, to_v)  # prev in 2nd number, ignoring 3rd
 
     # Everything else is incompatible
@@ -573,8 +512,11 @@ def versions_compatible(
 
 _REQUIRED_PATCH_RELEASES_MAP: Final = {
     # max can be evaluated in place, obviously, but we keep a list for documentation.
-    (2, 3, 0): max(
-        (Version.from_str("2.2.0p1"),),  # at least the last major version, by default.
+    _BaseVersion(2, 3, 0): max(
+        (
+            Version.from_str("2.2.0p1"),  # at least the last major version, by default.
+            Version.from_str("2.2.0p8"),  # Here we started to sign agents with SHA256
+        ),
     ),
 }
 
@@ -582,9 +524,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
 def _check_minimum_patch_release(
     from_v: Version, to_v: Version, /
 ) -> VersionsCompatible | VersionsIncompatible:
-    if not (
-        required_patch_release := _REQUIRED_PATCH_RELEASES_MAP.get(base_version_parts(str(to_v)))
-    ):
+    if to_v.base is None:
+        return VersionsCompatible()
+    if not (required_patch_release := _REQUIRED_PATCH_RELEASES_MAP.get(to_v.base)):
         return VersionsCompatible()
     if from_v >= required_patch_release:
         return VersionsCompatible()
@@ -639,7 +581,7 @@ def _get_os_info() -> str:
         return info["PRETTY_NAME"]
 
     if info:
-        return "%s" % info
+        return f"{info}"
 
     if os.environ.get("OMD_ROOT"):
         disto_info = os.environ["OMD_ROOT"] + "/share/omd/distro.info"

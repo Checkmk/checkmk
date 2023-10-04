@@ -8,23 +8,18 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
-def parse_jolokia_jvm_threading(info):
+def parse_jolokia_jvm_threading(string_table):
     parsed = {}
-    for instance, mbean, data in parse_jolokia_json_output(info):
+    for instance, mbean, data in parse_jolokia_json_output(string_table):
         type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
 
@@ -38,13 +33,13 @@ def parse_jolokia_jvm_threading(info):
     return parsed
 
 
-@discover
-def discover_jolokia_jvm_threading(_instance, data):
-    return bool(data.get("Threading"))
+def discover_jolokia_jvm_threading(section):
+    yield from ((instance, {}) for instance, data in section.items() if data.get("Threading"))
 
 
-@get_parsed_item_data
-def check_jolokia_jvm_threading(item, params, instance_data):
+def check_jolokia_jvm_threading(item, params, parsed):
+    if not (instance_data := parsed.get(item)):
+        return
     data = instance_data.get("Threading", {})
     count = data.get("ThreadCount")
     if count is not None:
@@ -54,7 +49,7 @@ def check_jolokia_jvm_threading(item, params, instance_data):
         )
 
         counter = "jolokia_jvm_threading.count.%s" % item
-        thread_rate = get_rate(counter, time.time(), count, allow_negative=True)
+        thread_rate = get_rate(get_value_store(), counter, time.time(), count)
         levels = params.get("threadrate_levels")
         yield check_levels(thread_rate, "ThreadRate", levels, infoname="Rate")
 
@@ -74,9 +69,9 @@ def check_jolokia_jvm_threading(item, params, instance_data):
 
 check_info["jolokia_jvm_threading"] = LegacyCheckDefinition(
     parse_function=parse_jolokia_jvm_threading,
+    service_name="JVM %s Threading",
     discovery_function=discover_jolokia_jvm_threading,
     check_function=check_jolokia_jvm_threading,
-    service_name="JVM %s Threading",
     check_ruleset_name="jvm_threading",
 )
 
@@ -85,7 +80,7 @@ def discover_jolokia_jvm_threading_pool(parsed):
     for instance in parsed:
         threadpool_data = parsed[instance].get("ThreadPool", {})
         for name in threadpool_data:
-            yield "%s ThreadPool %s" % (instance, name), {}
+            yield f"{instance} ThreadPool {name}", {}
 
 
 def check_jolokia_jvm_threading_pool(item, params, parsed):
@@ -121,9 +116,10 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
 
 
 check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
+    service_name="JVM %s",
+    sections=["jolokia_jvm_threading"],
     discovery_function=discover_jolokia_jvm_threading_pool,
     check_function=check_jolokia_jvm_threading_pool,
-    service_name="JVM %s",
     check_ruleset_name="jvm_tp",
     check_default_parameters={
         "currentThreadsBusy": (80, 90),

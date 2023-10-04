@@ -12,14 +12,14 @@ from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 huawei_switch_stack_unknown_role = "unknown"
 
 
-def parse_huawei_switch_stack(info):
+def parse_huawei_switch_stack(string_table):
     stack_role_names = {
         "1": "master",
         "2": "standby",
         "3": "slave",
     }
 
-    stack_enabled_info, stack_role_info = info
+    stack_enabled_info, stack_role_info = string_table
     if not stack_enabled_info or stack_enabled_info[0][0] != "1":
         return {}
 
@@ -48,15 +48,11 @@ def check_huawei_switch_stack(item, params, parsed):
         yield 0, item_data
 
     else:
-        yield 2, "Unexpected role: %s (Expected: %s)" % (item_data, params["expected_role"])
+        yield 2, "Unexpected role: {} (Expected: {})".format(item_data, params["expected_role"])
 
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_stack,
-    discovery_function=inventory_huawei_switch_stack,
-    check_function=check_huawei_switch_stack,
-    service_name="Stack role %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2011.5.25.183.1",
@@ -67,4 +63,8 @@ check_info["huawei_switch_stack"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3"],
         ),
     ],
+    parse_function=parse_huawei_switch_stack,
+    service_name="Stack role %s",
+    discovery_function=inventory_huawei_switch_stack,
+    check_function=check_huawei_switch_stack,
 )

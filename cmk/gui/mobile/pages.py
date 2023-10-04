@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union
 
 from cmk.utils.site import omd_site
 
@@ -24,18 +23,17 @@ from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.userdb.utils import active_connections_by_type
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows, VisualContext
-from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.userdb import active_connections_by_type
+from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
+from cmk.gui.view_renderer import ABCViewRenderer
 from cmk.gui.views.command import command_registry, CommandSpec, core_command
 from cmk.gui.views.page_show_view import (
-    ABCViewRenderer,
     get_limit,
     get_row_count,
     get_user_sorters,
@@ -43,9 +41,10 @@ from cmk.gui.views.page_show_view import (
     process_view,
 )
 from cmk.gui.views.store import get_permitted_views
-from cmk.gui.visuals import view_title
+from cmk.gui.visuals import get_only_sites_from_context, view_title
+from cmk.gui.visuals.filter import Filter
 
-HeaderButton = Union[tuple[str, str, str], tuple[str, str, str, str]]
+HeaderButton = tuple[str, str, str] | tuple[str, str, str, str]
 Items = list[tuple[str, str, str]]
 NavigationBar = list[tuple[str, str, str, str]]
 
@@ -66,7 +65,7 @@ def mobile_html_head(title: str) -> None:
     html.stylesheet(href="jquery/jquery.mobile-1.4.5.min.css")
     html.stylesheet(href="themes/facelift/theme.css")
 
-    html.link(rel="apple-touch-icon", href="themes/facelift/images/ios_logo.png")
+    html.link(rel="apple-touch-icon", href="themes/facelift/images/favicon.ico")
     html.javascript_file(src="js/mobile_min.js")
     html.set_js_csrf_token()
 
@@ -244,7 +243,7 @@ def page_index() -> None:
 
             view = View(view_name, view_spec, context)
             view.row_limit = get_limit()
-            view.only_sites = visuals.get_only_sites_from_context(context)
+            view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
             view.want_checkboxes = get_want_checkboxes()
 
@@ -294,7 +293,7 @@ def page_view() -> None:
 
     view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
-    view.only_sites = visuals.get_only_sites_from_context(context)
+    view.only_sites = get_only_sites_from_context(context)
     view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
     view.want_checkboxes = get_want_checkboxes()
 
@@ -483,19 +482,25 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    confirm_options, title, executor = core_command(what, rows[0], 0, rows)[
+    confirm_options, confirm_dialog_options, executor = core_command(what, rows[0], 0, rows)[
         1:4
-    ]  # just get confirm_options, title and executor
+    ]  # just get confirm_options, confirm_dialog_options and executor
 
-    confirm_title = _("Do you really want to %s") % title
-    r = confirm_with_preview(confirm_title, confirm_options)
-    if r is not True:
-        return r is None  # Show commands on negative answer
+    if not command_confirm_dialog(
+        confirm_options,
+        confirm_dialog_options.confirm_title,
+        confirm_dialog_options.affected + confirm_dialog_options.additions
+        if confirm_dialog_options.additions
+        else confirm_dialog_options.affected,
+        confirm_dialog_options.icon_class,
+        confirm_dialog_options.confirm_button,
+    ):
+        return False
 
     count = 0
     already_executed: set[CommandSpec] = set()
     for nr, row in enumerate(rows):
-        nagios_commands, _confirm_options, title, executor = core_command(
+        nagios_commands, _confirm_options, _confirm_dialog_options, executor = core_command(
             what,
             row,
             nr,

@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Final
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 class AutoQueue(Iterable[HostName]):
@@ -27,6 +27,12 @@ class AutoQueue(Iterable[HostName]):
 
     def __iter__(self) -> Iterator[HostName]:
         return (HostName(f.name) for f in self._ls()).__iter__()
+
+    def add(self, host_name: HostName) -> None:
+        self.path.mkdir(parents=True, exist_ok=True)
+        file_path = self.path / host_name
+        if not file_path.exists():
+            file_path.touch()
 
     def oldest(self) -> float | None:
         return min((f.stat().st_mtime for f in self._ls()), default=None)

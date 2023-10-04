@@ -14,8 +14,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, Any]
 
 
-def parse_storeonce4x_d2d_services(info):
-    return json.loads(info[0][0])["services"]
+def parse_storeonce4x_d2d_services(string_table):
+    return json.loads(string_table[0][0])["services"]
 
 
 def discover_storeonce4x_d2d_services(section: Section) -> Iterable[tuple[None, dict]]:
@@ -30,7 +30,7 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
         healthLevelString = service_data["healthLevelString"]
         healthString = service_data["healthString"]
         subsystemState = service_data["subsystemState"]
-        yield health_map.get(healthLevelString, 3), "%s: %s (%s)" % (
+        yield health_map.get(healthLevelString, 3), "{}: {} ({})".format(
             service_name,
             healthString,
             subsystemState,
@@ -39,7 +39,7 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
 
 check_info["storeonce4x_d2d_services"] = LegacyCheckDefinition(
     parse_function=parse_storeonce4x_d2d_services,
+    service_name="D2D Services",
     discovery_function=discover_storeonce4x_d2d_services,
     check_function=check_storeonce4x_d2d_services,
-    service_name="D2D Services",
 )

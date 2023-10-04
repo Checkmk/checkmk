@@ -19,15 +19,9 @@
 
 # mypy: disable-error-code="var-annotated,arg-type"
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 nodes_info = {
     "open_file_descriptors": "Open file descriptors",
@@ -38,10 +32,10 @@ nodes_info = {
 }
 
 
-def parse_elasticsearch_nodes(info):
+def parse_elasticsearch_nodes(string_table):
     parsed = {}
 
-    for name, desc, value_str in info:
+    for name, desc, value_str in string_table:
         try:
             if desc == "cpu_percent":
                 value = float(value_str)
@@ -56,10 +50,11 @@ def parse_elasticsearch_nodes(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_elasticsearch_nodes(item, params, item_data):
+def check_elasticsearch_nodes(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     for data_key, params_key, hr_func in [
-        ("cpu_percent", "cpu_levels", get_percent_human_readable),
+        ("cpu_percent", "cpu_levels", render.percent),
         ("cpu_total_in_millis", "cpu_total_in_millis", int),
         ("mem_total_virtual_in_bytes", "mem_total_virtual_in_bytes", get_bytes_human_readable),
         ("open_file_descriptors", "open_file_descriptors", int),
@@ -72,11 +67,15 @@ def check_elasticsearch_nodes(item, params, item_data):
         )
 
 
+def discover_elasticsearch_nodes(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
     parse_function=parse_elasticsearch_nodes,
-    check_function=check_elasticsearch_nodes,
-    discovery_function=discover(),
     service_name="Elasticsearch Node %s",
+    discovery_function=discover_elasticsearch_nodes,
+    check_function=check_elasticsearch_nodes,
     check_ruleset_name="elasticsearch_nodes",
     check_default_parameters={"cpu_levels": (75.0, 90.0)},
 )

@@ -28,11 +28,13 @@ def check_dell_chassis_power(item, _no_params, info):
     }
     infotext, state = state_table.get(status, ("unknown state, ", 3))
 
-    infotext += "Power: %.1f W, PotentialPower: %.1f W, MaxPower: %.1f W, Current: %.1f A" % (
-        savefloat(power),
-        savefloat(PotentialPower),
-        savefloat(MaxPowerSpec),
-        savefloat(current),
+    infotext += (
+        "Power: {:.1f} W, PotentialPower: {:.1f} W, MaxPower: {:.1f} W, Current: {:.1f} A".format(
+            savefloat(power),
+            savefloat(PotentialPower),
+            savefloat(MaxPowerSpec),
+            savefloat(current),
+        )
     )
 
     perfdata = [("power", power + "Watt", 0, PotentialPower, "", MaxPowerSpec)]
@@ -42,11 +44,11 @@ def check_dell_chassis_power(item, _no_params, info):
 
 check_info["dell_chassis_power"] = LegacyCheckDefinition(
     detect=DETECT_CHASSIS,
-    check_function=check_dell_chassis_power,
-    discovery_function=inventory_dell_chassis_power,
-    service_name="Chassis Power",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2",
         oids=["3.1.5.0", "4.1.1.2.1", "4.1.1.4.1", "4.1.1.13.1", "4.1.1.14.1"],
     ),
+    service_name="Chassis Power",
+    discovery_function=inventory_dell_chassis_power,
+    check_function=check_dell_chassis_power,
 )

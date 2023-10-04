@@ -19,7 +19,8 @@ UNZIP := $(shell which unzip) -o
 BAZEL_BUILD := "../scripts/run-bazel-build.sh"
 
 # Bazel paths
-BAZEL_BIN := "bazel-bin/external"
+BAZEL_BIN := "$(REPO_PATH)/bazel-bin"
+BAZEL_BIN_EXT := "$(BAZEL_BIN)/external"
 
 HUMAN_INSTALL_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -install,$(package)))
 HUMAN_BUILD_TARGETS := $(foreach package,$(PACKAGES),$(addsuffix -build,$(package)))
@@ -122,9 +123,7 @@ include \
     packages/openssl/openssl.make \
     packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
-    packages/lasso/lasso.make \
     packages/xinetd/xinetd.make \
-    packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/freetds/freetds.make \
@@ -155,6 +154,7 @@ include \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \
     packages/livestatus/livestatus.make \
+    packages/neb/neb.make \
     packages/unixcat/unixcat.make \
     packages/xmlsec1/xmlsec1.make
 

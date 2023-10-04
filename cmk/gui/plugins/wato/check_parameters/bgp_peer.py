@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_bgp_peer():
@@ -48,6 +48,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="bgp_peer",
         group=RulespecGroupCheckParametersNetworking,
+        item_spec=lambda: TextInput(title=_("Remote IP address"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bgp_peer,
         title=lambda: _("BGP Peer State Mapping"),

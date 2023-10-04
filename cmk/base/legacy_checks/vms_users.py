@@ -29,7 +29,7 @@ def check_vms_users(item, params, info):
         interactive, _subproc, _batch, _network = list(map(saveint, line[1:])) + padding
         if interactive:
             num_sessions += interactive
-            infos.append(("%s: %d" % (line[0], interactive)))
+            infos.append("%s: %d" % (line[0], interactive))
 
     perfdata = [("sessions", num_sessions)]
 
@@ -39,7 +39,7 @@ def check_vms_users(item, params, info):
 
 
 check_info["vms_users"] = LegacyCheckDefinition(
-    check_function=check_vms_users,
-    discovery_function=inventory_vms_users,
     service_name="VMS Users",
+    discovery_function=inventory_vms_users,
+    check_function=check_vms_users,
 )

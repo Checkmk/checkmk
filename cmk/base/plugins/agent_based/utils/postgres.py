@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from ..agent_based_api.v1.type_defs import StringTable
 
@@ -11,7 +11,7 @@ Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
 def parse_dbs(string_table: StringTable) -> Section:
-    dbs: Dict[str, List[Mapping[str, str]]] = {}
+    dbs: dict[str, list[Mapping[str, str]]] = {}
     inst_name = ""
     lines = iter(string_table)
 

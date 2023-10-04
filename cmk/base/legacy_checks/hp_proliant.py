@@ -37,7 +37,7 @@ def check_proliant_general(_no_item, _no_params, info):
 
     status, firmware, serial_number = info[0]
     state, state_readable = map_states.get(status, (3, "unhandled[%s]" % status))
-    return state, "Status: %s, Firmware: %s, S/N: %s" % (state_readable, firmware, serial_number)
+    return state, f"Status: {state_readable}, Firmware: {firmware}, S/N: {serial_number}"
 
 
 check_info["hp_proliant"] = LegacyCheckDefinition(
@@ -49,11 +49,11 @@ check_info["hp_proliant"] = LegacyCheckDefinition(
             exists(".1.3.6.1.4.1.232.11.1.3.0"),
         ),
     ),
-    discovery_function=inventory_proliant_general,
-    check_function=check_proliant_general,
-    service_name="General Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232",
         oids=["11.1.3.0", "11.2.14.1.1.5.0", "2.2.2.1.0"],
     ),
+    service_name="General Status",
+    discovery_function=inventory_proliant_general,
+    check_function=check_proliant_general,
 )

@@ -5,6 +5,7 @@
 
 import re
 import time
+from collections.abc import Iterable, Mapping, Sequence
 
 # Example output from agent:
 # 0 Service_FOO V=1 This Check is OK
@@ -15,15 +16,15 @@ import time
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.cache_helper import CacheInfo, render_cache_info
 
 # we don't have IgnoreResults and thus don't want to handle them
-LocalCheckResult = Iterable[Union[Metric, Result]]
-Levels = Optional[Tuple[float, float]]
+LocalCheckResult = Iterable[Metric | Result]
+Levels = tuple[float, float] | None
 
 
 class Perfdata(NamedTuple):
@@ -31,11 +32,11 @@ class Perfdata(NamedTuple):
     value: float
     levels_upper: Levels
     levels_lower: Levels
-    boundaries: Optional[Tuple[Optional[float], Optional[float]]]
+    boundaries: tuple[float | None, float | None] | None
 
 
 class LocalResult(NamedTuple):
-    cache_info: Optional[CacheInfo]
+    cache_info: CacheInfo | None
     item: str
     state: State
     apply_levels: bool
@@ -49,7 +50,7 @@ class LocalError(NamedTuple):
 
 
 class LocalSection(NamedTuple):
-    errors: List[LocalError]
+    errors: Mapping[str, LocalError]
     data: Mapping[str, LocalResult]
 
 
@@ -63,15 +64,15 @@ def float_ignore_uom(value: str) -> float:
     return 0.0
 
 
-def _try_convert_to_float(value: str) -> Optional[float]:
+def _try_convert_to_float(value: str) -> float | None:
     try:
         return float(value)
     except ValueError:
         return None
 
 
-def _sanitize_state(raw_state: str) -> Tuple[Union[int, str], str]:
-    state_mapping: Mapping[str, Tuple[Union[int, str], str]] = {
+def _sanitize_state(raw_state: str) -> tuple[int | str, str]:
+    state_mapping: Mapping[str, tuple[int | str, str]] = {
         "0": (0, ""),
         "1": (1, ""),
         "2": (2, ""),
@@ -117,7 +118,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     value = float_ignore_uom(raw[0])
 
     # create a check_levels compatible levels quadruple
-    levels: List[Optional[float]] = [None] * 4
+    levels: list[float | None] = [None] * 4
     if len(raw) >= 2:
         warn = raw[1].split(":", 1)
         levels[0] = _try_convert_to_float(warn[-1])
@@ -141,7 +142,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     if levels[2] is not None and levels[3] is None:
         levels[3] = float("-inf")
 
-    def optional_tuple(warn: Optional[float], crit: Optional[float]) -> Levels:
+    def optional_tuple(warn: float | None, crit: float | None) -> Levels:
         assert (warn is None) == (crit is None)
         if warn is not None and crit is not None:
             return warn, crit
@@ -159,7 +160,7 @@ def _parse_perfentry(entry: str) -> Perfdata:
     )
 
 
-def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
+def _parse_perftxt(string: str) -> tuple[Iterable[Perfdata], str]:
     if string == "-":
         return [], ""
 
@@ -175,7 +176,7 @@ def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
     return perfdata, ""
 
 
-def _split_check_result(line: str) -> Optional[Tuple[str, str, str, Optional[str]]]:
+def _split_check_result(line: str) -> tuple[str, str, str, str | None] | None:
     """Parse the output of a local check and return the individual components
     Note: this regex does not check the validity of each component. E.g. the state component
           could be 'NOK' (which is not a valid state) but would be complained later
@@ -255,10 +256,10 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
     #       would make it invalid with no hints about what exactly was the problem.
     #       Therefore we first apply a very loosy pattern to "split" into raw components
     #       and later check those for validity.
-    errors = []
+    errors = {}
     parsed_data = {}
 
-    # turn splittet lines into monolithic strings again in order to be able to handle
+    # turn split lines into monolithic strings again in order to be able to handle
     # all input in the same manner. current `local` sections are 0-separated anyway so
     # joining is only needed for legacy input
     for line in (l[0] if len(l) == 1 else " ".join(l) for l in string_table):
@@ -268,48 +269,33 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         raw_cached, raw_result = split_cache_match.groups()
 
         if not raw_result:
-            errors.append(
-                LocalError(
-                    output=line,
-                    reason="Received empty line. Maybe some of the local checks"
-                    " returns a superfluous newline character.",
-                )
-            )
             continue
 
         raw_components = _split_check_result(raw_result)
         if not raw_components:
-            # splitting into raw components didn't work out so the given line must
-            # be really crappy
-            errors.append(
-                LocalError(
-                    output=line,
-                    reason="Received wrong format of local check output. "
-                    "Please read the documentation regarding the correct format: "
-                    "https://docs.checkmk.com/latest/en/localchecks.html",
-                )
-            )
             continue
 
         # these are raw components - not checked for validity yet
         raw_state, raw_item, raw_perf, raw_info = raw_components
 
+        item = raw_item
+
         state, state_msg = _sanitize_state(raw_state)
         if state_msg:
-            errors.append(LocalError(output=line, reason=state_msg))
-
-        item = raw_item
+            errors[item] = LocalError(output=line, reason=state_msg)
+            continue
 
         perfdata, perf_msg = _parse_perftxt(raw_perf)
         if perf_msg:
-            errors.append(LocalError(output=line, reason=perf_msg))
+            errors[item] = LocalError(output=line, reason=perf_msg)
+            continue
 
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)
         text = (raw_info or "").replace("\\n", "\n")
         if state_msg or perf_msg:
             state = 3
-            text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
+            text = f"{state_msg}{perf_msg}Output is: {text}"
 
         parsed_data[item] = LocalResult(
             cache_info=CacheInfo.from_raw(raw_cached, now),
@@ -363,6 +349,7 @@ def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
             metric_name=metric_name,
             label=_labelify(entry.name),
             boundaries=entry.boundaries,
+            notice_only=True,
         )
 
 
@@ -405,21 +392,19 @@ def _labelify(word: str) -> str:
 
 
 def discover_local(section: LocalSection) -> DiscoveryResult:
-    if section.errors:
-        output = section.errors[0].output
-        reason = section.errors[0].reason
-        raise ValueError(
-            (
-                "Invalid line in agent section <<<local>>>. "
-                'Reason: %s First offending line: "%s"' % (reason, output)
-            )
-        )
-
     for key in section.data:
+        yield Service(item=key)
+
+    for key in section.errors:
         yield Service(item=key)
 
 
 def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
+    if (local_error := section.errors.get(item)) is not None:
+        raise ValueError(
+            f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}'
+        )
+
     local_result = section.data.get(item)
     if local_result is None:
         return

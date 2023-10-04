@@ -7,8 +7,11 @@
 import json
 import math
 import time
+from collections.abc import MutableMapping
 from itertools import islice
-from typing import Literal, MutableMapping, NamedTuple, Optional, Tuple, TypedDict, Union
+from typing import Literal, NamedTuple
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -34,8 +37,8 @@ from cmk.base.plugins.agent_based.utils.kube import (
 
 
 def discovery_kube_pod_resources(
-    section_kube_pod_resources: Optional[PodResources],
-    section_kube_allocatable_pods: Optional[AllocatablePods],
+    section_kube_pod_resources: PodResources | None,
+    section_kube_allocatable_pods: AllocatablePods | None,
 ) -> DiscoveryResult:
     yield Service()
 
@@ -129,11 +132,11 @@ def _check_phase_duration_pods(
     return Result(state=State.OK, summary=summary)
 
 
-VSResultPercent = Union[
-    Tuple[Literal["levels_abs"], Tuple[int, int]],
-    Tuple[Literal["levels_perc"], Tuple[float, float]],
-    Literal["no_levels"],
-]
+VSResultPercent = (
+    tuple[Literal["levels_abs"], tuple[int, int]]
+    | tuple[Literal["levels_perc"], tuple[float, float]]
+    | Literal["no_levels"]
+)
 
 
 class Params(TypedDict):
@@ -216,8 +219,8 @@ def _check_kube_pod_resources(
     now: float,
     value_store: ValueStore,
     params: Params,
-    section_kube_pod_resources: Optional[PodResources],
-    section_kube_allocatable_pods: Optional[AllocatablePods],
+    section_kube_pod_resources: PodResources | None,
+    section_kube_allocatable_pods: AllocatablePods | None,
 ) -> CheckResult:
     assert section_kube_pod_resources is not None, "Missing Api data"
     yield from check_kube_pods(params, section_kube_pod_resources, now, value_store)
@@ -241,8 +244,8 @@ def _check_kube_pod_resources(
 
 def check_kube_pod_resources(
     params: Params,
-    section_kube_pod_resources: Optional[PodResources],
-    section_kube_allocatable_pods: Optional[AllocatablePods],
+    section_kube_pod_resources: PodResources | None,
+    section_kube_allocatable_pods: AllocatablePods | None,
 ) -> CheckResult:
     yield from _check_kube_pod_resources(
         time.time(),

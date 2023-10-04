@@ -9,7 +9,6 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.aws_rds import (
-    AWSSectionMetrics,
     check_aws_rds,
     check_aws_rds_agent_jobs,
     check_aws_rds_bin_log_usage,
@@ -31,6 +30,7 @@ from cmk.base.plugins.agent_based.aws_rds import (
     discover_aws_rds_transaction_logs_usage,
     parse_aws_rds,
 )
+from cmk.base.plugins.agent_based.utils.aws import AWSSectionMetrics
 
 SECTION = {
     "database-1 [eu-central-1]": {

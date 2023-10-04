@@ -164,3 +164,6 @@ def make_experimental_config_file() -> Path:
     config_storage_format = "raw"
     """
     return Path(default_config_dir) / "experimental.mk"
+
+
+cse_config_dir = Path("/etc/cse")

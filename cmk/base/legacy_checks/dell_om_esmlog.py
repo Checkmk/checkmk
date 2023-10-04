@@ -33,12 +33,11 @@ def check_dell_om_esmlog(_no_item, _no_params, info):
 
 check_info["dell_om_esmlog"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_esmlog,
-    discovery_function=inventory_dell_om_esmlog,
-    service_name="ESM Log",
-    # There is no other way to find out that openmanage is present.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.200.10.1.41",
         oids=["1"],
     ),
+    service_name="ESM Log",
+    discovery_function=inventory_dell_om_esmlog,
+    check_function=check_dell_om_esmlog,
 )

@@ -35,8 +35,8 @@ def check_veeam_jobs(item, _no_params, info):
         if job_name != item:
             continue  # Skip not matching lines
 
-        if job_last_state in ["Working", "Postprocessing"]:
-            return 0, "Running since %s (current state is: %s)" % (
+        if job_last_state in ["Starting", "Working", "Postprocessing"]:
+            return 0, "Running since {} (current state is: {})".format(
                 job_creation_time,
                 job_last_state,
             )
@@ -53,7 +53,7 @@ def check_veeam_jobs(item, _no_params, info):
         else:
             state = 3
 
-        return state, "State: %s, Result: %s, Creation time: %s, End time: %s, Type: %s" % (
+        return state, "State: {}, Result: {}, Creation time: {}, End time: {}, Type: {}".format(
             job_last_state,
             job_last_result,
             job_creation_time,
@@ -63,7 +63,7 @@ def check_veeam_jobs(item, _no_params, info):
 
 
 check_info["veeam_jobs"] = LegacyCheckDefinition(
-    check_function=check_veeam_jobs,
-    discovery_function=inventory_veeam_jobs,
     service_name="VEEAM Job %s",
+    discovery_function=inventory_veeam_jobs,
+    check_function=check_veeam_jobs,
 )

@@ -35,10 +35,10 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_graylog_nodes(info):
+def parse_graylog_nodes(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         node_details = json.loads(line[0])
 
         for node, detail in node_details.items():
@@ -77,9 +77,9 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
                 if value is None:
                     continue
 
-                state = params.get("%s%s" % (levels, str(value).lower()), 1)
+                state = params.get(f"{levels}{str(value).lower()}", 1)
 
-                yield state, "%s: %s" % (
+                yield state, "{}: {}".format(
                     infotext,
                     str(value).replace("True", "yes").replace("False", "no"),
                 )
@@ -138,9 +138,9 @@ def check_graylog_nodes(item, params, parsed):  # pylint: disable=too-many-branc
 
 check_info["graylog_nodes"] = LegacyCheckDefinition(
     parse_function=parse_graylog_nodes,
-    check_function=check_graylog_nodes,
-    discovery_function=inventory_graylog_nodes,
     service_name="Graylog Node %s",
+    discovery_function=inventory_graylog_nodes,
+    check_function=check_graylog_nodes,
     check_ruleset_name="graylog_nodes",
     check_default_parameters={
         "lb_throttled": 2,

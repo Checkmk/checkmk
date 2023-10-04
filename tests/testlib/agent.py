@@ -18,7 +18,7 @@ from tests.testlib import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import execute
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 
@@ -167,17 +167,16 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 def register_controller(
-    contoller_path: Path,
-    site: Site,
-    hostname: HostName,
+    contoller_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
     execute(
         [
             "sudo",
             contoller_path.as_posix(),
+            "--verbose",
             "register",
             "--server",
-            site.http_address,
+            site_address if site_address else site.http_address,
             "--site",
             site.id,
             "--hostname",
@@ -206,7 +205,7 @@ def wait_until_host_receives_data(
 
 
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
-    return json.loads(
+    return json.loads(  # type: ignore[no-any-return]
         execute(
             [
                 "sudo",

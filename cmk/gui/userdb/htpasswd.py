@@ -10,17 +10,17 @@ from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.htpasswd import Htpasswd
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
+from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import (
     CheckCredentialsResult,
     ConnectorType,
     user_connector_registry,
     UserConnector,
 )
-from cmk.gui.type_defs import UserSpec
 
 
 # Checkmk supports different authentication frontends for verifying the

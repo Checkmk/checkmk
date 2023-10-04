@@ -40,14 +40,14 @@ def check_kentix_humidity(
     _no_item: None, _no_params: Mapping[str, object], section: Section
 ) -> Iterable:
     perfdata = [("humidity", section.reading, section.upper_warn, None)]
-    infotext = "%.1f%% (min/max at %.1f%%/%.1f%%)" % (
+    infotext = "{:.1f}% (min/max at {:.1f}%/{:.1f}%)".format(
         section.reading,
         section.lower_warn,
         section.upper_warn,
     )
     if section.reading >= section.upper_warn or section.reading <= section.lower_warn:
         state = 1
-        infotext = "%s:  %s" % (section.text, infotext)
+        infotext = f"{section.text}:  {infotext}"
     else:
         state = 0
     return state, infotext, perfdata
@@ -63,10 +63,6 @@ _OIDS = [
 
 check_info["kentix_humidity"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_humidity,
-    check_function=check_kentix_humidity,
-    discovery_function=inventory_kentix_humidity,
-    service_name="Humidity",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.2",
@@ -77,4 +73,8 @@ check_info["kentix_humidity"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "5"],
         ),
     ],
+    parse_function=parse_kentix_humidity,
+    service_name="Humidity",
+    discovery_function=inventory_kentix_humidity,
+    check_function=check_kentix_humidity,
 )

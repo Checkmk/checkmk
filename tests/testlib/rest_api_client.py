@@ -13,11 +13,15 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TypedDict
+from typing import Any, cast, Literal, NoReturn
+
+from typing_extensions import TypedDict
 
 from cmk.utils import version
-from cmk.utils.type_defs import HTTPMethod
-from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
+
+from cmk.gui.http import HTTPMethod
+from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule
+from cmk.gui.rest_api_types.site_connection import SiteConfig
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -43,6 +47,10 @@ API_DOMAIN = Literal[
     "service_group_config",
     "contact_group_config",
     "site_connection",
+    "notification_rule",
+    "comment",
+    "event_console",
+    "audit_log",
 ]
 
 
@@ -52,13 +60,10 @@ def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
 
 def set_if_match_header(
     if_match: IF_MATCH_HEADER_OPTIONS,
-    resp: Response,
 ) -> Mapping[str, str] | None:
     match if_match:
         case "star":
             return {"If-Match": "*"}
-        case "valid_etag":
-            return {"If-Match": resp.headers["ETag"]}
         case "invalid_etag":
             return {"If-Match": "asdf"}
         case _:
@@ -76,9 +81,40 @@ class Response:
         return self
 
     @property
-    def json(self):
-        assert self.body is not None  # mostly for mypy
+    def json(self) -> Any:
+        assert self.body is not None
         return json.loads(self.body.decode("utf-8"))
+
+
+class RestApiRequestException(Exception):
+    def __init__(
+        self,
+        url: str,
+        method: str,
+        body: Any | None = None,
+        headers: Mapping[str, str] | None = None,
+        query_params: Mapping[str, Any] | None = None,
+    ) -> None:
+        super().__init__(url, method, body, headers)
+        self.url = url
+        self.query_params = query_params
+        self.method = method
+        self.body = body
+        self.headers = headers
+
+    def __str__(self) -> str:
+        return pprint.pformat(
+            {
+                "request": {
+                    "method": self.method,
+                    "url": self.url,
+                    "query_params": self.query_params,
+                    "body": self.body,
+                    "headers": self.headers,
+                },
+            },
+            compact=True,
+        )
 
 
 class RestApiException(Exception):
@@ -127,16 +163,16 @@ class RestApiException(Exception):
 def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
-            return link
+            return link  # type: ignore[no-any-return]
     if "result" in resp:
         for link in resp["result"].get("links", []):
             if link["rel"].startswith(rel):
-                return link
+                return link  # type: ignore[no-any-return]
     for member in resp.get("members", {}).values():
         if member["memberType"] == "action":
             for link in member["links"]:
                 if link["rel"].startswith(rel):
-                    return link
+                    return link  # type: ignore[no-any-return]
     raise KeyError(f"{rel!r} not found")
 
 
@@ -348,19 +384,6 @@ class RestApiClient:
         )
 
 
-CLIENTS: dict = {}
-
-
-def register_client(client):
-    CLIENTS[client.__name__.replace("Client", "")] = client
-
-    def client_register():
-        return client
-
-    return client_register
-
-
-@register_client
 class LicensingClient(RestApiClient):
     domain: API_DOMAIN = "licensing"
 
@@ -374,7 +397,7 @@ class LicensingClient(RestApiClient):
     def call_configure_licensing_settings(
         self, settings: Mapping[str, str | Mapping[str, str]], expect_ok: bool = False
     ) -> Response:
-        body = {"settings": settings}
+        body = {"settings": settings} if settings else {}
         return self.request(
             "put",
             url="/domain-types/licensing/actions/configure/invoke",
@@ -383,7 +406,6 @@ class LicensingClient(RestApiClient):
         )
 
 
-@register_client
 class ActivateChangesClient(RestApiClient):
     domain: API_DOMAIN = "activation_run"
 
@@ -419,7 +441,7 @@ class ActivateChangesClient(RestApiClient):
                 "sites": sites,
                 "force_foreign_changes": force_foreign_changes,
             },
-            headers=set_if_match_header(etag, self.list_pending_changes()),
+            headers=self._set_etag_header(etag),
             expect_ok=expect_ok,
         )
 
@@ -441,7 +463,7 @@ class ActivateChangesClient(RestApiClient):
                 "force_foreign_changes": force_foreign_changes,
             },
             expect_ok=False,
-            headers=set_if_match_header(etag, self.list_pending_changes()),
+            headers=self._set_etag_header(etag),
             follow_redirects=False,
         )
 
@@ -480,42 +502,60 @@ class ActivateChangesClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def _set_etag_header(self, etag: IF_MATCH_HEADER_OPTIONS) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.list_pending_changes().headers["ETag"]}
+        return set_if_match_header(etag)
 
-@register_client
+
 class UserClient(RestApiClient):
     domain: API_DOMAIN = "user_config"
 
-    # TODO: add optional parameters
     def create(
         self,
         username: str,
         fullname: str,
-        customer: str = "provider",
+        customer: str | None = None,
         authorized_sites: Sequence[str] | None = None,
         contactgroups: Sequence[str] | None = None,
-        auth_option: dict[str, str] | None = None,
+        auth_option: dict[str, Any] | None = None,
         roles: list[str] | None = None,
+        idle_timeout: dict[str, Any] | None = None,
+        interface_options: dict[str, str] | None = None,
+        disable_notifications: dict[str, Any] | None = None,
+        disable_login: bool | None = None,
+        pager_address: str | None = None,
+        language: str | None = None,
+        temperature_unit: str | None = None,
+        contact_options: dict[str, Any] | None = None,
+        extra: dict[str, Any] | None = None,
         expect_ok: bool = True,
     ) -> Response:
+        if extra is None:
+            extra = {}
+
         body: dict[str, Any] = {
-            "username": username,
-            "fullname": fullname,
+            k: v
+            for k, v in {
+                **extra,
+                "username": username,
+                "fullname": fullname,
+                "authorized_sites": authorized_sites,
+                "contactgroups": contactgroups,
+                "auth_option": auth_option,
+                "roles": roles,
+                "customer": customer,
+                "idle_timeout": idle_timeout,
+                "interface_options": interface_options,
+                "disable_notifications": disable_notifications,
+                "disable_login": disable_login,
+                "pager_address": pager_address,
+                "language": language,
+                "temperature_unit": temperature_unit,
+                "contact_options": contact_options,
+            }.items()
+            if v is not None
         }
-
-        if authorized_sites is not None:
-            body["authorized_sites"] = authorized_sites
-
-        if contactgroups is not None:
-            body["contactgroups"] = contactgroups
-
-        if auth_option is not None:
-            body["auth_option"] = auth_option
-
-        if roles is not None:
-            body["roles"] = roles
-
-        if version.is_managed_edition():
-            body["customer"] = customer
 
         return self.request(
             "post",
@@ -524,48 +564,109 @@ class UserClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get(self, username: str, expect_ok: bool = True) -> Response:
+    def get(
+        self, username: str | None = None, url: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        url_is_complete = False
+        actual_url = ""
+
+        if username is not None:
+            url_is_complete = False
+            actual_url = f"/objects/{self.domain}/{username}"
+
+        elif url is not None:
+            url_is_complete = True
+            actual_url = url
+
+        else:
+            raise ValueError("Must specify username or url parameter")
+
         return self.request(
             "get",
-            url=f"/objects/{self.domain}/{username}",
+            url=actual_url,
+            url_is_complete=url_is_complete,
             expect_ok=expect_ok,
         )
 
-    # TODO: add additional parameters
+    def get_all(self, effective_attributes: bool = False, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params={"effective_attributes": "true" if effective_attributes else "false"},
+            expect_ok=expect_ok,
+        )
+
     def edit(
         self,
         username: str,
         fullname: str | None = None,
+        customer: str = "provider",
         contactgroups: list[str] | None = None,
         authorized_sites: Sequence[str] | None = None,
+        idle_timeout: dict[str, Any] | None = None,
+        interface_options: dict[str, str] | None = None,
+        auth_option: dict[str, Any] | None = None,
+        disable_notifications: dict[str, bool] | None = None,
+        disable_login: bool | None = None,
+        contact_options: dict[str, Any] | None = None,
+        pager_address: str | None = None,
+        extra: dict[str, Any] | None = None,
+        roles: list[str] | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        body: dict[str, str | Sequence[str] | None] = {
-            "fullname": fullname,
-            "contactgroups": contactgroups,
+        if extra is None:
+            extra = {}
+
+        body: dict[str, Any] = {
+            k: v
+            for k, v in {
+                **extra,
+                "fullname": fullname,
+                "contactgroups": contactgroups,
+                "authorized_sites": authorized_sites,
+                "idle_timeout": idle_timeout,
+                "customer": customer,
+                "roles": roles,
+                "interface_options": interface_options,
+                "auth_option": auth_option,
+                "disable_notifications": disable_notifications,
+                "contact_options": contact_options,
+                "disable_login": disable_login,
+                "pager_address": pager_address,
+            }.items()
+            if v is not None
         }
-
-        if authorized_sites is not None:
-            body["authorized_sites"] = authorized_sites
-
-        # if there is no object, there's probably no etag.
-        # But we want the 404 from the request below!
-        etag = self.get(username, expect_ok=expect_ok).headers.get("E-Tag")
-        if etag is not None:
-            headers = {"If-Match": etag}
-        else:
-            headers = {}
 
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{username}",
-            body={k: v for k, v in body.items() if v is not None},
-            headers=headers,
+            body=body,
+            headers=self._set_etag_header(username, etag),
             expect_ok=expect_ok,
         )
 
+    def delete(
+        self,
+        username: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{username}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(username, etag),
+        )
 
-@register_client
+    def _set_etag_header(
+        self, username: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(username).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 class HostConfigClient(RestApiClient):
     domain: API_DOMAIN = "host_config"
 
@@ -591,7 +692,7 @@ class HostConfigClient(RestApiClient):
         self,
         host_name: str,
         folder: str = "/",
-        attributes: Mapping[str, Any] | None = None,
+        attributes: Mapping[str, Any] | Any | None = None,
         bake_agent: bool | None = None,
         expect_ok: bool = True,
     ) -> Response:
@@ -607,11 +708,20 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def bulk_create(self, *args: JSON, expect_ok: bool = True) -> Response:
+    def bulk_create(
+        self,
+        entries: list[dict[str, Any]],
+        bake_agent: Literal["0", "1"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        url = f"/domain-types/{self.domain}/actions/bulk-create/invoke"
+        if bake_agent is not None:
+            url += "?bake_agent=" + bake_agent
+
         return self.request(
             "post",
-            url=f"/domain-types/{self.domain}/actions/bulk-create/invoke",
-            body={"entries": args},
+            url=url,
+            body={"entries": entries},
             expect_ok=expect_ok,
         )
 
@@ -644,32 +754,52 @@ class HostConfigClient(RestApiClient):
     def edit(
         self,
         host_name: str,
-        folder: str | None = "/",
         attributes: Mapping[str, Any] | None = None,
         update_attributes: Mapping[str, Any] | None = None,
         remove_attributes: Sequence[str] | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        etag = self.get(host_name).headers["ETag"]
-        headers = {"IF-Match": etag, "Accept": "application/json"}
-        body = {
-            "attributes": attributes,
-            "update_attributes": update_attributes,
-            "remove_attributes": remove_attributes,
-        }
+        body: dict[str, Any] = {}
+
+        if attributes is not None:
+            body["attributes"] = attributes
+
+        if remove_attributes is not None:
+            body["remove_attributes"] = remove_attributes
+
+        if update_attributes is not None:
+            body["update_attributes"] = update_attributes
+
         return self.request(
             "put",
             url=f"/objects/{self.domain}/" + host_name,
-            body={k: v for k, v in body.items() if v is not None},
+            body=body,
             expect_ok=expect_ok,
-            headers=headers,
+            headers=self._set_etag_header(host_name, etag),
         )
 
-    def bulk_edit(self, *args: JSON, expect_ok: bool = True) -> Response:
+    def bulk_edit(
+        self,
+        entries: list[dict[str, Any]],
+        expect_ok: bool = True,
+    ) -> Response:
         return self.request(
             "put",
             url=f"/domain-types/{self.domain}/actions/bulk-update/invoke",
-            body={"entries": args},
+            body={"entries": entries},
+            expect_ok=expect_ok,
+        )
+
+    def bulk_delete(
+        self,
+        entries: list[str],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/bulk-delete/invoke",
+            body={"entries": entries},
             expect_ok=expect_ok,
         )
 
@@ -679,14 +809,13 @@ class HostConfigClient(RestApiClient):
         property_name: str,
         property_value: Any,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        etag = self.get(host_name).headers["ETag"]
-        headers = {"IF-Match": etag}
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{host_name}/properties/{property_name}",
             body=property_value,
-            headers=headers,
+            headers=self._set_etag_header(host_name, etag),
             expect_ok=expect_ok,
         )
 
@@ -696,35 +825,36 @@ class HostConfigClient(RestApiClient):
             url=f"/objects/{self.domain}/{host_name}",
         )
 
-    def move(self, host_name: str, target_folder: str, expect_ok: bool = True) -> Response:
-        etag = self.get(host_name).headers["ETag"]
-
+    def move(
+        self,
+        host_name: str,
+        target_folder: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
         return self.request(
             "post",
             url=f"/objects/{self.domain}/{host_name}/actions/move/invoke",
             body={"target_folder": target_folder},
             expect_ok=expect_ok,
-            headers={"IF-Match": etag, "Accept": "application/json"},
+            headers=self._set_etag_header(host_name, etag),
         )
 
     def rename(
         self,
         host_name: str,
         new_name: str,
-        etag: str | None = None,
         expect_ok: bool = True,
         follow_redirects: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        if etag is None:
-            etag = self.get(host_name).headers["ETag"]
-
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{host_name}/actions/rename/invoke",
             body={"new_name": new_name},
             expect_ok=expect_ok,
             follow_redirects=follow_redirects,
-            headers={"IF-Match": etag, "Accept": "application/json"},
+            headers=self._set_etag_header(host_name, etag),
         )
 
     def rename_wait_for_completion(self, expect_ok: bool = True) -> Response:
@@ -734,8 +864,14 @@ class HostConfigClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def _set_etag_header(
+        self, host_name: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(host_name=host_name).headers["ETag"]}
+        return set_if_match_header(etag)
 
-@register_client
+
 class FolderClient(RestApiClient):
     domain: API_DOMAIN = "folder_config"
 
@@ -746,11 +882,21 @@ class FolderClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(self, parent: str | None = None, expect_ok: bool = True) -> Response:
+    def get_all(
+        self,
+        parent: str | None = None,
+        expect_ok: bool = True,
+        recursive: bool = False,
+        show_hosts: bool = False,
+    ) -> Response:
+        query_params: dict[str, Any] = {"recursive": recursive, "show_hosts": show_hosts}
+        if parent:
+            query_params.update({"parent": parent})
+
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            query_params={"parent": parent} if parent is not None else {},
+            query_params=query_params,
             expect_ok=expect_ok,
         )
 
@@ -777,26 +923,76 @@ class FolderClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def edit(
+    def bulk_edit(
         self,
-        folder_name: str,
-        title: str,
-        attributes: Mapping[str, Any] | None = None,
+        entries: list[dict[str, Any]],
         expect_ok: bool = True,
     ) -> Response:
-        etag = self.get(folder_name).headers["ETag"]
-        headers = {"IF-Match": etag}
-        body = {"title": title, "attributes": attributes}
         return self.request(
             "put",
-            url=f"/objects/{self.domain}/{folder_name}",
-            headers=headers,
-            body={k: v for k, v in body.items() if v is not None},
+            url=f"/domain-types/{self.domain}/actions/bulk-update/invoke",
+            body={"entries": entries},
             expect_ok=expect_ok,
         )
 
+    def edit(
+        self,
+        folder_name: str,
+        title: str | None = None,
+        attributes: Mapping[str, Any] | None = None,
+        update_attributes: Mapping[str, Any] | None = None,
+        remove_attributes: list[str] | None = None,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        body: dict[str, Any] = {"title": title} if title is not None else {}
 
-@register_client
+        if attributes is not None:
+            body["attributes"] = attributes
+
+        if remove_attributes is not None:
+            body["remove_attributes"] = remove_attributes
+
+        if update_attributes is not None:
+            body["update_attributes"] = update_attributes
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{folder_name}",
+            headers=self._set_etag_header(folder_name, etag),
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def move(
+        self,
+        folder_name: str,
+        destination: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{folder_name}/actions/move/invoke",
+            body={"destination": destination},
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(folder_name, etag),
+        )
+
+    def delete(self, folder_name: str) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{folder_name}",
+        )
+
+    def _set_etag_header(
+        self, folder_name: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(folder_name=folder_name).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 class AuxTagClient(RestApiClient):
     domain: API_DOMAIN = "aux_tag"
 
@@ -853,7 +1049,6 @@ class AuxTagClient(RestApiClient):
         )
 
 
-@register_client
 class TimePeriodClient(RestApiClient):
     domain: API_DOMAIN = "time_period"
 
@@ -901,7 +1096,6 @@ class TimePeriodClient(RestApiClient):
         )
 
 
-@register_client
 class RuleClient(RestApiClient):
     domain: API_DOMAIN = "rule"
 
@@ -969,7 +1163,6 @@ class RuleClient(RestApiClient):
         )
 
 
-@register_client
 class RulesetClient(RestApiClient):
     domain: API_DOMAIN = "ruleset"
 
@@ -1011,7 +1204,6 @@ class RulesetClient(RestApiClient):
         return self.request("get", url=url, expect_ok=expect_ok)
 
 
-@register_client
 class HostTagGroupClient(RestApiClient):
     domain: API_DOMAIN = "host_tag_group"
 
@@ -1076,7 +1268,6 @@ class HostTagGroupClient(RestApiClient):
         )
 
 
-@register_client
 class PasswordClient(RestApiClient):
     domain: API_DOMAIN = "password"
 
@@ -1137,7 +1328,6 @@ class PasswordClient(RestApiClient):
         )
 
 
-@register_client
 class AgentClient(RestApiClient):
     domain: API_DOMAIN = "agent"
 
@@ -1164,61 +1354,148 @@ class AgentClient(RestApiClient):
         )
 
 
-@register_client
 class DowntimeClient(RestApiClient):
     domain: API_DOMAIN = "downtime"
 
+    def get(self, downtime_id: int, site_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{downtime_id}?site_id={site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        host_name: str | None = None,
+        service_description: str | None = None,
+        query: str | None = None,
+        downtime_type: Literal["host", "service", "both"] = "both",
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query_params = urllib.parse.urlencode(
+            _only_set_keys(
+                {
+                    "downtime_type": downtime_type,
+                    "host_name": host_name,
+                    "service_description": service_description,
+                    "query": query,
+                    "site_id": site_id,
+                }
+            )
+        )
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all?{query_params}",
+            expect_ok=expect_ok,
+        )
+
     def create_for_host(
         self,
-        start_time: datetime.datetime,
-        end_time: datetime.datetime,
-        recur: str,
-        duration: int,
-        comment: str,
-        host_name: str,
+        start_time: datetime.datetime | str,
+        end_time: datetime.datetime | str,
+        recur: str | None = None,
+        duration: int | None = None,
+        comment: str | None = None,
+        host_name: str | None = None,
+        hostgroup_name: str | None = None,
+        query: str | None = None,
+        downtime_type: Literal["host", "hostgroup", "host_by_query"] = "host",
         expect_ok: bool = True,
     ) -> Response:
         body = {
-            "start_time": start_time.isoformat(),
-            "end_time": end_time.isoformat(),
+            "downtime_type": downtime_type,
+            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
-            "duration": duration,
             "comment": comment,
-            "host_name": host_name,
-            "downtime_type": "host",
+            "duration": duration,
         }
+
+        if downtime_type == "host":
+            body.update({"host_name": host_name})
+
+        elif downtime_type == "hostgroup":
+            body.update({"hostgroup_name": hostgroup_name})
+
+        else:
+            body.update({"query": query})
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/host",
-            body=body,
+            body={k: v for k, v in body.items() if v is not None},
             expect_ok=expect_ok,
         )
 
     def create_for_services(
         self,
-        start_time: datetime.datetime,
-        end_time: datetime.datetime,
-        recur: str,
-        duration: int,
-        comment: str,
-        host_name: str,
-        service_descriptions: list[str],
+        start_time: datetime.datetime | str,
+        end_time: datetime.datetime | str,
+        recur: str | None = None,
+        duration: int | None = None,
+        comment: str | None = None,
+        host_name: str | None = None,
+        servicegroup_name: str | None = None,
+        query: str | None = None,
+        service_descriptions: list[str] | None = None,
+        downtime_type: Literal["service", "servicegroup", "service_by_query"] = "service",
         expect_ok: bool = True,
     ) -> Response:
-        body = {
-            "start_time": start_time.isoformat(),
-            "end_time": end_time.isoformat(),
+        body: dict[str, Any] = {
+            "downtime_type": downtime_type,
+            "start_time": start_time if isinstance(start_time, str) else start_time.isoformat(),
+            "end_time": end_time if isinstance(end_time, str) else end_time.isoformat(),
             "recur": recur,
             "duration": duration,
             "comment": comment,
             "host_name": host_name,
-            "service_descriptions": service_descriptions,
-            "downtime_type": "service",
         }
+
+        if downtime_type == "service":
+            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+
+        elif downtime_type == "servicegroup":
+            body.update({"servicegroup_name": servicegroup_name})
+
+        else:
+            body.update({"query": query})
+
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/collections/service",
-            body=body,
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        site_id: str,
+        delete_type: Literal["by_id", "query", "params"],
+        downtime_id: str | None = None,
+        query: str | None = None,
+        host_name: str | None = None,
+        service_descriptions: list[str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "site_id": site_id,
+            "delete_type": delete_type,
+        }
+
+        if delete_type == "by_id":
+            body.update({"downtime_id": downtime_id})
+
+        elif delete_type == "query":
+            body.update({"query": query})
+
+        else:
+            body.update({"host_name": host_name, "service_descriptions": service_descriptions})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body={k: v for k, v in body.items() if v is not None},
             expect_ok=expect_ok,
         )
 
@@ -1257,7 +1534,7 @@ class GroupConfig(RestApiClient):
         expect_ok: bool = True,
     ) -> Response:
         body = {"name": name, "alias": alias}
-        if version.is_managed_edition():
+        if version.edition() is version.Edition.CME:
             body.update({"customer": customer})
 
         return self.request(
@@ -1268,22 +1545,18 @@ class GroupConfig(RestApiClient):
         )
 
 
-@register_client
 class HostGroupClient(GroupConfig):
     domain: Literal["host_group_config"] = "host_group_config"
 
 
-@register_client
 class ServiceGroupClient(GroupConfig):
     domain: Literal["service_group_config"] = "service_group_config"
 
 
-@register_client
 class ContactGroupClient(GroupConfig):
     domain: Literal["contact_group_config"] = "contact_group_config"
 
 
-@register_client
 class SiteManagementClient(RestApiClient):
     domain: API_DOMAIN = "site_connection"
 
@@ -1340,7 +1613,6 @@ class SiteManagementClient(RestApiClient):
         )
 
 
-@register_client
 class HostClient(RestApiClient):
     domain: Literal["host"] = "host"
 
@@ -1370,6 +1642,540 @@ class HostClient(RestApiClient):
         )
 
 
+class RuleNotificationClient(RestApiClient):
+    domain: API_DOMAIN = "notification_rule"
+
+    def get(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, rule_config: APINotificationRule, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={"rule_config": rule_config},
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self, rule_id: str, rule_config: APINotificationRule, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body={"rule_config": rule_config},
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{rule_id}/actions/delete/invoke",
+            expect_ok=expect_ok,
+        )
+
+
+class EventConsoleClient(RestApiClient):
+    domain: API_DOMAIN = "event_console"
+
+    def get(
+        self,
+        event_id: str,
+        site_id: str,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{event_id}?site_id={site_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        query: str | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query_params = urllib.parse.urlencode(
+            _only_set_keys(
+                {
+                    "query": query,
+                    "host": host,
+                    "application": application,
+                    "state": state,
+                    "phase": phase,
+                    "site_id": site_id,
+                }
+            )
+        )
+
+        url = f"/domain-types/{self.domain}/collections/all"
+        if query_params:
+            url = f"{url}?{query_params}"
+
+        return self.request(
+            "get",
+            url=url,
+            expect_ok=expect_ok,
+        )
+
+    def update_and_acknowledge(
+        self,
+        event_id: str,
+        site_id: str | None = None,
+        change_comment: str | None = None,
+        change_contact: str | None = None,
+        expect_ok: bool = True,
+        phase: Literal["open", "ack"] | None = None,
+    ) -> Response:
+        body = {
+            "change_comment": change_comment,
+            "change_contact": change_contact,
+            "phase": phase,
+        }
+
+        if site_id is not None:
+            body.update({"site_id": site_id})
+
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{event_id}/actions/update_and_acknowledge/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def update_and_acknowledge_multiple(
+        self,
+        filter_type: Literal["query", "params", "all"],
+        site_id: str | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        change_comment: str | None = None,
+        change_contact: str | None = None,
+        query: str | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "site_id": site_id,
+            "filter_type": filter_type,
+            "change_comment": change_comment,
+            "change_contact": change_contact,
+            "phase": phase,
+        }
+
+        if filter_type == "query":
+            body.update({"query": query})
+        elif filter_type == "params":
+            filters = {"state": state, "host": host, "application": application}
+            body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/update_and_acknowledge/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def change_event_state(
+        self,
+        event_id: str,
+        site_id: str | None = None,
+        new_state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "new_state": new_state,
+            "site_id": site_id,
+        }
+
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{event_id}/actions/change_state/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def change_multiple_event_states(
+        self,
+        filter_type: Literal["query", "params"],
+        new_state: Literal["warning", "ok", "critical", "unknown"],
+        site_id: str | None = None,
+        query: str | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            "site_id": site_id,
+            "filter_type": filter_type,
+            "new_state": new_state,
+        }
+
+        if filter_type == "query":
+            body.update({"query": query})
+        else:
+            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/change_state/invoke",
+            body={k: v for k, v in body.items() if v is not None},
+            expect_ok=expect_ok,
+        )
+
+    def delete(
+        self,
+        filter_type: Literal["by_id", "query", "params"],
+        site_id: str,
+        query: str | None = None,
+        event_id: int | None = None,
+        host: str | None = None,
+        application: str | None = None,
+        state: Literal["warning", "ok", "critical", "unknown"] | None = None,
+        phase: Literal["open", "ack"] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"site_id": site_id, "filter_type": filter_type}
+
+        if filter_type == "by_id":
+            body.update({"event_id": event_id})
+
+        elif filter_type == "query":
+            body.update({"query": query})
+
+        else:
+            filters = {"state": state, "host": host, "application": application, "phase": phase}
+            body.update({"filters": {k: v for k, v in filters.items() if v is not None}})
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+
+class CommentClient(RestApiClient):
+    domain: API_DOMAIN = "comment"
+
+    def delete(
+        self,
+        site_id: str,
+        delete_type: str,
+        comment_id: Any | None = None,
+        host_name: str | None = None,
+        service_descriptions: Sequence[str] | None = None,
+        query: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body = _only_set_keys(
+            {
+                "site_id": site_id,
+                "delete_type": delete_type,
+                "comment_id": comment_id,
+                "host_name": host_name,
+                "service_descriptions": service_descriptions,
+                "query": query,
+            }
+        )
+
+        res = self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/delete/invoke",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            res.assert_status_code(204)
+
+        return res
+
+    def create_for_host(
+        self,
+        comment: str,
+        comment_type: str = "host",
+        host_name: str | None = None,
+        query: Mapping[str, Any] | str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = _only_set_keys(
+            {
+                "comment": comment,
+                "comment_type": comment_type,
+                "host_name": host_name,
+                "query": query,
+            }
+        )
+
+        return self._create(body, "host", expect_ok)
+
+    def create_for_service(
+        self,
+        comment: str,
+        comment_type: str = "service",
+        host_name: str | None = None,
+        query: Mapping[str, Any] | str | None = None,
+        service_description: str | None = None,
+        persistent: bool | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = _only_set_keys(
+            {
+                "comment_type": comment_type,
+                "comment": comment,
+                "host_name": host_name,
+                "query": query,
+                "persistent": persistent,
+                "service_description": service_description,
+            }
+        )
+
+        return self._create(body, "service", expect_ok)
+
+    def _create(self, body: dict[str, Any], collection: str, expect_ok: bool) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/{collection}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get_all(
+        self,
+        host_name: str | None = None,
+        service_description: str | None = None,
+        query: Mapping[str, Any] | str | None = None,
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        q: Mapping[str, Any] = _only_set_keys(
+            {
+                "host_name": host_name,
+                "service_description": service_description,
+                "query": query,
+                "site_id": site_id,
+            }
+        )
+
+        return self._get("all", q, expect_ok)
+
+    def get_host(
+        self,
+        host_name: str | None = None,
+        service_description: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query: Mapping[str, Any] = _only_set_keys(
+            {"host_name": host_name, "service_description": service_description}
+        )
+
+        return self._get("host", query, expect_ok)
+
+    def get_service(self, expect_ok: bool = True) -> Response:
+        return self._get("service", None, expect_ok)
+
+    def _get(
+        self, collection: str, query: Mapping[str, Any] | None = None, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/{collection}",
+            query_params=query if query else None,
+            expect_ok=expect_ok,
+        )
+
+    def get(
+        self, comment_id: str | int, site_id: str | None = None, expect_ok: bool = True
+    ) -> Response:
+        # TODO: Agregar el parámetro site_id: str
+        qp = _only_set_keys({"site_id": site_id})
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{comment_id}",
+            query_params=qp if qp else None,
+            expect_ok=expect_ok,
+        )
+
+
+class DcdClient(RestApiClient):
+    domain: Literal["dcd"] = "dcd"
+
+    def get(self, dcd_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        dcd_id: str,
+        site: str,
+        title: str
+        | None = None,  # Set as optional in order to run tests on missing fields behavior
+        comment: str | None = None,
+        documentation_url: str | None = None,
+        disabled: bool | None = None,
+        interval: int | None = None,
+        connector_type: str | None = None,
+        discover_on_creation: bool | None = None,
+        no_deletion_time_after_init: int | None = None,
+        validity_period: int | None = None,
+        exclude_time_ranges: list[dict[str, str]] | None = None,
+        creation_rules: list[dict[str, Any]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            k: v
+            for k, v in {
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": site,
+                "comment": comment,
+                "documentation_url": documentation_url,
+                "disabled": disabled,
+                "interval": interval,
+                "discover_on_creation": discover_on_creation,
+                "no_deletion_time_after_init": no_deletion_time_after_init,
+                "validity_period": validity_period,
+                "creation_rules": creation_rules,
+                "exclude_time_ranges": exclude_time_ranges,
+                "connector_type": connector_type,
+            }.items()
+            if v is not None
+        }
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        dcd_id: str,
+        title: str,
+        site: str,
+        comment: str | None = None,
+        documentation_url: str | None = None,
+        disabled: bool | None = None,
+        interval: int | None = None,
+        discover_on_creation: bool | None = None,
+        no_deletion_time_after_init: int | None = None,
+        validity_period: int | None = None,
+        creation_rules: list[dict[str, Any]] | None = None,
+        exclude_time_ranges: list[dict[str, str]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            k: v
+            for k, v in {
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": site,
+                "comment": comment,
+                "documentation_url": documentation_url,
+                "disabled": disabled,
+                "interval": interval,
+                "discover_on_creation": discover_on_creation,
+                "no_deletion_time_after_init": no_deletion_time_after_init,
+                "validity_period": validity_period,
+                "creation_rules": creation_rules,
+                "exclude_time_ranges": exclude_time_ranges,
+            }.items()
+            if v is not None
+        }
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, dcd_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            expect_ok=expect_ok,
+        )
+
+
+class AuditLogClient(RestApiClient):
+    domain: API_DOMAIN = "audit_log"
+
+    def get_all(
+        self,
+        date: Any = "now",
+        object_type: str | None = None,
+        object_id: str | None = None,
+        user_id: str | None = None,
+        regexp: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        query = _only_set_keys(
+            {
+                "date": date,
+                "object_type": object_type,
+                "object_id": object_id,
+                "user_id": user_id,
+                "regexp": regexp,
+            },
+        )
+
+        result = self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params=query,
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            result.assert_status_code(200)
+
+        return result
+
+    def clear(self, expect_ok: bool = True) -> Response:
+        result = self.request(
+            "delete",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+        if expect_ok:
+            result.assert_status_code(204)
+
+        return result
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -1390,9 +2196,36 @@ class ClientRegistry:
     ServiceGroup: ServiceGroupClient
     ContactGroup: ContactGroupClient
     SiteManagement: SiteManagementClient
+    RuleNotification: RuleNotificationClient
+    Comment: CommentClient
+    EventConsole: EventConsoleClient
+    Dcd: DcdClient
+    AuditLog: AuditLogClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
     return ClientRegistry(
-        **{name: cls(request_handler, url_prefix) for name, cls in CLIENTS.items()}
+        Licensing=LicensingClient(request_handler, url_prefix),
+        ActivateChanges=ActivateChangesClient(request_handler, url_prefix),
+        User=UserClient(request_handler, url_prefix),
+        HostConfig=HostConfigClient(request_handler, url_prefix),
+        Host=HostClient(request_handler, url_prefix),
+        Folder=FolderClient(request_handler, url_prefix),
+        AuxTag=AuxTagClient(request_handler, url_prefix),
+        TimePeriod=TimePeriodClient(request_handler, url_prefix),
+        Rule=RuleClient(request_handler, url_prefix),
+        Ruleset=RulesetClient(request_handler, url_prefix),
+        HostTagGroup=HostTagGroupClient(request_handler, url_prefix),
+        Password=PasswordClient(request_handler, url_prefix),
+        Agent=AgentClient(request_handler, url_prefix),
+        Downtime=DowntimeClient(request_handler, url_prefix),
+        HostGroup=HostGroupClient(request_handler, url_prefix),
+        ServiceGroup=ServiceGroupClient(request_handler, url_prefix),
+        ContactGroup=ContactGroupClient(request_handler, url_prefix),
+        SiteManagement=SiteManagementClient(request_handler, url_prefix),
+        RuleNotification=RuleNotificationClient(request_handler, url_prefix),
+        Comment=CommentClient(request_handler, url_prefix),
+        EventConsole=EventConsoleClient(request_handler, url_prefix),
+        Dcd=DcdClient(request_handler, url_prefix),
+        AuditLog=AuditLogClient(request_handler, url_prefix),
     )

@@ -46,11 +46,11 @@ def check_hitachi_hus_status(_no_item, _no_params, info):
 
 check_info["hitachi_hus_status"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.116"),
-    check_function=check_hitachi_hus_status,
-    discovery_function=inventory_hitachi_hus_status,
-    service_name="Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.1.2.2",
         oids=["1"],
     ),
+    service_name="Status",
+    discovery_function=inventory_hitachi_hus_status,
+    check_function=check_hitachi_hus_status,
 )

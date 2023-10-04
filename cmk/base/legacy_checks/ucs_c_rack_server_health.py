@@ -10,18 +10,18 @@
 # sys/rack-unit-2/board/storage-SAS-SLOT-HBA/vd-0 <TAB>id SLOT-HBA<TAB>health Good
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_health(info):
+def parse_ucs_c_rack_server_health(string_table):
     """
     Input: list of lists containing storage controller health data on a per rack basis.
     Output: Returns dict with indexed Rack Units mapped to keys and lowercase health string mapped to value
     'health' if rack server has racks attached or empty dict if not.
     """
     parsed = {}
-    for _, dn, _id, health in info:
+    for _, dn, _id, health in string_table:
         rack_storage_board = (
             dn.replace("dn sys/", "")
             .replace("rack-unit-", "Rack unit ")
@@ -42,12 +42,13 @@ def inventory_ucs_c_rack_server_health(parsed):
         yield key, {}
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_health(item, params, health):
+def check_ucs_c_rack_server_health(item, params, parsed):
     """
     Check function is called only in case parsed is a dict and item exists as key in parsed[item].
     All other potential bad case conditions are handled by @get_parsed_item_data.
     """
+    if not (health := parsed.get(item)):
+        return
     # Dict keys are storage controller health strings provided via special agent -> XML
     # API of servers. Dict values are corresponding check status.
     # For information about the data provided by the special agent
@@ -71,7 +72,7 @@ def check_ucs_c_rack_server_health(item, params, health):
 
 check_info["ucs_c_rack_server_health"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_health,
+    service_name="Health %s",
     discovery_function=inventory_ucs_c_rack_server_health,
     check_function=check_ucs_c_rack_server_health,
-    service_name="Health %s",
 )

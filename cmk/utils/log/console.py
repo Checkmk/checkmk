@@ -13,7 +13,7 @@ from typing import TextIO
 
 import cmk.utils.tty as tty
 
-from ._level import VERBOSE
+from ._level import VERBOSE as VERBOSE
 
 
 # For StreamHandler.setStream()

@@ -46,9 +46,9 @@ win_netstat_states = {
 }
 
 
-def parse_win_netstat(info):
+def parse_win_netstat(string_table):
     connections = []
-    for line in info:
+    for line in string_table:
         if line[0] == "TCP":
             proto, local, remote, connstate = line
         elif line[0] == "UDP":
@@ -69,7 +69,7 @@ def parse_win_netstat(info):
 
 check_info["win_netstat"] = LegacyCheckDefinition(
     parse_function=parse_win_netstat,
-    check_function=check_netstat_generic,
     service_name="TCP Connection %s",
+    check_function=check_netstat_generic,
     check_ruleset_name="tcp_connections",
 )

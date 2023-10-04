@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
 
 
-def parse_pandacom_psu(info):
+def parse_pandacom_psu(string_table):
     map_psu_type = {
         "0": "type not configured",
         "1": "230 V AC 75 W",
@@ -51,10 +51,10 @@ def parse_pandacom_psu(info):
         ("2", 6, 3),
         ("3", 10, 11),
     ]:
-        if info[state_index][0] not in ["0", "255"]:
+        if string_table[state_index][0] not in ["0", "255"]:
             parsed[psu_nr] = {
-                "type": map_psu_type[info[type_index][0]],
-                "state": map_psu_state[info[state_index][0]],
+                "type": map_psu_type[string_table[type_index][0]],
+                "state": map_psu_state[string_table[state_index][0]],
             }
 
     return parsed
@@ -67,18 +67,18 @@ def inventory_pandacom_psu(parsed):
 def check_pandacom_psu(item, _no_params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
-        return state, "[%s] Operational status: %s" % (parsed[item]["type"], state_readable)
+        return state, "[{}] Operational status: {}".format(parsed[item]["type"], state_readable)
     return None
 
 
 check_info["pandacom_psu"] = LegacyCheckDefinition(
     detect=DETECT_PANDACOM,
-    parse_function=parse_pandacom_psu,
-    discovery_function=inventory_pandacom_psu,
-    check_function=check_pandacom_psu,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3652.3.2",
         oids=["1"],
     ),
+    parse_function=parse_pandacom_psu,
+    service_name="Power Supply %s",
+    discovery_function=inventory_pandacom_psu,
+    check_function=check_pandacom_psu,
 )

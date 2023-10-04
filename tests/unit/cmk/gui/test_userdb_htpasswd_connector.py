@@ -10,11 +10,10 @@ from pytest import MonkeyPatch
 
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.userdb.utils import CheckCredentialsResult
-from cmk.gui.userdb import htpasswd
+from cmk.gui.userdb import CheckCredentialsResult, htpasswd
 
 
 @pytest.fixture(name="htpasswd_file", autouse=True)

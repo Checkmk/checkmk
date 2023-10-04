@@ -2,10 +2,12 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Literal
 
-from typing import Literal
+import marshmallow
+from marshmallow.utils import from_iso_time
 
-from cmk.utils.defines import weekday_ids
+from cmk.utils.dateutils import weekday_ids
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.groups import is_alias_used
@@ -33,6 +35,7 @@ class TimePeriodName(fields.String):
         self._should_exist = should_exist
         super().__init__(
             example=example,
+            pattern=TIMEPERIOD_ID_PATTERN,
             required=required,
             validate=validate,
             **kwargs,
@@ -54,7 +57,7 @@ class TimePeriodAlias(fields.String):
     default_error_messages = {
         "should_exist": "Time period alias does not exist: {name!r}",
         "should_not_exist": "Time period alias {name!r} already exists.",
-        "should_not_be_builtin": "Time period alias {name!r} can't be a builtin",
+        "should_not_be_builtin": "Time period alias {name!r} can't be a built-in",
     }
 
     def __init__(  # type: ignore[no-untyped-def]
@@ -111,6 +114,48 @@ class TimeRange(BaseSchema):
         description="The end time of the period's time range",
     )
 
+    @marshmallow.validates_schema
+    def validate_start_before_end(self, data, **_kwargs):
+        self._validate_times(data)
+        self._validate_time_order(data)
+
+    @staticmethod
+    def _validate_time_order(data: Any) -> None:
+        def _day_timestamp(time_string: str) -> int:
+            """
+            Examples:
+                >>> _day_timestamp("13:00")
+                780
+                >>> _day_timestamp("00:00")
+                0
+                >>> _day_timestamp("24:00")
+                1440
+            """
+            # we also care about 24:00 but Python datetime doesn't
+            time_components = time_string.split(":")
+            return int(time_components[0]) * 60 + int(time_components[1])
+
+        if _day_timestamp(data["start"]) > _day_timestamp(data["end"]):
+            raise marshmallow.ValidationError(
+                f"Start time ({data['start']}) must be before end " f"time ({data['end']})."
+            )
+
+    @staticmethod
+    def _validate_times(data: Any) -> None:
+        for time_reference in ("start", "end"):
+            time_string = data[time_reference]
+            time_components = time_string.split(":")
+            if time_components[0] == "24":
+                if time_components[1] == "00":
+                    return
+
+                raise marshmallow.ValidationError(f"Invalid {time_reference} time: {time_string}")
+
+            try:
+                from_iso_time(time_string)
+            except ValueError:
+                raise marshmallow.ValidationError(f"Invalid {time_reference} time: {time_string}")
+
 
 class TimeRangeActive(BaseSchema):
     day = fields.String(
@@ -147,7 +192,6 @@ class CreateTimePeriod(BaseSchema):
         description="A unique name for the time period.",
         required=True,
         should_exist=False,
-        pattern=TIMEPERIOD_ID_PATTERN,
     )
     alias = TimePeriodAlias(
         example="alias",
@@ -203,4 +247,16 @@ class UpdateTimePeriod(BaseSchema):
         required=False,
         example=[{"date": "2020-01-01", "time_ranges": [{"start": "14:00:00", "end": "18:00:00"}]}],
         description="A list of additional time ranges to be added.",
+    )
+
+    exclude = fields.List(  # type: ignore[assignment]
+        TimePeriodAlias(
+            example="alias",
+            description="The alias for a time period.",
+            required=True,
+            presence="should_exist_and_should_not_be_builtin",
+        ),
+        example=["alias"],
+        description="A list of time period aliases whose periods are excluded.",
+        required=False,
     )

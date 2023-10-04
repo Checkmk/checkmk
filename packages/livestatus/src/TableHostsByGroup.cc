@@ -5,16 +5,15 @@
 
 #include "livestatus/TableHostsByGroup.h"
 
+// NOTE: IWYU is wrong here, we really need the IHostGroup definition.
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
+#include "livestatus/Interface.h"  // IWYU pragma: keep
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/TableHostGroups.h"
 #include "livestatus/TableHosts.h"
 #include "livestatus/User.h"
-
-class IHost;
-class IHostGroup;
 
 namespace {
 struct host_and_group {

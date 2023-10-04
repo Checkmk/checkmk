@@ -26,25 +26,25 @@ def check_emc_datadomain_fans(item, _no_params, info):
     }
     fan_level = {"0": "Unknown", "1": "Low", "2": "Medium", "3": "High"}
     for line in info:
-        if item == "%s-%s" % (line[0], line[1]):
+        if item == f"{line[0]}-{line[1]}":
             dev_descr = line[2]
             dev_level = line[3]
             dev_state = line[4]
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
             dev_level_str = fan_level.get(dev_level, "Unknown")
-            infotext = "%s %s RPM %s" % (dev_descr, dev_state_str, dev_level_str)
+            infotext = f"{dev_descr} {dev_state_str} RPM {dev_level_str}"
             return dev_state_rc, infotext
     return None
 
 
 check_info["emc_datadomain_fans"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_fans,
-    discovery_function=inventory_emc_datadomain_fans,
-    service_name="FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.1.3.1.1.1",
         oids=["1", "2", "4", "5", "6"],
     ),
+    service_name="FAN %s",
+    discovery_function=inventory_emc_datadomain_fans,
+    check_function=check_emc_datadomain_fans,
 )

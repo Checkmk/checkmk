@@ -12,6 +12,7 @@ In the legacy check API some items were discovered as integers, which is no long
 As a result some services may turn to UNKNOWN.
 Users must rediscover services on the affected hosts to fix this.
 Affected checks:<br>
+<ul>
 <li>fjdarye100_cadaps</li>
 <li>fjdarye100_cmods</li>
 <li>fjdarye100_cmods_mem</li>
@@ -46,3 +47,4 @@ Affected checks:<br>
 <li>fjdarye60_inletthmls</li>
 <li>fjdarye60_syscaps</li>
 <li>fjdarye60_thmls</li>
+</ul>

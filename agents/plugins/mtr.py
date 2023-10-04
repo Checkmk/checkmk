@@ -30,7 +30,7 @@ import sys
 import time
 
 try:
-    from typing import Any, Dict  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -96,7 +96,7 @@ def read_config():
 # # HOST        |LASTTIME |HOPCOUNT|HOP1|Loss%|Snt|Last|Avg|Best|Wrst|StDev|HOP2|...|HOP8|...|StdDev
 # www.google.com|145122481|8|192.168.1.1|0.0%|10|32.6|3.6|0.3|32.6|10.2|192.168.0.1|...|9.8
 def read_status():
-    current_status = {}  # type: Dict[str, Dict[str, Any]]
+    current_status = {}  # type: dict[str, dict[str, Any]]
     if not os.path.exists(status_filename):
         return current_status
     with open(status_filename) as opened_file:

@@ -1,0 +1,15 @@
+Title: Improved handling of forwarded syslog messages in the event console
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1693812302
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The event console already handled various non-RFC compliant syslog messages
+in addition to the official RFC 3164/5424 ones, but somehow accepting e.g.
+forwarded syslog messages from zypper on SLES15 requires yet another variant.
+Fun fact: In addition to the 2 official correct formats, we accept 11
+non-compliant formats now.

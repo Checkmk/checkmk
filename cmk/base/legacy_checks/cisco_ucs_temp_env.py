@@ -18,12 +18,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # .1.3.6.1.4.1.9.9.719.1.9.44.1.21 cucsComputeRackUnitMbTempStatsRearTemp
 
 
-def parse_cisco_ucs_temp_env(info):
+def parse_cisco_ucs_temp_env(string_table):
     new_info = {
-        "Ambient": info[0][0],
-        "Front": info[0][1],
-        "IO-Hub": info[0][2],
-        "Rear": info[0][3],
+        "Ambient": string_table[0][0],
+        "Front": string_table[0][1],
+        "IO-Hub": string_table[0][2],
+        "Rear": string_table[0][3],
     }
     return new_info
 
@@ -41,14 +41,14 @@ def check_cisco_ucs_temp_env(item, params, info):
 
 check_info["cisco_ucs_temp_env"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_cisco_ucs_temp_env,
-    discovery_function=inventory_cisco_ucs_temp_env,
-    check_function=check_cisco_ucs_temp_env,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.9.44.1",
         oids=["4", "8", "13", "21"],
     ),
+    parse_function=parse_cisco_ucs_temp_env,
+    service_name="Temperature %s",
+    discovery_function=inventory_cisco_ucs_temp_env,
+    check_function=check_cisco_ucs_temp_env,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

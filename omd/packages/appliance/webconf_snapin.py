@@ -14,7 +14,7 @@ from cmk.gui.htmllib.html import html  # pylint: disable=cmk-module-layer-violat
 
 # Does not detect the module hierarchy correctly. Imports are fine.
 from cmk.gui.i18n import _  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.sidebar.utils import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.sidebar import (  # pylint: disable=cmk-module-layer-violation
     SidebarSnapin,
     snapin_registry,
 )
@@ -24,7 +24,6 @@ def nav_modules_path() -> Path:
     return Path("/usr/share/cma/webconf/nav_modules")
 
 
-@snapin_registry.register
 class SidebarSnapinCMAWebconf(SidebarSnapin):
     @staticmethod
     def type_name() -> str:
@@ -116,3 +115,6 @@ class SidebarSnapinCMAWebconf(SidebarSnapin):
         html.write_text(text)
         html.close_a()
         html.br()
+
+
+snapin_registry.register(SidebarSnapinCMAWebconf)

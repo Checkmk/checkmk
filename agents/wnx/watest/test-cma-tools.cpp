@@ -3,13 +3,15 @@
 
 #include "pch.h"
 
-#include "cfg.h"
-#include "cma_core.h"
-#include "glob_match.h"
-#include "test-utf-names.h"
-#include "test_tools.h"
+#include "watest/test-utf-names.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/glob_match.h"
+#include "wnx/read_file.h"
 
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 namespace cma::tools {
 TEST(CmaTools, CheckArgvForValue) {
@@ -257,6 +259,93 @@ TEST(CmaTools, StringCache) {
     ASSERT_TRUE(cache.size() == 3);
     EXPECT_TRUE(tools::AddUniqStringToSetAsIs(cache, "AAaaA"));
     ASSERT_TRUE(cache.size() == 4);
+}
+
+TEST(CmaTools, ToView) {
+    EXPECT_EQ(ToView(L"a"s), "a\x0"sv);
+    EXPECT_EQ(ToView("A\0Z\x0"s), "A\0Z\0"sv);
+    const std::vector data = {L'A', L'b', L'c'};
+    EXPECT_EQ(ToView(data), "A\0b\0c\0"sv);
+}
+
+TEST(CmaTools, ToWideView) {
+    EXPECT_FALSE(ToWideView("a"s).has_value());
+    const auto result = *ToWideView("\xD6\0\n\0"sv);
+    const auto expected = wtools::ConvertToUtf16("Ö\n"sv);
+    EXPECT_EQ(result, expected);
+}
+
+TEST(CmaTools, ScanView) {
+    constexpr auto haystack{"markline2mark markline4markz"sv};
+    constexpr auto needle{"mark"sv};
+    std::vector<std::string> result;
+    const std::vector<std::string> expected = {"mark", "line2mark", " mark",
+                                               "line4mark", "z"};
+
+    ScanView(haystack, needle,
+             [&](auto s) { result.emplace_back(std::string{s}); });
+    EXPECT_EQ(result, expected);
+}
+
+namespace {
+std::vector<char> JoinBomLe(std::wstring_view value) {
+    constexpr auto bom{"\xFF\xFE"sv};
+    std::vector<char> data;
+    data.assign(bom.begin(), bom.end());
+    const auto begin = reinterpret_cast<const char *>(value.data());
+    data.append_range(std::vector<char>{begin, begin + value.size() * 2});
+    return data;
+}
+}  // namespace
+
+std::pair<std::vector<char>, std::string> GetGoodTestPair() {
+    constexpr auto expected_result = "ÜÖÄa\nФИФИ"sv;
+    const auto in = wtools::ConvertToUtf16(expected_result);
+    const auto good_input = JoinBomLe(in);
+    return {good_input, std::string{expected_result}};
+}
+
+std::pair<std::vector<char>, std::string> GetBadTestPairMix_Odd_16_Odd() {
+    std::vector<char> bad{
+        '\xFF', '\xFE',             //
+        'A',    'B',    'C',        // "ABC"
+        '\x0A', '\0',               // \n
+        'A',    '\0',   'B', '\0',  // L"AB"
+        '\x0A', '\0',               // \n
+        'A',    'B',    'C',        // "ABC"
+    };
+    return {bad, std::string{"ABC\nAB\nABC"s}};
+}
+TEST(CmaTools, ConvertUtfDataGood) {
+    const auto [good, expected] = GetGoodTestPair();
+    EXPECT_EQ(ConvertUtfData(good, basic), expected);
+    EXPECT_EQ(ConvertUtfData(good, repair_by_line), expected);
+}
+
+TEST(CmaTools, ConvertUtfDataGetBadTestPairMix_Odd_16_Odd) {
+    const auto [bad_input, expected] = GetBadTestPairMix_Odd_16_Odd();
+
+    EXPECT_NE(ConvertUtfData(bad_input, basic), expected);
+    EXPECT_EQ(ConvertUtfData(bad_input, repair_by_line), expected);
+}
+
+auto GetBadUtfMix() -> std::vector<char> {
+    const auto file_data = ReadFileInVector(tst::MakePathToUnitTestFiles() /
+                                            "utf_16_mix_16_8_16.txt");
+    const auto raw_data = reinterpret_cast<const char *>(file_data->data());
+    return {raw_data, raw_data + file_data->size()};
+}
+
+// Special test to check repairing of UTF
+TEST(CmaTools, ConvertUtfDataUsingUtfMixIntegration) {
+    // consists from UTF0-16 UTF-8 mix
+    const auto data = GetBadUtfMix();
+    ASSERT_FALSE(data.empty());
+    const auto converted_1 = ConvertUtfData(data, basic);
+    EXPECT_TRUE(converted_1.empty());
+    const auto converted_2 = ConvertUtfData(data, repair_by_line);
+    EXPECT_EQ(converted_2.size(), 270U);
+    XLOG::l("{}", converted_2);
 }
 
 namespace win {

@@ -10,13 +10,13 @@ from typing import cast
 
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui.graphing._html_render import default_dashlet_graph_render_options
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
-from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.type_defs import VisualContext
-from cmk.gui.visuals import VisualType
+from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
 from .store import add_dashlet, get_permitted_dashboards, load_dashboard_with_cloning
@@ -94,7 +94,10 @@ class VisualTypeDashboards(VisualType):
                     # displaying host graphs.
                     "service": {"service": specification[1]["service_description"]},
                 }
-                parameters = {"source": specification[1]["graph_id"]}
+                parameters = {
+                    "source": specification[1]["graph_id"],
+                    "single_infos": [],
+                }
 
             elif specification[0] == "custom":
                 # Override the dashlet type here. It would be better to get the
@@ -124,7 +127,7 @@ class VisualTypeDashboards(VisualType):
             else:
                 raise MKGeneralException(
                     _(
-                        "Graph specification '%s' is insuficient for Dashboard. "
+                        "Graph specification '%s' is insufficient for Dashboard. "
                         "Please save your graph as a custom graph first, then "
                         "add that one to the dashboard."
                     )
@@ -156,7 +159,7 @@ class VisualTypeDashboards(VisualType):
             # We don't know if what we get as parameters actually fits a DashletConfig.
             dashlet_spec.update(parameters)  # type: ignore[typeddict-item]
 
-        # When a view shal be added to the dashboard, load the view and put it into the dashlet
+        # When a view shall be added to the dashboard, load the view and put it into the dashlet
         # FIXME: Move this to the dashlet plugins
         if add_type == "view":
             dashlet_spec = cast(ViewDashletConfig, dashlet_spec)

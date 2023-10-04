@@ -1,0 +1,12 @@
+Title: Ignore invalid session cookie for header-auth
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695106437
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When an user logged in via HTTP header authentication (e.g. the legacy SAML method with mod_auth_mellon) and that user had a session cookie from a previous session which is now invalid the creation of a new session was aborted.
+This Werk fixes this so previous session cookies are ignored if they are invalid and a new session will be created.

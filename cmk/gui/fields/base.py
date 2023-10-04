@@ -34,6 +34,7 @@ class BaseSchema(Schema):
         ordered = True  # we want to have documentation in definition-order
 
     cast_to_dict: bool = False
+    schema_example: dict[str, typing.Any] | None = None
 
     # Marshmallow removed dump-validation starting from 3.0.0rc9. When we want to verify we don't
     # try to dump (superfluous fields are filtered anyway) we need to do it ourselves.
@@ -422,7 +423,7 @@ Keys 'optional1', 'required1' occur more than once.
         nested: typing.Sequence[type[Schema] | Schema],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
-        default: typing.Any = fields.missing_,
+        default: typing.Any = fields.missing_,  # type: ignore[attr-defined]
         only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,
@@ -629,9 +630,6 @@ Keys 'optional1', 'required1' occur more than once.
                         if key in value:
                             del value[key]
                 except ValidationError as exc:
-                    for key in schema_inst.declared_fields:
-                        if key in value and key not in exc.messages:
-                            del value[key]
                     self._add_error(error_store, exc.messages)
                     continue
 

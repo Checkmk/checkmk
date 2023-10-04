@@ -18,9 +18,9 @@ from cmk.base.config import check_info
 # vCenter Server 5 Standard   1 1
 
 
-def parse_esx_vsphere_licenses(info):
+def parse_esx_vsphere_licenses(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         name, values = line
         parsed.setdefault(name, {"used": 0, "total": 0, "keys": 0})
         used, total = values.split()
@@ -46,8 +46,8 @@ def check_esx_vsphere_licenses(item, params, parsed):
 
 check_info["esx_vsphere_licenses"] = LegacyCheckDefinition(
     parse_function=parse_esx_vsphere_licenses,
+    service_name="License %s",
     discovery_function=inventory_esx_vsphere_licenses,
     check_function=check_esx_vsphere_licenses,
-    service_name="License %s",
     check_ruleset_name="esx_licenses",
 )

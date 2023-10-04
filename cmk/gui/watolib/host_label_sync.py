@@ -18,8 +18,8 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.log as log
 from cmk.gui.background_job import (
@@ -82,7 +82,7 @@ class SiteRequest:
                     )
                     % (enforce_host.host_name, enforce_host.site_id)
                 )
-            host.need_permission("read")
+            host.permissions.need_permission("read")
 
         newest_host_labels = serialized["newest_host_labels"]
         assert isinstance(newest_host_labels, float)

@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State, type_defs
 
-Section = Dict[str, Dict[str, Mapping[str, int]]]
+Section = dict[str, dict[str, Mapping[str, int]]]
 
 
 def parse_site_object_counts(string_table: type_defs.StringTable) -> Section:
@@ -51,7 +51,7 @@ def discover_site_object_counts(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_site_object_counts(section: Section) -> type_defs.CheckResult:
-    global_counts: Dict[str, Dict[str, int]] = {}
+    global_counts: dict[str, dict[str, int]] = {}
     for site, site_data in section.items():
         site_info = []
         for cmds_or_tags, counts in site_data.items():
@@ -60,11 +60,11 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
             for counted_obj, count in counts.items():
                 global_cmds_or_tags_counts.setdefault(counted_obj, 0)
                 global_cmds_or_tags_counts[counted_obj] += count
-                site_counts.append("%s %s" % (count, counted_obj))
-            site_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(site_counts)))
+                site_counts.append(f"{count} {counted_obj}")
+            site_info.append("{}: {}".format(cmds_or_tags.title(), ", ".join(site_counts)))
         yield Result(
             state=State.OK,
-            notice="[%s] %s" % (site, ", ".join(site_info)),
+            notice="[{}] {}".format(site, ", ".join(site_info)),
         )
 
     global_info = []
@@ -72,11 +72,11 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
         cmds_or_tags_info = []
         for counted_obj, count in counts.items():
             yield Metric(
-                ("%s %s" % (cmds_or_tags, counted_obj)).lower().replace(" ", "_").replace(".", "_"),
+                (f"{cmds_or_tags} {counted_obj}").lower().replace(" ", "_").replace(".", "_"),
                 count,
             )
-            cmds_or_tags_info.append("%s %s" % (count, counted_obj))
-        global_info.append("%s: %s" % (cmds_or_tags.title(), ", ".join(cmds_or_tags_info)))
+            cmds_or_tags_info.append(f"{count} {counted_obj}")
+        global_info.append("{}: {}".format(cmds_or_tags.title(), ", ".join(cmds_or_tags_info)))
 
     yield Result(
         state=State.OK,
@@ -85,11 +85,11 @@ def check_site_object_counts(section: Section) -> type_defs.CheckResult:
 
 
 def cluster_check_site_object_counts(
-    section: Mapping[str, Optional[Section]]
+    section: Mapping[str, Section | None]
 ) -> type_defs.CheckResult:
     yield from check_site_object_counts(
         {
-            "%s/%s" % (site_name, node_name): site_counts
+            f"{site_name}/{node_name}": site_counts
             for node_name, node_section in section.items()
             for site_name, site_counts in (node_section.items() if node_section is not None else ())
         }

@@ -15,7 +15,7 @@
 #pragma warning(3 : 4062)
 #endif
 
-#include "stdafx_defines.h"  // shared use, watest!
+#include "wnx/stdafx_defines.h"  // shared use, watest!
 
 // settings for the LWA
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING  // NOLINT

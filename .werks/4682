@@ -38,7 +38,7 @@ These things are protected by the new permission at the moment:
     <li>Ruleset: Configuring custom host check command</li>
     <li>Host diagnostic page: Setting arbritary command line as datasource program</li>
     <li>Configure event console actions</li>
-<li>
+</ul>
 
 <strong>Incompatible</strong>: User with the role <i>Users</i> are allowed to edit rulesets
 for the WATO folders they are permitted on. In previous versions they were also able to

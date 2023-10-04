@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to help generate pydantic based Kubernetes models
 
-Notice (for pydantic_factories):
+Notice (for polyfactory):
     For models which make use of validator such as api.StorageRequirement, the build function will
     first generate the field value before passing it through the validator function. This will in
     some cases raise an error.
@@ -19,10 +19,17 @@ import typing
 from collections.abc import Iterator, Sequence
 
 import pydantic
-from pydantic_factories import ModelFactory, Use
+from polyfactory import Use
+from polyfactory.factories.dataclass_factory import DataclassFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
 
+import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
+from cmk.special_agents.utils_kubernetes.agent_handlers import node_handler
+from cmk.special_agents.utils_kubernetes.agent_handlers.node_handler import (
+    NATIVE_NODE_CONDITION_TYPES,
+)
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -132,8 +139,8 @@ class APIDeploymentFactory(ModelFactory):
 
 def api_to_agent_deployment(
     api_deployment: api.Deployment, pods: Sequence[api.Pod] = ()
-) -> agent.Deployment:
-    return agent.Deployment(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.Deployment:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.Deployment(
         metadata=api_deployment.metadata,
         spec=api_deployment.spec,
         status=api_deployment.status,
@@ -152,8 +159,8 @@ class APIDaemonSetFactory(ModelFactory):
 
 def api_to_agent_daemonset(
     api_daemonset: api.DaemonSet, pods: Sequence[api.Pod] = ()
-) -> agent.DaemonSet:
-    return agent.DaemonSet(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.DaemonSet:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.DaemonSet(
         metadata=api_daemonset.metadata,
         spec=api_daemonset.spec,
         status=api_daemonset.status,
@@ -172,8 +179,8 @@ class APIStatefulSetFactory(ModelFactory):
 
 def api_to_agent_statefulset(
     api_statefulset: api.StatefulSet, pods: Sequence[api.Pod] = ()
-) -> agent.StatefulSet:
-    return agent.StatefulSet(
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.StatefulSet:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.StatefulSet(
         metadata=api_statefulset.metadata,
         spec=api_statefulset.spec,
         status=api_statefulset.status,
@@ -283,8 +290,19 @@ NPD_NODE_CONDITION_TYPES = [
 ]
 
 
+def _node_conditions() -> Iterator[str]:
+    yield from (node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
+
+
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
+
+    type_ = Use(
+        next,
+        itertools.cycle(
+            node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES  # type: ignore [arg-type]
+        ),
+    )
 
 
 class NodeStatusFactory(ModelFactory):
@@ -292,7 +310,7 @@ class NodeStatusFactory(ModelFactory):
 
     conditions = Use(
         NodeConditionFactory.batch,
-        size=len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+        size=len(node_handler.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
         factory_use_construct=True,
     )
     allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)
@@ -307,7 +325,7 @@ def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatu
                 status=node_condition_status,
                 factory_use_construct=True,
             )
-            for type_ in agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES
+            for type_ in NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES
         ],
     )
 
@@ -319,8 +337,10 @@ class APINodeFactory(ModelFactory):
     metadata = Use(NodeMetaDataFactory.build, factory_use_construct=True)
 
 
-def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Node:
-    return agent.Node(
+def api_to_agent_node(
+    node: api.Node, pods: Sequence[api.Pod] = ()
+) -> cmk.special_agents.utils_kubernetes.agent_handlers.common.Node:
+    return cmk.special_agents.utils_kubernetes.agent_handlers.common.Node(
         metadata=node.metadata,
         status=node.status,
         kubelet_health=node.kubelet_health,
@@ -373,7 +393,7 @@ class SampleFactory(ModelFactory):
 # Cluster related Factories
 
 
-class APIDataFactory(ModelFactory):
+class APIDataFactory(DataclassFactory):
     __model__ = APIData
 
     persistent_volume_claims = randomize_size(PersistentVolumeClaimFactory.batch)

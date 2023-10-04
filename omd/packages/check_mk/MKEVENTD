@@ -10,7 +10,11 @@
 
 case "$1" in
 default)
-    echo "on"
+    if [ "$2" = cse ]; then
+        echo "off"
+    else
+        echo "on"
+    fi
     ;;
 choices)
     echo "on: enable"

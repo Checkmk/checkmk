@@ -136,7 +136,7 @@ def check_hp_msa_volume_health(item, params, parsed):
     return check_hp_msa_health(item, params, parsed)
 
 
-def parse_hp_msa_volume(info):
+def parse_hp_msa_volume(string_table):
     # use numerical id (2nd row from left) as uid for items,
     # in case of several values the values are whitespace separated as usual
     item_type_idx = 0
@@ -146,7 +146,7 @@ def parse_hp_msa_volume(info):
     min_list_elements_cnt_with_values = 4
     pre_parsed = {}
 
-    for line in info:
+    for line in string_table:
         if len(line) < min_list_elements_cnt_with_values:
             # make parsing robust against too short lists
             continue
@@ -170,9 +170,9 @@ def parse_hp_msa_volume(info):
 
 check_info["hp_msa_volume"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa_volume,
+    service_name="Volume Health %s",
     discovery_function=inventory_hp_msa_health,
     check_function=check_hp_msa_volume_health,
-    service_name="Volume Health %s",
 )
 
 # .
@@ -194,7 +194,7 @@ def inventory_hp_msa_volume_df(parsed):
 def check_hp_msa_volume_df(item, params, parsed):
     parsed = _get_item_data(item, parsed)
     if item in parsed:
-        yield 0, "%s (%s)" % (parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
+        yield 0, "{} ({})".format(parsed[item]["virtual-disk-name"], parsed[item]["raidtype"])
 
         size_mb = (int(parsed[item]["total-size-numeric"]) * 512) // 1024**2
         alloc_mb = (int(parsed[item]["allocated-size-numeric"]) * 512) // 1024**2
@@ -204,9 +204,10 @@ def check_hp_msa_volume_df(item, params, parsed):
 
 
 check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
+    service_name="Filesystem %s",
+    sections=["hp_msa_volume"],
     discovery_function=inventory_hp_msa_volume_df,
     check_function=check_hp_msa_volume_df,
-    service_name="Filesystem %s",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

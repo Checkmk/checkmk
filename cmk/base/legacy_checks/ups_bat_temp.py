@@ -39,14 +39,14 @@ def check_ups_bat_temp(item, params, info):
 
 check_info["ups_bat_temp"] = LegacyCheckDefinition(
     detect=DETECT_UPS_GENERIC,
-    discovery_function=inventory_ups_bat_temp,
-    check_function=check_ups_bat_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1",
         oids=["1.5", "2.7"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_ups_bat_temp,
+    check_function=check_ups_bat_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 50.0),
     },

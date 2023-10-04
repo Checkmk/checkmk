@@ -31,18 +31,18 @@ def check_acme_fan(item, params, info):
     for descr, value_str, state in info:
         if item == descr:
             dev_state, dev_state_readable = acme_environment_states[state]
-            return dev_state, "Status: %s, Speed: %s%%" % (dev_state_readable, value_str)
+            return dev_state, f"Status: {dev_state_readable}, Speed: {value_str}%"
     return None
 
 
 check_info["acme_fan"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_fan,
-    check_function=check_acme_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.4.1.1",
         oids=["3", "4", "5"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_acme_fan,
+    check_function=check_acme_fan,
     check_ruleset_name="hw_fans_perc",
 )

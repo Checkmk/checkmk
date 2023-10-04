@@ -4,11 +4,11 @@
 //
 #include "pch.h"
 
-#include "cfg.h"
 #include "common/cfg_info.h"
-#include "external_port.h"
-#include "onlyfrom.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/external_port.h"
+#include "wnx/onlyfrom.h"
 using namespace std::chrono_literals;
 
 namespace {

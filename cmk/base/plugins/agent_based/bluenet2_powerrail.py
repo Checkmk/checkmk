@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from typing import Any, Dict, List
+from typing import Any
 
 from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -116,8 +116,8 @@ from .utils.temperature import check_temperature, TempParamType
 
 
 def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
-    string_table: List[StringTable],
-) -> Dict:
+    string_table: list[StringTable],
+) -> dict:
     map_status = {
         "0": (0, "expected"),
         "1": (3, "undefined"),
@@ -185,7 +185,7 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
 
     oid_sections = [(0, "inlet"), (1, "phases"), (2, "rcm_phases"), (4, "sockets"), (5, "fuses")]
 
-    pre_parsed: Dict[str, Dict[str, Dict[str, Dict[str, str]]]] = {}
+    pre_parsed: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
     for oidend, _guid, _name, _friendly_name in string_table[0]:
         pre_parsed[oidend] = {}
         for index, what in oid_sections:
@@ -200,7 +200,7 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
                     "name": friendly_name,
                 }
 
-    parsed: Dict[str, Dict[str, Dict[str, Any]]] = {"sensors": {}}
+    parsed: dict[str, dict[str, dict[str, Any]]] = {"sensors": {}}
     for index, what in oid_sections:
         parsed[what] = {}
     for oidend, ty, status, exponent_str, reading_str in string_table[3]:
@@ -213,16 +213,16 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
             phase_ty, phase_txt, what = map_phase_types[ty]
             for inlet_id, inlet_info in pre_parsed.items():
                 if identifier in inlet_info[phase_ty].keys():
-                    phase_name = get_item_name("%s %s" % (inlet_id, phase_txt), oid_info[3])
+                    phase_name = get_item_name(f"{inlet_id} {phase_txt}", oid_info[3])
                     parsed[phase_ty].setdefault(phase_name, inlet_info[phase_ty][identifier])
                     parsed[phase_ty][phase_name].setdefault(what, (reading, status_info))
                 if identifier in inlet_info["sockets"].keys():
-                    socket_name = "%s %s" % (inlet_id, inlet_info["sockets"][identifier]["id"])
+                    socket_name = "{} {}".format(inlet_id, inlet_info["sockets"][identifier]["id"])
                     parsed["sockets"].setdefault(socket_name, inlet_info["sockets"][identifier])
                     parsed["sockets"][socket_name].setdefault(what, (reading, status_info))
                 if identifier in inlet_info["fuses"].keys():
                     phase_id = identifier.split(".")[3]
-                    fuse_name = "%s.%s %s" % (
+                    fuse_name = "{}.{} {}".format(
                         inlet_id,
                         phase_id,
                         inlet_info["fuses"][identifier]["id"],
@@ -244,7 +244,7 @@ def parse_bluenet2_powerrail(  # pylint: disable=too-many-branches
             #           1.2-1.5 GPIO in 1-4
             #           1.6-1.9 GPIO out 1-4
             # * becomes part of the item in order to make it unique
-            sensor_name = "Sensor %s %s/%s" % (get_pdu_name(oid_info[0]), oid_info[3], oid_info[4])
+            sensor_name = f"Sensor {get_pdu_name(oid_info[0])} {oid_info[3]}/{oid_info[4]}"
             inst = parsed["sensors"].setdefault(map_sensor_types[ty], {})
             inst.setdefault(sensor_name, (reading, status_info))
 
@@ -315,13 +315,13 @@ register.snmp_section(
 )
 
 
-def discover_bluenet2_powerrail_phases(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_phases(section: dict) -> DiscoveryResult:
     for key in section["phases"]:
         yield Service(item=key)
 
 
 def check_bluenet2_powerrail_phases(
-    item: str, params: Mapping[str, Any], section: Dict
+    item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     yield from check_elphase(item, params, section["phases"])
 
@@ -347,13 +347,13 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_rcm_phases(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_rcm_phases(section: dict) -> DiscoveryResult:
     for key in section["rcm_phases"]:
         yield Service(item=key)
 
 
 def check_bluenet2_powerrail_rcm_phases(
-    item: str, params: Mapping[str, Any], section: Dict
+    item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     yield from check_elphase(item, params, section["rcm_phases"])
 
@@ -385,13 +385,13 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_sockets(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_sockets(section: dict) -> DiscoveryResult:
     for key in section["sockets"]:
         yield Service(item=key)
 
 
 def check_bluenet2_powerrail_sockets(
-    item: str, params: Mapping[str, Any], section: Dict
+    item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     yield from check_elphase(item, params, section["sockets"])
 
@@ -419,13 +419,13 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_fuses(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_fuses(section: dict) -> DiscoveryResult:
     for key in section["fuses"]:
         yield Service(item=key)
 
 
 def check_bluenet2_powerrail_fuses(
-    item: str, params: Mapping[str, Any], section: Dict
+    item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     yield from check_elphase(item, params, section["fuses"])
 
@@ -453,13 +453,13 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_inlet(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_inlet(section: dict) -> DiscoveryResult:
     for key in section["inlet"]:
         yield Service(item=key)
 
 
 def check_bluenet2_powerrail_inlet(
-    item: str, params: Mapping[str, Any], section: Dict
+    item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     yield from check_elphase(item, params, section["inlet"])
 
@@ -485,12 +485,12 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_temp(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_temp(section: dict) -> DiscoveryResult:
     for item in section["sensors"].get("temp", {}):
         yield Service(item=item)
 
 
-def check_bluenet2_powerrail_temp(item: str, params: TempParamType, section: Dict) -> CheckResult:
+def check_bluenet2_powerrail_temp(item: str, params: TempParamType, section: dict) -> CheckResult:
     if item in section["sensors"].get("temp", {}):
         reading, (state, state_readable) = section["sensors"]["temp"][item]
         yield from check_temperature(
@@ -525,13 +525,13 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_bluenet2_powerrail_humidity(section: Dict) -> DiscoveryResult:
+def discover_bluenet2_powerrail_humidity(section: dict) -> DiscoveryResult:
     for item in section["sensors"].get("humidity", {}):
         yield Service(item=item)
 
 
 def check_bluenet2_powerrail_humidity(
-    item: str, params: Mapping[str, Any], section: Dict
+    item: str, params: Mapping[str, Any], section: dict
 ) -> CheckResult:
     if item in section["sensors"].get("humidity", {}):
         reading, (state, state_readable) = section["sensors"]["humidity"][item]

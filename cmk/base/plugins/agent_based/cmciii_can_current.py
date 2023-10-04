@@ -35,8 +35,7 @@ def check_cmciii_can_current(
     state = State.OK if state_readable == "OK" else State.CRIT
     yield Result(
         state=state,
-        summary="Status: %s, Current: %s mA (warn/crit at %s/%s mA)"
-        % (state_readable, value, warn, crit),
+        summary=f"Status: {state_readable}, Current: {value} mA (warn/crit at {warn}/{crit} mA)",
     )
     yield Metric("current", value / 1000.0, levels=(warn / 1000.0, crit / 1000.0))
 

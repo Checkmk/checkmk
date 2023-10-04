@@ -14,16 +14,15 @@ import pytest
 from fakeredis import FakeRedis
 from pytest import MonkeyPatch
 
-from tests.testlib import (
+# Import this fixture to not clutter this file, but it's unused here...
+from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
+from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
     is_saas_repo,
     repo_path,
 )
-
-# Import this fixture to not clutter this file, but it's unused here...
-from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
 
 import livestatus
 
@@ -34,8 +33,12 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
-from cmk.utils.licensing.handler import LicensingHandler, NotificationHandler, UserEffect
-from cmk.utils.licensing.registry import LicenseState
+from cmk.utils.licensing.handler import (
+    LicenseState,
+    LicensingHandler,
+    NotificationHandler,
+    UserEffect,
+)
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
@@ -140,7 +143,7 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
     store.makedirs(cmk.utils.paths.local_dashboards_dir)
     store.makedirs(cmk.utils.paths.local_views_dir)
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         # needed for visuals.load()
         store.makedirs(cmk.utils.paths.local_reports_dir)
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
@@ -231,8 +234,7 @@ def site(request):
 
 
 def _clear_caches():
-    cmk.utils.caching.config_cache.clear()
-    cmk.utils.caching.runtime_cache.clear()
+    cmk.utils.caching.cache_manager.clear()
 
     cmk_version.edition.cache_clear()
 
@@ -254,23 +256,26 @@ class FixRegister:
 
     def __init__(self) -> None:
         # Local import to have faster pytest initialization
-        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
+        import cmk.base.plugins.commands.register as commands_register  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
 
         config._initialize_data_structures()
         assert not config.check_info
 
-        config.load_all_agent_based_plugins(
+        errors = config.load_all_plugins(
             check_api.get_check_api_context,
             local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
             checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
         )
+        assert not errors
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
         self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
         self._inventory_plugins = copy.deepcopy(register._config.registered_inventory_plugins)
+        self._active_checks = copy.deepcopy(commands_register.registered_active_checks)
 
     @property
     def snmp_sections(self):
@@ -293,7 +298,7 @@ class FixPluginLegacy:
     """Access legacy dicts like `check_info`"""
 
     def __init__(self, fixed_register: FixRegister) -> None:
-        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 

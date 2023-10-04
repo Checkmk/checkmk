@@ -1,0 +1,14 @@
+Title: mk_oracle: Fix "Database or necessary processes not running or login failed" error due to race conditions
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1690817204
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+mk_oracle stores the query results for SYNC_SECTIONS in intermediate cache files per SID, which will be cleaned up afterwards.
+Currently, these files can be erroneously deleted before the agent plugin has finished if the agent plugin is started a second time, resulting in a "Database or necessary processes not running or login failed" error.
+This has been fixed by only deleting files created by the current process.
+

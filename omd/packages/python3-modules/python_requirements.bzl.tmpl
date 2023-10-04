@@ -1,0 +1,18 @@
+all_requirements = %%ALL_REQUIREMENTS%%
+
+packages = %%PACKAGES%%
+
+def _clean_name(name):
+    return name.replace("-", "_").replace(".", "_").lower()
+
+def requirement(name):
+    return "@%%NAME%%_" + _clean_name(name) + "//:pkg"
+
+def whl_requirement(name):
+    return "@%%NAME%%_" + _clean_name(name) + "//:whl"
+
+def data_requirement(name):
+    return "@%%NAME%%_" + _clean_name(name) + "//:data"
+
+def dist_info_requirement(name):
+    return "@%%NAME%%_" + _clean_name(name) + "//:dist_info"

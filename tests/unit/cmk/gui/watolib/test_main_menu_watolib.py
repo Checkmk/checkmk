@@ -3,79 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.version as cmk_version
+from pytest import MonkeyPatch
 
-from cmk.gui.watolib.main_menu import main_module_registry
+from cmk.gui.wato import MainModuleTopicExporter
+from cmk.gui.watolib import main_menu
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 
 
-def test_registered_modules() -> None:
-    expected_modules = [
-        "folder",
-        "tags",
-        "globalvars",
-        "host_attrs",
-        "wato.py?group=static&mode=rulesets",
-        "check_plugins",
-        "read_only",
-        "predefined_conditions",
-        "host_groups",
-        "service_groups",
-        "users",
-        "user_attrs",
-        "roles",
-        "contact_groups",
-        "notifications",
-        "timeperiods",
-        "mkeventd_rule_packs",
-        "bi_packs",
-        "sites",
-        "backup",
-        "passwords",
-        "analyze_config",
-        "auditlog",
-        "icons",
-        "background_jobs_overview",
-        "ldap_config",
-        "diagnostics",
-        "download_agents",
-        "rule_search",
-        "wato.py?group=activechecks&mode=rulesets",
-        "wato.py?group=agent&mode=rulesets",
-        "wato.py?group=agents&mode=rulesets",
-        "wato.py?group=checkparams&mode=rulesets",
-        "wato.py?group=custom_checks&mode=rulesets",
-        "wato.py?group=datasource_programs&mode=rulesets",
-        "wato.py?group=inventory&mode=rulesets",
-        "wato.py?group=monconf&mode=rulesets",
-        "wato.py?group=host_monconf&mode=rulesets",
-        "wato.py?group=snmp&mode=rulesets",
-        "wato.py?group=vm_cloud_container&mode=rulesets",
-        "wato.py?group=eventconsole&mode=rulesets",
-    ]
-
-    if cmk_version.is_raw_edition():
-        expected_modules += [
-            "download_agents_linux",
-            "download_agents_windows",
-        ]
-
-    if not cmk_version.is_raw_edition():
-        expected_modules += [
-            "agent_registration",
-            "agents",
-            "alert_handlers",
-            "dcd_connections",
-            "influxdb_connections",
-            "licensing",
-            "mkps",
-            "saml_config",
-        ]
-
-    if cmk_version.is_managed_edition():
-        expected_modules += [
-            "customer_management",
-        ]
-
-    assert sorted(m().mode_or_url for m in main_module_registry.values()) == sorted(
-        expected_modules
+def test_register_modules(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(main_menu, "main_module_registry", MainModuleRegistry())
+    module = main_menu.WatoModule(
+        mode_or_url="dang",
+        description="descr",
+        permission="icons",
+        title="Custom DING",
+        sort_index=100,
+        icon="icons",
     )
+    main_menu.register_modules(module)
+
+    modules = list(main_menu.main_module_registry.values())  # type: ignore[attr-defined]
+    assert len(modules) == 1
+    registered = modules[0]()
+    assert isinstance(registered, ABCMainModule)
+    assert registered.mode_or_url == "dang"
+    assert registered.description == "descr"
+    assert registered.permission == "icons"
+    assert registered.title == "Custom DING"
+    assert registered.sort_index == 100
+    assert registered.icon == "icons"
+    assert registered.is_show_more is False
+    assert registered.topic == MainModuleTopicExporter

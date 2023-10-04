@@ -7,7 +7,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
 Section = Mapping[str, Any]
 
 
-def parse_aws_rds_summary(info):
+def parse_aws_rds_summary(string_table):
     try:
         return {
             aws_rds_service_item(instance["DBInstanceIdentifier"], instance["Region"]): instance
-            for instance in parse_aws(info)
+            for instance in parse_aws(string_table)
         }
     except IndexError:
         return {}
@@ -48,15 +48,15 @@ def check_aws_rds_summary(item, params, parsed):
 
     class_infos = []
     for instance_class, instances in instances_by_classes.items():
-        class_infos.append("%s: %s" % (instance_class, len(instances)))
+        class_infos.append(f"{instance_class}: {len(instances)}")
     yield 0, ", ".join(class_infos)
 
 
 check_info["aws_rds_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_rds_summary,
+    service_name="AWS/RDS Summary",
     discovery_function=discover_aws_rds_summary,
     check_function=check_aws_rds_summary,
-    service_name="AWS/RDS Summary",
 )
 
 # .
@@ -70,13 +70,14 @@ check_info["aws_rds_summary"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_aws_rds_summary_db(item, params, data):
+def check_aws_rds_summary_db(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     db_name = data.get("DBName")
     pre_info = ""
     if db_name is not None:
         pre_info = "[%s] " % db_name
-    yield 0, "%sStatus: %s" % (pre_info, data["DBInstanceStatus"])
+    yield 0, "{}Status: {}".format(pre_info, data["DBInstanceStatus"])
 
     multi_az = data.get("MultiAZ")
     if multi_az is not None:
@@ -90,11 +91,12 @@ def check_aws_rds_summary_db(item, params, data):
     if zone is not None:
         region = zone[:-1]
         zone_info = zone[-1]
-        yield 0, "Availability zone: %s (%s)" % (AWSRegions[region], zone_info)
+        yield 0, f"Availability zone: {AWSRegions[region]} ({zone_info})"
 
 
 check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(
+    service_name="AWS/RDS %s Info",
+    sections=["aws_rds_summary"],
     discovery_function=lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
     check_function=check_aws_rds_summary_db,
-    service_name="AWS/RDS %s Info",
 )

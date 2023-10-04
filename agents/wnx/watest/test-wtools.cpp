@@ -2,6 +2,7 @@
 // windows mostly
 
 #include "pch.h"
+// this file is fixed
 
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -11,9 +12,9 @@
 
 #include "common/wtools.h"
 #include "common/wtools_user_control.h"
-#include "test_tools.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
 
 using namespace std::string_literals;
 using namespace std::chrono_literals;
@@ -65,12 +66,17 @@ protected:
 
         int count = 0;
         for (int i = 0; i < requested; i++) {
-            if (cma::tools::RunDetachedCommand(cmd)) {
+            if (cma::tools::RunDetachedCommand(cmd).has_value()) {
                 count++;
             }
         }
 
         return count;
+    }
+    [[nodiscard]] std::optional<uint32_t> RunProcess() const {
+        const auto cmd = fmt::format("{} -t 8.8.8.8", test_exe_);
+
+        return cma::tools::RunDetachedCommand(cmd);
     }
 
     static std::tuple<std::wstring, uint32_t> FindExpectedProcess() {
@@ -95,7 +101,6 @@ protected:
         fs::create_directories(test_dir_);
         const fs::path ping(R"(c:\windows\system32\ping.exe)");
         ASSERT_TRUE(fs::copy_file(ping, test_exe_));
-        EXPECT_EQ(RunProcesses(1), 1);
     }
 
     void TearDown() override {
@@ -105,7 +110,8 @@ protected:
         fs::remove_all(test_dir_, ec);
         if (ec) {
             std::cerr << fmt::format(
-                "Attention: remove_all failed, some of temporary processes are busy. Exception: '{}' [{}]\n",
+                "Attention: remove_all failed, some of temporary processes are busy. "
+                "Exception: '{}' [{}]\n",
                 ec.message(), ec.value());
         }
     }
@@ -115,6 +121,7 @@ protected:
 };
 
 TEST_F(WtoolsKillProcFixture, KillProcByPid) {
+    EXPECT_EQ(RunProcesses(1), 1);
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(!path.empty());
     ASSERT_NE(pid, 0);
@@ -130,6 +137,7 @@ TEST_F(WtoolsKillProcFixture, KillProcByPid) {
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
+    EXPECT_EQ(RunProcesses(1), 1);
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
     auto test_dir = test_dir_.wstring();
     cma::tools::WideUpper(test_dir);
@@ -147,16 +155,46 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByFullPath) {
+    EXPECT_EQ(RunProcesses(1), 1);
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
-    auto test_dir = test_dir_.wstring();
-    cma::tools::WideUpper(test_dir);
-
     KillProcessesByFullPath(test_exe_);
     cma::tools::sleep(500ms);
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());
     EXPECT_EQ(pid, 0);
+}
+
+TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
+    const auto maybe_pid = RunProcess();
+    ASSERT_TRUE(maybe_pid.has_value());
+
+    // bad pid
+    {
+        KillProcessesByPathEndAndPid(test_exe_.filename(), 4);
+        cma::tools::sleep(500ms);
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_FALSE(path.empty());
+        EXPECT_EQ(pid, *maybe_pid);
+    }
+
+    // bad path
+    {
+        KillProcessesByPathEndAndPid("aa.exe", *maybe_pid);
+        cma::tools::sleep(500ms);
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_FALSE(path.empty());
+        EXPECT_EQ(pid, *maybe_pid);
+    }
+
+    // should kill
+    {
+        KillProcessesByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+        cma::tools::sleep(500ms);
+        auto [path, pid] = FindExpectedProcess();
+        EXPECT_TRUE(path.empty());
+        EXPECT_EQ(pid, 0);
+    }
 }
 
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
@@ -199,7 +237,9 @@ protected:
         tst::CreateTextFile(exe_b, "@echo start\n@call " + ToStr(exe_c));
         tst::CreateTextFile(exe_c,
                             "@echo start\n@powershell Start-Sleep 10000");
-        return cma::tools::RunStdCommand(exe_a.wstring(), false);
+        return cma::tools::RunStdCommand(exe_a.wstring(),
+                                         cma::tools::WaitForEnd::no)
+            .value_or(0);
     }
 
     static [[nodiscard]] bool findProcessByPid(uint32_t pid) {
@@ -262,7 +302,9 @@ TEST_F(WtoolsKillProcessTreeFixture, Component) {
     EXPECT_TRUE(proc_name == L"cmd.exe");
     EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
 
-    EXPECT_TRUE(findProcessByParentPid(proc_id)) << "child process absent";
+    ASSERT_TRUE(tst::WaitForSuccessSilent(2000ms, [&]() {
+        return findProcessByParentPid(proc_id);
+    })) << "child process absent";
 
     // killing
     KillProcessTree(proc_id);
@@ -710,7 +752,7 @@ TEST(Wtools, ExecuteCommandsAsync) {
                                    ::GetCurrentProcessId());
     const std::vector<std::wstring> commands{L"echo x>" + output_file,
                                              L"@echo powershell Start-Sleep 1"};
-    const auto result = ExecuteCommandsAsync(L"test", commands);
+    const auto result = ExecuteCommands(L"test", commands, ExecuteMode::async);
     std::error_code ec;
     ON_OUT_OF_SCOPE({
         if (!result.empty()) {

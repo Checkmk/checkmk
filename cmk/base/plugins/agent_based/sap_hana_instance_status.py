@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timedelta
-from typing import Dict, Final, List, NamedTuple
+from typing import Final, NamedTuple
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -21,7 +21,7 @@ class InstanceProcess(NamedTuple):
 
 class InstanceStatus(NamedTuple):
     status: str
-    processes: List[InstanceProcess] = []
+    processes: list[InstanceProcess] = []
 
 
 INSTANCE_STATUSES: Final = {
@@ -43,8 +43,8 @@ def _parse_elapsed_time(time_string):
     return elapsed_time.total_seconds()
 
 
-def parse_sap_hana_instance_status(string_table: StringTable) -> Dict[str, InstanceStatus]:
-    section: Dict[str, InstanceStatus] = {}
+def parse_sap_hana_instance_status(string_table: StringTable) -> dict[str, InstanceStatus]:
+    section: dict[str, InstanceStatus] = {}
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         status = lines[0][0].split(":")[1].lstrip()
@@ -75,12 +75,12 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_instance_status(section: Dict[str, InstanceStatus]) -> DiscoveryResult:
+def discovery_sap_hana_instance_status(section: dict[str, InstanceStatus]) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_sap_hana_instance_status(item: str, section: Dict[str, InstanceStatus]) -> CheckResult:
+def check_sap_hana_instance_status(item: str, section: dict[str, InstanceStatus]) -> CheckResult:
     instance = section.get(item)
     if instance is None:
         return

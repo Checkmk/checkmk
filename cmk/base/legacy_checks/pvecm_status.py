@@ -55,9 +55,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_pvecm_status(info):
+def parse_pvecm_status(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
         k = line[0].strip().lower()
@@ -82,7 +82,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
     else:
         name = parsed.get("cluster name", parsed.get("quorum provider", "unknown"))
 
-        yield 0, "Name: %s, Nodes: %s" % (name, parsed["nodes"])
+        yield 0, "Name: {}, Nodes: {}".format(name, parsed["nodes"])
 
         if "activity blocked" in parsed["quorum"]:
             yield 2, "Quorum: %s" % parsed["quorum"]
@@ -90,7 +90,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
         if int(parsed["expected votes"]) == int(parsed["total votes"]):
             yield 0, "No faults"
         else:
-            yield 2, "Expected votes: %s, Total votes: %s" % (
+            yield 2, "Expected votes: {}, Total votes: {}".format(
                 parsed["expected votes"],
                 parsed["total votes"],
             )
@@ -98,7 +98,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
 
 check_info["pvecm_status"] = LegacyCheckDefinition(
     parse_function=parse_pvecm_status,
+    service_name="PVE Cluster State",
     discovery_function=inventory_pvecm_status,
     check_function=check_pvecm_status,
-    service_name="PVE Cluster State",
 )

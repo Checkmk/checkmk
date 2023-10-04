@@ -59,13 +59,13 @@ def check_netapp_api_snapshots(item, params, parsed):
 
     extra_info = ("(Levels at %d%%/%d%%)" % (warn, crit)) if state else ""
 
-    yield state, "Reserve used: %.1f%% (%s)%s" % (
+    yield state, "Reserve used: {:.1f}% ({}){}".format(
         used_percent,
         get_bytes_human_readable(snapshot_total),
         extra_info,
     )
 
-    yield 0, "Total Reserve: %s%% (%s) of %s" % (
+    yield 0, "Total Reserve: {}% ({}) of {}".format(
         data[0]["snapshot-percent-reserved"],
         get_bytes_human_readable(reserved_bytes),
         get_bytes_human_readable(volume_total),
@@ -74,9 +74,9 @@ def check_netapp_api_snapshots(item, params, parsed):
 
 check_info["netapp_api_snapshots"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_snapshots,
-    check_function=check_netapp_api_snapshots,
-    discovery_function=inventory_netapp_api_snapshots,
     service_name="Snapshots Volume %s",
+    discovery_function=inventory_netapp_api_snapshots,
+    check_function=check_netapp_api_snapshots,
     check_ruleset_name="netapp_snapshots",
     check_default_parameters={"levels": (85.0, 90.0)},
 )

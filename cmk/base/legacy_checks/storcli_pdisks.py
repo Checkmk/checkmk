@@ -9,12 +9,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils import megaraid
 
 
-def parse_storcli_pdisks(info):
+def parse_storcli_pdisks(string_table):
     parsed = {}
 
     controller_num = 0
     separator_count = 0
-    for line in info:
+    for line in string_table:
         if line[0].startswith("-----"):
             separator_count += 1
         elif separator_count == 2:
@@ -52,9 +52,9 @@ def check_storcli_pdisks(item, params, parsed):
 
 check_info["storcli_pdisks"] = LegacyCheckDefinition(
     parse_function=parse_storcli_pdisks,
+    service_name="RAID PDisk EID:Slot-Device %s",
     discovery_function=inventory_storcli_pdisks,
     check_function=check_storcli_pdisks,
-    service_name="RAID PDisk EID:Slot-Device %s",
     check_ruleset_name="storcli_pdisks",
     check_default_parameters=megaraid.PDISKS_DEFAULTS,
 )

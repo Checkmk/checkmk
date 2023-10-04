@@ -10,7 +10,7 @@ Tests for legacy tuple rulesets.
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -18,11 +18,11 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
+from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
-from cmk.base.config import RuleSpec
 
 
 @pytest.fixture(autouse=True)
@@ -90,7 +90,8 @@ def test_service_extra_conf(ts: Scenario) -> None:
         {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": "12"},
     ]
 
-    assert ts.config_cache.service_extra_conf(HostName("host1"), "service1", ruleset) == [
+    matcher = ts.config_cache.ruleset_matcher
+    assert matcher.service_extra_conf(HostName("host1"), "service1", ruleset) == [
         "1",
         "2",
         "3",
@@ -101,7 +102,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert ts.config_cache.service_extra_conf(HostName("host1"), "serv", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host1"), "serv", ruleset) == [
         "1",
         "2",
         "3",
@@ -112,7 +113,7 @@ def test_service_extra_conf(ts: Scenario) -> None:
         "12",
     ]
 
-    assert ts.config_cache.service_extra_conf(HostName("host2"), "service1", ruleset) == [
+    assert matcher.service_extra_conf(HostName("host2"), "service1", ruleset) == [
         "1",
         "2",
         "3",
@@ -158,8 +159,9 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
-    assert ts.config_cache.host_extra_conf(HostName("host1"), host_ruleset) == [
+def test_get_host_values(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
+    ruleset_matcher = ts.config_cache.ruleset_matcher
+    assert ruleset_matcher.get_host_values(HostName("host1"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -169,15 +171,18 @@ def test_host_extra_conf(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
         {"9": True},
     ]
 
-    assert ts.config_cache.host_extra_conf(HostName("host2"), host_ruleset) == [
+    assert ruleset_matcher.get_host_values(HostName("host2"), host_ruleset) == [
         {"1": True},
         {"2": True},
         {"8": True},
     ]
 
 
-def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
-    assert ts.config_cache.host_extra_conf_merged(HostName("host1"), host_ruleset) == {
+def test_get_host_merged_dict(
+    ts: Scenario, host_ruleset: Sequence[RuleSpec[Mapping[str, object]]]
+) -> None:
+    ruleset_matcher = ts.config_cache.ruleset_matcher
+    assert ruleset_matcher.get_host_merged_dict(HostName("host1"), host_ruleset) == {
         "1": True,
         "2": True,
         "3": True,
@@ -187,7 +192,7 @@ def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[ob
         "9": True,
     }
 
-    assert ts.config_cache.host_extra_conf_merged(HostName("host2"), host_ruleset) == {
+    assert ruleset_matcher.get_host_merged_dict(HostName("host2"), host_ruleset) == {
         "1": True,
         "2": True,
         "8": True,
@@ -319,54 +324,49 @@ def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Sequence[RuleSpec[ob
         ),
     ],
 )
-def test_in_boolean_serviceconf_list(
+def test_get_service_bool_value(
     ts: Scenario, parameters: tuple[Sequence[RuleSpec], bool, bool]
 ) -> None:
     ruleset, outcome_host1, outcome_host2 = parameters
+    matcher = ts.config_cache.ruleset_matcher
 
-    assert (
-        ts.config_cache.in_boolean_serviceconf_list(HostName("host1"), "service1", ruleset)
-        == outcome_host1
-    )
-    assert (
-        ts.config_cache.in_boolean_serviceconf_list(HostName("host2"), "service2", ruleset)
-        == outcome_host2
-    )
+    assert matcher.get_service_bool_value(HostName("host1"), "service1", ruleset) == outcome_host1
+    assert matcher.get_service_bool_value(HostName("host2"), "service2", ruleset) == outcome_host2
 
 
 def test_all_matching_hosts(ts: Scenario) -> None:
-    config_cache = ts.config_cache
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    ruleset_matcher = ts.config_cache.ruleset_matcher
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}}, with_foreign_hosts=False
     ) == {"host1", "host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): TagID("test")}}, with_foreign_hosts=False
     ) == {"host1"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}}, with_foreign_hosts=False
     ) == {"host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("test")}}}, with_foreign_hosts=True
     ) == {"host2", "host3"}
 
     assert (
-        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": []},
             with_foreign_hosts=True,
         )
         == set()
     )
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": ["host1"]},
         with_foreign_hosts=True,
     ) == {"host1"}
 
     assert (
-        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {
                 "host_tags": {TagGroupID("agent"): {"$ne": TagID("no-agent")}},
                 "host_name": ["host1"],
@@ -376,23 +376,23 @@ def test_all_matching_hosts(ts: Scenario) -> None:
         == set()
     )
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "h"}]},
         with_foreign_hosts=False,
     ) == {"host1", "host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2"}]},
         with_foreign_hosts=False,
     ) == {"host2"}
 
-    assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+    assert ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": ".*2$"}]},
         with_foreign_hosts=False,
     ) == {"host2"}
 
     assert (
-        config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
+        ruleset_matcher.ruleset_optimizer._all_matching_hosts(
             {"host_tags": {TagGroupID("agent"): TagID("no-agent")}, "host_name": [{"$regex": "2"}]},
             with_foreign_hosts=False,
         )
@@ -419,9 +419,6 @@ def test_in_extraconf_hostlist() -> None:
     assert tuple_rulesets.in_extraconf_hostlist(["~1"], "host1") is False
     assert tuple_rulesets.in_extraconf_hostlist(["~.*1"], "host1") is True
     assert tuple_rulesets.in_extraconf_hostlist(["~.*1$"], "host1") is True
-
-
-# TODO: in_binary_hostlist
 
 
 def test_get_rule_options_regular_rule() -> None:

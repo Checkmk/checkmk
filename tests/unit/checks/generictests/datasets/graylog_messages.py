@@ -7,6 +7,12 @@
 # mypy: disable-error-code=var-annotated
 checkname = "graylog_messages"
 
+mock_item_state = {
+    "": {
+        "graylog_msgs_avg.rate" : (0, 8569688),
+    }
+}
+
 info = [['{"events": 8569688}']]
 
 discovery = {"": [(None, {})]}

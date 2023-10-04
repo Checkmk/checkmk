@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -52,7 +53,7 @@ def _check_common(
 
         rate = get_rate_or_none(
             value_store,
-            "mssql_counters.locks.%s.%s.%s" % (node_info, item, counter_key),
+            f"mssql_counters.locks.{node_info}.{item}.{counter_key}",
             now,
             counters[counter_key],
         )
@@ -64,7 +65,7 @@ def _check_common(
         yield from check_levels(
             rate,
             levels_upper=params.get(counter_key),
-            render_func=lambda v, i=node_info, t=title: "%s%s: %.1f/s" % (i, t, v),
+            render_func=lambda v, i=node_info, t=title: f"{i}{t}: {v:.1f}/s",
             metric_name=counter_key.replace("/sec", "_per_second"),
             boundaries=(0, None),
         )

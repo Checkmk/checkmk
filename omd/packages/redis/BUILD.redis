@@ -25,13 +25,13 @@ genrule(
 
 genrule(
     name = "skel",
-    srcs = ["@omd_packages//packages/redis/skeleton:skel", "@omd_packages//packages/redis/skeleton:skel_root"],
+    srcs = ["@omd_packages//omd/packages/redis/skeleton:skel", "@omd_packages//omd/packages/redis/skeleton:skel_root"],
     outs = ["skeleton/etc/init.d/redis",
             "skeleton/etc/logrotate.d/redis",
             "skeleton/etc/rc.d/85-redis",
             "skeleton/etc/redis/redis.conf",
            ],
     cmd = """
-        cp -r --dereference $$(dirname $(execpath @omd_packages//packages/redis/skeleton:skel_root)) $$(realpath $(RULEDIR))
+        cp -r --dereference $$(dirname $(execpath @omd_packages//omd/packages/redis/skeleton:skel_root)) $$(realpath $(RULEDIR))
     """,
 )

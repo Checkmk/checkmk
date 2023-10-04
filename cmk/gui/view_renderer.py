@@ -46,7 +46,6 @@ from cmk.gui.page_menu_utils import (
     get_ntop_page_menu_dropdown,
 )
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
@@ -56,9 +55,10 @@ from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.command import Command, do_actions, get_command_groups, should_show_command_form
 from cmk.gui.visuals import view_title
+from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
-if not cmk_version.is_raw_edition():
+if cmk_version.edition() is not cmk_version.Edition.CRE:
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 
@@ -218,8 +218,9 @@ class GUIViewRenderer(ABCViewRenderer):
             for info in sites.live().dead_sites().values():
                 if isinstance(info["site"], dict):
                     html.show_error(
-                        "<b>%s - %s</b><br>%s"
-                        % (info["site"]["alias"], _("Livestatus error"), info["exception"])
+                        "<b>{} - {}</b><br>{}".format(
+                            info["site"]["alias"], _("Livestatus error"), info["exception"]
+                        )
                     )
 
         missing_single_infos = self.view.missing_single_infos
@@ -426,9 +427,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
 
-    def _page_menu_dropdowns_ntop(  # type: ignore[no-untyped-def]
-        self, host_address
-    ) -> PageMenuDropdown:
+    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:  # type: ignore[no-untyped-def]
         return get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
@@ -460,7 +459,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
-        if cmk_version.is_raw_edition():
+        if cmk_version.edition() is cmk_version.Edition.CRE:
             return
 
         if not user.may("general.instant_reports"):
@@ -494,15 +493,6 @@ class GUIViewRenderer(ABCViewRenderer):
             ),
         )
 
-        if display_options.enabled(display_options.D):
-            display_dropdown.topics.insert(
-                0,
-                PageMenuTopic(
-                    title=_("Format"),
-                    entries=list(self._page_menu_entries_view_format()),
-                ),
-            )
-
         if display_options.enabled(display_options.F):
             display_dropdown.topics.insert(
                 0,
@@ -523,17 +513,17 @@ class GUIViewRenderer(ABCViewRenderer):
             is_shortcut=True,
         )
 
-    def _page_menu_entries_view_format(self) -> Iterator[PageMenuEntry]:
-        painter_options = PainterOptions.get_instance()
-        yield PageMenuEntry(
-            title=_("Modify display options"),
-            icon_name="painteroptions",
-            item=PageMenuPopup(self._render_painter_options_form()),
-            name="display_painter_options",
-            is_enabled=painter_options.painter_option_form_enabled(),
-        )
-
     def _page_menu_entries_view_layout(self) -> Iterator[PageMenuEntry]:
+        if display_options.enabled(display_options.D):
+            painter_options = PainterOptions.get_instance()
+            yield PageMenuEntry(
+                title=_("Modify display options"),
+                icon_name="painteroptions",
+                item=PageMenuPopup(self._render_painter_options_form()),
+                name="display_painter_options",
+                is_enabled=painter_options.painter_option_form_enabled(),
+            )
+
         checkboxes_toggleable = (
             self.view.layout.can_display_checkboxes and not self.view.checkboxes_enforced
         )
@@ -586,7 +576,7 @@ class GUIViewRenderer(ABCViewRenderer):
 
             if is_builtin_view or not is_own_view:
                 yield PageMenuEntry(
-                    title=_("Clone builtin view") if is_builtin_view else _("Clone view"),
+                    title=_("Clone built-in view") if is_builtin_view else _("Clone view"),
                     icon_name="clone",
                     item=make_simple_link(
                         makeuri_contextless(

@@ -88,8 +88,7 @@ def check_hp_procurve_sensors(item, _not_used, info):
 
             return (
                 status,
-                'Condition of %s "%s" is %s'
-                % (get_hp_procurve_sensor_type(line[1]), line[3], procurve_status),
+                f'Condition of {get_hp_procurve_sensor_type(line[1])} "{line[3]}" is {procurve_status}',
             )
     return (3, "item not found in snmp data")
 
@@ -99,11 +98,11 @@ check_info["hp_procurve_sensors"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
     ),
-    check_function=check_hp_procurve_sensors,
-    discovery_function=inventory_hp_procurve_sensors,
-    service_name="Sensor %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.1.2.6.1",
         oids=["1", "2", "4", "7"],
     ),
+    service_name="Sensor %s",
+    discovery_function=inventory_hp_procurve_sensors,
+    check_function=check_hp_procurve_sensors,
 )

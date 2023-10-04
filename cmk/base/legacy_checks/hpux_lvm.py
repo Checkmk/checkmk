@@ -42,7 +42,7 @@ def check_hpux_lvm(item, params, info):
             lv_name = line[0].split("=")[1]
             if lv_name == item:
                 status = line[1].split("=")[1]
-                infotext = "status is %s (VG = %s)" % (status, vg_name)
+                infotext = f"status is {status} (VG = {vg_name})"
                 if status == "available,syncd":
                     return (0, infotext)
                 return (2, infotext)
@@ -51,7 +51,7 @@ def check_hpux_lvm(item, params, info):
 
 
 check_info["hpux_lvm"] = LegacyCheckDefinition(
-    check_function=check_hpux_lvm,
-    discovery_function=inventory_hpux_lvm,
     service_name="Logical Volume %s",
+    discovery_function=inventory_hpux_lvm,
+    check_function=check_hpux_lvm,
 )

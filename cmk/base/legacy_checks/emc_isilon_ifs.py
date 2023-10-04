@@ -21,10 +21,10 @@ def check_emc_isilon_ifs(item, params, section: FSBlock):
 
 
 check_info["emc_isilon_ifs"] = LegacyCheckDefinition(
-    # section already migrated
-    check_function=check_emc_isilon_ifs,
-    discovery_function=inventory_emc_isilon_ifs,
     service_name="Filesystem %s",
+    # section already migrated
+    discovery_function=inventory_emc_isilon_ifs,
+    check_function=check_emc_isilon_ifs,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

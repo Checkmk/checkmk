@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-from typing import Any, List, MutableMapping, Optional
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -25,13 +25,13 @@ def _get_item_data(item: str, section_liebert_temp_air: ParsedSection) -> tuple[
     return None
 
 
-def parse_liebert_temp_air(string_table: List[StringTable]) -> ParsedSection:
+def parse_liebert_temp_air(string_table: list[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 
 def discover_liebert_temp_air(
-    section_liebert_temp_air: Optional[ParsedSection],
-    section_liebert_system: Optional[SystemSection],
+    section_liebert_temp_air: ParsedSection | None,
+    section_liebert_system: SystemSection | None,
 ) -> DiscoveryResult:
     if not section_liebert_temp_air:
         return
@@ -43,8 +43,8 @@ def discover_liebert_temp_air(
 def check_liebert_temp_air(
     item: str,
     params: TempParamType,
-    section_liebert_temp_air: Optional[ParsedSection],
-    section_liebert_system: Optional[SystemSection],
+    section_liebert_temp_air: ParsedSection | None,
+    section_liebert_system: SystemSection | None,
 ) -> CheckResult:
     value_store = get_value_store()
     yield from _check_liebert_temp_air(
@@ -59,8 +59,8 @@ def check_liebert_temp_air(
 def _check_liebert_temp_air(
     item: str,
     params: TempParamType,
-    section_liebert_temp_air: Optional[ParsedSection],
-    section_liebert_system: Optional[SystemSection],
+    section_liebert_temp_air: ParsedSection | None,
+    section_liebert_system: SystemSection | None,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
     if section_liebert_temp_air is None or section_liebert_system is None:

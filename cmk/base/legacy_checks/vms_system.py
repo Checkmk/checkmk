@@ -27,15 +27,16 @@ def check_vms_system_ios(_no_item, _no_params, info):
     direct_ios, buffered_ios = map(float, info[0][:2])
     return (
         0,
-        "Direct IOs: %.2f/sec, Buffered IOs: %.2f/sec" % (direct_ios, buffered_ios),
+        f"Direct IOs: {direct_ios:.2f}/sec, Buffered IOs: {buffered_ios:.2f}/sec",
         [("direct", direct_ios), ("buffered", buffered_ios)],
     )
 
 
 check_info["vms_system.ios"] = LegacyCheckDefinition(
-    check_function=check_vms_system_ios,
-    discovery_function=inventory_vms_system,
     service_name="IOs",
+    sections=["vms_system"],
+    discovery_function=inventory_vms_system,
+    check_function=check_vms_system_ios,
 )
 
 
@@ -55,8 +56,9 @@ def check_vms_system_procs(_no_item, params, info):
 
 
 check_info["vms_system.procs"] = LegacyCheckDefinition(
-    check_function=check_vms_system_procs,
-    discovery_function=inventory_vms_system,
     service_name="Number of processes",
+    sections=["vms_system"],
+    discovery_function=inventory_vms_system,
+    check_function=check_vms_system_procs,
     check_ruleset_name="vms_procs",
 )

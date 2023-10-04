@@ -8,15 +8,8 @@ from collections.abc import Callable, Iterable
 
 import cmk.utils.aws_constants as agent_aws_types
 
-from cmk.base.check_api import (
-    check_levels,
-    get_number_with_precision,
-    get_percent_human_readable,
-    MKCounterWrapped,
-    ServiceCheckResult,
-    state_markers,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.check_api import check_levels, ServiceCheckResult, state_markers
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import aws
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
@@ -109,7 +102,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
             100.0 * amount / limit_ref,
             None,
             (warn, crit),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Usage",
         )
 
@@ -128,8 +121,9 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         yield 0, "\n%s" % "\n".join(sorted(long_output))
 
 
-def aws_get_float_human_readable(f, unit=""):
-    return get_number_with_precision(f, unit=unit, precision=3)
+def aws_get_float_human_readable(value: float, unit: str = "") -> str:
+    value_str = "%.3f" % value
+    return f"{value_str} {unit}" if unit else value_str
 
 
 def aws_get_counts_rate_human_readable(rate):
@@ -166,7 +160,7 @@ def check_aws_error_rate(
         errors_perc,
         metric_name_perc,
         levels,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="%s of total requests" % display_text,
     )
 
@@ -176,7 +170,7 @@ def check_aws_http_errors(
 ):
     request_rate = parsed.get(key_all_requests)
     if request_rate is None:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     yield check_aws_request_rate(request_rate)
 
@@ -212,7 +206,7 @@ def check_aws_metrics(
         )
 
     if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
 
 def aws_get_parsed_item_data(check_function: Callable) -> Callable:
@@ -230,7 +224,7 @@ def aws_get_parsed_item_data(check_function: Callable) -> Callable:
                 "not a dict",
             )
         if item not in parsed:
-            raise MKCounterWrapped("Currently no data from AWS")
+            raise IgnoreResultsError("Currently no data from AWS")
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function

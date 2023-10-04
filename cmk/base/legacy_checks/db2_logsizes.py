@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
@@ -20,8 +21,8 @@ from cmk.base.config import check_info
 # logsecond 100
 
 
-def parse_db2_logsizes(info):
-    pre_parsed = parse_db2_dbs(info)
+def parse_db2_logsizes(string_table):
+    pre_parsed = parse_db2_dbs(string_table)
     global_timestamp = pre_parsed[0]
     parsed = {}
     for key, values in pre_parsed[1].items():
@@ -35,7 +36,7 @@ def parse_db2_logsizes(info):
 
         if "node" in instance_info:
             for node in instance_info["node"]:
-                parsed["%s DPF %s" % (key, node)] = instance_info
+                parsed[f"{key} DPF {node}"] = instance_info
         else:
             parsed[key] = instance_info
 
@@ -52,7 +53,7 @@ def check_db2_logsizes(item, params, parsed):
     db = parsed.get(item)
 
     if not db:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     # A DPF instance could look like
     # {'TIMESTAMP': ['1439976757'],
@@ -94,8 +95,8 @@ def check_db2_logsizes(item, params, parsed):
 check_info["db2_logsizes"] = LegacyCheckDefinition(
     parse_function=parse_db2_logsizes,
     service_name="DB2 Logsize %s",
-    check_function=check_db2_logsizes,
     discovery_function=inventory_db2_logsizes,
+    check_function=check_db2_logsizes,
     check_ruleset_name="db2_logsize",
     check_default_parameters={
         "levels": (-20.0, -10.0),  # Interpreted as free space in df_check_filesystem_single

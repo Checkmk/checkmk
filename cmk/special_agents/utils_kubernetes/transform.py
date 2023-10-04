@@ -22,11 +22,11 @@ from .transform_any import parse_match_labels
 
 
 def parse_metadata_no_namespace(metadata: client.V1ObjectMeta) -> api.MetaDataNoNamespace:
-    return api.MetaDataNoNamespace.from_orm(metadata)
+    return api.MetaDataNoNamespace.model_validate(metadata)
 
 
 def parse_metadata(metadata: client.V1ObjectMeta) -> api.MetaData:
-    return api.MetaData.from_orm(metadata)
+    return api.MetaData.model_validate(metadata)
 
 
 def container_resources(container: client.V1Container) -> api.ContainerResources:
@@ -414,7 +414,7 @@ def daemonset_from_client(
 
 
 def namespace_from_client(namespace: client.V1Namespace) -> api.Namespace:
-    return api.Namespace.from_orm(namespace)
+    return api.Namespace.model_validate(namespace)
 
 
 def parse_resource_quota_spec(
@@ -501,8 +501,8 @@ def persistent_volume_claim_from_client(
 ) -> api.PersistentVolumeClaim:
     return api.PersistentVolumeClaim(
         metadata=parse_metadata(persistent_volume_claim.metadata),
-        spec=api.PersistentVolumeClaimSpec.from_orm(persistent_volume_claim.spec),
-        status=api.PersistentVolumeClaimStatus.from_orm(persistent_volume_claim.status),
+        spec=api.PersistentVolumeClaimSpec.model_validate(persistent_volume_claim.spec),
+        status=api.PersistentVolumeClaimStatus.model_validate(persistent_volume_claim.status),
     )
 
 

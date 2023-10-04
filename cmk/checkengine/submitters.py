@@ -11,18 +11,23 @@ import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from random import Random
-from typing import Final, IO, Literal, NamedTuple
+from typing import final, Final, IO, Literal, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 
 _CacheInfo = tuple[int, int]
+
+ServiceState = int
+ServiceDetails = str
+ServiceAdditionalDetails = str
 
 
 def _sanitize_perftext(
@@ -86,26 +91,17 @@ def get_submitter(
     """Enterprise should use `cmk.base.cee.keepalive.submitters`."""
     if dry_run:
         return NoOpSubmitter(
-            host_name,
-            dry_run=dry_run,
-            perfdata_format=perfdata_format,
-            show_perfdata=show_perfdata,
+            host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata
         )
 
     if check_submission == "pipe" or monitoring_core == "cmc":
         return PipeSubmitter(
-            host_name,
-            dry_run=dry_run,
-            perfdata_format=perfdata_format,
-            show_perfdata=show_perfdata,
+            host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata
         )
 
     if check_submission == "file":
         return FileSubmitter(
-            host_name,
-            dry_run=dry_run,
-            perfdata_format=perfdata_format,
-            show_perfdata=show_perfdata,
+            host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata
         )
 
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
@@ -130,15 +126,14 @@ class Submitter(abc.ABC):
         self,
         host_name: HostName,
         *,
-        dry_run: bool,
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
     ):
         self.host_name: Final = host_name
-        self.dry_run: Final = dry_run
         self.perfdata_format: Final = perfdata_format
         self.show_perfdata: Final = show_perfdata
 
+    @final
     def submit(self, submittees: Iterable[Submittee]) -> None:
         formatted_submittees = [
             (
@@ -162,7 +157,8 @@ class Submitter(abc.ABC):
         for submittee, pending in formatted_submittees:
             _output_check_result(submittee, show_perfdata=self.show_perfdata, pending=pending)
 
-        self._submit((submittee for submittee, pending in formatted_submittees if not pending))
+        if formatted_submittees:
+            self._submit((submittee for submittee, pending in formatted_submittees if not pending))
 
     @abc.abstractmethod
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:

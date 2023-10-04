@@ -67,7 +67,7 @@ def check_dell_powerconnect_fans(item, _not_used, info):
             dell_powerconnect_status = dell_powerconnect_fans_status_map[state]
             status = dell_powerconnect_fans_status2nagios_map[dell_powerconnect_status]
 
-            return (status, 'Condition of FAN "%s" is %s' % (name, dell_powerconnect_status))
+            return (status, f'Condition of FAN "{name}" is {dell_powerconnect_status}')
 
     return (3, "item not found in snmp data")
 
@@ -79,11 +79,11 @@ check_info["dell_powerconnect_fans"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
     ),
-    check_function=check_dell_powerconnect_fans,
-    discovery_function=inventory_dell_powerconnect_fans,
-    service_name="Sensor %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10895.3000.1.2.110.7.1.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Sensor %s",
+    discovery_function=inventory_dell_powerconnect_fans,
+    check_function=check_dell_powerconnect_fans,
 )

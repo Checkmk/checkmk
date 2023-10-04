@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from .agent_based_api.v1 import Attributes, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -23,7 +23,7 @@ def _parse_string(val):
     return val.strip().replace("\r\n", " ").replace("\n", " ")
 
 
-def parse_snmp_info(string_table: StringTable) -> Optional[SNMPInfo]:
+def parse_snmp_info(string_table: StringTable) -> SNMPInfo | None:
     if not string_table:
         return None
     snmp_info = [_parse_string(s) for s in string_table[0]]

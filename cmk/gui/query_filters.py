@@ -15,7 +15,6 @@ import livestatus
 
 from cmk.utils.tags import TagGroupID
 
-import cmk.gui.inventory as inventory
 import cmk.gui.site_config as site_config
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -252,16 +251,6 @@ def starred(what: Literal["host", "service"]) -> Callable[[bool], FilterHeader]:
         return filters
 
     return filterheader
-
-
-# Filter tables
-def inside_inventory(inventory_path: inventory.InventoryPath) -> Callable[[bool, Row], bool]:
-    def keep_row(on: bool, row: Row) -> bool:
-        return (
-            row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key or "") is on
-        )
-
-    return keep_row
 
 
 def has_inventory(on: bool, row: Row) -> bool:
@@ -525,44 +514,6 @@ def re_ignorecase(text: str, varprefix: str) -> re.Pattern:
 def filter_by_column_textregex(filtertext: str, column: str) -> Callable[[Row], bool]:
     regex = re_ignorecase(filtertext, column)
     return lambda row: bool(regex.search(row.get(column, "")))
-
-
-def filter_by_host_inventory(
-    inventory_path: inventory.InventoryPath,
-) -> Callable[[str, str], Callable[[Row], bool]]:
-    def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
-        regex = re_ignorecase(filtertext, column)
-
-        def filt(row: Row):  # type: ignore[no-untyped-def]
-            return bool(
-                regex.search(
-                    str(
-                        row["host_inventory"].get_attribute(
-                            inventory_path.path, inventory_path.key or ""
-                        )
-                    )
-                )
-            )
-
-        return filt
-
-    return row_filter
-
-
-def filter_in_host_inventory_range(
-    inventory_path: inventory.InventoryPath,
-) -> Callable[[Row, str, MaybeBounds], bool]:
-    def row_filter(row: Row, column: str, bounds: MaybeBounds) -> bool:
-        if not isinstance(
-            invdata := row["host_inventory"].get_attribute(
-                inventory_path.path, inventory_path.key or ""
-            ),
-            (int, float),
-        ):
-            return False
-        return value_in_range(invdata, bounds)
-
-    return row_filter
 
 
 class CheckCommandQuery(TextQuery):

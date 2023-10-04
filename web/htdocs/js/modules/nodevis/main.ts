@@ -1,6 +1,8 @@
-// Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as d3 from "d3";
 import {
@@ -144,12 +146,12 @@ export class NodeVisualization {
 }
 
 export class BIVisualization extends NodeVisualization {
-    static _nodevis_type = "bi_aggregations";
-    constructor(div_id) {
+    static override _nodevis_type = "bi_aggregations";
+    constructor(div_id: string) {
         super(div_id);
     }
 
-    show_aggregations(list_of_aggregations, use_layout_id) {
+    show_aggregations(list_of_aggregations: string[], use_layout_id: string) {
         const aggr_ds = this._world.datasource_manager.get_datasource(
             AggregationsDatasource.id()
         ) as AggregationsDatasource;
@@ -160,11 +162,11 @@ export class BIVisualization extends NodeVisualization {
         aggr_ds.fetch_aggregations(list_of_aggregations, use_layout_id);
     }
 
-    _get_force_config(): typeof ForceConfig {
+    override _get_force_config(): typeof ForceConfig {
         return BIForceConfig;
     }
 
-    _show_aggregations(list_of_aggregations): void {
+    _show_aggregations(list_of_aggregations: string[]): void {
         if (list_of_aggregations.length > 0)
             d3.select("table.header td.heading a").text(
                 list_of_aggregations[0]
@@ -215,7 +217,7 @@ class TopologySettings {
     }
 }
 
-function _parse_topology_settings(data): TopologySettings {
+function _parse_topology_settings(data: TopologySettings): TopologySettings {
     return new TopologySettings(
         data.growth_root_nodes,
         data.growth_forbidden_nodes,
@@ -226,7 +228,7 @@ function _parse_topology_settings(data): TopologySettings {
     );
 }
 
-interface TopologyFrontendConfig {
+export interface TopologyFrontendConfig {
     overlays_config: {[name: string]: OverlayConfig};
     growth_root_nodes: string[];
     growth_forbidden_nodes: string[];
@@ -244,9 +246,9 @@ interface TopologyFrontendConfig {
 }
 
 export class TopologyVisualization extends NodeVisualization {
-    static _nodevis_type = "topology";
+    static override _nodevis_type = "topology";
     _custom_topology_fetch_parameters: {[name: string]: any} = {};
-    _custom_node_settings_memory = {};
+    _custom_node_settings_memory: Record<string, any> = {};
     _last_update_request: number;
     _update_request_timer_active = false;
     _topology_datasource: TopologyDatasource;
@@ -254,7 +256,7 @@ export class TopologyVisualization extends NodeVisualization {
     _frontend_configuration: TopologyFrontendConfig | null = null;
     _livesearch: LiveSearch;
 
-    constructor(div_id, topology_type) {
+    constructor(div_id: string, topology_type: string) {
         super(div_id);
         this._topology_type = topology_type;
         this._topology_datasource =
@@ -277,7 +279,7 @@ export class TopologyVisualization extends NodeVisualization {
         return this._frontend_configuration;
     }
 
-    save_layout() {
+    override save_layout() {
         // TODO: move to layout.ts
         const fetch_params = new SearchFilters().get_filter_params();
         fetch_params["topology_frontend_configuration"] = JSON.stringify(
@@ -287,7 +289,7 @@ export class TopologyVisualization extends NodeVisualization {
         this._update_data(fetch_params);
     }
 
-    delete_layout() {
+    override delete_layout() {
         // TODO: move to layout.ts
         const fetch_params = new SearchFilters().get_filter_params();
         fetch_params["topology_frontend_configuration"] = JSON.stringify(
@@ -297,7 +299,7 @@ export class TopologyVisualization extends NodeVisualization {
         this._update_data(fetch_params);
     }
 
-    update_filters(settings) {
+    update_filters(settings: TopologyFrontendConfig) {
         // Update filter form
         new SearchFilters().add_hosts_to_host_regex(
             new Set(settings.growth_root_nodes)
@@ -339,11 +341,14 @@ export class TopologyVisualization extends NodeVisualization {
         return frontend_config;
     }
 
-    update_browser_url(): void {
+    override update_browser_url(): void {
         return;
     }
 
-    show_topology(frontend_configuration, search_frontend_settings) {
+    show_topology(
+        frontend_configuration: TopologyFrontendConfig,
+        search_frontend_settings: boolean
+    ) {
         this._topology_datasource.enable();
         this._topology_datasource.set_update_interval(30);
 
@@ -354,7 +359,7 @@ export class TopologyVisualization extends NodeVisualization {
 
         const fetch_params = new SearchFilters().get_filter_params();
         if (search_frontend_settings)
-            fetch_params["search_frontend_settings"] = true;
+            fetch_params["search_frontend_settings"] = String(true);
         fetch_params["topology_frontend_configuration"] = JSON.stringify(
             frontend_configuration
         );
@@ -398,8 +403,10 @@ export class TopologyVisualization extends NodeVisualization {
             const node_id = node.data.id;
             if (this._custom_node_settings_memory[node_id]) {
                 for (const [key, value] of Object.entries(
+                    //@ts-ignore
                     this._custom_node_settings_memory[node_id]
                 )) {
+                    //@ts-ignore
                     node.data[key] = value;
                 }
                 node.data.custom_node_settings =
@@ -409,11 +416,11 @@ export class TopologyVisualization extends NodeVisualization {
         });
     }
 
-    _show_topology_errors(errors): void {
+    _show_topology_errors(errors: string): void {
         d3.select("label#max_nodes_error_text").text(errors);
     }
 
-    update_data() {
+    override update_data() {
         if (this._throttle_update()) return;
         // Update browser url in case someone wants to bookmark the current settings
         this.update_browser_url();
@@ -442,7 +449,7 @@ export class TopologyVisualization extends NodeVisualization {
         return false;
     }
 
-    _update_data(fetch_params) {
+    _update_data(fetch_params: Record<string, string>) {
         fetch_params["topology_type"] = this._topology_type;
         this._world.viewport.add_status_message(
             "topology_fetch",
@@ -453,7 +460,7 @@ export class TopologyVisualization extends NodeVisualization {
         );
     }
 
-    _update_overlay_config(overlays_config) {
+    _update_overlay_config(overlays_config: OverlayConfig[]) {
         for (const idx in overlays_config) {
             this._world.viewport.set_overlay_config(idx, overlays_config[idx]);
         }

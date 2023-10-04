@@ -1,0 +1,20 @@
+Title: local: Better error handling for incorrect local checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1687430612
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the discovery service would crash in case of incorrect
+lines in the local check section. This prevented all other local services
+with correct format from being discovered.
+
+Now, the discovery service no longer crashes, the faulty local service is
+discovered and it crashes with a helpful message. All other local services
+are discovered and their state isn't influenced by the incorrect service.
+In case when the item can't be determined from the local section line, the
+line is completely ignored.
+

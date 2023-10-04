@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 
-def parse_fortigate_signatures(info):
+def parse_fortigate_signatures(string_table):
     def parse_version(ver):
         # sample: 27.00768(2015-09-01 15:10)
         ver_regex = regex(r"([0-9.]*)\(([0-9-: ]*)\)")
@@ -36,7 +36,7 @@ def parse_fortigate_signatures(info):
             ("av_ext_age", "AV extended"),
             ("ips_ext_age", "IPS extended"),
         ],
-        info[0],
+        string_table[0],
     ):
         version, age = parse_version(value)
         parsed.append((key, title, version, age))
@@ -53,7 +53,7 @@ def check_fortigate_signatures(_no_item, params, parsed):
     for key, title, version, age in parsed:
         if age is None:
             continue
-        infotext = "[%s] %s age: %s" % (version, title, get_age_human_readable(age))
+        infotext = f"[{version}] {title} age: {get_age_human_readable(age)}"
         state = 0
         levels = params.get(key)
         if levels is not None:
@@ -63,7 +63,7 @@ def check_fortigate_signatures(_no_item, params, parsed):
             elif warn is not None and age >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_age_human_readable(warn),
                     get_age_human_readable(crit),
                 )
@@ -72,14 +72,14 @@ def check_fortigate_signatures(_no_item, params, parsed):
 
 check_info["fortigate_signatures"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    parse_function=parse_fortigate_signatures,
-    discovery_function=inventory_fortigate_signatures,
-    check_function=check_fortigate_signatures,
-    service_name="Signatures",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.2",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_fortigate_signatures,
+    service_name="Signatures",
+    discovery_function=inventory_fortigate_signatures,
+    check_function=check_fortigate_signatures,
     check_ruleset_name="fortinet_signatures",
     check_default_parameters={
         "av_age": (86400, 172800),

@@ -35,7 +35,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 # .1.3.6.1.4.1.13742.4.1.2.2.1.31.4 0 --> PDU-MIB::outletWattHours.4
 
 
-def parse_raritan_px_outlets(info):
+def parse_raritan_px_outlets(string_table):
     map_state = {
         "-1": (2, "error"),
         "0": (2, "off"),
@@ -43,7 +43,16 @@ def parse_raritan_px_outlets(info):
         "2": (0, "cycling"),
     }
     parsed = {}
-    for index, label, state, current_str, voltage_str, power_str, appower_str, energy_str in info:
+    for (
+        index,
+        label,
+        state,
+        current_str,
+        voltage_str,
+        power_str,
+        appower_str,
+        energy_str,
+    ) in string_table:
         parsed[index] = {
             "device_state": map_state.get(state, (3, "unknown")),
             "label": label,
@@ -70,13 +79,13 @@ def check_raritan_px_outlets(item, params, parsed):
 
 check_info["raritan_px_outlets"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.4"),
-    parse_function=parse_raritan_px_outlets,
-    discovery_function=inventory_raritan_px_outlets,
-    check_function=check_raritan_px_outlets,
-    service_name="Outlet %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.4.1.2.2.1",
         oids=["1", "2", "3", "4", "6", "7", "8", "31"],
     ),
+    parse_function=parse_raritan_px_outlets,
+    service_name="Outlet %s",
+    discovery_function=inventory_raritan_px_outlets,
+    check_function=check_raritan_px_outlets,
     check_ruleset_name="el_inphase",
 )

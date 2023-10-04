@@ -9,12 +9,16 @@ import pytest
 
 from tests.testlib import SpecialAgent
 
-from cmk.base.config import SpecialAgentInfoFunctionResult
+from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
+    SpecialAgentInfoFunctionResult,
+)
 
-from cmk.gui.plugins.wato.special_agents import kube
-
-from cmk.special_agents.agent_kube import parse_arguments
-from cmk.special_agents.utils_kubernetes.query import parse_api_session_config
+from cmk.special_agents.agent_kube import (  # pylint: disable=cmk-module-layer-violation
+    parse_arguments,
+)
+from cmk.special_agents.utils_kubernetes.query import (  # pylint: disable=cmk-module-layer-violation
+    parse_api_session_config,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -597,15 +601,3 @@ def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) 
             assert expected_proxy_arg == argument_after
             return
     assert False, "--api-server-proxy is missing"
-
-
-def test_valuespec_matches_agent_kube() -> None:
-    """agent_kube_arguments needs to be updated, if you remove any of the two assertions below."""
-
-    valuespec = kube._valuespec_special_agents_kube()._valuespec
-    assert "monitored-objects" in valuespec._required_keys
-    for element in valuespec._get_elements():
-        if element[0] == "monitored-objects":
-            assert not element[1]._allow_empty
-            return
-    assert False, "Missing 'monitored-objects' in _valuespec_special_agents_kube"

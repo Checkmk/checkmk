@@ -4,17 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import abc
 import datetime
+from collections.abc import Iterable
 from enum import Enum
-from typing import NamedTuple, Union
+from functools import partial
+from typing import Any, Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.version import parse_check_mk_version
 
 
-class WerkError(MKGeneralException):
+class WerkError(MKGeneralException, TypeError):
     pass
 
 
@@ -58,28 +61,88 @@ _COMPATIBLE_SORTING_VALUE = {
 }
 
 
-class Werk(NamedTuple):
-    compatible: Compatibility
-    version: str
-    title: str
-    id: int
-    date: datetime.datetime
-    description: Union[str, "NoWiki"]
-    level: Level
-    class_: Class
-    component: str
-    edition: Edition
+class WerkV2Base(BaseModel):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
 
-    def sort_by_version_and_component(self, translator: "WerkTranslator") -> tuple[str | int, ...]:
-        return (
-            -parse_check_mk_version(self.version),
-            translator.translate_component(self.component),
-            _CLASS_SORTING_VALUE.get(self.class_, 99),
-            -self.level.value,
-            # GuiWerk alters this tuple, and adds an element here!
-            _COMPATIBLE_SORTING_VALUE.get(self.compatible, 99),
-            self.title,
-        )
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    werk_version: Literal["2"] = Field(default="2", alias="__version__")
+    id: int
+    class_: Class = Field(alias="class")
+    component: str
+    level: Level
+    date: datetime.datetime
+    compatible: Compatibility
+    edition: Edition
+    description: str
+    title: str
+
+    @field_validator("level", mode="before")
+    def parse_level(cls, v: str) -> Level:  # pylint: disable=no-self-argument
+        if isinstance(v, Level):
+            return v
+        try:
+            return Level(int(v))
+        except ValueError:
+            raise ValueError(f"Expected level to be in (1, 2, 3). Got {v} instead")
+
+    # TODO: CMK-14587
+    # @field_validator("component")
+    # def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
+    #     components = {k for k, _ in WerkTranslator().components()}
+    #     if v not in components:
+    #         raise TypeError(f"Component {v} not know. Choose from: {components}")
+    #     return v
+
+    def to_json_dict(self) -> dict[str, object]:
+        return self.model_dump(by_alias=True, mode="json")
+
+
+class Werk(WerkV2Base):
+    version: str
+
+    # old werks contain some illegal versions
+    # the next refactoring will move this code away from cmk, so we won't have access to Version
+    # so we may also disable this right now.
+    # @validator("version")
+    # def parse_version(cls, v: str) -> str:  # pylint: disable=no-self-argument
+    #     Version.from_str(v)
+    #     return v
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]) -> "Werk":
+        return cls.model_validate(data)
+
+
+class WebsiteWerk(WerkV2Base):
+    # ATTENTION! If you change this model, you have to inform
+    # the website team first! They rely on those fields.
+    """
+    This Model is used to built up a file containing all werks.
+    The file is called all_werks.json or all_werks_v2.json
+    """
+    versions: dict[str, str]
+    product: Literal["cmk", "cma", "checkmk_kube_agent"]
+
+
+def get_sort_key_by_version_and_component(
+    translator: "WerkTranslator", werk: Werk
+) -> tuple[str | int, ...]:
+    return (
+        -parse_check_mk_version(werk.version),
+        translator.translate_component(werk.component),
+        _CLASS_SORTING_VALUE.get(werk.class_, 99),
+        -werk.level.value,
+        # GuiWerk alters this tuple, and adds an element here!
+        _COMPATIBLE_SORTING_VALUE.get(werk.compatible, 99),
+        werk.title,
+    )
+
+
+def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
+    translator = WerkTranslator()
+    return sorted(werks, key=partial(get_sort_key_by_version_and_component, translator))
 
 
 # This class is used to avoid repeated construction of dictionaries, including
@@ -151,20 +214,3 @@ class WerkTranslator:
 
     def level_of(self, werk: Werk) -> str:
         return self._levels[werk.level.value]  # TODO: remove .value
-
-
-class NoWiki:
-    def __init__(self, value: list[str]):
-        self.value = value
-
-
-class RawWerk(abc.ABC):
-    @abc.abstractmethod
-    def to_json_dict(self) -> dict[str, object]:
-        """
-        returns a python dict structure that can be serialized to json
-        """
-
-    @abc.abstractmethod
-    def to_werk(self) -> Werk:
-        ...

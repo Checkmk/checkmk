@@ -4,19 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping, MutableMapping, Optional, Tuple
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, get_average, get_rate, Metric, render
 from ..agent_based_api.v1.type_defs import CheckResult
 
-Levels = Tuple[float, float]
+Levels = tuple[float, float]
 
 MB = 1024 * 1024
 SEC_PER_H = 60 * 60
 SEC_PER_D = SEC_PER_H * 24
 
 
-def _level_bytes_to_mb(levels: Optional[Levels]) -> Optional[Levels]:
+def _level_bytes_to_mb(levels: Levels | None) -> Levels | None:
     """convert levels given as bytes to levels as MB
     >>> _level_bytes_to_mb(None)
     >>> _level_bytes_to_mb((1048576, 2097152))
@@ -27,7 +28,7 @@ def _level_bytes_to_mb(levels: Optional[Levels]) -> Optional[Levels]:
     return levels[0] / MB, levels[1] / MB
 
 
-def _reverse_level_signs(levels: Optional[Levels]) -> Optional[Levels]:
+def _reverse_level_signs(levels: Levels | None) -> Levels | None:
     """reverse the sign of all values
     >>> _reverse_level_signs(None)
     >>> _reverse_level_signs((-1, 2))
@@ -46,7 +47,7 @@ def size_trend(
     levels: Mapping[str, Any],
     used_mb: float,
     size_mb: float,
-    timestamp: Optional[float],
+    timestamp: float | None,
 ) -> CheckResult:
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
@@ -146,12 +147,12 @@ def size_trend(
         label="trend per %s" % render.timespan(range_sec),
     )
 
-    def to_abs(levels: Optional[Levels]) -> Optional[Levels]:
+    def to_abs(levels: Levels | None) -> Levels | None:
         if levels is None:
             return None
         return levels[0] / 100 * size_mb, levels[1] / 100 * size_mb
 
-    def mins(levels1: Optional[Levels], levels2: Optional[Levels]) -> Optional[Levels]:
+    def mins(levels1: Levels | None, levels2: Levels | None) -> Levels | None:
         return (
             (min(levels1[0], levels2[0]), min(levels1[1], levels2[1]))
             if levels1 and levels2

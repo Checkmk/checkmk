@@ -47,9 +47,6 @@ def check_dell_om_power(item, params, info):
 
 check_info["dell_om_power"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    discovery_function=inventory_dell_om_power,
-    check_function=check_dell_om_power,
-    service_name="Power Supply Redundancy %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10892.1.600.10.1",
@@ -60,6 +57,9 @@ check_info["dell_om_power"] = LegacyCheckDefinition(
             oids=["2", "5", "7", "8"],
         ),
     ],
+    service_name="Power Supply Redundancy %s",
+    discovery_function=inventory_dell_om_power,
+    check_function=check_dell_om_power,
 )
 
 
@@ -96,7 +96,7 @@ def check_dell_om_power_unit(item, _no_params, info):
         if index == item:
             state, state_readable = translate_status[status]
             psu_type_readable = translate_type[psu_type]
-            yield state, "Status: %s, Type: %s, Name: %s" % (
+            yield state, "Status: {}, Type: {}, Name: {}".format(
                 state_readable,
                 psu_type_readable,
                 location,
@@ -104,7 +104,8 @@ def check_dell_om_power_unit(item, _no_params, info):
 
 
 check_info["dell_om_power.unit"] = LegacyCheckDefinition(
+    service_name="Power Supply %s",
+    sections=["dell_om_power"],
     discovery_function=inventory_dell_om_power_unit,
     check_function=check_dell_om_power_unit,
-    service_name="Power Supply %s",
 )

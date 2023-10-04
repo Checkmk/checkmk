@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import $ from "jquery";
 import Swal from "sweetalert2";
@@ -268,7 +270,22 @@ export function randomize_secret(id: string, len: number, message: string) {
     }
     const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
-    navigator.clipboard.writeText(secret);
+
+    try {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(secret);
+        } else {
+            fallbackCopyToClipboard(secret);
+        }
+    } catch (err) {
+        Swal.fire({
+            icon: "error",
+            title: "Unable to copy to clipboard",
+            text: "You can still copy it manually: " + secret,
+        });
+        return;
+    }
+
     Swal.fire({
         icon: "success",
         title: message,
@@ -276,6 +293,26 @@ export function randomize_secret(id: string, len: number, message: string) {
         timer: 1500,
         width: 350,
     });
+}
+
+function fallbackCopyToClipboard(secret: string) {
+    const textArea = document.createElement("textarea");
+    textArea.value = secret;
+
+    // Avoid scrolling to bottom
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        document.execCommand("copy");
+    } finally {
+        document.body.removeChild(textArea);
+    }
 }
 
 export function toggle_container(id: string) {
@@ -288,7 +325,10 @@ export function toggle_container(id: string) {
 // Folderlist
 // ----------------------------------------------------------------------------
 
-export function open_folder(event: Event | undefined, link: string) {
+export function open_folder(
+    event: Event | undefined,
+    link: string
+): false | void {
     const target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div

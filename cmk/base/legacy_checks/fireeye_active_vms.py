@@ -28,13 +28,13 @@ def check_fireeye_active_vms(_no_item, params, info):
 
 check_info["fireeye_active_vms"] = LegacyCheckDefinition(
     detect=fireeye.DETECT,
-    discovery_function=discover_fireeye_active_vms,
-    check_function=check_fireeye_active_vms,
-    service_name="Active VMs",
-    check_ruleset_name="fireeye_active_vms",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.9",
         oids=["0"],
     ),
+    service_name="Active VMs",
+    discovery_function=discover_fireeye_active_vms,
+    check_function=check_fireeye_active_vms,
+    check_ruleset_name="fireeye_active_vms",
     check_default_parameters={"vms": (100, 120)},
 )

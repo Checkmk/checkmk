@@ -1,22 +1,37 @@
-// Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
-import {d3SelectionDiv, d3SelectionG, NodevisWorld} from "nodevis/type_defs";
-import {AbstractClassRegistry} from "nodevis/utils";
+import {
+    d3SelectionDiv,
+    d3SelectionG,
+    NodevisNode,
+    NodevisWorld,
+} from "nodevis/type_defs";
+import {AbstractClassRegistry, TypeWithName} from "nodevis/utils";
 
 export interface LayerSelections {
     div: d3SelectionDiv;
     svg: d3SelectionG;
 }
 
-export type OverlayConfig = {
-    active: boolean;
-    [name: string]: number | string | boolean;
-};
+export interface OverlayElement {
+    node: NodevisNode;
+    type: string;
+    image: string;
+    call: d3.DragBehavior<any, any, any>;
+    onclick?: () => void;
+}
 
-export class AbstractLayer extends Object {
-    static class_name = "abstract_layer";
+type OverlayConfigMandatory = Record<string, number | string | boolean>;
+
+export interface OverlayConfig extends OverlayConfigMandatory {
+    active: boolean;
+}
+
+export class AbstractLayer extends Object implements TypeWithName {
     enabled = false;
     _world: NodevisWorld;
     _div_selection: d3SelectionDiv;
@@ -30,6 +45,10 @@ export class AbstractLayer extends Object {
 
         // TODO: sort index for div and svg layers
         // d3js can rearrange dom with sorting
+    }
+
+    class_name() {
+        return "abstract_layer";
     }
 
     id(): string {
@@ -129,6 +148,13 @@ export class ToggleableLayer extends AbstractLayer {
 }
 
 export class FixLayer extends AbstractLayer {}
-class LayerClassRegistry extends AbstractClassRegistry<typeof AbstractLayer> {}
+class LayerClassRegistry extends AbstractClassRegistry<AbstractLayer> {}
 
 export const layer_class_registry = new LayerClassRegistry();
+
+export type AbstractNodeVisConstructor<Type extends TypeWithName> = new (
+    a?: any,
+    b?: any,
+    c?: any,
+    d?: any
+) => Type;

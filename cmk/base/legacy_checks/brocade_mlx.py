@@ -50,7 +50,7 @@ def brocade_mlx_combine_item(id_, descr):
     if descr == "":
         return id_
     descr = re.sub(" *Module", "", descr)
-    return "%s %s" % (id_, descr)
+    return f"{id_} {descr}"
 
 
 #   .--Overall Status------------------------------------------------------.
@@ -80,9 +80,10 @@ def check_brocade_mlx_module(item, _no_params, info):
 
 
 check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
-    check_function=check_brocade_mlx_module,
-    discovery_function=inventory_brocade_mlx_module,
     service_name="Status Module %s",
+    sections=["brocade_mlx"],
+    discovery_function=inventory_brocade_mlx_module,
+    check_function=check_brocade_mlx_module,
 )
 
 # .
@@ -167,9 +168,10 @@ def check_brocade_mlx_module_mem(item, params, info):
 
 
 check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
-    check_function=check_brocade_mlx_module_mem,
-    discovery_function=inventory_brocade_mlx_module_mem,
     service_name="Memory Module %s",
+    sections=["brocade_mlx"],
+    discovery_function=inventory_brocade_mlx_module_mem,
+    check_function=check_brocade_mlx_module_mem,
     check_ruleset_name="memory_multiitem",
 )
 
@@ -247,8 +249,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
             return (
                 status,
-                "CPU utilization was %s/%s/%s%s/%s%% for the last 1/5/60/300 sec"
-                % (cpu_util1, cpu_util5, cpu_util60, errorstring, cpu_util300),
+                f"CPU utilization was {cpu_util1}/{cpu_util5}/{cpu_util60}{errorstring}/{cpu_util300}% for the last 1/5/60/300 sec",
                 perfdata,
             )
 
@@ -256,8 +257,9 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
 
 check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
-    check_function=check_brocade_mlx_module_cpu,
-    discovery_function=inventory_brocade_mlx_module_cpu,
     service_name="CPU utilization Module %s",
+    sections=["brocade_mlx"],
+    discovery_function=inventory_brocade_mlx_module_cpu,
+    check_function=check_brocade_mlx_module_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )

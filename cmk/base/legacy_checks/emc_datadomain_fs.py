@@ -33,13 +33,13 @@ def check_emc_datadomain_fs(item, params, info):
 
 check_info["emc_datadomain_fs"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_fs,
-    discovery_function=inventory_emc_datadomain_fs,
-    service_name="DD-Filesystem %s",
-    check_ruleset_name="filesystem",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.3.2.1.1",
         oids=["1", "3", "4", "5", "6", "7", "8"],
     ),
+    service_name="DD-Filesystem %s",
+    discovery_function=inventory_emc_datadomain_fs,
+    check_function=check_emc_datadomain_fs,
+    check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

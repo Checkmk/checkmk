@@ -1,0 +1,23 @@
+Title: notification rules: match_folder value now matches correctly to available folders
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1694514118
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue when creating or updating a notification rule
+via the REST-API.  Previously, it would not correctly match the desired folder
+and as a result, you had to set this option to disabled which meant all rules
+were created in the main folder only.
+
+Now the match_folder value field should match a folder id, in the form of the
+folder path, replacing / for ~
+
+E.g.
+
+/folder1 ->  ~folder1
+/folder1/folder2  ->  ~folder1~folder2
+

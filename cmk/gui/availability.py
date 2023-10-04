@@ -10,17 +10,18 @@ import itertools
 import os
 import time
 from collections.abc import Callable, Iterator
-from typing import Any, Literal, NamedTuple, Union
+from typing import Any, Literal, NamedTuple
 
 from livestatus import LivestatusOutputFormat, OnlySites, SiteId
 
-import cmk.utils.defines as defines
+import cmk.utils.dateutils as dateutils
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import lq_logic
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.bi import BIManager
@@ -56,13 +57,14 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CSSClass
 
-from cmk.bi.data_fetcher import (
+from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
     BIStatusInfo,
+    NodeComputeResult,
+    NodeResultBundle,
 )
-from cmk.bi.lib import NodeComputeResult, NodeResultBundle
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type
@@ -71,7 +73,7 @@ AVOptions = dict[str, Any]  # TODO: Improve this type
 AVOptionValueSpecs = list  # TODO: Be more specific here
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
-AVObjectSpec = Union[None, AVBIObjectSpec, AVHostOrServiceObjectSpec]
+AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
 AVOutageStatisticsAggregations = list[Literal["min", "max", "avg", "cnt"]]
 AVOutageStatisticsStates = list[
     Literal[
@@ -97,7 +99,7 @@ AVObjectCells = list[tuple[str, str]]
 AVRowCells = list[tuple[HTML | str, CSSClass]]
 AVGroups = list[tuple[str | None, AVData]]
 HostOrServiceGroupName = str
-AVGroupKey = Union[SiteHost, HostOrServiceGroupName, None]
+AVGroupKey = SiteHost | HostOrServiceGroupName | None
 AVGroupIds = list[SiteHost] | set[HostOrServiceGroupName] | None
 AVTimeStamp = float
 AVTimeRange = tuple[AVTimeStamp, AVTimeStamp]
@@ -113,14 +115,14 @@ AVTimeformatSpecLegacy = Literal[
     "hours",
     "hhmmss",
 ]
-AVTimeformatSpec = Union[
-    AVTimeformatSpecLegacy,
-    tuple[
+AVTimeformatSpec = (
+    AVTimeformatSpecLegacy
+    | tuple[
         Literal["both", "perc", "time"],
         Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"],
         Literal["seconds", "minutes", "hours", "hhmmss"],
-    ],
-]
+    ]
+)
 AVTimelineLabelling = Literal[
     "omit_headers",
     "omit_host",
@@ -291,7 +293,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             ("service_groups", _("By Service group")),
         ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         ruleset_search_url = makeuri_contextless(
             request,
             [
@@ -2239,23 +2241,23 @@ def _render_hour(tst: time.struct_time) -> str:
 
 
 def _render_2hours(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
 
 
 def _render_6hours(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
 
 
 def _render_day(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(", %d.%m. 00:00", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(", %d.%m. 00:00", tst)
 
 
 def _render_week(tst: time.struct_time) -> str:
-    return defines.weekday_name(tst.tm_wday) + time.strftime(", %d.%m.", tst)
+    return dateutils.weekday_name(tst.tm_wday) + time.strftime(", %d.%m.", tst)
 
 
 def _render_month(tst: time.struct_time) -> str:
-    return "%s %d" % (defines.month_name(tst.tm_mon - 1), tst.tm_year)
+    return "%s %d" % (dateutils.month_name(tst.tm_mon - 1), tst.tm_year)
 
 
 def _make_struct(year: int, month: int, day: int, hour: int, *, offset: int) -> time.struct_time:

@@ -42,7 +42,7 @@ import sys
 import time
 
 try:
-    from typing import Any, Dict, List, Tuple, Union  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -130,13 +130,13 @@ local_cfg = {
 monitor_paths = [
     "SAP CCMS Monitor Templates/Dialog Overview/*",
 ]
-monitor_types = []  # type: List[str]
+monitor_types = []  # type: list[str]
 config_file = MK_CONFDIR + "/sap.cfg"
 
-cfg = {}  # type: Union[List[Dict[Any, Any]], Dict[Any, Any]]
+cfg = {}  # type: list[dict[Any, Any]] | dict[Any, Any]
 if os.path.exists(config_file):
     with open(config_file) as opened_file:
-        exec(opened_file.read())
+        exec(opened_file.read())  # nosec B102 # BNS:a29406
     if isinstance(cfg, dict):
         cfg = [cfg]
 else:
@@ -370,8 +370,8 @@ def check(pyrfc, cfg_entry):  # pylint: disable=too-many-branches
     )
     login(conn)
 
-    logs = {}  # type: Dict[str, Dict[str, List]]
-    sap_data = {}  # type: Dict[str, List]
+    logs = {}  # type: dict[str, dict[str, list]]
+    sap_data = {}  # type: dict[str, list]
 
     # This loop is used to collect all information from SAP
     for ms_name, mon_name in mon_list(conn, cfg_entry):
@@ -385,7 +385,7 @@ def check(pyrfc, cfg_entry):  # pylint: disable=too-many-branches
                 continue
             # sys.stdout.write("%s\n" % node["PATH"])
 
-            status_details = ""  # type: Union[str, Tuple[str, Any]]
+            status_details = ""  # type: str | tuple[str, Any]
             perfvalue = "-"
             uom = "-"
 

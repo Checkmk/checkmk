@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypedDict, Union
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -15,12 +18,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.utils import interfaces, netapp_api
 
-MACList = List[Tuple[str, Optional[str]]]
+MACList = list[tuple[str, str | None]]
 
 
 class NICExtraInfo(TypedDict, total=False):
     grouped_if: MACList
-    speed_differs: Tuple[int, int]
+    speed_differs: tuple[int, int]
     home_port: str
     home_node: str | None
     is_home: bool
@@ -28,7 +31,7 @@ class NICExtraInfo(TypedDict, total=False):
 
 
 ExtraInfo = Mapping[str, NICExtraInfo]
-Section = Tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
+Section = tuple[interfaces.Section[interfaces.InterfaceWithCounters], ExtraInfo]
 
 
 def parse_netapp_api_if(  # pylint: disable=too-many-branches
@@ -41,7 +44,7 @@ def parse_netapp_api_if(  # pylint: disable=too-many-branches
     # List of virtual interfaces
     vif_list = []
 
-    speed: Union[str, int]
+    speed: str | int
 
     # Calculate speed, state and create mac-address list
     for name, values in ifaces.items():
@@ -256,7 +259,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
             home_attribute = "is %shome port" % ("" if is_home_port else "not ")
             yield Result(
                 state=State(mon_state),
-                summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
+                summary="Current Port: {} ({})".format(vif["home_port"], home_attribute),
             )
 
         if "failover_ports" in vif:
@@ -301,7 +304,7 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
                 else:
                     yield Result(
                         state=State(mon_state),
-                        summary="%s(%s)" % (member_name, interfaces.statename(member_state)),
+                        summary=f"{member_name}({interfaces.statename(member_state)})",
                     )
 
         if "speed_differs" in vif and speed_info_included:

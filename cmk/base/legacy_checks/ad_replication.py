@@ -16,10 +16,20 @@
 
 import time
 
-from cmk.base.check_api import get_relative_date_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 ad_replication_default_params = (15, 20)
+
+
+def _get_relative_date_human_readable(timestamp: float) -> str:
+    """Formats the given timestamp for humans "in ..." for future times
+    or "... ago" for past timestamps."""
+    seconds = timestamp - time.time()
+    if seconds > 0:
+        return "in " + render.timespan(seconds)
+    return render.timespan(-seconds) + " ago"
 
 
 def parse_ad_replication_dates(s):
@@ -27,8 +37,7 @@ def parse_ad_replication_dates(s):
         return None, "unknown"
 
     s_val = time.mktime(time.strptime(s, "%Y-%m-%d %H:%M:%S"))
-    s_txt = get_relative_date_human_readable(s_val)
-    return s_val, s_txt
+    return s_val, _get_relative_date_human_readable(s_val)
 
 
 def parse_ad_replication_info(info):
@@ -53,7 +62,7 @@ def inventory_ad_replication(info):
             source_dc = line[4]
         else:
             break  # unhandled data
-        entry = ("%s/%s" % (source_site, source_dc), ad_replication_default_params)
+        entry = (f"{source_site}/{source_dc}", ad_replication_default_params)
         if line[0] == "showrepl_INFO" and entry not in inv:
             inv.append(entry)
     return inv
@@ -162,7 +171,7 @@ def check_ad_replication(item, params, info):
         return
 
     yield status, (
-        "Replications with failures: %s, Total failures: %s" % (count_failed_repl, count_failures)
+        f"Replications with failures: {count_failed_repl}, Total failures: {count_failures}"
     )
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
@@ -170,8 +179,8 @@ def check_ad_replication(item, params, info):
 
 
 check_info["ad_replication"] = LegacyCheckDefinition(
-    check_function=check_ad_replication,
-    discovery_function=inventory_ad_replication,
     service_name="AD Replication %s",
+    discovery_function=inventory_ad_replication,
+    check_function=check_ad_replication,
     check_ruleset_name="ad_replication",
 )

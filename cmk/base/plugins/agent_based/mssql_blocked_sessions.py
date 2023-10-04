@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import defaultdict
+from collections.abc import Mapping
 from enum import Enum
-from typing import Mapping, NamedTuple, NotRequired, TypedDict
+from typing import NamedTuple, NotRequired
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -51,20 +54,11 @@ def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DB
         if line[-1].startswith("ERROR:"):
             continue
 
-        if len(line) == 1 and line[0] == NO_BLOCKING_SESSIONS_MSG:
-            parsed.setdefault("", [])
-        elif len(line) == 2 and line[1] == NO_BLOCKING_SESSIONS_MSG:
+        if len(line) in (1, 4):
+            continue
+
+        if len(line) == 2 and line[1] == NO_BLOCKING_SESSIONS_MSG:
             parsed.setdefault(line[0], [])
-        elif len(line) == 4:
-            session_id, wait_duration_ms, wait_type, blocking_session_id = line
-            parsed.setdefault("", []).append(
-                DBInstance(
-                    session_id,
-                    wait_type,
-                    blocking_session_id,
-                    float(wait_duration_ms) / 1000,
-                )
-            )
         elif len(line) == 5:
             inst, session_id, wait_duration_ms, wait_type, blocking_session_id = line
             parsed.setdefault(inst, []).append(
@@ -82,11 +76,14 @@ def parse_mssql_blocked_sessions(string_table: StringTable) -> dict[str, list[DB
 def check_mssql_blocked_sessions(
     item: str, params: Params, section: dict[str, list[DBInstance]]
 ) -> CheckResult:  # pylint: disable=too-many-branches
-    if item is None:
-        item = ""
-
-    data = section.get(item)
-    if data is None:
+    if item == "":
+        yield Result(
+            state=State.UNKNOWN,
+            summary="MSSQL agent plugin prior to Checkmk version 1.6 is no longer supported. "
+            "Please upgrade your agent plugin to a newer version (see Werk 6140)",
+        )
+        return
+    if (data := section.get(item)) is None:
         # Assume general connection problem to the database, which is reported
         # by the "X Instance" service and skip this check.
         raise IgnoreResultsError("Failed to retrieve data from database")
@@ -132,7 +129,7 @@ def check_mssql_blocked_sessions(
             % (
                 ", ".join(
                     [
-                        "%s blocked by %s ID(s)" % (k, v)
+                        f"{k} blocked by {v} ID(s)"
                         for k, v in sorted(blocked_sessions_counter.items())
                     ]
                 )

@@ -9,8 +9,8 @@ from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
 
 
-def parse_ddn_s2a_version(info):
-    return {key: value[0] for key, value in parse_ddn_s2a_api_response(info).items()}
+def parse_ddn_s2a_version(string_table):
+    return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
 
 
 def inventory_ddn_s2a_version(parsed):
@@ -19,13 +19,13 @@ def inventory_ddn_s2a_version(parsed):
 
 def check_ddn_s2a_version(_no_item, _no_params, parsed):
     yield 0, "Platform: %s" % parsed["platform"]
-    yield 0, "Firmware Version: %s (%s)" % (parsed["fw_version"], parsed["fw_date"])
+    yield 0, "Firmware Version: {} ({})".format(parsed["fw_version"], parsed["fw_date"])
     yield 0, "Bootrom Version: %s" % parsed["bootrom_version"]
 
 
 check_info["ddn_s2a_version"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_version,
+    service_name="DDN S2A Version",
     discovery_function=inventory_ddn_s2a_version,
     check_function=check_ddn_s2a_version,
-    service_name="DDN S2A Version",
 )

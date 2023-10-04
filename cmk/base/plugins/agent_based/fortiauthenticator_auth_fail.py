@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Mapping, Optional, Tuple
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -12,7 +12,7 @@ from .utils.fortinet import DETECT_FORTIAUTHENTICATOR
 Section = Mapping[str, int]
 
 
-def parse_fortiauthenticator_auth_fail(string_table: List[StringTable]) -> Optional[Section]:
+def parse_fortiauthenticator_auth_fail(string_table: list[StringTable]) -> Section | None:
     """
     >>> parse_fortiauthenticator_auth_fail([[['3']]])
     {'auth_fails': 3}
@@ -29,7 +29,7 @@ def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:
 
 
 def check_fortiauthenticator_auth_fail(
-    params: Mapping[str, Tuple[int, int]],
+    params: Mapping[str, tuple[int, int]],
     section: Section,
 ) -> CheckResult:
     """

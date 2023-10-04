@@ -145,7 +145,10 @@ def verbosity_to_log_level(verbosity: int) -> int:
 
 
 def init_dedicated_logging(
-    log_level: int | None, target_logger: logging.Logger, log_file: Path
+    log_level: int | None,
+    target_logger: logging.Logger,
+    log_file: Path,
+    formatter: logging.Formatter | None = None,
 ) -> None:
     """Initializes logging to a dedicated log_file for the given log_handler.
     Logging won't be propagated to parent loggers of log_handler."""
@@ -160,7 +163,7 @@ def init_dedicated_logging(
         Path(log_dir) / log_file,
         encoding="UTF-8",
     )
-    handler.setFormatter(get_formatter())
+    handler.setFormatter(formatter if formatter is not None else get_formatter())
     target_logger.setLevel(log_level)
     target_logger.addHandler(handler)
     target_logger.propagate = False

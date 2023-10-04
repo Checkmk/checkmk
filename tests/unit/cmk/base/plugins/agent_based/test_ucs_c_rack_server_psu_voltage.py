@@ -5,7 +5,7 @@
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 

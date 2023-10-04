@@ -7,7 +7,10 @@
 
 import pytest
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.plugins.wato.check_parameters import kube_node_container_count
+from cmk.gui.plugins.wato.utils import rulespec_registry
 from cmk.gui.valuespec import Dictionary
 from cmk.gui.watolib.rulespecs import ManualCheckParameterRulespec
 
@@ -45,8 +48,8 @@ def test_parameter_valuespec_has_element_for_section_element(
 
 @pytest.fixture
 def rulespec():
-    for r in kube_node_container_count.rulespec_registry.get_by_group("static/applications"):
-        if r.name == "static_checks:kube_node_container_count":
+    for r in rulespec_registry.get_by_group("static/applications"):
+        if r.name == RuleGroup.StaticChecks("kube_node_container_count"):
             return r
     assert False, "Should be able to find the rulespec"
 

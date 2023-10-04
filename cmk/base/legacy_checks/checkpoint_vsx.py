@@ -7,17 +7,16 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from collections.abc import Callable
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    render,
+    SNMPTree,
+)
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
@@ -45,9 +44,9 @@ from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 # .1.3.6.1.4.1.2620.1.16.23.1.1.13.1.0 1
 
 
-def parse_checkpoint_vsx(info):
+def parse_checkpoint_vsx(string_table):
     parsed = {}
-    status_table, counter_table = info
+    status_table, counter_table = string_table
 
     vsid_info = [s + c for (s, c) in zip(status_table, counter_table)]
 
@@ -71,7 +70,7 @@ def parse_checkpoint_vsx(info):
         bytes_rejected,
         logged,
     ) in vsid_info:
-        item = "%s %s" % (vs_name, vs_id)
+        item = f"{vs_name} {vs_id}"
         parsed.setdefault(
             item,
             {
@@ -106,6 +105,13 @@ def parse_checkpoint_vsx(info):
     return parsed
 
 
+def discover_key(key: str) -> Callable:
+    def discover_bound_keys(section):
+        yield from ((item, {}) for item, data in section.items() if key in data)
+
+    return discover_bound_keys
+
+
 #   .--info----------------------------------------------------------------.
 #   |                          _        __                                 |
 #   |                         (_)_ __  / _| ___                            |
@@ -118,28 +124,23 @@ def parse_checkpoint_vsx(info):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx(item, _no_params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
     for key, infotext in [
         ("vs_type", "Type"),
         ("vs_ip", "Main IP"),
     ]:
-        value = parsed.get(key)
+        value = data.get(key)
         if value is None:
             continue
 
-        yield 0, "%s: %s" % (infotext, value)
+        yield 0, f"{infotext}: {value}"
 
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
     detect=DETECT_NEVER,
-    parse_function=parse_checkpoint_vsx,
-    discovery_function=discover(lambda k, values: "vs_name" in values),
-    check_function=check_checkpoint_vsx,
-    service_name="VS %s Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.16.22.1.1",
@@ -150,6 +151,10 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
             oids=["2", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
         ),
     ],
+    parse_function=parse_checkpoint_vsx,
+    service_name="VS %s Info",
+    discovery_function=discover_key("vs_name"),
+    check_function=check_checkpoint_vsx,
 )
 # .
 #   .--connections---------------------------------------------------------.
@@ -164,12 +169,11 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_connections(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    conn_total = parsed.get("conn_num")
+    conn_total = data.get("conn_num")
     if conn_total is None:
         return
 
@@ -181,7 +185,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
         infoname="Used connections",
     )
 
-    conn_limit = parsed.get("conn_table_size")
+    conn_limit = data.get("conn_table_size")
     if conn_limit is None:
         return
 
@@ -190,15 +194,16 @@ def check_checkpoint_vsx_connections(item, params, parsed):
             100.0 * conn_total / conn_limit,
             None,
             params.get("levels_perc"),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Used percentage",
         )
 
 
 check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "conn_num" in values),
-    check_function=check_checkpoint_vsx_connections,
     service_name="VS %s Connections",
+    sections=["checkpoint_vsx"],
+    discovery_function=discover_key("conn_num"),
+    check_function=check_checkpoint_vsx_connections,
     check_ruleset_name="checkpoint_vsx_connections",
     check_default_parameters={
         "levels_perc": (90.0, 95.0),
@@ -217,10 +222,11 @@ check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_packets(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
+
+    value_store = get_value_store()
 
     for key, infotext in [
         ("packets", "Total number of packets processed"),
@@ -229,12 +235,14 @@ def check_checkpoint_vsx_packets(item, params, parsed):
         ("packets_rejected", "Total number of rejected packets"),
         ("logged", "Total number of logs sent"),
     ]:
-        value = parsed.get(key)
+        value = data.get(key)
         if value is None:
             continue
 
         this_time = int(time.time())
-        value_per_sec = get_rate("%s_rate" % key, this_time, value)
+        value_per_sec = get_rate(
+            value_store, "%s_rate" % key, this_time, value, raise_overflow=True
+        )
 
         yield check_levels(
             value_per_sec,
@@ -247,9 +255,10 @@ def check_checkpoint_vsx_packets(item, params, parsed):
 
 
 check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "packets" in values),
-    check_function=check_checkpoint_vsx_packets,
     service_name="VS %s Packets",
+    sections=["checkpoint_vsx"],
+    discovery_function=discover_key("packets"),
+    check_function=check_checkpoint_vsx_packets,
     check_ruleset_name="checkpoint_vsx_packets",
 )
 # .
@@ -265,22 +274,23 @@ check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_traffic(item, params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
+
+    value_store = get_value_store()
 
     for key in [
         ("bytes_accepted"),
         ("bytes_dropped"),
         ("bytes_rejected"),
     ]:
-        value = parsed.get(key)
+        value = data.get(key)
         if value is None:
             continue
 
         this_time = int(time.time())
-        value_per_sec = get_rate("%s_rate" % key, this_time, value)
+        value_per_sec = get_rate(value_store, f"{key}_rate", this_time, value, raise_overflow=True)
 
         yield check_levels(
             value_per_sec,
@@ -292,9 +302,10 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 
 check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "bytes_accepted" in values),
-    check_function=check_checkpoint_vsx_traffic,
     service_name="VS %s Traffic",
+    sections=["checkpoint_vsx"],
+    discovery_function=discover_key("bytes_accepted"),
+    check_function=check_checkpoint_vsx_traffic,
     check_ruleset_name="checkpoint_vsx_traffic",
 )
 # .
@@ -310,12 +321,11 @@ check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
 def check_checkpoint_vsx_status(item, _no_params, parsed):
-    if not parsed:
+    if not (data := parsed.get(item)):
         return
 
-    ha_state = parsed.get("vs_ha_status")
+    ha_state = data.get("vs_ha_status")
     if ha_state is not None:
         state = 0
         if not ha_state.lower() in ["active", "standby"]:
@@ -323,7 +333,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
         yield state, "HA Status: %s" % ha_state
 
-    sic_state = parsed.get("vs_sic_status")
+    sic_state = data.get("vs_sic_status")
     if sic_state is not None:
         state = 0
         if sic_state.lower() != "trust established":
@@ -331,11 +341,11 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
         yield state, "SIC Status: %s" % sic_state
 
-    policy_name = parsed.get("vs_policy")
+    policy_name = data.get("vs_policy")
     if policy_name is not None:
         yield 0, "Policy name: %s" % policy_name
 
-    policy_type = parsed.get("vs_policy_type")
+    policy_type = data.get("vs_policy_type")
     if policy_type is not None:
         state = 0
         infotext = "Policy type: %s" % policy_type
@@ -346,9 +356,10 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
-    discovery_function=discover(lambda k, values: "vs_ha_status" in values),
-    check_function=check_checkpoint_vsx_status,
     service_name="VS %s Status",
+    sections=["checkpoint_vsx"],
+    discovery_function=discover_key("vs_ha_status"),
+    check_function=check_checkpoint_vsx_status,
     check_ruleset_name="checkpoint_vsx_traffic_status",
 )
 # .

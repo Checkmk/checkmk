@@ -15,7 +15,8 @@
 # Firmware state: Unconfigured(good)
 # Inquiry Data: FUJITSU MBB2147RC       5204BS04P9104BSC
 
-from typing import Final, Mapping
+from collections.abc import Mapping
+from typing import Final
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

@@ -26,7 +26,7 @@ def check_kemp_loadmaster_ha(_no_item, _no_params, info):
         "3": "passive",
     }
 
-    return 0, "Device is: %s (Firmware: %s)" % (map_states[info[0][0]], info[0][1])
+    return 0, f"Device is: {map_states[info[0][0]]} (Firmware: {info[0][1]})"
 
 
 check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
@@ -37,11 +37,11 @@ check_info["kemp_loadmaster_ha"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.12196.13.0.9.*"),
     ),
-    check_function=check_kemp_loadmaster_ha,
-    discovery_function=inventory_kemp_loadmaster_ha,
-    service_name="HA State",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12196.13.0",
         oids=["9", "10"],
     ),
+    service_name="HA State",
+    discovery_function=inventory_kemp_loadmaster_ha,
+    check_function=check_kemp_loadmaster_ha,
 )

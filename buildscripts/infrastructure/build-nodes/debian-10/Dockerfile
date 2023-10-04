@@ -7,17 +7,11 @@ ENV DEBIAN_FRONTEND=noninteractive LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${
 
 RUN apt-get update \
     && apt-get install -y \
-    default-libmysqlclient-dev \
-    gdebi \
     git \
     libenchant1c2a \
-    libkrb5-dev \
-    libldap2-dev \
     librrd-dev \
     libsasl2-dev \
-    libssl-dev \
     make \
-    python-dev \
     python-dev \
     python3-pip \
     rrdtool \
@@ -43,6 +37,7 @@ RUN apt-get update \
     gtk-doc-tools \
     iputils-ping \
     joe \
+    libc6-dbg \
     libcurl4-openssl-dev \
     libevent-dev \
     libffi-dev \
@@ -73,8 +68,6 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    vim \
-    libc6-dbg \
     && rm -rf /var/lib/apt/lists/*
 
 # Install our standard tool chain for building

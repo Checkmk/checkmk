@@ -78,8 +78,8 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
 
 check_info["cisco_prime_wifi_connections"] = LegacyCheckDefinition(
     parse_function=parse_cisco_prime_wifi_connections,
+    service_name="Cisco Prime WiFi Connections",
     discovery_function=discover_cisco_prime_wifi_connections,
     check_function=check_cisco_prime_wifi_connections,
-    service_name="Cisco Prime WiFi Connections",
     check_ruleset_name="cisco_prime_wifi_connections",
 )

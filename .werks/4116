@@ -13,12 +13,14 @@ administrators who really knows how to use the wallet.
 You have to add an entry with the name of the instance. Please check the
 connection with SQLPlus before trying to use the plugin.
 The plugin use the following connection:
-sqlplus /@<ORACLE_SID>
+`sqlplus /@<ORACLE_SID>`
 
 You have to add a credential to the wallet with the ORACLE_SID as name for
 the entry:
 Example:
-mkstore -wrl <Wallet Directory> createCredential „<ORACLE_SID>" <Username> <Password>
+```
+mkstore -wrl <Wallet Directory> createCredential <ORACLE_SID> <Username> <Password>
+```
 
 The wallet is only used, when username is set to '/'. Password,
 hostname and listener-port is ignored, because the tnsnames.ora is used.

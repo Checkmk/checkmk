@@ -8,9 +8,11 @@ from collections.abc import Callable, Sequence
 from typing import cast, Literal, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
+from cmk.gui.dashboard.dashlet.base import IFrameDashlet
+from cmk.gui.dashboard.type_defs import DashletConfig, DashletId, DashletSize
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -34,8 +36,7 @@ from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.views.view_choices import view_choices
-
-from ..base import DashletConfig, DashletId, DashletSize, IFrameDashlet
+from cmk.gui.visuals import get_only_sites_from_context
 
 
 class ABCViewDashletConfig(DashletConfig):
@@ -72,7 +73,7 @@ class _ViewDashletConfigMandatory(ABCViewDashletConfig):
 class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
     # From: ViewSpec
     add_headers: str
-    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
     mobile: bool
     mustsearch: bool
@@ -107,7 +108,7 @@ def copy_view_into_dashlet(
         if not view:
             raise MKGeneralException(
                 _(
-                    "Failed to convert a builtin dashboard which is referencing "
+                    "Failed to convert a built-in dashboard which is referencing "
                     'the view "%s". You will have to migrate it to the new '
                     "dashboard format on your own to work properly."
                 )
@@ -216,7 +217,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         # it
         view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
         view.row_limit = get_limit()
-        view.only_sites = visuals.get_only_sites_from_context(context)
+        view.only_sites = get_only_sites_from_context(context)
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
 
         process_view(GUIViewRenderer(view, show_buttons=False))

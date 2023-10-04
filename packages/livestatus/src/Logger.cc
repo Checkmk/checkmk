@@ -30,7 +30,7 @@ SharedStreamHandler::SharedStreamHandler(std::mutex &mutex, std::ostream &os)
 void SharedStreamHandler::publish(const LogRecord &record) {
     const std::lock_guard<std::mutex> lg(_mutex);
     getFormatter()->format(_os, record);
-    _os << std::endl;
+    _os << "\n" << std::flush;
 }
 
 StreamHandler::StreamHandler(std::ostream &os)

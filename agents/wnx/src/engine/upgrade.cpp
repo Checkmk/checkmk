@@ -1,7 +1,7 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "upgrade.h"
+#include "wnx/upgrade.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -9,16 +9,16 @@
 #include <optional>
 #include <string>
 
-#include "cfg_details.h"
-#include "cvt.h"
-#include "glob_match.h"
-#include "install_api.h"
-#include "logger.h"
 #include "providers/ohm.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
+#include "wnx/cfg_details.h"
+#include "wnx/cvt.h"
+#include "wnx/glob_match.h"
+#include "wnx/install_api.h"
+#include "wnx/logger.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
 
@@ -686,7 +686,7 @@ static bool RunOhm(const fs::path &lwa_path) noexcept {
     }
 
     XLOG::l.t("Starting open hardware monitor...");
-    RunDetachedProcess(ohm.wstring());
+    tools::RunDetachedProcess(ohm.wstring());
     WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0", SERVICE_RUNNING,
                   5000);
     return true;
@@ -732,36 +732,6 @@ bool FindActivateStartLegacyAgent(AddAction action) {
     if (action == AddAction::start_ohm) RunOhm(path);
 
     return true;
-}
-
-bool RunDetachedProcess(const std::wstring &name) {
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-
-    ZeroMemory(&si, sizeof si);
-    si.cb = sizeof si;
-    ZeroMemory(&pi, sizeof pi);
-    auto windows_name = const_cast<LPWSTR>(name.c_str());
-
-    const auto ret = CreateProcessW(
-        nullptr,       // application name
-        windows_name,  // Command line options
-        nullptr,       // Process handle not inheritable
-        nullptr,       // Thread handle not inheritable
-        FALSE,         // Set handle inheritance to FALSE
-        CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS,  // No creation flags
-        nullptr,  // Use parent's environment block
-        nullptr,  // Use parent's starting directory
-        &si,      // Pointer to STARTUPINFO structure
-        &pi);     // Pointer to PROCESS_INFORMATION structure
-    if (ret != TRUE) {
-        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(name),
-                GetLastError());
-    }
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-
-    return ret == TRUE;
 }
 
 fs::path ConstructProtocolFileName(const fs::path &dir) noexcept {

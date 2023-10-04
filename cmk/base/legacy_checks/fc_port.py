@@ -8,11 +8,14 @@
 
 import time
 
-from cmk.base.check_api import get_average, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
+    get_average,
+    get_rate,
+    get_value_store,
     not_exists,
     OIDBytes,
     render,
@@ -92,7 +95,7 @@ def fc_port_getitem(num_ports, index, portname):
     fmt = "%%0%dd" % len(str(num_ports))  # number of digits for index
     itemname = fmt % (index - 1)  # leading zeros
     if portname.strip() and fc_port_inventory_use_portname:
-        return "%s %s" % (itemname, portname.strip())
+        return f"{itemname} {portname.strip()}"
     return itemname
 
 
@@ -122,6 +125,8 @@ def inventory_fc_port(info):
 
 
 def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
+    value_store = get_value_store()
+
     # Accept item, even if port name has changed
     item_index = int(item.split()[0])
     portinfo = [line for line in info if int(line[0]) == item_index + 1]
@@ -161,8 +166,20 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     # Now check rates of various counters
     this_time = time.time()
 
-    in_bytes = get_rate("fc_port.rxelements.%s" % index, this_time, rxelements)
-    out_bytes = get_rate("fc_port.txelements.%s" % index, this_time, txelements)
+    in_bytes = get_rate(
+        get_value_store(),
+        "fc_port.rxelements.%s" % index,
+        this_time,
+        rxelements,
+        raise_overflow=True,
+    )
+    out_bytes = get_rate(
+        get_value_store(),
+        "fc_port.txelements.%s" % index,
+        this_time,
+        txelements,
+        raise_overflow=True,
+    )
 
     average = params.get("average")  # range in minutes
 
@@ -183,12 +200,14 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             crit_bytes = crit * 1048576.0
 
     for what, value in [("In", in_bytes), ("Out", out_bytes)]:
-        output.append("%s: %s" % (what, render.iobandwidth(value)))
+        output.append(f"{what}: {render.iobandwidth(value)}")
         perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
         # average turned on: use averaged traffic values instead of current ones
         if average:
-            value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average(
+                value_store, f"fc_port.{what}.{item}.avg", this_time, value, average
+            )
             output.append("Avg(%dmin): %s" % (average, render.iobandwidth(value)))
             perfaverages.append(
                 ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed)
@@ -207,12 +226,18 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
 
     # R X O B J E C T S & T X O B J E C T S
     # Put number of objects into performance data (honor averaging)
-    rxobjects_rate = get_rate("fc_port.rxobjects.%s" % index, this_time, rxobjects)
-    txobjects_rate = get_rate("fc_port.txobjects.%s" % index, this_time, txobjects)
+    rxobjects_rate = get_rate(
+        get_value_store(), "fc_port.rxobjects.%s" % index, this_time, rxobjects, raise_overflow=True
+    )
+    txobjects_rate = get_rate(
+        get_value_store(), "fc_port.txobjects.%s" % index, this_time, txobjects, raise_overflow=True
+    )
     for what, value in [("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate)]:
         perfdata.append((what, value))
         if average:
-            value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average(
+                value_store, f"fc_port.{what}.{item}.avg", this_time, value, average
+            )
             perfdata.append(("%s_avg" % what, value))
 
     # E R R O R C O U N T E R S
@@ -244,14 +269,20 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             txobjects_rate,
         ),
     ]:
-        per_sec = get_rate("fc_port.%s.%s" % (counter, index), this_time, value)
+        per_sec = get_rate(
+            get_value_store(),
+            f"fc_port.{counter}.{index}",
+            this_time,
+            value,
+            raise_overflow=True,
+        )
 
         perfdata.append((counter, per_sec))
 
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
-                "fc_port.%s.%s.avg" % (counter, item), this_time, per_sec, average
+                value_store, f"fc_port.{counter}.{item}.avg", this_time, per_sec, average
             )
             perfdata.append(("%s_avg" % counter, per_sec_avg))
 
@@ -260,11 +291,13 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             rate = per_sec / (ref + per_sec)  # fixed: true-division
         else:
             rate = 0
-        text = "%s: %.2f%%" % (descr, rate * 100.0)
+        text = f"{descr}: {rate * 100.0:.2f}%"
 
         # Honor averaging of error rate
         if average:
-            rate = get_average("fc_port.%s.%s.avgrate" % (counter, item), this_time, rate, average)
+            rate = get_average(
+                value_store, f"fc_port.{counter}.{item}.avgrate", this_time, rate, average
+            )
             text += ", Avg: %.2f%%" % (rate * 100.0)
 
         error_percentage = rate * 100.0
@@ -345,9 +378,9 @@ check_info["fc_port"] = LegacyCheckDefinition(
             # Count of disparity errors received at this port.
         ],
     ),
-    check_function=check_fc_port,
-    discovery_function=inventory_fc_port,
     service_name="FC Interface %s",
+    discovery_function=inventory_fc_port,
+    check_function=check_fc_port,
     check_ruleset_name="fc_port",
     check_default_parameters={
         "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors

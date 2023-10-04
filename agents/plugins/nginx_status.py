@@ -127,7 +127,7 @@ def main():  # pylint: disable=too-many-branches
     if os.path.exists(config_file):
         with open(config_file) as open_config_file:
             config_src = open_config_file.read()
-            exec(config_src, globals(), config)
+            exec(config_src, globals(), config)  # nosec B102 # BNS:a29406
     # None or list of (proto, ipaddress, port) tuples.
     # proto is 'http' or 'https'
     servers = config.get("servers")

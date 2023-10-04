@@ -30,9 +30,9 @@ def inventory_nullmailer_mailq(parsed):
 
 check_info["nullmailer_mailq"] = LegacyCheckDefinition(
     parse_function=parse_nullmailer_mailq,
-    check_function=check_nullmailer_mailq,
-    discovery_function=inventory_nullmailer_mailq,
     service_name="Nullmailer Queue %s",
+    discovery_function=inventory_nullmailer_mailq,
+    check_function=check_nullmailer_mailq,
     check_ruleset_name="mail_queue_length",
     check_default_parameters=NULLMAILER_MAILQ_DEFAULT_LEVELS,
 )

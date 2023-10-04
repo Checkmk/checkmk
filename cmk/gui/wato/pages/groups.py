@@ -7,6 +7,7 @@ import abc
 from collections.abc import Collection, Iterator, Sequence
 
 import cmk.utils.paths
+from cmk.utils.user import UserId
 
 import cmk.gui.forms as forms
 import cmk.gui.userdb as userdb
@@ -35,18 +36,11 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    make_confirm_delete_link,
-    mode_registry,
-    mode_url,
-    redirect,
-    WatoMode,
-)
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import makeactionuri
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -56,6 +50,16 @@ from cmk.gui.valuespec import (
     ListOfStrings,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeHostgroups)
+    mode_registry.register(ModeServicegroups)
+    mode_registry.register(ModeContactgroups)
+    mode_registry.register(ModeEditServicegroup)
+    mode_registry.register(ModeEditHostgroup)
+    mode_registry.register(ModeEditContactgroup)
 
 
 class ModeGroups(WatoMode, abc.ABC):
@@ -299,7 +303,6 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         html.end_form()
 
 
-@mode_registry.register
 class ModeHostgroups(ModeGroups):
     @property
     def type_name(self) -> GroupType:
@@ -330,7 +333,6 @@ class ModeHostgroups(ModeGroups):
         return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")])
 
 
-@mode_registry.register
 class ModeServicegroups(ModeGroups):
     @property
     def type_name(self) -> GroupType:
@@ -361,7 +363,6 @@ class ModeServicegroups(ModeGroups):
         return folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")])
 
 
-@mode_registry.register
 class ModeContactgroups(ModeGroups):
     @property
     def type_name(self) -> GroupType:
@@ -419,7 +420,6 @@ class ModeContactgroups(ModeGroups):
         )
 
 
-@mode_registry.register
 class ModeEditServicegroup(ABCModeEditGroup):
     @property
     def type_name(self) -> GroupType:
@@ -446,7 +446,6 @@ class ModeEditServicegroup(ABCModeEditGroup):
         return _("Edit service group")
 
 
-@mode_registry.register
 class ModeEditHostgroup(ABCModeEditGroup):
     @property
     def type_name(self) -> GroupType:
@@ -473,7 +472,6 @@ class ModeEditHostgroup(ABCModeEditGroup):
         return _("Edit host group")
 
 
-@mode_registry.register
 class ModeEditContactgroup(ABCModeEditGroup):
     @property
     def type_name(self) -> GroupType:

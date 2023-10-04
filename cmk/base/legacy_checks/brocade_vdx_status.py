@@ -33,7 +33,7 @@ def check_brocade_vdx_status(_no_item, _no_params, info):
     }
     firmware = info[0][0]
     state = saveint(info[0][1])
-    message = "State: %s, Firmware: %s" % (states[state], firmware)
+    message = f"State: {states[state]}, Firmware: {firmware}"
     if state == 1:
         return 0, message
     if state in [2, 4]:
@@ -51,15 +51,15 @@ check_info["brocade_vdx_status"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.1588.2.1.1.1.1.6.0"),
     ),
-    check_function=check_brocade_vdx_status,
-    discovery_function=inventory_brocade_vdx_status,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.1588.2.1.1.1.1",
+        oids=["6", "7"],
+    ),
     service_name="Status",
     # It does not seem to work to exclude several OIDs here, there seem
     # to be too many devices which do not have the needed OIDs. We try
     # another approach: check for existance of the first needed OID
     # not oid('.1.3.6.1.2.1.1.2.0').startswith( ".1.3.6.1.4.1.1588.2.1.1.1"),
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.1588.2.1.1.1.1",
-        oids=["6", "7"],
-    ),
+    discovery_function=inventory_brocade_vdx_status,
+    check_function=check_brocade_vdx_status,
 )

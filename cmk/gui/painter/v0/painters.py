@@ -12,24 +12,32 @@ from pathlib import Path
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import short_host_state_name, short_service_state_name
 from cmk.utils.labels import Labels
+from cmk.utils.prediction import Timestamp
 from cmk.utils.render import approx_age
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.statename import short_host_state_name, short_service_state_name
 
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
+from cmk.gui.graphing._color import render_color_icon
+from cmk.gui.graphing._utils import metric_info
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
-from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
+from cmk.gui.type_defs import (
+    ColumnName,
+    PainterParameters,
+    Row,
+    SorterName,
+    TranslatedMetrics,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
@@ -97,6 +105,7 @@ def register(
     painter_registry.register(PainterSvcPerfVal10)
     painter_registry.register(PainterSvcCheckCommand)
     painter_registry.register(PainterSvcCheckCommandExpanded)
+    painter_registry.register(PainterSvcNotesURLExpanded)
     painter_registry.register(PainterSvcContacts)
     painter_registry.register(PainterSvcContactGroups)
     painter_registry.register(PainterServiceDescription)
@@ -131,7 +140,6 @@ def register(
     painter_registry.register(PainterSvcCustomNotes)
     painter_registry.register(PainterSvcStaleness)
     painter_registry.register(PainterSvcIsStale)
-    painter_registry.register(PainterSvcServicelevel)
     painter_registry.register(PainterServiceCustomVariables)
     painter_registry.register(PainterServiceCustomVariable)
     painter_registry.register(PainterHostCustomVariable)
@@ -141,6 +149,7 @@ def register(
     painter_registry.register(PainterHostPerfData)
     painter_registry.register(PainterHostCheckCommand)
     painter_registry.register(PainterHostCheckCommandExpanded)
+    painter_registry.register(PainterHostNotesURLExpanded)
     painter_registry.register(PainterHostStateAge)
     painter_registry.register(PainterHostCheckAge)
     painter_registry.register(PainterHostNextCheck)
@@ -190,7 +199,6 @@ def register(
     painter_registry.register(PainterHostAcknowledged)
     painter_registry.register(PainterHostStaleness)
     painter_registry.register(PainterHostIsStale)
-    painter_registry.register(PainterHostServicelevel)
     painter_registry.register(PainterHostCustomVariables)
     painter_registry.register(PainterServiceDiscoveryState)
     painter_registry.register(PainterServiceDiscoveryCheck)
@@ -366,7 +374,7 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
 
 # This helper function returns the value of the given custom var
-def _paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = None) -> CellSpec:
+def paint_custom_var(what: str, key: CSSClass, row: Row, choices: list | None = None) -> CellSpec:
     if choices is None:
         choices = []
 
@@ -706,7 +714,7 @@ class PainterSvcMetrics(Painter):
             html.td(render_color_icon(metric["color"]), class_="color")
             html.td(f'{metric["title"]}{optional_metric_id}:')
             html.td(metric["unit"]["render"](metric["value"]), class_="value")
-            if not cmk_version.is_raw_edition():
+            if cmk_version.edition() is not cmk_version.Edition.CRE:
                 html.td(
                     html.render_popup_trigger(
                         html.render_icon(
@@ -827,6 +835,28 @@ class PainterSvcCheckCommandExpanded(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_check_command_expanded"])
+
+
+class PainterSvcNotesURLExpanded(Painter):
+    @property
+    def ident(self) -> str:
+        return "svc_notes_url_expanded"
+
+    def title(self, cell: Cell) -> str:
+        return _("Service notes URL expanded")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Notes URL expanded")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["service_notes_url_expanded"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        content: HTML = HTMLWriter.render_a(
+            row["service_notes_url_expanded"], href=row["service_notes_url_expanded"]
+        )
+        return (None, content)
 
 
 class PainterSvcContacts(Painter):
@@ -1554,7 +1584,7 @@ class PainterSvcAcknowledged(Painter):
         return paint_nagiosflag(row, "service_acknowledged", False)
 
 
-def notes_matching_pattern_entries(dirs: Iterable[Path], item: str) -> Iterable[Path]:
+def match_path_entries_with_item(dirs: Iterable[Path], item: str) -> Iterable[Path]:
     yield from (
         sub_path
         for directory in dirs
@@ -1568,17 +1598,15 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     host = row["host_name"]
     svc = row.get("service_description")
     if what == "service":
-        dirs = [
-            Path(cmk.utils.paths.default_config_dir) / "notes/services" / host,
-            Path(cmk.utils.paths.default_config_dir) / "notes/services" / "*",
-        ]
+        notes_dir = cmk.utils.paths.default_config_dir + "/notes/services"
+        dirs = match_path_entries_with_item([Path(notes_dir)], host)
         item = svc
     else:
         dirs = [Path(cmk.utils.paths.default_config_dir) / "notes/hosts"]
         item = host
 
     assert isinstance(item, str)
-    files = sorted(notes_matching_pattern_entries(dirs, item), reverse=True)
+    files = sorted(match_path_entries_with_item(dirs, item), reverse=True)
     contents = []
 
     def replace_tags(text: str) -> str:
@@ -1599,7 +1627,7 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
 
     for f in files:
         contents.append(replace_tags(f.read_text(encoding="utf8").strip()))
-    return "", "<hr>".join(contents)
+    return "", HTML("<hr>".join(contents))
 
 
 class PainterSvcCustomNotes(Painter):
@@ -1667,29 +1695,6 @@ class PainterSvcIsStale(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_is_stale(row)
-
-
-class PainterSvcServicelevel(Painter):
-    @property
-    def ident(self) -> str:
-        return "svc_servicelevel"
-
-    def title(self, cell: Cell) -> str:
-        return _("Service service level")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["service_custom_variable_names", "service_custom_variable_values"]
-
-    @property
-    def sorter(self) -> SorterName:
-        return "servicelevel"
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: list | None = None) -> CellSpec:
@@ -1784,7 +1789,7 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if (params := cell.painter_parameters()) is None:
             params = {}
-        return _paint_custom_var(self._object_type, params.get("ident", "").upper(), row)
+        return paint_custom_var(self._object_type, params.get("ident", "").upper(), row)
 
 
 class PainterServiceCustomVariable(ABCPainterCustomVariable):
@@ -1984,6 +1989,28 @@ class PainterHostCheckCommandExpanded(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_check_command_expanded"])
+
+
+class PainterHostNotesURLExpanded(Painter):
+    @property
+    def ident(self) -> str:
+        return "host_notes_url_expanded"
+
+    def title(self, cell: Cell) -> str:
+        return _("Host notes URL expanded")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Notes URL expanded")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_notes_url_expanded"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        content: HTML = HTMLWriter.render_a(
+            row["host_notes_url_expanded"], href=row["host_notes_url_expanded"]
+        )
+        return (None, content)
 
 
 class PainterHostStateAge(Painter):
@@ -2551,7 +2578,7 @@ class PainterHostIpv4Address(Painter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "ADDRESS_4", row)
+        return paint_custom_var("host", "ADDRESS_4", row)
 
 
 class PainterHostIpv6Address(Painter):
@@ -2570,7 +2597,7 @@ class PainterHostIpv6Address(Painter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "ADDRESS_6", row)
+        return paint_custom_var("host", "ADDRESS_6", row)
 
 
 class PainterHostAddresses(Painter):
@@ -2653,7 +2680,7 @@ class PainterHostAddressFamily(Painter):
         return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "ADDRESS_FAMILY", row)
+        return paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
 class PainterHostAddressFamilies(Painter):
@@ -3188,29 +3215,6 @@ class PainterHostIsStale(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_is_stale(row)
-
-
-class PainterHostServicelevel(Painter):
-    @property
-    def ident(self) -> str:
-        return "host_servicelevel"
-
-    def title(self, cell: Cell) -> str:
-        return _("Host service level")
-
-    def short_title(self, cell: Cell) -> str:
-        return _("Service Level")
-
-    @property
-    def columns(self) -> Sequence[ColumnName]:
-        return ["host_custom_variable_names", "host_custom_variable_values"]
-
-    @property
-    def sorter(self) -> SorterName:
-        return "servicelevel"
-
-    def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 class PainterHostCustomVariables(Painter):

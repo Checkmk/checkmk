@@ -6,14 +6,14 @@
 #include <filesystem>
 
 #include "common/yaml.h"
-#include "cvt.h"
 #include "lwa/types.h"
 #include "providers/logwatch_event.h"
 #include "providers/mrpe.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test_tools.h"
+#include "wnx/cvt.h"
+#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 
@@ -196,13 +196,12 @@ TEST(CvtTest, LogWatchSection) {
 
     ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
     auto logfiles = logwatch[vars::kLogWatchEventLogFile];
-    constexpr provider::RawLogWatchData base[4] = {
-        {true, "application", EventLevels::kCrit,
-         provider::LogWatchContext::with},
-        {true, "system", EventLevels::kWarn, provider::LogWatchContext::hide},
-        {true, "*", EventLevels::kOff, provider::LogWatchContext::with},
+    const provider::RawLogWatchData base[4] = {
+        {true, "application", EventLevels::kCrit, EventContext::with},
+        {true, "system", EventLevels::kWarn, EventContext::hide},
+        {true, "*", EventLevels::kOff, EventContext::with},
         {true, "microsoft-windows-grouppolicy/operational", EventLevels::kWarn,
-         provider::LogWatchContext::with},
+         EventContext::with},
     };
 
     for (int i = 0; i < 4; ++i) {

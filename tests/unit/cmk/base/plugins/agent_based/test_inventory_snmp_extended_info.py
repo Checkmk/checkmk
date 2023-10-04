@@ -10,10 +10,10 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, HostLabel, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_snmp_extended_info import (
-    get_device_type_label,
     inventory_snmp_extended_info,
     parse_snmp_extended_info,
 )
+from cmk.base.plugins.agent_based.utils.device_types import get_device_type_label
 
 from .utils_inventory import sort_inventory_result
 

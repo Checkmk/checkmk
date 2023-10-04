@@ -1,0 +1,14 @@
+Title: event console: Fix on 'Events of host x' caption and its corresponding link
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1694009039
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk the hostname, alias and address macros in the hamburger menu of the
+Events service were not correctly replaced, causing the 'Events on host x' button and
+its corresponding link to be generated incorrectly. This werk fixes that issue.
+

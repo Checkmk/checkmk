@@ -22,6 +22,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils import diskstat
 
+from .diskstat import LEVELS
+
 
 @pytest.mark.parametrize(
     "params,exp_res",
@@ -351,37 +353,14 @@ def test_scale_levels(levels: tuple[float, float] | None, factor: float) -> None
         assert scaled_levels == tuple(level * factor for level in levels)
 
 
-LEVELS = {
-    "horizon": 90,
-    "levels_lower": ("absolute", (2.0, 4.0)),
-    "levels_upper": ("absolute", (10.0, 20.0)),
-    "levels_upper_min": (10.0, 15.0),
-    "period": "wday",
-}
-
-LEVELS_SCALED = {
-    "horizon": 90,
-    "levels_lower": ("absolute", (20.0, 40.0)),
-    "levels_upper": ("absolute", (100.0, 200.0)),
-    "levels_upper_min": (100.0, 150.0),
-    "period": "wday",
-}
-
-
 def test_scale_levels_predictive() -> None:
-    assert diskstat._scale_levels_predictive(LEVELS, 10) == LEVELS_SCALED
-
-
-def test_load_levels_wato() -> None:
-    # when scaling the preditvie levels we make certain asumptions about the
-    # wato structure of predictive levels here we try to make sure that these
-    # asumptions are still correct. if this test fails, fix it and adapt
-    # _scale_levels_predictive to handle the changed values
-    from cmk.gui.plugins.wato.utils import PredictiveLevels
-
-    pl = PredictiveLevels()
-    pl.validate_value(LEVELS, "")
-    pl.validate_datatype(LEVELS, "")
+    assert diskstat._scale_levels_predictive(LEVELS, 10) == {
+        "horizon": 90,
+        "levels_lower": ("absolute", (20.0, 40.0)),
+        "levels_upper": ("absolute", (100.0, 200.0)),
+        "levels_upper_min": (100.0, 150.0),
+        "period": "wday",
+    }
 
 
 @pytest.mark.parametrize(

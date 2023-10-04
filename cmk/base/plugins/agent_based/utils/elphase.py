@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 from ..agent_based_api.v1 import check_levels, render, Result, State, type_defs
 
-CheckParams = Optional[Mapping[str, Any]]
+CheckParams = Mapping[str, Any] | None
 Sensor = Mapping[str, Any]
 Section = Mapping[str, Sensor]
 
@@ -60,7 +61,7 @@ def check_elphase(  # pylint: disable=too-many-branches
             state = device_state
         yield Result(
             state=State(state),
-            summary="Device status: %s(%s)" % (device_state_readable, device_state),
+            summary=f"Device status: {device_state_readable}({device_state})",
         )
 
     for quantity, title, render_func, bound, factor in [
@@ -96,8 +97,8 @@ def check_elphase(  # pylint: disable=too-many-branches
             value = entry  # 12.0
             state_info = None
 
-        levels_upper: Optional[Tuple[float, float]] = None
-        levels_lower: Optional[Tuple[float, float]] = None
+        levels_upper: tuple[float, float] | None = None
+        levels_lower: tuple[float, float] | None = None
         if quantity in params:
             if bound == Bounds.Both:
                 levels = params[quantity]

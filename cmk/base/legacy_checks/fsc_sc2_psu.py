@@ -46,7 +46,7 @@ def check_fsc_sc2_psu(item, _no_params, info):
         if designation == item:
             yield psu_status.get(status, (3, "Status is unknown"))
             if nominal and load:
-                infotext = "Nominal load: %s W, Actual load: %s W" % (nominal, load)
+                infotext = f"Nominal load: {nominal} W, Actual load: {load} W"
                 perfdata = [("power", int(load))]
             else:
                 infotext = "Did not receive load data"
@@ -56,11 +56,11 @@ def check_fsc_sc2_psu(item, _no_params, info):
 
 check_info["fsc_sc2_psu"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
-    discovery_function=inventory_fsc_sc2_psu,
-    check_function=check_fsc_sc2_psu,
-    service_name="FSC %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.2.1",
         oids=["3", "5", "6", "7"],
     ),
+    service_name="FSC %s",
+    discovery_function=inventory_fsc_sc2_psu,
+    check_function=check_fsc_sc2_psu,
 )

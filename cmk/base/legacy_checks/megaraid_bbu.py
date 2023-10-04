@@ -34,10 +34,10 @@ megaraid_bbu_refvalues = {
 }
 
 
-def megaraid_bbu_parse(info):
+def megaraid_bbu_parse(string_table):
     controllers = {}
     current_hba = None
-    for line in info:
+    for line in string_table:
         joined = " ".join(line)
         if ":" not in joined:
             continue  # skip garbage lines
@@ -110,7 +110,7 @@ def check_megaraid_bbu(item, _no_params, section):
 
 check_info["megaraid_bbu"] = LegacyCheckDefinition(
     parse_function=megaraid_bbu_parse,
-    check_function=check_megaraid_bbu,
-    discovery_function=discover_megaraid_bbu,
     service_name="RAID BBU %s",
+    discovery_function=discover_megaraid_bbu,
+    check_function=check_megaraid_bbu,
 )

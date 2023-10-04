@@ -6,10 +6,9 @@
 from pytest import MonkeyPatch
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ServiceID
 
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,

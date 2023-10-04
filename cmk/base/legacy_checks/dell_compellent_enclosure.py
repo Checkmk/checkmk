@@ -24,7 +24,7 @@ def check_dell_compellent_enclosure(item, _no_params, info):
         if number == item:
             state, state_readable = dell_compellent.dev_state_map(status)
             yield state, "Status: %s" % state_readable
-            yield 0, "Model: %s, Type: %s, Service-Tag: %s" % (model, enc_type, serial)
+            yield 0, f"Model: {model}, Type: {enc_type}, Service-Tag: {serial}"
 
             if status_message:
                 yield state, "State Message: %s" % status_message
@@ -32,11 +32,11 @@ def check_dell_compellent_enclosure(item, _no_params, info):
 
 check_info["dell_compellent_enclosure"] = LegacyCheckDefinition(
     detect=DETECT_DELL_COMPELLENT,
-    discovery_function=dell_compellent.discover,
-    check_function=check_dell_compellent_enclosure,
-    service_name="Enclosure %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.11000.2000.500.1.2.15.1",
         oids=["2", "3", "5", "6", "7", "9"],
     ),
+    service_name="Enclosure %s",
+    discovery_function=dell_compellent.discover,
+    check_function=check_dell_compellent_enclosure,
 )

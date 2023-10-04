@@ -16,8 +16,8 @@ from cmk.base.config import check_info
 # equipmentFanStats       Dn sys/chassis-2/fan-module-1-1/fan-1/stats     SpeedAvg 3652
 
 
-def parse_ucs_bladecenter_fans(info):
-    data = ucs_bladecenter.generic_parse(info)
+def parse_ucs_bladecenter_fans(string_table):
+    data = ucs_bladecenter.generic_parse(string_table)
     fans: dict[str, dict] = {}
 
     def get_item_name(key):
@@ -72,7 +72,7 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
     yield 0, "%d Fans" % len(my_fans)
     for key, fan in sorted(my_fans.items()):
         if fan["OperState"] != "operable":
-            yield 2, "Fan %s %s: average speed %s RPM" % (
+            yield 2, "Fan {} {}: average speed {} RPM".format(
                 key.split()[-1][2:],
                 fan["OperState"],
                 fan.get("SpeedAvg"),
@@ -81,9 +81,9 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
 
 check_info["ucs_bladecenter_fans"] = LegacyCheckDefinition(
     parse_function=parse_ucs_bladecenter_fans,
+    service_name="Fans %s",
     discovery_function=inventory_ucs_bladecenter_fans,
     check_function=check_ucs_bladecenter_fans,
-    service_name="Fans %s",
 )
 
 # .
@@ -112,7 +112,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
             loc = key.split()[-1].split(".")
             sensor_list.append(
                 (
-                    "Module %s Fan %s" % (loc[0], loc[1]),
+                    f"Module {loc[0]} Fan {loc[1]}",
                     float(values.get("AmbientTemp")),
                 )
             )
@@ -120,9 +120,10 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
+    sections=["ucs_bladecenter_fans"],
     discovery_function=inventory_ucs_bladecenter_fans_temp,
     check_function=check_ucs_bladecenter_fans_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 50.0),

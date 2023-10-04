@@ -4,18 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
+from cmk.utils.rulesets.definition import RuleGroup
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import (
-    MKUserError,
-    RulespecGroupDatasourceProgramsApps,
-)
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    HTTPProxyReference,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
+from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, ListOfStrings, RegExp, TextInput
+from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _validate_regex_choices(
@@ -35,9 +31,9 @@ def _validate_regex_choices(
 
 def _valuespec_special_agents_mobileiron() -> Dictionary:
     return Dictionary(
-        title=_("MobileIron API"),
+        title=_("IvantiNeurons for MDM (formerly MobileIron Cloud)"),
         help=_(
-            "Requests data from Mobileiron API and outputs a piggyback host per returned device."
+            "Requests data from the API of IvantiNeurons for MDM (formerly MobileIron Cloud) and outputs a piggyback host per returned device."
         ),
         elements=[
             ("username", TextInput(title=_("Username"), allow_empty=False)),
@@ -139,7 +135,7 @@ def _valuespec_special_agents_mobileiron() -> Dictionary:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:mobileiron",
+        name=RuleGroup.SpecialAgents("mobileiron"),
         valuespec=_valuespec_special_agents_mobileiron,
     )
 )

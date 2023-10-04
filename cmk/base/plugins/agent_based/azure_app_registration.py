@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
@@ -63,7 +63,7 @@ def check_app_registration(
         return
 
     expiration_date = parse_azure_datetime(secret.endDateTime)
-    age = expiration_date.timestamp() - datetime.utcnow().timestamp()
+    age = expiration_date.timestamp() - datetime.now(tz=timezone.utc).timestamp()
 
     if age < 0:
         yield Result(

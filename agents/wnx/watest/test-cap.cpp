@@ -5,15 +5,15 @@
 
 #include <filesystem>
 
-#include "cap.h"
-#include "cfg.h"
-#include "cma_core.h"
 #include "common/yaml.h"
 #include "lwa/types.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+#include "watest/test_tools.h"
+#include "wnx/cap.h"
+#include "wnx/cfg.h"
+#include "wnx/cma_core.h"
+#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
@@ -342,7 +342,8 @@ TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
                               fs::copy_options::overwrite_existing));
     ASSERT_TRUE(tools::RunDetachedCommand(
-        wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8"));
+                    wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8")
+                    .has_value());
     cma::tools::sleep(200ms);
     std::vector buf = {'_', '_'};
     ASSERT_FALSE(StoreFile(cmk_test_ping, buf));
@@ -350,7 +351,8 @@ TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(fs::copy_file(ping, cmk_test_ping,
                               fs::copy_options::overwrite_existing));
     ASSERT_TRUE(tools::RunDetachedCommand(
-        wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8"));
+                    wtools::ToUtf8(cmk_test_ping.wstring()) + " -t 8.8.8.8")
+                    .has_value());
     cma::tools::sleep(200ms);
 
     std::error_code ec;

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Dict, Final, List, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Final
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -19,7 +20,7 @@ Section = Mapping[str, Sequence[Mapping]]
 
 
 def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def]
-    parsed: Dict[str, List[Mapping]] = {}
+    parsed: dict[str, list[Mapping]] = {}
 
     for line in string_table:
         node_detail = json.loads(line[0])
@@ -56,8 +57,8 @@ def discover_jenkins_nodes(section: Section) -> DiscoveryResult:
 
 
 def _get_optional_value(
-    mon_data: Mapping[str, Optional[Mapping[str, Union[float, int]]]], key: str, *, value: str
-) -> Optional[Union[float, int]]:
+    mon_data: Mapping[str, Mapping[str, float | int] | None], key: str, *, value: str
+) -> float | int | None:
     k = mon_data.get(key)
     if k is not None:
         return k.get(value)

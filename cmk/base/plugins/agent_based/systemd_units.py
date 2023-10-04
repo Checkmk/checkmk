@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections import defaultdict
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
-from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -135,7 +136,7 @@ class UnitTypes(Enum):
 class UnitStatus:
     name: str
     status: str
-    time_since_change: Optional[timedelta]
+    time_since_change: timedelta | None
 
     @classmethod
     def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
@@ -156,7 +157,7 @@ class UnitEntry:
     current_state: str
     description: str
     enabled_status: str
-    time_since_change: Optional[timedelta] = None
+    time_since_change: timedelta | None = None
 
     @classmethod
     def _parse_name_and_unit_type(cls, raw: str) -> None | tuple[str, UnitTypes]:
@@ -179,7 +180,7 @@ class UnitEntry:
         row: Sequence[str],
         enabled_status: Mapping[str, str],
         status_details: Mapping[str, UnitStatus],
-    ) -> Optional[tuple[UnitTypes, "UnitEntry"]]:
+    ) -> tuple[UnitTypes, "UnitEntry"] | None:
         if not (name_unit := cls._parse_name_and_unit_type(row[0])):
             return None
         name, unit_type = name_unit
@@ -297,7 +298,7 @@ def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
     return unit_status
 
 
-def parse(string_table: StringTable) -> Optional[Section]:
+def parse(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
     # This is a hack to know about possible markers that start a new section. Just looking for a "[" is
@@ -398,7 +399,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
         yield Result(state=State(params["else"]), summary="Service not found")
         return
     unit = units[item]
-    # TODO: this defaults unkown states to CRIT with the default params
+    # TODO: this defaults unknown states to CRIT with the default params
     state = params["states"].get(unit.active_status, params["states_default"])
     yield Result(state=State(state), summary=f"Status: {unit.active_status}")
     yield Result(state=State.OK, summary=unit.description)
@@ -411,7 +412,7 @@ CHECK_DEFAULT_PARAMETERS = {
         "failed": 2,
     },
     "states_default": 2,
-    "else": 2,  # missleading name, used if service vanishes
+    "else": 2,  # misleading name, used if service vanishes
 }
 
 DISCOVERY_DEFAULT_PARAMETERS = {"names": ["(never discover)^"]}

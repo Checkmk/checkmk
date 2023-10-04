@@ -31,6 +31,13 @@ def main() {
                 PASSWORD: WIN_SIGN_PASSWORD,
             )
         }
+
+        stage("detach") {
+            dir("agents\\wnx"){
+                bat "run.cmd --detach"
+            }
+        }
+
     }
 }
 

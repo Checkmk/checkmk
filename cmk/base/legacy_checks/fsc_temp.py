@@ -55,12 +55,12 @@ check_info["fsc_temp"] = LegacyCheckDefinition(
         ),
         not_exists(".1.3.6.1.4.1.231.2.10.2.2.10.5.1.1.3.*"),
     ),
-    discovery_function=inventory_fsc_temp,
-    check_function=check_fsc_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.5.2.1.1",
         oids=["13", "11", "6", "8"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_fsc_temp,
+    check_function=check_fsc_temp,
     check_ruleset_name="temperature",
 )

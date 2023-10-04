@@ -13,13 +13,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 
 def inventory_mongodb_connections(info):
@@ -49,11 +45,17 @@ def check_mongodb_connections(item, params, info):
         used_perc,
         None,
         params.get("levels_perc"),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Used percentage",
     )
 
-    rate = get_rate("total_created", time.time(), int(info_dict["totalCreated"]))
+    rate = get_rate(
+        get_value_store(),
+        "total_created",
+        time.time(),
+        int(info_dict["totalCreated"]),
+        raise_overflow=True,
+    )
     yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
 
 
@@ -74,8 +76,8 @@ def _is_int(key_list, info_dict) -> bool:
 
 check_info["mongodb_connections"] = LegacyCheckDefinition(
     service_name="MongoDB %s",
-    check_function=check_mongodb_connections,
     discovery_function=inventory_mongodb_connections,
+    check_function=check_mongodb_connections,
     check_ruleset_name="db_connections_mongodb",
     check_default_parameters={
         "levels_perc": (80.0, 90.0),  # Levels at 80%/90% of maximum

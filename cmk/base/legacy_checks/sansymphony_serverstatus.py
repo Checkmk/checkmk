@@ -22,14 +22,14 @@ def check_sansymphony_serverstatus(_no_item, _no_params, info):
         return None
     status, cachestate = info[0]
     if status == "Online" and cachestate == "WritebackGlobal":
-        return 0, "SANsymphony is %s and its cache is in %s mode" % (status, cachestate)
+        return 0, f"SANsymphony is {status} and its cache is in {cachestate} mode"
     if status == "Online" and cachestate != "WritebackGlobal":
-        return 1, "SANsymphony is %s but its cache is in %s mode" % (status, cachestate)
+        return 1, f"SANsymphony is {status} but its cache is in {cachestate} mode"
     return 2, "SANsymphony is %s" % status
 
 
 check_info["sansymphony_serverstatus"] = LegacyCheckDefinition(
-    check_function=check_sansymphony_serverstatus,
-    discovery_function=inventory_sansymphony_serverstatus,
     service_name="sansymphony Serverstatus",
+    discovery_function=inventory_sansymphony_serverstatus,
+    check_function=check_sansymphony_serverstatus,
 )

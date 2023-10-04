@@ -435,17 +435,17 @@ def mock_item_state(mock_state):
 
 
 class MockHostExtraConf:
-    """Mock the calls to host_extra_conf.
+    """Mock the calls to get_host_values.
 
     Due to our rather unorthodox import structure, we cannot mock
-    host_extra_conf_merged directly (it's a global var in running checks!)
-    Instead, we mock the calls to cmk.base.config.host_extra_conf.
+    get_host_merged_dict directly (it's a global var in running checks!)
+    Instead, we mock the calls to cmk.base.config.get_host_values.
 
     Passing a single dict to this objects init method will result in
-    host_extra_conf_merged returning said dict.
+    get_host_merged_dict returning said dict.
 
     You can also pass a list of dicts, but that's rather pointless, as
-    host_extra_conf_merged will return a merged dict, the result of
+    get_host_merged_dict will return a merged dict, the result of
 
         merged_dict = {}
         for d in reversed(list_of_dicts):
@@ -456,7 +456,7 @@ class MockHostExtraConf:
 
     with MockHostExtraConf(mockconfig):
         # run your check test here,
-        # host_extra_conf_merged in your check will return
+        # get_host_merged_dict in your check will return
         # mockconfig
 
     See for example 'test_df_check.py'.
@@ -466,7 +466,7 @@ class MockHostExtraConf:
         self,
         check: object,
         mock_config: Callable | dict[object, object],
-        target: str = "host_extra_conf",
+        target: str = "get_host_values",
     ) -> None:
         self.target = target
         self.context: Any = None  # TODO: Figure out the right type
@@ -478,17 +478,18 @@ class MockHostExtraConf:
         if hasattr(self.config, "__call__"):
             return self.config(_hostname, _ruleset)
 
-        if self.target == "host_extra_conf" and isinstance(self.config, dict):
+        if self.target == "get_host_values" and isinstance(self.config, dict):
             return [self.config]
         return self.config
 
     def __enter__(self):
         """The default context: just mock get_item_state"""
-        import cmk.base.config  # pylint: disable=import-outside-toplevel
+        import cmk.base.config  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
 
-        config_cache = cmk.base.config.get_config_cache()
+        # we can't use get_config_cache here because it may lead to flakiness
+        config_cache = cmk.base.config.reset_config_cache()
         self.context = mock.patch.object(
-            config_cache,
+            config_cache.ruleset_matcher,
             self.target,
             # I'm the MockObj myself!
             new_callable=lambda: self,

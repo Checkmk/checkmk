@@ -19,10 +19,10 @@ SplunkLicenseUsage = collections.namedtuple(  # pylint: disable=collections-name
 )
 
 
-def parse_splunk_license_usage(info):
+def parse_splunk_license_usage(string_table):
     parsed = {}
 
-    for lcs_detail in info:
+    for lcs_detail in string_table:
         try:
             quota, slaves_usage_bytes = lcs_detail
 
@@ -63,9 +63,9 @@ def check_splunk_license_usage(item, params, parsed):
 
 check_info["splunk_license_usage"] = LegacyCheckDefinition(
     parse_function=parse_splunk_license_usage,
-    check_function=check_splunk_license_usage,
-    discovery_function=inventory_splunk_license_usage,
     service_name="Splunk License Usage",
+    discovery_function=inventory_splunk_license_usage,
+    check_function=check_splunk_license_usage,
     check_ruleset_name="splunk_license_usage",
     check_default_parameters={
         "usage_bytes": (80.0, 90.0),

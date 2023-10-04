@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from unittest.mock import MagicMock
+import pytest_mock
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_daemonset,
@@ -12,6 +12,11 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 )
 
 from cmk.special_agents import agent_kube
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    AnnotationNonPatternOption,
+    CheckmkHostSettings,
+)
+from cmk.special_agents.utils_kubernetes.agent_handlers.daemonset_handler import create_api_sections
 
 
 def daemon_sets_api_sections() -> set[str]:
@@ -27,20 +32,22 @@ def daemon_sets_api_sections() -> set[str]:
 
 
 def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
-    write_writeable_sections_mock: MagicMock,
+    mocker: pytest_mock.MockFixture,
 ) -> None:
+    write_sections_mock = mocker.patch("cmk.special_agents.utils_kubernetes.common.write_sections")
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build(), pods=[APIPodFactory.build()])
-    sections = agent_kube.create_daemon_set_api_sections(
+    sections = create_api_sections(
         daemon_set,
-        agent_kube.CheckmkHostSettings(
+        CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
-            annotation_key_pattern=agent_kube.AnnotationNonPatternOption.ignore_all,
+            annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
         ),
         "daemonset",
     )
-    agent_kube.common.write_sections(sections)
+    # Too much monkeypatching/mocking, the typing error isn't worth fixing.
+    agent_kube.common.write_sections(sections)  # type: ignore[attr-defined]
     assert {
-        section.section_name for section in list(write_writeable_sections_mock.call_args[0][0])
+        section.section_name for section in list(write_sections_mock.call_args[0][0])
     } == daemon_sets_api_sections()
-    assert write_writeable_sections_mock.call_count == 1
+    assert write_sections_mock.call_count == 1

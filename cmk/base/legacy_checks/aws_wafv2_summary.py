@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterable
-from typing import Dict
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
@@ -19,7 +18,7 @@ def discover_aws_wafv2_summary(section: GenericAWSSection) -> Iterable[tuple[Non
 
 
 def check_aws_wafv2_summary(item, params, parsed):
-    web_acls_by_region: Dict[str, Dict] = {}
+    web_acls_by_region: dict[str, dict] = {}
 
     for web_acl in parsed:
         try:
@@ -35,7 +34,7 @@ def check_aws_wafv2_summary(item, params, parsed):
 
     for region in regions_sorted:
         web_acls_region = web_acls_by_region[region]
-        yield 0, "%s: %s" % (region, len(web_acls_region))
+        yield 0, f"{region}: {len(web_acls_region)}"
 
         web_acl_names_sorted = sorted(web_acls_region.keys())
         long_output.append("%s:" % region)
@@ -48,8 +47,9 @@ def check_aws_wafv2_summary(item, params, parsed):
                 description = "[no description]"
 
             long_output.append(
-                "%s -- Description: %s, Number of rules and rule groups: %s"
-                % (web_acl_name, description, len(web_acl["Rules"]))
+                "{} -- Description: {}, Number of rules and rule groups: {}".format(
+                    web_acl_name, description, len(web_acl["Rules"])
+                )
             )
 
     if long_output:
@@ -58,7 +58,7 @@ def check_aws_wafv2_summary(item, params, parsed):
 
 check_info["aws_wafv2_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws,
+    service_name="AWS/WAFV2 Summary",
     discovery_function=discover_aws_wafv2_summary,
     check_function=check_aws_wafv2_summary,
-    service_name="AWS/WAFV2 Summary",
 )

@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from collections.abc import Callable, Sequence
-from typing import Literal, TypeGuard, TypeVar
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Literal, TypeGuard, TypeVar
 
 from livestatus import OnlySites, SiteId
 
-from cmk.utils.defines import short_service_state_name
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.hostaddress import HostName
+from cmk.utils.statename import short_service_state_name
+from cmk.utils.user import UserId
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
@@ -23,9 +24,9 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
+from cmk.gui.painter.v0.painters import paint_custom_var
 from cmk.gui.painter_options import paint_age
-from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -33,24 +34,30 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     SingleInfos,
+    SorterName,
     SorterSpec,
     ViewSpec,
     VisualContext,
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
+from cmk.gui.views.command import Command, CommandActionResult, CommandRegistry, CommandSpec
 from cmk.gui.views.sorter import (
+    cmp_custom_variable,
     cmp_num_split,
     cmp_simple_number,
     cmp_simple_string,
     declare_1to1_sorter,
+    Sorter,
+    SorterRegistry,
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
+from cmk.gui.visuals.filter import Filter
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices
@@ -58,10 +65,29 @@ from .livestatus import execute_command
 from .permission_section import PermissionSectionEventConsole
 
 
-def register(data_source_registry: DataSourceRegistry, painter_registry: PainterRegistry) -> None:
+def register(
+    data_source_registry: DataSourceRegistry,
+    painter_registry: PainterRegistry,
+    command_registry: CommandRegistry,
+    sorter_registry: SorterRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
     data_source_registry.register(DataSourceECEvents)
     data_source_registry.register(DataSourceECEventHistory)
 
+    multisite_builtin_views["ec_events"] = EC_EVENTS
+    multisite_builtin_views["ec_events_of_monhost"] = EC_EVENTS_OF_MONHOST
+    multisite_builtin_views["ec_events_of_host"] = EC_EVENTS_OF_HOST
+    multisite_builtin_views["ec_event"] = EC_EVENT
+    multisite_builtin_views["ec_history_recent"] = EC_HISTORY_RECENT
+    multisite_builtin_views["ec_historyentry"] = EC_HISTORYENTRY
+    multisite_builtin_views["ec_history_of_event"] = EC_HISTORY_OF_EVENT
+    multisite_builtin_views["ec_history_of_host"] = EC_HISTORY_OF_HOST
+    multisite_builtin_views["ec_event_mobile"] = EC_EVENT_MOBILE
+    multisite_builtin_views["ec_events_mobile"] = EC_EVENTS_MOBILE
+
+    painter_registry.register(PainterSvcServicelevel)
+    painter_registry.register(PainterHostServicelevel)
     painter_registry.register(PainterEventId)
     painter_registry.register(PainterEventCount)
     painter_registry.register(PainterEventText)
@@ -99,6 +125,10 @@ def register(data_source_registry: DataSourceRegistry, painter_registry: Painter
     command_registry.register(CommandECArchiveEvent)
     command_registry.register(CommandECArchiveEventsOfHost)
 
+    sorter_registry.register(SorterServicelevel)
+
+    declare_1to1_sorter("svc_servicelevel", cmp_simple_number)
+    declare_1to1_sorter("host_servicelevel", cmp_simple_number)
     declare_1to1_sorter("event_id", cmp_simple_number)
     declare_1to1_sorter("event_count", cmp_simple_number)
     declare_1to1_sorter("event_text", cmp_simple_string)
@@ -123,6 +153,17 @@ def register(data_source_registry: DataSourceRegistry, painter_registry: Painter
     declare_1to1_sorter("history_what", cmp_simple_string)
     declare_1to1_sorter("history_who", cmp_simple_string)
     declare_1to1_sorter("history_addinfo", cmp_simple_string)
+
+    permission_registry.register(PermissionECSeeAll)
+    permission_registry.register(PermissionECSeeUnrelated)
+    permission_registry.register(PermissionECSeeInTacticalOverview)
+    permission_registry.register(PermissionECUpdateEvent)
+    permission_registry.register(PermissionECUpdateComment)
+    permission_registry.register(PermissionECUpdateContact)
+    permission_registry.register(PermissionECChangeEventState)
+    permission_registry.register(PermissionECCustomActions)
+    permission_registry.register(PermissionECArchiveEvent)
+    permission_registry.register(PermissionECArchiveEventsOfHost)
 
 
 #   .--Datasources---------------------------------------------------------.
@@ -226,44 +267,38 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
                 row[key] = ""
 
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="seeall",
-        title=_("See all events"),
-        description=_(
-            "If a user lacks this permission then he/she can see only those events that "
-            "originate from a host that he/she is a contact for."
-        ),
-        defaults=default_authorized_builtin_role_ids,
-    )
+PermissionECSeeAll = Permission(
+    section=PermissionSectionEventConsole,
+    name="seeall",
+    title=_("See all events"),
+    description=_(
+        "If a user lacks this permission then he/she can see only those events that "
+        "originate from a host that he/she is a contact for."
+    ),
+    defaults=default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="seeunrelated",
-        title=_("See events not related to a known host"),
-        description=_(
-            "If that user does not have the permission <i>See all events</i> then this permission "
-            "controls whether he/she can see events that are not related to a host in the monitoring "
-            "and that do not have been assigned specific contact groups to via the event rule."
-        ),
-        defaults=default_authorized_builtin_role_ids,
-    )
+PermissionECSeeUnrelated = Permission(
+    section=PermissionSectionEventConsole,
+    name="seeunrelated",
+    title=_("See events not related to a known host"),
+    description=_(
+        "If that user does not have the permission <i>See all events</i> then this permission "
+        "controls whether he/she can see events that are not related to a host in the monitoring "
+        "and that do not have been assigned specific contact groups to via the event rule."
+    ),
+    defaults=default_authorized_builtin_role_ids,
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="see_in_tactical_overview",
-        title=_("See events in the sidebar element 'Overview'"),
-        description=_(
-            "Whether or not the user is permitted to see the number of open events in the "
-            "sidebar element 'Overview'."
-        ),
-        defaults=default_authorized_builtin_role_ids,
-    )
+PermissionECSeeInTacticalOverview = Permission(
+    section=PermissionSectionEventConsole,
+    name="see_in_tactical_overview",
+    title=_("See events in the sidebar element 'Overview'"),
+    description=_(
+        "Whether or not the user is permitted to see the number of open events in the "
+        "sidebar element 'Overview'."
+    ),
+    defaults=default_authorized_builtin_role_ids,
 )
 
 
@@ -344,6 +379,52 @@ class DataSourceECEventHistory(ABCDataSource):
 #   |                |_|   \__,_|_|_| |_|\__\___|_|  |___/                 |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class PainterSvcServicelevel(Painter):
+    @property
+    def ident(self) -> str:
+        return "svc_servicelevel"
+
+    def title(self, cell: Cell) -> str:
+        return _("Service service level")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Service Level")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["service_custom_variable_names", "service_custom_variable_values"]
+
+    @property
+    def sorter(self) -> SorterName:
+        return "servicelevel"
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return paint_custom_var("service", "EC_SL", row, active_config.mkeventd_service_levels)
+
+
+class PainterHostServicelevel(Painter):
+    @property
+    def ident(self) -> str:
+        return "host_servicelevel"
+
+    def title(self, cell: Cell) -> str:
+        return _("Host service level")
+
+    def short_title(self, cell: Cell) -> str:
+        return _("Service Level")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["host_custom_variable_names", "host_custom_variable_values"]
+
+    @property
+    def sorter(self) -> SorterName:
+        return "servicelevel"
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return paint_custom_var("host", "EC_SL", row, active_config.mkeventd_service_levels)
 
 
 class PainterEventId(Painter):
@@ -1112,36 +1193,30 @@ class PainterHistoryAddinfo(Painter):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionECUpdateEvent = permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="update",
-        title=_l("Update an event"),
-        description=_l("Needed for acknowledging and changing the comment and contact of an event"),
-        defaults=["user", "admin"],
-    )
+PermissionECUpdateEvent = Permission(
+    section=PermissionSectionEventConsole,
+    name="update",
+    title=_l("Update an event"),
+    description=_l("Needed for acknowledging and changing the comment and contact of an event"),
+    defaults=["user", "admin"],
 )
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="update_comment",
-        title=_l("Update an event: change comment"),
-        description=_l("Needed for changing a comment when updating an event"),
-        defaults=["user", "admin"],
-    )
+PermissionECUpdateComment = Permission(
+    section=PermissionSectionEventConsole,
+    name="update_comment",
+    title=_l("Update an event: change comment"),
+    description=_l("Needed for changing a comment when updating an event"),
+    defaults=["user", "admin"],
 )
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
-permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="update_contact",
-        title=_l("Update an event: change contact"),
-        description=_l("Needed for changing a contact when updating an event"),
-        defaults=["user", "admin"],
-    )
+PermissionECUpdateContact = Permission(
+    section=PermissionSectionEventConsole,
+    name="update_contact",
+    title=_l("Update an event: change contact"),
+    description=_l("Needed for changing a contact when updating an event"),
+    defaults=["user", "admin"],
 )
 
 
@@ -1149,6 +1224,19 @@ class ECCommand(Command):
     @property
     def tables(self):
         return ["event"]
+
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
+        return HTML(
+            _("Affected %s: %s")
+            % (
+                ungettext(
+                    "event",
+                    "events",
+                    len_action_rows,
+                ),
+                len_action_rows,
+            )
+        )
 
     def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
@@ -1167,16 +1255,20 @@ class CommandECUpdateEvent(ECCommand):
         return _("Update & acknowledge")
 
     @property
+    def confirm_title(self) -> str:
+        return (
+            _("Update & acknowledge event?")
+            if request.var("_mkeventd_acknowledge")
+            else _("Update event?")
+        )
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Update & acknowledge") if request.var("_mkeventd_acknowledge") else _l("Update")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
-
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" the following %d Event Console %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_table(border="0", cellpadding="0", cellspacing="3")
@@ -1201,7 +1293,10 @@ class CommandECUpdateEvent(ECCommand):
         html.close_td()
         html.close_tr()
         html.close_table()
-        html.button("_mkeventd_update", _("Update"))
+        html.open_div(class_="group")
+        html.button("_mkeventd_update", _("Update"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -1229,22 +1324,20 @@ class CommandECUpdateEvent(ECCommand):
                     comment,
                     contact,
                 ),
-                _("update"),
+                self.confirm_dialog_options(cmdtag, row, len(action_rows)),
             )
         return None
 
 
-PermissionECChangeEventState = permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="changestate",
-        title=_l("Change event state"),
-        description=_l(
-            "This permission allows to change the state classification of an event "
-            "(e.g. from CRIT to WARN)."
-        ),
-        defaults=["user", "admin"],
-    )
+PermissionECChangeEventState = Permission(
+    section=PermissionSectionEventConsole,
+    name="changestate",
+    title=_l("Change event state"),
+    description=_l(
+        "This permission allows to change the state classification of an event "
+        "(e.g. from CRIT to WARN)."
+    ),
+    defaults=["user", "admin"],
 )
 
 
@@ -1258,21 +1351,37 @@ class CommandECChangeState(ECCommand):
         return _("Change state")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Change event state?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Change")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECChangeEventState
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" of the following %d Event Console %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
+    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+        return HTML(
+            "<br><br>"
+            + _("New state: %s")
+            % {
+                0: _("OK"),
+                1: _("WARN"),
+                2: _("CRIT"),
+                3: _("UNKNOWN"),
+            }[MonitoringState().from_html_vars("_mkeventd_state")]
         )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_mkeventd_changestate", _("Change Event state to:"))
-        html.nbsp()
-        MonitoringState().render_input("_mkeventd_state", 2)
+        MonitoringState(label="Select new event state").render_input("_mkeventd_state", 2)
+        html.br()
+        html.br()
+        html.open_div(class_="group")
+        html.button("_mkeventd_changestate", _("Change state"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -1280,21 +1389,22 @@ class CommandECChangeState(ECCommand):
         if request.var("_mkeventd_changestate"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
             state = MonitoringState().from_html_vars("_mkeventd_state")
-            return f"CHANGESTATE;{events};{user.id};{state}", _("change the state")
+            return (
+                f"CHANGESTATE;{events};{user.id};{state}",
+                self.confirm_dialog_options(cmdtag, row, len(action_rows)),
+            )
         return None
 
 
-PermissionECCustomActions = permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="actions",
-        title=_l("Perform custom action"),
-        description=_l(
-            "This permission is needed for performing the configured actions "
-            "(execution of scripts and sending emails)."
-        ),
-        defaults=["user", "admin"],
-    )
+PermissionECCustomActions = Permission(
+    section=PermissionSectionEventConsole,
+    name="actions",
+    title=_l("Perform custom action"),
+    description=_l(
+        "This permission is needed for performing the configured actions "
+        "(execution of scripts and sending emails)."
+    ),
+    defaults=["user", "admin"],
 )
 
 
@@ -1308,40 +1418,44 @@ class CommandECCustomAction(ECCommand):
         return _("Custom action")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Execute custom action '%s'?") % list(request.itervars(prefix="_action_"))[0][1]
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Execute")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" for the following %d Event Console  %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
-
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        html.open_div(class_="group")
         for action_id, title in action_choices(omit_hidden=True):
-            html.button("_action_" + action_id, title)
+            html.button("_action_" + action_id, title, cssclass="border_hot")
             html.br()
+            html.br()
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        for action_id, title in action_choices(omit_hidden=True):
+        for action_id, _title in action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
-                title = _('execute the action "%s"') % title
-                return "ACTION;{};{};{}".format(row["event_id"], user.id, action_id), title
+                return (
+                    "ACTION;{};{};{}".format(row["event_id"], user.id, action_id),
+                    self.confirm_dialog_options(cmdtag, row, len(action_rows)),
+                )
         return None
 
 
-PermissionECArchiveEvent = permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="delete",
-        title=_l("Archive an event"),
-        description=_l("Finally archive an event without any further action"),
-        defaults=["user", "admin"],
-    )
+PermissionECArchiveEvent = Permission(
+    section=PermissionSectionEventConsole,
+    name="delete",
+    title=_l("Archive an event"),
+    description=_l("Finally archive an event without any further action"),
+    defaults=["user", "admin"],
 )
 
 
@@ -1355,19 +1469,22 @@ class CommandECArchiveEvent(ECCommand):
         return _("Archive event")
 
     @property
+    def confirm_title(self) -> str:
+        return "%s?" % self.title
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Archive")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def user_dialog_suffix(
-        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
-    ) -> str:
-        return title + _(" the following %d Event Console %s") % (
-            len_action_rows,
-            ungettext("event", "events", len_action_rows),
-        )
-
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
-        html.button("_delete_event", _("Archive Event"))
+        html.open_div(class_="group")
+        html.button("_delete_event", _("Archive Event"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -1375,19 +1492,16 @@ class CommandECArchiveEvent(ECCommand):
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
             command = f"DELETE;{events};{user.id}"
-            title = _("<b>archive</b>")
-            return command, title
+            return command, self.confirm_dialog_options(cmdtag, row, len(action_rows))
         return None
 
 
-PermissionECArchiveEventsOfHost = permission_registry.register(
-    Permission(
-        section=PermissionSectionEventConsole,
-        name="archive_events_of_hosts",
-        title=_l("Archive events of hosts"),
-        description=_l("Archive all open events of all hosts shown in host views"),
-        defaults=["user", "admin"],
-    )
+PermissionECArchiveEventsOfHost = Permission(
+    section=PermissionSectionEventConsole,
+    name="archive_events_of_hosts",
+    title=_l("Archive events of hosts"),
+    description=_l("Archive all open events of all hosts shown in host views"),
+    defaults=["user", "admin"],
 )
 
 
@@ -1401,12 +1515,31 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return _("Archive events of hosts")
 
     @property
+    def confirm_title(self) -> str:
+        return _("Archive all events of this host?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Archive")
+
+    @property
     def permission(self) -> Permission:
         return PermissionECArchiveEventsOfHost
 
     @property
     def tables(self):
         return ["service"]
+
+    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+        return HTML(
+            _(
+                "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."
+            )
+            % request.var("host")
+        )
+
+    def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
+        return HTML("")
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.help(
@@ -1416,14 +1549,20 @@ class CommandECArchiveEventsOfHost(ECCommand):
                 "configured."
             )
         )
+        html.open_div(class_="group")
         html.button("_archive_events_of_hosts", _("Archive events"), cssclass="hot")
+        html.button("_cancel", _("Cancel"))
+        html.close_div()
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_archive_events_of_hosts"):
             commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
-            return commands, "<b>archive all events</b> of"
+            return (
+                commands,
+                self.confirm_dialog_options(cmdtag, row, len(action_rows)),
+            )
         return None
 
 
@@ -1436,6 +1575,23 @@ class CommandECArchiveEventsOfHost(ECCommand):
 #   |                 |____/ \___/|_|   \__\___|_|  |___/                  |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+
+class SorterServicelevel(Sorter):
+    @property
+    def ident(self) -> str:
+        return "servicelevel"
+
+    @property
+    def title(self) -> str:
+        return _("Servicelevel")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["custom_variables"]
+
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
+        return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
 def cmp_simple_state(column, ra, rb):
@@ -1483,7 +1639,7 @@ def mkeventd_view(d):
 
 
 # Table of all open events
-multisite_builtin_views["ec_events"] = mkeventd_view(
+EC_EVENTS = mkeventd_view(
     {
         "group_painters": [],
         "sorters": [SorterSpec(sorter="event_last", negate=False)],
@@ -1545,8 +1701,7 @@ multisite_builtin_views["ec_events"] = mkeventd_view(
     }
 )
 
-
-multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
+EC_EVENTS_OF_MONHOST = mkeventd_view(
     {
         "hidden": True,
         "group_painters": [],
@@ -1597,7 +1752,7 @@ multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
+EC_EVENTS_OF_HOST = mkeventd_view(
     {
         "hidden": True,
         "group_painters": [],
@@ -1649,7 +1804,7 @@ multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_event"] = mkeventd_view(
+EC_EVENT = mkeventd_view(
     {
         "browser_reload": 0,
         "hidden": True,
@@ -1700,7 +1855,7 @@ multisite_builtin_views["ec_event"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_history_recent"] = mkeventd_view(
+EC_HISTORY_RECENT = mkeventd_view(
     {
         "icon": {"icon": "event_console", "emblem": "time"},
         "group_painters": [],
@@ -1771,7 +1926,7 @@ multisite_builtin_views["ec_history_recent"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_historyentry"] = mkeventd_view(
+EC_HISTORYENTRY = mkeventd_view(
     {
         "browser_reload": 0,
         "hidden": True,
@@ -1826,7 +1981,7 @@ multisite_builtin_views["ec_historyentry"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
+EC_HISTORY_OF_EVENT = mkeventd_view(
     {
         "browser_reload": 0,
         "hidden": True,
@@ -1869,7 +2024,7 @@ multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
+EC_HISTORY_OF_HOST = mkeventd_view(
     {
         "browser_reload": 0,
         "hidden": True,
@@ -1940,7 +2095,7 @@ multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
     }
 )
 
-multisite_builtin_views["ec_event_mobile"] = {
+EC_EVENT_MOBILE: ViewSpec = {
     "browser_reload": 0,
     "column_headers": "pergroup",
     "context": {},
@@ -1997,7 +2152,7 @@ multisite_builtin_views["ec_event_mobile"] = {
     "packaged": False,
 }
 
-multisite_builtin_views["ec_events_mobile"] = {
+EC_EVENTS_MOBILE: ViewSpec = {
     "browser_reload": 60,
     "column_headers": "pergroup",
     "context": {

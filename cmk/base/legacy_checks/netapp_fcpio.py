@@ -6,21 +6,27 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, exists, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    exists,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+    startswith,
+)
 
 
 def check_netapp_fcpio(item, params, info):
     read, write = map(int, info[0])
     this_time = int(time.time())
-    avg_read = get_rate("netapp_fcpio.read", this_time, read)
-    avg_write = get_rate("netapp_fcpio.write", this_time, write)
+    avg_read = get_rate(
+        get_value_store(), "netapp_fcpio.read", this_time, read, raise_overflow=True
+    )
+    avg_write = get_rate(
+        get_value_store(), "netapp_fcpio.write", this_time, write, raise_overflow=True
+    )
 
     yield check_levels(
         avg_read,
@@ -47,9 +53,9 @@ check_info["netapp_fcpio"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.789.1.17",
         oids=["20", "21"],
     ),
-    check_function=check_netapp_fcpio,
-    discovery_function=lambda info: [(None, {})],
     service_name="FCP I/O",
+    discovery_function=lambda info: [(None, {})],
+    check_function=check_netapp_fcpio,
     check_ruleset_name="netapp_fcportio",
     check_default_parameters={},
 )

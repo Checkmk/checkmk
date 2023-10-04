@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 
@@ -19,13 +19,13 @@ from cmk.base.config import check_info
 # computeRackUnitMbTempStats<TAB>dn sys/rack-unit-2/board/temp-stats<TAB>ambientTemp 50.0<TAB>frontTemp 50.0<TAB>ioh1Temp 50.0<TAB>ioh2Temp 50.0<TAB>rearTemp 50.0
 
 
-def parse_ucs_c_rack_server_temp(info):
+def parse_ucs_c_rack_server_temp(string_table):
     """
     Returns dict with indexed processors, memory units and motherboards mapped to keys and
     temperature as value.
     """
     parsed = {}
-    for line in info:
+    for line in string_table:
         key_value_pairs = [kv.split(" ", 1) for kv in line[1:]]
         if "cpu-" in key_value_pairs[0][1]:
             cpu = (
@@ -70,17 +70,22 @@ def parse_ucs_c_rack_server_temp(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_ucs_c_rack_server_temp(item, params, temperature):
+def check_ucs_c_rack_server_temp(item, params, parsed):
+    if (temperature := parsed.get(item)) is None:
+        return
     yield check_temperature(
         temperature, params, "ucs_c_rack_server_%s" % item.lower().replace(" ", "_")
     )
 
 
+def discover_ucs_c_rack_server_temp(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ucs_c_rack_server_temp"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_temp,
-    discovery_function=discover(),
+    service_name="Temperature %s",
+    discovery_function=discover_ucs_c_rack_server_temp,
     check_function=check_ucs_c_rack_server_temp,
     check_ruleset_name="temperature",
-    service_name="Temperature %s",
 )

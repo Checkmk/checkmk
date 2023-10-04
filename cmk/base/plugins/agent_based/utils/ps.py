@@ -5,24 +5,18 @@
 import contextlib
 import re
 import time
-from dataclasses import dataclass
-from html import escape
-from typing import (
-    Any,
+from collections.abc import (
     Callable,
-    Dict,
     Generator,
     Iterable,
     Iterator,
-    List,
-    Literal,
     Mapping,
     MutableMapping,
-    Optional,
     Sequence,
-    Tuple,
-    Union,
 )
+from dataclasses import dataclass
+from html import escape
+from typing import Any, Literal
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -42,25 +36,25 @@ from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLab
 from . import cpu, memory
 
 # typing: nothing intentional, just adapt to sad reality
-_ProcessValue = Tuple[Union[str, float], str]
-_Process = List[Tuple[str, _ProcessValue]]
+_ProcessValue = tuple[str | float, str]
+_Process = list[tuple[str, _ProcessValue]]
 
 
 @dataclass(frozen=True)
 class PsInfo:
-    user: Optional[str] = None
-    virtual: Optional[int] = None
-    physical: Optional[int] = None
+    user: str | None = None
+    virtual: int | None = None
+    physical: int | None = None
     # TODO: not all of these should be strings, I guess.
-    cputime: Optional[str] = None
-    process_id: Optional[str] = None
-    pagefile: Optional[str] = None
-    usermode_time: Optional[str] = None
-    kernelmode_time: Optional[str] = None
-    handles: Optional[str] = None
-    threads: Optional[str] = None
-    uptime: Optional[str] = None
-    cgroup: Optional[str] = None
+    cputime: str | None = None
+    process_id: str | None = None
+    pagefile: str | None = None
+    usermode_time: str | None = None
+    kernelmode_time: str | None = None
+    handles: str | None = None
+    threads: str | None = None
+    uptime: str | None = None
+    cgroup: str | None = None
 
     _FIELDS = (
         "user",
@@ -94,19 +88,19 @@ class PsInfo:
         )
 
 
-Section = Tuple[int, Sequence[Tuple[PsInfo, Sequence[str]]], int]
+Section = tuple[int, Sequence[tuple[PsInfo, Sequence[str]]], int]
 
-_InventorySpec = Tuple[
+_InventorySpec = tuple[
     str,
-    Optional[str],
-    Optional[Union[str, Literal[False]]],
-    Tuple[Optional[str], bool],
+    str | None,
+    str | Literal[False] | None,
+    tuple[str | None, bool],
     Mapping[str, str],
     Mapping[str, Any],
 ]
 
 # process_lines: (Node, PsInfo, cmd_line, time)
-ProcessLine = Tuple[Optional[str], PsInfo, Sequence[str], int]
+ProcessLine = tuple[str | None, PsInfo, Sequence[str], int]
 
 
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]) -> Sequence[_InventorySpec]:
@@ -247,8 +241,8 @@ def format_process_list(processes: Iterable[_Process], html_output: bool) -> str
         if unit == "kB":
             return render.bytes(float(value) * 1024)
         if isinstance(value, float):
-            return "%.1f%s" % (value, unit)
-        unescaped = "%s%s" % (value, unit)
+            return f"{value:.1f}{unit}"
+        unescaped = f"{value}{unit}"
         # Handling of backslash-n vs newline is fundamentally broken when talking to the core.
         # If we're creating HTML anyway, we can circumnavigate that...
         return escape(unescaped).replace("\\", "&bsol;") if html_output else unescaped
@@ -338,9 +332,9 @@ class ProcessAggregator:
         self.resident_size = 0
         self.handle_count = 0
         self.percent_cpu = 0.0
-        self.max_elapsed: Optional[float] = None
-        self.min_elapsed: Optional[float] = None
-        self.processes: List[_Process] = []
+        self.max_elapsed: float | None = None
+        self.min_elapsed: float | None = None
+        self.processes: list[_Process] = []
         self.running_on_nodes: set = set()
 
     def __getitem__(self, item: int) -> _Process:
@@ -510,10 +504,10 @@ def process_capture(
 
 def discover_ps(
     params: Sequence[Mapping[str, Any]],
-    section_ps: Optional[Section],
-    section_mem: Optional[memory.SectionMem],
-    section_mem_used: Optional[Dict[str, memory.SectionMem]],
-    section_cpu: Optional[cpu.Section],
+    section_ps: Section | None,
+    section_mem: memory.SectionMem | None,
+    section_mem_used: dict[str, memory.SectionMem] | None,
+    section_cpu: cpu.Section | None,
 ) -> DiscoveryResult:
     if not section_ps:
         return
@@ -530,7 +524,7 @@ def discover_ps(
 
             # User capturing on rule
             if userspec is False:
-                i_userspec: Union[None, str] = process_info.user
+                i_userspec: None | str = process_info.user
             else:
                 i_userspec = userspec
 
@@ -561,7 +555,7 @@ def discover_ps(
 def unused_value_remover(
     value_store: MutableMapping[str, Any],
     key: str,
-) -> Generator[Dict[str, Tuple[float, float]], None, None]:
+) -> Generator[dict[str, tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
 
     This plugin uses the process IDs in the keys to persist values.
@@ -708,7 +702,7 @@ def check_averageable_metric(
     metric_id: str,
     avg_metric_id: str,
     metric_name: str,
-    metric_value: Union[float, int],
+    metric_value: float | int,
     levels: tuple[float, float] | None,
     average_mins: int | None,
     render_fn: Callable,
@@ -839,6 +833,15 @@ def uptime_check(
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Running for",
+        )
+        yield Metric(
+            name="age_youngest",
+            value=min_elapsed,
+        )
+        yield Metric(
+            name="age_oldest",
+            value=max_elapsed,
+            levels=params.get("max_age"),
         )
     else:
         yield from check_levels(

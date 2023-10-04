@@ -8,16 +8,15 @@
 
 import time
 
-from cmk.base.check_api import (
-    get_bytes_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    RAISE,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
@@ -199,8 +198,9 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             return None
 
     now = time.time()
+    value_store = get_value_store()
     for protocol, (protoname, values) in protocol_map.items():
-        data = parsed.get("%s.%s" % (protocol, item))
+        data = parsed.get(f"{protocol}.{item}")
         if not data:
             continue
 
@@ -214,23 +214,24 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
 
             try:
                 rate = get_rate(
+                    value_store,
                     f"{protocol}.{what}",
                     ref,
                     int(data[what]) * scale,
-                    onwrap=RAISE,
+                    raise_overflow=True,
                 )
                 yield (
                     0,
                     f"{protoname} {perftext}: {format_func(rate)}",  # pylint: disable=not-callable
                     [(perfname, rate)],
                 )
-            except MKCounterWrapped:
+            except IgnoreResultsError:
                 yield (0, f"{protoname} {perftext}: -")
 
 
 check_info["netapp_api_vs_traffic"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_vs_traffic,
+    service_name="Traffic vServer %s",
     discovery_function=inventory_netapp_api_vs_traffic,
     check_function=check_netapp_api_vs_traffic,
-    service_name="Traffic vServer %s",
 )

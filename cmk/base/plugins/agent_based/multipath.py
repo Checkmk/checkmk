@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, Mapping, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils import multipath
 
@@ -126,7 +129,7 @@ def parse_multipath(  # pylint: disable=too-many-branches
             if reg_prio.search(l):
                 group["state"] = "".join(line[3:])
             elif len(line) >= 4 and reg_lun.match(line[1]):
-                luninfo = "%s(%s)" % (line[1], line[2])
+                luninfo = f"{line[1]}({line[2]})"
                 lun_info.append(luninfo)
                 state = line[4]
                 if "active" not in state:

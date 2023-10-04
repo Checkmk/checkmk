@@ -19,16 +19,16 @@ def check_fireeye_powersupplies(_no_item, _no_params, info):
     for text, (state, state_readable) in check_fireeye_states(
         [(status, "Status"), (health, "Health")]
     ).items():
-        yield state, "%s: %s" % (text, state_readable)
+        yield state, f"{text}: {state_readable}"
 
 
 check_info["fireeye_powersupplies"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
-    check_function=check_fireeye_powersupplies,
-    service_name="Power supplies summary",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.3.1",
         oids=["1", "2"],
     ),
+    service_name="Power supplies summary",
+    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    check_function=check_fireeye_powersupplies,
 )

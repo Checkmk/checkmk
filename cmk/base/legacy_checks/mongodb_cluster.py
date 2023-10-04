@@ -18,13 +18,13 @@ from cmk.base.config import check_info
 Section = Mapping
 
 
-def parse_mongodb_cluster(info):
+def parse_mongodb_cluster(string_table):
     """
-    :param info: dictionary with all data for all checks and subchecks
+    :param string_table: dictionary with all data for all checks and subchecks
     :return:
     """
-    if info:
-        return json.loads(str(info[0][0]))
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 
@@ -78,9 +78,9 @@ def check_mongodb_cluster_databases(item, _params, databases_dict):
 
 check_info["mongodb_cluster"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_cluster,
+    service_name="MongoDB Database: %s",
     discovery_function=inventory_mongodb_cluster_databases,
     check_function=check_mongodb_cluster_databases,
-    service_name="MongoDB Database: %s",
     check_ruleset_name="mongodb_cluster",
 )
 
@@ -107,7 +107,7 @@ def inventory_mongodb_cluster_shards(databases_dict):
     db_coll_list = []
     for db_name in databases_dict.get("databases", {}):
         db_coll_list += [
-            ("%s.%s" % (db_name, coll_name), {})
+            (f"{db_name}.{coll_name}", {})
             for coll_name in databases_dict.get("databases").get(db_name).get("collections", [])
         ]
     return db_coll_list
@@ -359,7 +359,7 @@ def _generate_mongodb_cluster_long_output(
             )
         )
 
-    return 0, "\n%s\n%s" % ("\n".join(collections_info), "\n".join(shard_info)), perf_data
+    return 0, "\n{}\n{}".format("\n".join(collections_info), "\n".join(shard_info)), perf_data
 
 
 def _mongodb_cluster_get_shard_statistic_info(
@@ -392,7 +392,7 @@ def _mongodb_cluster_get_shard_statistic_info(
     estChunkData = (float(shard_size) / number_of_chunks) if number_of_chunks > 0 else 0
     estChunkCount = (float(number_of_documents) / number_of_chunks) if number_of_chunks > 0 else 0
 
-    shard_name_info = "%s%s" % (shard_name, " (primary)" if is_primary else "")
+    shard_name_info = "{}{}".format(shard_name, " (primary)" if is_primary else "")
 
     output = ["Shard %s" % shard_name_info]
     output.append("- Chunks: %d" % number_of_chunks)
@@ -479,9 +479,10 @@ def _mongodb_cluster_split_namespace(namespace):
 
 
 check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
+    service_name="MongoDB Cluster: %s",
+    sections=["mongodb_cluster"],
     discovery_function=inventory_mongodb_cluster_shards,
     check_function=check_mongodb_cluster_shards,
-    service_name="MongoDB Cluster: %s",
     check_ruleset_name="mongodb_cluster",
     check_default_parameters={"levels_number_jumbo": (1, 2)},
 )
@@ -513,7 +514,8 @@ def check_mongodb_cluster_balancer(_item, _params, databases_dict):
 
 
 check_info["mongodb_cluster.balancer"] = LegacyCheckDefinition(
+    service_name="MongoDB Balancer",
+    sections=["mongodb_cluster"],
     discovery_function=discover_mongodb_cluster_balancer,
     check_function=check_mongodb_cluster_balancer,
-    service_name="MongoDB Balancer",
 )

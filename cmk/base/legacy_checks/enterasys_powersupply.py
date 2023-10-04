@@ -46,7 +46,7 @@ def check_enterasys_powersupply(item, params, info):
 
             redun_mapped = redundancy_types.get(redun, "unknown[%s]" % redun)
             if redun and int(redun) in params["redundancy_ok_states"]:
-                return 0, "Status: working and %s (%s)" % (
+                return 0, "Status: working and {} ({})".format(
                     redun_mapped,
                     supply_types.get(typ, "unknown[%s]" % typ),
                 )
@@ -56,13 +56,13 @@ def check_enterasys_powersupply(item, params, info):
 
 check_info["enterasys_powersupply"] = LegacyCheckDefinition(
     detect=DETECT_ENTERASYS,
-    check_function=check_enterasys_powersupply,
-    discovery_function=inventory_enterasys_powersupply,
-    service_name="PSU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.3.1.2.1.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
+    service_name="PSU %s",
+    discovery_function=inventory_enterasys_powersupply,
+    check_function=check_enterasys_powersupply,
     check_ruleset_name="enterasys_powersupply",
     check_default_parameters={
         "redundancy_ok_states": [

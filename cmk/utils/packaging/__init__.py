@@ -5,7 +5,7 @@
 
 import logging
 import subprocess
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -18,27 +18,27 @@ import cmk.utils.store as store
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
-from ._installed import Installer
-from ._mkp import (  # noqa: F401
-    create_mkp,
-    extract_manifest,
-    extract_manifest_optionally,
-    extract_manifests,
-    extract_mkp,
-    Manifest,
-    manifest_template,
-    PackagePart,
-    read_manifest_optionally,
-)
-from ._parts import (  # noqa: F401
-    CONFIG_PARTS,
-    PackageOperationCallbacks,
-    PathConfig,
-    permissions,
-    ui_title,
-)
-from ._reporter import all_local_files, all_rule_pack_files
-from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
+from ._installed import Installer as Installer
+from ._mkp import create_mkp as create_mkp
+from ._mkp import extract_manifest as extract_manifest
+from ._mkp import extract_manifest_optionally as extract_manifest_optionally
+from ._mkp import extract_manifests as extract_manifests
+from ._mkp import extract_mkp as extract_mkp
+from ._mkp import Manifest as Manifest
+from ._mkp import manifest_template as manifest_template
+from ._mkp import PackagePart as PackagePart
+from ._mkp import read_manifest_optionally as read_manifest_optionally
+from ._parts import CONFIG_PARTS as CONFIG_PARTS
+from ._parts import PackageOperationCallbacks as PackageOperationCallbacks
+from ._parts import PathConfig as PathConfig
+from ._parts import permissions as permissions
+from ._parts import ui_title as ui_title
+from ._reporter import all_local_files as all_local_files
+from ._reporter import all_rule_pack_files as all_rule_pack_files
+from ._type_defs import PackageError as PackageError
+from ._type_defs import PackageID as PackageID
+from ._type_defs import PackageName as PackageName
+from ._type_defs import PackageVersion as PackageVersion
 
 _logger = logging.getLogger(__name__)
 
@@ -87,12 +87,11 @@ def release(
     installer.remove_installed_manifest(pacname)
 
 
-def uninstall(
+def _uninstall(
     installer: Installer,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
-    post_package_change_actions: bool = True,
 ) -> None:
     if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
         raise PackageError(", ".join(err))
@@ -101,9 +100,6 @@ def uninstall(
         callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
-
-    if post_package_change_actions:
-        _execute_post_package_change_actions(manifest)
 
 
 class PackageStore:
@@ -162,9 +158,7 @@ class PackageStore:
             return local_package_path
 
         # if we're on the remote site, we have to consider this one:
-        if (
-            enabled_package_path := cmk.utils.paths.local_enabled_packages_dir / base_name
-        ).exists():
+        if (enabled_package_path := self.enabled_packages / base_name).exists():
             return enabled_package_path
 
         if (shipped_package_path := self.shipped_packages / base_name).exists():
@@ -214,12 +208,13 @@ def disable(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     package_id: PackageID,
-) -> None:
+) -> Manifest | None:
     if (
         installed := installer.get_installed_manifest(package_id.name)
     ) is not None and installed.version == package_id.version:
-        uninstall(installer, path_config, callbacks, installed)
+        _uninstall(installer, path_config, callbacks, installed)
     package_store.remove_enabled_mark(package_id)
+    return installed
 
 
 def create(
@@ -304,9 +299,8 @@ def install(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
-    allow_outdated: bool = True,
-    post_package_change_actions: bool = True,
     site_version: str,
+    allow_outdated: bool = True,
 ) -> Manifest:
     try:
         return _install(
@@ -317,7 +311,6 @@ def install(
             callbacks,
             site_version=site_version,
             allow_outdated=allow_outdated,
-            post_package_change_actions=post_package_change_actions,
         )
     finally:
         # it is enabled, even if installing failed
@@ -337,7 +330,6 @@ def _install(
     #  b) users cannot even modify packages without installing them
     # Reconsider!
     allow_outdated: bool,
-    post_package_change_actions: bool,
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -375,9 +367,6 @@ def _install(
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
-
-    if post_package_change_actions:
-        _execute_post_package_change_actions(manifest)
 
     return manifest
 
@@ -609,29 +598,29 @@ def update_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     site_version: str,
-) -> None:
+) -> tuple[Sequence[Manifest], Sequence[Manifest]]:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    _deinstall_inapplicable_active_packages(
-        installer,
-        path_config,
-        callbacks,
-        post_package_change_actions=False,
-        site_version=site_version,
+    # order matters here (deinstall, then install)!
+    return (
+        _deinstall_inapplicable_active_packages(
+            installer,
+            path_config,
+            callbacks,
+            site_version=site_version,
+        ),
+        _install_applicable_inactive_packages(
+            package_store,
+            installer,
+            path_config,
+            callbacks,
+            site_version=site_version,
+        ),
     )
-    _install_applicable_inactive_packages(
-        package_store,
-        installer,
-        path_config,
-        callbacks,
-        post_package_change_actions=False,
-        site_version=site_version,
-    )
-    _execute_post_package_change_actions(None)
 
 
 def _deinstall_inapplicable_active_packages(
@@ -639,9 +628,9 @@ def _deinstall_inapplicable_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
-    post_package_change_actions: bool,
     site_version: str,
-) -> None:
+) -> Sequence[Manifest]:
+    uninstalled = []
     for manifest in installer.get_installed_manifests():
         try:
             _raise_for_installability(
@@ -654,15 +643,16 @@ def _deinstall_inapplicable_active_packages(
             )
         except PackageError as exc:
             _logger.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
-            uninstall(
+            _uninstall(
                 installer,
                 path_config,
                 callbacks,
                 manifest,
-                post_package_change_actions=post_package_change_actions,
             )
+            uninstalled.append(manifest)
         else:
             _logger.info("[%s %s]: Not uninstalling", manifest.name, manifest.version)
+    return uninstalled
 
 
 def _install_applicable_inactive_packages(
@@ -671,21 +661,22 @@ def _install_applicable_inactive_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
-    post_package_change_actions: bool,
     site_version: str,
-) -> None:
+) -> Sequence[Manifest]:
+    installed = []
     for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
             try:
-                install(
-                    installer,
-                    package_store,
-                    manifest.id,
-                    path_config,
-                    callbacks,
-                    allow_outdated=False,
-                    post_package_change_actions=post_package_change_actions,
-                    site_version=site_version,
+                installed.append(
+                    install(
+                        installer,
+                        package_store,
+                        manifest.id,
+                        path_config,
+                        callbacks,
+                        allow_outdated=False,
+                        site_version=site_version,
+                    )
                 )
             except PackageError as exc:
                 _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
@@ -695,6 +686,7 @@ def _install_applicable_inactive_packages(
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.
                 break
+    return installed
 
 
 def _sort_enabled_packages_for_installation(
@@ -720,12 +712,13 @@ def disable_outdated(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-) -> None:
+) -> Sequence[Manifest]:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
+    disabled = []
     for manifest in installer.get_installed_manifests():
         try:
             _raise_for_too_new_cmk_version(manifest.version_usable_until, site_version)
@@ -736,13 +729,23 @@ def disable_outdated(
                 manifest.version,
                 exc,
             )
-            disable(installer, package_store, path_config, callbacks, manifest.id)
+            if (
+                disabled_manifest := disable(
+                    installer,
+                    package_store,
+                    path_config,
+                    callbacks,
+                    manifest.id,
+                )
+            ) is not None:
+                disabled.append(disabled_manifest)
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
+    return disabled
 
 
-def _execute_post_package_change_actions(package: Manifest | None) -> None:
-    if package is None or _package_contains_gui_files(package):
+def execute_post_package_change_actions(packages: Sequence[Manifest]) -> None:
+    if any("gui" in package.files or "web" in package.files for package in packages):
         _invalidate_visuals_cache()
         _reload_apache()
     request_index_rebuild()
@@ -752,10 +755,6 @@ def _invalidate_visuals_cache():
     """Invalidate visuals cache to use the current data"""
     for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
         file.unlink(missing_ok=True)
-
-
-def _package_contains_gui_files(package: Manifest) -> bool:
-    return "gui" in package.files or "web" in package.files
 
 
 def _reload_apache() -> None:

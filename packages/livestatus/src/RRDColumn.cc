@@ -15,7 +15,6 @@
 #include <memory>
 #include <set>
 #include <stdexcept>
-#include <type_traits>
 
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
@@ -316,7 +315,16 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
     if (rrd_xport(static_cast<int>(argv_s.size()),
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
-        Warning(logger) << "Error accessing RRD: " << rrd_get_error();
+        const std::string rrd_error{rrd_get_error()};
+        if (rrd_error.starts_with("don't understand ")) {
+            // The error msg "don't understand '<metric_name>'" is logged on
+            // info lvl only as preventing such queries for non-given metrics is
+            // not feasible atm
+            Informational(logger)
+                << "Error parsing RPN expression: " << rrd_error;
+        } else {
+            Warning(logger) << "Error accessing RRD: " << rrd_error;
+        }
         return data.as_vector(timezone_offset);
     }
 

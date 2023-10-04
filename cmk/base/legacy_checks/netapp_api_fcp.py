@@ -6,20 +6,18 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_nic_speed_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    RAISE,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import (
     get_and_try_cast_to_int,
     netapp_api_parse_lines,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 from cmk.base.plugins.agent_based.utils.interfaces import (
     bandwidth_levels,
     BandwidthUnit,
@@ -83,10 +81,10 @@ def check_netapp_api_fcp(item, params, parsed):
 
 def _speed_result(params, fcp_if):
     speed = fcp_if.get("speed")
-    speed_str = None if speed is None else get_nic_speed_human_readable(speed)
+    speed_str = None if speed is None else render.nicspeed(float(speed) / 8.0)
     expected_speed = params.get("speed", params.get("inv_speed"))
     expected_speed_str = (
-        None if expected_speed is None else get_nic_speed_human_readable(expected_speed)
+        None if expected_speed is None else render.nicspeed(float(expected_speed) / 8.0)
     )
 
     if speed is None:
@@ -110,12 +108,13 @@ def _io_bytes_results(item, params, fcp_if):
         unit=BandwidthUnit.BYTE,
     )
 
+    value_store = get_value_store()
     now = fcp_if["now"]
     for what, levels, descr in [
         ("read_bytes", bw_levels.input, "Read"),
         ("write_bytes", bw_levels.output, "Write"),
     ]:
-        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        value = get_rate(value_store, f"{item}.{what}", now, fcp_if.get(what), raise_overflow=True)
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
@@ -148,11 +147,12 @@ def _io_bytes_results(item, params, fcp_if):
 
 def _io_ops_results(item, params, fcp_if):
     now = fcp_if["now"]
+    value_store = get_value_store()
     for what, descr in [
         ("read_ops", "Read OPS"),
         ("write_ops", "Write OPS"),
     ]:
-        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        value = get_rate(value_store, f"{item}.{what}", now, fcp_if.get(what), raise_overflow=True)
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
@@ -169,6 +169,7 @@ def _io_ops_results(item, params, fcp_if):
 
 def _latency_results(item, params, fcp_if):
     total_ops = fcp_if["total_ops"]
+    value_store = get_value_store()
     for what, text in [
         ("avg_latency", "Latency"),
         ("avg_read_latency", "Read Latency"),
@@ -177,8 +178,10 @@ def _latency_results(item, params, fcp_if):
         try:
             # According to NetApp's "Performance Management Design Guide",
             # the latency is a function of `total_ops`.
-            value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what), onwrap=RAISE)
-        except MKCounterWrapped:
+            value = get_rate(
+                value_store, f"{item}.{what}", total_ops, fcp_if.get(what), raise_overflow=True
+            )
+        except IgnoreResultsError:
             continue
 
         yield _notice_only_fy(
@@ -198,9 +201,9 @@ def _notice_only_fy(state, text, metrics):
     return state, f"{newline}{text}", metrics
 
 
-def parse_netapp_api_fcp(info):
+def parse_netapp_api_fcp(string_table):
     now = time.time()
-    parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
+    parsed = netapp_api_parse_lines(string_table, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
         fcp_data = {
@@ -227,8 +230,8 @@ def parse_netapp_api_fcp(info):
 
 check_info["netapp_api_fcp"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_fcp,
+    service_name="Interface FCP %s",
     discovery_function=inventory_netapp_api_fcp,
     check_function=check_netapp_api_fcp,
-    service_name="Interface FCP %s",
     check_ruleset_name="fcp",
 )

@@ -7,21 +7,25 @@ from __future__ import annotations
 import abc
 import enum
 import io
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, Generic, TypeVar
+
+from typing_extensions import TypedDict
 
 from cmk.utils import store
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import ContactgroupName, HostName
 
 HostAttributeMapping = tuple[
     str, str, dict[str, Any], str
 ]  # host attr, cmk.base var name, value, title
+
+ContactgroupName = str
 
 
 class GroupRuleType(TypedDict):
@@ -79,7 +83,7 @@ class ContactGroupsField(TypedDict):
 class HostsStorageData:
     locked_hosts: bool
     all_hosts: list[HostName]
-    clusters: dict[HostName, list[str]]
+    clusters: dict[HostName, Sequence[HostName]]
     attributes: dict[str, Any]
     custom_macros: dict[str, Any]
     host_tags: dict[HostName, Mapping[TagGroupID, TagID]]
@@ -343,7 +347,7 @@ class ABCHostsStorageLoader(abc.ABC, Generic[THostsReadData]):
 
 class StandardStorageLoader(ABCHostsStorageLoader[str]):
     def apply(self, data: str, global_dict: dict[str, Any]) -> bool:
-        exec(data, global_dict, global_dict)
+        exec(data, global_dict, global_dict)  # nosec B102 # BNS:aee528
         return True
 
 

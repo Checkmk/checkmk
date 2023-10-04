@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMP
 # discovering function.
 
 
-def parse_gude_powerbanks(info):
+def parse_gude_powerbanks(string_table):
     map_port_states = {
         "0": (2, "off"),
         "1": (0, "on"),
@@ -31,10 +31,10 @@ def parse_gude_powerbanks(info):
         "1": (0, "data valid"),
     }
 
-    ports = dict(info[0])
+    ports = dict(string_table[0])
 
     parsed = {}
-    for oid, block in zip(_TABLES, info[2:]):
+    for oid, block in zip(_TABLES, string_table[2:]):
         for (
             idx,
             dev_state,
@@ -79,10 +79,6 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
     ),
-    parse_function=parse_gude_powerbanks,
-    discovery_function=inventory_gude_powerbanks,
-    check_function=check_elphase,
-    service_name="Powerbank %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.28507.{table}.1.3.1.2.1",
@@ -97,6 +93,10 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
+    parse_function=parse_gude_powerbanks,
+    service_name="Powerbank %s",
+    discovery_function=inventory_gude_powerbanks,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

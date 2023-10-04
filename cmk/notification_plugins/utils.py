@@ -18,7 +18,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.notify import find_wato_folder, NotificationContext
 from cmk.utils.notify_types import PluginNotificationContext
 
@@ -255,9 +254,7 @@ def post_request(
         response = requests.post(  # nosec B113
             url=url,
             json=message_constructor(context),
-            proxies=typeshed_issue_7724(
-                deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies()
-            ),
+            proxies=deserialize_http_proxy_config(serialized_proxy_config).to_requests_proxies(),
             headers=headers,
             verify=verify,
         )

@@ -15,8 +15,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, Any]
 
 
-def parse_cadvisor_df(info):
-    diskstat_info = json.loads(info[0][0])
+def parse_cadvisor_df(string_table):
+    diskstat_info = json.loads(string_table[0][0])
     parsed = {}
     for diskstat_name, diskstat_entries in diskstat_info.items():
         if len(diskstat_entries) != 1:
@@ -46,7 +46,7 @@ def check_cadvisor_df(item, _params, parsed):
 
 check_info["cadvisor_df"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_df,
+    service_name="Filesystem",
     discovery_function=discover_cadvisor_df,
     check_function=check_cadvisor_df,
-    service_name="Filesystem",
 )

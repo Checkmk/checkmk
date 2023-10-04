@@ -31,7 +31,7 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
             dev_state = line[2]
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
-            infotext = "Status %s Charge Level %s%%" % (dev_state_str, dev_charge)
+            infotext = f"Status {dev_state_str} Charge Level {dev_charge}%"
             perfdata = [("charge", dev_charge + "%")]
             return dev_state_rc, infotext, perfdata
     return None
@@ -39,11 +39,11 @@ def check_emc_datadomain_nvbat(item, _no_params, info):
 
 check_info["emc_datadomain_nvbat"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_nvbat,
-    discovery_function=inventory_emc_datadomain_nvbat,
-    service_name="NVRAM Battery %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.2.3.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="NVRAM Battery %s",
+    discovery_function=inventory_emc_datadomain_nvbat,
+    check_function=check_emc_datadomain_nvbat,
 )

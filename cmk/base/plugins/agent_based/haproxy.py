@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from enum import Enum
 from time import time
-from typing import Any, Dict, Mapping, NamedTuple, Optional
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -36,20 +37,20 @@ class HAProxyServerStatus(Enum):
 
 class Frontend(NamedTuple):
     status: str
-    stot: Optional[int]
+    stot: int | None
 
 
 class Server(NamedTuple):
     status: str
     layer_check: str
-    uptime: Optional[int]
-    active: Optional[int]
-    backup: Optional[int]
+    uptime: int | None
+    active: int | None
+    backup: int | None
 
 
 class Section(NamedTuple):
-    frontends: Dict[str, Frontend]
-    servers: Dict[str, Server]
+    frontends: dict[str, Frontend]
+    servers: dict[str, Server]
 
 
 def parse_int(val):

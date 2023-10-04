@@ -47,12 +47,12 @@ def check_emc_datadomain_temps(item, params, info):
 
 check_info["emc_datadomain_temps"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_temps,
-    discovery_function=inventory_emc_datadomain_temps,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.1.2.1.1.1",
         oids=["1", "2", "4", "5", "6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_emc_datadomain_temps,
+    check_function=check_emc_datadomain_temps,
+    check_ruleset_name="temperature",
 )

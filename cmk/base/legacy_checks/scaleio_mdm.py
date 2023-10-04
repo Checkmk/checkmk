@@ -45,10 +45,10 @@ def add_key_values(data_dict, line):
             data_dict[name].append(token[0].replace(" ", ""))
 
 
-def parse_scaleio_mdm(info):
+def parse_scaleio_mdm(string_table):
     # parsing this section is horrible. But I will guide you...
     parsed, id_, node = {}, "", ""
-    for line in info:
+    for line in string_table:
         # A subsection starts with one of the following:
         if line[0].lower() in (
             "cluster:",
@@ -105,12 +105,12 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
         active = data["Active"].split("/")
         replicas = data["Replicas"].split("/")
 
-        yield translate_status[status], "Mode: %s, State: %s" % (data["Mode"], status)
+        yield translate_status[status], "Mode: {}, State: {}".format(data["Mode"], status)
 
         if not active[0] == active[1] or not replicas[0] == replicas[1]:
             state = 2
 
-        yield state, "Active: %s, Replicas: %s" % ("/".join(active), "/".join(replicas))
+        yield state, "Active: {}, Replicas: {}".format("/".join(active), "/".join(replicas))
 
     for role in ["Master MDM", "Slave MDMs", "Tie-Breakers", "Standby MDMs"]:
         state, nodes = 0, []
@@ -121,7 +121,7 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
                 state = max(state, translate_status[status])
 
         if nodes:
-            infotext = "%s: %s" % (role, ", ".join(nodes))
+            infotext = "{}: {}".format(role, ", ".join(nodes))
         else:
             if role != "Standby MDMs":
                 state, infotext = 2, "%s not found in agent output" % role
@@ -133,7 +133,7 @@ def check_scaleio_mdm(_no_item, _no_params, parsed):
 
 check_info["scaleio_mdm"] = LegacyCheckDefinition(
     parse_function=parse_scaleio_mdm,
+    service_name="ScaleIO cluster status",
     discovery_function=inventory_scaleio_mdm,
     check_function=check_scaleio_mdm,
-    service_name="ScaleIO cluster status",
 )

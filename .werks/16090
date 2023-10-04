@@ -1,0 +1,17 @@
+Title: etherbox_voltage: No default thresholds and remove predictive levels option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1692279826
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The check plugin <tt>etherbox_voltage</tt> monitors voltage sensors of Etherboxes. By default, the
+plugin reported <i>CRIT</i> for any non-zero voltage reading. As of this werk, the new default
+behaviour is to apply no thresholds. Users can configure custom thresholds, as before.
+
+Furthermore, this werk removes the option to configure predictive levels for this check plugin,
+which lead to a crash. Already existing configurations will automatically be migrated to the new
+default behaviour (no thresholds).

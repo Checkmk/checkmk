@@ -6,7 +6,6 @@
 
 import collections
 from collections.abc import Iterable
-from typing import Dict, List, Tuple
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import LegacyCheckDefinition
@@ -15,9 +14,9 @@ from cmk.base.config import check_info
 
 def check_ucs_c_rack_server_faultinst(
     _item: None,
-    _params: Dict,
-    parsed: Dict[str, List[str]],
-) -> Iterable[Tuple[int, str]]:
+    _params: dict,
+    parsed: dict[str, list[str]],
+) -> Iterable[tuple[int, str]]:
     if not parsed:
         yield 0, "No fault instances found"
         return
@@ -35,7 +34,7 @@ def check_ucs_c_rack_server_faultinst(
     severity_counter = collections.Counter(parsed["Severity"])
     yield overall_state, "Found faults: " + ", ".join(
         [
-            "%s with severity '%s'" % (severity_counter[severity], severity)
+            f"{severity_counter[severity]} with severity '{severity}'"
             for severity in sorted(severity_counter.keys())
         ]
     )
@@ -45,7 +44,7 @@ def check_ucs_c_rack_server_faultinst(
     for index in sorted(range(len(states)), key=lambda idx: states[idx]):
         yield states[index], start_str + ", ".join(
             [
-                "%s: %s" % (key, parsed[key][index])
+                f"{key}: {parsed[key][index]}"
                 for key in ["Severity", "Description", "Cause", "Code", "Affected DN"]
             ]
         )
@@ -53,7 +52,7 @@ def check_ucs_c_rack_server_faultinst(
 
 
 check_info["ucs_c_rack_server_faultinst"] = LegacyCheckDefinition(
+    service_name="Fault Instances Rack",
     discovery_function=lambda p: [(None, {})],
     check_function=check_ucs_c_rack_server_faultinst,
-    service_name="Fault Instances Rack",
 )

@@ -4,16 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.base.check_api import passwordstore_get_cmdline
+from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 
-def agent_azure_arguments(
+def agent_azure_arguments(  # pylint: disable=too-many-branches
     params: Mapping[str, Any],
     hostname: str,
-    ipaddress: Optional[str],
+    ipaddress: str | None,
 ) -> Sequence[Any]:
     args = [
         "--tenant",
@@ -24,7 +25,7 @@ def agent_azure_arguments(
         passwordstore_get_cmdline("%s", params["secret"]),
     ]
 
-    keys = ("subscription", "piggyback_vms", "sequential")
+    keys = ("authority", "subscription", "piggyback_vms", "sequential")
 
     for key in (k for k in keys if k in params):
         option = "--%s" % key
@@ -34,6 +35,9 @@ def agent_azure_arguments(
                 args.append(option)
         else:
             args += [option, value]
+
+    if proxy_settings := params.get("proxy"):
+        args += ["--proxy", get_http_proxy(proxy_settings).serialize()]
 
     if "services" in params:
         args += ["--services", *params["services"]]

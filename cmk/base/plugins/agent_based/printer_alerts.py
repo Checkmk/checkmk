@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, List, NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import Final, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -147,7 +148,7 @@ PRINTER_ALERTS_TEXT_MAP: Final = {
 }
 
 
-def parse_printer_alerts(string_table: List[StringTable]) -> Section:
+def parse_printer_alerts(string_table: list[StringTable]) -> Section:
     return [
         Alert(
             severity=s[0],

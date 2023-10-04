@@ -23,7 +23,7 @@ logger = logging.getLogger()
 class CMKWebSession:
     def __init__(self, site) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
-        self.transids: list = []
+        self.transids: list[str] = []
         # Resources are only fetched and verified once per session
         self.verified_resources: set = set()
         self.site = site
@@ -34,8 +34,9 @@ class CMKWebSession:
         if expected_target:
             if response.headers["Location"] != expected_target:
                 raise AssertionError(
-                    "REDIRECT FAILED: '%s' != '%s'"
-                    % (response.headers["Location"], expected_target)
+                    "REDIRECT FAILED: '{}' != '{}'".format(
+                        response.headers["Location"], expected_target
+                    )
                 )
             assert response.headers["Location"] == expected_target
 
@@ -207,7 +208,7 @@ class CMKWebSession:
                 "_login": "Login",
             },
         )
-        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)
+        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)  # type: ignore[no-untyped-call]
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 

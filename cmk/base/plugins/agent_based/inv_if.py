@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, List, Optional, Sequence, Union
 
 from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
@@ -40,7 +40,7 @@ def _process_last_change(last_change_str: str) -> float:
         return seconds + 60 * minutes + 3600 * hours + 86400 * days
 
 
-def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterable[Interface]:
+def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Interface]:
     """
     >>> from pprint import pprint
     >>> pprint(list(_process_sub_table(['49160', 'gigabitEthernet 1/0/8', 'pve-muc1-ipmi', '6',
@@ -91,7 +91,7 @@ def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterab
     )
 
 
-def parse_inv_if(string_table: List[StringByteTable]) -> SectionInvIf:
+def parse_inv_if(string_table: list[StringByteTable]) -> SectionInvIf:
     return SectionInvIf(
         [
             iface_and_last_change
@@ -128,8 +128,8 @@ register.snmp_section(
 
 def inventory_if(
     params: InventoryParams,
-    section_inv_if: Optional[SectionInvIf],
-    section_uptime: Optional[uptime.Section],
+    section_inv_if: SectionInvIf | None,
+    section_uptime: uptime.Section | None,
 ) -> InventoryResult:
     if section_inv_if is None or section_uptime is None or section_uptime.uptime_sec is None:
         return

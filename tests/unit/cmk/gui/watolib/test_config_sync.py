@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -14,12 +14,12 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
+from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
 import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
@@ -82,7 +82,7 @@ def _create_sync_snapshot(
     tmp_path: Path,
     remote_site: SiteId,
     edition: cmk_version.Edition,
-) -> Iterator[activate_changes.SnapshotSettings]:
+) -> Iterator[config_sync.SnapshotSettings]:
     with _create_test_sync_config(monkeypatch):
         yield _generate_sync_snapshot(
             activation_manager,
@@ -115,7 +115,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         f.write("DUMMY_PWD_ENTRY \n")
 
     with monkeypatch.context() as m:
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             m.setattr(
                 active_config,
                 "customers",
@@ -153,7 +153,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
                 "tcp",
                 NetworkSocketDetails(
                     address=("127.0.0.1", 6790),
-                    tls=("encrypted", {"verify": True}),
+                    tls=("encrypted", TLSParams(verify=True)),
                 ),
             ),
             "replication": "slave",
@@ -180,7 +180,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
                 "tcp",
                 NetworkSocketDetails(
                     address=("127.0.0.1", 6790),
-                    tls=("encrypted", {"verify": True}),
+                    tls=("encrypted", TLSParams(verify=True)),
                 ),
             ),
             "replication": "slave",
@@ -239,7 +239,7 @@ def _generate_sync_snapshot(
     remote_site: SiteId,
     *,
     edition: cmk_version.Edition,
-) -> activate_changes.SnapshotSettings:
+) -> config_sync.SnapshotSettings:
     snapshot_data_collector_class = (
         "CMESnapshotDataCollector"
         if edition is cmk_version.Edition.CME
@@ -440,69 +440,6 @@ def test_generate_snapshot(
             assert sorted(paths) == sorted(expected_paths)
 
 
-@pytest.mark.parametrize(
-    "master, slave, result",
-    [
-        pytest.param(
-            {"first": {"customer": "tribe"}},
-            {"first": {"customer": "tribe"}, "second": {"customer": "tribe"}},
-            {"first": {"customer": "tribe"}},
-            id="Delete user from master",
-        ),
-        pytest.param(
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            {},
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            id="New users",
-        ),
-        pytest.param(
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "all admins"}],
-                },
-                "first": {"customer": "tribe", "notification_rules": []},
-            },
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "adminevery"}],
-                },
-                "first": {
-                    "customer": "tribe",
-                    "notification_rules": [{"description": "Host on fire"}],
-                },
-            },
-            {
-                "cmkadmin": {
-                    "customer": None,
-                    "notification_rules": [{"description": "all admins"}],
-                },
-                "first": {
-                    "customer": "tribe",
-                    "notification_rules": [{"description": "Host on fire"}],
-                },
-            },
-            id="Update Global user notifications. Retain Customer user notifications",
-        ),
-    ],
-)
-def test_update_contacts_dict(master: dict, slave: dict, result: dict) -> None:
-    assert config_sync._update_contacts_dict(master, slave) == result
-
-
 # This test does not perform the full synchronization. It executes the central site parts and mocks
 # the remote site HTTP calls
 @pytest.mark.usefixtures("request_context")
@@ -552,11 +489,10 @@ def test_synchronize_site(
         body="True",
     )
 
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
-    monkeypatch.setattr(
-        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
-    )
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
 
+    file_filter_func = None
+    site_id = SiteId("unit_remote_1")
     with _get_activation_manager(monkeypatch, SiteId("unit_remote_1")) as activation_manager:
         assert activation_manager._activation_id is not None
         with _create_sync_snapshot(
@@ -566,12 +502,47 @@ def test_synchronize_site(
             remote_site=SiteId("unit_remote_1"),
             edition=edition,
         ) as snapshot_settings:
-            site_activation = activate_changes.ActivateChangesSite(
-                SiteId("unit_remote_1"),
-                snapshot_settings,
-                activation_manager._activation_id,
-                prevent_activate=True,
-            )
+            _synchronize_site(activation_manager, site_id, snapshot_settings, file_filter_func)
 
-            site_activation._time_started = time.time()
-            site_activation._synchronize_site()
+
+def _synchronize_site(
+    activation_manager: activate_changes.ActivateChangesManager,
+    site_id: SiteId,
+    snapshot_settings: config_sync.SnapshotSettings,
+    file_filter_func: Callable[[str], bool] | None,
+) -> None:
+    assert activation_manager._activation_id is not None
+    site_activation_state = activate_changes._initialize_site_activation_state(
+        site_id, activation_manager._activation_id, activation_manager, time.time()
+    )
+
+    fetch_state_result = activate_changes.fetch_sync_state(
+        snapshot_settings.snapshot_components,
+        site_activation_state,
+        {},
+    )
+
+    assert fetch_state_result is not None
+    (
+        sync_state,
+        site_activation_state,
+        sync_start,
+    ) = fetch_state_result
+
+    calc_delta_result = activate_changes.calc_sync_delta(
+        sync_state,
+        file_filter_func,
+        site_activation_state,
+        sync_start,
+    )
+    assert calc_delta_result is not None
+    sync_delta, site_activation_state, sync_start = calc_delta_result
+
+    sync_result = activate_changes.synchronize_files(
+        sync_delta,
+        sync_state.remote_config_generation,
+        Path(snapshot_settings.work_dir),
+        site_activation_state,
+        sync_start,
+    )
+    assert sync_result is not None

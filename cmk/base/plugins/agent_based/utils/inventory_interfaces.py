@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from collections.abc import Container, Iterable
 from dataclasses import dataclass
-from typing import Container, Iterable, Optional, TypedDict, Union
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import Attributes, TableRow
 from ..agent_based_api.v1.type_defs import InventoryResult
@@ -18,11 +20,11 @@ class Interface:
     alias: str
     type: str
     speed: int
-    oper_status: int
+    oper_status: int | None
     phys_address: str
-    admin_status: Optional[int] = None
-    last_change: Optional[float] = None
-    bond: Optional[str] = None
+    admin_status: int | None = None
+    last_change: float | None = None
+    bond: str | None = None
 
 
 class InventoryParams(TypedDict, total=False):
@@ -65,7 +67,7 @@ def inventorize_interfaces(
     params: InventoryParams,
     interfaces: Iterable[Interface],
     n_total: int,
-    uptime_sec: Optional[float] = None,
+    uptime_sec: float | None = None,
 ) -> InventoryResult:
     now = time.time()
 
@@ -86,7 +88,7 @@ def inventorize_interfaces(
         )
         last_change_timestamp = _round_to_day(now - state_age) if state_age is not None else None
         try:
-            if_index_nr: Union[str, int] = int(interface.index)
+            if_index_nr: str | int = int(interface.index)
         except ValueError:
             if_index_nr = ""
 

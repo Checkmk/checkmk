@@ -12,11 +12,11 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
 
 
-def parse_brocade_sys(info):
+def parse_brocade_sys(string_table):
     try:
         return {
-            "cpu_util": int(info[0][0]),
-            "mem_used_percent": int(info[0][1]),
+            "cpu_util": int(string_table[0][0]),
+            "mem_used_percent": int(string_table[0][1]),
         }
     except (IndexError, ValueError):
         return {}
@@ -58,9 +58,10 @@ def check_brocade_sys_mem(item, params, parsed):
 
 
 check_info["brocade_sys.mem"] = LegacyCheckDefinition(
+    service_name="Memory",
+    sections=["brocade_sys"],
     discovery_function=inventory_brocade_sys_mem,
     check_function=check_brocade_sys_mem,
-    service_name="Memory",
     check_ruleset_name="memory_relative",
 )
 
@@ -88,13 +89,13 @@ check_info["brocade_sys"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1916.2.306"),
     ),
-    parse_function=parse_brocade_sys,
-    discovery_function=inventory_brocade_sys,
-    check_function=check_brocade_sys,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1588.2.1.1.1.26",
         oids=["1", "6"],
     ),
+    parse_function=parse_brocade_sys,
+    service_name="CPU utilization",
+    discovery_function=inventory_brocade_sys,
+    check_function=check_brocade_sys,
     check_ruleset_name="cpu_utilization",
 )

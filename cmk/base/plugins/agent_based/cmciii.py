@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Tuple, Union
 
 from .agent_based_api.v1 import (
     contains,
@@ -44,7 +43,7 @@ def sanitize_variable(variable: str) -> Variable:
     return start + [end]
 
 
-def sensor_type(variable: Variable) -> Optional[SensorType]:
+def sensor_type(variable: Variable) -> SensorType | None:
     if variable[0].startswith("PSM_") and "Unit" in variable:
         return "psm_current"
     if variable[0].startswith("PSM_") and variable[1].startswith("Plug"):
@@ -91,20 +90,20 @@ def sensor_id(type_: SensorType, variable: Variable, device: str) -> str:
         return item
     if type_ == "phase":
         if "Phase" in variable[0]:
-            return "%s %s %s" % (
+            return "{} {} {}".format(
                 device,
                 "Phase",
                 variable[0].replace("Phase", "").replace("L", "").strip(),
             )
-        return "%s %s %s %s" % (
+        return "{} {} {} {}".format(
             device,
             variable[0],
             "Phase",
             variable[1].replace("Phase", "").replace("L", "").strip(),
         )
     if type_ in ["psm_plugs", "can_current"]:
-        return "%s %s" % (device, ".".join(variable))
-    return "%s %s" % (device, variable[0])
+        return "{} {}".format(device, ".".join(variable))
+    return f"{device} {variable[0]}"
 
 
 def sensor_key(type_: SensorType, var_type: str, variable: Variable):  # type: ignore[no-untyped-def]
@@ -126,7 +125,7 @@ def sensor_key(type_: SensorType, var_type: str, variable: Variable):  # type: i
 
 def sensor_value(
     value_str: str, value_int: str, scale: str, var_type: str, var_unit: str
-) -> Union[str, float]:
+) -> str | float:
     if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
         return value_str
 
@@ -145,9 +144,9 @@ def sensor_value(
     return value
 
 
-def parse_devices_and_states(device_table: type_defs.StringTable) -> Tuple[Devices, Sensors]:
-    devices: Dict[str, str] = {}
-    states: Dict[str, Dict[str, str]] = {}
+def parse_devices_and_states(device_table: type_defs.StringTable) -> tuple[Devices, Sensors]:
+    devices: dict[str, str] = {}
+    states: dict[str, dict[str, str]] = {}
     for num, (endoid, name, alias, status) in enumerate(device_table, start=1):
         # no blanks in names since we use blanks in items
         # later to split between unit_name and item_name
@@ -156,7 +155,7 @@ def parse_devices_and_states(device_table: type_defs.StringTable) -> Tuple[Devic
             dev_name = name + "-" + str(num)
 
         if dev_name in states:
-            dev_name = "%s %s" % (alias, endoid)
+            dev_name = f"{alias} {endoid}"
 
         devices.setdefault(endoid, dev_name)
 
@@ -174,7 +173,7 @@ def split_temp_in_out_sensors(sensors: Sensors) -> Sensors:
     for item, sensor in sensors.items():
         template = {k: v for k, v in sensor.items() if k not in in_out_values}
         for value in in_out_values:
-            in_out_item = "%s %s" % (
+            in_out_item = "{} {}".format(
                 item,
                 value.replace("-", " ").replace("Bot", "Bottom").replace("Mid", "Middle"),
             )
@@ -183,7 +182,7 @@ def split_temp_in_out_sensors(sensors: Sensors) -> Sensors:
     return in_out_sensors
 
 
-def parse_cmciii(string_table: List[type_defs.StringTable]) -> Sensors:
+def parse_cmciii(string_table: list[type_defs.StringTable]) -> Sensors:
     device_table, var_table = string_table
     devices, states = parse_devices_and_states(device_table)
 

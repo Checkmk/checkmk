@@ -1,0 +1,12 @@
+Title: pushover: 204 status should not trigger error message
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1696233337
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

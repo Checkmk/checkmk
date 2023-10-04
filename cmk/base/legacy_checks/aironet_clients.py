@@ -61,15 +61,7 @@ def check_aironet_clients(item, params, info):
     avg = sum(saveint(line[index]) for line in info) / float(len(info))
     warn, crit = params
     perfdata = [(item, avg, warn, crit, mmin, mmax)]
-    infotxt = "signal %s at %.1f%s (warn/crit at %s%s/%s%s)" % (
-        item,
-        avg,
-        unit,
-        warn,
-        unit,
-        crit,
-        unit,
-    )
+    infotxt = f"signal {item} at {avg:.1f}{unit} (warn/crit at {warn}{unit}/{crit}{unit})"
 
     if neg * avg <= neg * crit:
         return (2, infotxt, perfdata)
@@ -91,11 +83,11 @@ check_info["aironet_clients"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1661"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2240"),
     ),
-    check_function=check_aironet_clients,
-    discovery_function=inventory_aironet_clients,
-    service_name="Average client signal %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.273.1.3.1.1",
         oids=["3", "4"],
     ),
+    service_name="Average client signal %s",
+    discovery_function=inventory_aironet_clients,
+    check_function=check_aironet_clients,
 )

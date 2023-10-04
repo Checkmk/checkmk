@@ -41,7 +41,7 @@ def check_dell_om_vdisks(item, params, parsed):
         if parsed[item]["State"] != "Ready":
             status = 2
 
-        return status, "Device: %s, Status: %s, State: %s, Layout: %s" % (
+        return status, "Device: {}, Status: {}, State: {}, Layout: {}".format(
             parsed[item]["Device Name"],
             parsed[item]["Status"],
             parsed[item]["State"],
@@ -51,8 +51,8 @@ def check_dell_om_vdisks(item, params, parsed):
 
 
 check_info["dell_om_vdisks"] = LegacyCheckDefinition(
-    check_function=check_dell_om_vdisks,
-    discovery_function=inventory_dell_om_vdisks,
     parse_function=parse_omreport,
     service_name="Virtual Disk %s",
+    discovery_function=inventory_dell_om_vdisks,
+    check_function=check_dell_om_vdisks,
 )

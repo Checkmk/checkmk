@@ -39,7 +39,7 @@ def test_registered_ac_tests() -> None:
         "ACTestMknotifydCommunicationEncrypted",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_ac_tests += [
             "ACTestSecureAgentUpdaterTransport",
         ]

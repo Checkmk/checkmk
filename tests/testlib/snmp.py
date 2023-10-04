@@ -7,11 +7,17 @@ import logging
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.snmp_table import get_snmp_table
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackendEnum, SNMPHostConfig
-from cmk.snmplib.utils import evaluate_snmp_detection
+from cmk.snmplib import (
+    BackendSNMPTree,
+    ensure_str,
+    evaluate_snmp_detection,
+    get_snmp_table,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+)
 
 from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
 
@@ -42,10 +48,10 @@ def snmp_is_detected(section_name: SectionName, snmp_walk: Path) -> bool:
     backend = StoredWalkSNMPBackend(SNMP_HOST_CONFIG, logging.getLogger("test"), snmp_walk)
 
     def oid_value_getter(oid: str) -> str | None:
-        value = backend.get(oid)
+        value = backend.get(oid, context="")
         if value is None:
             return None
-        return backend.config.ensure_str(value)
+        return ensure_str(value, encoding=backend.config.character_encoding)
 
     return evaluate_snmp_detection(
         detect_spec=section.detect_spec,

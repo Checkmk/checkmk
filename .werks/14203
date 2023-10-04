@@ -1,0 +1,17 @@
+Title: Slightly improved checker performance
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1687872483
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Two improvements have been made.
+<ul>
+<li>Improved parsing speed of raw TCP agent output</li>
+<li>Fixed unnecessary deepcopy/duplication of parsed data</li>
+</ul>
+

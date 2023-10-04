@@ -16,17 +16,17 @@ def inventory_juniper_trpz_info(info):
 
 def check_juniper_trpz_info(_no_item, _no_params, info):
     serial, version = info[0]
-    message = "S/N: %s, FW Version: %s" % (serial, version)
+    message = f"S/N: {serial}, FW Version: {version}"
     return 0, message
 
 
 check_info["juniper_trpz_info"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,
-    check_function=check_juniper_trpz_info,
-    discovery_function=inventory_juniper_trpz_info,
-    service_name="Info",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.2.1",
         oids=["1", "4"],
     ),
+    service_name="Info",
+    discovery_function=inventory_juniper_trpz_info,
+    check_function=check_juniper_trpz_info,
 )

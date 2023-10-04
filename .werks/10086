@@ -13,7 +13,7 @@ report
 <ul>
 <li>CRIT - Got no information of host</li>
 <li>OK - X vanished services</li>
-<ul>
+</ul>
 by default.
 
 Now a validity period and state are configurable within the host rule

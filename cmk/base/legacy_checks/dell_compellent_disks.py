@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes import dell_compellent
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -28,9 +28,9 @@ dell_compellent_disks_health_map = {
 }
 
 
-def parse_dell_compellent_disks(info):
-    disk_info = info[0]
-    disk_serials = dict(info[1])
+def parse_dell_compellent_disks(string_table):
+    disk_info = string_table[0]
+    disk_serials = dict(string_table[1])
 
     return {
         disk_name_position: [status, health, health_message, enclosure, disk_serials.get(number)]
@@ -38,8 +38,9 @@ def parse_dell_compellent_disks(info):
     }
 
 
-@get_parsed_item_data
-def check_dell_compellent_disks(_item, _no_params, data):
+def check_dell_compellent_disks(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     dev_state, health, health_message, enclosure, serial = data
     state, state_readable = dell_compellent.dev_state_map(dev_state)
     yield state, "Status: %s" % state_readable
@@ -52,15 +53,15 @@ def check_dell_compellent_disks(_item, _no_params, data):
         health_state, health_state_readable = dell_compellent_disks_health_map.get(
             health, (3, "unknown[%s]" % health)
         )
-        yield health_state, "Health: %s, Reason: %s" % (health_state_readable, health_message)
+        yield health_state, f"Health: {health_state_readable}, Reason: {health_message}"
+
+
+def discover_dell_compellent_disks(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["dell_compellent_disks"] = LegacyCheckDefinition(
     detect=DETECT_DELL_COMPELLENT,
-    parse_function=parse_dell_compellent_disks,
-    discovery_function=discover(),
-    check_function=check_dell_compellent_disks,
-    service_name="Disk %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.11000.2000.500.1.2.14.1",
@@ -71,4 +72,8 @@ check_info["dell_compellent_disks"] = LegacyCheckDefinition(
             oids=["2", "3"],
         ),
     ],
+    parse_function=parse_dell_compellent_disks,
+    service_name="Disk %s",
+    discovery_function=discover_dell_compellent_disks,
+    check_function=check_dell_compellent_disks,
 )

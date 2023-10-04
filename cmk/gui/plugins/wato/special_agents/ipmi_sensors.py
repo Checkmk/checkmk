@@ -4,13 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -19,6 +16,8 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     TextInput,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
 def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements:
@@ -199,7 +198,7 @@ def _valuespec_special_agents_ipmi_sensors() -> CascadingDropdown:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupDatasourceProgramsOS,
-        name="special_agents:ipmi_sensors",
+        name=RuleGroup.SpecialAgents("ipmi_sensors"),
         valuespec=_valuespec_special_agents_ipmi_sensors,
     )
 )

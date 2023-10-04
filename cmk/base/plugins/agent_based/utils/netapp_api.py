@@ -3,24 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Callable, Dict, List, Literal, Mapping, Optional, Sequence, TypedDict
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import Result, Service, State, type_defs
 
 CPUSection = TypedDict(
     "CPUSection",
     {
-        "clustermode": Dict[str, Dict[str, str]],
-        "7mode": Dict[str, str],
+        "clustermode": dict[str, dict[str, str]],
+        "7mode": dict[str, str],
     },
     total=False,
 )
 
-Instance = Dict[str, str]
-SectionMultipleInstances = Dict[str, List[Instance]]
+Instance = dict[str, str]
+SectionMultipleInstances = dict[str, list[Instance]]
 SectionSingleInstance = Mapping[str, Instance]
-CustomKeys = Optional[Sequence[str]]
-ItemFunc = Optional[Callable[[str, Instance], str]]
+CustomKeys = Sequence[str] | None
+ItemFunc = Callable[[str, Instance], str] | None
 
 
 _DEV_KEYS = {

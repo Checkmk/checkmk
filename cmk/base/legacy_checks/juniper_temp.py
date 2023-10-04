@@ -15,9 +15,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, st
 # .1.3.6.1.4.1.2636.3.1.13.1.7.7.2.0.0 43 --> SNMPv2-SMI::enterprises.2636.3.1.13.1.7.7.2.0.0
 
 
-def parse_juniper_temp(info):
+def parse_juniper_temp(string_table):
     parsed = {}
-    for description, reading_str in info:
+    for description, reading_str in string_table:
         temperature = float(reading_str)
         if temperature > 0:
             description = description.replace(":", "").replace("/*", "").replace("@ ", "").strip()
@@ -40,14 +40,14 @@ check_info["juniper_temp"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636.1.1.1.2"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636.1.1.1.4"),
     ),
-    parse_function=parse_juniper_temp,
-    discovery_function=inventory_juniper_temp,
-    check_function=check_juniper_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.13.1",
         oids=["5.7", "7.7"],
     ),
+    parse_function=parse_juniper_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_juniper_temp,
+    check_function=check_juniper_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (55.0, 60.0),  # Just an assumption based on observed real temperatures

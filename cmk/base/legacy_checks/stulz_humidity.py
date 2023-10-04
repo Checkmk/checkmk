@@ -26,12 +26,12 @@ def check_stulz_humidity(item, params, info):
 
 check_info["stulz_humidity"] = LegacyCheckDefinition(
     detect=DETECT_STULZ,
-    check_function=check_stulz_humidity,
-    discovery_function=inventory_stulz_humidity,
-    service_name="Humidity %s ",
-    check_ruleset_name="humidity",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.2.1.1.1194",
         oids=[OIDEnd(), "1"],
     ),
+    service_name="Humidity %s ",
+    discovery_function=inventory_stulz_humidity,
+    check_function=check_stulz_humidity,
+    check_ruleset_name="humidity",
 )

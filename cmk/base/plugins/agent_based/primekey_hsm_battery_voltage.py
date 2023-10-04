@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Mapping, Tuple
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -62,7 +62,7 @@ def discover(section: _Section) -> DiscoveryResult:
 
 def check(
     item: str,
-    params: Mapping[str, Tuple[float, float]],
+    params: Mapping[str, tuple[float, float]],
     section: _Section,
 ) -> CheckResult:
     if not (battery := section.get(item)):

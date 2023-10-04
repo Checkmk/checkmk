@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -33,7 +35,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_acme_sbc(),
         group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:acme_sbc",
+        name=RuleGroup.SpecialAgents("acme_sbc"),
         valuespec=_valuespec_special_agents_acme_sbc,
     )
 )

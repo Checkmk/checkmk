@@ -9,10 +9,15 @@
         "ecmaVersion": 6,
         "sourceType": "module"
     },
-    "plugins": ["compat", "prettier", "simple-import-sort"],
+    "plugins": [
+        "compat",
+        "prettier",
+        "simple-import-sort",
+        "license-header"],
     "rules": {
         "simple-import-sort/exports": "error",
         "simple-import-sort/imports": "error",
+        "license-header/header": [ "error", "./resources/license-header.js" ],
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/ban-ts-comment": "off",
@@ -43,5 +48,15 @@
     },
     "ignorePatterns": [
         "*_min.js"
+    ],
+    "overrides": [
+        {
+            "files": [
+                "enterprise/web/htdocs/**/*.ts"
+            ],
+            "rules": {
+                "license-header/header": [ "error", "./resources/enterprise-license-header.js" ]
+            }
+        }
     ]
 }

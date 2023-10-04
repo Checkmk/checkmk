@@ -23,10 +23,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 f5_bigip_pool_default_levels = (2, 1)
 
 
-def parse_f5_bigip_pool(info):
+def parse_f5_bigip_pool(string_table):
     parsed = {}
     processed_member_info = False
-    for block in info:
+    for block in string_table:
         if not block:
             continue
 
@@ -84,10 +84,10 @@ def check_f5_bigip_pool(item, params, parsed):
         state = 0
     elif pool_act_members < crit:
         state = 2
-        message += " (warn/crit: %s/%s)" % (warn, crit)
+        message += f" (warn/crit: {warn}/{crit})"
     elif pool_act_members < warn:
         state = 1
-        message += " (warn/crit: %s/%s)" % (warn, crit)
+        message += f" (warn/crit: {warn}/{crit})"
 
     if pool_act_members < pool_def_members:
         downs = f5_bigip_pool_get_down_members(pool_info["down_info"])
@@ -98,11 +98,6 @@ def check_f5_bigip_pool(item, params, parsed):
 
 check_info["f5_bigip_pool"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_f5_bigip_pool,
-    check_function=check_f5_bigip_pool,
-    check_ruleset_name="f5_pools",
-    discovery_function=inventory_f5_bigip_pool,
-    service_name="Load Balancing Pool %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.2.5.1.2.1",
@@ -113,4 +108,9 @@ check_info["f5_bigip_pool"] = LegacyCheckDefinition(
             oids=["1", "4", "10", "11", "13", "19"],
         ),
     ],
+    parse_function=parse_f5_bigip_pool,
+    service_name="Load Balancing Pool %s",
+    discovery_function=inventory_f5_bigip_pool,
+    check_function=check_f5_bigip_pool,
+    check_ruleset_name="f5_pools",
 )

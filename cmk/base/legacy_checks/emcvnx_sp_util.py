@@ -14,15 +14,16 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 emcvnx_sp_util_default_levels = (50.0, 60.0)
 
 
-def parse_emcvnx_sp_util(info):
+def parse_emcvnx_sp_util(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2 and "busy" in line[0]:
             parsed.setdefault("busy", float(line[1]))
         elif len(line) == 2 and "idle" in line[0]:
@@ -42,8 +43,12 @@ def check_emcvnx_sp_util(item, params, parsed):
 
     now = time.time()
     warn, crit = params
-    busy_ticks_rate = get_rate("emcvnx_sp_util.busy_ticks", now, parsed["busy"])
-    idle_ticks_rate = get_rate("emcvnx_sp_util.idle_ticks", now, parsed["idle"])
+    busy_ticks_rate = get_rate(
+        get_value_store(), "emcvnx_sp_util.busy_ticks", now, parsed["busy"], raise_overflow=True
+    )
+    idle_ticks_rate = get_rate(
+        get_value_store(), "emcvnx_sp_util.idle_ticks", now, parsed["idle"], raise_overflow=True
+    )
     if busy_ticks_rate + idle_ticks_rate == 0:
         sp_util = 0.0
     else:
@@ -59,15 +64,15 @@ def check_emcvnx_sp_util(item, params, parsed):
         state = 0
 
     if state > 0:
-        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+        infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
 
     return state, infotext, [("storage_processor_util", sp_util, warn, crit, 0, 100.0)]
 
 
 check_info["emcvnx_sp_util"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_sp_util,
+    service_name="Storage Processor Utilization",
     discovery_function=inventory_emcvnx_sp_util,
     check_function=check_emcvnx_sp_util,
-    service_name="Storage Processor Utilization",
     check_ruleset_name="sp_util",
 )

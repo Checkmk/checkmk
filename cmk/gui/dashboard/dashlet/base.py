@@ -392,8 +392,7 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
 
         if self.reload_on_resize():
             html.javascript(
-                "cmk.dashboard.set_reload_on_resize(%s, %s);"
-                % (json.dumps(self._dashlet_id), json.dumps(iframe_url))
+                f"cmk.dashboard.set_reload_on_resize({json.dumps(self._dashlet_id)}, {json.dumps(iframe_url)});"
             )
 
     def _get_iframe_url(self) -> str | None:

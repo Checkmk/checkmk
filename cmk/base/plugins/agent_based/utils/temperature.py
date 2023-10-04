@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Generator, MutableMapping, Optional, Tuple, TypedDict, Union
+from collections.abc import Generator, MutableMapping
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from ..agent_based_api.v1 import check_levels, get_average, get_rate, Result, State
 from ..agent_based_api.v1.render import timespan
@@ -14,9 +17,9 @@ StatusType = int
 TempUnitType = str
 LevelModes = str
 
-TwoLevelsType = Tuple[Optional[float], Optional[float]]
-FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
-LevelsType = Union[TwoLevelsType, FourLevelsType]
+TwoLevelsType = tuple[float | None, float | None]
+FourLevelsType = tuple[float | None, float | None, float | None, float | None]
+LevelsType = TwoLevelsType | FourLevelsType
 
 
 class TrendComputeDict(TypedDict, total=False):
@@ -35,7 +38,7 @@ class TempParamDict(TypedDict, total=False):
     trend_compute: TrendComputeDict
 
 
-TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
+TempParamType = None | TwoLevelsType | FourLevelsType | TempParamDict
 
 
 def fahrenheit_to_celsius(tempf, relative=False):
@@ -92,7 +95,7 @@ def render_temp(n: float, output_unit: str, relative: bool = False, *, sign: boo
 
     """
     value = from_celsius(n, output_unit, relative)
-    template = "%%%s%s" % ("+" if sign else "", "d" if isinstance(n, int) else ".1f")
+    template = "%{}{}".format("+" if sign else "", "d" if isinstance(n, int) else ".1f")
     return template % value
 
 
@@ -148,8 +151,8 @@ def _migrate_params(params: TempParamType) -> TempParamDict:
 
 
 def _validate_levels(
-    levels: Optional[Tuple[Optional[float], Optional[float]]] = None,
-) -> Optional[Tuple[float, float]]:
+    levels: tuple[float | None, float | None] | None = None,
+) -> tuple[float, float] | None:
     if levels is None:
         return None
 
@@ -165,8 +168,8 @@ def _check_trend(
     temp: float,
     params: TrendComputeDict,
     output_unit: str,
-    crit_temp: Optional[float],
-    crit_temp_lower: Optional[float],
+    crit_temp: float | None,
+    crit_temp_lower: float | None,
     unique_name: str,
 ) -> Generator[Result, None, None]:
     trend_range_min = params["period"]
@@ -246,13 +249,13 @@ def check_temperature(  # pylint: disable=too-many-branches
     reading: float,
     params: TempParamType,
     *,
-    unique_name: Optional[str] = None,
-    value_store: Optional[MutableMapping[str, Any]] = None,
-    dev_unit: Optional[str] = "c",
-    dev_levels: Optional[Tuple[float, float]] = None,
-    dev_levels_lower: Optional[Tuple[float, float]] = None,
-    dev_status: Optional[StatusType] = None,
-    dev_status_name: Optional[str] = None,
+    unique_name: str | None = None,
+    value_store: MutableMapping[str, Any] | None = None,
+    dev_unit: str | None = "c",
+    dev_levels: tuple[float, float] | None = None,
+    dev_levels_lower: tuple[float, float] | None = None,
+    dev_status: StatusType | None = None,
+    dev_status_name: str | None = None,
 ) -> CheckResult:
     """This function checks the temperature value against specified levels and issues a warn/cirt
     message. Levels can be supplied by the user or the device. The user has the possibility to configure

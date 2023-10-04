@@ -7,8 +7,11 @@
 import re
 from collections.abc import Collection, Iterable
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
+from cmk.utils.servicename import Item, ServiceName
+
+from cmk.checkengine.checking import CheckPluginNameStr
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
@@ -28,7 +31,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.table import Foldable, table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.escaping import escape_to_html
@@ -38,6 +40,7 @@ from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.watolib.check_mk_automations import analyse_service
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.rulesets import rules_grouped_by_folder, SingleRulesetRecursively
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -48,7 +51,10 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.utils import mk_repr
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModePatternEditor)
+
+
 class ModePatternEditor(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -286,7 +292,7 @@ class ModePatternEditor(WatoMode):
                                 if not already_matched:
                                     # First match
                                     match_class = "match first"
-                                    match_img = "match"
+                                    match_img = "checkmark"
                                     match_title = _(
                                         "This logfile pattern matches first and will be used for "
                                         "defining the state of the given line."
@@ -295,25 +301,25 @@ class ModePatternEditor(WatoMode):
                                 else:
                                     # subsequent match
                                     match_class = "match"
-                                    match_img = "imatch"
+                                    match_img = "checkmark_orange"
                                     match_title = _(
                                         "This logfile pattern matches but another matched first."
                                     )
                             else:
-                                match_img = "nmatch"
+                                match_img = "hyphen"
                                 match_title = _(
                                     "This logfile pattern does not match the given string."
                                 )
                         else:
                             # rule does not match
-                            match_img = "nmatch"
+                            match_img = "hyphen"
                             match_title = _("The rule conditions do not match.")
 
                         table.row()
                         table.cell("#", css=["narrow nowrap"])
                         html.write_text(rulenr)
                         table.cell(_("Match"))
-                        html.icon("rule%s" % match_img, match_title)
+                        html.icon(match_img, match_title)
 
                         cls = (
                             ["state%d" % logwatch.level_state(state), "fillbackground"]

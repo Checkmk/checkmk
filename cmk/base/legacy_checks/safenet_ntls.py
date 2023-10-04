@@ -6,19 +6,25 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+    startswith,
+)
 
 
-def parse_safenet_ntls(info):
+def parse_safenet_ntls(string_table):
     return {
-        "operation_status": info[0][0],
-        "connected_clients": int(info[0][1]),
-        "links": int(info[0][2]),
-        "successful_connections": int(info[0][3]),
-        "failed_connections": int(info[0][4]),
-        "expiration_date": info[0][5],
+        "operation_status": string_table[0][0],
+        "connected_clients": int(string_table[0][1]),
+        "links": int(string_table[0][2]),
+        "successful_connections": int(string_table[0][3]),
+        "failed_connections": int(string_table[0][4]),
+        "expiration_date": string_table[0][5],
     }
 
 
@@ -47,15 +53,18 @@ def inventory_safenet_ntls_connrate(parsed):
 
 def check_safenet_ntls_connrate(item, _no_params, parsed):
     now = time.time()
-    connections_rate = get_rate(item, now, parsed[item + "_connections"])
+    connections_rate = get_rate(
+        get_value_store(), item, now, parsed[item + "_connections"], raise_overflow=True
+    )
     perfdata = [("connections_rate", connections_rate)]
     return 0, "%.2f connections/s" % connections_rate, perfdata
 
 
 check_info["safenet_ntls.connrate"] = LegacyCheckDefinition(
+    service_name="NTLS Connection Rate: %s",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_connrate,
     check_function=check_safenet_ntls_connrate,
-    service_name="NTLS Connection Rate: %s",
 )
 
 # .
@@ -86,9 +95,10 @@ def check_safenet_ntls_expiration(_no_item, _no_params, parsed):
 
 
 check_info["safenet_ntls.expiration"] = LegacyCheckDefinition(
+    service_name="NTLS Expiration Date",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_expiration,
     check_function=check_safenet_ntls_expiration,
-    service_name="NTLS Expiration Date",
 )
 
 # .
@@ -115,9 +125,10 @@ def check_safenet_ntls_links(_no_item, params, parsed):
 
 
 check_info["safenet_ntls.links"] = LegacyCheckDefinition(
+    service_name="NTLS Links",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_links,
     check_function=check_safenet_ntls_links,
-    service_name="NTLS Links",
     check_ruleset_name="safenet_ntls_links",
 )
 
@@ -155,9 +166,10 @@ def check_safenet_ntls_clients(_no_item, params, parsed):
 
 
 check_info["safenet_ntls.clients"] = LegacyCheckDefinition(
+    service_name="NTLS Clients",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_clients,
     check_function=check_safenet_ntls_clients,
-    service_name="NTLS Clients",
     check_ruleset_name="safenet_ntls_clients",
 )
 
@@ -200,12 +212,12 @@ check_info["safenet_ntls"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12383"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
     ),
-    parse_function=parse_safenet_ntls,
-    discovery_function=inventory_safenet_ntls,
-    check_function=check_safenet_ntls,
-    service_name="NTLS Operation Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12383.3.1.2",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
+    parse_function=parse_safenet_ntls,
+    service_name="NTLS Operation Status",
+    discovery_function=inventory_safenet_ntls,
+    check_function=check_safenet_ntls,
 )

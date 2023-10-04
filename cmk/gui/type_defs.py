@@ -10,11 +10,10 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, NotRequired, TypedDict, Union
+from typing import Any, Literal, NamedTuple, NewType, NotRequired
 
 from pydantic import BaseModel
-
-from livestatus import SiteId
+from typing_extensions import TypedDict
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.crypto import HashAlgorithm
@@ -27,14 +26,16 @@ from cmk.utils.crypto.certificate import (
 )
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.labels import Labels
+from cmk.utils.metrics import MetricName
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.structured_data import SDPath
-from cmk.utils.type_defs import ContactgroupName, HostName, MetricName, ServiceName, UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-SizePT = float
+SizePT = NewType("SizePT", float)
 SizeMM = float
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
@@ -83,9 +84,23 @@ class WebAuthnCredential(TypedDict):
     credential_data: bytes
 
 
+class TotpCredential(TypedDict):
+    credential_id: str
+    secret: bytes
+    version: int
+    registered_at: int
+    alias: str
+
+
 class TwoFactorCredentials(TypedDict):
     webauthn_credentials: dict[str, WebAuthnCredential]
     backup_codes: list[PasswordHash]
+    totp_credentials: dict[str, TotpCredential]
+
+
+class WebAuthnActionState(TypedDict):
+    challenge: str
+    user_verification: str
 
 
 SessionId = str
@@ -102,7 +117,7 @@ class SessionInfo:
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
-    webauthn_action_state: object = None
+    webauthn_action_state: WebAuthnActionState | None = None
 
     logged_out: bool = field(default=False)
     auth_type: AuthType | None = None
@@ -147,7 +162,7 @@ class UserSpec(TypedDict, total=False):
     alias: str
     authorized_sites: Any  # TODO: Improve this
     automation_secret: str
-    connector: str | None
+    connector: str | None  # Contains the connection id this user was synced from
     contactgroups: list[ContactgroupName]
     customer: str | None
     disable_notifications: DisabledNotificationsOptions
@@ -236,7 +251,7 @@ class VisualLinkSpec(NamedTuple):
     @classmethod
     def from_raw(cls, value: VisualName | tuple[VisualTypeName, VisualName]) -> VisualLinkSpec:
         # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
-        # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
+        # only a string (view_name) anymore, but a tuple of two elements: ('<visual_type_name>',
         # '<visual_name>'). Transform the old value to the new format.
         if isinstance(value, tuple):
             return cls(value[0], value[1])
@@ -277,6 +292,9 @@ class PainterParameters(TypedDict, total=False):
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
     time_range: tuple[str, int]
+    # From graph painters
+    graph_render_options: GraphRenderOptions
+    set_default_time_range: int
 
 
 def _make_default_painter_parameters() -> PainterParameters:
@@ -445,7 +463,7 @@ class ViewSpec(Visual):
     column_headers: Literal["off", "pergroup", "repeat"]
     sorters: Sequence[SorterSpec]
     add_headers: NotRequired[str]
-    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # View editor only adds them in case they are truish. In our built-in specs these flags are also
     # partially set in case they are falsy
     mobile: NotRequired[bool]
     mustsearch: NotRequired[bool]
@@ -571,7 +589,6 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 UnitRenderFunc = Callable[[Any], str]
 
-
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
@@ -591,6 +608,13 @@ class UnitInfo(TypedDict):
     perfometer_render: NotRequired[UnitRenderFunc]
 
 
+class ScalarBounds(TypedDict, total=False):
+    warn: float
+    crit: float
+    min: float
+    max: float
+
+
 class _TranslatedMetricRequired(TypedDict):
     scale: list[float]
 
@@ -601,28 +625,27 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
     # CustomGraphPage._show_metric_type_combined_summary)
     orig_name: list[str]
     value: float
-    scalar: dict[str, float]
+    scalar: ScalarBounds
     auto_graph: bool
     title: str
     unit: UnitInfo
     color: str
 
 
-GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
-GraphConsoldiationFunction = Literal["max", "min", "average"]
-
-RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
-MetricExpression = str
-LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-MetricDefinition = Union[
-    tuple[MetricExpression, LineType],
-    tuple[MetricExpression, LineType, str | LazyString],
-]
-PerfometerSpec = dict[str, Any]
-PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
-Perfdata = list[PerfdataTuple]
+
+
+class PerfDataTuple(NamedTuple):
+    metric_name: MetricName
+    value: float | int
+    unit_name: str
+    warn: float | None
+    crit: float | None
+    min: float | None
+    max: float | None
+
+
+Perfdata = list[PerfDataTuple]
 RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 
 
@@ -633,91 +656,7 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-RPNExpression = tuple  # TODO: Improve this type
-
-HorizontalRule = tuple[float, str, str, str | LazyString]
-
-
-class GraphMetric(TypedDict):
-    title: str
-    line_type: LineType
-    expression: RPNExpression
-    unit: NotRequired[str]
-    color: NotRequired[str]
-    visible: NotRequired[bool]
-
-
-class GraphSpec(TypedDict):
-    pass
-
-
-class TemplateGraphSpec(GraphSpec):
-    site: SiteId | None
-    host_name: HostName
-    service_description: ServiceName
-    graph_index: NotRequired[int | None]
-    graph_id: NotRequired[str | None]
-
-
-class ExplicitGraphSpec(GraphSpec):
-    title: str
-    unit: str
-    consolidation_function: GraphConsoldiationFunction | None
-    explicit_vertical_range: tuple[float | None, float | None]
-    omit_zero_metrics: bool
-    horizontal_rules: Sequence[HorizontalRule]
-    context: VisualContext
-    add_context_to_title: bool
-    metrics: Sequence[GraphMetric]
-
-
-class CombinedGraphSpec(GraphSpec):
-    datasource: str
-    single_infos: SingleInfos
-    presentation: GraphPresentation
-    context: VisualContext
-    selected_metric: NotRequired[MetricDefinition]
-    consolidation_function: NotRequired[GraphConsoldiationFunction]
-    graph_template: NotRequired[str]
-
-
-class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
-    site: str
-    metric: MetricName
-
-
-class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False):
-    host: HostName
-    service: ServiceName
-    service_description: ServiceName
-    color: str | None
-
-
-TemplateGraphIdentifier = tuple[Literal["template"], TemplateGraphSpec]
-CombinedGraphIdentifier = tuple[Literal["combined"], CombinedGraphSpec]
-CustomGraphIdentifier = tuple[Literal["custom"], str]
-ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
-SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
-ForecastGraphIdentifier = tuple[Literal["forecast"], str]
-
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-GraphIdentifier = Union[
-    CustomGraphIdentifier,
-    ForecastGraphIdentifier,
-    TemplateGraphIdentifier,
-    CombinedGraphIdentifier,
-    ExplicitGraphIdentifier,
-    SingleTimeseriesGraphIdentifier,
-]
-
-
-class RenderableRecipe(NamedTuple):
-    title: str
-    expression: RenderingExpression
-    color: str
-    line_type: str
-    visible: bool
-
+GraphRenderOptions = dict[str, Any]
 
 ActionResult = FinalizeRequest | None
 

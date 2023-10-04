@@ -97,7 +97,7 @@ def fixture_mkp_bytes(installer: packaging.Installer) -> bytes:
     mkp = packaging.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
 
     # Remove files from local hierarchy
-    packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
+    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     assert installer.is_installed(packaging.PackageName("aaa")) is False
 
     return mkp
@@ -251,7 +251,6 @@ def test_install(
         _PATH_CONFIG,
         _NO_CALLBACKS,
         allow_outdated=False,
-        post_package_change_actions=True,
         site_version="3.14.0p15",
     )
     assert installer.is_installed(packaging.PackageName("aaa")) is True
@@ -299,7 +298,7 @@ def test_write_file(installer: packaging.Installer) -> None:
 
 def test_uninstall(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
-    packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
+    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     assert not installer.is_installed(packaging.PackageName("aaa"))
 
 
@@ -386,7 +385,7 @@ def test_reload_gui_without_gui_files(reload_apache: Mock) -> None:
         packaging.PackageName("ding"),
         version_packaged="3.14.0p15",
     )
-    packaging._execute_post_package_change_actions(package)
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_not_called()
 
 
@@ -397,7 +396,7 @@ def test_reload_gui_with_gui_part(reload_apache: Mock) -> None:
         files={packaging.PackagePart.GUI: [Path("a")]},
     )
 
-    packaging._execute_post_package_change_actions(package)
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_called_once()
 
 
@@ -408,7 +407,7 @@ def test_reload_gui_with_web_part(reload_apache: Mock) -> None:
         files={packaging.PackagePart.WEB: [Path("a")]},
     )
 
-    packaging._execute_post_package_change_actions(package)
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_called_once()
 
 

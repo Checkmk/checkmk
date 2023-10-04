@@ -7,4 +7,4 @@ import pytest
 
 from cmk.utils import version
 
-managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")

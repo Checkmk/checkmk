@@ -8,7 +8,7 @@
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -17,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     exists,
     not_contains,
     not_exists,
+    render,
     SNMPTree,
 )
 
@@ -42,7 +43,7 @@ def check_cisco_cpu(item, params, info):
         util,
         "util",
         (warn, crit),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
         infoname="Utilization in the last 5 minutes",
     )
@@ -59,13 +60,13 @@ check_info["cisco_cpu"] = LegacyCheckDefinition(
             exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1")
         ),
     ),
-    check_function=check_cisco_cpu,
-    discovery_function=inventory_cisco_cpu,
-    service_name="CPU utilization",
-    check_ruleset_name="cpu_utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.109.1.1.1.1",
         oids=["5", "8"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_cisco_cpu,
+    check_function=check_cisco_cpu,
+    check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

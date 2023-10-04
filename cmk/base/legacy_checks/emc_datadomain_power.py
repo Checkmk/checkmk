@@ -33,18 +33,18 @@ def check_emc_datadomain_power(item, _no_params, info):
             dev_state = line[3]
             dev_state_str = state_table.get(dev_state, ("Unknown", 3))[0]
             dev_state_rc = state_table.get(dev_state, ("Unknown", 3))[1]
-            infotext = "%s Status %s" % (dev_descr, dev_state_str)
+            infotext = f"{dev_descr} Status {dev_state_str}"
             return dev_state_rc, infotext
     return None
 
 
 check_info["emc_datadomain_power"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_power,
-    discovery_function=inventory_emc_datadomain_power,
-    service_name="Power Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.1.1.1.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="Power Module %s",
+    discovery_function=inventory_emc_datadomain_power,
+    check_function=check_emc_datadomain_power,
 )

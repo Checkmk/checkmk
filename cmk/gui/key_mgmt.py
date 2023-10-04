@@ -21,12 +21,12 @@ from cmk.utils.crypto.certificate import (
 )
 from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -63,7 +63,7 @@ class KeypairStore:
 
         variables: dict[str, dict[int, dict[str, Any]]] = {self._attr: {}}
         with self._path.open("rb") as f:
-            exec(f.read(), variables, variables)
+            exec(f.read(), variables, variables)  # nosec B102 # BNS:aee528
         return self._parse(variables[self._attr])
 
     def save(self, keys: Mapping[int, Key]) -> None:
@@ -74,10 +74,10 @@ class KeypairStore:
             )
 
     def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
-        return {key_id: Key.parse_obj(raw_key) for key_id, raw_key in raw_keys.items()}
+        return {key_id: Key.model_validate(raw_key) for key_id, raw_key in raw_keys.items()}
 
     def _unparse(self, keys: Mapping[int, Key]) -> dict[int, dict[str, Any]]:
-        return {key_id: key.dict() for key_id, key in keys.items()}
+        return {key_id: key.model_dump() for key_id, key in keys.items()}
 
     def choices(self) -> list[tuple[str, str]]:
         choices = []
@@ -229,6 +229,7 @@ class PageKeyManagement:
                 table.cell(_("Created"), cmk.utils.render.date(key.date))
                 table.cell(_("By"), key.owner)
                 table.cell(_("Digest (MD5)"), key.fingerprint(HashAlgorithm.MD5))
+                table.cell(_("Key ID"), key_id)
 
 
 class PageEditKey:
@@ -252,15 +253,9 @@ class PageEditKey:
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value["alias"], PasswordType(value["passphrase"]))
-            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
-            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
-            #  is obviously a very simple module-layer violation. This whole module should either
-            #    * be moved into cmk.gui.cee.plugins.wato
-            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
-            #  Either way, this is outside my scope right now and shall be fixed.
-            from cmk.gui.plugins.wato.utils.base_modes import mode_url
-
-            return HTTPRedirect(mode_url(self.back_mode))
+            return HTTPRedirect(
+                makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py")
+            )
         return None
 
     def _create_key(self, alias: str, passphrase: PasswordType) -> None:
@@ -341,16 +336,10 @@ class PageUploadKey:
                 self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
             except InvalidPEMError:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
-
-            # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
-            #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
-            #  is obviously a very simple module-layer violation. This whole module should either
-            #    * be moved into cmk.gui.cee.plugins.wato
-            #    * or cmk.gui.cee.plugins.wato.module_registry should be moved up
-            #  Either way, this is outside my scope right now and shall be fixed.
-            from cmk.gui.plugins.wato.utils.base_modes import mode_url
-
-            return HTTPRedirect(mode_url(self.back_mode), code=302)
+            return HTTPRedirect(
+                makeuri_contextless(request, [("mode", self.back_mode)], filename="wato.py"),
+                code=302,
+            )
         return None
 
     def _get_uploaded(
@@ -482,10 +471,10 @@ class PageDownloadKey:
 
     def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         key = keys[key_id]
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
-            key_id, key
+        response.set_content_type("application/x-pem-file")
+        response.set_content_disposition(
+            ContentDispositionType.ATTACHMENT, self._file_name(key_id, key)
         )
-        response.headers["Content-type"] = "application/x-pem-file"
         response.set_data(key.private_key + key.certificate)
 
     def _file_name(self, key_id: int, key: Key) -> str:

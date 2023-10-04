@@ -11,18 +11,12 @@ from typing import Final
 
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError
+from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.exceptions import MKException, MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, SectionName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import (
-    OID,
-    SNMPBackend,
-    SNMPContextName,
-    SNMPHostConfig,
-    SNMPRawValue,
-    SNMPRowInfo,
-)
+from cmk.snmplib import OID, SNMPBackend, SNMPContext, SNMPHostConfig, SNMPRawValue, SNMPRowInfo
 
 from ._utils import strip_snmp_value
 
@@ -40,8 +34,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
         if not self.path.exists():
             raise MKSNMPError(f"No snmpwalk file {self.path}")
 
-    def get(self, oid: OID, context_name: SNMPContextName | None = None) -> SNMPRawValue | None:
-        walk = self.walk(oid)
+    def get(self, /, oid: OID, *, context: SNMPContext) -> SNMPRawValue | None:
+        walk = self.walk(oid, context=context)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
         if len(walk) == 1 and oid == walk[0][0]:
@@ -52,10 +46,12 @@ class StoredWalkSNMPBackend(SNMPBackend):
 
     def walk(
         self,
+        /,
         oid: OID,
+        *,
+        context: SNMPContext,
         section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
-        context_name: SNMPContextName | None = None,
     ) -> SNMPRowInfo:
         if oid.startswith("."):
             oid = oid[1:]
@@ -131,6 +127,8 @@ class StoredWalkSNMPBackend(SNMPBackend):
     def _to_bin_string(oid: OID) -> tuple[int, ...]:
         try:
             return tuple(map(int, oid.strip(".").split(".")))
+        except MKException:
+            raise
         except Exception:
             raise MKGeneralException("Invalid OID %s" % oid)
 

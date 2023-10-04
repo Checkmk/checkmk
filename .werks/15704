@@ -1,0 +1,18 @@
+Title: check_mkevents: Display of last log line configurable
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1689966800
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The ruleset "Check event state in Event Console" now has a new
+configuration entry "Show last log message".<br>
+With this entry, you can decide whether and where (summary or details)
+the last relevant log entry will be displayed within the resulting service.
+By default it will be shown in the service details.
+
+Rules that have been created before this change will default to
+"Show last log message in service summary", as this was old behavior.

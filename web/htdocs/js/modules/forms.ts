@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import "select2";
 import "element-closest-polyfill";
@@ -9,7 +11,7 @@ import Tagify, {EditTagsRuntimeSettings} from "@yaireo/tagify";
 import * as ajax from "ajax";
 import $ from "jquery";
 import Swal from "sweetalert2";
-import {CMKAjaxReponse} from "types";
+import {CMKAjaxReponse, RequireConfirmation} from "types";
 import * as utils from "utils";
 import {initialize_autocompleters, toggle_label_row_opacity} from "valuespecs";
 
@@ -225,6 +227,9 @@ function enable_label_input_fields(
         tagify.on("input", function (e) {
             $("div.label_error").remove(); // Remove all previous errors
 
+            //e.detail is InputEventDataNormal
+            if (!("value" in e.detail)) return;
+
             const value = e.detail.value;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 
@@ -337,7 +342,10 @@ function ajax_call_autocomplete_labels(
 }
 
 // Handle Enter key in textfields
-export function textinput_enter_submit(event: KeyboardEvent, submit: string) {
+export function textinput_enter_submit(
+    event: KeyboardEvent,
+    submit: string
+): boolean | void {
     const keyCode = event.which || event.keyCode;
     if (keyCode == 13) {
         if (submit) {
@@ -351,7 +359,8 @@ export function textinput_enter_submit(event: KeyboardEvent, submit: string) {
 // Helper function to display nice popup confirm dialogs
 export function confirm_dialog(
     optional_args: any,
-    confirm_handler: null | (() => void)
+    confirm_handler: null | (() => void),
+    cancel_handler: null | (() => void) = null
 ) {
     const default_custom_class_args = {
         title: "confirm_title",
@@ -404,26 +413,25 @@ export function confirm_dialog(
     };
 
     Swal.fire(args).then(result => {
-        if (confirm_handler && result.value) {
-            confirm_handler();
+        if (result.value) {
+            if (confirm_handler) confirm_handler();
+        } else if (result.dismiss == Swal.DismissReason.cancel) {
+            if (cancel_handler) cancel_handler();
         }
     });
 }
 
 // Makes a form submittable after explicit confirmation
-export function add_confirm_on_submit(form_id: string, message: string) {
-    const form = document.getElementById(form_id);
-    if (form instanceof HTMLElement) {
-        form.addEventListener("submit", e => {
-            confirm_dialog({html: message}, () => {
-                (document.getElementById(form_id) as HTMLFormElement)?.submit();
-            });
-            return utils.prevent_default_events(e!);
+export function add_confirm_on_submit(
+    form: HTMLFormElement,
+    confirmation_args: RequireConfirmation
+) {
+    form.addEventListener("submit", e => {
+        confirm_dialog(confirmation_args, () => {
+            form.submit();
         });
-    } else
-        throw new Error(
-            `Can not add confirm on submit: The Form with the id ${form_id} does not exist`
-        );
+        return utils.prevent_default_events(e!);
+    });
 }
 
 // Used as onclick handler on links to confirm following the link or not
@@ -463,4 +471,24 @@ export function replace_error_msg_with_confirm_dialog() {
 
     error_msg.replaceWith(dialog);
     utils.remove_class(dialog, "hidden");
+}
+
+export function add_filter_form_error_listener(elem_id: string) {
+    const elem = document.getElementById(elem_id) as HTMLElement;
+    if (!elem) return;
+
+    const observer = new MutationObserver(() => {
+        // Disable the form submit button if there are any errors
+        const errors: HTMLCollection = elem.getElementsByClassName("error");
+        const submit_button = document.getElementById(
+            "_apply"
+        )! as HTMLInputElement;
+        if (errors.length > 0) {
+            submit_button.disabled = true;
+        } else {
+            submit_button.disabled = false;
+        }
+    });
+
+    observer.observe(elem, {childList: true, subtree: true});
 }

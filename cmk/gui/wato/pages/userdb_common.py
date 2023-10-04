@@ -27,22 +27,18 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import (
-    load_connection_config,
-    save_connection_config,
-    UserConnectionSpec,
-)
-from cmk.gui.plugins.wato.utils import make_confirm_delete_link, redirect
 from cmk.gui.site_config import get_login_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
+from cmk.gui.userdb import load_connection_config, save_connection_config, UserConnectionSpec
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import DocReference, makeuri_contextless
+from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri_contextless
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mode import redirect
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
@@ -192,7 +188,7 @@ def render_connections_page(
             table.cell(_("ID"), connection_id)
             table.cell(_("Name"), connection.get("name", connection_id))
 
-            if cmk_version.is_managed_edition():
+            if cmk_version.edition() is cmk_version.Edition.CME:
                 table.cell(_("Customer"), managed.get_customer_name(connection))
 
             table.cell(_("Description"))
@@ -210,7 +206,7 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
 
 
 def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
     return get_login_sites()
 

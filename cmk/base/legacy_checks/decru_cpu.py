@@ -17,7 +17,7 @@ def inventory_decru_cpu(info):
 
 
 def check_decru_cpu(item, _no_params, info):
-    user, nice, system, interrupt, idle = [float(x[0]) / 10.0 for x in info]
+    user, nice, system, interrupt, idle = (float(x[0]) / 10.0 for x in info)
     user += nice
 
     perfdata = [
@@ -28,18 +28,18 @@ def check_decru_cpu(item, _no_params, info):
 
     return (
         0,
-        "user %.0f%%, sys %.0f%%, interrupt %.0f%%, idle %.0f%%" % (user, system, interrupt, idle),
+        f"user {user:.0f}%, sys {system:.0f}%, interrupt {interrupt:.0f}%, idle {idle:.0f}%",
         perfdata,
     )
 
 
 check_info["decru_cpu"] = LegacyCheckDefinition(
     detect=DETECT_DECRU,
-    check_function=check_decru_cpu,
-    discovery_function=inventory_decru_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.1",
         oids=["8"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_decru_cpu,
+    check_function=check_decru_cpu,
 )

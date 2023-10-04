@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Dict, Mapping, MutableMapping, Optional
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -75,7 +76,7 @@ register.agent_section(
 
 
 def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSection:
-    parsed: Dict[str, Dict[str, str]] = {}
+    parsed: dict[str, dict[str, str]] = {}
     site = None
     for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":
@@ -96,8 +97,8 @@ register.agent_section(
 
 
 def discovery_livestatus_status(
-    section_livestatus_status: Optional[LivestatusSection],
-    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -109,8 +110,8 @@ def discovery_livestatus_status(
 def check_livestatus_status(
     item: str,
     params: Mapping[str, Any],
-    section_livestatus_status: Optional[LivestatusSection],
-    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,
 ) -> CheckResult:
     # Check Performance counters
     this_time = time.time()
@@ -128,8 +129,8 @@ def check_livestatus_status(
 def _generate_livestatus_results(  # pylint: disable=too-many-branches
     item: str,
     params: Mapping[str, Any],
-    section_livestatus_status: Optional[LivestatusSection],
-    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    section_livestatus_status: LivestatusSection | None,
+    section_livestatus_ssl_certs: LivestatusSection | None,
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:
@@ -155,9 +156,9 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     ]:
         value = float(status[key])
         if key in ("host_checks_rate", "service_checks_rate"):
-            yield Result(state=State.OK, summary="%s: %.1f/s" % (title, value))
+            yield Result(state=State.OK, summary=f"{title}: {value:.1f}/s")
         else:
-            yield Result(state=State.OK, notice="%s: %.1f/s" % (title, value))
+            yield Result(state=State.OK, notice=f"{title}: {value:.1f}/s")
 
         yield Metric(name=metric_name, value=value, boundaries=(0, None))
 
@@ -270,7 +271,7 @@ def _generate_livestatus_results(  # pylint: disable=too-many-branches
     # for 32bit systems, dates after 19th Jan 2038 (32bit limit)
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
-    pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
+    pem_path = f"/omd/sites/{item}/etc/ssl/sites/{item}.pem"
     valid_until_str = (
         None
         if section_livestatus_ssl_certs is None

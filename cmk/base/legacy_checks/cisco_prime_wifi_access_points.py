@@ -12,9 +12,10 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
 import collections
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping
@@ -39,18 +40,18 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
         critical_percent,
         "ap_devices_percent_unhealthy",
         params.get("levels", (None, None)),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Percent Critical",
     )
     for k, v in counts.items():
-        yield 0, "%s: %r" % (k.title(), v), [("ap_devices_%s" % k.lower(), v)]
+        yield 0, f"{k.title()}: {v!r}", [("ap_devices_%s" % k.lower(), v)]
 
 
 check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
     parse_function=parse_cisco_prime_wifi_access_points,
+    service_name="Cisco Prime WiFi Access Points",
     discovery_function=discover_cisco_prime_wifi_access_points,
     check_function=check_cisco_prime_wifi_access_points,
-    service_name="Cisco Prime WiFi Access Points",
     check_ruleset_name="cisco_prime_wifi_access_points",
     check_default_parameters={
         "levels": (20, 40),

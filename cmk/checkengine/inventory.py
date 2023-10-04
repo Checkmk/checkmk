@@ -9,43 +9,43 @@ import contextlib
 import itertools
 import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
-    make_filter_func,
     MutableTree,
     parse_visible_raw_path,
-    RawIntervalsFromConfig,
-    RetentionInterval,
+    RawIntervalFromConfig,
+    SDKey,
+    SDPath,
+    SDRetentionFilterChoices,
+    SDValue,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    HostName,
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-    ValidatedString,
-)
+from cmk.utils.validatedstr import ValidatedString
 
-from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
-from ._typedefs import HostKey, SourceType
 from .checkresults import ActiveCheckResult
-from .host_sections import HostSections
+from .fetcher import FetcherFunction, HostKey, SourceType
+from .parser import group_by_host, HostSections, ParserFunction
 from .sectionparser import (
-    filter_out_errors,
     make_providers,
+    ParsedSectionName,
     Provider,
     ResolvedResult,
+    SectionPlugin,
     store_piggybacked_sections,
 )
 from .sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs
+from .summarize import SummarizerFunction
 
 __all__ = [
     "InventoryPluginName",
@@ -69,10 +69,7 @@ class PInventoryResult(Protocol):
     def path(self) -> Sequence[str]:
         ...
 
-    def populate_inventory_tree(self, tree: MutableTree) -> None:
-        ...
-
-    def populate_status_data_tree(self, tree: MutableTree) -> None:
+    def collect(self, collection: ItemDataCollection) -> None:
         ...
 
 
@@ -96,7 +93,7 @@ class HWSWInventoryParameters:
     status_data_inventory: bool
 
     @classmethod
-    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
+    def from_raw(cls, raw_parameters: Mapping[str, Any]) -> HWSWInventoryParameters:
         return cls(
             hw_changes=int(raw_parameters.get("hw-changes", 0)),
             sw_changes=int(raw_parameters.get("sw-changes", 0)),
@@ -122,19 +119,26 @@ def inventorize_host(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: SectionMap[SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
+    section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
-    host_sections_no_error = filter_out_errors(host_sections)
-    store_piggybacked_sections(host_sections_no_error)
+    host_sections_by_host = group_by_host(
+        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+    )
+    store_piggybacked_sections(host_sections_by_host)
 
-    providers = make_providers(host_sections_no_error, section_plugins)
+    providers = make_providers(
+        host_sections_by_host,
+        section_plugins,
+        error_handling=section_error_handling,
+    )
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -161,7 +165,7 @@ def inventorize_host(
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
     ) or bool(parsing_errors)
-    no_data_or_files = _no_data_or_files(host_name, host_sections_no_error.values())
+    no_data_or_files = _no_data_or_files(host_name, host_sections_by_host.values())
 
     return CheckInventoryTreeResult(
         processing_failed=processing_failed,
@@ -210,11 +214,11 @@ def inventorize_cluster(
 
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
-    tree.add_pairs(
+    tree.add(
         path=("software", "applications", "check_mk", "cluster"),
-        pairs={"is_cluster": True},
+        pairs=[{"is_cluster": True}],
     )
-    tree.add_rows(
+    tree.add(
         path=("software", "applications", "check_mk", "cluster", "nodes"),
         key_columns=["name"],
         rows=[{"name": name} for name in nodes],
@@ -223,7 +227,7 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
 
 
 def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
-    if any(host_sections):
+    if any(hs.sections or hs.piggybacked_raw_data for hs in host_sections):
         return False
 
     if Path(cmk.utils.paths.inventory_output_dir, str(host_name)).exists():
@@ -244,7 +248,7 @@ def _inventorize_real_host(
     *,
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
 ) -> tuple[MutableTrees, UpdateResult]:
     section.section_step("Create inventory or status data tree")
@@ -262,9 +266,9 @@ def _inventorize_real_host(
     )
 
     if trees.inventory:
-        trees.inventory.add_pairs(
+        trees.inventory.add(
             path=("software", "applications", "check_mk", "cluster"),
-            pairs={"is_cluster": False},
+            pairs=[{"is_cluster": False}],
         )
 
     return trees, update_result
@@ -348,9 +352,9 @@ def _collect_inventory_plugin_items(
                 continue
 
             def __iter(
-                section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+                section_names: Iterable[ParsedSectionName], providers: Iterable[Provider]
             ) -> Iterable[ResolvedResult]:
-                for provider in providers.values():
+                for provider in providers:
                     yield from (
                         resolved
                         for section_name in section_names
@@ -362,7 +366,7 @@ def _collect_inventory_plugin_items(
                 raw_cache_info=get_cache_info(
                     tuple(
                         cache_info
-                        for resolved in __iter(inventory_plugin.sections, providers)
+                        for resolved in __iter(inventory_plugin.sections, providers.values())
                         if (cache_info := resolved.cache_info) is not None
                     )
                 ),
@@ -384,6 +388,15 @@ def _parse_inventory_plugin_item(
 
 
 @dataclass(frozen=True)
+class ItemDataCollection:
+    inventory_pairs: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+    status_data_pairs: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+    key_columns: list[SDKey] = field(default_factory=list)
+    inventory_rows: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+    status_data_rows: list[Mapping[SDKey, SDValue]] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class MutableTrees:
     inventory: MutableTree
     status_data: MutableTree
@@ -392,12 +405,28 @@ class MutableTrees:
 def _create_trees_from_inventory_plugin_items(
     items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin],
 ) -> MutableTrees:
-    inventory_tree = MutableTree()
-    status_data_tree = MutableTree()
+    collection_by_path: dict[SDPath, ItemDataCollection] = {}
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
-            item.populate_inventory_tree(inventory_tree)
-            item.populate_status_data_tree(status_data_tree)
+            item.collect(collection_by_path.setdefault(tuple(item.path), ItemDataCollection()))
+
+    inventory_tree = MutableTree()
+    status_data_tree = MutableTree()
+    for path, collection in collection_by_path.items():
+        key_columns = sorted(set(collection.key_columns))
+        inventory_tree.add(
+            path=path,
+            pairs=collection.inventory_pairs,
+            key_columns=key_columns,
+            rows=collection.inventory_rows,
+        )
+        status_data_tree.add(
+            path=path,
+            pairs=collection.status_data_pairs,
+            key_columns=key_columns,
+            rows=collection.status_data_rows,
+        )
+
     return MutableTrees(inventory_tree, status_data_tree)
 
 
@@ -432,7 +461,7 @@ def _may_update(
     *,
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     inventory_tree: MutableTree,
     previous_tree: ImmutableTree,
 ) -> UpdateResult:
@@ -446,49 +475,40 @@ def _may_update(
         for item in items_of_inventory_plugin.items
     }
 
-    results = []
+    choices_by_path: dict[SDPath, SDRetentionFilterChoices] = {}
     for entry in raw_intervals_from_config:
         path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
-
+        choices = choices_by_path.setdefault(
+            path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
+        )
         if choices_for_attributes := entry.get("attributes"):
-            results.append(
-                inventory_tree.update_pairs(
-                    now,
-                    path,
-                    previous_tree,
-                    make_filter_func(
-                        a[-1] if isinstance(a := choices_for_attributes, tuple) else a
-                    ),
-                    RetentionInterval.make(
-                        (
-                            (now, 0)
-                            if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
-                            else ci
-                        ),
-                        entry["interval"],
-                    ),
-                )
+            choices.add_pairs_choice(
+                choice=a[-1] if isinstance(a := choices_for_attributes, tuple) else a,
+                cache_info=(
+                    (now, 0)
+                    if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
+                    else ci
+                ),
+            )
+        elif choices_for_columns := entry.get("columns"):
+            choices.add_columns_choice(
+                choice=c[-1] if isinstance(c := choices_for_columns, tuple) else c,
+                cache_info=(
+                    (now, 0)
+                    if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
+                    else ci
+                ),
             )
 
-        elif choices_for_table := entry.get("columns"):
-            results.append(
-                inventory_tree.update_rows(
-                    now,
-                    path,
-                    previous_tree,
-                    make_filter_func(c[-1] if isinstance(c := choices_for_table, tuple) else c),
-                    RetentionInterval.make(
-                        (
-                            (now, 0)
-                            if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
-                            else ci
-                        ),
-                        entry["interval"],
-                    ),
-                )
-            )
-
-    return UpdateResult.from_results(results)
+    update_result = UpdateResult()
+    for choices in choices_by_path.values():
+        inventory_tree.update(
+            now=now,
+            previous_tree=previous_tree,
+            choices=choices,
+            update_result=update_result,
+        )
+    return update_result
 
 
 def _check_fetched_data_or_trees(
@@ -508,7 +528,7 @@ def _check_fetched_data_or_trees(
         # Inventory trees in Checkmk <2.2 the cluster property was added in any case.
         # Since Checkmk 2.2 we changed this behaviour: see werk 14836.
         # In order to avoid a lot of "useless" warnings we check the following:
-        if inventory_tree.count_entries() == 1 and isinstance(
+        if len(inventory_tree) == 1 and isinstance(
             inventory_tree.get_attribute(
                 ("software", "applications", "check_mk", "cluster"), "is_cluster"
             ),
@@ -540,7 +560,7 @@ def _check_trees(
         yield ActiveCheckResult(0, "Found no data")
         return
 
-    yield ActiveCheckResult(0, f"Found {inventory_tree.count_entries()} inventory entries")
+    yield ActiveCheckResult(0, f"Found {len(inventory_tree)} inventory entries")
 
     if parameters.sw_missing and inventory_tree.has_table(("software", "packages")):
         yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
@@ -552,4 +572,4 @@ def _check_trees(
         yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
     if status_data_tree:
-        yield ActiveCheckResult(0, f"Found {status_data_tree.count_entries()} status entries")
+        yield ActiveCheckResult(0, f"Found {len(status_data_tree)} status entries")

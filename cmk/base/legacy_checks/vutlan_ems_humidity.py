@@ -16,9 +16,9 @@ from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 # NOTE: the unit is not given in the SNMP walk, it is %
 
 
-def parse_vutlan_ems_humidity(info):
+def parse_vutlan_ems_humidity(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         if line[0].startswith("202"):
             # all OIDs 202xxx are humidity-related
             parsed[line[1]] = float(line[2])
@@ -40,16 +40,16 @@ def check_vutlan_ems_humidity(item, params, parsed):
 
 check_info["vutlan_ems_humidity"] = LegacyCheckDefinition(
     detect=DETECT_VUTLAN_EMS,
-    parse_function=parse_vutlan_ems_humidity,
-    discovery_function=discover_vutlan_ems_humidity,
-    check_function=check_vutlan_ems_humidity,
-    service_name="Humidity %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.39052.1.3.1",
             oids=[OIDEnd(), "7", "9"],
         )
     ],
+    parse_function=parse_vutlan_ems_humidity,
+    service_name="Humidity %s",
+    discovery_function=discover_vutlan_ems_humidity,
+    check_function=check_vutlan_ems_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={
         "levels": (60.0, 70.0),

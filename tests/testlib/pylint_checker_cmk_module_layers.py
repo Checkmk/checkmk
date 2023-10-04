@@ -13,6 +13,7 @@ from typing import NewType
 from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
+from pylint.lint.pylinter import PyLinter  # type: ignore[import]
 
 from tests.testlib import cmk_path
 
@@ -21,7 +22,7 @@ ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path
 Component = NewType("Component", str)
 
 
-def register(linter):
+def register(linter: PyLinter) -> None:
     linter.register_checker(CMKModuleLayerChecker(linter))
 
 
@@ -48,7 +49,7 @@ def _get_absolute_importee(
 def _is_package(node: ImportFrom) -> bool:
     parent = node.parent
     try:
-        return parent.package
+        return bool(parent.package)
     except AttributeError:  # could be a try/except block, for instance.
         return _is_package(parent)
 
@@ -69,6 +70,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported, Component("cmk.fields")),
             _in_component(imported, Component("cmk.automations")),
             _in_component(imported, Component("cmk.bi")),
+            _in_component(imported, Component("cmk.commands")),
         )
     )
 
@@ -251,7 +253,71 @@ def _is_allowed_for_agent_based_plugin(
     )
 
 
+def _allow_default_plus_component_under_test(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    if component.startswith("tests.unit.checks"):
+        component_under_test = Component("cmk.base.plugins.agent_based")
+    elif component.startswith("tests.unit.") or component.startswith("tests.integration"):
+        component_under_test = Component(".".join(component.split(".")[2:]))
+    else:
+        raise ValueError(f"Unhandled component: {component}")
+
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _is_default_allowed_import(imported=imported, component=component_under_test),
+        )
+    )
+
+
+def _is_allowed_for_legacy_check_tests(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allow_default_plus_component_under_test(imported=imported, component=component),
+            _in_component(imported, Component("cmk.base.legacy_checks")),
+            _in_component(imported, Component("cmk.base.command_config")),
+            _in_component(imported, Component("cmk.base.check_legacy_includes")),
+            _in_component(imported, Component("cmk.base.api.agent_based")),
+            _in_component(imported, Component("cmk.checkengine")),
+            _in_component(imported, Component("cmk.snmplib")),
+        )
+    )
+
+
+def _allow_default_plus_component_under_test_bakery_checkengine(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _allow_default_plus_component_under_test(imported=imported, component=component),
+            _in_component(imported, Component("cmk.checkengine")),
+            _in_component(imported, Component("cmk.cee.bakery")),
+        )
+    )
+
+
 _COMPONENTS = (
+    (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
+    (Component("tests.unit.cmk_metrics"), _allow_default_plus_component_under_test),
+    (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
+    (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
+    (Component("tests.integration.cmk.post_rename_site"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.snmplib"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.gui"), _allow_default_plus_component_under_test),
+    (Component("tests.integration.cmk.cee.liveproxy"), _allow_default_plus_component_under_test),
+    (
+        Component("tests.integration.cmk.base"),
+        _allow_default_plus_component_under_test_bakery_checkengine,
+    ),
     # Namespaces below cmk.base.api.agent_based are not really components,
     # but they (almost) adhere to the same import restrictions,
     # and we want to encourage that
@@ -345,8 +411,8 @@ class CMKModuleLayerChecker(BaseChecker):
         absolute_path: str = node.root().file
         importing_path = ModulePath(removeprefix(absolute_path, self.cmk_path_cached))
 
-        # Tests are allowed to import anyting.
-        if str(importing_path).startswith("tests/"):
+        # Tests are allowed to import everything for now. Should be cleaned up soon
+        if str(importing_path).startswith("tests/testlib"):
             return
 
         importing = self._get_module_name_of_files(importing_path)
@@ -362,7 +428,7 @@ class CMKModuleLayerChecker(BaseChecker):
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         parts[-1] = removeprefix(parts[-1], "flycheck_")
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        if parts[0] != "cmk":
+        if parts[0] not in ("cmk", "tests", "cmk_metrics"):
             parts = [parts[-1]]
         return ModuleName(".".join(parts))
 

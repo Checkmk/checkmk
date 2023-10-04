@@ -9,7 +9,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.type_defs import Row
-from cmk.gui.views.perfometer import Perfometer, SorterPerfometer
+from cmk.gui.views.perfometer import Perfometer
+from cmk.gui.views.perfometer.sorter import SorterPerfometer
 
 
 @pytest.mark.parametrize(

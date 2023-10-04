@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Command line interface for the Checkmk Extension Packages"""
+
 import argparse
 import json
 import logging
 import sys
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
+
+from cmk.utils.version import edition, Edition
 
 from . import (
     disable,
@@ -61,7 +64,7 @@ def _render_table(headers: list[str], rows: Iterable[list[str]]) -> str:
 def _to_text(manifest: Manifest) -> str:
     valid_until_text = manifest.version_usable_until or "No version limitation"
     files = "".join(
-        "\n  {}{}".format(ui_title(part), "".join(f"\n    {f}" for f in fs))
+        "\n  {}{}".format(ui_title(part, lambda s: s), "".join(f"\n    {f}" for f in fs))
         for part, fs in manifest.files.items()
     )
     return (
@@ -99,6 +102,7 @@ def _command_find(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Show information about local files"""
     installer = Installer(path_config.installed_packages_dir)
@@ -132,6 +136,7 @@ def _command_inspect(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Show manifest of an MKP file"""
     file_path: Path = args.file
@@ -157,6 +162,7 @@ def _command_show_all(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Show all manifests"""
     stored_manifests = get_stored_manifests(
@@ -191,6 +197,7 @@ def _command_show(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Show manifest of a stored package"""
     package_store = PackageStore(
@@ -210,6 +217,7 @@ def _command_files(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Show all files beloning to a package"""
     package_store = PackageStore(
@@ -241,6 +249,7 @@ def _command_list(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Show a table of all known files, including the deployment state"""
     installer = Installer(path_config.installed_packages_dir)
@@ -302,6 +311,7 @@ def _command_install_deprecated(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """This command is deprecated. Please use the `add` and `enable` commands."""
     sys.stderr.write(f"{_command_install_deprecated.__doc__}\n")
@@ -319,6 +329,7 @@ def _command_add(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Add an MKP to the collection of managed MKPs"""
     file_path: Path = args.file
@@ -353,6 +364,7 @@ def _command_release(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
     release(Installer(path_config.installed_packages_dir), args.name, callbacks)
@@ -364,6 +376,7 @@ def _command_remove(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Remove a package from the site"""
     package_store = PackageStore(
@@ -386,6 +399,7 @@ def _command_disable_outdated(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Disable MKP packages that are declared to be outdated with the new version.
 
@@ -393,7 +407,7 @@ def _command_disable_outdated(
     For all installed packages, this command compares that version with the Checkmk version.
     In case it is outdated, the package is disabled.
     """
-    disable_outdated(
+    disabled = disable_outdated(
         Installer(path_config.installed_packages_dir),
         PackageStore(
             shipped_dir=path_config.packages_shipped_dir,
@@ -404,6 +418,7 @@ def _command_disable_outdated(
         callbacks,
         site_version=this_version,
     )
+    post_package_change_actions(disabled)
     return 0
 
 
@@ -412,6 +427,7 @@ def _command_update_active(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Disable MKP packages that are not suitable for this version, and enable others.
 
@@ -420,12 +436,13 @@ def _command_update_active(
 
     This command deactivates all packages that are not applicable, and then activates the ones that are.
     """
-    update_active_packages(
+    uninstalled, installed = update_active_packages(
         Installer(path_config.installed_packages_dir),
         path_config,
         callbacks,
         site_version=this_version,
     )
+    post_package_change_actions([*uninstalled, *installed])
     return 0
 
 
@@ -451,6 +468,7 @@ def _command_enable(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Enable a disabled package"""
     installer = Installer(path_config.installed_packages_dir)
@@ -459,7 +477,7 @@ def _command_enable(
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    install(
+    installed = install(
         installer,
         package_store,
         _get_package_id(args.name, args.version, package_store),
@@ -467,6 +485,8 @@ def _command_enable(
         callbacks,
         site_version=this_version,
     )
+    post_package_change_actions([installed])
+
     return 0
 
 
@@ -475,6 +495,7 @@ def _command_disable(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Disable an enabled package"""
     package_store = PackageStore(
@@ -482,13 +503,16 @@ def _command_disable(
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    disable(
-        Installer(path_config.installed_packages_dir),
-        package_store,
-        path_config,
-        callbacks,
-        _get_package_id(args.name, args.version, package_store),
-    )
+    if (
+        disabled := disable(
+            Installer(path_config.installed_packages_dir),
+            package_store,
+            path_config,
+            callbacks,
+            _get_package_id(args.name, args.version, package_store),
+        )
+    ) is not None:
+        post_package_change_actions([disabled])
     return 0
 
 
@@ -507,6 +531,7 @@ def _command_template(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Create a template of a package manifest"""
     installer = Installer(path_config.installed_packages_dir)
@@ -544,6 +569,7 @@ def _command_package(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
     """Create an .mkp file from the provided manifest.
 
@@ -568,7 +594,15 @@ def _command_package(
         manifest = store.store(
             create_mkp(package, path_config.get_path, version_packaged=this_version)
         )
-        install(installer, store, manifest.id, path_config, callbacks, site_version=this_version)
+        installed = install(
+            installer,
+            store,
+            manifest.id,
+            path_config,
+            callbacks,
+            site_version=this_version,
+        )
+        post_package_change_actions([installed])
     except PackageError as exc:
         sys.stderr.write(f"{exc}\n")
         return 1
@@ -640,7 +674,14 @@ def _add_command(
     cmd: str,
     args_adder: Callable[[argparse.ArgumentParser], None],
     handler: Callable[
-        [argparse.Namespace, PathConfig, Mapping[PackagePart, PackageOperationCallbacks], str], int
+        [
+            argparse.Namespace,
+            PathConfig,
+            Mapping[PackagePart, PackageOperationCallbacks],
+            str,
+            Callable[[Sequence[Manifest]], None],
+        ],
+        int,
     ],
 ) -> None:
     subparser = subparsers.add_parser(cmd, help=handler.__doc__, description=handler.__doc__)
@@ -660,11 +701,16 @@ def main(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
+    if edition() is Edition.CSE:
+        sys.stderr.write(f"The mkp command is not available in the {Edition.CSE.title}.\n")
+        return 1
+
     args = _parse_arguments(argv)
     set_up_logging(args.verbose)
     try:
-        return args.handler(args, path_config, callbacks, this_version)
+        return args.handler(args, path_config, callbacks, this_version, post_package_change_actions)
     except PackageError as exc:
         if args.debug:
             raise

@@ -6,8 +6,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_locks>>>
@@ -43,7 +44,7 @@ def check_postgres_locks(item, params, parsed):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     locks = {}
     for element in parsed[item]:
@@ -73,8 +74,8 @@ def check_postgres_locks(item, params, parsed):
 
 check_info["postgres_locks"] = LegacyCheckDefinition(
     parse_function=postgres.parse_dbs,
-    check_function=check_postgres_locks,
-    discovery_function=inventory_postgres_locks,
     service_name="PostgreSQL Locks %s",
+    discovery_function=inventory_postgres_locks,
+    check_function=check_postgres_locks,
     check_ruleset_name="postgres_locks",
 )

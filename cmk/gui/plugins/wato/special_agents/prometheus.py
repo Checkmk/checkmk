@@ -4,15 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.graphing._utils import MetricName
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     filter_kubernetes_namespace_element,
     RulespecGroupVMCloudContainer,
-    ssl_verification,
 )
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
@@ -153,7 +155,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                     title=_("Prometheus connection option"),
                 ),
             ),
-            ssl_verification(),
+            tls_verify_flag_default_no(),
             api_request_authentication(),
             (
                 "protocol",
@@ -540,7 +542,7 @@ def _validate_prometheus_service_metrics(value, _varprefix):
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:prometheus",
+        name=RuleGroup.SpecialAgents("prometheus"),
         valuespec=_valuespec_generic_metrics_prometheus,
         doc_references={DocReference.PROMETHEUS: _("Integrating Prometheus")},
     )

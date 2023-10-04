@@ -11,6 +11,7 @@ from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based import logwatch
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.utils import logwatch as logwatch_
 
 
 @pytest.mark.parametrize(
@@ -75,7 +76,7 @@ def test_logwatch_groups_of_logfile_exception(
         logwatch._groups_of_logfile(group_patterns, filename)
 
 
-SECTION1 = logwatch.logwatch.Section(
+SECTION1 = logwatch_.Section(
     errors=[],
     logfiles={
         "mylog": {
@@ -100,7 +101,7 @@ SECTION1 = logwatch.logwatch.Section(
 
 
 def test_discovery_single(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(logwatch.logwatch, "get_ec_rule_params", lambda: [])
+    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: [])
     assert sorted(
         logwatch.discover_logwatch_single([], SECTION1),
         key=lambda s: s.item or "",
@@ -163,7 +164,7 @@ def test_check_single(
     assert list(logwatch.check_logwatch_node(log_name, SECTION1)) == expected_result
 
 
-SECTION2 = logwatch.logwatch.Section(
+SECTION2 = logwatch_.Section(
     errors=[],
     logfiles={
         "log1": {
@@ -192,7 +193,7 @@ SECTION2 = logwatch.logwatch.Section(
 
 def test_logwatch_discover_single_restrict(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        logwatch.logwatch,
+        logwatch_,
         "get_ec_rule_params",
         lambda: [{"restrict_logfiles": [".*2"]}],
     )
@@ -215,7 +216,7 @@ def test_logwatch_discover_single_groups(monkeypatch: pytest.MonkeyPatch) -> Non
         }
     ]
 
-    monkeypatch.setattr(logwatch.logwatch, "get_ec_rule_params", lambda: [])
+    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: [])
 
     assert list(logwatch.discover_logwatch_single(params, SECTION2)) == [
         Service(item="log1"),
@@ -232,7 +233,7 @@ def test_logwatch_discover_groups(monkeypatch: pytest.MonkeyPatch) -> None:
         }
     ]
 
-    monkeypatch.setattr(logwatch.logwatch, "get_ec_rule_params", lambda: [])
+    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: [])
 
     assert list(logwatch.discover_logwatch_groups(params, SECTION2)) == [
         Service(

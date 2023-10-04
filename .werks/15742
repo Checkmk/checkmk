@@ -1,0 +1,11 @@
+Title: Added Authenticator Based Two-Factor
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1693434612
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Checkmk now offers authenticator application based two-factor authentication (eg: Google Authenticator, etc). Navigating to <i>(User > Two-factor authentication)</i> will now present users with an option to register multiple time-based one-time password (TOTP) credentials.

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import Final, List, NamedTuple
+from typing import Final, NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -29,7 +29,7 @@ class Sensor(NamedTuple):
 Section = Mapping[str, Sensor]
 
 
-def parse_kentix_temp(string_table: List[StringTable]) -> Section:
+def parse_kentix_temp(string_table: list[StringTable]) -> Section:
     return {
         item: Sensor(
             reading=float(value) / 10,
@@ -62,10 +62,6 @@ def check_kentix_temp(
 
 check_info["kentix_temp"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_temp,
-    check_function=check_kentix_temp,
-    discovery_function=inventory_kentix_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.1",
@@ -76,5 +72,9 @@ check_info["kentix_temp"] = LegacyCheckDefinition(
             oids=["1", "2", "3"],
         ),
     ],
+    parse_function=parse_kentix_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_kentix_temp,
+    check_function=check_kentix_temp,
     check_ruleset_name="temperature",
 )

@@ -7,13 +7,14 @@
 
 #include <unistd.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cerrno>
+#include <compare>
 #include <cstring>
 #include <ostream>
 #include <string_view>
 #include <utility>
-// IWYU pragma: no_include <type_traits>
 
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
@@ -199,7 +200,8 @@ InputBuffer::Result InputBuffer::readRequest() {
                 length--;
             }
             if (length > 0) {
-                std::string_view s(&_readahead_buffer[_read_index], length);
+                const std::string_view s(&_readahead_buffer[_read_index],
+                                         length);
                 if (!mk::is_utf8(s)) {
                     return Result::invalid_utf8;
                 }

@@ -9,7 +9,6 @@ from logging import Logger
 from cmk.utils.log import VERBOSE
 
 from cmk.gui.i18n import is_community_translation
-from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableEnableCommunityTranslations
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_users
@@ -118,7 +117,39 @@ def _update_removed_global_config_vars(
 
             del global_config_updated[old_config_name]
 
-    return filter_unknown_settings(global_config_updated)
+    return filter_unknown_settings(
+        {
+            **global_config_updated,
+            **_convert_user_idle_timeout(
+                logger,
+                global_config_updated,
+            ),
+        }
+    )
+
+
+def _convert_user_idle_timeout(
+    logger: Logger,
+    global_config: GlobalSettings,
+) -> dict[str, dict[str, int | dict[str, None | int]]]:
+    """
+    Version 2.3 moved the former ConfigVariableUserIdleTimeout to ConfigVariableSessionManagement.
+    Make sure old settings are respected in the new variable before filter_unknown_settings()
+    """
+    # No such explicit setting or already converted
+    if "user_idle_timeout" not in global_config:
+        return {}
+
+    logger.log(VERBOSE, "Converting global setting 'user_idle_timeout' to new format")
+    # None, deactivated by user
+    if idle_timeout := global_config.get("user_idle_timeout") is None:
+        return {"session_mgmt": {}}
+
+    return {
+        "session_mgmt": {
+            "user_idle_timeout": idle_timeout,
+        }
+    }
 
 
 def _transform_global_config_value(config_var: str, config_val: object) -> object:
@@ -146,7 +177,8 @@ def _handle_community_translations(logger: Logger, global_config: GlobalSettings
     UI language. Otherwise this global setting defaults to False and community translations are not
     choosable as language.
     """
-    if (enable_ct_ident := ConfigVariableEnableCommunityTranslations().ident()) in global_config:
+    enable_ct_ident = "enable_community_translations"
+    if enable_ct_ident in global_config:
         return global_config
 
     enable_ct: bool = False

@@ -32,13 +32,13 @@ def check_bvip_poe(_no_item, params, info):
 
 check_info["bvip_poe"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
-    check_function=check_bvip_poe,
-    discovery_function=inventory_bvip_poe,
-    service_name="POE Power",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1",
         oids=["10"],
     ),
+    service_name="POE Power",
+    discovery_function=inventory_bvip_poe,
+    check_function=check_bvip_poe,
     check_ruleset_name="epower_single",
     check_default_parameters={"levels": (50.0, 60.0)},
 )

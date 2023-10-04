@@ -27,10 +27,13 @@ from cmk.utils.store import (
     load_from_mk_file,
     load_text_from_file,
     mkdir,
+    release_lock,
     save_text_to_file,
     save_to_mk_file,
 )
-from cmk.utils.type_defs import ContactgroupName, UserId
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.store.htpasswd import Htpasswd
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.pages
@@ -39,19 +42,14 @@ from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import (
-    active_connections,
-    add_internal_attributes,
-    get_connection,
-    get_user_attributes,
-    load_cached_profile,
-    release_users_lock,
-    save_cached_profile,
-    UserConnector,
-)
+from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
-from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
+
+from ._connections import active_connections, get_connection
+from ._connector import UserConnector
+from ._user_attribute import get_user_attributes
+from ._user_spec import add_internal_attributes
 
 T = TypeVar("T")
 
@@ -561,7 +559,11 @@ def _save_cached_profile(
             # UserSpec is now a TypedDict, unfortunately not complete yet, thanks to such constructs.
             cache[key] = user[key]  # type: ignore[literal-required]
 
-    save_cached_profile(user_id, cache)
+    save_user_file("cached_profile", cache, user_id=user_id)
+
+
+def load_cached_profile(user_id: UserId) -> UserSpec | None:
+    return LoggedInUser(user_id).load_file("cached_profile", None)
 
 
 def contactgroups_of_user(user_id: UserId) -> list[ContactgroupName]:
@@ -659,3 +661,7 @@ def convert_session_info(value: str) -> dict[str, SessionInfo]:
             flashes=[],
         ),
     }
+
+
+def release_users_lock() -> None:
+    release_lock(cmk.utils.paths.check_mk_config_dir + "/wato/contacts.mk")

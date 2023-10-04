@@ -18,7 +18,7 @@ def inventory_emc_isilon_diskstatus(info):
 def check_emc_isilon_diskstatus(item, _no_params, info):
     for disk_id, name, disk_status, serial in info:
         if disk_id == item:
-            message = "Disk %s, serial number %s status is %s" % (name, serial, disk_status)
+            message = f"Disk {name}, serial number {serial} status is {disk_status}"
             if disk_status in ["HEALTHY", "L3"]:
                 status = 0
             else:
@@ -29,11 +29,11 @@ def check_emc_isilon_diskstatus(item, _no_params, info):
 
 check_info["emc_isilon_diskstatus"] = LegacyCheckDefinition(
     detect=DETECT_ISILON,
-    check_function=check_emc_isilon_diskstatus,
-    discovery_function=inventory_emc_isilon_diskstatus,
-    service_name="Disk bay %s Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.52.1",
         oids=["1", "4", "5", "7"],
     ),
+    service_name="Disk bay %s Status",
+    discovery_function=inventory_emc_isilon_diskstatus,
+    check_function=check_emc_isilon_diskstatus,
 )

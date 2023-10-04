@@ -34,15 +34,13 @@ def check_unitrends_backup(item, _no_params, info):
         if found is True:
             # Collection Backup deatils
             app_type, bid, backup_type, status = line
-            details.append(
-                "Application Type: %s (%s), %s: %s" % (app_type, bid, backup_type, status)
-            )
+            details.append(f"Application Type: {app_type} ({bid}), {backup_type}: {status}")
             continue
 
         if line[0] == "HEADER" and line[1] == item:
             found = True
             _head, _sched_name, app_name, sched_desc, failures = line
-            message = "%s Errors in last 24/h for Application %s (%s) " % (
+            message = "{} Errors in last 24/h for Application {} ({}) ".format(
                 failures,
                 app_name,
                 sched_desc,
@@ -57,7 +55,7 @@ def check_unitrends_backup(item, _no_params, info):
 
 
 check_info["unitrends_backup"] = LegacyCheckDefinition(
-    check_function=check_unitrends_backup,
-    discovery_function=inventory_unitrends_backup,
     service_name="Schedule %s",
+    discovery_function=inventory_unitrends_backup,
+    check_function=check_unitrends_backup,
 )

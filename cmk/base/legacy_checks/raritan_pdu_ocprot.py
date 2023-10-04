@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
@@ -41,10 +41,10 @@ raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
 # of the OID should really be swapped!
 
 
-def parse_raritan_pdu_ocprot(info):
+def parse_raritan_pdu_ocprot(string_table):
     flattened_info = [
         [end_oid, state, value, scale]
-        for (end_oid, state, value), (scale,) in zip(info[0], info[1])
+        for (end_oid, state, value), (scale,) in zip(string_table[0], string_table[1])
     ]
     parsed = {}
     for end_oid, state, value, scale in flattened_info:
@@ -61,8 +61,9 @@ def discover_raritan_pdu_ocprot(section):
     yield from ((item, raritan_pdu_ocprot_current_default_levels) for item in section)
 
 
-@get_parsed_item_data
-def check_raritan_pdu_ocprot(item, params, data):
+def check_raritan_pdu_ocprot(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     states = {
         "-1": (3, "Overcurrent protector information is unavailable"),
         "0": (2, "Overcurrent protector is open"),
@@ -77,11 +78,6 @@ def check_raritan_pdu_ocprot(item, params, data):
 
 check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", "13742"),
-    parse_function=parse_raritan_pdu_ocprot,
-    discovery_function=discover_raritan_pdu_ocprot,
-    check_function=check_raritan_pdu_ocprot,
-    service_name="Overcurrent Protector %s",
-    check_ruleset_name="ocprot_current",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13742.6.5.3.3.1",
@@ -92,4 +88,9 @@ check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
             oids=["7"],
         ),
     ],
+    parse_function=parse_raritan_pdu_ocprot,
+    service_name="Overcurrent Protector %s",
+    discovery_function=discover_raritan_pdu_ocprot,
+    check_function=check_raritan_pdu_ocprot,
+    check_ruleset_name="ocprot_current",
 )

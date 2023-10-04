@@ -29,12 +29,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 f5_bigip_fans_default_levels = (2000, 500)
 
 
-def parse_f5_bigip_fans(info):
+def parse_f5_bigip_fans(string_table):
     fantyp = ["Chassis", "Processor"]
     fanchoice = 0
     parsed: dict[str, tuple[int, int | None]] = {}
 
-    for line in info:
+    for line in string_table:
         for fanentry in line:
             if fanchoice >= len(fantyp):
                 continue
@@ -44,7 +44,7 @@ def parse_f5_bigip_fans(info):
                     int(fanentry[1]),
                 )
             else:
-                parsed[("%s %s" % (fantyp[fanchoice], fanentry[0]))] = (int(fanentry[1]), None)
+                parsed[(f"{fantyp[fanchoice]} {fanentry[0]}")] = (int(fanentry[1]), None)
         fanchoice += 1
 
     return parsed
@@ -78,11 +78,6 @@ def check_f5_bigip_fans(item, params, parsed):
 
 check_info["f5_bigip_fans"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_f5_bigip_fans,
-    discovery_function=inventory_f5_bigip_fans,
-    parse_function=parse_f5_bigip_fans,
-    service_name="FAN %s",
-    check_ruleset_name="hw_fans",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.3.2.1.2.1",
@@ -93,4 +88,9 @@ check_info["f5_bigip_fans"] = LegacyCheckDefinition(
             oids=["4", "3"],
         ),
     ],
+    parse_function=parse_f5_bigip_fans,
+    service_name="FAN %s",
+    discovery_function=inventory_f5_bigip_fans,
+    check_function=check_f5_bigip_fans,
+    check_ruleset_name="hw_fans",
 )

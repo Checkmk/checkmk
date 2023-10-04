@@ -4,25 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any
+from unittest import mock
 
-import mock
 import pytest
 from pytest import MonkeyPatch
 
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
-from cmk.utils.type_defs.rest_api_types.site_connection import (
+
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.openapi.endpoints.site_management.common import (
+    default_config_example as _default_config,
+)
+from cmk.gui.rest_api_types.site_connection import (
     ConfigurationConnection,
     Connection,
     Proxy,
     SiteConfig,
     StatusHost,
-)
-
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.openapi.endpoints.site_management.common import (
-    default_config_example as _default_config,
 )
 
 DOMAIN_TYPE = "site_connection"
@@ -66,9 +66,7 @@ def test_login(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
-    )
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
         lambda site_id, username, password: "watosecret",
@@ -84,9 +82,7 @@ def test_login_site_doesnt_exist(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
-    )
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     clients.SiteManagement.login(
         site_id="NON_SITE",
         username="cmkadmin",
@@ -99,9 +95,7 @@ def test_login_site_problem(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
-    )
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
 
     class MockLoginException:
         def __init__(self, *args, **kwargs):
@@ -462,14 +456,15 @@ def test_update_site_connection_user_sync_with_ldap_connections_200(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
+    connection_choices = [
+        ("LDAP_1", "LDAP_1 (ldap)"),
+        ("LDAP_2", "LDAP_2 (ldap)"),
+        ("LDAP_3", "LDAP_3 (ldap)"),
+    ]
     monkeypatch.setattr(
-        "cmk.gui.plugins.userdb.utils.connection_choices",
-        lambda: [
-            ("LDAP_1", "LDAP_1 (ldap)"),
-            ("LDAP_2", "LDAP_2 (ldap)"),
-            ("LDAP_3", "LDAP_3 (ldap)"),
-        ],
+        "cmk.gui.fields.custom_fields.connection_choices", lambda: connection_choices
     )
+    monkeypatch.setattr("cmk.gui.watolib.sites.connection_choices", lambda: connection_choices)
 
     config, site_id = _default_config_with_site_id()
     clients.SiteManagement.create(site_config=config)
@@ -721,7 +716,7 @@ def test_update_url_prefix_400(clients: ClientRegistry) -> None:
 
 def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
     config = _default_config()
-    if version.is_managed_edition():
+    if version.edition() is version.Edition.CME:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
         del config["basic_settings"]["customer"]

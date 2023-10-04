@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -60,7 +62,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupIntegrateOtherServices,
         match_type="all",
-        name="active_checks:ssh",
+        name=RuleGroup.ActiveChecks("ssh"),
         valuespec=_valuespec_active_checks_ssh,
     )
 )

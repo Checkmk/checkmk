@@ -13,46 +13,42 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
-def parse_nginx_status(info):
-    if len(info) % 4 != 0:
+def parse_nginx_status(string_table):
+    if len(string_table) % 4 != 0:
         # Every instance block consists of four lines
         # Multiple block may occur.
         return {}
 
     data = {}
-    for i, line in enumerate(info):
+    for i, line in enumerate(string_table):
         address, port = line[:2]
         if len(line) < 3:
             continue  # Skip unexpected lines
-        item = "%s:%s" % (address, port)
+        item = f"{address}:{port}"
 
         if item not in data:
             # new server block start
             data[item] = {
-                "active": int(info[i + 0][4]),
-                "accepted": int(info[i + 2][2]),
-                "handled": int(info[i + 2][3]),
-                "requests": int(info[i + 2][4]),
-                "reading": int(info[i + 3][3]),
-                "writing": int(info[i + 3][5]),
-                "waiting": int(info[i + 3][7]),
+                "active": int(string_table[i + 0][4]),
+                "accepted": int(string_table[i + 2][2]),
+                "handled": int(string_table[i + 2][3]),
+                "requests": int(string_table[i + 2][4]),
+                "reading": int(string_table[i + 3][3]),
+                "writing": int(string_table[i + 3][5]),
+                "waiting": int(string_table[i + 3][7]),
             }
 
     return data
 
 
-@get_parsed_item_data
-def check_nginx_status(item, params, data):
+def check_nginx_status(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     if params is None:
         params = {}
 
@@ -61,8 +57,12 @@ def check_nginx_status(item, params, data):
     computed_values["requests_per_conn"] = 1.0 * data["requests"] / data["handled"]
 
     this_time = int(time.time())
+    value_store = get_value_store()
+
     for key in ["accepted", "handled", "requests"]:
-        per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
+        per_sec = get_rate(
+            value_store, f"nginx_status.{key}", this_time, data[key], raise_overflow=True
+        )
         computed_values["%s_per_sec" % key] = per_sec
 
     state, txt, perf = check_levels(
@@ -91,10 +91,14 @@ def check_nginx_status(item, params, data):
     yield 0, "Handled: %0.2f/s" % computed_values["handled_per_sec"], [("handled", data["handled"])]
 
 
+def discover_nginx_status(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["nginx_status"] = LegacyCheckDefinition(
     parse_function=parse_nginx_status,
-    check_function=check_nginx_status,
-    discovery_function=discover(),
     service_name="Nginx %s Status",
+    discovery_function=discover_nginx_status,
+    check_function=check_nginx_status,
     check_ruleset_name="nginx_status",
 )

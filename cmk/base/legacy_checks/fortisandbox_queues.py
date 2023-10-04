@@ -25,7 +25,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTISANDBOX
 
 
-def parse_fortisandbox_queues(info):
+def parse_fortisandbox_queues(string_table):
     queues = [
         "Executable",
         "PDF",
@@ -40,7 +40,7 @@ def parse_fortisandbox_queues(info):
         "Job Queue Assignment",
     ]
 
-    return {k: int(v) for k, v in zip(queues, info[0])}
+    return {k: int(v) for k, v in zip(queues, string_table[0])}
 
 
 def inventory_fortisandbox_queues(parsed):
@@ -60,20 +60,20 @@ def check_fortisandbox_queues(item, params, parsed):
             perfdata = [("queue", length, warn, crit)]
             infotext = "Queue length: %s" % length
             if state:
-                infotext += " (warn/crit at %s/%s)" % (warn, crit)
+                infotext += f" (warn/crit at {warn}/{crit})"
             return state, infotext, perfdata
     return None
 
 
 check_info["fortisandbox_queues"] = LegacyCheckDefinition(
     detect=DETECT_FORTISANDBOX,
-    parse_function=parse_fortisandbox_queues,
-    discovery_function=inventory_fortisandbox_queues,
-    check_function=check_fortisandbox_queues,
-    service_name="Pending %s files",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.5.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
+    parse_function=parse_fortisandbox_queues,
+    service_name="Pending %s files",
+    discovery_function=inventory_fortisandbox_queues,
+    check_function=check_fortisandbox_queues,
     check_ruleset_name="fortisandbox_queues",
 )

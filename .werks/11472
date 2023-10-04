@@ -28,5 +28,7 @@ All agents now support the automatic discovery of the following host labels:
 The Linux agent can also gather the following host labels, if the host is
 virtualized or a Linux container:
 
+<ul>
 <li>"cmk/device_type:vm"</li>
 <li>"cmk/device_type:container"</li>
+</ul>

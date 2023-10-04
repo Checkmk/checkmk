@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -28,7 +28,7 @@ _LBSCHED_MODES = {
 }
 
 
-def parse_fortigate_ha(string_table: StringTable) -> Optional[Section]:
+def parse_fortigate_ha(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
     table_data = string_table[0]

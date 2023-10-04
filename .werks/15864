@@ -1,0 +1,12 @@
+Title: Checkmk agent for OpenBSD: Fix interface services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689164158
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The interface section produced unparsable data, leading to critical services.
+

@@ -4,74 +4,75 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Dict, List, Mapping, NamedTuple
+from collections import Counter
+from typing import NamedTuple
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
 
 
+class Param(TypedDict):
+    locks: int
+    security: int
+    recommended: int
+    other: int
+
+
 class ZypperUpdates(NamedTuple):
-    patch_types: Dict[str, int] = {}
-    updates: int = 0
-    locks: List[str] = []
-    error: str = ""
+    patch_types: list[str]
+    locks: list[str] = []
 
 
-Section = ZypperUpdates
+class Error(str):
+    pass
+
+
+Section = ZypperUpdates | Error
+
+DEFAULT_PARAMS = Param(
+    locks=int(State.WARN),
+    security=int(State.CRIT),
+    recommended=int(State.WARN),
+    other=int(State.OK),
+)
 
 
 def parse_zypper(string_table: type_defs.StringTable) -> Section:
-    patch_types: Dict[str, int] = {}
-    updates: int = 0
-    locks: List[str] = []
+    patch_types = []
+    locks = []
 
     firstline = " ".join(string_table[0]) if string_table else ""
     if re.match("ERROR:", firstline):
-        return Section(error=firstline)
+        return Error(firstline)
 
     for line in string_table:
-        # 5 patches needed (2 security patches)
-        if len(line) >= 5:
-            patch_type = None
-            if len(line) >= 7 and line[5].lower().strip() == "needed":  # since SLES12
-                patch_type = line[2].strip()
-            elif line[4].lower().strip() == "needed":
-                patch_type = line[3].strip()
-            if patch_type:
-                patch_types.setdefault(patch_type, 0)
-                patch_types[patch_type] += 1
-                updates += 1
-        elif len(line) == 4:
-            locks.append(line[1])
+        match line:
+            case [_, _, _, pt, n] | [_, _, _, pt, n, _] | [_, _, pt, _, _, n, *_]:
+                if (patch_type := pt.strip()) and n.lower().strip() == "needed":
+                    patch_types.append(patch_type)
+            case [_, lock, _, _]:
+                locks.append(lock)
 
-    return Section(patch_types=patch_types, updates=updates, locks=locks)
+    return ZypperUpdates(patch_types=patch_types, locks=locks)
 
 
 def discover_zypper(section: Section) -> type_defs.DiscoveryResult:
     yield Service()
 
 
-def check_zypper(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if section.error:
-        yield Result(state=State.UNKNOWN, summary=section.error)
+def check_zypper(params: Param, section: Section) -> CheckResult:
+    if isinstance(section, Error):
+        yield Result(state=State.UNKNOWN, summary=section)
         return
 
+    yield Result(state=State.OK, summary=f"{len(section.patch_types)} updates")
     if section.locks:
-        infotext = "%d updates, %d locks" % (section.updates, len(section.locks))
-        yield Result(state=State.WARN, summary=infotext)
-    else:
-        yield Result(state=State.OK, summary="%d updates" % section.updates)
+        yield Result(state=State(params["locks"]), summary=f"{len(section.locks)} locks")
 
-    if section.updates:
-        patch_items = sorted(section.patch_types.items())
-        for t, c in patch_items:
-            infotext = "%s: %d" % (t, c)
-            if t == "security":
-                yield Result(state=State.CRIT, notice=infotext)
-            elif t == "recommended":
-                yield Result(state=State.WARN, notice=infotext)
-            else:
-                yield Result(state=State.OK, notice=infotext)
+    for type_, count in sorted(Counter(section.patch_types).items(), key=lambda item: item[0]):
+        yield Result(state=State(params.get(type_, params["other"])), notice=f"{type_}: {count}")
 
 
 register.agent_section(
@@ -85,5 +86,5 @@ register.check_plugin(
     discovery_function=discover_zypper,
     check_function=check_zypper,
     check_ruleset_name="zypper",
-    check_default_parameters={},
+    check_default_parameters=DEFAULT_PARAMS,
 )

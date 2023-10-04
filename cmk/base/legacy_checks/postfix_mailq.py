@@ -74,10 +74,10 @@ def postfix_mailq_to_bytes(value, uom):
     return None
 
 
-def parse_postfix_mailq(info):
+def parse_postfix_mailq(string_table):
     parsed = {}
     instance_name = ""
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3]
 
@@ -160,9 +160,9 @@ def check_postfix_mailq(item, params, parsed):
 
 check_info["postfix_mailq"] = LegacyCheckDefinition(
     parse_function=parse_postfix_mailq,
+    service_name="Postfix Queue %s",
     discovery_function=inventory_postfix_mailq,
     check_function=check_postfix_mailq,
-    service_name="Postfix Queue %s",
     check_ruleset_name="mail_queue_length",
     check_default_parameters={
         "deferred": (10, 20),

@@ -6,21 +6,17 @@
 from collections.abc import Callable, Generator, Iterable
 from math import ceil
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
+from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
-    MKCounterWrapped,
+    get_value_store,
+    IgnoreResultsError,
+    render,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.base.plugins.agent_based.utils.wmi import (
-    required_tables_missing,
-    StringTable,
-    WMISection,
-    WMITable,
-)
+from cmk.base.plugins.agent_based.utils.wmi import required_tables_missing, WMISection, WMITable
 
 _Metric = tuple[str, float, float | None, float | None, float | None, float | None]
 LegacyCheckFunctionGenerator = Generator[tuple[int, str, list[_Metric]], None, None]
@@ -58,7 +54,7 @@ class WMITableLegacy(WMITable):
         silently_skip_timed_out=False,
     ) -> str | None:
         if not silently_skip_timed_out and self.timed_out:
-            raise MKCounterWrapped("WMI query timed out")
+            raise IgnoreResultsError("WMI query timed out")
         return self._get_row_col_value(row, column)
 
 
@@ -205,7 +201,13 @@ def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
     except KeyError:
         return
 
-    value_per_sec = get_rate(f"{column}_{table.name}", get_wmi_time(table, row), int(value))
+    value_per_sec = get_rate(
+        get_value_store(),
+        f"{column}_{table.name}",
+        get_wmi_time(table, row),
+        int(value),
+        raise_overflow=True,
+    )
 
     yield check_levels(
         value_per_sec,
@@ -295,8 +297,16 @@ def wmi_calculate_raw_average_time(
 
     sample_time = get_wmi_time(table, row)
 
-    measure_per_sec = get_rate(f"{column}_{table.name}", sample_time, int(measure))
-    base_per_sec = get_rate(f"{column}_{table.name}_Base", sample_time, int(base))
+    measure_per_sec = get_rate(
+        get_value_store(), f"{column}_{table.name}", sample_time, int(measure), raise_overflow=True
+    )
+    base_per_sec = get_rate(
+        get_value_store(),
+        f"{column}_{table.name}_Base",
+        sample_time,
+        int(base),
+        raise_overflow=True,
+    )
 
     if base_per_sec == 0:
         return 0
@@ -373,7 +383,7 @@ def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
         perfvar,
         get_levels_quadruple(levels),
         infoname=infoname,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
     )
 

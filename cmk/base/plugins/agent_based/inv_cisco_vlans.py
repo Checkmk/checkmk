@@ -31,7 +31,8 @@
 # VLANs; the VLAN is not included if its bit has a
 # value of '0'."
 
-from typing import NamedTuple, Sequence
+from collections.abc import Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -113,9 +114,9 @@ def _render_vlan_lists(vlans: Sequence[int]) -> str:
         if succ_vals and i - 1 in succ_vals[-1]:
             succ_vals[-1].add(i)
         else:
-            succ_vals.append(set((i,)))
+            succ_vals.append({i})
 
-    return ", ".join((str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals))
+    return ", ".join(str(s.pop()) if len(s) == 1 else f"{min(s)}-{max(s)}" for s in succ_vals)
 
 
 def parse_inv_cisco_vlans(string_table: StringTable) -> Section:

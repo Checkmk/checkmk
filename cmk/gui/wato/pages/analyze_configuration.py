@@ -39,7 +39,6 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -53,9 +52,13 @@ from cmk.gui.watolib.analyze_configuration import (
     AutomationCheckAnalyzeConfig,
 )
 from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
-@mode_registry.register
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeAnalyzeConfig)
+
+
 class ModeAnalyzeConfig(WatoMode):
     _ack_path = cmk.utils.paths.var_dir + "/acknowledged_bp_tests.mk"
 
@@ -301,7 +304,9 @@ class ModeAnalyzeConfig(WatoMode):
         results_by_site: dict[SiteId, list[ACTestResult]] = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue: multiprocessing.Queue[tuple[SiteId, str]] = multiprocessing.JoinableQueue()
+        result_queue: multiprocessing.JoinableQueue[
+            tuple[SiteId, str]
+        ] = multiprocessing.JoinableQueue()
 
         processes = []
         site_id = SiteId("unknown_site")
@@ -382,7 +387,7 @@ class ModeAnalyzeConfig(WatoMode):
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
     def _perform_tests_for_site(
-        self, site_id: SiteId, result_queue: multiprocessing.Queue[tuple[SiteId, str]]
+        self, site_id: SiteId, result_queue: multiprocessing.JoinableQueue[tuple[SiteId, str]]
     ) -> None:
         self._logger.debug("[%s] Starting" % site_id)
         result = None

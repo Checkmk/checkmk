@@ -209,7 +209,7 @@ def _strip_ascii_suffix(version: str) -> str:
     # Remove any traces of i, p, b versions. Windows can't handle them...
     # The revision should be enough to uniquely identify this build
     # The original version name is also still visible in the list of programs
-    match = re.search("[a-z]", version)
+    match = re.search("[A-Za-z]", version)
     if match:
         result = version[: match.start(0)]
         if result[-1] == ".":

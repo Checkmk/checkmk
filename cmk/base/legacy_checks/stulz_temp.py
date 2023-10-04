@@ -33,7 +33,7 @@ from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.3.1.1.1208.1.2.1 16 --> Stulz-WIB8000-MIB::currentRaisedFloorPressure.1.2.1
 
 
-def parse_stulz_temp(info):
+def parse_stulz_temp(string_table):
     map_types = {
         "1170": "unit air",
         "1192": "unit return air",
@@ -55,12 +55,12 @@ def parse_stulz_temp(info):
     }
 
     parsed = {}
-    for oidend, reading_str in info:
+    for oidend, reading_str in string_table:
         oids = oidend.split(".")
         temp_ty = oids[0]
         index = oids[2]
         if temp_ty in map_types and reading_str != "999":
-            itemname = "%s-%s" % (map_types[temp_ty], index)
+            itemname = f"{map_types[temp_ty]}-{index}"
             parsed.setdefault(itemname, float(reading_str) / 10)
 
     return parsed
@@ -79,14 +79,14 @@ def check_stulz_temp(item, params, parsed):
 
 check_info["stulz_temp"] = LegacyCheckDefinition(
     detect=DETECT_STULZ,
-    parse_function=parse_stulz_temp,
-    discovery_function=inventory_stulz_temp,
-    check_function=check_stulz_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1",
         oids=[OIDEnd(), "1"],
     ),
+    parse_function=parse_stulz_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_stulz_temp,
+    check_function=check_stulz_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (25.0, 28.0)},
 )

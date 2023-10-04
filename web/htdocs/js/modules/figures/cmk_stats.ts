@@ -1,5 +1,14 @@
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
 import * as cmk_figures from "cmk_figures";
+import * as d3 from "d3";
+import { BaseType } from "d3";
 import * as d3Hexbin from "d3-hexbin";
+import { FigureData } from "figure_types";
 
 interface FigurePart {
     count: number;
@@ -7,31 +16,35 @@ interface FigurePart {
     title: string;
     url: string;
 }
-interface FigureResponceData extends cmk_figures.FigureData {
+interface FigureResponseData extends FigureData {
+    title: string;
+    title_url: string;
     parts: FigurePart[];
     total: FigurePart;
 }
 
-interface Hex_Config {
+interface HexConfig {
     title: string;
-    path: [number, number][];
-    css_class;
+    path: string;
+    css_class: string;
     tooltip: string;
     count: number;
 }
 
-export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
-    _table_div;
-    _hexagon_box;
+export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
+    _table_div!: d3.Selection<HTMLDivElement, any, BaseType, any>;
+    _hexagon_box!: d3.Selection<SVGGElement, unknown, BaseType, unknown>;
     _max_radius!: number;
-    _title = "";
-    _title_url = "";
-    ident() {
+    _title!: string;
+    _title_url!: string;
+    override ident() {
         return "hoststats";
     }
 
-    getEmptyData(): FigureResponceData {
+    getEmptyData(): FigureResponseData {
         return {
+            title: "",
+            title_url: "",
             data: [],
             plot_definitions: [],
             total: {count: 0, css_class: "", title: "", url: ""},
@@ -39,7 +52,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
         };
     }
 
-    initialize(debug) {
+    override initialize(debug?: boolean) {
         super.initialize(debug);
 
         this._div_selection.classed("stats_dashlet", true);
@@ -54,21 +67,24 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
         this._max_radius = 48;
     }
 
-    update_data(data) {
+    override update_data(data: FigureResponseData) {
         this._title = data.title;
         this._title_url = data.title_url;
         //This assignment changes the type of our Data so it not FigureData but FigureData.Data
         //It's difficult to have a workaround for this...
+        //TODO: this is also a typing issue since _data was usually like {data, plot_definitions}
+        // and here the type is overwritten to be only data
+        //@ts-ignore
         this._data = data.data;
     }
 
-    update_gui() {
+    override update_gui() {
         if (!this._data || this._data.total.count == 0) return;
 
         this.resize();
         const parts = this._data.parts;
         const hexbin = d3Hexbin.hexbin();
-        const hexagon_config: Hex_Config[] = [];
+        const hexagon_config: HexConfig[] = [];
 
         let largest_element_count = 0;
         for (const element of this._data.parts) {
@@ -125,9 +141,21 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
             .join("tr");
 
         const a = rows.selectAll("td a").data(d => [
-            {text: d.count, url: d.url, css_class: "count " + d.css_class},
-            {css_class: "box " + d.css_class, url: d.url},
-            {text: d.title, url: d.url, css_class: "text"},
+            { // count
+                text: d.count,
+                url: d.url,
+                css_class: "count " + d.css_class,
+            },
+            { // state color
+                text: "",
+                url: d.url,
+                css_class: "box " + d.css_class,
+            },
+            { // text (state title)
+                text: d.title,
+                url: d.url,
+                css_class: "text",
+            },
         ]);
         a.join(enter => enter.append("td").append("a"))
             .attr("class", d => d.css_class)
@@ -139,17 +167,13 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
 }
 
 export class ServiceStats extends HostStats {
-    ident() {
+    override ident() {
         return "servicestats";
     }
 }
 
 export class EventStats extends HostStats {
-    ident() {
+    override ident() {
         return "eventstats";
     }
 }
-
-cmk_figures.figure_registry.register(HostStats);
-cmk_figures.figure_registry.register(ServiceStats);
-cmk_figures.figure_registry.register(EventStats);

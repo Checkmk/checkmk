@@ -44,9 +44,9 @@ def check_scaleio_pd(item, params, parsed):
 
 check_info["scaleio_pd"] = LegacyCheckDefinition(
     parse_function=parse_scaleio_pd,
+    service_name="ScaleIO PD capacity %s",
     discovery_function=inventory_scaleio_pd,
     check_function=check_scaleio_pd,
-    service_name="ScaleIO PD capacity %s",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
@@ -65,11 +65,12 @@ def check_scaleio_pd_status(item, _no_params, parsed):
     state = 0 if status == "ACTIVE" else 2
     name = data["NAME"][0]
 
-    yield state, "Name: %s, State: %s" % (name, status)
+    yield state, f"Name: {name}, State: {status}"
 
 
 check_info["scaleio_pd.status"] = LegacyCheckDefinition(
+    service_name="ScaleIO PD status %s",
+    sections=["scaleio_pd"],
     discovery_function=inventory_scaleio_pd_status,
     check_function=check_scaleio_pd_status,
-    service_name="ScaleIO PD status %s",
 )

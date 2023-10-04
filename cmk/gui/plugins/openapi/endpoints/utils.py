@@ -13,36 +13,38 @@ from livestatus import MultiSiteConnection, SiteId
 from cmk.utils import version
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.version import is_managed_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.exceptions import MKHTTPException
-from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
+from cmk.gui.groups import GroupSpec, GroupSpecs, GroupType, load_group_information
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import constructors
+from cmk.gui.plugins.openapi.restful_objects.type_defs import CollectionObject
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.watolib.groups import edit_group, GroupType
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.groups import edit_group
+from cmk.gui.watolib.hosts_and_folders import Folder
 
-if is_managed_edition():
+if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 
 
 GroupName = Literal["host_group_config", "contact_group_config", "service_group_config", "agent"]
 
 
 def complement_customer(details):
-    if not is_managed_edition():
+    if edition() is not Edition.CME:
         return details
 
     if "customer" in details:
         customer_id = details["customer"]
         details["customer"] = "global" if managed.is_global(customer_id) else customer_id
     else:  # special case where customer is set to customer_default_id which results in no-entry
-        details["customer"] = managed.default_customer_id()
+        details["customer"] = default_customer_id()
     return details
 
 
-def serve_group(group, serializer):
+def serve_group(group, serializer) -> Response:  # type: ignore[no-untyped-def]
     response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
@@ -53,7 +55,7 @@ def serve_group(group, serializer):
 def serialize_group_list(
     domain_type: GroupName,
     collection: Sequence[dict[str, Any]],
-) -> constructors.CollectionObject:
+) -> CollectionObject:
     return constructors.collection_object(
         domain_type=domain_type,
         value=[
@@ -75,8 +77,8 @@ def serialize_group(name: GroupName) -> Any:
         if "customer" in group:
             customer_id = group["customer"]
             extensions["customer"] = "global" if customer_id is None else customer_id
-        elif is_managed_edition():
-            extensions["customer"] = managed.default_customer_id()
+        elif edition() is Edition.CME:
+            extensions["customer"] = default_customer_id()
 
         extensions["alias"] = group["alias"]
         return constructors.domain_object(
@@ -113,7 +115,7 @@ def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> Grou
             already_existing.append(name)
             continue
         group_details: GroupSpec = {"alias": details["alias"]}
-        if version.is_managed_edition():
+        if version.edition() is version.Edition.CME:
             group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
 
@@ -239,7 +241,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
 
     """
     # None is a valid customer_id used for 'Global' configuration
-    if remove_provider and customer_id == managed.default_customer_id():
+    if remove_provider and customer_id == default_customer_id():
         attributes.pop("customer", None)
         return attributes
 
@@ -250,7 +252,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
 def group_edit_details(body) -> GroupSpec:  # type: ignore[no-untyped-def]
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
-    if version.is_managed_edition() and "customer" in body:
+    if version.edition() is version.Edition.CME and "customer" in body:
         group_details = update_customer_info(group_details, body["customer"])
     return group_details
 
@@ -278,7 +280,7 @@ def updated_group_details(  # type: ignore[no-untyped-def]
     return group
 
 
-def folder_slug(folder: CREFolder) -> str:
+def folder_slug(folder: Folder) -> str:
     """Create a tilde separated path identifier to be used in URLs
 
     Args:

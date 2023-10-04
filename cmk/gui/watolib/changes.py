@@ -12,7 +12,7 @@ from livestatus import SiteId
 
 import cmk.utils
 from cmk.utils.setup_search_index import request_index_update
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.utils
 import cmk.gui.watolib.git
@@ -42,6 +42,7 @@ def add_change(
     domains: Sequence[type[ABCConfigDomain]] | None = None,
     sites: Sequence[SiteId] | None = None,
     domain_settings: DomainSettings | None = None,
+    prevent_discard_changes: bool = False,
 ) -> None:
     """
     config_domains:
@@ -68,6 +69,8 @@ def add_change(
         domains,
         sites,
         domain_settings,
+        prevent_discard_changes,
+        diff_text=diff_text,
     )
 
 
@@ -94,6 +97,8 @@ class ActivateChangesWriter:
         domains: Sequence[type[ABCConfigDomain]] | None,
         sites: Iterable[SiteId] | None,
         domain_settings: DomainSettings | None,
+        prevent_discard_changes: bool = False,
+        diff_text: str | None = None,
     ) -> None:
         if not ActivateChangesWriter._enabled:
             return
@@ -120,6 +125,8 @@ class ActivateChangesWriter:
                 need_restart,
                 domains,
                 domain_settings,
+                prevent_discard_changes,
+                diff_text,
             )
 
     def _new_change_id(self) -> str:
@@ -137,6 +144,8 @@ class ActivateChangesWriter:
         need_restart: bool | None,
         domains: Sequence[type[ABCConfigDomain]],
         domain_settings: DomainSettings | None,
+        prevent_discard_changes: bool,
+        diff_text: str | None = None,
     ) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
@@ -151,12 +160,6 @@ class ActivateChangesWriter:
         # escaped / allowed HTML and strings to be escaped.
         text = escaping.escape_text(text)
 
-        # If the local site don't need a restart, there is no reason to add a
-        # change for that site. Otherwise the activation page would show a
-        # change but the site would not be selected for activation.
-        if site_is_local(site_id) and need_restart is False:
-            return
-
         SiteChanges(site_id).append(
             {
                 "id": change_id,
@@ -169,6 +172,9 @@ class ActivateChangesWriter:
                 "need_sync": need_sync,
                 "need_restart": need_restart,
                 "domain_settings": domain_settings or {},
+                "prevent_discard_changes": prevent_discard_changes,
+                "diff_text": diff_text,
+                "has_been_activated": site_is_local(site_id) and need_restart is False,
             }
         )
 

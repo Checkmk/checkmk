@@ -37,21 +37,17 @@
 import difflib
 import hashlib
 
-from cmk.base.check_api import (
-    get_item_state,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-    set_item_state,
-)
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
 
 
 def iptables_hash(config):
     return hashlib.sha256(config.encode("utf-8")).hexdigest()
 
 
-def parse_iptables(info):
-    config_lines = [" ".join(sublist) for sublist in info]
+def parse_iptables(string_table):
+    config_lines = [" ".join(sublist) for sublist in string_table]
     config = "\n".join(config_lines)
     return config
 
@@ -61,11 +57,12 @@ def inventory_iptables(parsed):
 
 
 def check_iptables(_no_item, params, parsed):
-    item_state = get_item_state("iptables.config")
+    value_store = get_value_store()
+    item_state = value_store.get("iptables.config")
 
     if not item_state:
-        set_item_state("iptables.config", {"config": parsed, "hash": iptables_hash(parsed)})
-        raise MKCounterWrapped(
+        value_store["iptables.config"] = {"config": parsed, "hash": iptables_hash(parsed)}
+        raise IgnoreResultsError(
             "Initial configuration has been saved. The next check interval will contain a valid state."
         )
 
@@ -74,7 +71,7 @@ def check_iptables(_no_item, params, parsed):
 
     if initial_config_hash == new_config_hash:
         if initial_config_hash != item_state.get("hash"):
-            set_item_state("iptables.config", {"config": parsed, "hash": new_config_hash})
+            value_store["iptables.config"] = {"config": parsed, "hash": new_config_hash}
             return 0, "accepted new filters after service rediscovery / reboot"
         return 0, "no changes in filters table detected"
 
@@ -90,7 +87,7 @@ def check_iptables(_no_item, params, parsed):
 
 check_info["iptables"] = LegacyCheckDefinition(
     parse_function=parse_iptables,
-    check_function=check_iptables,
-    discovery_function=inventory_iptables,
     service_name="Iptables",
+    discovery_function=inventory_iptables,
+    check_function=check_iptables,
 )

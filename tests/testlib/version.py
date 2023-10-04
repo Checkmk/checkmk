@@ -44,9 +44,11 @@ class CMKVersion:
     def _version(self, version_spec: str, branch: str) -> str:
         if version_spec in (self.DAILY, self.GIT):
             date_part = time.strftime("%Y.%m.%d")
-            if branch != "master":
+            if branch == "master":
+                return date_part
+            if re.match(r"^\d+\.\d+\.\d+.*", branch):
                 return f"{branch}-{date_part}"
-            return date_part
+            return f"{date_part}-{branch.replace('/', '-')}"
 
         if version_spec == self.DEFAULT:
             return self._get_default_version()

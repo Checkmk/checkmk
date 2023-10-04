@@ -1,0 +1,12 @@
+Title: Enable scrolling for sidebar element dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1690794196
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Scrolling was not possible in sidebar element dashlets, e.g. the quicksearch
+snapin.

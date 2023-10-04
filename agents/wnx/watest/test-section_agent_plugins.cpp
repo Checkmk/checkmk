@@ -6,10 +6,10 @@
 #include <filesystem>
 #include <ranges>
 
-#include "cfg.h"
 #include "common/wtools.h"
 #include "providers/agent_plugins.h"
-#include "test_tools.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
 
 namespace fs = std::filesystem;
 

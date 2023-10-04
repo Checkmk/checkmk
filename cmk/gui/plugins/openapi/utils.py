@@ -2,19 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
+
 import logging
 from collections.abc import Iterable
 from typing import Any, Literal, NewType
-from urllib.parse import quote_plus
 
 import docstring_parser
 from werkzeug.exceptions import HTTPException
 
-from livestatus import SiteId
-
 from cmk.utils.encoding import json_encode
-from cmk.utils.livestatus_helpers.queries import Query
 
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.type_defs import Serializable
@@ -29,7 +25,7 @@ EXT = NewType("EXT", dict[str, Any])
 def problem(
     status: int = 400,
     title: str = "A problem occurred.",
-    detail: str | None = None,
+    detail: str = "",
     type_: str | None = None,
     fields: FIELDS | None = None,
     ext: EXT | None = None,
@@ -37,9 +33,8 @@ def problem(
     problem_dict = {
         "title": title,
         "status": status,
+        "detail": detail,
     }
-    if detail is not None:
-        problem_dict["detail"] = detail
     if type_ is not None:
         problem_dict["type"] = type_
 
@@ -89,7 +84,7 @@ class GeneralRestAPIException(HTTPException):
 class RestAPIRequestGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 403, 404, 406, 415],
+        status: Literal[400, 401, 403, 404, 406, 415],
         title: str,
         detail: str,
         fields: FIELDS | None = None,
@@ -197,7 +192,21 @@ class RestAPIWatoDisabledException(RestAPIRequestGeneralException):
 
 
 # ==================================================== PERMISSION Exceptions
-class RestAPIPermissionException(GeneralRestAPIException):  # Crash report?
+class RestAPIForbiddenException(RestAPIRequestGeneralException):
+    status: Literal[403] = 403
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: FIELDS | None = None,
+        ext: EXT | None = None,
+    ) -> None:
+        super().__init__(RestAPIForbiddenException.status, title, detail, fields, ext)
+
+
+class RestAPIPermissionException(GeneralRestAPIException):
     status: Literal[500] = 500
 
     def __init__(
@@ -243,7 +252,7 @@ class ProblemException(HTTPException):
         self,
         status: int = 400,
         title: str = "A problem occured.",
-        detail: str | None = None,
+        detail: str = "",
         type_: str | None = None,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
@@ -336,46 +345,6 @@ def param_description(
     if errors == "raise":
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")
     return None
-
-
-def create_url(site: SiteId, query: Query) -> str:
-    """Create a REST-API query URL.
-
-    Examples:
-
-        >>> create_url('heute',
-        ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
-        '/heute/check_mk/api/1.0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
-
-    Args:
-        site:
-            A valid site-name.
-
-        query:
-            The Query() instance which the endpoint shall create again.
-
-    Returns:
-        The URL.
-
-    Raises:
-        A ValueError when no URL could be created.
-
-    """
-    table = query.table.__tablename__
-    try:
-        domain_type = {
-            "hosts": "host",
-            "services": "service",
-        }[table]
-    except KeyError:
-        raise ValueError(f"Could not find a domain-type for table {table}.")
-    url = f"/{site}/check_mk/api/1.0/domain-types/{domain_type}/collections/all"
-    query_dict = query.dict_repr()
-    if query_dict:
-        query_string_value = quote_plus(json.dumps(query_dict))
-        url += f"?query={query_string_value}"
-
-    return url
 
 
 def serve_json(

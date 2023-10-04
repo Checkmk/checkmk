@@ -1,0 +1,15 @@
+Title: mssql_backup: Now mssql_backup finds backup even if collation is case sensitive
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1694612939
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously, if the collation was case sensitive some of the backup were not found.
+This has now been fixed and the backups will be found regardless of case sensitivity.
+
+

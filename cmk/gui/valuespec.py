@@ -51,8 +51,8 @@ from typing import (
     NamedTuple,
     Protocol,
     SupportsFloat,
+    TypeAlias,
     TypeVar,
-    Union,
 )
 
 from dateutil.relativedelta import relativedelta
@@ -64,7 +64,7 @@ from six import ensure_binary, ensure_str
 from livestatus import SiteId
 
 import cmk.utils.crypto.certificate as certificate
-import cmk.utils.defines as defines
+import cmk.utils.dateutils as dateutils
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
@@ -73,8 +73,8 @@ from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import Seconds, TimeRange, UserId
 from cmk.utils.urls import is_allowed_url
+from cmk.utils.user import UserId
 from cmk.utils.version import Version
 
 import cmk.gui.forms as forms
@@ -91,7 +91,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import (
     _Icon,
     ChoiceGroup,
@@ -136,7 +136,12 @@ T = TypeVar("T")
 # A value which can be delayed.
 # NOTE: Due to the use of Union below, we can't have Callables as values.
 # NOTE: No caching, so it's different from e.g. Scheme's delay/force.
-Promise = Union[T, Callable[[], T]]
+Promise: TypeAlias = T | Callable[[], T]
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_fetch_ca")(AjaxFetchCA)
+    page_registry.register_page_handler("ajax_popup_icon_selector", ajax_popup_icon_selector)
 
 
 # NOTE: This helper function should be used everywhere instead of dispatching on
@@ -147,8 +152,8 @@ def force(p: Promise[T]) -> T:
 
 
 ValueSpecValidateFunc = Callable[[T, str], None]
-ValueSpecDefault = Promise[Union[Sentinel, T]]
-ValueSpecText = Union[str, HTML]
+ValueSpecDefault = Promise[Sentinel | T]
+ValueSpecText = str | HTML
 ValueSpecHelp = Promise[ValueSpecText]
 # TODO: redefine after https://github.com/python/mypy/pull/13516 is released
 JSONValue = Any
@@ -168,11 +173,11 @@ class Comparable(Protocol):
 class Bounds(Generic[C]):
     def __init__(self, lower: C | None, upper: C | None) -> None:
         super().__init__()
-        self.__lower = lower
-        self.__upper = upper
+        self._lower = lower
+        self._upper = upper
 
     def lower(self, default: C) -> C:
-        return default if self.__lower is None else self.__lower
+        return default if self._lower is None else self._lower
 
     def validate_value(
         self,
@@ -183,23 +188,23 @@ class Bounds(Generic[C]):
         message_upper: str | None = None,
         formatter: Callable[[C], ValueSpecText] = str,
     ) -> None:
-        if self.__lower is not None and value < self.__lower:
+        if self._lower is not None and value < self._lower:
             raise MKUserError(
                 varprefix,
                 (
                     _("{actual} is too low. The minimum allowed value is {bound}.")
                     if message_lower is None
                     else message_lower
-                ).format(actual=formatter(value), bound=formatter(self.__lower)),
+                ).format(actual=formatter(value), bound=formatter(self._lower)),
             )
-        if self.__upper is not None and self.__upper < value:
+        if self._upper is not None and self._upper < value:
             raise MKUserError(
                 varprefix,
                 (
                     _("{actual} is too high. The maximum allowed value is {bound}.")
                     if message_upper is None
                     else message_upper
-                ).format(actual=formatter(value), bound=formatter(self.__upper)),
+                ).format(actual=formatter(value), bound=formatter(self._upper)),
             )
 
 
@@ -408,31 +413,31 @@ class FixedValue(ValueSpec[T]):
             )
 
 
-class Age(ValueSpec[Seconds]):
+class Age(ValueSpec[int]):
     """Time in seconds"""
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: str | None = None,
-        minvalue: Seconds | None = None,
-        maxvalue: Seconds | None = None,
+        minvalue: int | None = None,
+        maxvalue: int | None = None,
         display: Container[Literal["days", "hours", "minutes", "seconds"]] | None = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
-        default_value: ValueSpecDefault[Seconds] = DEF_VALUE,
-        validate: ValueSpecValidateFunc[Seconds] | None = None,
+        default_value: ValueSpecDefault[int] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[int] | None = None,
         cssclass: str | None = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
-        self._bounds = Bounds[Seconds](minvalue, maxvalue)
+        self._bounds = Bounds[int](minvalue, maxvalue)
         self._display = display if display is not None else ["days", "hours", "minutes", "seconds"]
         self._cssclass = [] if cssclass is None else [cssclass]
 
-    def canonical_value(self) -> Seconds:
+    def canonical_value(self) -> int:
         return self._bounds.lower(0)
 
-    def render_input(self, varprefix: str, value: Seconds) -> None:
+    def render_input(self, varprefix: str, value: int) -> None:
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
@@ -459,7 +464,7 @@ class Age(ValueSpec[Seconds]):
                 takeover = (takeover + val) * tkovr_fac
         html.close_div()
 
-    def from_html_vars(self, varprefix: str) -> Seconds:
+    def from_html_vars(self, varprefix: str) -> int:
         # TODO: Validate for correct numbers!
         return (
             request.get_integer_input_mandatory(varprefix + "_days", 0) * 3600 * 24
@@ -468,28 +473,28 @@ class Age(ValueSpec[Seconds]):
             + request.get_integer_input_mandatory(varprefix + "_seconds", 0)
         )
 
-    def mask(self, value: Seconds) -> Seconds:
+    def mask(self, value: int) -> int:
         return value
 
-    def value_to_html(self, value: Seconds) -> ValueSpecText:
+    def value_to_html(self, value: int) -> ValueSpecText:
         if value == 0:
             return _("no time")
         return SecondsRenderer.detailed_str(value)
 
-    def value_to_json(self, value: Seconds) -> JSONValue:
+    def value_to_json(self, value: int) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> Seconds:
+    def value_from_json(self, json_value: JSONValue) -> int:
         return json_value
 
-    def validate_datatype(self, value: Seconds, varprefix: str) -> None:
+    def validate_datatype(self, value: int, varprefix: str) -> None:
         if not isinstance(value, int):
             raise MKUserError(
                 varprefix,
                 _("The value %r has type %s, but must be of type int") % (value, _type_name(value)),
             )
 
-    def _validate_value(self, value: Seconds, varprefix: str) -> None:
+    def _validate_value(self, value: int, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
 
@@ -865,7 +870,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
 ):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
 
-    def _validate(varprefix: str, userid_str: str) -> None:
+    def _validate(userid_str: str, varprefix: str) -> None:
         try:
             UserId(userid_str)
             if userid_str.strip() == "":
@@ -2128,8 +2133,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             html.jsbutton(
                 varprefix + "_sort",
                 _("Sort"),
-                "cmk.valuespecs.listof_sort(%s, %s, %s)"
-                % (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)),
+                f"cmk.valuespecs.listof_sort({json.dumps(varprefix)}, {json.dumps(self._magic)}, {json.dumps(self._sort_by)})",
             )
 
     def _show_reference_entry(self, varprefix: str, index: str, value: T) -> None:
@@ -3277,13 +3281,13 @@ def HostState(  # type: ignore[no-untyped-def] # pylint: disable=redefined-built
     )
 
 
-CascadingDropdownChoiceIdent = Union[None, str, bool, int]
-CascadingDropdownChoiceValue = Union[
-    CascadingDropdownChoiceIdent, tuple[CascadingDropdownChoiceIdent, Any]
-]
+CascadingDropdownChoiceIdent = None | str | bool | int
+CascadingDropdownChoiceValue = (
+    CascadingDropdownChoiceIdent | tuple[CascadingDropdownChoiceIdent, Any]
+)
 CascadingDropdownCleanChoice = tuple[CascadingDropdownChoiceIdent, str, None | ValueSpec]
 CascadingDropdownShortChoice = tuple[CascadingDropdownChoiceIdent, str]
-CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownCleanChoice]
+CascadingDropdownChoice = CascadingDropdownShortChoice | CascadingDropdownCleanChoice
 CascadingDropdownChoices = Promise[Sequence[CascadingDropdownChoice]]
 
 
@@ -3662,13 +3666,9 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
 
 # TODO: Can we clean up the int type here?
-ListChoiceChoiceIdent = Union[str, int]
+ListChoiceChoiceIdent = str | int
 ListChoiceChoice = tuple[ListChoiceChoiceIdent, str]
-ListChoiceChoices = Union[
-    None,
-    Promise[Sequence[ListChoiceChoice]],
-    Mapping[ListChoiceChoiceIdent, str],
-]
+ListChoiceChoices = None | Promise[Sequence[ListChoiceChoice]] | Mapping[ListChoiceChoiceIdent, str]
 ListChoiceModel = Sequence[ListChoiceChoiceIdent]
 
 
@@ -3794,10 +3794,10 @@ class ListChoice(ValueSpec[ListChoiceModel]):
     def from_html_vars(self, varprefix: str) -> ListChoiceModel:
         self.load_elements()
         return [
-            key  #
+            key
             for nr, (key, _title) in enumerate(self._elements)
             if html.get_checkbox("%s_%d" % (varprefix, nr))
-        ]
+        ]  #
 
     def value_to_json(self, value: ListChoiceModel) -> JSONValue:
         return value
@@ -3997,11 +3997,11 @@ class DualListChoice(ListChoice):
 
     def _locked_choice_text(self, value: ListChoiceModel) -> ChoiceText | None:
         num_locked_choices = sum(1 for choice_id in value if choice_id in self._locked_choices)
-        return (  #
+        return (
             self._locked_choices_text_singular % num_locked_choices
-            if num_locked_choices == 1  #
+            if num_locked_choices == 1
             else self._locked_choices_text_plural % num_locked_choices
-            if num_locked_choices > 1  #
+            if num_locked_choices > 1
             else None
         )
 
@@ -4190,7 +4190,7 @@ def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     deprecated_choices: Sequence[str] = (),
 ):
     return DropdownChoice(
-        choices=_sorted(defines.weekdays().items()),
+        choices=_sorted(dateutils.weekdays().items()),
         sorted=sorted,
         label=label,
         help_separator=help_separator,
@@ -4246,14 +4246,14 @@ class RelativeDate(OptionalDropdownChoice[int]):
         weekday = time.localtime(_today()).tm_wday
         for w in range(2, 7):
             wd = (weekday + w) % 7
-            choices.append((w, defines.weekday_name(wd)))
+            choices.append((w, dateutils.weekday_name(wd)))
         for w in range(0, 7):
             wd = (weekday + w) % 7
             if w < 2:
                 title = _(" next week")
             else:
                 title = _(" in %d days") % (w + 7)
-            choices.append((w + 7, defines.weekday_name(wd) + title))
+            choices.append((w + 7, dateutils.weekday_name(wd) + title))
 
         super().__init__(
             explicit=Integer(),
@@ -4539,8 +4539,7 @@ class AbsoluteDate(ValueSpec[None | float]):
             raise MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 
-# https://github.com/python/mypy/issues/11098
-TimeofdayValue = Union[tuple[int, int], None]
+TimeofdayValue = tuple[int, int] | None
 
 
 class Timeofday(ValueSpec[TimeofdayValue]):
@@ -4652,8 +4651,7 @@ class Timeofday(ValueSpec[TimeofdayValue]):
         return (json_value[0], json_value[1])
 
 
-# https://github.com/python/mypy/issues/11098
-TimeofdayRangeValue = Union[None, tuple[tuple[int, int], tuple[int, int]]]
+TimeofdayRangeValue = None | tuple[tuple[int, int], tuple[int, int]]
 
 
 class TimeofdayRange(ValueSpec[TimeofdayRangeValue]):
@@ -4800,12 +4798,11 @@ class TimeHelper:
         return lt.timestamp()
 
 
-# https://github.com/python/mypy/issues/11098
-TimerangeValue = Union[None, int, str, tuple[str, Any]]  # TODO: Be more specific
+TimerangeValue = None | int | str | tuple[str, Any]  # TODO: Be more specific
 
 
 class ComputedTimerange(NamedTuple):
-    range: TimeRange
+    range: tuple[int, int]
     title: str
 
 
@@ -5048,7 +5045,7 @@ class Timerange(CascadingDropdown):
             "d": (_("Today"), _("Yesterday")),
             "w": (_("This week"), _("Last week")),
             "y": (str(year), None),
-            "m": ("%s %d" % (defines.month_name(month - 1), year), None),
+            "m": ("%s %d" % (dateutils.month_name(month - 1), year), None),
         }[rangespec[0]]
 
         if rangespec[1] == "0":
@@ -5227,8 +5224,7 @@ class Optional(ValueSpec[None | T]):
             "%s_use" % varprefix,
             checked,
             label=self._get_label(),
-            onclick="cmk.valuespecs.toggle_option(this, %s, %r)"
-            % (json.dumps(div_id), 1 if self._negate else 0),
+            onclick=f"cmk.valuespecs.toggle_option(this, {json.dumps(div_id)}, {1 if self._negate else 0!r})",
         )
         if self._sameline:
             html.nbsp()
@@ -5586,9 +5582,7 @@ class Tuple(ValueSpec[TT]):
             yield idx, element, value[idx]
 
     def mask(self, value: TT) -> TT:
-        return tuple(
-            el.mask(val) for _, el, val in self._iter_value(value)
-        )  # type: ignore[return-value]
+        return tuple(el.mask(val) for _, el, val in self._iter_value(value))  # type: ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
         return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
@@ -5597,14 +5591,10 @@ class Tuple(ValueSpec[TT]):
         return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
     def value_from_json(self, json_value: JSONValue) -> TT:
-        return tuple(
-            el.value_from_json(val) for _, el, val in self._iter_value(json_value)
-        )  # type: ignore[return-value]
+        return tuple(el.value_from_json(val) for _, el, val in self._iter_value(json_value))  # type: ignore[return-value]
 
     def from_html_vars(self, varprefix: str) -> TT:
-        return tuple(
-            e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements)
-        )  # type: ignore[return-value]
+        return tuple(e.from_html_vars(f"{varprefix}_{idx}") for idx, e in enumerate(self._elements))  # type: ignore[return-value]
 
     def _validate_value(self, value: TT, varprefix: str) -> None:
         for idx, el, val in self._iter_value(value):
@@ -5626,9 +5616,7 @@ class Tuple(ValueSpec[TT]):
 
     def transform_value(self, value: TT) -> TT:
         assert isinstance(value, tuple), f"Tuple.transform_value() got a non-tuple: {value!r}"
-        return tuple(
-            vs.transform_value(value[index]) for index, vs in enumerate(self._elements)
-        )  # type: ignore[return-value]
+        return tuple(vs.transform_value(value[index]) for index, vs in enumerate(self._elements))  # type: ignore[return-value]
 
 
 DictionaryEntry = tuple[str, ValueSpec]
@@ -5994,8 +5982,8 @@ class Dictionary(ValueSpec[DictionaryModel]):
         assert isinstance(value, dict), f"Dictionary.transform_value() got a non-dict: {value!r}"
         return {
             **{
-                param: vs.transform_value(value[param])  #
-                for param, vs in self._get_elements()  #
+                param: vs.transform_value(value[param])
+                for param, vs in self._get_elements()
                 if param in value
             },
             **{param: value[param] for param in self._ignored_keys if param in value},  #
@@ -6726,6 +6714,8 @@ class ImageUpload(FileUpload):
         default_value: ValueSpecDefault[FileUploadModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FileUploadModel] | None = None,
     ) -> None:
+        if allowed_extensions is None:
+            allowed_extensions = [".png"]
         self._max_size: Final = max_size
         self._show_current_image: Final = show_current_image
         super().__init__(
@@ -7209,7 +7199,7 @@ class LabelGroups(LabelGroup):
 
 
 # https://github.com/python/mypy/issues/12368
-IconSelectorModel = Union[None, Icon]
+IconSelectorModel = None | Icon
 
 
 class IconSelector(ValueSpec[IconSelectorModel]):
@@ -7331,7 +7321,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
 
         categories = list(self.categories())
         if self._show_builtin_icons:
-            categories.append(("builtin", _("Builtin")))
+            categories.append(("builtin", _("Built-in")))
 
         icon_categories = []
         for category_name, category_alias in categories:
@@ -7417,8 +7407,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             html.open_li(class_="active" if active_category == category_name else None)
             html.a(
                 category_alias,
-                href="javascript:cmk.valuespecs.iconselector_toggle(%s, %s)"
-                % (json.dumps(varprefix), json.dumps(category_name)),
+                href=f"javascript:cmk.valuespecs.iconselector_toggle({json.dumps(varprefix)}, {json.dumps(category_name)})",
                 id_=f"{varprefix}_{category_name}_nav",
                 class_="%s_nav" % varprefix,
             )
@@ -7438,8 +7427,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 html.open_a(
                     href=None,
                     class_="icon",
-                    onclick="cmk.valuespecs.iconselector_select(event, %s, %s)"
-                    % (json.dumps(varprefix), json.dumps(icon)),
+                    onclick=f"cmk.valuespecs.iconselector_select(event, {json.dumps(varprefix)}, {json.dumps(icon)})",
                     title=icon,
                 )
 
@@ -7539,7 +7527,6 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
-@cmk.gui.pages.register("ajax_popup_icon_selector")
 def ajax_popup_icon_selector() -> None:
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")
@@ -7794,9 +7781,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
     def _get_key_fingerprint(cls, value: SSHKeyPairValue) -> str:
         _private_key, public_key = value
         key = base64.b64decode(public_key.strip().split()[1].encode("ascii"))
-        fp_plain = hashlib.md5(  # pylint: disable=unexpected-keyword-arg
-            key, usedforsecurity=False
-        ).hexdigest()
+        fp_plain = hashlib.md5(key, usedforsecurity=False).hexdigest()
         return ":".join(a + b for a, b in zip(fp_plain[::2], fp_plain[1::2]))
 
 
@@ -7854,8 +7839,7 @@ def SchedulePeriod(  # type: ignore[no-untyped-def] # pylint: disable=redefined-
     )
 
 
-# https://github.com/python/mypy/issues/11098
-_CAInputModel = Union[None, tuple[str, int, bytes]]
+_CAInputModel = None | tuple[str, int, bytes]
 
 
 class _CAInput(ValueSpec[_CAInputModel]):
@@ -7904,7 +7888,6 @@ class _CAInput(ValueSpec[_CAInputModel]):
         return (address, port, content)
 
 
-@page_registry.register_page("ajax_fetch_ca")
 class AjaxFetchCA(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()

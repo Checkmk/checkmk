@@ -70,12 +70,12 @@ def check_steelhead_connections(item, params, info):
 
 check_info["steelhead_connections"] = LegacyCheckDefinition(
     detect=DETECT_STEELHEAD,
-    discovery_function=inventory_steelhead_connections,
-    check_function=check_steelhead_connections,
-    service_name="Connections",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.5",
         oids=[OIDEnd(), "2"],
     ),
+    service_name="Connections",
+    discovery_function=inventory_steelhead_connections,
+    check_function=check_steelhead_connections,
     check_ruleset_name="steelhead_connections",
 )

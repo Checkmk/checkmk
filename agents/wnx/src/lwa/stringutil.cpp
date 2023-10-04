@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "stringutil.h"
+#include "lwa/stringutil.h"
 
 #include <ws2tcpip.h>
 
@@ -11,8 +11,8 @@
 #include <optional>
 #include <regex>
 
-#include "Logger.h"
-#include "win_error.h"
+#include "lwa/win_error.h"
+#include "wnx/logger.h"
 
 #ifdef _WIN32
 #endif

@@ -33,7 +33,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Run integration tests for the Checkmk Docker image
         """.stripMargin());
@@ -73,4 +73,5 @@ def main() {
         }
     }
 }
+
 return this;

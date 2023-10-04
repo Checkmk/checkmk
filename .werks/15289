@@ -1,0 +1,25 @@
+Title: mk_oracle: Revert werk 15559, use tnsping when available
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1690461999
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+<a href="https://checkmk.com/werk/15559">Werk 15559</a> removed the invocation
+of <tt>tnsping</tt>.
+
+<tt>tnsping</tt> was used to check if the tns-alias could be reached. If it
+could not be reached via <tt>tnsping</tt>, hostname and port is used to connect
+to the database.
+
+With <a href="https://checkmk.com/werk/15559">Werk 15559</a> the invocation of
+<tt>tnsping</tt> was completely removed. tns-alias was always used. This lead
+to problems with different configurations of <tt>mk_oracle</tt>.
+
+This change introduces a check if the <tt>tnsping</tt> binary is available.
+If the binary is available, the logic of <tt>mk_oracle</tt> before Werk 15559
+is restored. If the binary is not available, it is assumed that the tns-alias
+can be reached.

@@ -49,8 +49,8 @@ def check_sql_arguments(params):  # pylint: disable=too-many-branches
     if "levels" in params or "levels_low" in params:
         warn_low, crit_low = lower
         warn_high, crit_high = upper
-        args.append("-w%s:%s" % (warn_low, warn_high))
-        args.append("-c%s:%s" % (crit_low, crit_high))
+        args.append(f"-w{warn_low}:{warn_high}")
+        args.append(f"-c{crit_low}:{crit_high}")
 
     if "text" in params:
         args.append("--text=%s" % params["text"])

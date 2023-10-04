@@ -9,7 +9,7 @@ from livestatus import SiteId
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables import Hosts
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command

@@ -6,17 +6,16 @@
 from collections.abc import Mapping
 from pathlib import Path
 
-import pytest
-
 from tests.testlib.agent import (
     register_controller,
     wait_until_host_has_services,
     wait_until_host_receives_data,
 )
+from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition, skip_if_not_containerized
 from tests.testlib.site import Site
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from ..utils import LOGGER
 
@@ -47,6 +46,7 @@ def _test_register_workflow(
     )
 
 
+@skip_if_not_containerized
 def test_register_workflow_pull(
     central_site: Site,
     agent_ctl: Path,
@@ -59,7 +59,8 @@ def test_register_workflow_pull(
     )
 
 
-@pytest.mark.usefixtures("skip_if_not_cloud_edition")
+@skip_if_not_containerized
+@skip_if_not_cloud_edition
 def test_register_workflow_push(
     central_site: Site,
     agent_ctl: Path,

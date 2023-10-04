@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec
@@ -19,7 +19,7 @@ def register_builtin_dashboards(builtin: dict[DashboardName, DashboardConfig]) -
 
     # CEE uses specific "main" dashboard with new CEE specific dashlets.
     # CRE should use the problem dashboard as main dashboard
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         main_dashboard = builtin["main"] = builtin.pop("problems")
         main_dashboard["title"] = _l("Main dashboard")
         main_dashboard["icon"] = "dashboard_main"

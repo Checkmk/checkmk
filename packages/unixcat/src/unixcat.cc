@@ -22,8 +22,6 @@
 
 using namespace std::chrono_literals;
 
-int copy_data(int from, int to);
-
 struct thread_info {
     int from;
     int to;
@@ -32,7 +30,7 @@ struct thread_info {
 };
 
 void printErrno(const std::string &msg) {
-    std::cerr << msg + ": " + strerror(errno) << std::endl;
+    std::cerr << msg << ": " << strerror(errno) << "\n";
 }
 
 ssize_t read_with_timeout(int from, char *buffer, int size,
@@ -92,7 +90,7 @@ void *copy_thread(void *info) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " UNIX-socket" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " UNIX-socket\n";
         exit(1);
     }
 
@@ -103,7 +101,7 @@ int main(int argc, char **argv) {
     struct stat st;
 
     if (0 != stat(unixpath.c_str(), &st)) {
-        std::cerr << "No UNIX socket " << unixpath << " existing" << std::endl;
+        std::cerr << "No UNIX socket " << unixpath << " existing\n";
         exit(2);
     }
 

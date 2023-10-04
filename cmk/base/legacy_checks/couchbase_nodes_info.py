@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_status(_item, params, data):
+def check_couchbase_nodes_status(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     health = data.get("status")
     if health is not None:
         status = 0
@@ -26,7 +27,7 @@ def check_couchbase_nodes_status(_item, params, data):
         ("version", "Version"),
         ("clusterCompatibility", "Cluster compatibility"),
     ):
-        yield 0, "%s: %s" % (label, data.get(key, "unknown"))
+        yield 0, "{}: {}".format(label, data.get(key, "unknown"))
 
     membership = data.get("clusterMembership")
     if membership is None:
@@ -40,10 +41,14 @@ def check_couchbase_nodes_status(_item, params, data):
     yield status, "Cluster membership: %s" % membership
 
 
+def discover_couchbase_nodes_info(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_info"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(),
-    check_function=check_couchbase_nodes_status,
     service_name="Couchbase %s Info",
+    discovery_function=discover_couchbase_nodes_info,
+    check_function=check_couchbase_nodes_status,
     check_ruleset_name="couchbase_status",
 )

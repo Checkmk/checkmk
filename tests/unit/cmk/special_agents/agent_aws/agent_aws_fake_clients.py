@@ -8,7 +8,9 @@ from __future__ import annotations
 import abc
 import random
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from typing import Any, TypedDict
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -2878,12 +2880,88 @@ class WAFV2GetWebACLIB(InstanceBuilder):
                                 [
                                     Int("Limit"),
                                     Str("AggregateKeyType"),
-                                    Dict("ScopeDownStatement", []),
+                                    Dict(
+                                        "ScopeDownStatement",
+                                        [
+                                            Dict(
+                                                "ByteMatchStatement",
+                                                [
+                                                    Bytes("SearchString"),
+                                                    self._field_to_match(),
+                                                    self._text_transformations(),
+                                                    Choice(
+                                                        "PositionalConstraint",
+                                                        [
+                                                            "EXACTLY",
+                                                            "STARTS_WITH",
+                                                            "ENDS_WITH",
+                                                            "CONTAINS",
+                                                            "CONTAINS_WORD",
+                                                        ],
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    ),
                                 ],
                             ),
-                            Dict("AndStatement", [List("Statements", [])]),
+                            Dict(
+                                "AndStatement",
+                                [
+                                    List(
+                                        "Statements",
+                                        [
+                                            Dict(
+                                                "ByteMatchStatement",
+                                                [
+                                                    Bytes("SearchString"),
+                                                    self._field_to_match(),
+                                                    self._text_transformations(),
+                                                    Choice(
+                                                        "PositionalConstraint",
+                                                        [
+                                                            "EXACTLY",
+                                                            "STARTS_WITH",
+                                                            "ENDS_WITH",
+                                                            "CONTAINS",
+                                                            "CONTAINS_WORD",
+                                                        ],
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    )
+                                ],
+                            ),
                             Dict("OrStatement", [List("Statements", [])]),
-                            Dict("NotStatement", [Dict("ScopeDownStatement", [])]),
+                            Dict(
+                                "NotStatement",
+                                [
+                                    Dict(
+                                        "ScopeDownStatement",
+                                        [
+                                            Dict(
+                                                "ByteMatchStatement",
+                                                [
+                                                    Bytes("SearchString"),
+                                                    self._field_to_match(),
+                                                    self._text_transformations(),
+                                                    Choice(
+                                                        "PositionalConstraint",
+                                                        [
+                                                            "EXACTLY",
+                                                            "STARTS_WITH",
+                                                            "ENDS_WITH",
+                                                            "CONTAINS",
+                                                            "CONTAINS_WORD",
+                                                        ],
+                                                    ),
+                                                ],
+                                            ),
+                                        ],
+                                    )
+                                ],
+                            ),
                             Dict(
                                 "Statement",
                                 [

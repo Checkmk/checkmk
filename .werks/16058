@@ -1,0 +1,13 @@
+Title: Fix import of iCalendar files
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695370450
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The import of iCalendar files was broken in earlier 2.2 versions, resulting in
+an error like “The file does not seem to be a valid iCalendar file.AAA“.
+

@@ -16,11 +16,11 @@ from .checktestlib import assertCheckResultsEqual, CheckResult
 pytestmark = pytest.mark.checks
 
 
-def get_rate(_counter, _time, value):
+def get_rate(_vs, _counter, _time, value, raise_overflow):
     return value
 
 
-def get_average(_counter, _time, value, _time_span):
+def get_average(__store, counter, _time, value, _time_span):
     return round(value / 10.0) * 10.0
 
 
@@ -61,6 +61,7 @@ def test_check_diskstat_line(
     monkeypatch: pytest.MonkeyPatch,
     args: tuple[float, str, Mapping[str, object], Sequence[object]],
     expected_result: CheckResult,
+    initialised_item_state: None,
 ) -> None:
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)

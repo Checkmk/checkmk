@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import (
     all_of,
@@ -20,10 +21,10 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"
 
-Section = Dict
+Section = dict
 
 
-def parse_fortigate_node_memory(string_table: List[StringTable]) -> Section:
+def parse_fortigate_node_memory(string_table: list[StringTable]) -> Section:
     if len(string_table[0]) == 1:
         return {"Cluster": float(string_table[0][0][1])}
 

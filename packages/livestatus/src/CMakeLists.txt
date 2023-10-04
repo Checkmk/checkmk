@@ -55,6 +55,7 @@ set(livestatus_headers
     ${header_location}/OStreamStateSaver.h
     ${header_location}/OutputBuffer.h
     ${header_location}/overload.h
+    ${header_location}/ParsedQuery.h
     ${header_location}/PerfdataAggregator.h
     ${header_location}/PnpUtils.h
     ${header_location}/Poller.h
@@ -147,6 +148,7 @@ set(livestatus_sources
     opids.cc
     OringFilter.cc
     OutputBuffer.cc
+    ParsedQuery.cc
     PerfdataAggregator.cc
     PnpUtils.cc
     POSIXUtils.cc
@@ -286,6 +288,8 @@ target_link_libraries(
 target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})
+
+add_custom_target(build DEPENDS livestatus)
 
 # Black Magic for IDE:
 source_group(

@@ -6,9 +6,17 @@
 
 import time
 
-from cmk.base.check_api import get_percent_human_readable, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    equals,
+    get_rate,
+    get_value_store,
+    OIDEnd,
+    render,
+    SNMPTree,
+)
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
@@ -49,16 +57,16 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDE
 # []]
 
 
-def parse_docsis_channels_upstream(info):
-    freq_info = info[0]
+def parse_docsis_channels_upstream(string_table):
+    freq_info = string_table[0]
     freq_info_dict = {x[0]: x[1:] for x in freq_info}
-    sig_info_dict = {x[0]: x[1:] for x in info[1]}
-    cm_info_dict = {x[0]: x[1:] for x in info[2]}
+    sig_info_dict = {x[0]: x[1:] for x in string_table[1]}
+    cm_info_dict = {x[0]: x[1:] for x in string_table[2]}
 
     parsed = {}
     for endoid, (cid, freq_str) in freq_info_dict.items():
         unique_name = (
-            cid if len(freq_info) == len({x[1] for x in freq_info}) else ("%s.%s" % (endoid, cid))
+            cid if len(freq_info) == len({x[1] for x in freq_info}) else (f"{endoid}.{cid}")
         )
 
         data = []
@@ -96,7 +104,7 @@ def check_docsis_channels_upstream(item, params, parsed):
             state = 1
 
         if state:
-            infotext += " (warn/crit below %.1f/%.1f dB)" % (warn, crit)
+            infotext += f" (warn/crit below {warn:.1f}/{crit:.1f} dB)"
 
         yield state, infotext, [("signal_noise", noise_db, warn, crit)]
 
@@ -128,7 +136,7 @@ def check_docsis_channels_upstream(item, params, parsed):
             ),
             ("uncorrectable", int(uncorrectables)),
         ]:
-            rate = get_rate("docsis_channels_upstream.%s.%s" % (item, what), now, counter)
+            rate = get_rate(get_value_store(), what, now, counter, raise_overflow=True)
             rates[what] = rate
             total_rate += rate
 
@@ -146,7 +154,7 @@ def check_docsis_channels_upstream(item, params, parsed):
                 ratio = rates[what] / total_rate  # fixed: true-division
                 perc = 100.0 * ratio
                 warn, crit = params[what]
-                infotext = "%s %s" % (get_percent_human_readable(perc), title)
+                infotext = f"{render.percent(perc)} {title}"
 
                 if perc >= crit:
                     state = 2
@@ -154,7 +162,7 @@ def check_docsis_channels_upstream(item, params, parsed):
                     state = 1
 
                 if state:
-                    infotext += " (warn/crit at %.1f/%.1f%%)" % (warn, crit)
+                    infotext += f" (warn/crit at {warn:.1f}/{crit:.1f}%)"
 
                 yield state, infotext, [("codewords_" + what, ratio, warn / 100.0, crit / 100.0)]
 
@@ -167,10 +175,6 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2.600"),
     ),
-    parse_function=parse_docsis_channels_upstream,
-    discovery_function=inventory_docsis_channels_upstream,
-    check_function=check_docsis_channels_upstream,
-    service_name="Upstream Channel %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.10.127.1.1.2.1",
@@ -185,6 +189,10 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3", "4", "5", "7"],
         ),
     ],
+    parse_function=parse_docsis_channels_upstream,
+    service_name="Upstream Channel %s",
+    discovery_function=inventory_docsis_channels_upstream,
+    check_function=check_docsis_channels_upstream,
     check_ruleset_name="docsis_channels_upstream",
     check_default_parameters={
         "signal_noise": (10.0, 5.0),  # dB

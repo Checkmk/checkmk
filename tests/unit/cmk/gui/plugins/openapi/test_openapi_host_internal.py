@@ -13,8 +13,8 @@ from pytest_mock import MockerFixture
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
-from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKAuthException
 
@@ -42,7 +42,7 @@ def test_link_with_uuid_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.CREHost.need_permission",
+        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
         side_effect=MKAuthException("hands off this host"),
     )
     assert (
@@ -53,9 +53,10 @@ def test_link_with_uuid_401(
             status=401,
             headers={"Accept": "application/json"},
             content_type="application/json; charset=utf-8",
-        ).json_body["title"]
+        ).json_body["detail"]
         == "You do not have write access to the host example.com"
     )
+    mocker.stopall()
 
 
 @pytest.mark.usefixtures("with_host")
@@ -127,7 +128,7 @@ def test_openapi_show_host_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.CREHost.need_permission",
+        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
         side_effect=MKAuthException("hands off this host"),
     )
     assert (
@@ -136,9 +137,10 @@ def test_openapi_show_host_401(
             urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
             headers={"Accept": "application/json"},
             status=401,
-        ).json_body["title"]
+        ).json_body["detail"]
         == "You do not have read access to the host heute"
     )
+    mocker.stopall()
 
 
 @pytest.mark.usefixtures("with_host")

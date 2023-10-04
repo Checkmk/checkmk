@@ -35,7 +35,7 @@ def check_hp_procurve_mem(item, params, info):
 
     if isinstance(params, tuple):
         params = {"levels": ("perc_used", params)}
-    mem_total, mem_used = [int(mem) for mem in info[0]]
+    mem_total, mem_used = (int(mem) for mem in info[0])
     return check_memory_element(
         "Usage",
         mem_used,
@@ -50,13 +50,13 @@ check_info["hp_procurve_mem"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
     ),
-    check_function=check_hp_procurve_mem,
-    discovery_function=inventory_hp_procurve_mem,
-    service_name="Memory",
-    check_ruleset_name="memory_simple",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1",
         oids=["5", "7"],
     ),
+    service_name="Memory",
+    discovery_function=inventory_hp_procurve_mem,
+    check_function=check_hp_procurve_mem,
+    check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

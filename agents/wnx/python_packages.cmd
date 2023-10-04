@@ -52,7 +52,6 @@ call python_package_install !ppath! typing
 call python_package_install !ppath! pytest
 call python_package_install !ppath! freezegun
 call python_package_install !ppath! bs4
-call python_package_install !ppath! pycryptodomex
 call python_package_install !ppath! black
 call python_package_install !ppath! isort
 call python_package_install !ppath! pytest-mock

@@ -27,10 +27,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_windows_tasks(info):
+def parse_windows_tasks(string_table):
     data = {}
     last_task: bool | str = False
-    for line in info:
+    for line in string_table:
         name = line[0].strip()
         value = ":".join(line[1:]).strip()
         if value and last_task and name != "TaskName":
@@ -191,7 +191,7 @@ def check_windows_tasks(item, params, parsed):
         ("Next Run Time", "Next run time"),
     ]:
         if key in data:
-            additional_infos.append("%s: %s" % (title, data[key]))
+            additional_infos.append(f"{title}: {data[key]}")
 
     if additional_infos:
         yield 0, ", ".join(additional_infos)
@@ -199,9 +199,9 @@ def check_windows_tasks(item, params, parsed):
 
 check_info["windows_tasks"] = LegacyCheckDefinition(
     parse_function=parse_windows_tasks,
-    check_function=check_windows_tasks,
-    discovery_function=inventory_windows_tasks,
     service_name="Task %s",
+    discovery_function=inventory_windows_tasks,
+    check_function=check_windows_tasks,
     check_ruleset_name="windows_tasks",
     check_default_parameters={
         # This list is overruled by a ruleset, if configured.

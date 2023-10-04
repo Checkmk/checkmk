@@ -31,6 +31,7 @@ import fcntl
 import io
 import logging
 import os
+import pty
 import pwd
 import re
 import shutil
@@ -121,8 +122,9 @@ from cmk.utils.exceptions import MKTerminate
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.type_defs.result import Error, OK, Result
+from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
+from cmk.utils.werks.acknowledgement import unacknowledged_incompatible_werks
 
 Arguments = list[str]
 ConfigChangeCommands = list[tuple[str, str]]
@@ -517,8 +519,7 @@ def patch_template_file(  # pylint: disable=too-many-branches
     # existing - possibly user modified - file.
 
     result = os.system(  # nosec B605 # BNS:2b5952
-        "diff -u %s %s | %s/bin/patch --force --backup --forward --silent %s"
-        % (old_orig_path, new_orig_path, new_site.dir, dst)
+        f"diff -u {old_orig_path} {new_orig_path} | {new_site.dir}/bin/patch --force --backup --forward --silent {dst}"
     )
 
     try_chown(dst, new_site.name)
@@ -705,8 +706,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
             )  # nosec B605 # BNS:2b5952
         elif choice == "new":
             os.system(  # nosec B605 # BNS:2b5952
-                "diff -u %s-%s %s-%s%s"
-                % (user_path, old_version, user_path, new_version, pipe_pager())
+                f"diff -u {user_path}-{old_version} {user_path}-{new_version}{pipe_pager()}"
             )
         elif choice == "missing":
             if reject_file.exists():
@@ -740,8 +740,7 @@ def merge_update_file(  # pylint: disable=too-many-branches
                 pass
             if _try_merge(site, conflict_mode, relpath, old_version, new_version) == 0:
                 sys.stdout.write(
-                    "Successfully merged changes from %s -> %s into %s\n"
-                    % (old_version, new_version, fn)
+                    f"Successfully merged changes from {old_version} -> {new_version} into {fn}\n"
                 )
                 return
             sys.stdout.write(" Merge failed again.\n")
@@ -809,8 +808,7 @@ def _try_merge(
 
     # First try to merge the changes in the version into the users' file
     f = os.popen(  # nosec B605 # BNS:2b5952
-        "%s/bin/patch --force --backup --forward --silent --merge %s >/dev/null"
-        % (site.dir, user_path),
+        f"{site.dir}/bin/patch --force --backup --forward --silent --merge {user_path} >/dev/null",
         "w",
     )
     f.write(version_patch)
@@ -1251,8 +1249,7 @@ def update_file(  # pylint: disable=too-many-branches
         except Exception as e:
             sys.stdout.write(
                 StateMarkers.error
-                + " Permission:    cannot change %04o -> %04o %s: %s\n"
-                % (user_perm, new_perm, fn, e)
+                + f" Permission:    cannot change {user_perm:04o} -> {new_perm:04o} {fn}: {e}\n"
             )
 
 
@@ -1847,7 +1844,9 @@ def pipe_pager() -> str:
     return ""
 
 
-def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | None = None) -> None:
+def call_scripts(
+    site: SiteContext, phase: str, open_pty: bool, add_env: Mapping[str, str] | None = None
+) -> None:
     """Calls hook scripts in defined directories."""
     path = Path(site.dir, "lib", "omd", "scripts", phase)
     if not path.exists():
@@ -1864,32 +1863,58 @@ def call_scripts(site: SiteContext, phase: str, add_env: Mapping[str, str] | Non
     for file in sorted(path.iterdir()):
         if file.name[0] == ".":
             continue
-        sys.stdout.write(f'Executing {phase} script "{file.name}"...')
-        with subprocess.Popen(  # nosec B602 # BNS:2b5952
-            str(file),  # path-like args is not allowed when shell is true
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            encoding="utf-8",
-            env=env,
-        ) as proc:
-            if proc.stdout is None:
-                raise Exception("stdout needs to be set")
+        _call_script(phase, open_pty, env, file)
 
-            wrote_output = False
-            for line in proc.stdout:
+
+def _call_script(  # pylint: disable=too-many-branches
+    phase: str, open_pty: bool, env: Mapping[str, str], file: Path
+) -> None:
+    sys.stdout.write(f'Executing {phase} script "{file.name}"...')
+    if open_pty:
+        fd_parent, fd_child = pty.openpty()
+        stdout = stderr = fd_child
+    else:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT
+
+    with subprocess.Popen(  # nosec B602 # BNS:2b5952
+        str(file),  # path-like args is not allowed when shell is true
+        shell=True,
+        stdout=stdout,
+        stderr=stderr,
+        encoding="utf-8",
+        env=env,
+    ) as proc:
+        if open_pty:
+            os.close(fd_child)
+            parent: IO[str] = os.fdopen(fd_parent, buffering=1)
+        else:
+            assert proc.stdout is not None
+            parent = proc.stdout
+
+        wrote_output = False
+        try:
+            while True:
+                line = parent.readline()
+                if not line:
+                    break
                 if not wrote_output:
                     sys.stdout.write("\n")
                     wrote_output = True
 
                 sys.stdout.write(f"-| {line}")
                 sys.stdout.flush()
+        except OSError:
+            pass
+        finally:
+            if not pty:
+                parent.close()
 
-        if not proc.returncode:
-            sys.stdout.write(tty.ok + "\n")
-        else:
-            sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
-            raise SystemExit(1)
+    if not proc.returncode:
+        sys.stdout.write(tty.ok + "\n")
+    else:
+        sys.stdout.write(tty.error + " (exit code: %d)\n" % proc.returncode)
+        raise SystemExit(1)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
@@ -2184,17 +2209,14 @@ def welcome_message(site: SiteContext, admin_password: Password) -> None:
         f"  The site can be started with {tty.bold}omd start {site.name}{tty.normal}.\n"
     )
     sys.stdout.write(
-        "  The default web UI is available at %shttp://%s/%s/%s\n"
-        % (tty.bold, hostname(), site.name, tty.normal)
+        f"  The default web UI is available at {tty.bold}http://{hostname()}/{site.name}/{tty.normal}\n"
     )
     sys.stdout.write("\n")
     sys.stdout.write(
-        "  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n"
-        % (tty.bold, tty.normal, tty.bold, admin_password.raw, tty.normal)
+        f"  The admin user for the web applications is {tty.bold}cmkadmin{tty.normal} with password: {tty.bold}{admin_password.raw}{tty.normal}\n"
     )
     sys.stdout.write(
-        "  For command line administration of the site, log in with %s'omd su %s'%s.\n"
-        % (tty.bold, site.name, tty.normal)
+        f"  For command line administration of the site, log in with {tty.bold}'omd su {site.name}'{tty.normal}.\n"
     )
     sys.stdout.write(
         "  After logging in, you can change the password for cmkadmin with "
@@ -2351,7 +2373,7 @@ def finalize_site_as_user(
     if command_type in [CommandType.create, CommandType.copy, CommandType.restore_as_new_site]:
         save_instance_id(file_path=get_instance_id_file_path(Path(site.dir)), instance_id=uuid4())
 
-    call_scripts(site, "post-" + command_type.short)
+    call_scripts(site, "post-" + command_type.short, open_pty=sys.stdout.isatty())
 
 
 def main_rm(
@@ -2412,7 +2434,7 @@ def create_site_dir(site: SiteContext) -> None:
             raise
     os.chown(site.dir, user_id(site.name), group_id(site.name))
     # If the site-dir is not world executable files in the site are all not readable/writeable
-    os.chmod(site.dir, 0o751)
+    os.chmod(site.dir, 0o751)  # nosec B103 # BNS:7e6b08
 
 
 def main_disable(
@@ -2800,11 +2822,11 @@ def main_update(  # pylint: disable=too-many-branches
                 bail_out("Aborted.")
         exec_other_omd(site, to_version, "update")
 
+    cmk_from_version = _omd_to_check_mk_version(from_version)
+    cmk_to_version = _omd_to_check_mk_version(to_version)
     if (
         isinstance(
-            compatibility := versions_compatible(
-                _omd_to_check_mk_version(from_version), _omd_to_check_mk_version(to_version)
-            ),
+            compatibility := versions_compatible(cmk_from_version, cmk_to_version),
             VersionsIncompatible,
         )
         and not global_opts.force
@@ -2818,6 +2840,30 @@ def main_update(  # pylint: disable=too-many-branches
             "update with '-f'.\n"
             "But you will be on your own from there."
         )
+
+    # warn about unacknowledged werks
+    is_major_update = cmk_from_version.base != cmk_to_version.base
+    # but we can only do this if we have access to the version we upgrade from:
+    # (docker installations have only a single version, the one they run and update to.)
+    access_to_from_version = os.path.exists(os.path.join(site.real_dir, "version"))
+    if is_major_update and access_to_from_version:
+        unack_werks = unacknowledged_incompatible_werks()
+        if len(unack_werks):
+            note_list_is_clipped = ""
+            werks_list = "\n".join(f"  * {werk.id} {werk.title}" for werk in unack_werks[:50])
+            if len(unack_werks) > 50:
+                note_list_is_clipped = "(Only showing the first 50 unacknowledged werks here, check the changelog in Checkmk for the whole list.)\n\n"
+            if not dialog_yesno(
+                f"The current site contains {len(unack_werks)} unacknowledged werks.\n\n"
+                "It is recommended to review these werks for changes you need to make to your sites configuration. "
+                "If you continue, those werks will be automatically acknowledged and "
+                f"the list of unacknowledged werks is replaced with the ones of the new version.\n\n{note_list_is_clipped}"
+                f"{werks_list}",
+                "Acknowledge werks and continue",
+                "Abort",
+                scrollbar=True,
+            ):
+                bail_out("Aborted.")
 
     # This line is reached, if the version of the OMD binary (the target)
     # is different from the current version of the site.
@@ -2841,8 +2887,7 @@ def main_update(  # pylint: disable=too-many-branches
         from_edition != to_edition
         and not global_opts.force
         and not dialog_yesno(
-            text="You are updating from %s Edition to %s Edition. Is this intended?"
-            % (from_edition.title(), to_edition.title()),
+            text=f"You are updating from {from_edition.title()} Edition to {to_edition.title()} Edition. Is this intended?",
             default_no=True,
         )
     ):
@@ -2881,11 +2926,11 @@ def main_update(  # pylint: disable=too-many-branches
     ):
         bail_out("Aborted.")
 
+    is_tty = sys.stdout.isatty()
     start_logging(site.dir + "/var/log/update.log")
 
     sys.stdout.write(
-        "%s - Updating site '%s' from version %s to %s...\n\n"
-        % (time.strftime("%Y-%m-%d %H:%M:%S"), site.name, from_version, to_version)
+        f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Updating site '{site.name}' from version {from_version} to {to_version}...\n\n"
     )
 
     # etc/icinga/icinga.d/pnp4nagios.cfg was created by the PNP4NAGIOS OMD hook in previous
@@ -2956,6 +3001,7 @@ def main_update(  # pylint: disable=too-many-branches
     call_scripts(
         site,
         "update-pre-hooks",
+        open_pty=is_tty,
         add_env={
             "OMD_CONFLICT_MODE": conflict_mode,
             "OMD_TO_EDITION": to_edition,
@@ -2975,7 +3021,7 @@ def main_update(  # pylint: disable=too-many-branches
 
     save_site_conf(site)
 
-    call_scripts(site, "post-update")
+    call_scripts(site, "post-update", open_pty=is_tty)
 
     if from_edition != "cloud" and to_edition == "cloud":
         sys.stdout.write(
@@ -3054,6 +3100,10 @@ def _get_edition(
     if edition_short == "cse":
         return "saas"
     return "unknown"
+
+
+def _get_raw_version(omd_version: str) -> str:
+    return omd_version[:-4]
 
 
 def _omd_to_check_mk_version(omd_version: str) -> Version:
@@ -3736,6 +3786,8 @@ def main_cleanup(
     if package_manager is None:
         bail_out("Command is not supported on this platform")
 
+    all_installed_packages = package_manager.get_all_installed_packages()
+
     for version in omd_versions():
         if version == default_version():
             sys.stdout.write(
@@ -3756,10 +3808,16 @@ def main_cleanup(
             )
             continue
 
-        version_path = os.path.join("/omd/versions", version)
+        target_package_name = "{}-{}".format(
+            _get_edition(version),
+            _get_raw_version(version),
+        )
 
-        packages = package_manager.find_packages_of_path(version_path)
-        if len(packages) != 1:
+        matching_installed_packages = [
+            package for package in all_installed_packages if target_package_name in package
+        ]
+
+        if len(matching_installed_packages) != 1:
             sys.stdout.write(
                 "%s%-20s%s Could not determine package. Keeping this version.\n"
                 % (tty.bold, version, tty.normal)
@@ -3767,10 +3825,11 @@ def main_cleanup(
             continue
 
         sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty.bold, version, tty.normal))
-        package_manager.uninstall(packages[0])
+        package_manager.uninstall(matching_installed_packages[0])
 
         # In case there were modifications made to the version the uninstall may leave
         # some files behind. Remove the whole version directory
+        version_path: str = os.path.join("/omd/versions", version)
         if os.path.exists(version_path):
             shutil.rmtree(version_path)
 
@@ -3815,7 +3874,7 @@ class PackageManager(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def find_packages_of_path(self, path: str) -> list[str]:
+    def get_all_installed_packages(self) -> list[str]:
         raise NotImplementedError()
 
     def _execute_uninstall(self, cmd: list[str]) -> None:
@@ -3842,38 +3901,38 @@ class PackageManagerDEB(PackageManager):
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
-    def find_packages_of_path(self, path: str) -> list[str]:
-        real_path = os.path.realpath(path)
-
-        p = self._execute(["dpkg", "-S", real_path])
+    def get_all_installed_packages(self) -> list[str]:
+        p = self._execute(["dpkg", "-l"])
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % output)
+            bail_out("Failed to get all installed packages:\n%s" % output)
 
-        for line in output.split("\n"):
-            if line.endswith(": %s" % real_path):
-                return line.split(": ", 1)[0].split(", ")
+        packages: list[str] = []
+        for package in output.split("\n"):
+            if not package.startswith("ii"):
+                continue
 
-        return []
+            packages.append(package.split()[1])
+
+        return packages
 
 
 class PackageManagerRPM(PackageManager):
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["rpm", "-e", package_name])
 
-    def find_packages_of_path(self, path: str) -> list[str]:
-        real_path = os.path.realpath(path)
-
-        p = self._execute(["rpm", "-qf", real_path])
+    def get_all_installed_packages(self) -> list[str]:
+        p = self._execute(["rpm", "-qa"])
         output = p.communicate()[0]
-
-        if p.wait() == 1 and "not owned" in output:
-            return []
 
         if p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % output)
 
-        return output.strip().split("\n")
+        packages: list[str] = []
+        for package in output.split("\n"):
+            packages.append(package)
+
+        return packages
 
 
 class Option(NamedTuple):

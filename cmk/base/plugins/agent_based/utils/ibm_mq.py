@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex
 
@@ -30,7 +31,7 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
     def record_group(qmname, attributes, parsed):
         obj = attributes.get(group_by_object)
         if obj is not None and not obj.startswith(("SYSTEM", "AMQ.MQEXPLORER")):
-            obj = "%s:%s" % (qmname, obj)
+            obj = f"{qmname}:{obj}"
             parsed.setdefault(obj, {})
             parsed[obj].update(attributes)
 
@@ -48,8 +49,8 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
             previous = value
         yield previous, False
 
-    parsed: Dict[str, Any] = {}
-    attributes: Dict[str, Any] = {}
+    parsed: dict[str, Any] = {}
+    attributes: dict[str, Any] = {}
     for (line,), has_more in lookahead(string_table):
         intro_line = re_intro.match(line)
         if intro_line:

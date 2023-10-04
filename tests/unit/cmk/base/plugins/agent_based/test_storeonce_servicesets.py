@@ -13,10 +13,10 @@ from cmk.base.plugins.agent_based.storeonce_servicesets import (
     check_storeonce_servicesets,
     check_storeonce_servicesets_capacity,
     discover_storeonce_servicesets,
-    FILESYSTEM_DEFAULT_PARAMS,
     parse_storeonce_servicesets,
 )
 from cmk.base.plugins.agent_based.utils import storeonce
+from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 Section = storeonce.SectionServiceSets
 

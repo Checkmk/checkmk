@@ -26,8 +26,8 @@ from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.process import pid_from_file, send_signal
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
@@ -133,6 +133,8 @@ class ConfigDomainGUI(ABCConfigDomain):
             users = load_users()
             for ident, user_config in users.items():
                 lang: str = user_config.get("language", "en")
+                if lang is None:
+                    lang = "en"
                 if is_community_translation(lang):
                     warnings.append(
                         f"For user '{ident}': Resetting the language '{get_language_alias(lang)}' to the default "
@@ -173,7 +175,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return not cmk_version.is_raw_edition() and active_config.liveproxyd_enabled
+        return (
+            cmk_version.edition() is not cmk_version.Edition.CRE
+            and active_config.liveproxyd_enabled
+        )
 
     def config_dir(self):
         return liveproxyd_config_dir()
@@ -299,13 +304,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
-                "Failed to create trusted CA file '%s': %s"
-                % (self.trusted_cas_file, traceback.format_exc())
+                f"Failed to create trusted CA file '{self.trusted_cas_file}': {traceback.format_exc()}"
             ]
 
-    def _update_trusted_cas(  # type: ignore[no-untyped-def]
-        self, current_config
-    ) -> ConfigurationWarnings:
+    def _update_trusted_cas(self, current_config) -> ConfigurationWarnings:  # type: ignore[no-untyped-def]
         trusted_cas: list[str] = []
         errors: ConfigurationWarnings = []
 

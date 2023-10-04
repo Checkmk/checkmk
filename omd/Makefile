@@ -33,9 +33,7 @@ PACKAGES := \
     msitools \
     net-snmp \
     apache-omd \
-    lasso \
     xinetd \
-    mod_auth_mellon \
     mod_fcgid \
     mod_wsgi \
     check_mk \
@@ -54,6 +52,8 @@ PACKAGES := \
     snap7 \
     heirloom-pkgtools \
     livestatus \
+    unixcat \
+    neb \
     xmlsec1
 
 ifeq ($(EDITION),enterprise)

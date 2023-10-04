@@ -10,15 +10,16 @@ import copy
 import json
 import textwrap
 import traceback
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from enum import Enum
-from typing import Any
+from typing import Any, cast, Self
 
 from livestatus import SiteId
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -32,26 +33,9 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
-from cmk.gui.pages import AjaxPage, PageResult
-
-# Kept for compatibility with legacy plugins
-# TODO: Drop once we don't support legacy snapins anymore
-from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
-    begin_footnote_links,
-    bulletlink,
-    end_footnote_links,
-    footnotelinks,
-    heading,
-    iconlink,
-    link,
-    render_link,
-    SidebarSnapin,
-    snapin_registry,
-    snapin_site_choice,
-    snapin_width,
-    write_snapin_exception,
-)
-from cmk.gui.type_defs import Icon
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
+from cmk.gui.permissions import PermissionSectionRegistry
+from cmk.gui.type_defs import Icon as Icon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -62,11 +46,57 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
-from ...utils.exceptions import MKGeneralException
-from .main_menu import MainMenuRenderer
+from . import _snapin
+from ._snapin import begin_footnote_links as begin_footnote_links
+from ._snapin import bulletlink as bulletlink
+from ._snapin import CustomizableSidebarSnapin as CustomizableSidebarSnapin
+from ._snapin import end_footnote_links as end_footnote_links
+from ._snapin import footnotelinks as footnotelinks
+from ._snapin import heading as heading
+from ._snapin import iconlink as iconlink
+from ._snapin import link as link
+from ._snapin import make_topic_menu as make_topic_menu
+from ._snapin import PageHandlers as PageHandlers
+from ._snapin import PermissionSectionSidebarSnapins
+from ._snapin import render_link as render_link
+from ._snapin import show_topic_menu as show_topic_menu
+from ._snapin import SidebarSnapin as SidebarSnapin
+from ._snapin import snapin_registry as snapin_registry
+from ._snapin import snapin_site_choice as snapin_site_choice
+from ._snapin import snapin_width as snapin_width
+from ._snapin import SnapinRegistry as SnapinRegistry
+from ._snapin import write_snapin_exception as write_snapin_exception
+from .main_menu import (
+    ajax_message_read,
+    MainMenuRenderer,
+    PageAjaxSidebarGetMessages,
+    PageAjaxSidebarGetUnackIncompWerks,
+)
 
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: dict[str, dict] = {}
+
+
+def register(
+    page_registry: PageRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    snapin_registry_: SnapinRegistry,
+) -> None:
+    page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
+    page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
+    page_registry.register_page("sidebar_ajax_add_snapin")(AjaxAddSnapin)
+    page_registry.register_page_handler("side", page_side)
+    page_registry.register_page_handler("sidebar_snapin", ajax_snapin)
+    page_registry.register_page_handler("sidebar_move_snapin", move_snapin)
+    page_registry.register_page_handler("sidebar_add_snapin", page_add_snapin)
+    page_registry.register_page_handler("sidebar_ajax_set_snapin_site", ajax_set_snapin_site)
+    page_registry.register_page_handler("sidebar_message_read", ajax_message_read)
+    page_registry.register_page("ajax_sidebar_get_messages")(PageAjaxSidebarGetMessages)
+    page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")(
+        PageAjaxSidebarGetUnackIncompWerks
+    )
+    permission_section_registry.register(PermissionSectionSidebarSnapins)
+    _snapin.register(snapin_registry_)
 
 
 def load_plugins() -> None:
@@ -79,9 +109,9 @@ def load_plugins() -> None:
 def _register_pre_21_plugin_api() -> None:
     """Register pre 2.1 "plugin API"
 
-    This was never an official API, but the names were used by builtin and also 3rd party plugins.
+    This was never an official API, but the names were used by built-in and also 3rd party plugins.
 
-    Our builtin plugin have been changed to directly import from the .utils module. We add these old
+    Our built-in plugin have been changed to directly import from the .utils module. We add these old
     names to remain compatible with 3rd party plugins for now.
 
     At the moment we define an official plugin API, we can drop this and require all plugins to
@@ -93,26 +123,26 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.sidebar as api_module
     import cmk.gui.plugins.sidebar.utils as plugin_utils
 
-    for name in (
-        "begin_footnote_links",
-        "bulletlink",
-        "CustomizableSidebarSnapin",
-        "end_footnote_links",
-        "footnotelinks",
-        "heading",
-        "iconlink",
-        "link",
-        "make_topic_menu",
-        "PageHandlers",
-        "render_link",
-        "show_topic_menu",
-        "SidebarSnapin",
-        "snapin_registry",
-        "snapin_site_choice",
-        "snapin_width",
-        "write_snapin_exception",
-    ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
+    for name, value in [
+        ("SidebarSnapin", SidebarSnapin),
+        ("CustomizableSidebarSnapin", CustomizableSidebarSnapin),
+        ("PageHandlers", PageHandlers),
+        ("snapin_registry", snapin_registry),
+        ("begin_footnote_links", begin_footnote_links),
+        ("bulletlink", bulletlink),
+        ("end_footnote_links", end_footnote_links),
+        ("footnotelinks", footnotelinks),
+        ("heading", heading),
+        ("iconlink", iconlink),
+        ("link", link),
+        ("make_topic_menu", make_topic_menu),
+        ("render_link", render_link),
+        ("show_topic_menu", show_topic_menu),
+        ("snapin_site_choice", snapin_site_choice),
+        ("snapin_width", snapin_width),
+        ("write_snapin_exception", write_snapin_exception),
+    ]:
+        api_module.__dict__[name] = plugin_utils.__dict__[name] = value
 
 
 # Pre Checkmk 1.5 the snapins were declared with dictionaries like this:
@@ -130,7 +160,6 @@ def _register_pre_21_plugin_api() -> None:
 def transform_old_dict_based_snapins() -> None:
     for snapin_id, snapin in sidebar_snapins.items():
 
-        @snapin_registry.register
         class LegacySnapin(SidebarSnapin):
             _type_name = snapin_id
             _spec = snapin
@@ -165,8 +194,7 @@ def transform_old_dict_based_snapins() -> None:
             def styles(self):
                 return self._spec.get("styles")
 
-        # Help pylint a little bit, it doesn't know that the registry remembers the class above.
-        _it_is_really_used = LegacySnapin  # noqa: F841
+        snapin_registry.register(LegacySnapin)
 
 
 class UserSidebarConfig:
@@ -342,8 +370,7 @@ class SidebarRenderer:
         # In both cases this method would only render the sidebar
         # content afterwards.
 
-        html.clear_default_javascript()
-        html.html_head(title or _("Checkmk Sidebar"), javascripts=["side"])
+        html.html_head(title or _("Checkmk Sidebar"), main_javascript="side")
 
         self._show_body_start()
         self._show_sidebar()
@@ -365,8 +392,7 @@ class SidebarRenderer:
         )
         html.open_body(
             class_=body_classes,
-            onload="cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks(%s, %s); "
-            % (json.dumps(interval), json.dumps(bool(may_acknowledge()))),
+            onload=f"cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks({json.dumps(interval)}, {json.dumps(bool(may_acknowledge()))}); ",
             data_theme=theme.get(),
         )
 
@@ -547,8 +573,7 @@ class SidebarRenderer:
                 # Fetch the contents from an external URL. Don't render it on our own.
                 refresh_url = url
                 html.javascript(
-                    'cmk.ajax.get_url("%s", cmk.utils.update_contents, "snapin_%s")'
-                    % (refresh_url, name)
+                    f'cmk.ajax.get_url("{refresh_url}", cmk.utils.update_contents, "snapin_{name}")'
                 )
         except Exception as e:
             logger.exception("error rendering snapin %s", name)
@@ -570,6 +595,17 @@ class SidebarRenderer:
             html.write_html(content)
         html.close_div()
 
+    def _show_saas_link(self) -> None:
+        html.open_div(
+            id_="saas",
+            title=_("Go to the Saas Admin Panel"),
+            onclick="window.open('https://admin-panel.saas-prod.cloudsandbox.check-mk.net/', '_blank')",
+        )
+        html.icon("saas")
+        if not user.get_attribute("nav_hide_icons_title"):
+            html.div(_("Admin"))
+        html.close_div()
+
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(
@@ -582,6 +618,9 @@ class SidebarRenderer:
         html.close_div()
 
         MainMenuRenderer().show()
+
+        if cmk_version.edition() is cmk_version.Edition.CSE:
+            self._show_saas_link()
 
         html.open_div(
             id_="side_fold", title=_("Toggle the sidebar"), onclick="cmk.sidebar.toggle_sidebar()"
@@ -600,12 +639,10 @@ def _render_header_icon() -> None:
         html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
 
 
-@cmk.gui.pages.register("side")
 def page_side():
     SidebarRenderer().show()
 
 
-@cmk.gui.pages.register("sidebar_snapin")
 def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
@@ -657,7 +694,6 @@ def ajax_snapin():
     response.set_data(json.dumps(snapin_code))
 
 
-@cmk.gui.pages.page_registry.register_page("sidebar_fold")
 class AjaxFoldSnapin(AjaxPage):
     def page(self) -> PageResult:  # pylint: disable=useless-return
         check_csrf_token()
@@ -668,7 +704,6 @@ class AjaxFoldSnapin(AjaxPage):
         return None
 
 
-@cmk.gui.pages.page_registry.register_page("sidebar_openclose")
 class AjaxOpenCloseSnapin(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -700,7 +735,6 @@ class AjaxOpenCloseSnapin(AjaxPage):
         return None
 
 
-@cmk.gui.pages.register("sidebar_move_snapin")
 def move_snapin() -> None:
     response.set_content_type("application/json")
     if not user.may("general.configure_sidebar"):
@@ -745,7 +779,15 @@ class CustomSpaninsSpec(pagetypes.OverridableSpec):
     custom_snapin: tuple[str, dict]
 
 
-class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
+class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
+    @classmethod
+    def deserialize(cls, page_dict: Mapping[str, object]) -> Self:
+        # TODO Remove 'cast' and do real parsing
+        return cls(cast(CustomSpaninsSpec, page_dict))
+
+    def serialize(self) -> CustomSpaninsSpec:
+        return self._
+
     @classmethod
     def type_name(cls) -> str:
         return "custom_snapin"
@@ -840,7 +882,6 @@ register_post_config_load_hook(_register_custom_snapins)
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("sidebar_add_snapin")
 def page_add_snapin() -> None:
     if not user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
@@ -898,7 +939,6 @@ def _used_snapins() -> list[Any]:
     return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 
 
-@cmk.gui.pages.page_registry.register_page("sidebar_ajax_add_snapin")
 class AjaxAddSnapin(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -934,7 +974,6 @@ class AjaxAddSnapin(AjaxPage):
 
 
 # TODO: This is snapin specific. Move this handler to the snapin file
-@cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
     response.set_content_type("application/json")
     ident = request.var("ident")

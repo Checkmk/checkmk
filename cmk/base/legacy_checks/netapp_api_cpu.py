@@ -6,9 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, RAISE
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
@@ -46,7 +47,9 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
     cpu_busy = int(data["cpu_busy"])
     num_cpus_str = data.get("num_processors")
-    ticks_per_sec = get_rate("netapp_api_cpu.utilization", now, cpu_busy, onwrap=RAISE)
+    ticks_per_sec = get_rate(
+        get_value_store(), "netapp_api_cpu.utilization", now, cpu_busy, raise_overflow=True
+    )
     cpusecs_per_sec = ticks_per_sec / 1000000.0
     used_perc = 100.0 * cpusecs_per_sec
 
@@ -70,21 +73,22 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = LegacyCheckDefinition(
+    service_name="CPU utilization Node %s",
     discovery_function=inventory_netapp_api_cpu,
     check_function=lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "clustermode"
     ),
-    service_name="CPU utilization Node %s",
     check_ruleset_name="cpu_utilization_multiitem",
 )
 
 # 7Mode CPU utilization
 check_info["netapp_api_cpu.utilization"] = LegacyCheckDefinition(
+    service_name="CPU utilization",
+    sections=["netapp_api_cpu"],
     discovery_function=inventory_netapp_api_cpu_utilization,
     check_function=lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "7mode"
     ),
-    service_name="CPU utilization",
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},
 )
@@ -120,7 +124,8 @@ def check_netapp_api_nvram_bat(item, _no_params, parsed):
 
 # Clustermode NVRAM Bat
 check_info["netapp_api_cpu.nvram_bat"] = LegacyCheckDefinition(
+    service_name="NVRAM Battery %s",
+    sections=["netapp_api_cpu"],
     discovery_function=inventory_netapp_api_nvram_bat,
     check_function=check_netapp_api_nvram_bat,
-    service_name="NVRAM Battery %s",
 )

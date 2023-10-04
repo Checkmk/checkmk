@@ -6,17 +6,17 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import cast
 
-import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.user import UserId
 
-import cmk.gui.userdb as userdb
+from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.userdb.utils import add_internal_attributes
-from cmk.gui.type_defs import UserId, UserObject, Users, UserSpec
+from cmk.gui.type_defs import UserObject, Users, UserSpec
+from cmk.gui.userdb import add_internal_attributes, get_user_attributes
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
@@ -26,27 +26,6 @@ from cmk.gui.watolib.user_scripts import (
     user_script_choices,
     user_script_title,
 )
-
-if not cmk_version.is_raw_edition():
-    from cmk.gui.cee.plugins.watolib.dcd import (  # pylint: disable=no-name-in-module
-        ConfigDomainDCD,
-        used_dcd_rest_api_user,
-    )
-
-    def _add_dcd_change(affected_user: str) -> None:
-        add_change(
-            "edit-dcd-user",
-            _l("User %s of DCD connection was modified") % affected_user,
-            domains=[ConfigDomainDCD],
-        )
-
-else:
-    # Stub needed for non enterprise edition
-    def used_dcd_rest_api_user() -> str | None:
-        return None
-
-    def _add_dcd_change(affected_user: str) -> None:
-        return None
 
 
 def delete_users(users_to_delete: Sequence[UserId]) -> None:
@@ -118,10 +97,7 @@ def edit_users(changed_users: UserObject) -> None:
             "edit-users",
             _l("Modified users: %s") % ", ".join(modified_users_info),
         )
-        if (
-            affected_user := used_dcd_rest_api_user()
-        ) is not None and affected_user in modified_users_info:
-            _add_dcd_change(affected_user)
+        hooks.call("users-changed", modified_users_info)
 
     userdb.save_users(all_users, datetime.now())
 
@@ -226,7 +202,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         )
 
     # Custom user attributes
-    for name, attr in userdb.get_user_attributes():
+    for name, attr in get_user_attributes():
         value = user_attrs.get(name)
         attr.valuespec().validate_value(value, "ua_" + name)
 
@@ -256,6 +232,15 @@ def vs_idle_timeout_duration() -> Age:
         title=_("Set an individual idle timeout"),
         display=["minutes", "hours", "days"],
         minvalue=60,
+        help=_(
+            "Normally a user login session is valid until the password is changed or "
+            "the user is locked. By enabling this option, you can apply a time limit "
+            "to login sessions which is applied when the user stops interacting with "
+            "the GUI for a given amount of time. When a user is exceeding the configured "
+            "maximum idle time, the user will be logged out and redirected to the login "
+            "screen to renew the login session. This setting can be overridden for each "
+            "user individually in the profile of the users."
+        ),
         default_value=5400,
     )
 

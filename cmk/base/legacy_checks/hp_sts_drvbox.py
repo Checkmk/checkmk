@@ -106,11 +106,12 @@ def check_hp_sts_drvbox(item, _no_params, info):
                 elif this_state == 2:
                     state_txt = " (!!)"
                 sum_state = max(sum_state, this_state)
-                output.append("%s: %s%s" % (label, map_[val][1], state_txt))
+                output.append(f"{label}: {map_[val][1]}{state_txt}")
 
             output.append(
-                "(Type: %s, Model: %s, Serial: %s, Location: %s)"
-                % (hp_sts_drvbox_type_map.get(ty, "unknown"), model, serial, loc)
+                "(Type: {}, Model: {}, Serial: {}, Location: {})".format(
+                    hp_sts_drvbox_type_map.get(ty, "unknown"), model, serial, loc
+                )
             )
 
             return (sum_state, ", ".join(output))
@@ -119,11 +120,11 @@ def check_hp_sts_drvbox(item, _no_params, info):
 
 check_info["hp_sts_drvbox"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.4.1.232.2.2.4.2.0", "proliant"),
-    check_function=check_hp_sts_drvbox,
-    discovery_function=inventory_hp_sts_drvbox,
-    service_name="Drive Box %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.8.2.1.1",
         oids=["1", "2", "3", "4", "7", "8", "9", "10", "11", "17", "23"],
     ),
+    service_name="Drive Box %s",
+    discovery_function=inventory_hp_sts_drvbox,
+    check_function=check_hp_sts_drvbox,
 )

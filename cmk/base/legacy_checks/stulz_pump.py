@@ -39,9 +39,6 @@ def check_stulz_pump(item, _no_params, info):
 
 check_info["stulz_pump"] = LegacyCheckDefinition(
     detect=DETECT_STULZ,
-    check_function=check_stulz_pump,
-    discovery_function=inventory_stulz_pump,
-    service_name="Pump %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5802",
@@ -52,4 +49,7 @@ check_info["stulz_pump"] = LegacyCheckDefinition(
             oids=["2"],
         ),
     ],
+    service_name="Pump %s",
+    discovery_function=inventory_stulz_pump,
+    check_function=check_stulz_pump,
 )

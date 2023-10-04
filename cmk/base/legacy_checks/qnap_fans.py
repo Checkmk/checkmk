@@ -4,16 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.qnap import DETECT_QNAP
 
 
-def parse_qnap_fans(info):
+def parse_qnap_fans(string_table):
     parsed = {}
-    for fan, value in info:
+    for fan, value in string_table:
         try:
             parsed[fan] = int(value.replace("RPM", ""))
         except ValueError:
@@ -21,21 +21,26 @@ def parse_qnap_fans(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_qnap_fans(_item, params, data):
-    return check_fan(data, params)
+def check_qnap_fans(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+    yield check_fan(data, params)
+
+
+def discover_qnap_fans(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["qnap_fans"] = LegacyCheckDefinition(
     detect=DETECT_QNAP,
-    discovery_function=discover(),
-    parse_function=parse_qnap_fans,
-    check_function=check_qnap_fans,
-    service_name="QNAP FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.15.1",
         oids=[OIDEnd(), "3"],
     ),
+    parse_function=parse_qnap_fans,
+    service_name="QNAP FAN %s",
+    discovery_function=discover_qnap_fans,
+    check_function=check_qnap_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "upper": (None, None),

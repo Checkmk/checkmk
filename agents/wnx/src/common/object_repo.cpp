@@ -1,7 +1,7 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "object_repo.h"
+#include "common/object_repo.h"
 
 namespace cma {
 void RepoStub() {

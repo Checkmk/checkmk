@@ -29,8 +29,7 @@ def check_viprinet_router(_no_item, params, info):
             if expect_mode != current_mode:
                 return (
                     2,
-                    "Mode '%s' differs from expected mode '%s'"
-                    % (mode, router_mode_map.get(expect_mode)),
+                    f"Mode '{mode}' differs from expected mode '{router_mode_map.get(expect_mode)}'",
                 )
 
     if mode:
@@ -40,12 +39,12 @@ def check_viprinet_router(_no_item, params, info):
 
 check_info["viprinet_router"] = LegacyCheckDefinition(
     detect=DETECT_VIPRINET,
-    check_function=check_viprinet_router,
-    discovery_function=lambda info: len(info) > 0 and [(None, {"mode_inv": info[0][0][0]})] or [],
-    service_name="Router Mode",
-    check_ruleset_name="viprinet_router",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.1",
         oids=["5"],
     ),
+    service_name="Router Mode",
+    discovery_function=lambda info: len(info) > 0 and [(None, {"mode_inv": info[0][0][0]})] or [],
+    check_function=check_viprinet_router,
+    check_ruleset_name="viprinet_router",
 )

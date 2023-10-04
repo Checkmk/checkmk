@@ -8,6 +8,13 @@
 
 
 checkname = "emcvnx_hba"
+mock_item_state = {
+    "": {
+        "emcvnx_hba.read_blocks.SP_A_Port_0" : (0, 0),
+        "emcvnx_hba.write_blocks.SP_A_Port_0" : (0, 0),
+    },
+}
+
 
 
 parsed = {

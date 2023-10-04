@@ -7,9 +7,10 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 @pytest.fixture(name="auto_queue")
@@ -41,3 +42,17 @@ class TestAutoQueue:
 
     def test_queued_populated(self, auto_queue: AutoQueue) -> None:
         assert set(auto_queue) == {HostName("most"), HostName("lost")}
+
+    def test_add(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
+        auto_queue = AutoQueue(tmpdir / "dir2")
+        auto_queue.add(HostName("most"))
+        assert list(auto_queue) == [HostName("most")]
+
+    def test_add_existing(self, tmpdir: Path, auto_queue: AutoQueue, mocker: MockerFixture) -> None:
+        auto_queue = AutoQueue(tmpdir / "dir2")
+        auto_queue.add(HostName("most"))
+
+        mock_touch = mocker.patch.object(Path, "touch")
+        auto_queue.add(HostName("most"))
+
+        mock_touch.assert_not_called()

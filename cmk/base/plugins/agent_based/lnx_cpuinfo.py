@@ -5,12 +5,12 @@
 
 
 import re
-from typing import Mapping, Union
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, Union[str, int]]
+Section = Mapping[str, str | int]
 
 
 def parse_lnx_cpuinfo(string_table: StringTable) -> Section:
@@ -18,9 +18,9 @@ def parse_lnx_cpuinfo(string_table: StringTable) -> Section:
     The parse / inventorize separation in this plugin is a result of a brainless migration --
     feel free to improve it.
     """
-    node: dict[str, Union[str, int]] = {}
+    node: dict[str, str | int] = {}
     num_threads_total = 0
-    sockets = set([])
+    sockets = set()
     for varname, value in string_table:
         if varname == "cpu cores":
             node["cores_per_cpu"] = int(value)

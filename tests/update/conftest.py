@@ -3,39 +3,60 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
-import json
 import logging
 import os
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Generator, Iterator
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
-from tests.testlib import CMKWebSession
 from tests.testlib.agent import (
     agent_controller_daemon,
     clean_agent_controller,
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, PExpectDialog, spawn_expect_process
-from tests.testlib.version import CMKVersion
+from tests.testlib.utils import current_base_branch_name
+from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--disable-interactive-mode",
+        action="store_true",
+        default=False,
+        help="Disable interactive site creation and update. Use CLI instead.",
+    )
+    parser.addoption(
+        "--latest-base-version",
+        action="store_true",
+        default=False,
+        help="Use the latest base-version only.",
+    )
+
+
 @dataclasses.dataclass
 class BaseVersions:
     """Get all base versions used for the test."""
 
+    # minimal version supported for an update that can merge the configuration
+    MIN_VERSION = os.getenv("MIN_VERSION", "2.2.0")
     BASE_VERSIONS_STR = [
         "2.2.0",
         "2.2.0p1",
         "2.2.0p2",
+        "2.2.0p3",
+        "2.2.0p4",
+        "2.2.0p5",
+        "2.2.0p6",
+        "2.2.0p7",
+        "2.2.0p8",
+        "2.2.0p9",
     ]
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
@@ -45,32 +66,6 @@ class BaseVersions:
         f"from_{base_version.omd_version()}_to_{os.getenv('VERSION', 'daily')}"
         for base_version in BASE_VERSIONS
     ]
-
-
-def get_host_data(site: Site, hostname: str) -> dict:
-    """Return dict with key=service and value=status for all services in the given site and host."""
-    web = CMKWebSession(site)
-    web.login()
-    raw_data = json.loads(
-        web.get(
-            f"view.py?host={hostname}&output_format=json_export&site={site.id}&view_name=host"
-        ).content
-    )
-    data = {}
-    for item in raw_data[1:]:
-        data[item[1]] = item[0]
-    return data
-
-
-def get_services_with_status(
-    host_data: dict, service_status: str, skipped_services: list | tuple = ()
-) -> list:
-    """Return a list of services in the given status which are not in the 'skipped' list."""
-    service_list = []
-    for service in host_data:
-        if host_data[service] == service_status and service not in skipped_services:
-            service_list.append(service)
-    return service_list
 
 
 def _run_as_site_user(
@@ -88,39 +83,6 @@ def _run_as_site_user(
         check=False,
     )
     return completed_process
-
-
-def set_admin_password(site: Site, password: str = "cmk") -> int:
-    """Set the admin password for the given site.
-    Use cmk-passwd if available (or htpasswd otherwise)."""
-    if os.path.exists(f"{site.root}/bin/cmk-passwd"):
-        # recent checkmk versions: cmk-passwd
-        cmd = [f"{site.root}/bin/cmk-passwd", "-i", "cmkadmin"]
-    else:
-        # older checkmk versions: htpasswd
-        cmd = ["/usr/bin/htpasswd", "-i", f"{site.root}/etc/htpasswd", "cmkadmin"]
-    return _run_as_site_user(site, cmd, input_value=password).returncode
-
-
-def verify_admin_password(site: Site) -> None:
-    """Verify that logging in to the site is possible and reset the admin password otherwise."""
-    web = CMKWebSession(site)
-    try:
-        web.login()
-    except AssertionError:
-        assert set_admin_password(site) == 0, "Could not set admin password!"
-        logger.warning(
-            "Had to reset the admin password after installing %s!", site.version.version_directory()
-        )
-        site.stop()
-        site.start()
-
-
-def get_omd_version(site: Site, full: bool = False) -> str:
-    """Get the omd version for the given site."""
-    cmd = ["/usr/bin/omd", "version", site.id]
-    version = _run_as_site_user(site, cmd).stdout.split("\n", 1)[0]
-    return version if full else version.rsplit(" ", 1)[-1]
 
 
 def get_omd_status(site: Site) -> dict[str, str]:
@@ -166,10 +128,9 @@ def update_config(site: Site) -> int:
     return 2
 
 
-def _get_site(
-    version: CMKVersion, base_site: Optional[Site] = None, interactive: bool = True
-) -> Site:
+def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = None) -> Site:
     """Install or update the test site with the given version.
+
     An update installation is done automatically when an optional base_site is given.
     By default, both installing and updating is done directly via spawn_expect_process()."""
     update = base_site is not None and base_site.exists()
@@ -198,14 +159,9 @@ def _get_site(
     logger.info("Updating existing site" if update else "Creating new site")
 
     if interactive:
-        # bypass SiteFactory for interactive installations
         source_version = base_site.version.version_directory() if base_site else ""
         target_version = version.version_directory()
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
-        # install the release
-        site.install_cmk()
-
-        # Run the CLI installer interactively and respond to expected dialogs.
 
         if not os.getenv("CI", "").strip().lower() == "true":
             print(
@@ -216,106 +172,54 @@ def _get_site(
                 "#######################################################################"
                 "\033[0m"
             )
-        rc = spawn_expect_process(
-            [
-                "/usr/bin/sudo",
-                "/usr/bin/omd",
-                "-V",
-                target_version,
-                "update",
-                f"--conflict={update_conflict_mode}",
-                site.id,
-            ]
-            if update
-            else [
-                "/usr/bin/sudo",
-                "/usr/bin/omd",
-                "-V",
-                target_version,
-                "create",
-                "--admin-password",
-                site.admin_password,
-                "--apache-reload",
-                site.id,
-            ],
-            [
-                PExpectDialog(
-                    expect=(
-                        f"You are going to update the site {site.id} "
-                        f"from version {source_version} "
-                        f"to version {target_version}."
-                    ),
-                    send="u\r",
-                ),
-                PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
-            ]
-            if update
-            else [],
-            logfile_path=logfile_path,
-        )
 
-        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+        if update:
+            sf.interactive_update(
+                base_site,  # type: ignore
+                version,
+                CMKVersion(BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name()),
+            )
+            if not version_supported(source_version):
+                pytest.skip(f"{source_version} is not a supported version for {target_version}")
 
-        with open(logfile_path, "r") as logfile:
-            logger.debug("OMD automation logfile: %s", logfile.read())
-        # refresh the site object after creating the site
-        site = sf.get_existing_site("central")
-        # open the livestatus port
-        site.open_livestatus_tcp(encrypted=False)
-        # start the site after manually installing it
-        site.start()
+        else:  # interactive site creation
+            site = sf.interactive_create(site.id, logfile_path)
+
     else:
         # use SiteFactory for non-interactive site creation/update
         site = sf.get_site("central")
 
-    verify_admin_password(site)
-
-    assert site.is_running(), "Site is not running!"
-    logger.info("Test-site %s is up", site.id)
-
-    site_version, site_edition = get_omd_version(site).rsplit(".", 1)
-    assert (
-        site.version.version == version.version == site_version
-    ), "Version mismatch during %s!" % ("update" if update else "installation")
-    assert (
-        site.version.edition.short == version.edition.short == site_edition
-    ), "Edition mismatch during %s!" % ("update" if update else "installation")
-
     return site
+
+
+def version_supported(version: str) -> bool:
+    """Check if the given version is supported for updating."""
+    return version_gte(version, BaseVersions.MIN_VERSION)
 
 
 @pytest.fixture(
     name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS, scope="module"
 )
-def get_site(request: pytest.FixtureRequest) -> Site:
+def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     """Install the test site with the base version."""
     base_version = request.param
-    logger.info("Setting up test-site ...")
-    return _get_site(base_version, interactive=True)
+    if (
+        request.config.getoption(name="--latest-base-version")
+        and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
+    ):
+        pytest.skip("Only latest base-version selected")
+    interactive_mode_off = request.config.getoption(name="--disable-interactive-mode")
+    logger.info("Setting up test-site (interactive-mode=%s) ...", not interactive_mode_off)
+    test_site = _get_site(base_version, interactive=not interactive_mode_off)
+    yield test_site
+    logger.info("Removing test-site...")
+    test_site.rm()
 
 
-def update_site(site: Site, target_version: CMKVersion, interactive: bool = True) -> Site:
+def update_site(site: Site, target_version: CMKVersion, interactive_mode_off: bool) -> Site:
     """Update the test site to the target version."""
-    return _get_site(target_version, base_site=site, interactive=interactive)
-
-
-def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
-    """Reschedule services in the test-site for a given host until no pending services are found."""
-
-    count = 0
-    base_data_host = get_host_data(site, hostname)
-
-    # reschedule services
-    site.schedule_check(hostname, "Check_MK", 0)
-
-    while len(get_services_with_status(base_data_host, "PEND")) > 0 and count < max_count:
-        logger.info(
-            "The following services were found with pending status: %s. Rescheduling checks...",
-            get_services_with_status(base_data_host, "PEND"),
-        )
-        site.schedule_check(hostname, "Check_MK", 0)
-        base_data_host = get_host_data(site, hostname)
-        count += 1
+    logger.info("Updating site (interactive-mode=%s) ...", not interactive_mode_off)
+    return _get_site(target_version, base_site=site, interactive=not interactive_mode_off)
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")

@@ -38,7 +38,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
 
-def parse_sym_brightmail_queues(info):
+def parse_sym_brightmail_queues(string_table):
     parsed = {}
     for (
         descr,
@@ -48,7 +48,7 @@ def parse_sym_brightmail_queues(info):
         messageRate,
         queueSize,
         queuedMessages,
-    ) in info:
+    ) in string_table:
         for k, v in [
             ("connections", connections),
             ("dataRate", dataRate),
@@ -92,13 +92,13 @@ def check_sym_brightmail_queues(item, params, parsed):
 
 check_info["sym_brightmail_queues"] = LegacyCheckDefinition(
     detect=any_of(contains(".1.3.6.1.2.1.1.1.0", "el5_sms"), contains(".1.3.6.1.2.1.1.1.0", "el6")),
-    parse_function=parse_sym_brightmail_queues,
-    discovery_function=inventory_sym_brightmail_queues,
-    check_function=check_sym_brightmail_queues,
-    service_name="Queue %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.393.200.130.2.2.1.1",
         oids=["2", "3", "4", "5", "6", "7", "8"],
     ),
+    parse_function=parse_sym_brightmail_queues,
+    service_name="Queue %s",
+    discovery_function=inventory_sym_brightmail_queues,
+    check_function=check_sym_brightmail_queues,
     check_ruleset_name="sym_brightmail_queues",
 )

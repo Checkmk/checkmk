@@ -7,15 +7,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Final, NamedTuple
 
-from cryptography.hazmat.primitives.asymmetric.rsa import (
-    generate_private_key,
-    RSAPrivateKeyWithSerialization,
-    RSAPublicKey,
-)
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -30,18 +26,18 @@ from cryptography.x509 import (
     CertificateSigningRequest,
     CertificateSigningRequestBuilder,
     DNSName,
-    KeyUsage,
     load_pem_x509_certificate,
     Name,
     NameAttribute,
     random_serial_number,
     SubjectAlternativeName,
-    SubjectKeyIdentifier,
 )
 from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteId
+
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey, RsaPrivateKey
 
 
 class _CNTemplate:
@@ -60,12 +56,13 @@ class _CNTemplate:
 
 CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
 
-_DEFAULT_VALIDITY = relativedelta(years=999)
+_DEFAULT_VALIDITY = relativedelta(years=10)
+_DEFAULT_KEY_SIZE = 4096
 
 
 class RootCA(NamedTuple):
     cert: Certificate
-    rsa: RSAPrivateKeyWithSerialization
+    rsa: RSAPrivateKey
 
     @classmethod
     def load(cls, path: Path) -> RootCA:
@@ -78,8 +75,7 @@ class RootCA(NamedTuple):
         try:
             return cls.load(path)
         except FileNotFoundError:
-            rsa = _make_private_key()
-            cert = _make_root_certificate(_make_subject_name(name), validity, rsa)
+            cert, rsa = _generate_root_cert(name, validity, _DEFAULT_KEY_SIZE)
             _save_cert_chain(path, [cert], rsa)
         return cls(cert, rsa)
 
@@ -94,8 +90,8 @@ class RootCA(NamedTuple):
         self,
         name: str,
         validity: relativedelta = _DEFAULT_VALIDITY,
-    ) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
-        private_key = _make_private_key()
+    ) -> tuple[Certificate, RSAPrivateKey]:
+        private_key = RsaPrivateKey.generate(_DEFAULT_KEY_SIZE)._key
         cert = _sign_csr(
             _make_csr(
                 _make_subject_name(name),
@@ -132,7 +128,7 @@ def write_cert_store(source_dir: Path, store_path: Path) -> None:
     store_path.write_bytes(b"".join(pem_certs))
 
 
-def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
+def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKey]:
     return (
         load_pem_x509_certificate(
             pem_bytes := path_pem.read_bytes(),
@@ -147,21 +143,18 @@ def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKe
 def _save_cert_chain(
     path_pem: Path,
     certificate_chain: Iterable[Certificate],
-    key: RSAPrivateKeyWithSerialization,
+    key: RSAPrivateKey,
 ) -> None:
     path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
     with path_pem.open(mode="wb") as f:
-        f.write(key.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()))
+        # RSAPrivateKeyWithSerialization confuses mypy, RSAPrivateKey has private_bytes
+        private_bytes = key.private_bytes(  # type:ignore[attr-defined]
+            Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()
+        )
+        f.write(private_bytes)
         for cert in certificate_chain:
             f.write(cert.public_bytes(Encoding.PEM))
     path_pem.chmod(mode=0o660)
-
-
-def _make_private_key() -> RSAPrivateKeyWithSerialization:
-    return generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-    )
 
 
 def _make_cert_builder(
@@ -174,58 +167,29 @@ def _make_cert_builder(
         .subject_name(subject_name)
         .public_key(public_key)
         .serial_number(random_serial_number())
-        .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + validity)
+        # use naive datetimes -- see cmk.utils.crypto.certificate.Certificate._naive_utcnow
+        .not_valid_before(datetime.now(tz=timezone.utc).replace(tzinfo=None))
+        .not_valid_after(datetime.now(tz=timezone.utc).replace(tzinfo=None) + validity)
     )
 
 
-def _make_root_certificate(
-    subject_name: Name,
+def _generate_root_cert(
+    common_name: str,
     validity: relativedelta,
-    private_key: RSAPrivateKeyWithSerialization,
-) -> Certificate:
-    return (
-        _make_cert_builder(
-            subject_name,
-            validity,
-            private_key.public_key(),
-        )
-        .issuer_name(subject_name)
-        .add_extension(
-            SubjectKeyIdentifier.from_public_key(private_key.public_key()),
-            critical=False,
-        )
-        .add_extension(
-            BasicConstraints(
-                ca=True,
-                path_length=0,
-            ),
-            critical=True,
-        )
-        .add_extension(
-            KeyUsage(
-                digital_signature=False,
-                content_commitment=False,
-                key_encipherment=False,
-                data_encipherment=False,
-                key_agreement=False,
-                key_cert_sign=True,
-                crl_sign=True,
-                encipher_only=False,
-                decipher_only=False,
-            ),
-            critical=True,
-        )
-        .sign(
-            private_key,
-            SHA256(),
-        )
+    key_size: int,
+) -> tuple[Certificate, RSAPrivateKey]:
+    ca = CertificateWithPrivateKey.generate_self_signed(
+        common_name=common_name,
+        expiry=validity,
+        key_size=key_size,
+        is_ca=True,
     )
+    return (ca.certificate._cert, ca.private_key._key)
 
 
 def _make_csr(
     subject_name: Name,
-    private_key: RSAPrivateKeyWithSerialization,
+    private_key: RSAPrivateKey,
 ) -> CertificateSigningRequest:
     return (
         CertificateSigningRequestBuilder()
@@ -241,7 +205,7 @@ def _sign_csr(
     csr: CertificateSigningRequest,
     validity: relativedelta,
     signing_cert: Certificate,
-    signing_private_key: RSAPrivateKeyWithSerialization,
+    signing_private_key: RSAPrivateKey,
 ) -> Certificate:
     common_name = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
     return (

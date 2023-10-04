@@ -12,25 +12,25 @@ import traceback
 from collections.abc import Callable, Mapping, Sequence
 from html import unescape
 from pathlib import Path
-from typing import Any, Literal, Union
+from typing import Any, Literal
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import TimeRange
+from cmk.utils.prediction import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
+from cmk.gui.graphing._graph_specification import GraphMetric
+from cmk.gui.graphing._utils import CombinedSingleMetricSpec
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    CombinedGraphSpec,
     HTTPVariables,
     PainterName,
     PainterParameters,
@@ -54,7 +54,7 @@ from ..v1.painter_lib import Painter as V1Painter
 from ..v1.painter_lib import PainterConfiguration
 
 ExportCellContent = str | dict[str, Any]
-PDFCellContent = Union[str | tuple[Literal["icon"], str]]
+PDFCellContent = str | tuple[Literal["icon"], str]
 PDFCellSpec = tuple[Sequence[str], PDFCellContent]
 
 
@@ -252,7 +252,7 @@ class Painter(abc.ABC):
 class Painter2(Painter):
     # Poor man's composition:  Renderer differs between CRE and non-CRE.
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ] | None = None
 
 

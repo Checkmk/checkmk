@@ -5,14 +5,14 @@
 
 #include "stdafx.h"
 
-#include "firewall.h"
+#include "wnx/firewall.h"
 
 #include <comutil.h>
 #include <netfw.h>
 
 #include "common/wtools.h"
-#include "logger.h"
 #include "tools/_misc.h"
+#include "wnx/logger.h"
 
 #pragma comment(lib, "ole32.lib")
 #pragma comment(lib, "oleaut32.lib")

@@ -40,7 +40,7 @@ def check_arris_cmts_cpu(item, params, info):
             warn, crit = params["levels"]
 
             infotext = "Current utilization is: %d %% " % cpu_util
-            levels = " (warn/crit at %.1f/%.1f %%)" % (warn, crit)
+            levels = f" (warn/crit at {warn:.1f}/{crit:.1f} %)"
             perfdata = [("util", cpu_util, warn, crit)]
             if cpu_util >= crit:
                 yield 2, infotext + levels, perfdata
@@ -53,12 +53,12 @@ def check_arris_cmts_cpu(item, params, info):
 
 check_info["arris_cmts_cpu"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
-    check_function=check_arris_cmts_cpu,
-    discovery_function=inventory_arris_cmts_cpu,
-    service_name="CPU utilization Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.5.3.1.1.1",
         oids=[OIDEnd(), "1", "8"],
     ),
+    service_name="CPU utilization Module %s",
+    discovery_function=inventory_arris_cmts_cpu,
+    check_function=check_arris_cmts_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )

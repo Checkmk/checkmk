@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
@@ -12,7 +12,7 @@ from .utils.fortinet import DETECT_FORTISANDBOX
 Section = Mapping[str, int]
 
 
-def parse_fortisandbox_mem_usage(string_table: StringTable) -> Optional[Section]:
+def parse_fortisandbox_mem_usage(string_table: StringTable) -> Section | None:
     """
     >>> parse_fortisandbox_mem_usage(([["4", "260459760"]]))
     {'MemFree': 256042362470, 'MemTotal': 266710794240}

@@ -11,14 +11,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_oracle_sessions(info):
+def parse_oracle_sessions(string_table):
     header = ["cursess", "maxsess", "curmax"]
     parsed = {}
-    for line in info:
+    for line in string_table:
         for key, entry in zip(header, line[1:]):
             try:
                 parsed.setdefault(line[0], {})[key] = int(entry)
@@ -53,7 +54,7 @@ def check_oracle_sessions(item, params, parsed):
                 elif sessions_perc >= warn_perc:
                     state = 1
                 if state:
-                    infotext_perc += " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
+                    infotext_perc += f" (warn/crit at {warn_perc:.1f}%/{crit_perc:.1f}%)"
             yield state, infotext_perc
 
         else:
@@ -76,14 +77,14 @@ def check_oracle_sessions(item, params, parsed):
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    raise IgnoreResultsError("Login into database failed")
 
 
 check_info["oracle_sessions"] = LegacyCheckDefinition(
     parse_function=parse_oracle_sessions,
+    service_name="ORA %s Sessions",
     discovery_function=inventory_oracle_sessions,
     check_function=check_oracle_sessions,
-    service_name="ORA %s Sessions",
     check_ruleset_name="oracle_sessions",
     check_default_parameters={
         "sessions_abs": (150, 300),

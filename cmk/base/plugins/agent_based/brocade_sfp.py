@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, TypedDict
+from collections.abc import Mapping
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.utils.brocade import (
     brocade_fcport_getitem,
@@ -40,7 +43,7 @@ class Port(TypedDict):
 Section = Mapping[int, Port]
 
 
-def parse_brocade_sfp(string_table: List[StringTable]) -> Section:
+def parse_brocade_sfp(string_table: list[StringTable]) -> Section:
     parsed: dict[int, Port] = {}
 
     isl_ports = [int(x[0]) for x in string_table[1]]

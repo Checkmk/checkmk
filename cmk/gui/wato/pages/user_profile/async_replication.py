@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb
@@ -20,12 +20,20 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import get_site_config, sitenames
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.watolib.activate_changes import ActivateChanges, ACTIVATION_TIME_PROFILE_SYNC
+from cmk.gui.watolib.activate_changes import (
+    ActivateChanges,
+    ACTIVATION_TIME_PROFILE_SYNC,
+    update_activation_time,
+)
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("wato_ajax_profile_repl")(ModeAjaxProfileReplication)
 
 
 def user_profile_async_replication_page(back_url: str) -> None:
@@ -99,7 +107,6 @@ def _add_profile_replication_change(site_id: SiteId, result: bool | str) -> None
     )
 
 
-@page_registry.register_page("wato_ajax_profile_repl")
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
 
@@ -144,5 +151,5 @@ class ModeAjaxProfileReplication(AjaxPage):
         result = push_user_profiles_to_site_transitional_wrapper(site, {user_id: users[user_id]})
 
         duration = time.time() - start
-        ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, duration)
+        update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, duration)
         return result

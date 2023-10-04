@@ -60,13 +60,13 @@ def check_palo_alto_sessions(_no_item, params, info):
 
 check_info["palo_alto_sessions"] = LegacyCheckDefinition(
     detect=DETECT_PALO_ALTO,
-    discovery_function=inventory_palo_alto_sessions,
-    check_function=check_palo_alto_sessions,
-    service_name="Palo Alto Sessions",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25461.2.1.2.3",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
+    service_name="Palo Alto Sessions",
+    discovery_function=inventory_palo_alto_sessions,
+    check_function=check_palo_alto_sessions,
     check_ruleset_name="palo_alto_sessions",
     check_default_parameters={
         "levels_sessions_used": (60, 70),

@@ -40,14 +40,14 @@ def check_bluecat_ha(item, params, info):
 
 check_info["bluecat_ha"] = LegacyCheckDefinition(
     detect=DETECT_BLUECAT,
-    check_function=check_bluecat_ha,
-    discovery_function=inventory_bluecat_ha,
-    service_name="HA State",
-    check_ruleset_name="bluecat_ha",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.5.2.1",
         oids=["1"],
     ),
+    service_name="HA State",
+    discovery_function=inventory_bluecat_ha,
+    check_function=check_bluecat_ha,
+    check_ruleset_name="bluecat_ha",
     check_default_parameters={
         "oper_states": {
             "warning": [5, 6, 7],

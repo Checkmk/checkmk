@@ -9,7 +9,7 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 
 def inventory_netapp_api_info(section: StringTable) -> InventoryResult:
-    info_dict = dict((x[0], x[1]) for x in section if x[0] != "node")
+    info_dict = {x[0]: x[1] for x in section if x[0] != "node"}
 
     sw_os: dict[str, str] = {}
     hw_chassis: dict[str, str] = {}

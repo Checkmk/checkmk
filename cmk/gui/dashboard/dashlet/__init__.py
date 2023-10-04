@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .base import (
-    Dashlet,
+from cmk.gui.dashboard.type_defs import (
     DashletConfig,
     DashletId,
     DashletPosition,
     DashletRefreshAction,
     DashletRefreshInterval,
     DashletSize,
-    IFrameDashlet,
 )
+
+from .base import Dashlet, IFrameDashlet
 from .dashlets import (
     copy_view_into_dashlet,
     LinkedViewDashletConfig,

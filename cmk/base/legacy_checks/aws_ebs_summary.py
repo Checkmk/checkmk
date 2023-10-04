@@ -8,7 +8,7 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import GenericAWSSection, parse_aws
@@ -24,9 +24,9 @@ AWSEBSStorageTypes = {
 }
 
 
-def parse_aws_summary(info):
+def parse_aws_summary(string_table):
     parsed = {}
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         if (vid := row["VolumeId"]) not in parsed:
             parsed[vid] = row
         inst = parsed[vid]
@@ -58,24 +58,25 @@ def check_aws_ebs_summary(item, params, parsed):
         stores_by_state.setdefault(row["State"], []).append(volume_id)
         stores_by_type.setdefault(row["VolumeType"], []).append(volume_id)
         long_output.append(
-            "Volume: %s, Status: %s, Type: %s, Encrypted: %s, Creation time: %s"
-            % (volume_id, row["State"], row["VolumeType"], row["Encrypted"], row["CreateTime"])
+            "Volume: {}, Status: {}, Type: {}, Encrypted: {}, Creation time: {}".format(
+                volume_id, row["State"], row["VolumeType"], row["Encrypted"], row["CreateTime"]
+            )
         )
 
     yield 0, "Stores: %s" % len(parsed)
     for state, stores in stores_by_state.items():
-        yield 0, "%s: %s" % (state, len(stores))
+        yield 0, f"{state}: {len(stores)}"
     for type_, stores in stores_by_type.items():
-        yield 0, "%s: %s" % (AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_), len(stores))
+        yield 0, "{}: {}".format(AWSEBSStorageTypes.get(type_, "unknown[%s]" % type_), len(stores))
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
 
 
 check_info["aws_ebs_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_summary,
+    service_name="AWS/EBS Summary",
     discovery_function=discover_aws_ebs_summary,
     check_function=check_aws_ebs_summary,
-    service_name="AWS/EBS Summary",
 )
 
 # .
@@ -89,17 +90,19 @@ check_info["aws_ebs_summary"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_aws_ebs_summary_health(item, params, ebs_data):
+def check_aws_ebs_summary_health(item, params, parsed):
+    if not (ebs_data := parsed.get(item)):
+        return
     metrics = ebs_data["VolumeStatus"]
     ebs_status = metrics["Status"]
     yield 0 if ebs_status.lower() == "ok" else 2, "Status: %s" % ebs_status
     for row in metrics["Details"]:
-        yield 0, "%s: %s" % (row["Name"], row["Status"])
+        yield 0, "{}: {}".format(row["Name"], row["Status"])
 
 
 check_info["aws_ebs_summary.health"] = LegacyCheckDefinition(
+    service_name="AWS/EBS Health %s",
+    sections=["aws_ebs_summary"],
     discovery_function=lambda p: inventory_aws_generic(p, ["VolumeStatus"]),
     check_function=check_aws_ebs_summary_health,
-    service_name="AWS/EBS Health %s",
 )

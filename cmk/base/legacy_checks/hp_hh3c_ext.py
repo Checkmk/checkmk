@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.temperature import check_temperature
@@ -20,10 +20,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_hp_hh3c_ext(info):
-    entity_info = dict(info[1])
+def parse_hp_hh3c_ext(string_table):
+    entity_info = dict(string_table[1])
     parsed = {}
-    for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in info[0]:
+    for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in string_table[0]:
         name = entity_info.get(index, (None, None))
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)
@@ -32,7 +32,7 @@ def parse_hp_hh3c_ext(info):
         mem_used = 0.01 * int(mem_usage) * mem_total
 
         parsed.setdefault(
-            "%s %s" % (name, index),
+            f"{name} {index}",
             {
                 "temp": int(temperature),
                 "cpu": int(cpu),
@@ -75,10 +75,6 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.239"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.87"),
     ),
-    parse_function=parse_hp_hh3c_ext,
-    discovery_function=inventory_hp_hh3c_ext,
-    check_function=check_hp_hh3c_ext,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.25506.2.6.1.1.1.1",
@@ -89,6 +85,10 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
             oids=[OIDEnd(), OIDCached("2")],
         ),
     ],
+    parse_function=parse_hp_hh3c_ext,
+    service_name="Temperature %s",
+    discovery_function=inventory_hp_hh3c_ext,
+    check_function=check_hp_hh3c_ext,
     check_ruleset_name="temperature",
 )
 
@@ -141,13 +141,14 @@ def check_hp_hh3c_ext_states(item, params, parsed):
         params_state_type = params.get(state_type, {})
         if params_key in params_state_type:
             state = params_state_type[params_key]
-        yield state, "%s: %s" % (title, state_readable)
+        yield state, f"{title}: {state_readable}"
 
 
 check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
+    service_name="Status %s",
+    sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_states,
     check_function=check_hp_hh3c_ext_states,
-    service_name="Status %s",
     check_ruleset_name="hp_hh3c_ext_states",
 )
 
@@ -178,9 +179,10 @@ def check_hp_hh3c_ext_cpu(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
+    service_name="CPU utilization %s",
+    sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_cpu,
     check_function=check_hp_hh3c_ext_cpu,
-    service_name="CPU utilization %s",
     check_ruleset_name="cpu_utilization_multiitem",
 )
 
@@ -204,11 +206,12 @@ def inventory_hp_hh3c_ext_mem(parsed):
             yield name, {}
 
 
-@get_parsed_item_data
-def check_hp_hh3c_ext_mem(item, params, data):
+def check_hp_hh3c_ext_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     warn, crit = params.get("levels", (None, None))
     mode = "abs_used" if isinstance(warn, int) else "perc_used"
-    return check_memory_element(
+    yield check_memory_element(
         "Usage",
         data["mem_used"],
         data["mem_total"],
@@ -218,9 +221,10 @@ def check_hp_hh3c_ext_mem(item, params, data):
 
 
 check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
+    service_name="Memory %s",
+    sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_mem,
     check_function=check_hp_hh3c_ext_mem,
-    service_name="Memory %s",
     check_ruleset_name="memory_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

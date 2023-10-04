@@ -12,14 +12,14 @@ from typing import Literal
 
 from livestatus import LivestatusRow, lqencode, MKLivestatusNotFoundError, SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -29,14 +29,20 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live, only_sites
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 
-@cmk.gui.pages.page_registry.register_page("robotmk")
-class ModeRobotmkPage(cmk.gui.pages.Page):
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("robotmk")(RobotmkPage)
+    page_registry.register_page_handler("robotmk_report", robotmk_report_page)
+    page_registry.register_page_handler("download_robotmk_report", robotmk_download_page)
+
+
+class RobotmkPage(cmk.gui.pages.Page):
     @classmethod
     def ident(cls) -> str:
         return "robotmk"
@@ -185,7 +191,6 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
         )
 
 
-@cmk.gui.pages.register("robotmk_report")
 def robotmk_report_page() -> None:
     """Renders the content of the RobotMK html log file"""
     site_id, host_name, service_description = _get_mandatory_request_vars()
@@ -197,7 +202,6 @@ def robotmk_report_page() -> None:
     html.write_html(html_content)
 
 
-@cmk.gui.pages.register("download_robotmk_report")
 def robotmk_download_page() -> None:
     user.need_permission("general.see_crash_reports")
 
@@ -210,9 +214,9 @@ def robotmk_download_page() -> None:
         urlencode(service_description),
         time.strftime("%Y-%m-%d_%H-%M-%S"),
     )
+    response.set_content_type("application/x-tgz")
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
 
-    response.headers["Content-Disposition"] = "Attachment; filename=%s" % filename
-    response.headers["Content-Type"] = "application/x-tar"
     html_content: bytes = _get_html_from_livestatus(
         report_type, site_id, host_name, service_description
     )[0]
@@ -260,10 +264,7 @@ def _get_html_from_livestatus(
     report_column: Literal["robotmk_last_log", "robotmk_last_error_log"] = (
         "robotmk_last_log" if report_type == "robotmk" else "robotmk_last_error_log"
     )
-    query = (
-        "GET services\nColumns: %s\nFilter: host_name = %s\nFilter: service_description = %s\n"
-        % (report_column, lqencode(host_name), lqencode(service_description))
-    )
+    query = f"GET services\nColumns: {report_column}\nFilter: host_name = {lqencode(host_name)}\nFilter: service_description = {lqencode(service_description)}\n"
 
     with only_sites(site_id):
         row = live().query_row(query)

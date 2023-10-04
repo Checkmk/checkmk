@@ -7,7 +7,7 @@ import copy
 import time
 from typing import Any
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKUserError
@@ -22,7 +22,7 @@ from .builtin_dashboards import builtin_dashboards
 from .type_defs import DashboardConfig, DashboardName, DashletConfig, DashletId
 
 
-# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore, centralize implementation?
+# TODO: Same as in cmk.gui.plugins.views.utils.ViewStore and ReportStore, centralize implementation?
 class DashboardStore:
     @classmethod
     @request_memoize()
@@ -54,7 +54,7 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
     return {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps
-        **raw_dashboard,  # type: ignore[misc]
+        **raw_dashboard,  # type: ignore[typeddict-item]
         "dashlets": [
             internal_view_to_runtime_view(dashlet_spec)
             if dashlet_spec["type"] == "view"
@@ -90,7 +90,7 @@ def load_dashboard_with_cloning(
         all_dashboards,
     )
     if edit and board["owner"] == UserId.builtin():
-        # Trying to edit a builtin dashboard results in doing a copy
+        # Trying to edit a built-in dashboard results in doing a copy
         active_user = user.id
         assert active_user is not None
         board = copy.deepcopy(board)

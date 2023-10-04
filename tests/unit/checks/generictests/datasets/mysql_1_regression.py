@@ -9,6 +9,15 @@
 
 checkname = "mysql"
 
+mock_item_state = {
+    "sessions": {
+        "mysql.sessions": (0, 2),
+    },
+    "innodb_io": {
+        "diskstat.innodb_iomysql.read": (0.0, 2),
+        "diskstat.innodb_iomysql.write": (0.0, 4),
+    }
+}
 
 info = [
     ["[[mysql]]"],

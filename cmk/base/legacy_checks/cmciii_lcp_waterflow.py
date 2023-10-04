@@ -6,7 +6,8 @@
 
 # mypy: disable-error-code="no-untyped-def"
 
-from typing import Iterable, NamedTuple, Optional
+from collections.abc import Iterable
+from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -22,16 +23,16 @@ class WaterflowReading(NamedTuple):
     maxflow: float
 
 
-Section = Optional[WaterflowReading]
+Section = WaterflowReading | None
 
 
-def parse_cmciii_lcp_waterflow(info) -> Section:
-    if not info:
+def parse_cmciii_lcp_waterflow(string_table) -> Section:
+    if not string_table:
         return None
 
     # We have a list of values where no item has a fixed index. We
     # try to detect the starting index for the needed values now.
-    iter_info = iter(info[0])
+    iter_info = iter(string_table[0])
     name = None
     for line in iter_info:
         if "Waterflow" in line:
@@ -74,7 +75,7 @@ def check_cmciii_lcp_waterflow(item, params, section: Section):
         state = 1
         sym = "(!)"
 
-    info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" % (
+    info_text = "{} Status: {} Flow: {:.1f}{}, MinFlow: {:.1f}, MaxFLow: {:.1f}".format(
         section.name,
         section.status,
         section.flow,
@@ -98,12 +99,12 @@ def check_cmciii_lcp_waterflow(item, params, section: Section):
 
 check_info["cmciii_lcp_waterflow"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
-    parse_function=parse_cmciii_lcp_waterflow,
-    check_function=check_cmciii_lcp_waterflow,
-    discovery_function=inventory_cmciii_lcp_waterflow,
-    service_name="LCP Fanunit WATER FLOW",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10.2",
         oids=["74", "75", "76", "77", "78", "79", "80", "81", "82", "83", "84", "85", "86", "87"],
     ),
+    parse_function=parse_cmciii_lcp_waterflow,
+    service_name="LCP Fanunit WATER FLOW",
+    discovery_function=inventory_cmciii_lcp_waterflow,
+    check_function=check_cmciii_lcp_waterflow,
 )

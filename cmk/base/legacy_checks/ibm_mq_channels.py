@@ -69,16 +69,15 @@ def check_ibm_mq_channels(item, params, parsed):
     status = data.get("STATUS", "INACTIVE")
     check_state = map_ibm_mq_channel_status(status, params)
     chltype = data.get("CHLTYPE")
-    infotext = "Status: %s, Type: %s" % (status, chltype)
+    infotext = f"Status: {status}, Type: {chltype}"
     if "XMITQ" in data:
         infotext += ", Xmitq: %s" % data["XMITQ"]
     yield check_state, infotext, []
 
 
 check_info["ibm_mq_channels"] = LegacyCheckDefinition(
-    # section is already migrated!
-    check_function=check_ibm_mq_channels,
-    discovery_function=inventory_ibm_mq_channels,
     service_name="IBM MQ Channel %s",
+    discovery_function=inventory_ibm_mq_channels,
+    check_function=check_ibm_mq_channels,
     check_ruleset_name="ibm_mq_channels",
 )

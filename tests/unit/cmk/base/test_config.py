@@ -21,43 +21,57 @@ import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.sectionname import SectionName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName, RuleSetName, SectionName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
-from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
+from cmk.checkengine.discovery import AutocheckEntry, DiscoveryCheckParameters, HostLabel
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-from cmk.base.api.agent_based.type_defs import HostLabel, ParsedSectionName, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
 
 
 def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
+    hostnames = (
+        HostName("un"),
+        HostName("deux"),
+        HostName("deux"),
+        HostName("trois"),
+        HostName("trois"),
+        HostName("trois"),
+    )
     ts = Scenario()
-    for hostname in map(HostName, ["bla1", "bla1", "zzz", "zzz", "yyy"]):
+    for hostname in hostnames:
         ts.add_host(hostname)
-    ts.apply(monkeypatch)
-    assert config.duplicate_hosts() == ["bla1", "zzz"]
+    config_cache = ts.apply(monkeypatch)
+
+    # Routine uses global variables `cmk.base.config.all_hosts`
+    # and `cmk.base.config.clusters` so we have to obtain the
+    # `RulesetMatcher` from the `ConfigCache`.
+    assert config.duplicate_hosts(config_cache.ruleset_matcher) == ["deux", "trois"]
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
-    ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == set()
+    config_cache = ts.apply(monkeypatch)
+    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == set()
 
 
 def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) -> None:
@@ -77,8 +91,8 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
         tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
     )
     ts.add_host(HostName("bla"))
-    ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == {"blub1"}
+    config_cache = ts.apply(monkeypatch)
+    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == {"blub1"}
 
 
 def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -100,8 +114,8 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
         HostName("blub2"),
         tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
     )
-    ts.apply(monkeypatch)
-    assert config.all_offline_hosts() == {"blub1"}
+    config_cache = ts.apply(monkeypatch)
+    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == {"blub1"}
 
 
 def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -1076,11 +1090,18 @@ def test_host_config_inventory_parameters(
     [
         (
             HostName("testhost1"),
-            config.DiscoveryCheckParameters.commandline_only_defaults(),
+            DiscoveryCheckParameters(
+                commandline_only=True,
+                check_interval=0,
+                severity_new_services=1,
+                severity_vanished_services=0,
+                severity_new_host_labels=1,
+                rediscovery={},
+            ),
         ),
         (
             HostName("testhost2"),
-            config.DiscoveryCheckParameters(
+            DiscoveryCheckParameters(
                 commandline_only=False,
                 check_interval=1,
                 severity_new_services=1,
@@ -1092,7 +1113,7 @@ def test_host_config_inventory_parameters(
     ],
 )
 def test_discovery_check_parameters(
-    monkeypatch: MonkeyPatch, hostname: HostName, result: config.DiscoveryCheckParameters
+    monkeypatch: MonkeyPatch, hostname: HostName, result: DiscoveryCheckParameters
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)
@@ -1318,7 +1339,7 @@ def test_host_config_static_checks(
             module=None,
         )
 
-    monkeypatch.setattr(config.agent_based_register, "get_check_plugin", make_plugin)
+    monkeypatch.setattr(agent_based_register, "get_check_plugin", make_plugin)
 
     ts = Scenario()
     ts.add_host(hostname)
@@ -1620,7 +1641,7 @@ def test_get_sorted_check_table_no_cmc(
     monkeypatch.setattr(
         config,
         "service_depends_on",
-        lambda _hn, descr: {
+        lambda _cc, _hn, descr: {
             "description A": ["description C"],
             "description B": ["description D"],
             "description D": ["description A", "description F"],
@@ -1651,7 +1672,7 @@ def test_resolve_service_dependencies_cyclic(
     monkeypatch.setattr(
         config,
         "service_depends_on",
-        lambda _, descr: {
+        lambda _cc, _hn, descr: {
             "description A": ["description B"],
             "description B": ["description D"],
             "description D": ["description A"],
@@ -1670,8 +1691,9 @@ def test_resolve_service_dependencies_cyclic(
         config_cache.configured_services(HostName("MyHost"))
 
 
-def test_service_depends_on_unknown_host() -> None:
-    assert not config.service_depends_on(HostName("test-host"), "svc")
+def test_service_depends_on_unknown_host(monkeypatch: MonkeyPatch) -> None:
+    config_cache = Scenario().apply(monkeypatch)
+    assert not config.service_depends_on(config_cache, HostName("test-host"), "svc")
 
 
 def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
@@ -1686,11 +1708,11 @@ def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
             ("dep-disabled", [], config.ALL_HOSTS, ["svc1"], {"disabled": True}),
         ],
     )
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    assert not config.service_depends_on(test_host, "svc2")
-    assert config.service_depends_on(test_host, "svc1") == ["dep1"]
-    assert config.service_depends_on(test_host, "svc1-abc") == ["dep1", "dep2-abc"]
+    assert not config.service_depends_on(config_cache, test_host, "svc2")
+    assert config.service_depends_on(config_cache, test_host, "svc1") == ["dep1"]
+    assert config.service_depends_on(config_cache, test_host, "svc1-abc") == ["dep1", "dep2-abc"]
 
 
 @pytest.fixture(name="cluster_config")
@@ -1703,9 +1725,9 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
 
 
 def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
-    assert cluster_config.is_cluster(HostName("node1")) is False
-    assert cluster_config.is_cluster(HostName("host1")) is False
-    assert cluster_config.is_cluster(HostName("cluster1")) is True
+    assert HostName("node1") not in cluster_config.all_configured_clusters()
+    assert HostName("host1") not in cluster_config.all_configured_clusters()
+    assert HostName("cluster1") in cluster_config.all_configured_clusters()
 
 
 def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
@@ -2286,8 +2308,8 @@ def test_config_cache_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> 
     ts.add_host(xyz_host)
     ts.apply(monkeypatch)
 
-    config_cache = config.get_config_cache()
-    assert not config_cache.is_cluster(xyz_host)
+    config_cache = ts.config_cache
+    assert xyz_host not in config_cache.all_configured_clusters()
     assert (
         config_cache.max_cachefile_age(xyz_host).get(Mode.CHECKING)
         == config.check_max_cachefile_age
@@ -2304,8 +2326,8 @@ def test_config_cache_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> Non
     ts.add_cluster(clu)
     ts.apply(monkeypatch)
 
-    config_cache = config.get_config_cache()
-    assert config_cache.is_cluster(clu)
+    config_cache = ts.config_cache
+    assert clu in config_cache.all_configured_clusters()
     assert config_cache.max_cachefile_age(clu).get(Mode.CHECKING) != config.check_max_cachefile_age
     assert (
         config_cache.max_cachefile_age(clu).get(Mode.CHECKING) == config.cluster_max_cachefile_age
@@ -2348,16 +2370,16 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
             )
         ],
     )
-    config_cache = ts.apply(monkeypatch)
+    matcher = ts.apply(monkeypatch).ruleset_matcher
 
-    obj = config_cache.ruleset_match_object_of_service(xyz_host, "bla blä")
+    obj = matcher._service_match_object(xyz_host, "bla blä")
     assert obj == RulesetMatchObject(HostName("xyz"), "bla blä", {})
 
     # Funny service description because the plugin isn't loaded.
     # We could patch config.service_description, but this is easier:
     description = "Unimplemented check cpu_load"
 
-    obj = config_cache.ruleset_match_object_of_service(test_host, description)
+    obj = matcher._service_match_object(test_host, description)
     service_labels = {"abc": "xä"}
     assert obj == RulesetMatchObject(HostName("test-host"), description, service_labels)
 
@@ -2510,14 +2532,9 @@ def test_get_config_file_paths_with_confd(folder_path_test_config: None) -> None
 
 
 def test_load_config_folder_paths(folder_path_test_config: None) -> None:
-    assert config.host_paths == {
-        "lvl1-host": "/wato/lvl1/hosts.mk",
-        "lvl1aaa-host": "/wato/lvl1_aaa/hosts.mk",
-        "lvl2-host": "/wato/lvl1/lvl2/hosts.mk",
-        "lvl0-host": "/wato/hosts.mk",
-    }
-
-    config_cache = config.get_config_cache()
+    # reset makes our testing environment explicit and stable, but the test runs good with almost
+    # any config_cache.
+    config_cache = config.reset_config_cache()
 
     assert config_cache.host_path(HostName("main-host")) == "/"
     assert config_cache.host_path(HostName("lvl0-host")) == "/wato/"
@@ -2531,25 +2548,28 @@ def test_load_config_folder_paths(folder_path_test_config: None) -> None:
     assert "host_folder" not in config.cmc_host_rrd_config[3]["condition"]
     assert "host_folder" not in config.cmc_host_rrd_config[4]["condition"]
 
-    assert config_cache.host_extra_conf(HostName("main-host"), config.cmc_host_rrd_config) == [
+    ruleset_matcher = config_cache.ruleset_matcher
+    assert ruleset_matcher.get_host_values(HostName("main-host"), config.cmc_host_rrd_config) == [
         "LVL0",
         "MAIN",
     ]
-    assert config_cache.host_extra_conf(HostName("lvl0-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(HostName("lvl0-host"), config.cmc_host_rrd_config) == [
         "LVL0",
         "MAIN",
     ]
-    assert config_cache.host_extra_conf(HostName("lvl1-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(HostName("lvl1-host"), config.cmc_host_rrd_config) == [
         "LVL1",
         "LVL0",
         "MAIN",
     ]
-    assert config_cache.host_extra_conf(HostName("lvl1aaa-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(
+        HostName("lvl1aaa-host"), config.cmc_host_rrd_config
+    ) == [
         "LVL1aaa",
         "LVL0",
         "MAIN",
     ]
-    assert config_cache.host_extra_conf(HostName("lvl2-host"), config.cmc_host_rrd_config) == [
+    assert ruleset_matcher.get_host_values(HostName("lvl2-host"), config.cmc_host_rrd_config) == [
         "LVL2",
         "LVL1",
         "LVL0",
@@ -2892,6 +2912,18 @@ def test_commandline_arguments_not_existing_password(
     )
     stderr = capsys.readouterr().err
     assert 'The stored password "pw-id" used by service "blub" on host "bla"' in stderr
+
+
+def test_active_check_arguments_password_store_sanitization() -> None:
+    """Check that the --pwstore argument is properly sanitized.
+    This is a regression test for CMK-14149.
+    """
+    pw_id = "pw-id; echo HI;"
+    pw = "the password"
+    password_store.save({pw_id: pw})
+    assert config.commandline_arguments(
+        HostName("bla"), "blub", ["arg1", ("store", pw_id, "--password=%s"), "arg3"]
+    ) == "'--pwstore=2@11@pw-id; echo HI;' arg1 '--password=%s' arg3" % ("*" * len(pw))
 
 
 def test_commandline_arguments_wrong_types() -> None:

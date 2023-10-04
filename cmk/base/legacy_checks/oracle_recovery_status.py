@@ -23,8 +23,9 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
 def inventory_oracle_recovery_status(info):
@@ -155,7 +156,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
                     infotext += "(!)"
                     state = max(1, state)
 
-            infotext += " (warn/crit at %s/%s )" % (
+            infotext += " (warn/crit at {}/{} )".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
@@ -176,7 +177,7 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
 
             if params.get("backup_age"):
                 warn, crit = params["backup_age"]
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_age_human_readable(warn),
                     get_age_human_readable(crit),
                 )
@@ -200,12 +201,12 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped("Login into database failed")
+    raise IgnoreResultsError("Login into database failed")
 
 
 check_info["oracle_recovery_status"] = LegacyCheckDefinition(
-    check_function=check_oracle_recovery_status,
-    discovery_function=inventory_oracle_recovery_status,
     service_name="ORA %s Recovery Status",
+    discovery_function=inventory_oracle_recovery_status,
+    check_function=check_oracle_recovery_status,
     check_ruleset_name="oracle_recovery_status",
 )

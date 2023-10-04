@@ -7,7 +7,9 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import cast, Literal, NamedTuple, NewType, TypedDict
+from typing import cast, Literal, NamedTuple, NewType
+
+from typing_extensions import TypedDict
 
 from livestatus import (
     ConnectedSite,
@@ -27,15 +29,8 @@ from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
-from cmk.utils.version import (
-    __version__,
-    Edition,
-    edition,
-    is_managed_edition,
-    Version,
-    VersionsIncompatible,
-)
+from cmk.utils.user import UserId
+from cmk.utils.version import __version__, Edition, edition, Version, VersionsIncompatible
 
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
@@ -281,7 +276,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
 
-    if is_managed_edition():
+    if edition() is Edition.CME:
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         from cmk.gui.cme.livestatus import (  # pylint: disable=no-name-in-module
             CMEMultiSiteConnection,

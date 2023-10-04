@@ -9,7 +9,6 @@ from pathlib import Path
 
 from pytest import MonkeyPatch
 
-import omdlib.main
 import omdlib.skel_permissions
 
 
@@ -21,4 +20,4 @@ def test_read_skel_permissions(monkeypatch: MonkeyPatch, tmp_path: Path) -> None
         omdlib.skel_permissions, "skel_permissions_file_path", lambda v: "%s" % (pfile)
     )
 
-    assert omdlib.main.read_skel_permissions() == {"bla": 493, "blub": 420}
+    assert omdlib.skel_permissions.read_skel_permissions() == {"bla": 493, "blub": 420}

@@ -8,9 +8,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint, state_markers
+from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 # Example output from agent:
 # <<<emcvnx_disks>>>
@@ -99,9 +99,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # }
 
 
-def parse_emcvnx_disks(info):
+def parse_emcvnx_disks(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) > 4 and line[0] == "Bus" and line[4] == "Disk":
             encid = line[1] + "/" + line[3] + " " + line[4] + " " + line[5]
             enc = {}
@@ -137,7 +137,7 @@ def check_emcvnx_disks(item, params, parsed):
         return None
 
     diskstate = data["state"]
-    message = "Enclosure %s is %s" % (item, diskstate)
+    message = f"Enclosure {item} is {diskstate}"
     if diskstate in ["Unbound", "Hot Spare Ready", "Enabled", "Ready"]:
         nagstate = 0
     elif diskstate == "Rebuilding":
@@ -166,11 +166,15 @@ def check_emcvnx_disks(item, params, parsed):
     countername_r = "emcvnx_disks.read_bytes.%s" % item.replace(" ", "_")
     countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
 
-    read_bytes_per_sec = get_rate(countername_r, now, read_bytes)
+    read_bytes_per_sec = get_rate(
+        get_value_store(), countername_r, now, read_bytes, raise_overflow=True
+    )
     message += ", Read: %s" % render.iobandwidth(read_bytes_per_sec)
     perfdata.append(("read", read_bytes_per_sec))
 
-    write_bytes_per_sec = get_rate(countername_w, now, write_bytes)
+    write_bytes_per_sec = get_rate(
+        get_value_store(), countername_w, now, write_bytes, raise_overflow=True
+    )
     message += ", Write: %s" % render.iobandwidth(write_bytes_per_sec)
     perfdata.append(("write", write_bytes_per_sec))
 
@@ -179,9 +183,9 @@ def check_emcvnx_disks(item, params, parsed):
 
 check_info["emcvnx_disks"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_disks,
+    service_name="Enclosure %s",
     discovery_function=inventory_emcvnx_disks,
     check_function=check_emcvnx_disks,
-    service_name="Enclosure %s",
     check_ruleset_name="emcvnx_disks",
     check_default_parameters={
         "state_read_error": (2, 2),  # (state, count of errors)

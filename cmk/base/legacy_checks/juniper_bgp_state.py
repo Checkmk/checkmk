@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDBytes, SNMPTree
 from cmk.base.plugins.agent_based.utils.ip_format import clean_v4_address, clean_v6_address
@@ -22,7 +22,7 @@ def juniper_bgp_state_create_item(peering_entry):
     return " ".join("%02X" % int(i) for i in peering_entry)  # that's what has been in the data
 
 
-def parse_juniper_bgp_state(info):
+def parse_juniper_bgp_state(string_table):
     bgp_state_map = {
         "0": "undefined",  # 0 does not exist
         "1": "idle",  # 1
@@ -38,7 +38,7 @@ def parse_juniper_bgp_state(info):
         "2": "running",  # 2
     }
     parsed = {}
-    for state, operational_state, peering_entry in info:
+    for state, operational_state, peering_entry in string_table:
         item = juniper_bgp_state_create_item(peering_entry)
         state_txt = bgp_state_map.get(state.strip(), "undefined")
         operational_txt = bgp_operational_state_map.get(operational_state.strip(), "undefined")
@@ -50,8 +50,9 @@ def parse_juniper_bgp_state(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_juniper_bgp_state(item, _no_params, data):
+def check_juniper_bgp_state(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     state = data.get("state", "undefined")
     operational_state = data.get("operational_state", "undefined")
 
@@ -60,7 +61,7 @@ def check_juniper_bgp_state(item, _no_params, data):
         "undefined": 3,
     }.get(state, 2)
     # if we're halted, being un-established is fine
-    yield status if operational_state == "running" else 0, "Status with peer %s is %s" % (
+    yield status if operational_state == "running" else 0, "Status with peer {} is {}".format(
         item,
         state,
     )
@@ -72,14 +73,18 @@ def check_juniper_bgp_state(item, _no_params, data):
     yield op_status, "operational status: %s" % operational_state
 
 
+def discover_juniper_bgp_state(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["juniper_bgp_state"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER,
-    parse_function=parse_juniper_bgp_state,
-    check_function=check_juniper_bgp_state,
-    discovery_function=discover(),
-    service_name="BGP Status Peer %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.5.1.1.2.1.1.1",
         oids=["2", "3", OIDBytes("11")],
     ),
+    parse_function=parse_juniper_bgp_state,
+    service_name="BGP Status Peer %s",
+    discovery_function=discover_juniper_bgp_state,
+    check_function=check_juniper_bgp_state,
 )

@@ -11,10 +11,10 @@ import logging
 import mimetypes
 import traceback
 import urllib.parse
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Sequence, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from flask import g, send_from_directory
@@ -25,9 +25,9 @@ from werkzeug.routing import Map, Rule, Submount
 import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import HTTPMethod
+from cmk.utils.site import omd_site
 
-from cmk.gui import config, session
+from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
+    from cmk.gui.http import HTTPMethod
     from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse
 
@@ -73,7 +74,7 @@ def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
 
 
 def crash_report_response(exc: Exception) -> WSGIApplication:
-    site = config.omd_site()
+    site = omd_site()
     details: dict[str, Any] = {}
 
     if isinstance(exc, GeneralRestAPIException):

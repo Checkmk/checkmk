@@ -34,7 +34,7 @@ from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
 # .1.3.6.1.4.1.10222.2.1.4.7.1.6.5.4 0 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower.5.4
 
 
-def parse_intel_true_scale_psus(info):
+def parse_intel_true_scale_psus(string_table):
     map_states = {
         "1": (3, "unknown"),
         "2": (3, "disabled"),
@@ -54,7 +54,7 @@ def parse_intel_true_scale_psus(info):
     }
 
     parsed = {}
-    for descr, operstate, source, voltage_str, power_str in info:
+    for descr, operstate, source, voltage_str, power_str in string_table:
         name = descr.replace("Power Supply", "").strip()
 
         parsed.setdefault(
@@ -79,21 +79,22 @@ def inventory_intel_true_scale_psus(parsed):
 def check_intel_true_scale_psus(item, params, parsed):
     if item in parsed:
         state, state_readable = parsed[item]["state"]
-        yield state, "Operational status: %s, Source: %s" % (state_readable, parsed[item]["source"])
+        yield state, "Operational status: {}, Source: {}".format(
+            state_readable, parsed[item]["source"]
+        )
 
-        for res in check_elphase(item, params, parsed):
-            yield res
+        yield from check_elphase(item, params, parsed)
 
 
 check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
     detect=DETECT_INTEL_TRUE_SCALE,
-    parse_function=parse_intel_true_scale_psus,
-    discovery_function=inventory_intel_true_scale_psus,
-    check_function=check_intel_true_scale_psus,
-    service_name="Power supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.4.7.1",
         oids=["2", "3", "4", "5", "6"],
     ),
+    parse_function=parse_intel_true_scale_psus,
+    service_name="Power supply %s",
+    discovery_function=inventory_intel_true_scale_psus,
+    check_function=check_intel_true_scale_psus,
     check_ruleset_name="el_inphase",
 )

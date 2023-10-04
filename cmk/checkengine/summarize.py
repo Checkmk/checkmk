@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+from typing import Protocol
 
+import cmk.utils.resulttype as result
 from cmk.utils.exceptions import (
     MKAgentError,
     MKFetcherError,
@@ -14,15 +16,25 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result
 
 from cmk.fetchers import FetcherType
 
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.exitspec import ExitSpec
+from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.parser import HostSections
 
-__all__ = ["summarize"]
+__all__ = ["summarize", "SummarizerFunction"]
+
+
+class SummarizerFunction(Protocol):
+    def __call__(
+        self,
+        host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]],
+    ) -> Iterable[ActiveCheckResult]:
+        ...
 
 
 def summarize(

@@ -13,19 +13,19 @@ import cmk.utils.paths
 
 import cmk.ec.export as ec
 from cmk.ec.config import Config
+from cmk.ec.helpers import ECLock
 from cmk.ec.history import History
 from cmk.ec.main import (
     default_slave_status_master,
-    ECLock,
     EventServer,
     EventStatus,
     make_config,
-    Perfcounters,
     SlaveStatus,
     StatusServer,
     StatusTableEvents,
     StatusTableHistory,
 )
+from cmk.ec.perfcounters import Perfcounters
 from cmk.ec.settings import Settings
 
 

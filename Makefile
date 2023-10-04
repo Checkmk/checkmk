@@ -23,27 +23,16 @@ ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
 
-M4_DEPS            := $(wildcard m4/*) configure.ac
-CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
-CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
-DIST_DEPS          := $(CONFIG_DEPS)
-
-LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
-                      api/c++/{Makefile,*.{h,cc}} \
+LIVESTATUS_API_SOURCES := api/c++/{Makefile,*.{h,cc}} \
                       api/perl/* \
-                      api/python/{README,*.py} \
-                      {nagios,nagios4}/{README,*.h} \
-                      src/Makefile.am \
-                      src/include/neb/*.h \
-                      src/src/*.cc \
-                      src/test/*.{cc,h}
+                      api/python/{README,*.py}
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \
                               $(foreach edir,. enterprise managed, \
-                                  $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
+                                  $(foreach subdir,* */* */*/* */*/*/*,$(edir)/web/htdocs/js/$(subdir).[jt]s))))
 
 SCSS_SOURCES := $(wildcard \
 					$(foreach edir,. enterprise managed, \
@@ -56,7 +45,6 @@ RRDTOOL_VERS       := $(shell egrep -h "RRDTOOL_VERS\s:=\s" omd/packages/rrdtool
 
 WEBPACK_MODE       ?= production
 
-OPENAPI_DOC        := web/htdocs/openapi/api-documentation.html
 OPENAPI_SPEC       := web/htdocs/openapi/checkmk.yaml
 
 LOCK_FD := 200
@@ -66,15 +54,15 @@ ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
 endif
 
-.PHONY: all build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
+.PHONY: announcement all build check check-binaries check-permissions check-version \
+        clean css dist documentation \
         format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
-        packages setup setversion tidy version am--refresh skel openapi openapi-doc \
+        packages setup setversion tidy version skel openapi \
         protobuf-files
 
 help:
-	@echo "setup			      --> Prepare system for development and building"
+	@echo "setup                          --> Prepare system for development and building"
 	@echo "make dist                      --> Create source tgz for later building of rpm/deb and livestatus tgz"
 	@echo "make rpm                       --> Create rpm package"
 	@echo "make deb                       --> Create deb package"
@@ -137,13 +125,13 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) $(DIST_DEPS) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
+	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -179,19 +167,11 @@ $(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
 $(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks
 
-
-$(CHECK_MK_ANNOUNCE_FOLDER):
+announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
-
-$(CHECK_MK_ANNOUNCE_MD): $(CHECK_MK_ANNOUNCE_FOLDER)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
-
-$(CHECK_MK_ANNOUNCE_TXT): $(CHECK_MK_ANNOUNCE_FOLDER)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
-
-$(CHECK_MK_ANNOUNCE_TAR): $(CHECK_MK_ANNOUNCE_TXT) $(CHECK_MK_ANNOUNCE_MD)
 	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
-
 
 packages:
 	$(MAKE) -C agents packages
@@ -202,13 +182,8 @@ packages:
 $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
-	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
-	cd mk-livestatus-$(VERSION) && \
-	    autoreconf --install --include=m4 && \
-	    rm -rf autom4te.cache && \
-	    touch ar-lib compile config.guess config.sub install-sh missing depcomp
+	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_API_SOURCES) )  | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat packages/neb third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
 	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
@@ -219,13 +194,17 @@ version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 
+# NOTE: CMake accepts only up to 4 non-negative integer version parts, so we
+# replace any character (like 'p' or 'b') with a dot. Not completely correct,
+# but better than nothing. We have to rethink this setversion madness, anyway.
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
-	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
+	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/neb/CMakeLists.txt
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
+	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
 
@@ -236,15 +215,9 @@ $(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plu
 	mv $$TMPFILE $@
 
 
-$(OPENAPI_DOC): $(OPENAPI_SPEC) node_modules/.bin/redoc-cli
-	node_modules/.bin/redoc-cli bundle -o $(OPENAPI_DOC) $(OPENAPI_SPEC) && \
-		sed -i 's/\s\+$$//' $(OPENAPI_DOC) && \
-		echo >> $(OPENAPI_DOC)  # fix trailing whitespaces and end of file newline
-
 openapi-clean:
 	rm -f $(OPENAPI_SPEC)
 openapi: $(OPENAPI_SPEC)
-openapi-doc: $(OPENAPI_DOC)
 
 
 optimize-images:
@@ -277,7 +250,6 @@ optimize-images:
 # used registry. The resolved entry is only a hint for npm.
 .INTERMEDIATE: .ran-npm
 node_modules/.bin/webpack: .ran-npm
-node_modules/.bin/redoc-cli: .ran-npm
 node_modules/.bin/prettier: .ran-npm
 .ran-npm: package.json package-lock.json
 	@echo "npm version: $$(npm --version)"
@@ -296,7 +268,7 @@ node_modules/.bin/prettier: .ran-npm
         fi ; \
 	npm ci --yes --audit=false --unsafe-perm $$REGISTRY
 	sed -i 's#"resolved": "https://artifacts.lan.tribe29.com/repository/npm-proxy/#"resolved": "https://registry.npmjs.org/#g' package-lock.json
-	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli node_modules/.bin/prettier
+	touch node_modules/.bin/webpack node_modules/.bin/prettier
 
 # NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
 # list all targets separately.
@@ -326,7 +298,8 @@ clean:
 	       precompiled cache web/htdocs/js/*_min.js \
 	       web/htdocs/themes/*/theme.css \
 	       .werks/werks \
-	       ChangeLog
+	       ChangeLog \
+	       announce*
 
 css: .ran-webpack
 
@@ -339,13 +312,18 @@ EXCLUDE_PROPER= \
 EXCLUDE_CLEAN=$(EXCLUDE_PROPER) \
 	    --exclude=".venv" \
 	    --exclude=".venv.lock" \
+	    --exclude=".cargo" \
 	    --exclude="node_modules"
 
+# The list of files and folders to be protected from remove after "buildclean" is called
+# Rust dirs are kept due to heavy load when compiled: .cargo, controller
 AGENT_CTL_TARGET_PATH=packages/cmk-agent-ctl/target
+CHECK_SQL_TARGET_PATH=packages/check-sql/target
 EXCLUDE_BUILD_CLEAN=$(EXCLUDE_CLEAN) \
 	    --exclude="doc/plugin-api/build" \
 	    --exclude=".cargo" \
 	    --exclude=$(AGENT_CTL_TARGET_PATH) \
+	    --exclude=$(CHECK_SQL_TARGET_PATH) \
 	    --exclude="agents/plugins/*_2.py" \
 	    --exclude="agents/plugins/*.py.checksum"
 
@@ -355,13 +333,9 @@ mrproper:
 mrclean:
 	git clean -d --force -x $(EXCLUDE_CLEAN)
 
-# Used by gerrit jobs to cleanup workspaces *after* a gerrit job run.
-# This should not clean up everything - just things which are *not* needed for the next job to run as fast as
-# possible.
+# The target is reserved for a future use
 workspaceclean:
-	# Cargo related things
-	$(RM) -r $(AGENT_CTL_TARGET_PATH)/debug/ # This was the old target before "x86_64-unknown" and is deprecated now
-	$(RM) $(AGENT_CTL_TARGET_PATH)/x86_64-unknown-linux-musl/debug/deps/cmk_agent_ctl-* # Compiling this *should* be fast anyway
+	# Stub
 
 # Used by our version build (buildscripts/scripts/build-cmk-version.jenkins)
 # for cleaning up while keeping some build artifacts between version builds.
@@ -385,10 +359,7 @@ setup:
 	    doxygen \
 	    figlet \
 	    gawk \
-	    gdebi \
 	    git \
-	    git-svn \
-	    gitk \
 	    ksh \
 	    libclang-$(CLANG_VERSION)-dev \
 	    libjpeg-dev \
@@ -441,77 +412,9 @@ setup:
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
-ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
-	autoreconf --install --include=m4
-	touch ar-lib compile config.guess config.sub install-sh missing depcomp
-
-# TODO(sp): We should really detect and use our own packages in a less hacky way...
-config.status: $(CONFIG_DEPS)
-	@echo "Build $@ (newer targets: $?)"
-	@if test -f config.status; then \
-	  echo "update config.status by reconfiguring in the same conditions" ; \
-	  ./config.status --recheck; \
-	else \
-	  if test -d "omd/rrdtool-$(RRDTOOL_VERS)/src/.libs"; then \
-	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-$(RRDTOOL_VERS)/src/.libs)" ; \
-	  else \
-	    RRD_OPT="DUMMY2=" ; \
-	  fi ; \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
-	fi
-
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise protobuf-files
-endif
-
-configure: $(CONFIGURE_DEPS)
-	autoconf
-
-aclocal.m4: $(M4_DEPS)
-	aclocal
-
-config.h.in: $(CONFIGURE_DEPS)
-	autoheader
-	rm -f stamp-h1
-	touch $@
-
-config.h: stamp-h1
-	@test -f $@ || rm -f stamp-h1
-	@test -f $@ || $(MAKE) stamp-h1
-
-stamp-h1: config.h.in config.status
-	@rm -f stamp-h1
-	./config.status config.h
-
-GTAGS: config.h
-# automake generates "gtags -i ...", but incremental updates seem to be a bit
-# fragile, so let's start from scratch, gtags is quite fast.
-	$(RM) GTAGS GRTAGS GSYMS GPATH
-# Note: Even if we descend into livestatus, gtags is run on the top level (next
-# to configure.ac).
-	$(MAKE) -C livestatus GTAGS
-
-compile-neb-cmc: config.status test-format-c
-	$(MAKE) -C livestatus -j4
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core -j4
-endif
-
-compile-neb-cmc-docker:
-	scripts/run-in-docker.sh make compile-neb-cmc
-
-tidy: config.h
-	$(MAKE) -C livestatus/src tidy
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src tidy
-endif
-
-iwyu: config.status
-	$(MAKE) -C livestatus/src iwyu
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src iwyu
 endif
 
 format: format-python format-c format-shell format-js format-css format-bazel
@@ -519,17 +422,17 @@ format: format-python format-c format-shell format-js format-css format-bazel
 format-c:
 	packages/livestatus/run --format
 	packages/unixcat/run --format
-	$(MAKE) -C livestatus/src format
+	packages/neb/run --format
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src format
+	packages/cmc/run --format
 endif
 
 test-format-c:
 	packages/livestatus/run --check-format
 	packages/unixcat/run --check-format
-	$(MAKE) -C livestatus/src check-format
+	packages/neb/run --check-format
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src check-format
+	packages/cmc/run --check-format
 endif
 
 format-python: format-python-isort format-python-black
@@ -557,12 +460,8 @@ format-css:
 format-bazel:
 	scripts/run-buildifier --lint=fix --mode=fix
 
-# Note: You need the doxygen and graphviz packages.
-documentation: config.h
-	$(MAKE) -C livestatus/src documentation
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src documentation
-endif
+documentation:
+	echo Nothing to do here remove this target
 
 sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html
@@ -606,10 +505,3 @@ Pipfile.lock: Pipfile
 	    fi; \
 	    ( SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
-
-# This dummy rule is called from subdirectories whenever one of the
-# top-level Makefile's dependencies must be updated.  It does not
-# need to depend on %MAKEFILE% because GNU make will always make sure
-# %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh: config.status
-	./config.status

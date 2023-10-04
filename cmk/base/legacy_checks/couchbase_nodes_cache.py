@@ -5,28 +5,36 @@
 
 
 import time
+from collections.abc import Iterable
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_cache(item, params, data):
+def discover_couchbase_nodes_cache(section: Section) -> DiscoveryResult:
+    yield from (
+        (item, {})
+        for item, data in section.items()
+        if "get_hits" in data and "ep_bg_fetched" in data
+    )
+
+
+def check_couchbase_nodes_cache(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     misses = data.get("ep_bg_fetched")
     hits = data.get("get_hits")
     if None in (misses, hits):
         return
     total = misses + hits
     hit_perc = (hits / float(total)) * 100.0 if total != 0 else 100.0
-    miss_rate = get_rate("%s.cache_misses" % item, time.time(), misses)
+    miss_rate = get_rate(
+        get_value_store(), "cache_misses", time.time(), misses, raise_overflow=True
+    )
 
     yield check_levels(
         miss_rate,
@@ -41,7 +49,7 @@ def check_couchbase_nodes_cache(item, params, data):
         hit_perc,
         "cache_hit_ratio",
         (None, None) + params.get("cache_hits", (None, None)),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Cache hits",
         boundaries=(0, 100),
     )
@@ -49,8 +57,8 @@ def check_couchbase_nodes_cache(item, params, data):
 
 check_info["couchbase_nodes_cache"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda k, v: "get_hits" in v and "ep_bg_fetched" in v),
-    check_function=check_couchbase_nodes_cache,
     service_name="Couchbase %s Cache",
+    discovery_function=discover_couchbase_nodes_cache,
+    check_function=check_couchbase_nodes_cache,
     check_ruleset_name="couchbase_cache",
 )

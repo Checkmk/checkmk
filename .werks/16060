@@ -1,0 +1,14 @@
+Title: Fix possible "Request-URI Too Long" on rule search
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695969377
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you used a lot of tags, the links of the results of the page menu entry
+"Search" - "Refine search" could lead to the error "Request-URI Too Long".
+

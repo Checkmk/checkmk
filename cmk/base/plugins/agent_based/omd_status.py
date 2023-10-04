@@ -20,15 +20,16 @@ crontab 1
 OVERALL 2
 """
 
-from typing import Any, Dict, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-Section = Dict[str, Dict[str, Any]]
+Section = dict[str, dict[str, Any]]
 
 
-def parse_omd_status(string_table: StringTable) -> Optional[Section]:
+def parse_omd_status(string_table: StringTable) -> Section | None:
     """
     >>> for site, status in parse_omd_status([
     ...     ['[heute]'],
@@ -41,7 +42,7 @@ def parse_omd_status(string_table: StringTable) -> Optional[Section]:
     stable {'stopped': [], 'existing': ['cmc', 'apache'], 'overall': 'running'}
     """
     result: Section = {}
-    current_item: Optional[Dict[str, Any]] = None
+    current_item: dict[str, Any] | None = None
 
     for name, *states in string_table:
         if name.startswith("["):
@@ -67,8 +68,8 @@ register.agent_section(name="omd_status", parse_function=parse_omd_status)
 
 
 def discovery_omd_status(
-    section_omd_status: Optional[Section],
-    section_omd_info: Optional[Section],
+    section_omd_status: Section | None,
+    section_omd_info: Section | None,
 ) -> DiscoveryResult:
     """
     >>> for service in discovery_omd_status(
@@ -137,8 +138,8 @@ def _check_omd_status(
 
 def check_omd_status(
     item: str,
-    section_omd_status: Optional[Section],
-    section_omd_info: Optional[Section],
+    section_omd_status: Section | None,
+    section_omd_info: Section | None,
 ) -> CheckResult:
     """
     >>> for result in check_omd_status(
@@ -158,8 +159,8 @@ def check_omd_status(
 
 def cluster_check_omd_status(
     item: str,
-    section_omd_status: Mapping[str, Optional[Section]],
-    section_omd_info: Mapping[str, Optional[Section]],
+    section_omd_status: Mapping[str, Section | None],
+    section_omd_info: Mapping[str, Section | None],
 ) -> CheckResult:
     """
     >>> for result in cluster_check_omd_status(

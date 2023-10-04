@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 _TABLES = ["1", "2", "3", "4"]
 
 
-def parse_emka_modules(info):  # pylint: disable=too-many-branches
+def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
     # basModuleCoIx == 0
     map_module_types = {
         "0": "vacant",
@@ -49,12 +49,12 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
     }
 
     parsed: dict = {"basic_components": {}}
-    for oidend, status, ty, mod_info, remark in info[0]:
+    for oidend, status, ty, mod_info, remark in string_table[0]:
         mo_index, co_index = oidend.split(".")
         if mo_index == "0":
             itemname = "Master %s" % mod_info.split(",")[0]
         else:
-            itemname = "Perip %s %s" % (mo_index, mod_info)
+            itemname = f"Perip {mo_index} {mod_info}"
 
         if co_index == "0":
             parsed["basic_components"].setdefault(
@@ -71,12 +71,12 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
         if remark == "":
             itemname = oidend
         else:
-            itemname = "%s %s" % (remark, oidend)
+            itemname = f"{remark} {oidend}"
 
         parsed.setdefault(table, {})
         parsed[table].setdefault(itemname, {"_location_": oidend})
 
-    for table_idx, block in zip(_TABLES, info[1:5]):
+    for table_idx, block in zip(_TABLES, string_table[1:5]):
         for module_link, value, mode in block:
             table = map_component_types[table_idx]
             location = ".".join(module_link.split(".")[-2:])
@@ -89,7 +89,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
                 if mode:
                     attrs["mode"] = mode
 
-    for oidend, threshold in info[6]:
+    for oidend, threshold in string_table[6]:
         location, threshold_ty = oidend.split(".")
         if threshold_ty == "1":
             ty = "levels_lower"
@@ -112,7 +112,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
     # 0.02  => 2/100 [multiplicator]/[divisor]
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
-    for oidend, equation_bin in info[7]:
+    for oidend, equation_bin in string_table[7]:
         equation = []
         part = []
         for entry in equation_bin:
@@ -200,7 +200,7 @@ def check_emka_modules(item, params, parsed):
     if item in parsed["basic_components"]:
         attrs = parsed["basic_components"][item]
         state, state_readable = map_activation_states[attrs["activation"]]
-        return state, "Activation status: %s, Type: %s" % (state_readable, attrs["type"])
+        return state, "Activation status: {}, Type: {}".format(state_readable, attrs["type"])
     return None
 
 
@@ -209,10 +209,6 @@ check_info["emka_modules"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "emka"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13595"),
     ),
-    parse_function=parse_emka_modules,
-    discovery_function=inventory_emka_modules,
-    check_function=check_emka_modules,
-    service_name="Module %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13595.2.1.3.3.1",
@@ -238,6 +234,10 @@ check_info["emka_modules"] = LegacyCheckDefinition(
             oids=[OIDEnd(), OIDBytes("18")],
         ),
     ],
+    parse_function=parse_emka_modules,
+    service_name="Module %s",
+    discovery_function=inventory_emka_modules,
+    check_function=check_emka_modules,
 )
 
 # .
@@ -272,9 +272,10 @@ def check_emka_modules_alarm(item, params, parsed):
 
 
 check_info["emka_modules.alarm"] = LegacyCheckDefinition(
+    service_name="Alarm %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_alarm,
     check_function=check_emka_modules_alarm,
-    service_name="Alarm %s",
 )
 
 # .
@@ -310,9 +311,10 @@ def check_emka_modules_handle(item, params, parsed):
 
 
 check_info["emka_modules.handle"] = LegacyCheckDefinition(
+    service_name="Handle %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_handle,
     check_function=check_emka_modules_handle,
-    service_name="Handle %s",
 )
 
 # .
@@ -340,9 +342,10 @@ def check_emka_modules_sensor_volt(item, params, parsed):
 
 
 check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
+    service_name="Phase %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_volt,
     check_function=check_emka_modules_sensor_volt,
-    service_name="Phase %s",
     check_ruleset_name="el_inphase",
 )
 
@@ -377,9 +380,10 @@ def check_emka_modules_sensor_temp(item, params, parsed):
 
 
 check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_temp,
     check_function=check_emka_modules_sensor_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
 )
 
@@ -408,9 +412,10 @@ def check_emka_modules_sensor_humid(item, params, parsed):
 
 
 check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_humid,
     check_function=check_emka_modules_sensor_humid,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )
 
@@ -444,7 +449,8 @@ def check_emka_modules_relay(item, params, parsed):
 
 
 check_info["emka_modules.relay"] = LegacyCheckDefinition(
+    service_name="Relay %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_relay,
     check_function=check_emka_modules_relay,
-    service_name="Relay %s",
 )

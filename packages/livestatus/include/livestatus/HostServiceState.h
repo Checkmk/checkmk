@@ -75,7 +75,8 @@ public:
     std::string _service_description;  // Fallback if service no longer exists
 
     HostServiceState();
-    void computePerStateDurations();
+    void computePerStateDurations(
+        std::chrono::system_clock::duration query_timeframe);
 };
 
 #endif  // HostServiceState_h

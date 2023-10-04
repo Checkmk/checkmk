@@ -1,0 +1,16 @@
+Title: Fix Nagstamon API in case a host downtime is set for exported services
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1687949175
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The Nagstamon integration did not work in case downtimes were set on hosts,
+reporting an error like "TypeError: sequence item 0: expected str instance, dict found".
+
+This regression affected all previous 2.2 releases.
+

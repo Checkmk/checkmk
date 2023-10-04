@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.utils.oracle_constants import (
     oracle_io_sizes,
     oracle_io_types,
@@ -11,8 +13,10 @@ from cmk.utils.oracle_constants import (
     oracle_waitclasses,
 )
 
+from cmk.gui.graphing._color import indexed_color
+from cmk.gui.graphing._type_defs import LineType
+from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -180,6 +184,16 @@ register_oracle_metrics()
 #   '----------------------------------------------------------------------'
 
 
+def _oracle_wait_class_metrics() -> Sequence[tuple[str, LineType]]:
+    metrics: list[tuple[str, LineType]] = [("oracle_wait_class_total", "line")]
+    metrics += (
+        [(waitclass.metric, "line") for waitclass in oracle_waitclasses]
+        + [("oracle_wait_class_total_fg", "-line")]
+        + [(waitclass.metric_fg, "-line") for waitclass in oracle_waitclasses]
+    )
+    return metrics
+
+
 def register_oracle_graphs():
     graph_info["oracle_physical_io"] = {
         "title": _("ORACLE physical IO"),
@@ -247,16 +261,18 @@ def register_oracle_graphs():
             "oracle_sga_streams_pool",
         ],
     }
-    iostat_bytes_metrics = []
-    iostat_ios_metrics = []
+    iostat_bytes_metrics: list[tuple[str, LineType]] = []
+    iostat_ios_metrics: list[tuple[str, LineType]] = []
     for iofile in oracle_iofiles:
         for size in ["s", "l"]:
             iostat_bytes_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_rb", "line"))
             iostat_ios_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_r", "line"))
+
     for iofile in oracle_iofiles:
         for size in ["s", "l"]:
             iostat_bytes_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_wb", "-line"))
             iostat_ios_metrics.append((f"oracle_ios_f_{iofile.id}_{size}_w", "-line"))
+
     graph_info["oracle_iostat_bytes"] = {
         "title": _("ORACLE IOSTAT Bytes"),
         "metrics": iostat_bytes_metrics,
@@ -287,12 +303,7 @@ def register_oracle_graphs():
     }
     graph_info["oracle_wait_class"] = {
         "title": _("ORACLE Wait Class (FG lines are downside)"),
-        "metrics": [("oracle_wait_class_total", "line")]
-        + [(waitclass.metric, "line") for waitclass in oracle_waitclasses]
-        +
-        #######################################################
-        [("oracle_wait_class_total_fg", "-line")]
-        + [(waitclass.metric_fg, "-line") for waitclass in oracle_waitclasses],
+        "metrics": _oracle_wait_class_metrics(),
         "omit_zero_metrics": True,
         "optional_metrics": [waitclass.metric for waitclass in oracle_waitclasses]
         + [waitclass.metric_fg for waitclass in oracle_waitclasses],

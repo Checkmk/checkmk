@@ -9,6 +9,16 @@
 
 checkname = "f5_bigip_vserver"
 
+mock_item_state = {
+    "": {
+        "connections_rate.0" : (0, 2535),
+        "if_in_pkts.0": (0, 70981),
+        "if_out_pkts.0": (0, 84431),
+        "if_in_octets.0": (0, 10961763),
+        "if_out_octets.0": (0, 83403367),
+        "packet_velocity_asic.0": (0, 0),
+    },
+}
 
 info = [
     [

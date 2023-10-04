@@ -50,18 +50,18 @@ def check_fireeye_fans(item, params, info):
             for text, (state, state_readable) in check_fireeye_states(
                 [(status, "Status"), (health, "Health")]
             ).items():
-                yield state, "%s: %s" % (text, state_readable)
+                yield state, f"{text}: {state_readable}"
 
             yield 0, "Speed: %s RPM" % speed_str
 
 
 check_info["fireeye_fans"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=lambda info: inventory_fireeye_generic(info, True),
-    check_function=check_fireeye_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.4.1.3.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="Fan %s",
+    discovery_function=lambda info: inventory_fireeye_generic(info, True),
+    check_function=check_fireeye_fans,
 )

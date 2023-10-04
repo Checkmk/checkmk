@@ -41,10 +41,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def acme_sbc_parse_function(info):
+def acme_sbc_parse_function(string_table):
     states = {}
     settings = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2:
             for what in ["Health", "State"]:
                 if line[0] == what:
@@ -69,10 +69,10 @@ def check_acme_sbc(_no_item, _no_params, parsed):
 
 
 check_info["acme_sbc"] = LegacyCheckDefinition(
-    check_function=check_acme_sbc,
-    discovery_function=inventory_acme_sbc,
-    service_name="Status",
     parse_function=acme_sbc_parse_function,
+    service_name="Status",
+    discovery_function=inventory_acme_sbc,
+    check_function=check_acme_sbc,
 )
 
 
@@ -86,11 +86,12 @@ def check_acme_sbc_settings(_no_item, params, parsed):
     yield 0, "Checking %d settings" % len(saved_settings)
     for setting, value in saved_settings.items():
         if current_settings[setting] != value:
-            yield 2, "%s changed from %s to %s" % (setting, value, current_settings[setting])
+            yield 2, f"{setting} changed from {value} to {current_settings[setting]}"
 
 
 check_info["acme_sbc.settings"] = LegacyCheckDefinition(
-    check_function=check_acme_sbc_settings,
-    discovery_function=inventory_acme_sbc_settings,
     service_name="Settings",
+    sections=["acme_sbc"],
+    discovery_function=inventory_acme_sbc_settings,
+    check_function=check_acme_sbc_settings,
 )

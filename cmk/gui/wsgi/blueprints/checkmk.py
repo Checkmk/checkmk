@@ -26,7 +26,7 @@ from cmk.gui.wsgi.middleware import PatchJsonMiddleware
 if typing.TYPE_CHECKING:
     from _typeshed.wsgi import WSGIApplication
 
-ResponseTypes = typing.Union[flask.Response, werkzeug.Response]
+ResponseTypes = flask.Response | werkzeug.Response
 
 checkmk = Blueprint(
     "checkmk",

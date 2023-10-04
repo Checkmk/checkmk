@@ -12,10 +12,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_informix_sessions(info):
+def parse_informix_sessions(string_table):
     parsed = {}
     instance = None
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance = line[0][3:-3]
 
@@ -40,16 +40,16 @@ def check_informix_sessions(item, params, parsed):
         elif sessions >= warn:
             state = 0
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+            infotext += f" (warn/crit at {warn}/{crit})"
         return state, infotext, [("sessions", sessions)]
     return None
 
 
 check_info["informix_sessions"] = LegacyCheckDefinition(
     parse_function=parse_informix_sessions,
+    service_name="Informix Sessions %s",
     discovery_function=inventory_informix_sessions,
     check_function=check_informix_sessions,
-    service_name="Informix Sessions %s",
     check_ruleset_name="informix_sessions",
     check_default_parameters={"levels": (50, 60)},
 )

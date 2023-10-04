@@ -24,8 +24,7 @@ BUILD_ENVIRONMENT="$(
         "pathhash:/usr/lib/x86_64-linux-gnu/libc.so" \
         "pathhash:/lib64/libc.so.6" \
         "pathhash:/usr/lib64/libc.so" \
-        "pathhash:/opt/gcc-12.2.0" \
-        "env:PATH:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        "pathhash:/opt/gcc-13.2.0"
 )"
 
 eval "${BUILD_ENVIRONMENT}"
@@ -68,6 +67,8 @@ bazel build \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
     --host_action_env=PATH="$PATH" \
     --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    --experimental_ui_max_stdouterr_bytes=10000000 \
+    --jobs=4 \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \
     "${TARGET}"

@@ -1,0 +1,15 @@
+Title: agents: Key ID now shown in the agent signature keys table
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1696234593
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue with the agent signature keys table.
+Previously, the only way you could get the key id of a signature key
+was to hover over the download icon.  We now show the key ID as a new
+column in the table.
+

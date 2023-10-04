@@ -24,9 +24,10 @@ from collections.abc import Callable, Mapping, Sequence
 from distutils.util import strtobool
 from functools import reduce
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
 import yaml
+from typing_extensions import TypedDict
 
 LOG = logging.getLogger("validate_changes")
 

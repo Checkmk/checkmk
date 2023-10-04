@@ -21,20 +21,20 @@ def inventory_juniper_trpz_flash(info):
 def check_juniper_trpz_flash(_no_item, params, info):
     warn, crit = params
     used, total = map(savefloat, info[0])
-    message = "Used: %s of %s " % (get_bytes_human_readable(used), get_bytes_human_readable(total))
+    message = f"Used: {get_bytes_human_readable(used)} of {get_bytes_human_readable(total)} "
     perc_used = (used / total) * 100  # fixed: true-division
     if isinstance(crit, float):
         a_warn = (warn / 100.0) * total
         a_crit = (crit / 100.0) * total
         perf = [("used", used, a_warn, a_crit, 0, total)]
-        levels = "Levels Warn/Crit are (%.2f%%, %.2f%%)" % (warn, crit)
+        levels = f"Levels Warn/Crit are ({warn:.2f}%, {crit:.2f}%)"
         if perc_used > crit:
             return 2, message + levels, perf
         if perc_used > warn:
             return 1, message + levels, perf
     else:
         perf = [("used", used, warn, crit, 0, total)]
-        levels = "Levels Warn/Crit are (%s, %s)" % (
+        levels = "Levels Warn/Crit are ({}, {})".format(
             get_bytes_human_readable(warn),
             get_bytes_human_readable(crit),
         )
@@ -47,12 +47,12 @@ def check_juniper_trpz_flash(_no_item, params, info):
 
 check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,
-    check_function=check_juniper_trpz_flash,
-    discovery_function=inventory_juniper_trpz_flash,
-    service_name="Flash",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
         oids=["3", "4"],
     ),
+    service_name="Flash",
+    discovery_function=inventory_juniper_trpz_flash,
+    check_function=check_juniper_trpz_flash,
     check_ruleset_name="general_flash_usage",
 )

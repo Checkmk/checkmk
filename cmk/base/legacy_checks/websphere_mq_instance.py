@@ -73,7 +73,7 @@ def get_websphere_mq_status(what, status, params):
     return state
 
 
-def parse_websphere_mq_instance(info):
+def parse_websphere_mq_instance(string_table):
     def get_data_of_line(line):
         data = {}
         for elem in line:
@@ -83,7 +83,7 @@ def parse_websphere_mq_instance(info):
         return data
 
     parsed = {"manager": {}, "instances": {}}
-    for line in info:
+    for line in string_table:
         data = get_data_of_line(line)
         if data:
             if "QMNAME" in data:
@@ -121,7 +121,7 @@ def check_websphere_mq_instance(item, params, parsed):
         data = parsed["instances"][item]
         mode = data["MODE"]
         qm_name = data["QMNAME"]
-        return get_websphere_mq_status("instance", mode, params), "Status: %s, Manager: %s" % (
+        return get_websphere_mq_status("instance", mode, params), "Status: {}, Manager: {}".format(
             mode.lower(),
             qm_name,
         )
@@ -130,9 +130,9 @@ def check_websphere_mq_instance(item, params, parsed):
 
 check_info["websphere_mq_instance"] = LegacyCheckDefinition(
     parse_function=parse_websphere_mq_instance,
+    service_name="MQ Instance %s",
     discovery_function=inventory_websphere_mq_instance,
     check_function=check_websphere_mq_instance,
-    service_name="MQ Instance %s",
     check_ruleset_name="websphere_mq_instance",
 )
 
@@ -198,12 +198,13 @@ def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-man
             (installation_version, "Version"),
         ]:
             if what:
-                yield 0, "%s: %s" % (title, what)
+                yield 0, f"{title}: {what}"
 
 
 check_info["websphere_mq_instance.manager"] = LegacyCheckDefinition(
+    service_name="MQ Manager %s",
+    sections=["websphere_mq_instance"],
     discovery_function=inventory_websphere_mq_manager,
     check_function=check_websphere_mq_manager,
-    service_name="MQ Manager %s",
     check_ruleset_name="websphere_mq_manager",
 )

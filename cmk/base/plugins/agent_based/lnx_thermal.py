@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, NamedTuple, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 from .agent_based_api.v1 import get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -24,9 +25,9 @@ from .utils.temperature import check_temperature, TempParamDict, TempParamType
 class Thermal(NamedTuple):
     enabled: bool
     temperature: float
-    passive: Optional[float]
-    critical: Optional[float]
-    hot: Optional[float]
+    passive: float | None
+    critical: float | None
+    hot: float | None
 
 
 Section = Mapping[str, Thermal]
@@ -73,7 +74,7 @@ def parse_lnx_thermal(string_table: StringTable) -> Section:
 
 def _get_thermal_info(
     line: Sequence[str],
-) -> Optional[Tuple[Mapping[str, str], int, Sequence[str]]]:
+) -> tuple[Mapping[str, str], int, Sequence[str]] | None:
     for temp_idx, header in (
         (2, ["name", "type"]),
         (3, ["name", "mode", "type"]),
@@ -140,7 +141,7 @@ def check_lnx_thermal(item: str, params: TempParamType, section: Section) -> Che
     )
 
 
-def _get_levels(data: Thermal) -> Optional[Tuple[float, float]]:
+def _get_levels(data: Thermal) -> tuple[float, float] | None:
     crit = _get_crit_level(data.hot, data.critical)
     warn = data.passive
 
@@ -153,7 +154,7 @@ def _get_levels(data: Thermal) -> Optional[Tuple[float, float]]:
     return (warn, crit)
 
 
-def _get_crit_level(level0: Optional[float], level1: Optional[float]) -> Optional[float]:
+def _get_crit_level(level0: float | None, level1: float | None) -> float | None:
     if level0 is None:
         return level1
 

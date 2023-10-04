@@ -6,7 +6,8 @@
 from collections.abc import Container, Iterable
 from typing import TypeVar
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
@@ -14,16 +15,12 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupVMCloudContainer,
     validate_aws_tags,
 )
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DictionaryEntry,
+    DropdownChoice,
     FixedValue,
     ListChoice,
     ListOf,
@@ -35,6 +32,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 ServicesValueSpec = list[tuple[str, ValueSpec]]
 
@@ -436,7 +435,7 @@ class AWSSpecialAgentValuespecBuilder:
 
 
 def _valuespec_special_agents_aws() -> Migrate:
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(is_cloud_edition())
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(edition() is Edition.CCE)
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]
@@ -483,10 +482,32 @@ def _valuespec_special_agents_aws() -> Migrate:
                     ),
                 ),
                 (
-                    "assume_role",
+                    "access",
                     Dictionary(
-                        title=_("Assume a different IAM role"),
+                        title=_("Access to AWS API"),
                         elements=[
+                            (
+                                "global_service_region",
+                                DropdownChoice(
+                                    title=_("Use custom region for global AWS services"),
+                                    choices=[
+                                        (None, _("default (all normal AWS regions)")),
+                                    ]
+                                    + [
+                                        (x, x)
+                                        for x in (
+                                            "us-gov-east-1",
+                                            "us-gov-west-1",
+                                            "cn-north-1",
+                                            "cn-northwest-1",
+                                        )
+                                    ],
+                                    help=_(
+                                        "us-gov-* or cn-* regions have their own global services and may not reach the default one."
+                                    ),
+                                    default_value=None,
+                                ),
+                            ),
                             (
                                 "role_arn_id",
                                 Tuple(
@@ -510,7 +531,7 @@ def _valuespec_special_agents_aws() -> Migrate:
                                         ),
                                     ],
                                 ),
-                            )
+                            ),
                         ],
                     ),
                 ),
@@ -558,14 +579,22 @@ def _valuespec_special_agents_aws() -> Migrate:
             ],
             optional_keys=["overall_tags", "proxy_details"],
         ),
-        migrate=lambda p: {"piggyback_naming_convention": "ip_region_instance"} | p,
+        migrate=__migrate,
     )
+
+
+def __migrate(p: dict[str, object]) -> dict[str, object]:
+    # "assume_role" was renamed to "access"
+    if "assume_role" in p:
+        assert "access" not in p
+        p["access"] = p.pop("assume_role")
+    return p
 
 
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:aws",
+        name=RuleGroup.SpecialAgents("aws"),
         title=lambda: _("Amazon Web Services (AWS)"),
         valuespec=_valuespec_special_agents_aws,
         doc_references={DocReference.AWS: _("Monitoring Amazon Web Services (AWS)")},

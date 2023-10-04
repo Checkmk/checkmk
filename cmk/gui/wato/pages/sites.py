@@ -14,7 +14,13 @@ from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
 from typing import Any, cast, NamedTuple, overload
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
+from livestatus import (
+    NetworkSocketDetails,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+    TLSParams,
+)
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
@@ -22,6 +28,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 import cmk.gui.forms as forms
 import cmk.gui.log as log
@@ -46,14 +53,11 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
@@ -79,6 +83,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
 from cmk.gui.watolib.activate_changes import get_free_message
 from cmk.gui.watolib.automations import (
@@ -100,15 +105,25 @@ from cmk.gui.watolib.global_settings import (
     save_site_global_settings,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
+from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
     site_globals_editable,
     SiteManagementFactory,
 )
+from cmk.gui.watolib.utils import ldap_connections_are_configurable
 
 
-@mode_registry.register
+def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+    page_registry.register_page("wato_ajax_fetch_site_status")(PageAjaxFetchSiteStatus)
+    mode_registry.register(ModeEditSite)
+    mode_registry.register(ModeDistributedMonitoring)
+    mode_registry.register(ModeEditSiteGlobals)
+    mode_registry.register(ModeEditSiteGlobalSetting)
+    mode_registry.register(ModeSiteLivestatusEncryption)
+
+
 class ModeEditSite(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -169,9 +184,7 @@ class ModeEditSite(WatoMode):
                             address=("", 6557),
                             tls=(
                                 "encrypted",
-                                {
-                                    "verify": True,
-                                },
+                                TLSParams(verify=True),
                             ),
                         ),
                     ),
@@ -436,7 +449,7 @@ class ModeEditSite(WatoMode):
         return MonitoredHostname(title=_("Host:"))
 
     def _replication_elements(self):
-        return [
+        elements = [
             (
                 "replication",
                 DropdownChoice(
@@ -503,37 +516,44 @@ class ModeEditSite(WatoMode):
                     ),
                 ),
             ),
-            ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)),
-            (
-                "replicate_ec",
-                Checkbox(
-                    title=_("Replicate Event Console config"),
-                    label=_("Replicate Event Console configuration to this site"),
-                    help=_(
-                        "This option enables the distribution of global settings and rules of the Event Console "
-                        "to the remote site. Any change in the local Event Console settings will mark the site "
-                        "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
-                        "the remote site."
-                    ),
-                ),
-            ),
-            (
-                "replicate_mkps",
-                Checkbox(
-                    title=_("Replicate extensions"),
-                    label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
-                    help=_(
-                        "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                        "that are installed on your central site and all other files below the <tt>~/local/</tt> "
-                        "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
-                        "below <tt>~/local/</tt> on the remote site will be removed</b>."
-                    ),
-                ),
-            ),
         ]
 
+        if ldap_connections_are_configurable():
+            elements.append(("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)))
 
-@mode_registry.register
+        elements.extend(
+            [
+                (
+                    "replicate_ec",
+                    Checkbox(
+                        title=_("Replicate Event Console config"),
+                        label=_("Replicate Event Console configuration to this site"),
+                        help=_(
+                            "This option enables the distribution of global settings and rules of the Event Console "
+                            "to the remote site. Any change in the local Event Console settings will mark the site "
+                            "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                            "the remote site."
+                        ),
+                    ),
+                ),
+                (
+                    "replicate_mkps",
+                    Checkbox(
+                        title=_("Replicate extensions"),
+                        label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
+                        help=_(
+                            "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                            "that are installed on your central site and all other files below the <tt>~/local/</tt> "
+                            "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
+                            "below <tt>~/local/</tt> on the remote site will be removed</b>."
+                        ),
+                    ),
+                ),
+            ]
+        )
+        return elements
+
+
 class ModeDistributedMonitoring(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -884,8 +904,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
 
-@page_registry.register_page("wato_ajax_fetch_site_status")
-class ModeAjaxFetchSiteStatus(AjaxPage):
+class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
     def page(self) -> PageResult:
@@ -927,7 +946,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         status = replication_status[site_id]
         if status.success:
             assert not isinstance(status.response, Exception)
-            icon = "success"
+            icon = "checkmark"
             msg = _("Online (%s)") % make_site_version_info(
                 status.response.version,
                 status.response.edition,
@@ -935,7 +954,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
             )
         else:
             assert isinstance(status.response, Exception)
-            icon = "failed"
+            icon = "cross"
             msg = "%s" % status.response
 
         return html.render_icon(icon, title=msg) + HTMLWriter.render_span(
@@ -954,7 +973,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         else:
             message = status_msg.title()
 
-        icon = "success" if status == "online" else "failed"
+        icon = "checkmark" if status == "online" else "cross"
         return html.render_icon(icon, title=message) + HTMLWriter.render_span(
             message, style="vertical-align:middle"
         )
@@ -1067,7 +1086,6 @@ class ReplicationStatusFetcher:
             result_queue.join()
 
 
-@mode_registry.register
 class ModeEditSiteGlobals(ABCGlobalSettingsMode):
     @classmethod
     def name(cls) -> str:
@@ -1210,7 +1228,6 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         self._show_configuration_variables()
 
 
-@mode_registry.register
 class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     @classmethod
     def name(cls) -> str:
@@ -1256,7 +1273,6 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
-@mode_registry.register
 class ModeSiteLivestatusEncryption(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -1498,3 +1514,11 @@ def _page_menu_entries_site_details(
                 )
             ),
         )
+
+
+def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguration]]:
+    """Sort given sites argument by local, followed by remote sites"""
+    return sorted(
+        sites.items(),
+        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
+    )

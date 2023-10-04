@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Optional, Union
+from collections.abc import Mapping
+from typing import Any
 
 from ..agent_based_api.v1 import exists, OIDBytes, type_defs
 from . import interfaces
 
 BASE_OID = ".1.3.6.1.2.1"
 
-END_OIDS: List[Union[str, OIDBytes]] = [
+END_OIDS: list[str | OIDBytes] = [
     "2.2.1.1",  # ifIndex                      0
     "2.2.1.2",  # ifDescr                      1
     "2.2.1.3",  # ifType                       2
@@ -301,7 +302,7 @@ def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type: ignore[no-untyped-def]
+def port_mapping(name, port_map: Mapping[str, str]) -> str | None:  # type: ignore[no-untyped-def]
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map
@@ -313,7 +314,7 @@ def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type: i
 
 def generic_parse_if64(
     string_table: type_defs.StringByteTable,
-    port_map: Optional[Mapping[str, str]] = None,
+    port_map: Mapping[str, str] | None = None,
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     return [
         interfaces.InterfaceWithCounters(

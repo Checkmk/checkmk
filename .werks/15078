@@ -1,0 +1,13 @@
+Title: Merge the postgres_version check into postgres_instances
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1686559028
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+So far, the check plugin postgres_version (services "PostgreSQL Version ...") reported versions of PostgreSQL instances. With this werk, we remove this plugin and instead report the version information in the plugin postgres_instances (services "PostgreSQL Instance ..."). This makes the monitoring of PostgreSQL more consistent with the monitoring of other databases such as Oracle.
+
+Users should execute a service re-discovery on affected hosts to remove already discovered PostgreSQL version services.

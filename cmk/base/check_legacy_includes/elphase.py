@@ -5,11 +5,12 @@
 
 from collections.abc import Callable
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 _RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
     "%": (
-        get_percent_human_readable,
+        render.percent,
         "",
     ),
     "mA": (

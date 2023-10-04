@@ -6,15 +6,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
 
 
-def parse_arris_cmts_mem(info):
+def parse_arris_cmts_mem(string_table):
     parsed = {}
-    for cid, heap, heap_free in info:
+    for cid, heap, heap_free in string_table:
         # The Module numbers are starting with 0, not with 1 like the OIDs
         heap, heap_free = float(heap), float(heap_free)
         parsed.setdefault(
@@ -32,11 +32,12 @@ def inventory_arris_cmts_mem(parsed):
         yield k, {}
 
 
-@get_parsed_item_data
-def check_arris_cmts_mem(item, params, data):
+def check_arris_cmts_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     warn, crit = params.get("levels", (None, None))
     mode = "abs_used" if isinstance(warn, int) else "perc_used"
-    return check_memory_element(
+    yield check_memory_element(
         "Usage",
         data["mem_used"],
         data["mem_total"],
@@ -47,14 +48,14 @@ def check_arris_cmts_mem(item, params, data):
 
 check_info["arris_cmts_mem"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
-    parse_function=parse_arris_cmts_mem,
-    discovery_function=inventory_arris_cmts_mem,
-    check_function=check_arris_cmts_mem,
-    service_name="Memory Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.5.3.2.1.1",
         oids=[OIDEnd(), "2", "3"],
     ),
+    parse_function=parse_arris_cmts_mem,
+    service_name="Memory Module %s",
+    discovery_function=inventory_arris_cmts_mem,
+    check_function=check_arris_cmts_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

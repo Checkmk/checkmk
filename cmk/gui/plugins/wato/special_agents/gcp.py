@@ -6,18 +6,15 @@
 from collections.abc import Sequence
 from typing import Final
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateNotUpdated,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.utils.urls import DocReference
-from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
+from cmk.gui.valuespec import Dictionary, ListChoice, MigrateNotUpdated, TextInput
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 RAW_GCP_SERVICES: Final = [
     ("gcs", "Google Cloud Storage (GCS)"),
@@ -35,7 +32,7 @@ CCE_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[tuple[str, str]]:
-    if is_cloud_edition():
+    if edition() is Edition.CCE:
         return RAW_GCP_SERVICES + CCE_GCP_SERVICES
 
     return RAW_GCP_SERVICES
@@ -119,7 +116,7 @@ def _valuespec_special_agents_gcp():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:gcp",
+        name=RuleGroup.SpecialAgents("gcp"),
         title=lambda: _("Google Cloud Platform (GCP)"),
         valuespec=_valuespec_special_agents_gcp,
         doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},

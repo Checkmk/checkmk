@@ -53,16 +53,17 @@
 import time
 from typing import Any
 
-from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_mknotifyd(info):  # pylint: disable=too-many-branches
+def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
     try:
-        timestamp, data = float(info[0][0]), info[1:]
+        timestamp, data = float(string_table[0][0]), string_table[1:]
     except (IndexError, ValueError):
         # versions before 1.5.0p23/1.6.0p4 did not include a timestamp
-        timestamp, data = time.time(), info
+        timestamp, data = time.time(), string_table
 
     parsed: dict[str, Any] = {
         "sites": {},
@@ -228,9 +229,9 @@ def check_mknotifyd(item, _no_params, parsed):
 
 check_info["mknotifyd"] = LegacyCheckDefinition(
     parse_function=parse_mknotifyd,
+    service_name="OMD %s Notification Spooler",
     discovery_function=inventory_mknotifyd,
     check_function=check_mknotifyd,
-    service_name="OMD %s Notification Spooler",
 )
 
 #   .--Connections---------------------------------------------------------.
@@ -253,7 +254,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
     site_name, connection_name = item.split("-", 1)
 
     if site_name not in parsed["sites"]:
-        raise MKCounterWrapped("No status information about spooler available")
+        raise IgnoreResultsError("No status information about spooler available")
 
     states = {
         "established": (0, "Alive"),
@@ -289,7 +290,8 @@ def check_mknotifyd_connection(item, _no_params, parsed):
 
 
 check_info["mknotifyd.connection"] = LegacyCheckDefinition(
+    service_name="OMD %s Notify Connection",
+    sections=["mknotifyd"],
     discovery_function=inventory_mknotifyd_connection,
     check_function=check_mknotifyd_connection,
-    service_name="OMD %s Notify Connection",
 )

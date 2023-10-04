@@ -20,20 +20,15 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_msoffice_licenses(info):
+def parse_msoffice_licenses(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         if len(line) != 4:
             continue
 
@@ -48,8 +43,9 @@ def parse_msoffice_licenses(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_msoffice_licenses(item, params, item_data):
+def check_msoffice_licenses(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     lcs_active = item_data["active"]
     lcs_consumed = item_data["consumed"]
 
@@ -84,7 +80,7 @@ def check_msoffice_licenses(item, params, item_data):
             usage,
             "license_percentage",
             (warn_perc, crit_perc),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Usage",
             boundaries=(0, 100),
         )
@@ -98,11 +94,15 @@ def check_msoffice_licenses(item, params, item_data):
         yield 0, " Warning units: %s" % lcs_warning_units
 
 
+def discover_msoffice_licenses(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["msoffice_licenses"] = LegacyCheckDefinition(
     parse_function=parse_msoffice_licenses,
-    discovery_function=discover(),
-    check_function=check_msoffice_licenses,
     service_name="MS Office Licenses %s",
+    discovery_function=discover_msoffice_licenses,
+    check_function=check_msoffice_licenses,
     check_ruleset_name="msoffice_licenses",
     check_default_parameters={
         "usage": (80.0, 90.0),

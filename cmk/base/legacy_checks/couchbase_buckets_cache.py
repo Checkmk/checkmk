@@ -4,13 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_cache(_item, params, data):
+def discover_couchbase_buckets_cache(section: Section) -> DiscoveryResult:
+    yield from ((item, {}) for item, data in section.items() if "ep_cache_miss_rate" in data)
+
+
+def check_couchbase_buckets_cache(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     miss_rate = data.get("ep_cache_miss_rate")
     if miss_rate is not None:
         yield check_levels(
@@ -25,8 +34,8 @@ def check_couchbase_buckets_cache(_item, params, data):
 
 check_info["couchbase_buckets_cache"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda k, v: "ep_cache_miss_rate" in v),
-    check_function=check_couchbase_buckets_cache,
     service_name="Couchbase Bucket %s Cache",
+    discovery_function=discover_couchbase_buckets_cache,
+    check_function=check_couchbase_buckets_cache,
     check_ruleset_name="couchbase_cache",
 )

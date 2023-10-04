@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.utils.rulesets.definition import RuleGroup
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.valuespec import Dictionary, DropdownChoice, NetworkPort, TextInput, Tuple
-from cmk.gui.watolib.rulespecs import Rulespec
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 
 def _special_agents_jolokia_mk_jolokia_elements():
@@ -94,7 +92,7 @@ rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jolokia(),
         group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:jolokia",
+        name=RuleGroup.SpecialAgents("jolokia"),
         valuespec=_valuespec_special_agents_jolokia,
     )
 )

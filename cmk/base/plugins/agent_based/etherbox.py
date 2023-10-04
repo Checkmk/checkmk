@@ -17,10 +17,13 @@
 # Note: The short contact config option in the etherbox is of type switch contact
 #       The short contact status is set for 15 seconds after a button press
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, List, Mapping
+from typing import Any, assert_never, Literal
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from typing_extensions import TypedDict
+
+from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
     Metric,
@@ -32,7 +35,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
     State,
 )
-
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import humidity, temperature
 
@@ -53,7 +55,7 @@ class Section:
     sensor_data: Mapping[Index, Mapping[Type, SensorData]]
 
 
-def etherbox_convert(string_table: List[StringTable]) -> Section | None:
+def etherbox_convert(string_table: list[StringTable]) -> Section | None:
     if not string_table[0] and not string_table[1]:
         return None
     unit_of_measurement = {"0": "c", "1": "f", "2": "k"}[string_table[0][0][0]]
@@ -153,8 +155,7 @@ def check_etherbox_temp(
     if isinstance(result, Result):
         yield Result(state=State(result.state), summary=f"[{data.name}] {result.summary}")
     yield metric
-    for el in other:
-        yield el
+    yield from other
 
 
 def discovery_temp(section: Section) -> DiscoveryResult:
@@ -264,19 +265,50 @@ register.check_plugin(
 #   '----------------------------------------------------------------------'
 
 
-def check_etherbox_smoke(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+class SmokeParams(TypedDict):
+    smoke_handling: tuple[Literal["binary"], tuple[int, int]] | tuple[
+        Literal["levels"],
+        None | tuple[float, float],
+    ]
+
+
+def check_etherbox_smoke(item: str, params: SmokeParams, section: Section) -> CheckResult:
     try:
         data = etherbox_get_sensor(item, section)
     except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
-    yield from check_levels(
-        data.value,
-        levels_upper=params["levels"],
-        metric_name="smoke",
-        label="Smoke Alarm",
-        notice_only=True,
-    )
+
+    smoke_handling_config = params["smoke_handling"]
+
+    if smoke_handling_config[0] == "binary":
+        no_smoke_state, smoke_state = smoke_handling_config[1]
+        if data.value == 0:
+            yield Result(
+                state=State(no_smoke_state),
+                summary="No smoke detected",
+            )
+        else:
+            yield Result(
+                state=State(smoke_state),
+                summary="Smoke detected",
+            )
+        yield Metric(
+            name="smoke",
+            value=data.value,
+        )
+
+    elif smoke_handling_config[0] == "levels":
+        yield from check_levels(
+            data.value,
+            levels_upper=smoke_handling_config[1],
+            metric_name="smoke",
+            label="Smoke level",
+            notice_only=True,
+        )
+
+    else:
+        assert_never(smoke_handling_config)
 
 
 def discovery_smoke(section: Section) -> DiscoveryResult:
@@ -290,7 +322,7 @@ register.check_plugin(
     discovery_function=discovery_smoke,
     service_name="Sensor %s",
     check_ruleset_name="etherbox_smoke",
-    check_default_parameters={"levels": (0, 0)},
+    check_default_parameters={"smoke_handling": ("binary", (0, 2))},
 )
 
 
@@ -343,7 +375,12 @@ def check_etherbox_voltage(item: str, params: Mapping[str, Any], section: Sectio
     except SensorException as error:
         yield Result(state=State.UNKNOWN, summary=str(error))
         return
-    yield from check_levels(data.value, levels_upper=params["levels"], metric_name="voltage")
+    yield from check_levels(
+        data.value,
+        levels_upper=params["levels"],
+        metric_name="voltage",
+        render_func=lambda v: f"{v:.2f} V",
+    )
 
 
 def discovery_voltage(section: Section) -> DiscoveryResult:
@@ -357,5 +394,5 @@ register.check_plugin(
     discovery_function=discovery_voltage,
     service_name="Sensor %s",
     check_ruleset_name="etherbox_voltage",
-    check_default_parameters={"levels": (0, 0)},
+    check_default_parameters={"levels": None},
 )

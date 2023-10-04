@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from time import time
-from typing import Mapping, Tuple, TypedDict
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -37,7 +39,7 @@ register.snmp_section(
 
 
 class CheckParams(TypedDict):
-    levels: Tuple[float, float]
+    levels: tuple[float, float]
 
 
 def discover_juniper_cpu_util(section: Section) -> DiscoveryResult:

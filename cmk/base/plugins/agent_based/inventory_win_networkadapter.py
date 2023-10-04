@@ -16,7 +16,7 @@
 # Subnet: 255.255.255.0
 # DefaultGateway: 192.168.178.1
 
-from typing import Dict, List, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -27,10 +27,10 @@ Section = Sequence[Mapping]
 def parse_win_networkadapter(  # pylint: disable=too-many-branches
     string_table: StringTable,
 ) -> Section:
-    adapters: List[Mapping] = []
+    adapters: list[Mapping] = []
     first_varname = None
-    array: Dict = {}
-    addrtypes: Dict = {}
+    array: dict = {}
+    addrtypes: dict = {}
 
     for line in string_table:
         # return 'lost' double-colons back

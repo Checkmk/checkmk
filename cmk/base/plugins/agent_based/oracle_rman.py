@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Mapping, Optional, TypedDict
+from collections.abc import Mapping
+from typing import Any
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -34,20 +37,18 @@ from .utils import oracle
 # This will be removed in a later version of Checkmk. Don't use it for new installations!
 inventory_oracle_rman_incremental_details = True
 
-SectionSidOracleRman = TypedDict(
-    "SectionSidOracleRman",
-    {
-        "sid": str,
-        "backuptype": str,
-        "backuplevel": str,
-        "backupage": Optional[int],
-        "status": str,
-        "backupscn": int,
-        "used_incr_0": bool,
-    },
-)
 
-SectionOracleRman = Dict[str, SectionSidOracleRman]
+class SectionSidOracleRman(TypedDict):
+    sid: str
+    backuptype: str
+    backuplevel: str
+    backupage: int | None
+    status: str
+    backupscn: int
+    used_incr_0: bool
+
+
+SectionOracleRman = dict[str, SectionSidOracleRman]
 
 
 def parse_oracle_rman(  # pylint: disable=too-many-branches
@@ -74,7 +75,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
 
         if len(line) == 6:
             sid, status, _start, _end, backuptype, backupage_str = line
-            item = "%s.%s" % (sid, backuptype)
+            item = f"{sid}.{backuptype}"
 
             backupscn = int(-1)
             backuplevel = "-1"
@@ -97,12 +98,12 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
 
             if backuptype == "DB_INCR":
                 if inventory_oracle_rman_incremental_details:
-                    item = "%s.%s_%s" % (sid, backuptype, backuplevel)
+                    item = f"{sid}.{backuptype}_{backuplevel}"
                 else:
                     # This is for really old plugins without an information for the backuplevel
-                    item = "%s.%s" % (sid, backuptype)
+                    item = f"{sid}.{backuptype}"
             else:
-                item = "%s.%s" % (sid, backuptype)
+                item = f"{sid}.{backuptype}"
 
         else:
             continue
@@ -111,7 +112,7 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
             # sysdate can be old on slow databases with long running SQLs, therefore we can end up
             # with a negative number here if the Archivelog backup is running while the agent is
             # collecting data
-            backupage: Optional[int] = max(
+            backupage: int | None = max(
                 int(backupage_str),
                 0,
             )
@@ -168,9 +169,9 @@ def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
 
         if backuptype in ("ARCHIVELOG", "DB_FULL", "DB_INCR", "CONTROLFILE"):
             if inventory_oracle_rman_incremental_details and backuptype == "DB_INCR":
-                yield Service(item="%s.%s_%s" % (sid, backuptype, backuplevel))
+                yield Service(item=f"{sid}.{backuptype}_{backuplevel}")
                 continue
-            yield Service(item="%s.%s" % (sid, backuptype))
+            yield Service(item=f"{sid}.{backuptype}")
 
 
 def check_oracle_rman(
@@ -233,9 +234,9 @@ def check_oracle_rman(
 
 
 def cluster_check_oracle_rman(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Optional[SectionOracleRman]]
+    item: str, params: Mapping[str, Any], section: Mapping[str, SectionOracleRman | None]
 ) -> CheckResult:
-    youngest_backup_age: Optional[int] = None
+    youngest_backup_age: int | None = None
     # take the most current backupage in clustered environments
     for node_data in section.values():
         if node_data is None:

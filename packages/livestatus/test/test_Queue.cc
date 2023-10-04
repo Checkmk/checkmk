@@ -25,8 +25,12 @@ TEST_P(UnboundedQueueTest, LimitIsNotSet) {
     EXPECT_EQ(std::nullopt, queue.limit());
 }
 
+// Note: Throwing an exception in std::optional::value() is totally fine here,
+// the corresponding test will fail in that case.
+// NOLINTBEGIN(bugprone-unchecked-optional-access)
 TEST_P(UnboundedQueueTest, PushAndPopDontOverflow) {
     auto strategy = GetParam();
+
     EXPECT_EQ(0UL, queue.approx_size());
 
     EXPECT_EQ(std::make_pair(queue_status::ok, 1UL), queue.push(1, strategy));
@@ -35,11 +39,11 @@ TEST_P(UnboundedQueueTest, PushAndPopDontOverflow) {
     EXPECT_EQ(3UL, queue.approx_size());
 
     EXPECT_EQ(std::make_pair(1, 2UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(2, 1UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(42, 0UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(0UL, queue.approx_size());
 }
 
@@ -95,15 +99,15 @@ TEST_F(BoundedQueueTest, PopOldestWhenFull) {
     // The first five elements should be gone.
 
     EXPECT_EQ(std::make_pair(6, 4UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(7, 3UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(8, 2UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(9, 1UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(0, 0UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(0UL, queue.approx_size());
 }
 
@@ -135,17 +139,18 @@ TEST_F(BoundedQueueTest, DontPushWhenFull) {
     // The last five elements should not be there.
 
     EXPECT_EQ(std::make_pair(1, 4UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(2, 3UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(3, 2UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(4, 1UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(std::make_pair(5, 0UL),
-              *queue.pop(queue_pop_strategy::nonblocking, {}));
+              queue.pop(queue_pop_strategy::nonblocking, {}).value());
     EXPECT_EQ(0UL, queue.approx_size());
 }
+// NOLINTEND(bugprone-unchecked-optional-access)
 
 class MoveOnlyQueueTest : public ::testing::Test {
 public:

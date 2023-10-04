@@ -20,11 +20,11 @@ def check_fireeye_smtp_conn(_no_item, _no_params, info):
 
 check_info["fireeye_smtp_conn"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
-    check_function=check_fireeye_smtp_conn,
-    service_name="SMTP Connections",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["46"],
     ),
+    service_name="SMTP Connections",
+    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    check_function=check_fireeye_smtp_conn,
 )

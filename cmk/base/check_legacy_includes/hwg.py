@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import get_parsed_item_data
-
 from .humidity import check_humidity
 from .temperature import check_temperature
 
@@ -75,11 +73,13 @@ def inventory_hwg_humidity(parsed):
             yield index, {}
 
 
-@get_parsed_item_data
 def check_hwg_humidity(item, params, parsed):
-    status, infotext, perfdata = check_humidity(parsed["humidity"], params)
-    infotext += " (Description: {}, Status: {})".format(parsed["descr"], parsed["dev_status_name"])
-    return status, infotext, perfdata
+    if not (data := parsed.get(item)):
+        return
+
+    status, infotext, perfdata = check_humidity(data["humidity"], params)
+    infotext += " (Description: {}, Status: {})".format(data["descr"], data["dev_status_name"])
+    yield status, infotext, perfdata
 
 
 def inventory_hwg_temp(parsed):
@@ -88,22 +88,24 @@ def inventory_hwg_temp(parsed):
             yield index, {}
 
 
-@get_parsed_item_data
 def check_hwg_temp(item, params, parsed):
-    state = map_readable_states.get(parsed["dev_status_name"], 3)
-    state_readable = parsed["dev_status_name"]
-    temp = parsed["temperature"]
+    if not (data := parsed.get(item)):
+        return
+    state = map_readable_states.get(data["dev_status_name"], 3)
+    state_readable = data["dev_status_name"]
+    temp = data["temperature"]
     if temp is None:
-        return state, "Status: %s" % state_readable
+        yield state, "Status: %s" % state_readable
+        return
 
     state, infotext, perfdata = check_temperature(
         temp,
         params,
         "hwg_temp_%s" % item,
-        dev_unit=parsed["dev_unit"],
+        dev_unit=data["dev_unit"],
         dev_status=state,
         dev_status_name=state_readable,
     )
 
-    infotext += " (Description: {}, Status: {})".format(parsed["descr"], parsed["dev_status_name"])
-    return state, "%s" % infotext, perfdata
+    infotext += " (Description: {}, Status: {})".format(data["descr"], data["dev_status_name"])
+    yield state, "%s" % infotext, perfdata

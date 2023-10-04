@@ -9,7 +9,6 @@
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
-#include <type_traits>
 
 #include "livestatus/Renderer.h"
 #include "livestatus/Row.h"
@@ -27,6 +26,9 @@ void PerfdataAggregator::consume(Row row, const User & /*user*/,
                 _aggregations.insert(std::make_pair(varname, _factory()))
                     .first->second->update(value);
             } catch (const std::logic_error &e) {
+                // A no-op just to make clang-tidy happy: std::stod() failed and
+                // skipping the var/value pair is really what we want to do.
+                continue;
             }
         }
     }

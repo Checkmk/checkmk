@@ -26,10 +26,7 @@ def instance_method_lru_cache(
     def wrap(f: Callable[P, R]) -> Callable[P, R]:
         @wraps(f)
         def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
-            # We can use the following when https://github.com/python/mypy/pull/13459 is release (mypy 0.980)
-            # self, *rest = args
-            self = args[0]
-            rest = args[1:]
+            self, *rest = args
             cache_orig = lru_cache(maxsize, typed)(f)
             instance_cache = cache_orig.__get__(self, self.__class__)  # type: ignore[attr-defined] # pylint: disable=unnecessary-dunder-call
             setattr(self, f.__name__, instance_cache)
@@ -48,7 +45,8 @@ class CacheManager:
     def __contains__(self, name: str) -> bool:
         return name in self._caches
 
-    def get(self, name: str) -> DictCache:
+    def obtain_cache(self, name: str) -> DictCache:
+        """get or create cache with provided name"""
         return self._caches[name]
 
     def clear(self) -> None:
@@ -59,10 +57,7 @@ class CacheManager:
             cache.clear()
 
     def dump_sizes(self) -> dict[str, int]:
-        sizes = {}
-        for name, cache in self._caches.items():
-            sizes[name] = cmk.utils.misc.total_size(cache)
-        return sizes
+        return {name: cmk.utils.misc.total_size(cache) for name, cache in self._caches.items()}
 
 
 class DictCache(dict):
@@ -92,9 +87,5 @@ class DictCache(dict):
 # This cache manager holds all caches that rely on the configuration
 # and have to be flushed once the configuration is reloaded in the
 # keepalive mode
-config_cache = CacheManager()
-
-# These caches are not automatically cleared during the whole execution
-# time of the current Checkmk process. Single cached may be cleaned
-# manually during execution.
-runtime_cache = CacheManager()
+# TODO(sk): Fix it(mutable global implicitly used)
+cache_manager = CacheManager()

@@ -155,7 +155,7 @@ def check_arcserve_backup(item, _no_params, info):  # pylint: disable=too-many-b
 
 
 check_info["arcserve_backup"] = LegacyCheckDefinition(
-    check_function=check_arcserve_backup,
-    discovery_function=inventory_arcserve_backup,
     service_name="Arcserve Backup %s",
+    discovery_function=inventory_arcserve_backup,
+    check_function=check_arcserve_backup,
 )

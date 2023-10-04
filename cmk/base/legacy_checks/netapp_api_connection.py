@@ -43,8 +43,8 @@ def check_netapp_api_connection(_no_item, params, info):
 
 
 check_info["netapp_api_connection"] = LegacyCheckDefinition(
+    service_name="NetApp filer connection",
     discovery_function=inventory_netapp_api_connection,
     check_function=check_netapp_api_connection,
-    service_name="NetApp filer connection",
     check_ruleset_name="netapp_instance",
 )

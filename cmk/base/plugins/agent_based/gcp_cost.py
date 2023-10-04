@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from itertools import groupby
 from typing import Any
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,18 +19,17 @@ ProjectId = str
 
 
 class Cost(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     month: datetime.datetime
     amount: float
     currency: str
     project: str
 
-    @validator("month", pre=True)
+    @field_validator("month", mode="before")
     @classmethod
     def parse_month(cls, value: str) -> datetime.datetime:
         return datetime.datetime.strptime(value, "%Y%m")
-
-    class Config:
-        frozen = True
 
     def to_details(self) -> str:
         return f"{self.month.strftime('%B %Y')}: {self.amount:.2f} {self.currency}"
@@ -55,7 +54,7 @@ def parse(string_table: StringTable) -> Section:
     all_rows = sorted([json.loads(line[0]) for line in string_table[1:]], key=keyfunc)
     section = {}
     for project_id, rows in groupby(all_rows, key=keyfunc):
-        month_costs = sorted([Cost.parse_obj(r) for r in rows], key=lambda c: c.month)
+        month_costs = sorted([Cost.model_validate(r) for r in rows], key=lambda c: c.month)
         if len(month_costs) > 1:
             cost = ProjectCost(
                 current_month=month_costs[1],

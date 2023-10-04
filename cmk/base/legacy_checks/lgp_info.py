@@ -40,7 +40,7 @@ def check_lgp_info(item, params, info):
             for id_, manufacturer, unit_number in info[1]:
                 id_ = lgp_info_devices.get(id_, id_)
                 devices.append(
-                    "ID: %s, Manufacturer: %s, Unit-Number: %s" % (id_, manufacturer, unit_number)
+                    f"ID: {id_}, Manufacturer: {manufacturer}, Unit-Number: {unit_number}"
                 )
             device_output = "\n".join(devices)
 
@@ -50,9 +50,6 @@ def check_lgp_info(item, params, info):
 
 check_info["lgp_info"] = LegacyCheckDefinition(
     detect=DETECT_LGP,
-    check_function=check_lgp_info,
-    discovery_function=inventory_lgp_info,
-    service_name="Liebert Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.476.1.42.2.1",
@@ -63,4 +60,7 @@ check_info["lgp_info"] = LegacyCheckDefinition(
             oids=["2", "3", "6"],
         ),
     ],
+    service_name="Liebert Info",
+    discovery_function=inventory_lgp_info,
+    check_function=check_lgp_info,
 )

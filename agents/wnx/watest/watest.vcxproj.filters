@@ -136,9 +136,6 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\extlibs\googletest\googletest\src\gtest-all.cc">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test-wtools_service.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -158,6 +155,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test-section_perf_cpuload.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extlibs\$(GoogleTest)\googletest\src\gtest-all.cc" />
+    <ClCompile Include="test-extensions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

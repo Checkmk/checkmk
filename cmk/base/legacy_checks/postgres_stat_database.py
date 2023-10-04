@@ -13,22 +13,21 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+)
 
 
-def parse_postgres_stat_database(info):
-    if len(info) == 0:
+def parse_postgres_stat_database(string_table):
+    if len(string_table) == 0:
         return {}
     parsed = {}
     instance_name = ""
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue
@@ -46,7 +45,7 @@ def parse_postgres_stat_database(info):
             line[1] if line[1] else "access_to_shared_objects"
         )  # https://www.postgresql.org/message-id/CABUevEzMHzdAQjvpWO6eGSZeg8FKmLLPhdwVoqaOXR8VWnyd8w%40mail.gmail.com
         if instance_name:
-            db_name = "%s/%s" % (instance_name, datname)
+            db_name = f"{instance_name}/{datname}"
         else:
             db_name = datname
 
@@ -78,8 +77,14 @@ def check_postgres_stat_database(item, params, parsed):
         ("tup_updated", "Updates"),
         ("tup_inserted", "Inserts"),
     ]:
-        rate = get_rate("postgres_stat_database.%s.%s" % (item, what), this_time, stats[what])
-        infos.append("%s: %.2f/s" % (title, rate))
+        rate = get_rate(
+            get_value_store(),
+            f"postgres_stat_database.{item}.{what}",
+            this_time,
+            stats[what],
+            raise_overflow=True,
+        )
+        infos.append(f"{title}: {rate:.2f}/s")
         if what in params:
             warn, crit = params[what]
             if rate >= crit:
@@ -96,9 +101,9 @@ def check_postgres_stat_database(item, params, parsed):
 
 check_info["postgres_stat_database"] = LegacyCheckDefinition(
     parse_function=parse_postgres_stat_database,
+    service_name="PostgreSQL DB %s Statistics",
     discovery_function=inventory_postgres_stat_database,
     check_function=check_postgres_stat_database,
-    service_name="PostgreSQL DB %s Statistics",
     check_ruleset_name="postgres_stat_database",
 )
 
@@ -108,7 +113,7 @@ def check_postgres_stat_database_size(item, params, parsed):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
     levels = params.get("database_size")
     stats = parsed[item]
     size = stats["datsize"]
@@ -127,8 +132,9 @@ def check_postgres_stat_database_size(item, params, parsed):
 
 
 check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
-    check_function=check_postgres_stat_database_size,
-    discovery_function=inventory_postgres_stat_database,
     service_name="PostgreSQL DB %s Size",
+    sections=["postgres_stat_database"],
+    discovery_function=inventory_postgres_stat_database,
+    check_function=check_postgres_stat_database_size,
     check_ruleset_name="postgres_stat_database",
 )

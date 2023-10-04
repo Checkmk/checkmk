@@ -150,7 +150,7 @@ def last_scheduled_time(
     period: str | tuple[str, int], timeofday: tuple[int, int], dt: datetime.datetime | None = None
 ) -> float:
     if dt is None:
-        dt = datetime.datetime.today()
+        dt = datetime.datetime.now()
     schedule = _get_schedule(period, timeofday)
     return time.mktime(schedule.last(dt).timetuple())
 
@@ -160,6 +160,6 @@ def next_scheduled_time(
     period: str | tuple[str, int], timeofday: tuple[int, int], dt: datetime.datetime | None = None
 ) -> float:
     if dt is None:
-        dt = datetime.datetime.today()
+        dt = datetime.datetime.now()
     schedule = _get_schedule(period, timeofday)
     return time.mktime(schedule.next(dt).timetuple())

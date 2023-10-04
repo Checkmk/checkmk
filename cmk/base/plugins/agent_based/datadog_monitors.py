@@ -5,8 +5,10 @@
 
 import json
 import re
+from collections.abc import Container, Iterable, Mapping
 from dataclasses import dataclass
-from typing import Container, Iterable, Mapping, TypedDict
+
+from typing_extensions import TypedDict
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable

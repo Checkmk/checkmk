@@ -12,9 +12,9 @@
 import re
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 
@@ -43,8 +43,11 @@ def check_brocade_tm(item, params, info):
             perfdata = []
             overall_state = 0
 
+            value_store = get_value_store()
             for name, counter in tm.items():
-                rate = get_rate("%s.%s" % (name, item), now, int(counter))
+                rate = get_rate(
+                    value_store, f"{name}.{item}", now, int(counter), raise_overflow=True
+                )
 
                 warn, crit = params["brcdTMStats" + name]
                 if re.search("Discard", name):
@@ -60,7 +63,7 @@ def check_brocade_tm(item, params, info):
                 else:
                     state = 0
                     sym = ""
-                infotext += "%s: %.1f%s, " % (name, rate, sym)
+                infotext += f"{name}: {rate:.1f}{sym}, "
                 perfdata.append((name, rate, warn, crit))
                 overall_state = max(overall_state, state)
 
@@ -71,14 +74,14 @@ def check_brocade_tm(item, params, info):
 
 check_info["brocade_tm"] = LegacyCheckDefinition(
     detect=DETECT_MLX,
-    check_function=check_brocade_tm,
-    discovery_function=inventory_brocade_tm,
-    service_name="TM %s",
-    check_ruleset_name="brocade_tm",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
         oids=["3", "4", "5", "6", "9", "11", "13", "15"],
     ),
+    service_name="TM %s",
+    discovery_function=inventory_brocade_tm,
+    check_function=check_brocade_tm,
+    check_ruleset_name="brocade_tm",
     check_default_parameters={
         "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
         "brcdTMStatsIngressEnqueuePkts": (1000, 10000),

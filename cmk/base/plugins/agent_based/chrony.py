@@ -19,7 +19,7 @@
 # 506 Cannot talk to daemon
 from calendar import timegm
 from time import strptime, time
-from typing import Any, Dict
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 
@@ -34,10 +34,10 @@ def parse_chrony(string_table):
     if is_error_message(string_table):
         return {"error": " ".join(string_table[0])}
 
-    parsed: Dict[str, Any] = {}
+    parsed: dict[str, Any] = {}
     for line in string_table:
         if ":" in line:
-            key, value = [e.strip() for e in " ".join(line).split(":", 1)]
+            key, value = (e.strip() for e in " ".join(line).split(":", 1))
             if key == "Reference ID":
                 parsed[key] = value
                 try:

@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import CheckResult
@@ -13,10 +14,10 @@ from .utils import cpu, memory, ps
 def check_ps(
     item: str,
     params: Mapping[str, Any],
-    section_ps: Optional[ps.Section],
-    section_mem: Optional[memory.SectionMem],
-    section_mem_used: Optional[memory.SectionMem],
-    section_cpu: Optional[cpu.Section],
+    section_ps: ps.Section | None,
+    section_mem: memory.SectionMem | None,
+    section_mem_used: memory.SectionMem | None,
+    section_cpu: cpu.Section | None,
 ) -> CheckResult:
     if not section_ps:
         return
@@ -41,10 +42,10 @@ def check_ps(
 def cluster_check_ps(
     item: str,
     params: Mapping[str, Any],
-    section_ps: Mapping[str, Optional[ps.Section]],
-    section_mem: Mapping[str, Optional[memory.SectionMem]],
-    section_mem_used: Mapping[str, Optional[memory.SectionMem]],
-    section_cpu: Mapping[str, Optional[cpu.Section]],  # unused
+    section_ps: Mapping[str, ps.Section | None],
+    section_mem: Mapping[str, memory.SectionMem | None],
+    section_mem_used: Mapping[str, memory.SectionMem | None],
+    section_cpu: Mapping[str, cpu.Section | None],  # unused
 ) -> CheckResult:
     iter_non_trivial_sections = (
         (node_name, node_section)
@@ -59,9 +60,9 @@ def cluster_check_ps(
         for (ps_info, cmd_line) in (node_section[1])
     ]
 
-    core_counts = set(
+    core_counts = {
         node_section[0] for node_section in section_ps.values() if node_section is not None
-    )
+    }
     if len(core_counts) == 1:
         cpu_cores = core_counts.pop()
     else:

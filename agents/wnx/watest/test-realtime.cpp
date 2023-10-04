@@ -5,12 +5,12 @@
 
 #include <thread>
 
-#include "asio.h"
-#include "cfg.h"
 #include "common/cfg_info.h"
-#include "realtime.h"
 #include "tools/_misc.h"
 #include "tools/_raii.h"
+#include "wnx/asio.h"
+#include "wnx/cfg.h"
+#include "wnx/realtime.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view str) {
@@ -184,9 +184,8 @@ TEST(RealtimeTest, Base_Simulation) {
     // stub
     using namespace std::chrono;
 
-    cma::OnStart(cma::AppType::test);
-    ON_OUT_OF_SCOPE(
-        cma::OnStart(cma::AppType::test));  // restore original config
+    OnStartTest();
+    ON_OUT_OF_SCOPE( OnStartTest());  // restore original config
     {
         // we disable sections to be sure that realtime sections are executed
         // even being disabled

@@ -8,13 +8,14 @@
 # }
 
 
-from typing import Any, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.config import special_agent_info
 
 
 def agent_fritzbox_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     args = []
 

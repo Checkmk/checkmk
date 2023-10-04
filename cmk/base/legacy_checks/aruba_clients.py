@@ -25,11 +25,11 @@ def check_aruba_clients(_no_item, _params, info):
 
 check_info["aruba_clients"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
-    discovery_function=inventory_aruba_clients,
-    check_function=check_aruba_clients,
-    service_name="WLAN Clients",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.3",
         oids=["2"],
     ),
+    service_name="WLAN Clients",
+    discovery_function=inventory_aruba_clients,
+    check_function=check_aruba_clients,
 )

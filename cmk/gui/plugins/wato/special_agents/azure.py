@@ -5,15 +5,11 @@
 
 from typing import Final
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.rulesets.definition import RuleGroup
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    MigrateToIndividualOrStoredPassword,
-    rulespec_registry,
-)
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -28,6 +24,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES
 # in the azure special agent
@@ -54,7 +52,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> list[tuple[str, str]]:
-    if is_cloud_edition():
+    if edition() is Edition.CCE:
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
 
     return RAW_AZURE_SERVICES
@@ -112,6 +110,8 @@ def _special_agents_azure_azure_tag_based_config():
 
 
 def _migrate_services(data):
+    if "authority" not in data:
+        data["authority"] = "global"
     if "services" not in data:
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
@@ -132,6 +132,26 @@ def _valuespec_special_agents_azure():
             ),
             # element names starting with "--" will be passed do cmd line w/o parsing!
             elements=[
+                (
+                    "authority",
+                    DropdownChoice(
+                        title=_("Authority"),
+                        choices=[
+                            ("global", _("Global")),
+                            ("china", _("China")),
+                        ],
+                        default="global",
+                        help=_(
+                            "Specify the authority you want to connect to:"
+                            "<ul>"
+                            "<li>Global: Login into 'https://login.microsoftonline.com',"
+                            " get data from 'https://graph.microsoft.com'</li>"
+                            "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
+                            " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
+                            "</ul>"
+                        ),
+                    ),
+                ),
                 (
                     "subscription",
                     TextInput(
@@ -163,6 +183,10 @@ def _valuespec_special_agents_azure():
                         allow_empty=False,
                         size=45,
                     ),
+                ),
+                (
+                    "proxy",
+                    HTTPProxyReference(),
                 ),
                 get_services_vs(),
                 (
@@ -222,7 +246,7 @@ def _valuespec_special_agents_azure():
                     ),
                 ),
             ],
-            optional_keys=["subscription", "piggyback_vms", "sequential"],
+            optional_keys=["subscription", "proxy", "piggyback_vms", "sequential"],
         ),
         migrate=_migrate_services,
     )
@@ -231,7 +255,7 @@ def _valuespec_special_agents_azure():
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:azure",
+        name=RuleGroup.SpecialAgents("azure"),
         valuespec=_valuespec_special_agents_azure,
         doc_references={DocReference.AZURE: _("Monitoring Microsoft Azure")},
     )

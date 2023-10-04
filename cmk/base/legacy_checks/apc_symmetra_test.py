@@ -95,7 +95,7 @@ def check_apc_test(item, params, info):
         state = max(state, 1)
         time_label = "(!)"
 
-    return state, "Result of self test: %s%s, Date of last test: %s%s" % (
+    return state, "Result of self test: {}{}, Date of last test: {}{}".format(
         diagnostic_status_text.get(last_result, "-"),
         diag_label,
         last_date,
@@ -111,14 +111,14 @@ def inventory_apc_test(info):
 
 check_info["apc_symmetra_test"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_apc_test,
-    check_function=check_apc_test,
-    service_name="Self Test",
-    check_ruleset_name="ups_test",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.7.2",
         oids=["3", "4"],
     ),
+    service_name="Self Test",
+    discovery_function=inventory_apc_test,
+    check_function=check_apc_test,
+    check_ruleset_name="ups_test",
     check_default_parameters={
         "levels_elapsed_time": None,
     },

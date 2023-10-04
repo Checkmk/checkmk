@@ -14,13 +14,15 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
+from typing import Any, IO, Literal, NotRequired, TypeVar
+
+from typing_extensions import TypedDict
 
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _

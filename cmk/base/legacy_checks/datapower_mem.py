@@ -35,13 +35,13 @@ def check_datapower_mem(item, params, info):
 
 check_info["datapower_mem"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_mem,
-    check_function=check_datapower_mem,
-    service_name="Memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.5",
         oids=["2", "3"],
     ),
+    service_name="Memory",
+    discovery_function=inventory_datapower_mem,
+    check_function=check_datapower_mem,
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

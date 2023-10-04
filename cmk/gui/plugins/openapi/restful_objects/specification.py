@@ -133,6 +133,9 @@ an "optimistic lock" and allows read access even when writes are happening. It w
    which contains the value of the previously fetched `ETag`. This ensures that the writer has seen
    the object to be modified. If any modifications by someone else were to happen between the
    request (1) and the update (3) these values would not match and the update would fail.
+4. If you are sure you are not updating objects simultaneously and want to avoid first fetching the
+   object in order to obtain its ETag value, you can bypass this step by providing a "*" for the
+   the 'If-Match' header like so.  `"If-Match": "*"`
 
 This scheme is used for most `PUT` requests throughout the REST API and always works the same way.
 Detailed documentation of the various involved fields as well as the possible error messages can
@@ -308,11 +311,12 @@ We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an en
 documented we may change it without incrementing the API version.
 
 """
-from typing import Literal, TypedDict
+from typing import Literal
 
 import apispec.ext.marshmallow as marshmallow
 import apispec.utils
 import apispec_oneofschema  # type: ignore[import]
+from typing_extensions import TypedDict
 
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 from cmk.gui.plugins.openapi.restful_objects.documentation import table_definitions

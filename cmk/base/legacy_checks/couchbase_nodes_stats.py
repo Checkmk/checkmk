@@ -4,42 +4,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
+
+def discover_couchbase_nodes_stats(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
+    discovery_function=discover_couchbase_nodes_stats,
 )
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_cpu_util(_item, params, data):
+def check_couchbase_nodes_cpu_util(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+
     try:
-        return check_cpu_util(float(data["cpu_utilization_rate"]), params)
+        yield from check_cpu_util(float(data["cpu_utilization_rate"]), params)
     except (ValueError, KeyError):
-        return None
+        return
+
+
+def discover_couchbase_nodes_stats_cpu_util(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
-    discovery_function=discover(),
-    check_function=check_couchbase_nodes_cpu_util,
     service_name="Couchbase %s CPU utilization",
+    sections=["couchbase_nodes_stats"],
+    discovery_function=discover_couchbase_nodes_stats_cpu_util,
+    check_function=check_couchbase_nodes_cpu_util,
     check_ruleset_name="cpu_utilization_multiitem",
 )
 
 
-@get_parsed_item_data
-def check_couchbase_nodes_mem(_item, params, data):
+def check_couchbase_nodes_mem(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     try:
         mem_total = data["mem_total"]
         mem_free = data["mem_free"]
         swap_total = data["swap_total"]
         swap_used = data["swap_used"]
     except KeyError:
-        return None
+        return
 
     warn_ram, crit_ram = params.get("levels", (None, None))
     mode_ram = "abs_used" if isinstance(warn_ram, int) else "perc_used"
@@ -59,13 +73,17 @@ def check_couchbase_nodes_mem(_item, params, data):
         None,
         metric_name="swap_used",
     )
-    return None
+
+
+def discover_couchbase_nodes_stats_mem(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
-    discovery_function=discover(),
-    check_function=check_couchbase_nodes_mem,
     service_name="Couchbase %s Memory",
+    sections=["couchbase_nodes_stats"],
+    discovery_function=discover_couchbase_nodes_stats_mem,
+    check_function=check_couchbase_nodes_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters=MEMORY_DEFAULT_LEVELS,
 )

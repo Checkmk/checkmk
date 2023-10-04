@@ -235,9 +235,9 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_zfs_arc_cache(info):
+def parse_zfs_arc_cache(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if not (len(line) >= 3 and line[1] == "=" and line[2].isdigit()):
             continue
 
@@ -276,7 +276,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
             if total_hits_misses:
                 hit_ratio = float(parsed["%shits" % key]) / total_hits_misses * 100
-                yield 0, "%sHit Ratio: %0.2f%%" % (human_key.title(), hit_ratio), [
+                yield 0, f"{human_key.title()}Hit Ratio: {hit_ratio:0.2f}%", [
                     ("%shit_ratio" % key, hit_ratio, None, None, 0, 100)
                 ]
 
@@ -295,7 +295,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
     # these values may be missing, this is ok too
     # in this case just do not report these values
     if "arc_meta_used" in parsed and "arc_meta_limit" in parsed and "arc_meta_max" in parsed:
-        yield 0, "Arc Meta %s used, Limit %s, Max %s" % (
+        yield 0, "Arc Meta {} used, Limit {}, Max {}".format(
             get_bytes_human_readable(parsed["arc_meta_used"]),
             get_bytes_human_readable(parsed["arc_meta_limit"]),
             get_bytes_human_readable(parsed["arc_meta_max"]),
@@ -308,9 +308,9 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
 check_info["zfs_arc_cache"] = LegacyCheckDefinition(
     parse_function=parse_zfs_arc_cache,
-    check_function=check_zfs_arc_cache,
-    discovery_function=inventory_zfs_arc_cache,
     service_name="ZFS arc cache",
+    discovery_function=inventory_zfs_arc_cache,
+    check_function=check_zfs_arc_cache,
 )
 
 # .
@@ -360,7 +360,8 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
 
 
 check_info["zfs_arc_cache.l2"] = LegacyCheckDefinition(
-    check_function=check_zfs_arc_cache_l2,
-    discovery_function=inventory_zfs_arc_cache_l2,
     service_name="ZFS arc cache L2",
+    sections=["zfs_arc_cache"],
+    discovery_function=inventory_zfs_arc_cache_l2,
+    check_function=check_zfs_arc_cache_l2,
 )

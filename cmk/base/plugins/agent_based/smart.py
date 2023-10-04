@@ -218,7 +218,7 @@ def _parse_nvme_lines(nvme_lines: Iterable[Sequence[str]]) -> Section:
             disk = nvme_disks.setdefault(line[0], {})
             continue
 
-        field, value = [e.strip() for e in " ".join(line).split(":")]
+        field, value = (e.strip() for e in " ".join(line).split(":"))
         key = field.replace(" ", "_")
         value = value.replace("%", "").replace(".", "").replace(",", "")
         match field:

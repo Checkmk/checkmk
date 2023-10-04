@@ -9,17 +9,13 @@
 # TUX2 160 0 1081 300 0
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_oracle_undostat(info):
-    return {line[0]: [int(v) for v in line[1:]] for line in info if len(line) == 6}
+def parse_oracle_undostat(string_table):
+    return {line[0]: [int(v) for v in line[1:]] for line in string_table if len(line) == 6}
 
 
 def discover_oracle_undostat(parsed):
@@ -33,7 +29,7 @@ def check_oracle_undostat(item, params, parsed):
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = data
     warn, crit = params["levels"]
@@ -66,9 +62,9 @@ def check_oracle_undostat(item, params, parsed):
 
 check_info["oracle_undostat"] = LegacyCheckDefinition(
     parse_function=parse_oracle_undostat,
-    check_function=check_oracle_undostat,
-    discovery_function=discover_oracle_undostat,
     service_name="ORA %s Undo Retention",
+    discovery_function=discover_oracle_undostat,
+    check_function=check_oracle_undostat,
     check_ruleset_name="oracle_undostat",
     check_default_parameters={
         "levels": (600, 300),

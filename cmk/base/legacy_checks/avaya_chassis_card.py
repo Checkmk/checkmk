@@ -33,11 +33,11 @@ def check_avaya_chassis_card(item, _no_params, info):
 
 check_info["avaya_chassis_card"] = LegacyCheckDefinition(
     detect=DETECT_AVAYA,
-    check_function=check_avaya_chassis_card,
-    discovery_function=inventory_avaya_chassis_card,
-    service_name="Card %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.4.9.1.1",
         oids=["1", "6"],
     ),
+    service_name="Card %s",
+    discovery_function=inventory_avaya_chassis_card,
+    check_function=check_avaya_chassis_card,
 )

@@ -9,24 +9,22 @@ import time
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
-    get_item_state,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
-    set_item_state,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 veeam_tapejobs_default_levels = (1 * 3600 * 24, 2 * 3600 * 24)
 
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
 
 
-def parse_veeam_tapejobs(info):
+def parse_veeam_tapejobs(string_table):
     parsed = {}
-    columns = [s.lower() for s in info[0]]
+    columns = [s.lower() for s in string_table[0]]
 
-    for line in info[1:]:
+    for line in string_table[1:]:
         if len(line) < len(columns):
             continue
 
@@ -46,8 +44,11 @@ def inventory_veeam_tapejobs(parsed):
         yield job, veeam_tapejobs_default_levels
 
 
-@get_parsed_item_data
-def check_veeam_tapejobs(item, params, data):
+def check_veeam_tapejobs(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
+
+    value_store = get_value_store()
     job_id = data["job_id"]
     last_result = data["last_result"]
     last_state = data["last_state"]
@@ -55,17 +56,17 @@ def check_veeam_tapejobs(item, params, data):
     if last_result != "None" or last_state not in ("Working", "Idle"):
         yield BACKUP_STATE.get(last_result, 2), "Last backup result: %s" % last_result
         yield 0, "Last state: %s" % last_state
-        set_item_state("%s.running_since" % job_id, None)
+        value_store[f"{job_id}.running_since"] = None
         return
 
-    running_since = get_item_state("%s.running_since" % job_id)
+    running_since = value_store.get("%s.running_since" % job_id)
     now = time.time()
     if not running_since:
         running_since = now
-        set_item_state("%s.running_since" % job_id, now)
+        value_store[f"{job_id}.running_since" % job_id] = now
     running_time = now - running_since
 
-    yield 0, "Backup in progress since %s (currently %s)" % (
+    yield 0, "Backup in progress since {} (currently {})".format(
         get_timestamp_human_readable(running_since),
         last_state.lower(),
     )
@@ -80,8 +81,8 @@ def check_veeam_tapejobs(item, params, data):
 
 check_info["veeam_tapejobs"] = LegacyCheckDefinition(
     parse_function=parse_veeam_tapejobs,
+    service_name="VEEAM Tape Job %s",
     discovery_function=inventory_veeam_tapejobs,
     check_function=check_veeam_tapejobs,
-    service_name="VEEAM Tape Job %s",
     check_ruleset_name="veeam_tapejobs",
 )

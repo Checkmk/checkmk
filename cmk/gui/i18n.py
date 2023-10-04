@@ -84,7 +84,7 @@ def _get_package_language_dirs() -> list[Path]:
 
     It's possible for extension packages to provide custom localization files
     which are meant for localizing extension specific texts. These localizations
-    are then used in addition to the builtin and local localization files.
+    are then used in addition to the built-in and local localization files.
     """
     package_locale_dir = cmk.utils.paths.local_locale_dir / "packages"
     if not package_locale_dir.exists():
@@ -150,7 +150,7 @@ def localize(lang: str) -> None:
 
 def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     """Load all available "multisite" translation files. All are loaded first.
-    The builtin ones are used as "fallback" for the local files which means that
+    The built-in ones are used as "fallback" for the local files which means that
     the texts in the local files have precedence.
     """
     translations: list[gettext_module.NullTranslations] = []

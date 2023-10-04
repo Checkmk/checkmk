@@ -44,10 +44,10 @@ severity_to_states = {
 }
 
 
-def parse_silverpeak(info):
+def parse_silverpeak(string_table):
     parsed = {}
 
-    alarm_count, alarms = info
+    alarm_count, alarms = string_table
 
     # We currently do not know if any (alarm) OIDs will be delivered in case no alarm is active.
     # Therefore acquire the alarm count in any case.
@@ -91,7 +91,7 @@ def check_silverpeak(_item, _params, parsed):
     cnt_crit = len([alarm for alarm in alarms if alarm["state"] == 2])
     cnt_unkn = len([alarm for alarm in alarms if alarm["state"] == 3])
 
-    yield 0, "%s active alarms. OK: %s, WARN: %s, CRIT: %s, UNKNOWN: %s" % (
+    yield 0, "{} active alarms. OK: {}, WARN: {}, CRIT: {}, UNKNOWN: {}".format(
         alarm_cnt,
         cnt_ok,
         cnt_warn,
@@ -100,7 +100,7 @@ def check_silverpeak(_item, _params, parsed):
     )
 
     for elem in alarms:
-        yield elem["state"], "\nAlarm: %s, Alarm-Source: %s, Severity: %s" % (
+        yield elem["state"], "\nAlarm: {}, Alarm-Source: {}, Severity: {}".format(
             elem["descr"],
             elem["source"],
             elem["severity_as_text"],
@@ -109,10 +109,6 @@ def check_silverpeak(_item, _params, parsed):
 
 check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.23867"),
-    parse_function=parse_silverpeak,
-    discovery_function=discover_silverpeak_VX6000,
-    check_function=check_silverpeak,
-    service_name="Alarms",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.23867.3.1.1.1",
@@ -123,4 +119,8 @@ check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
             oids=["3", "5", "6"],
         ),
     ],
+    parse_function=parse_silverpeak,
+    service_name="Alarms",
+    discovery_function=discover_silverpeak_VX6000,
+    check_function=check_silverpeak,
 )

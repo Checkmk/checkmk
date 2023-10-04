@@ -1,0 +1,21 @@
+Title: notification_rules: implementation of rest-api endpoints
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1685078535
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a new set of endpoints to the rest-api for the
+configuration of notification rules.
+Users can now via the rest-api do the following...
+
+*  Create a notification rule
+*  Update a notification rule
+*  Delete a notification rule
+*  Show a notification rule
+*  Show all notification rules
+
+

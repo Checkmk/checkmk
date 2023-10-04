@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.metrics as metrics
+from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
+from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Perfdata, PerfometerSpec, Row, TranslatedMetrics
+from cmk.gui.type_defs import Perfdata, Row, TranslatedMetrics
 from cmk.gui.utils.html import HTML
 
 from .legacy_perfometers import perfometers, render_metricometer
@@ -26,11 +28,11 @@ class Perfometer:
         if not perf_data_string:
             return
 
-        self._perf_data, self._check_command = metrics.parse_perf_data(
+        self._perf_data, self._check_command = parse_perf_data(
             perf_data_string, self._row["service_check_command"]
         )
 
-        self._translated_metrics = metrics.translate_metrics(self._perf_data, self._check_command)
+        self._translated_metrics = translate_metrics(self._perf_data, self._check_command)
 
     def render(self) -> tuple[str | None, HTML | None]:
         """Renders the HTML code of a perfometer
@@ -116,7 +118,7 @@ class Perfometer:
         # The perfometer definitions had no ID until implementation of this sorting. We need to
         # care about this here. Since it is only for grouping perfometers of the same type, we
         # can use the id() of the perfometer_definition here.
-        return perfometer_definition.get("sort_group", id(perfometer_definition))
+        return id(perfometer_definition)
 
     def _get_sort_value(self) -> float | None:
         """Calculate the sort value for this perfometer
@@ -161,9 +163,7 @@ class Perfometer:
 
         Returns None in case there is no matching definition found.
         """
-        perfometer_definition = metrics.Perfometers().get_first_matching_perfometer(
-            translated_metrics
-        )
+        perfometer_definition = get_first_matching_perfometer(translated_metrics)
         if not perfometer_definition:
             return None
 

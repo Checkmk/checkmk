@@ -7,14 +7,14 @@
 #include <string>
 
 //
-#include "asio.h"
+#include "wnx/asio.h"
 //
 
-#include "agent_controller.h"
-#include "cfg.h"
 #include "common/version.h"
-#include "install_api.h"
-#include "onlyfrom.h"
+#include "wnx/agent_controller.h"
+#include "wnx/cfg.h"
+#include "wnx/install_api.h"
+#include "wnx/onlyfrom.h"
 
 using namespace std::string_literals;
 

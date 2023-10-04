@@ -32,12 +32,12 @@ from werkzeug.http import parse_options_header
 from werkzeug.utils import import_string
 
 from cmk.utils import store
-from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui import fields, hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.http import HTTPMethod, request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.permission_tracking import (
     enable_permission_tracking,
@@ -78,6 +78,7 @@ from cmk.gui.plugins.openapi.utils import (
     FIELDS,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIHeaderSchemaValidationException,
     RestAPIHeaderValidationException,
     RestAPIPathValidationException,
@@ -690,6 +691,11 @@ class Endpoint:
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
             )
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
+            )
 
     def _query_param_validation(
         self, query_schema: type[Schema] | None, _params: dict[str, Any]
@@ -711,6 +717,11 @@ class Endpoint:
                 fields=FIELDS(
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
+            )
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
             )
 
     def _header_validation(
@@ -762,6 +773,12 @@ class Endpoint:
                 fields=FIELDS(
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
+            )
+
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
             )
 
     def _validate_response(  # pylint: disable=too-many-branches
@@ -1129,7 +1146,7 @@ class Endpoint:
             if self.response_schema:
                 content: ContentObject
                 content = {self.content_type: {"schema": self.response_schema}}
-            elif self.content_type == "application/octet-stream" or self.content_type.startswith(
+            elif self.content_type.startswith("application/") or self.content_type.startswith(
                 "image/"
             ):
                 content = {

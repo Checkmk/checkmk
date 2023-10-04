@@ -53,6 +53,12 @@ def section_fixture() -> Section:
     )
 
 
+def test_discover_hr_fs_do_not_discover() -> None:
+    # Some devices don't report hrStorageDescr (SUP-14525)
+    section = [("", 1255.21484375, 185.06640625, 0)]
+    assert sorted(discover_hr_fs([{"groups": []}], section)) == []
+
+
 def test_discover_hr_fs(section: Section) -> None:
     assert sorted(discover_hr_fs([{"groups": []}], section)) == [
         Service(item="/dev/shm"),

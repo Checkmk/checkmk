@@ -1,0 +1,14 @@
+title: Extreme VSP Switch: Power Supply state
+agents: snmp
+catalog: hw/network/netextreme
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the power supply operational status, input voltage and output watts.
+ The operational status can be 'unknown', 'empty', 'up', 'down'.
+
+item:
+ The id of the VSP Switch Power Supply is the item.
+
+discovery:
+ One service is created for every VSP Switch Power Supply available.

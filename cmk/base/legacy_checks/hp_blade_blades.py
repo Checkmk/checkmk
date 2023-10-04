@@ -68,19 +68,18 @@ def check_hp_blade_blades(item, params, info):
             status = hp_blade_status2nagios_map[snmp_state]
             return (
                 status,
-                "Blade status is %s (Product: %s Name: %s S/N: %s)"
-                % (snmp_state, line[3], line[4], line[5]),
+                f"Blade status is {snmp_state} (Product: {line[3]} Name: {line[4]} S/N: {line[5]})",
             )
     return (3, "item not found in snmp data")
 
 
 check_info["hp_blade_blades"] = LegacyCheckDefinition(
     detect=DETECT_HP_BLADE,
-    check_function=check_hp_blade_blades,
-    discovery_function=inventory_hp_blade_blades,
-    service_name="Blade %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.4.1.1.1",
         oids=["3", "12", "21", "17", "4", "16"],
     ),
+    service_name="Blade %s",
+    discovery_function=inventory_hp_blade_blades,
+    check_function=check_hp_blade_blades,
 )

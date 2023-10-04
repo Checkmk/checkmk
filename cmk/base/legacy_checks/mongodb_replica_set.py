@@ -16,12 +16,11 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
-    get_item_state,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
-    set_item_state,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
@@ -29,13 +28,13 @@ from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 Section = Mapping
 
 
-def parse_mongodb_replica_set(info):
+def parse_mongodb_replica_set(string_table):
     """
-    :param info: dictionary with all data for all checks and subchecks
+    :param string_table: dictionary with all data for all checks and subchecks
     :return:
     """
-    if info:
-        return json.loads(str(info[0][0]))
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 
@@ -117,27 +116,28 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
 
 def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
     member_state_name = "mongodb.replica.set.lag.%s" % member_name
+    value_store = get_value_store()
     if lag_in_sec > levels[0]:
         # I don't think getting zero by default is the right thing to do here.
-        last_timestamp = get_item_state(member_state_name, 0.0)
+        last_timestamp = value_store.get(member_state_name, 0.0)
         lag_duration = new_timestamp - last_timestamp
         state, infotext, _ = check_levels(
             lag_duration,
             None,
             levels[1:],
             human_readable_func=get_age_human_readable,
-            infoname="%s is behind %s for" % (member_name, name),
+            infoname=f"{member_name} is behind {name} for",
         )
 
         if last_timestamp == 0:
-            set_item_state(member_state_name, new_timestamp)
+            value_store[member_state_name] = new_timestamp
         elif state:
             return state, infotext
 
         return 0, "", []
 
     # zero? see above!
-    set_item_state(member_state_name, 0.0)
+    value_store[member_state_name] = 0.0
 
     return 0, "", []
 
@@ -204,9 +204,9 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_replica_set,
+    service_name="MongoDB Replication Lag",
     discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_replica_set_lag,
-    service_name="MongoDB Replication Lag",
     check_ruleset_name="mongodb_replica_set",
     check_default_parameters={"levels_mongdb_replication_lag": (10, 60, 3600)},
 )
@@ -253,8 +253,9 @@ def check_mongodb_primary_election(_item, _params, status_dict):
         yield 1, "Can not retrieve primary name and election date"
         return
 
+    value_store = get_value_store()
     # get primary information from last check
-    last_primary_dict = get_item_state("mongodb_primary_election", {})
+    last_primary_dict = value_store.get("mongodb_primary_election", {})
 
     # check if primary or election date has changed between checks
     primary_name_changed = bool(
@@ -267,21 +268,22 @@ def check_mongodb_primary_election(_item, _params, status_dict):
 
     # warning if primary has changed
     if last_primary_dict and (primary_name_changed or election_date_changed):
-        yield 1, "New primary '%s' elected %s %s" % (
+        yield 1, "New primary '{}' elected {} {}".format(
             primary_name,
             get_timestamp_human_readable(primary_election_time),
             "(%s)" % ("node changed" if primary_name_changed else "election date changed"),
         )
     else:
-        yield 0, "Primary '%s' elected %s" % (
+        yield 0, "Primary '{}' elected {}".format(
             primary_name,
             get_timestamp_human_readable(primary_election_time),
         )
 
     # update primary information
-    set_item_state(
-        "mongodb_primary_election", {"name": primary_name, "election_time": primary_election_time}
-    )
+    value_store["mongodb_primary_election"] = {
+        "name": primary_name,
+        "election_time": primary_election_time,
+    }
 
 
 def _get_primary_election_time(primary):
@@ -296,9 +298,10 @@ def _get_primary_election_time(primary):
 
 
 check_info["mongodb_replica_set.election"] = LegacyCheckDefinition(
+    service_name="MongoDB Replica Set Primary Election",
+    sections=["mongodb_replica_set"],
     discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_primary_election,
-    service_name="MongoDB Replica Set Primary Election",
     check_ruleset_name="mongodb_replica_set",
 )
 

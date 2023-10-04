@@ -8,7 +8,7 @@ Knowledge: doc
 Level: 1
 Version: 2.1.0b1
 
-This fixes the case where <tt>mkp find<\tt> shows
+This fixes the case where <tt>mkp find</tt> shows
 the same file under multiple categories.
 
 This also fixes the same error in the UI for the

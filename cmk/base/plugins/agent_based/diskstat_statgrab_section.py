@@ -13,7 +13,6 @@
 # 1/md1.systime 1471423620
 # 1/md1.write_bytes 39462400
 
-from typing import Dict
 
 from .agent_based_api.v1 import register, type_defs
 from .utils import diskstat
@@ -40,7 +39,7 @@ def parse_statgrab_disk(string_table: type_defs.StringTable) -> diskstat.Section
                'write_throughput': 39462400}}
 
     """
-    raw_section: Dict[str, Dict[str, str]] = {}
+    raw_section: dict[str, dict[str, str]] = {}
     for (name, key), raw_value in ((w0.split("."), w1) for w0, w1 in string_table):
         raw_section.setdefault(name, {})[key] = raw_value
 

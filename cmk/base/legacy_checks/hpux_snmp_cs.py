@@ -34,9 +34,16 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    OIDEnd,
+    SNMPTree,
+    startswith,
+)
 
 
 def inventory_hpux_snmp_cpu(info):
@@ -52,12 +59,14 @@ def check_hpux_snmp_cpu(item, _no_params, info):
     rates = []
     for what, oid in [("user", "13.0"), ("system", "14.0"), ("idle", "15.0"), ("nice", "16.0")]:
         value = int(parts[oid])
-        rate = get_rate("snmp_cpu_util.%s" % what, this_time, value)
+        rate = get_rate(
+            get_value_store(), "snmp_cpu_util.%s" % what, this_time, value, raise_overflow=True
+        )
         total_rate += rate
         rates.append(rate)
 
     if total_rate == 0:
-        raise MKCounterWrapped("No counter counted. Time has ceased to flow.")
+        raise IgnoreResultsError("No counter counted. Time has ceased to flow.")
 
     perfdata = []
     infos = []
@@ -65,7 +74,7 @@ def check_hpux_snmp_cpu(item, _no_params, info):
         part = rate / total_rate  # fixed: true-division
         perc = part * 100
         perfdata.append((what, perc, None, None, 0, 100))
-        infos.append("%s: %.0f%%" % (what, perc))
+        infos.append(f"{what}: {perc:.0f}%")
 
     return (0, ", ".join(infos), perfdata)
 
@@ -80,7 +89,8 @@ check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
 
 
 check_info["hpux_snmp_cs.cpu"] = LegacyCheckDefinition(
-    check_function=check_hpux_snmp_cpu,
     service_name="CPU utilization",
+    sections=["hpux_snmp_cs"],
     discovery_function=inventory_hpux_snmp_cpu,
+    check_function=check_hpux_snmp_cpu,
 )

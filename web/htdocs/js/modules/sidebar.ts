@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
@@ -156,7 +158,7 @@ function removeSnapinDragIndicator() {
     }
 }
 
-function snapinDrop(event: MouseEvent, targetpos: HTMLElement) {
+function snapinDrop(event: MouseEvent, targetpos: HTMLElement): boolean | void {
     if (g_snapin_dragging === false) return true;
 
     // Reset properties
@@ -186,7 +188,7 @@ function snapinDrop(event: MouseEvent, targetpos: HTMLElement) {
     ajax.call_ajax("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
-function snapinTerminateDrag() {
+function snapinTerminateDrag(): true | void {
     if (g_snapin_dragging == false) return true;
     removeSnapinDragIndicator();
     // Reset properties
@@ -1178,7 +1180,7 @@ function handle_update_messages(_data: any, response_text: string) {
 
     update_message_trigger(messages_text, messages_count);
     result.popup_messages.forEach(msg => {
-        alert(msg.text);
+        console.error(msg.text);
         mark_message_read(msg.id, messages_text, messages_count);
     });
 }

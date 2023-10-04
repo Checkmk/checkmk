@@ -15,12 +15,12 @@ from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
 
 check_info["hp_proliant_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hp_proliant_temp,
-    discovery_function=inventory_hp_proliant_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.6.2.6.8.1",
         oids=["2", "3", "4", "5", "6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_hp_proliant_temp,
+    check_function=check_hp_proliant_temp,
     check_ruleset_name="temperature",
 )

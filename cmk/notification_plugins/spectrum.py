@@ -66,8 +66,9 @@ def main() -> NoReturn:
         base_oid + ".11": "Call number 123456",  # CALLOUT STRING
         base_oid + ".12": complete_url,
         base_oid
-        + ".13": "%s alarm on host %s"
-        % (context.get("SERVICEDESC", "Connectivity"), context["HOSTNAME"]),
+        + ".13": "{} alarm on host {}".format(
+            context.get("SERVICEDESC", "Connectivity"), context["HOSTNAME"]
+        ),
         base_oid + ".14": context.get("SERVICEGROUPNAMES", ""),
     }
 

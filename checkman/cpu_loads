@@ -5,8 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  This check measures the 1-, 5- and 15-minute-averages of the CPU
- load. Additionally, the 15-minute-average is checked against user-
- configurable levels.
+ load. These metrics are checked against configurable levels.
 
  Note: The CPU load is the average number of processes that are
  currently in the state "running". Do not mix this up with the

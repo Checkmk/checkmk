@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Container, Dict, NamedTuple, Optional, Sequence
+from collections.abc import Container, Sequence
+from typing import NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -54,7 +55,7 @@ class EntitySensor(NamedTuple):
     status_descr: str
 
 
-EntitySensorSection = Dict[str, Dict[str, EntitySensor]]
+EntitySensorSection = dict[str, dict[str, EntitySensor]]
 
 
 def _sensor_status_descr(status_nr: str) -> str:
@@ -82,7 +83,7 @@ def _reformat_sensor_name(name: str) -> str:
     return f"Sensor {new_name.strip()}"
 
 
-def _unit_from_device_unit(unit: str) -> Optional[str]:
+def _unit_from_device_unit(unit: str) -> str | None:
     """Converts device units to units known by Check_mk"""
     return {
         "celsius": "c",

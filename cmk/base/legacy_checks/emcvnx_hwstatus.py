@@ -120,14 +120,14 @@ def check_emcvnx_hwstatus(item, _no_params, info):
             nagstate = 0
         else:
             nagstate = 2
-        return nagstate, "Enclosure %s is %s" % (item, devstate)
+        return nagstate, f"Enclosure {item} is {devstate}"
 
     except KeyError:
         return 3, "Enclosure %s not found in agent output" % item
 
 
 check_info["emcvnx_hwstatus"] = LegacyCheckDefinition(
+    service_name="Enclosure %s",  # Example for Item: "0/1 Power A",
     discovery_function=inventory_emcvnx_hwstatus,
     check_function=check_emcvnx_hwstatus,
-    service_name="Enclosure %s",  # Example for Item: "0/1 Power A"
 )

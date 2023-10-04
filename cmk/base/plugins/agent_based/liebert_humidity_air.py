@@ -11,7 +11,8 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, List, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -32,20 +33,20 @@ def _item_from_key(key: str) -> str:
 def _get_item_data(
     item: str,
     section: ParsedSection,
-) -> Tuple:
+) -> tuple:
     for key, data in section.items():
         if _item_from_key(key) == item:
             return data
     return (None, None)
 
 
-def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection:
+def parse_liebert_humidity_air(string_table: list[StringTable]) -> ParsedSection:
     return liebert.parse_liebert(string_table, str)
 
 
 def discover_liebert_humidity_air(
-    section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[liebert.SystemSection],
+    section_liebert_humidity_air: ParsedSection | None,
+    section_liebert_system: liebert.SystemSection | None,
 ) -> DiscoveryResult:
     if section_liebert_humidity_air is None:
         return
@@ -58,8 +59,8 @@ def discover_liebert_humidity_air(
 def check_liebert_humidity_air(
     item: str,
     params: Mapping[str, Any],
-    section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[liebert.SystemSection],
+    section_liebert_humidity_air: ParsedSection | None,
+    section_liebert_system: liebert.SystemSection | None,
 ) -> CheckResult:
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return
@@ -83,7 +84,7 @@ def check_liebert_humidity_air(
         metric_name="humidity",
         levels_upper=params["levels"],
         levels_lower=params["levels_lower"],
-        render_func=lambda retval: "%.2f %s" % (retval, unit),
+        render_func=lambda retval: f"{retval:.2f} {unit}",
         boundaries=(0, None),
     )
 

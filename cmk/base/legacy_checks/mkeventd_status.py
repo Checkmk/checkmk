@@ -13,15 +13,16 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
-def parse_mkeventd_status(info):
+def parse_mkeventd_status(string_table):
     import json
 
     parsed, site = {}, None
-    for line in info:
+    for line in string_table:
         try:
             data = json.loads(line[0])
         except ValueError:
@@ -91,7 +92,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
     this_time = time.time()
     for title, col, fmt in columns:
         counter_value = status[col + "s"]
-        rate = get_rate(col, this_time, counter_value)
+        rate = get_rate(get_value_store(), col, this_time, counter_value, raise_overflow=True)
         rates[col] = rate
         yield 0, ("%s: " + fmt) % (title, rate), [("average_%s_rate" % col, rate)]
 
@@ -102,7 +103,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
         value = rates["rule_hit"] / rates["rule_trie"] * 100
         hit_rate_txt = "%.2f%%" % value
         yield 0, "", [("average_rule_hit_ratio", value)]
-    yield 0, "%s: %s" % ("Rule hit ratio", hit_rate_txt)
+    yield 0, "{}: {}".format("Rule hit ratio", hit_rate_txt)
 
     # Time columns
     time_columns = [
@@ -119,12 +120,12 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
             if name == "sync":
                 continue  # skip if not available
             txt = "-"
-        yield 0, "%s: %s" % (title, txt)
+        yield 0, f"{title}: {txt}"
 
 
 check_info["mkeventd_status"] = LegacyCheckDefinition(
     parse_function=parse_mkeventd_status,
+    service_name="OMD %s Event Console",
     discovery_function=inventory_mkeventd_status,
     check_function=check_mkeventd_status,
-    service_name="OMD %s Event Console",
 )

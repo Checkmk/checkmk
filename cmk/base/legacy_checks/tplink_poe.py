@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.poe import check_poe_data, PoeStatus, PoeValues
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -28,18 +28,18 @@ def _deci_watt_to_watt(deci_watt):
     return float(deci_watt) / 10
 
 
-def parse_tplink_poe(info):
+def parse_tplink_poe(string_table):
     """
-    parse info data and create dictionary with namedtuples for each item.
+    parse string_table data and create dictionary with namedtuples for each item.
 
     {
        item : PoeData(poe_max, poe_used, pse_op_status)
     }
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: dictionary
     """
-    interface_list, poe_info = info
+    interface_list, poe_info = string_table
 
     poe_dict = {}
     for port_index, poe_port_status, poe_max, poe_used, poe_power_status in poe_info:
@@ -81,17 +81,14 @@ def inventory_tplink_poe(parsed):
     return [(item, {}) for item in parsed]
 
 
-@get_parsed_item_data
-def check_tplink_poe(item, params, poe_data):
-    return check_poe_data(params, poe_data)
+def check_tplink_poe(item, params, parsed):
+    if not (poe_data := parsed.get(item)):
+        return
+    yield check_poe_data(params, poe_data)
 
 
 check_info["tplink_poe"] = LegacyCheckDefinition(
     detect=DETECT_TPLINK,
-    parse_function=parse_tplink_poe,
-    check_function=check_tplink_poe,
-    discovery_function=inventory_tplink_poe,
-    service_name="POE%s consumption",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
@@ -102,4 +99,8 @@ check_info["tplink_poe"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "7", "11"],
         ),
     ],
+    parse_function=parse_tplink_poe,
+    service_name="POE%s consumption",
+    discovery_function=inventory_tplink_poe,
+    check_function=check_tplink_poe,
 )

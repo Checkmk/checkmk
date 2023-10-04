@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import shutil
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
 import pytest
 from pytest import MonkeyPatch
@@ -16,21 +15,19 @@ from tests.testlib.base import Scenario
 import cmk.utils.config_path
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils import password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ConfiguredService
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.config import ConfigCache, HostAddressConfiguration, ObjectAttributes
+from cmk.base.config import ConfigCache, ObjectAttributes
 from cmk.base.core_config import (
     CollectedHostLabels,
     get_labels_from_attributes,
@@ -49,6 +46,14 @@ def fixture_config_path():
         shutil.rmtree(ConfigPath.ROOT)
 
 
+@pytest.fixture(name="core_scenario")
+def fixture_core_scenario(monkeypatch):
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    ts.set_option("ipaddresses", {"test-host": "127.0.0.1"})
+    return ts.apply(monkeypatch)
+
+
 def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
     core_config.do_create_config(create_core("nagios"), core_scenario, duplicates=())
 
@@ -56,7 +61,7 @@ def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 
-def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(HostName("test-host"), tags={TagGroupID("agent"): TagID("no-agent")})
     ts.set_option(
@@ -93,7 +98,7 @@ def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:  # type:ignore[n
         "alias": "test-host",
     }
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_attrs["_CUSTOMER"] = "provider"
 
     assert config_cache.get_host_attributes(HostName("test-host")) == expected_attrs
@@ -205,121 +210,6 @@ def test_get_tag_attributes(
     for k, v in attributes.items():
         assert isinstance(k, str)
         assert isinstance(v, str)
-
-
-@pytest.mark.parametrize(
-    "hostname, host_attrs, expected_result",
-    [
-        (
-            "myhost",
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESSES_4": "127.0.0.2 127.0.0.3",
-                "_ADDRESSES_4_1": "127.0.0.2",
-                "_ADDRESSES_4_2": "127.0.0.3",
-            },
-            HostAddressConfiguration(
-                hostname="myhost",
-                host_address="127.0.0.1",
-                alias="my_host_alias",
-                ipv4address="127.0.0.1",
-                ipv6address=None,
-                indexed_ipv4addresses={
-                    "$_HOSTADDRESSES_4_1$": "127.0.0.2",
-                    "$_HOSTADDRESSES_4_2$": "127.0.0.3",
-                },
-                indexed_ipv6addresses={},
-            ),
-        )
-    ],
-)
-def test_get_host_config(
-    hostname: str,
-    host_attrs: config.ObjectAttributes,
-    expected_result: HostAddressConfiguration,
-) -> None:
-    host_config = config._get_host_address_config(hostname, host_attrs)
-    assert host_config == expected_result
-
-
-@pytest.mark.parametrize(
-    "check_name, active_check_info, hostname, host_attrs, expected_result",
-    [
-        pytest.param(
-            "my_active_check",
-            {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "argument_function": lambda _: "--arg1 arument1 --host_alias $HOSTALIAS$",
-                    "service_description": lambda _: "Active check of $HOSTNAME$",
-                }
-            },
-            HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
-            [("Active check of myhost", "--arg1 arument1 --host_alias $HOSTALIAS$")],
-            id="one_active_service",
-        ),
-        pytest.param(
-            "my_active_check",
-            {
-                "my_active_check": {
-                    "command_line": "echo $ARG1$",
-                    "service_generator": lambda *_: (
-                        yield from [
-                            ("First service", "--arg1 argument1"),
-                            ("Second service", "--arg2 argument2"),
-                        ]
-                    ),
-                }
-            },
-            HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
-            [("First service", "--arg1 argument1"), ("Second service", "--arg2 argument2")],
-            id="multiple_active_services",
-        ),
-    ],
-)
-def test_iter_active_check_services(
-    check_name: str,
-    active_check_info: Mapping[str, Mapping[str, str]],
-    hostname: HostName,
-    host_attrs: dict[str, Any],
-    expected_result: Sequence[tuple[str, str]],
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(config, "active_check_info", active_check_info)
-    monkeypatch.setattr(ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
-
-    cache = config.get_config_cache()
-    cache.initialize()
-
-    active_info = active_check_info[check_name]
-    services = list(
-        config.iter_active_check_services(
-            check_name,
-            active_info,
-            hostname,
-            host_attrs["alias"],
-            host_attrs,
-            {},
-            password_store.load(),
-        )
-    )
-    assert services == expected_result
 
 
 @pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])

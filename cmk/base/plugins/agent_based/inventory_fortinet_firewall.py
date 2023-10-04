@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import List, Mapping, MutableMapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import NamedTuple
 
 from .agent_based_api.v1 import equals, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
@@ -15,7 +16,7 @@ class Interface(NamedTuple):
     if_name: str
     ip_address: str
     address_type: str
-    subnet: List[str]
+    subnet: list[str]
 
 
 SectionFortinetInterface = Mapping[str, Interface]
@@ -28,7 +29,7 @@ SectionFortinetInterface = Mapping[str, Interface]
 
 
 def parse_fortinet_firewall_network_interfaces(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> SectionFortinetInterface:
     if not string_table:
         return {}

@@ -6,12 +6,15 @@
 import abc
 import re
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.version import Edition, mark_edition_only
+from cmk.utils.rulesets.definition import is_from_ruleset_group, RuleGroup, RuleGroupType
+from cmk.utils.version import Edition, edition, mark_edition_only
 
+from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -42,7 +45,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.check_mk_automations import get_check_information
+from cmk.gui.watolib.check_mk_automations import get_check_information_cached
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -51,6 +54,36 @@ from cmk.gui.watolib.search import (
     MatchItems,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
+
+
+class AllowAll:
+    def is_visible(self, _rulespec_name: str) -> bool:
+        return True
+
+
+@dataclass(frozen=True)
+class RulespecAllowList:
+    visible_rulespecs: set[str] = field(default_factory=set)
+
+    @classmethod
+    def from_config(cls) -> "RulespecAllowList":
+        global_config = get_global_config()
+        model = global_config.rulespec_allow_list
+        visible_rulespecs = set()
+        for group in model.rule_groups:
+            _prefix = "" if group.type_ is None else f"{group.type_.value}:"
+            names = {f"{_prefix}{name}" for name in group.rule_names}
+            visible_rulespecs.update(names)
+        return cls(visible_rulespecs=visible_rulespecs)
+
+    def is_visible(self, rulespec_name: str) -> bool:
+        return rulespec_name in self.visible_rulespecs
+
+
+def get_rulespec_allow_list() -> RulespecAllowList | AllowAll:
+    if edition() is not Edition.CSE:
+        return AllowAll()
+    return RulespecAllowList.from_config()
 
 
 class RulespecBaseGroup(abc.ABC):
@@ -290,7 +323,7 @@ class Rulespec(abc.ABC):
         is_deprecated: bool,
         is_cloud_edition_only: bool,
         is_for_services: bool,
-        is_binary_ruleset: bool,
+        is_binary_ruleset: bool,  # unused
         factory_default: Any,
         help_func: Callable[[], str] | None,
         doc_references: dict[DocReference, str] | None,
@@ -645,12 +678,11 @@ def _get_manual_check_parameter_rulespec_instance(
         checkparams_static_sub_group_class = rulespec_group_registry[subgroup_key]
     except KeyError:
         group_instance = group()
-        main_group_static_class = rulespec_group_registry["static"]
         checkparams_static_sub_group_class = type(
             "%sStatic" % group_instance.__class__.__name__,
             (group_instance.__class__,),
             {
-                "main_group": main_group_static_class,
+                "main_group": RulespecGroupEnforcedServices,
             },
         )
 
@@ -663,6 +695,25 @@ def _get_manual_check_parameter_rulespec_instance(
         is_optional=is_optional,
         is_deprecated=is_deprecated,
     )
+
+
+class RulespecGroupEnforcedServices(RulespecGroup):
+    @property
+    def name(self) -> str:
+        return "static"
+
+    @property
+    def title(self) -> str:
+        return _("Enforced services")
+
+    @property
+    def help(self):
+        return _(
+            "Rules to set up [wato_services#enforced_services|enforced services]. Services set "
+            "up in this way do not depend on the service discovery. This is useful if you want "
+            "to enforce compliance with a specific guideline. You can for example ensure that "
+            "a certain Windows service is always present on a host."
+        )
 
 
 class CheckParameterRulespecWithItem(ServiceRulespec):
@@ -691,7 +742,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     ) -> None:
         # Mandatory keys
         self._check_group_name = check_group_name
-        name = "checkgroup_parameters:%s" % self._check_group_name
+        name = RuleGroup.CheckgroupParameters(self._check_group_name)
         self._parameter_valuespec = parameter_valuespec
 
         arg_infos = [
@@ -837,7 +888,7 @@ class ManualCheckParameterRulespec(HostRulespec):
         # Mandatory keys
         self._check_group_name = check_group_name
         if name is None:
-            name = "static_checks:%s" % self._check_group_name
+            name = RuleGroup.StaticChecks(self._check_group_name)
 
         arg_infos = [
             # (arg, is_callable, none_allowed)
@@ -937,7 +988,9 @@ def register_rule(
     }
     if valuespec is not None:
         class_kwargs["valuespec"] = lambda: valuespec
-    if varname.startswith("static_checks:") or varname.startswith("checkgroup_parameters:"):
+    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS) or is_from_ruleset_group(
+        varname, RuleGroupType.CHECKGROUP_PARAMETERS
+    ):
         class_kwargs["check_group_name"] = varname.split(":", 1)[1]
     if title is not None:
         class_kwargs["title"] = lambda: title
@@ -957,12 +1010,65 @@ def register_rule(
     rulespec_registry.register(base_class(**class_kwargs))
 
 
+def register_check_parameters(
+    subgroup,
+    checkgroup,
+    title,
+    valuespec,
+    itemspec,
+    match_type,
+    has_inventory=True,
+    register_static_check=True,
+    deprecated=False,
+):
+    """Legacy registration of check parameters"""
+    if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
+        raise MKGeneralException(
+            f"Check parameter definition for {checkgroup} has type Dictionary, but match_type {match_type}"
+        )
+
+    if not valuespec:
+        raise NotImplementedError()
+
+    # Added during 1.6 development for easier transition. Convert all legacy subgroup
+    # parameters (which are either str/unicode to group classes
+    if isinstance(subgroup, str):
+        subgroup = get_rulegroup("checkparams/" + subgroup).__class__
+
+    # Register rule for discovered checks
+    if has_inventory:
+        kwargs = {
+            "group": subgroup,
+            "title": lambda: title,
+            "match_type": match_type,
+            "is_deprecated": deprecated,
+            "parameter_valuespec": lambda: valuespec,
+            "check_group_name": checkgroup,
+            "create_manual_check": register_static_check,
+        }
+
+        if itemspec:
+            rulespec_registry.register(
+                CheckParameterRulespecWithItem(item_spec=lambda: itemspec, **kwargs)
+            )
+        else:
+            rulespec_registry.register(CheckParameterRulespecWithoutItem(**kwargs))
+
+    if not (valuespec and has_inventory) and register_static_check:
+        raise MKGeneralException(
+            "Sorry, registering manual check parameters without discovery "
+            "check parameters is not supported anymore using the old API. "
+            "Please register the manual check rulespec using the new API. "
+            "Checkgroup: %s" % checkgroup
+        )
+
+
 # NOTE: mypy's typing rules for ternaries seem to be a bit broken, so we have
 # to nest ifs in a slightly ugly way.
 def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -> type[Rulespec]:
-    if varname.startswith("static_checks:"):
+    if is_from_ruleset_group(varname, RuleGroupType.STATIC_CHECKS):
         return ManualCheckParameterRulespec
-    if varname.startswith("checkgroup_parameters:"):
+    if is_from_ruleset_group(varname, RuleGroupType.CHECKGROUP_PARAMETERS):
         if has_itemtype:
             return CheckParameterRulespecWithItem
         return CheckParameterRulespecWithoutItem
@@ -1053,9 +1159,9 @@ class CheckTypeGroupSelection(ElementSelection):
         self._checkgroup = checkgroup
 
     def get_elements(self):
-        checks = get_check_information().plugin_infos
+        checks = get_check_information_cached()
         elements = {
-            cn: "{} - {}".format(cn, c["title"])
+            str(cn): "{} - {}".format(cn, c["title"])
             for (cn, c) in checks.items()
             if c.get("group") == self._checkgroup
         }
@@ -1252,21 +1358,22 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
         return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
-        yield from (
-            MatchItem(
-                title=rulespec.title,
-                topic=self._topic(rulespec),
-                url=makeuri_contextless(
-                    request,
-                    [("mode", "edit_ruleset"), ("varname", rulespec.name)],
-                    filename="wato.py",
-                ),
-                match_texts=[rulespec.title, rulespec.name],
-            )
-            for group in self._rulespec_registry.get_all_groups()
-            for rulespec in self._rulespec_registry.get_by_group(group)
-            if rulespec.title
-        )
+        allow_list = get_rulespec_allow_list()
+        for group in self._rulespec_registry.get_all_groups():
+            for rulespec in self._rulespec_registry.get_by_group(group):
+                if not rulespec.title or not allow_list.is_visible(rulespec.name):
+                    continue
+
+                yield MatchItem(
+                    title=rulespec.title,
+                    topic=self._topic(rulespec),
+                    url=makeuri_contextless(
+                        request,
+                        [("mode", "edit_ruleset"), ("varname", rulespec.name)],
+                        filename="wato.py",
+                    ),
+                    match_texts=[rulespec.title, rulespec.name],
+                )
 
     @staticmethod
     def is_affected_by_change(_change_action_name: str) -> bool:

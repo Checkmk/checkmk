@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.plugins.metrics.utils import check_metrics, CheckMetricEntry, KB, m, MB
+from cmk.gui.graphing._utils import check_metrics, CheckMetricEntry, KB, m, MB
 
 # .
 #   .--Checks--------------------------------------------------------------.
@@ -473,6 +473,16 @@ check_metrics["check_mk-df_netscaler"] = df_translation
 check_metrics["check_mk-prism_host_usage"] = df_translation
 check_metrics["check_mk-prism_containers"] = df_translation
 check_metrics["check_mk-prism_storage_pools"] = df_translation
+check_metrics["check_mk-pure_storage_fa_arrays"] = {
+    "fs_used": {"scale": MB},
+    "fs_used_percent": {"auto_graph": False},
+    "fs_free": {"scale": MB},
+}
+check_metrics["check_mk-pure_storage_fa_volumes"] = {
+    "fs_used": {"scale": MB},
+    "fs_used_percent": {"auto_graph": False},
+    "fs_free": {"scale": MB},
+}
 check_metrics["check_mk-sansymphony_pool"] = {
     **df_translation,
     "percent_allocated": {"name": "fs_used_percent"},
@@ -1013,8 +1023,8 @@ check_metrics["check_mk-cisco_wlc_clients"] = {
     "clients": {"name": "connections"},
 }
 check_metrics["check_mk-cisco_qos"] = {
-    "drop": {"name": "qos_dropped_bytes_rate"},
-    "post": {"name": "qos_outbound_bytes_rate"},
+    "drop": {"name": "qos_dropped_bits_rate", "scale": 8},
+    "post": {"name": "qos_outbound_bits_rate", "scale": 8},
 }
 check_metrics["check_mk-hivemanager_devices"] = {
     "clients_count": {"name": "connections"},

@@ -10,9 +10,10 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Literal, NotRequired, TypedDict
+from typing import Literal, NotRequired
 
 from pydantic import BaseModel
+from typing_extensions import TypedDict
 
 from .targets import TargetId
 
@@ -42,7 +43,7 @@ class Job:
     id: str
 
 
-class JobState(BaseModel, frozen=True):
+class JobState(BaseModel):
     state: str | None
     started: float | None
     output: str

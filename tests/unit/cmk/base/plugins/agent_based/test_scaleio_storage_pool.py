@@ -16,14 +16,13 @@ from cmk.base.plugins.agent_based.scaleio_storage_pool import (
     check_scaleio_storage_pool_rebalancerw,
     check_scaleio_storage_pool_totalrw,
     discover_scaleio_storage_pool,
-    DiskReadWrite,
     FilesystemStoragePool,
     parse_scaleio_storage_pool,
     ScaleioStoragePoolSection,
-    StorageConversionError,
     StoragePool,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "4e9a44c700000000": StoragePool(

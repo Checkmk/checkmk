@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 # Example output from agent:
 # <<<openvpn_clients:sep(44)>>>
@@ -39,9 +39,11 @@ def check_openvpn_clients(item, _no_params, info):
             _name, _address, inbytes, outbytes, _date = line
             this_time = time.time()
             for what, val in [("in", int(inbytes)), ("out", int(outbytes))]:
-                countername = "openvpn_clients.%s.%s" % (item, what)
-                bytes_per_sec = get_rate(countername, this_time, val)
-                infos.append("%s: %s" % (what, render.iobandwidth(bytes_per_sec)))
+                countername = f"openvpn_clients.{item}.{what}"
+                bytes_per_sec = get_rate(
+                    get_value_store(), countername, this_time, val, raise_overflow=True
+                )
+                infos.append(f"{what}: {render.iobandwidth(bytes_per_sec)}")
                 perfdata.append((what, bytes_per_sec))
             return 0, ", ".join(infos), perfdata
 
@@ -49,7 +51,7 @@ def check_openvpn_clients(item, _no_params, info):
 
 
 check_info["openvpn_clients"] = LegacyCheckDefinition(
-    check_function=check_openvpn_clients,
-    discovery_function=inventory_openvpn_clients,
     service_name="OpenVPN Client %s",
+    discovery_function=inventory_openvpn_clients,
+    check_function=check_openvpn_clients,
 )

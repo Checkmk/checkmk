@@ -4,32 +4,37 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import active_check_info
 
 
 def check_disk_smb_arguments(params):
-    args = []
-    args += ["-a", "$HOSTADDRESS$"]
-    args += ["-s", params["share"]]
+    args = [
+        params["share"],
+        "-H",
+        "$HOSTADDRESS$" if params["host"] == "use_parent_host" else params["host"][1],
+    ]
 
     warn, crit = params["levels"]
-    args += ["-w%d%%" % warn]
-    args += ["-c%d%%" % crit]
+    args += ["--levels", warn, crit]
 
     if "workgroup" in params:
         args += ["-W", params["workgroup"]]
 
     if "port" in params:
-        args += ["-p", params["port"]]
+        args += ["-P", params["port"]]
 
     if "auth" in params:
         username, password = params["auth"]
-        args += ["-u", username, "-p", password]
+        args += [
+            "-u",
+            username,
+            "-p",
+            passwordstore_get_cmdline("%s", password),
+        ]
 
-    if "host" in params:
-        args += ["-H", params["host"]]
-    else:
-        args += ["-H", "$HOSTADDRESS$"]
+    if "ip_address" in params:
+        args += ["-a", params["ip_address"]]
 
     return args
 

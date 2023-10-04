@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
 
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree, type_defs
 from .utils import interfaces
@@ -10,7 +9,7 @@ from .utils.emc import DETECT_VPLEX
 
 
 def parse_emc_vplex_if(
-    string_table: List[type_defs.StringTable],
+    string_table: list[type_defs.StringTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     directors = {}
     for director, ip in string_table[0]:
@@ -21,7 +20,9 @@ def parse_emc_vplex_if(
             interfaces.Attributes(
                 index=str(idx + 1),
                 descr=frontend_info[0],
-                alias="%s %s" % (directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]),
+                alias="{} {}".format(
+                    directors[frontend_info[3].rsplit(".", 1)[0]], frontend_info[0]
+                ),
                 type="",
                 oper_status="1",
             ),

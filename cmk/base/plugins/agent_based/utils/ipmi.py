@@ -3,20 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Literal, TypedDict
 
 from ..agent_based_api.v1 import check_levels, Metric, Result, Service, State, type_defs
 
@@ -28,11 +17,11 @@ class Sensor:
     status_txt: str
     unit: str
     state: State | None = None
-    value: Optional[float] = None
-    crit_low: Optional[float] = None
-    warn_low: Optional[float] = None
-    warn_high: Optional[float] = None
-    crit_high: Optional[float] = None
+    value: float | None = None
+    crit_low: float | None = None
+    warn_low: float | None = None
+    warn_high: float | None = None
+    crit_high: float | None = None
     type_: str | None = None
 
     @property
@@ -64,7 +53,7 @@ class Sensor:
         }.get(dev_state.lower())
 
 
-Section = Dict[str, Sensor]
+Section = dict[str, Sensor]
 IgnoreParams = Mapping[str, Sequence[str]]
 StatusTxtMapping = Callable[[str], State]
 
@@ -76,10 +65,9 @@ class UserLevels:
 
 
 class DiscoveryParams(TypedDict):
-    discovery_mode: Union[
-        Tuple[Literal["summarize"], IgnoreParams],
-        Tuple[Literal["single"], IgnoreParams],
-    ]
+    discovery_mode: (
+        tuple[Literal["summarize"], IgnoreParams] | tuple[Literal["single"], IgnoreParams]
+    )
 
 
 def discover_individual_sensors(
@@ -162,9 +150,9 @@ def _compile_user_levels_map(params: Mapping[str, Any]) -> Mapping[str, UserLeve
 
 
 def _sensor_levels_to_check_levels(
-    sensor_warn: Optional[float],
-    sensor_crit: Optional[float],
-) -> Optional[Tuple[float, float]]:
+    sensor_warn: float | None,
+    sensor_crit: float | None,
+) -> tuple[float, float] | None:
     if sensor_crit is None:
         return None
     warn = sensor_warn if sensor_warn is not None else sensor_crit

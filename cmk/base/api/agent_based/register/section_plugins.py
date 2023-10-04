@@ -7,13 +7,19 @@
 import functools
 import inspect
 import itertools
-import types
 from collections.abc import Generator
 from typing import Any, List
 
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import SectionName
+
+from cmk.snmplib import SNMPDetectBaseType
+
+from cmk.checkengine.discovery import HostLabel
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.register.utils import (
     RuleSetType,
@@ -25,9 +31,7 @@ from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
-    HostLabel,
     HostLabelFunction,
-    ParametersTypeAlias,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
@@ -40,25 +44,32 @@ def _create_parse_annotation(
     *,
     needs_bytes: bool = False,
     is_list: bool = False,
-) -> tuple[type, str]:
+) -> set[tuple[type, str]]:
     # this is dumb, but other approaches are not understood by mypy
     if is_list:
         if needs_bytes:
-            return List[StringByteTable], "List[StringByteTable]"
-        return List[StringTable], "List[StringTable]"
+            return {
+                (List[StringByteTable], "List[StringByteTable]"),
+                (list[StringByteTable], "list[StringByteTable]"),
+            }
+        return {
+            (List[StringTable], "List[StringTable]"),
+            (list[StringTable], "list[StringTable]"),
+        }
     if needs_bytes:
-        return StringByteTable, "StringByteTable"
-    return StringTable, "StringTable"
+        return {(StringByteTable, "StringByteTable")}
+    return {(StringTable, "StringTable")}
 
 
 def _validate_parse_function(
     parse_function: AgentParseFunction | SimpleSNMPParseFunction | SNMPParseFunction,
     *,
-    expected_annotation: tuple[type, str],
+    expected_annotations: set[tuple[type, str]],
 ) -> None:
     """Validate the parse functions signature and type"""
 
-    if not isinstance(parse_function, types.FunctionType):
+    # TODO: Should we use callable() here? This is what we *actually* want to test.
+    if not inspect.isfunction(parse_function):
         raise TypeError(f"parse function must be a function: {parse_function!r}")
 
     if inspect.isgeneratorfunction(parse_function):
@@ -73,12 +84,14 @@ def _validate_parse_function(
         )
 
     arg = parameters["string_table"]
-    if arg.annotation is not arg.empty:  # why is inspect._empty trueish?!
-        if arg.annotation != expected_annotation[0]:
-            raise TypeError(
-                "expected parse function argument annotation %r, got %r"
-                % (expected_annotation[1], arg.annotation)
-            )
+    if (
+        arg.annotation is not arg.empty  # arg.empty is a class, so it's trueish
+        and arg.annotation not in {t for t, _ in expected_annotations}
+    ):
+        expected = " or ".join(repr(s) for _, s in expected_annotations)
+        raise TypeError(
+            f"expected parse function argument annotation {expected}, got {arg.annotation!r}"
+        )
 
 
 def _validate_host_label_kwargs(
@@ -128,7 +141,7 @@ def _create_snmp_parse_function(
 
     @functools.wraps(parse_function)
     def unpacking_parse_function(string_table):
-        return parse_function(string_table[0])  # type: ignore[misc] # no, it's not None.
+        return parse_function(string_table[0])
 
     return unpacking_parse_function
 
@@ -136,7 +149,7 @@ def _create_snmp_parse_function(
 def _validate_supersedings(own_name: SectionName, supersedes: list[SectionName]) -> None:
     set_supersedes = set(supersedes)
     if own_name in set_supersedes:
-        raise ValueError("cannot supersede myself: '%s'" % own_name)
+        raise ValueError(f"cannot supersede myself: '{own_name}'")
     if len(supersedes) != len(set_supersedes):
         raise ValueError("duplicate supersedes entry")
 
@@ -148,7 +161,7 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
         raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
 
     for atom in itertools.chain(*detect_spec):
-        if not isinstance(atom, tuple) or not len(atom) == 3:
+        if not isinstance(atom, tuple) or len(atom) != 3:
             raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
         oid_string, expression, expected_match = atom
 
@@ -166,7 +179,7 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
             try:
                 _ = regex(expression)
             except MKGeneralException as exc:
-                raise ValueError("invalid regex in value of 'detect' keyword: %s" % exc)
+                raise ValueError(f"invalid regex in value of 'detect' keyword: {exc}")
 
         if not isinstance(expected_match, bool):
             raise TypeError(
@@ -203,10 +216,7 @@ def _create_host_label_function(
 
         This allows for better typing in base code.
         """
-        for label in host_label_function(  # type: ignore[misc] # Bug: None not callable
-            *args,
-            **kwargs,
-        ):
+        for label in host_label_function(*args, **kwargs):
             if not isinstance(label, HostLabel):
                 raise TypeError("unexpected type in host label function: %r" % type(label))
             yield label
@@ -251,7 +261,7 @@ def create_agent_section_plugin(
         if parse_function is not None:
             _validate_parse_function(
                 parse_function,
-                expected_annotation=_create_parse_annotation(),
+                expected_annotations=_create_parse_annotation(),
             )
 
         if host_label_function is not None:
@@ -264,9 +274,7 @@ def create_agent_section_plugin(
 
     return AgentSectionPlugin(
         name=section_name,
-        parsed_section_name=ParsedSectionName(
-            parsed_section_name if parsed_section_name else str(section_name)
-        ),
+        parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
         parse_function=_create_agent_parse_function(parse_function),
         host_label_function=_create_host_label_function(host_label_function),
         host_label_default_parameters=host_label_default_parameters,
@@ -314,7 +322,7 @@ def create_snmp_section_plugin(
             needs_bytes = any(oid.encoding == "binary" for tree in tree_list for oid in tree.oids)
             _validate_parse_function(
                 parse_function,
-                expected_annotation=_create_parse_annotation(
+                expected_annotations=_create_parse_annotation(
                     needs_bytes=needs_bytes,
                     is_list=isinstance(fetch, list),
                 ),
@@ -330,9 +338,7 @@ def create_snmp_section_plugin(
 
     return SNMPSectionPlugin(
         name=section_name,
-        parsed_section_name=ParsedSectionName(
-            parsed_section_name if parsed_section_name else str(section_name)
-        ),
+        parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
         parse_function=_create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
         host_label_function=_create_host_label_function(host_label_function),
         host_label_default_parameters=host_label_default_parameters,
@@ -357,21 +363,21 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
     """
 
     for name, explicitly in all_supersedes.items():
-        transitivly = {
+        transitively = {
             n for section_name in explicitly for n in all_supersedes.get(section_name, ())
         }
-        implicitly = transitivly - explicitly
+        implicitly = transitively - explicitly
         if name in implicitly:
             raise ValueError(
                 "Section plugin '%s' implicitly supersedes section(s) %s. "
                 "This leads to a cyclic superseding!"
-                % (name, ", ".join("'%s'" % n for n in sorted(implicitly)))
+                % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
         if implicitly:
             raise ValueError(
                 "Section plugin '%s' implicitly supersedes section(s) %s. "
                 "You must add those to the supersedes keyword argument."
-                % (name, ", ".join("'%s'" % n for n in sorted(implicitly)))
+                % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
 
 

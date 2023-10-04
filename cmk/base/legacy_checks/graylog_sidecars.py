@@ -10,9 +10,7 @@ import time
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_age_human_readable,
-    get_parsed_item_data,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
 )
@@ -41,10 +39,10 @@ from cmk.base.config import check_info
 # false, "query  ": "", "total": 1, "order": "asc"}
 
 
-def parse_graylog_sidecars(info):
+def parse_graylog_sidecars(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         sidecar_data = json.loads(line[0])
 
         sidecar_nodename = sidecar_data.get("node_name")
@@ -69,8 +67,10 @@ def parse_graylog_sidecars(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_graylog_sidecars(item, params, item_data):  # pylint: disable=too-many-branches
+def check_graylog_sidecars(item, params, parsed):  # pylint: disable=too-many-branches
+    if not (item_data := parsed.get(item)):
+        return
+
     active_msg = item_data.get("active")
     if active_msg is not None:
         active_state = 0
@@ -158,11 +158,15 @@ def _handle_collector_states(collector_state, params):
     return 3
 
 
+def discover_graylog_sidecars(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["graylog_sidecars"] = LegacyCheckDefinition(
     parse_function=parse_graylog_sidecars,
-    check_function=check_graylog_sidecars,
-    discovery_function=discover(),
     service_name="Graylog Sidecar %s",
+    discovery_function=discover_graylog_sidecars,
+    check_function=check_graylog_sidecars,
     check_ruleset_name="graylog_sidecars",
     check_default_parameters={
         "running_lower": (1, 0),

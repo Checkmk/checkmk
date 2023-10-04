@@ -91,7 +91,8 @@ td.count.hstate0,
 .timeline .state0,
 .hostmatrix .state0,
 div.statea,
-div.stated {
+div.stated,
+table.job_details td.state.state0 {
   &,
   a {
     color: $font-color-black !important;
@@ -116,7 +117,8 @@ td.fillbackground.state1,
 .infobox_entry.state1,
 .state1 span,
 .timeline .state1,
-.hostmatrix .state1 {
+.hostmatrix .state1,
+table.job_details td.state.state1 {
   &,
   a {
     color: $font-color-black !important;
@@ -139,7 +141,8 @@ td.fillbackground.state2,
 .timeline .state2,
 .hostmatrix .state2,
 .hstate1 span,
-td.count.hstate1 {
+td.count.hstate1,
+table.job_details td.state.state2 {
   &,
   a {
     color: $font-color-white !important;
@@ -170,11 +173,23 @@ td.count.hstate2 {
 }
 
 /* PENDING / in DOWNTIME */
-.statebullet.statep {
-  color: $font-color-white !important;
-  background-color: $color-state-4-background !important;
+span.content.state-1,
+.statebullet.statep,
+table.job_details td.state.statep {
+  &,
+  a {
+    color: $font-color-white !important;
+    background-color: $color-state-4-background !important;
+  }
 }
 
+/* RUNNING */
+table.job_details td.state.job_running {
+  color: $font-color-white !important;
+  background-color: $color-state-running-background !important;
+}
+
+.state-1,
 .statep,
 .hstatep,
 .stated,
@@ -281,7 +296,8 @@ b.stmark {
     &:hover {
       /* TODO: create a better hover effect */
       opacity: 0.5;
-      filter: alpha(opacity=50); /* For IE8 and earlier */
+      filter: alpha(opacity=50);
+      /* For IE8 and earlier */
     }
   }
 

@@ -1,0 +1,13 @@
+Title: check_disk_smb: Now supports password store for setting passwords
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1688992715
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The corresponding ruleset for configuring the check_disk_smb active check now supports the use of the password store.
+Using this new possibility is recommended for all users because of security reasons.
+

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Any, Mapping, NamedTuple, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 from cmk.base.config import special_agent_info
 
@@ -17,11 +18,11 @@ from cmk.base.config import special_agent_info
 class SpecialAgentConfiguration(NamedTuple):
     args: Sequence[str]
     # None makes the stdin of subprocess /dev/null
-    stdin: Optional[str]
+    stdin: str | None
 
 
 def agent_prometheus_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> SpecialAgentConfiguration:
     prometheus_params = {**params, "host_address": ipaddress, "host_name": hostname}
     return SpecialAgentConfiguration([], repr(prometheus_params))

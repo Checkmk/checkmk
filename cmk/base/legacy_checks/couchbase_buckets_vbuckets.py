@@ -4,20 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_bytes_human_readable,
-    get_parsed_item_data,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+DiscoveryResult = Iterable[tuple[str, dict]]
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_vbuckets(_item, params, data):
+def discover_couchbase_buckets_vbuckets(section: Section) -> DiscoveryResult:
+    yield from (
+        (item, {}) for item, data in section.items() if "vb_active_resident_items_ratio" in data
+    )
+
+
+def check_couchbase_buckets_vbuckets(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     resident_items_ratio = data.get("vb_active_resident_items_ratio")
     if resident_items_ratio is not None:
         yield check_levels(
@@ -25,7 +30,7 @@ def check_couchbase_buckets_vbuckets(_item, params, data):
             "resident_items_ratio",
             (None, None) + params.get("resident_items_ratio", (None, None)),
             infoname="Resident items ratio",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
     item_memory = data.get("vb_active_itm_memory")
@@ -49,8 +54,9 @@ def check_couchbase_buckets_vbuckets(_item, params, data):
         )
 
 
-@get_parsed_item_data
-def check_couchbase_buckets_vbuckets_replica(_item, params, data):
+def check_couchbase_buckets_vbuckets_replica(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     replica_num = data.get("vb_replica_num")
     if replica_num is not None:
         yield check_levels(
@@ -74,16 +80,16 @@ def check_couchbase_buckets_vbuckets_replica(_item, params, data):
 
 check_info["couchbase_buckets_vbuckets"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
-    check_function=check_couchbase_buckets_vbuckets,
     service_name="Couchbase Bucket %s active vBuckets",
+    discovery_function=discover_couchbase_buckets_vbuckets,
+    check_function=check_couchbase_buckets_vbuckets,
     check_ruleset_name="couchbase_vbuckets",
 )
 
 check_info["couchbase_buckets_vbuckets.replica"] = LegacyCheckDefinition(
-    parse_function=parse_couchbase_lines,
-    discovery_function=discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
-    check_function=check_couchbase_buckets_vbuckets_replica,
     service_name="Couchbase Bucket %s replica vBuckets",
+    sections=["couchbase_buckets_vbuckets"],
+    discovery_function=discover_couchbase_buckets_vbuckets,
+    check_function=check_couchbase_buckets_vbuckets_replica,
     check_ruleset_name="couchbase_vbuckets",
 )

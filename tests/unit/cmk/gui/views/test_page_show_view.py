@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.view import View
 from cmk.gui.views.page_show_view import _get_needed_regular_columns
+from cmk.gui.visuals.filter import Filter
 
 
 def test_get_needed_regular_columns(view: View) -> None:

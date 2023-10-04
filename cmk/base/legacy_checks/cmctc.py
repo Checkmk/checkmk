@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Mapping
-from typing import List, NamedTuple
+from typing import NamedTuple
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
@@ -38,7 +38,7 @@ Section = Mapping[str, Sensor]
 _TABLES = ["3", "4", "5", "6"]
 
 
-def parse_cmctc_temp(string_table: List[StringTable]) -> Section:
+def parse_cmctc_temp(string_table: list[StringTable]) -> Section:
     return {
         f"{table}.{item}": Sensor(
             status=int(status),
@@ -71,13 +71,8 @@ def check_cmctc_temp(item, params, section):
     )
 
 
-check_info["cmctc.temp"] = LegacyCheckDefinition(
+check_info["cmctc_temp"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    parse_function=parse_cmctc_temp,
-    discovery_function=inventory_cmctc_temp,
-    check_function=check_cmctc_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2606.4.2.3",
@@ -132,4 +127,9 @@ check_info["cmctc.temp"] = LegacyCheckDefinition(
             ],
         ),
     ],
+    parse_function=parse_cmctc_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_cmctc_temp,
+    check_function=check_cmctc_temp,
+    check_ruleset_name="temperature",
 )

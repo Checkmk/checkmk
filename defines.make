@@ -61,12 +61,12 @@ BRANCH_VERSION     := 2.3.0
 #endif
 
 SHELL              := /bin/bash
-CLANG_VERSION      := 14
+CLANG_VERSION      := 16
 
 PLANTUML_JAR_PATH  := $(REPO_PATH)/third_party/plantuml
 
 # In our CI we use this compiler, but we are not restricted to this exact version
-GCC_VERSION_MAJOR      := 12
+GCC_VERSION_MAJOR      := 13
 GCC_VERSION_MINOR      := 2
 GCC_VERSION_PATCHLEVEL := 0
 GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}
@@ -90,8 +90,8 @@ AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11
 # Needed for bootstrapping CI and development environments
 PIPENV_VERSION := 2023.2.18
 VIRTUALENV_VERSION := 20.20.0
-NODEJS_VERSION := 16
-NPM_VERSION := 8
+NODEJS_VERSION := 18
+NPM_VERSION := 9
 
 # PyPi Mirror Configuration
 # By default our internal Python mirror is used.

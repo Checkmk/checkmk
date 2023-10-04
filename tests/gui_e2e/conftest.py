@@ -6,7 +6,7 @@
 """some fixtures related to e2e tests and playwright"""
 
 import logging
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 from playwright.sync_api import BrowserContext, Page

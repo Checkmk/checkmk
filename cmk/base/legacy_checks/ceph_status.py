@@ -10,17 +10,20 @@ import time
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
-    get_average,
-    get_percent_human_readable,
-    get_rate,
     LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    render,
+)
 
 
-def parse_ceph_status(info):
-    joined_lines = [" ".join(line) for line in info]
+def parse_ceph_status(string_table):
+    joined_lines = [" ".join(line) for line in string_table]
     parsed = json.loads("".join(joined_lines))
 
     # ceph health' JSON format has changed in luminous
@@ -33,8 +36,14 @@ def parse_ceph_status(info):
 def ceph_check_epoch(id_, epoch, params):
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
     now = time.time()
-    epoch_rate = get_rate("%s.epoch.rate" % id_, now, epoch, allow_negative=True)
-    epoch_avg = get_average("%s.epoch.avg" % id_, now, epoch_rate, avg_interval_min)
+    value_store = get_value_store()
+    epoch_rate = get_rate(
+        get_value_store(),
+        f"{id_}.epoch.rate",
+        now,
+        epoch,
+    )
+    epoch_avg = get_average(value_store, f"{id_}.epoch.avg", now, epoch_rate, avg_interval_min)
 
     infoname = "Epoch rate (%s average)" % get_age_human_readable(avg_interval_min * 60)
     return check_levels(
@@ -98,9 +107,9 @@ def check_ceph_status(_no_item, params, parsed):
 
 check_info["ceph_status"] = LegacyCheckDefinition(
     parse_function=parse_ceph_status,
+    service_name="Ceph Status",
     discovery_function=inventory_ceph_status,
     check_function=check_ceph_status,
-    service_name="Ceph Status",
     check_default_parameters={
         "epoch": (1, 3, 30),
     },
@@ -139,7 +148,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
             # Return false if 'full' or 'nearfull' indicators are not in the datasets (relevant for newer ceph versions after 13.2.7)
             yield state, title
 
-    yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])
+    yield 0, "OSDs: {}, Remapped PGs: {}".format(num_osds, data["num_remapped_pgs"])
 
     for ds, title, param_key in [
         ("num_in_osds", "OSDs out", "num_out_osds"),
@@ -148,7 +157,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
         state = 0
         value = num_osds - data[ds]
         value_perc = 100 * float(value) / num_osds
-        infotext = "%s: %s, %s" % (title, value, get_percent_human_readable(value_perc))
+        infotext = f"{title}: {value}, {render.percent(value_perc)}"
         if params.get(param_key):
             warn, crit = params[param_key]
             if value_perc >= crit:
@@ -156,18 +165,19 @@ def check_ceph_status_osds(_no_item, params, parsed):
             elif value_perc >= warn:
                 state = 1
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % (
-                    get_percent_human_readable(warn),
-                    get_percent_human_readable(crit),
+                infotext += " (warn/crit at {}/{})".format(
+                    render.percent(warn),
+                    render.percent(crit),
                 )
 
         yield state, infotext
 
 
 check_info["ceph_status.osds"] = LegacyCheckDefinition(
+    service_name="Ceph OSDs",
+    sections=["ceph_status"],
     discovery_function=inventory_ceph_status_osds,
     check_function=check_ceph_status_osds,
-    service_name="Ceph OSDs",
     check_ruleset_name="ceph_osds",
     check_default_parameters={
         "epoch": (50, 100, 15),
@@ -234,16 +244,17 @@ def check_ceph_status_pgs(_no_item, params, parsed):
         for status in pgs_by_state["state_name"].split("+"):
             state, state_readable = map_pg_states.get(status, (3, "UNKNOWN[%s]" % status))
             states.append(state)
-            statetexts.append("%s%s" % (state_readable, state_markers[state]))
-        infotexts.append("Status '%s': %s" % ("+".join(statetexts), pgs_by_state["count"]))
+            statetexts.append(f"{state_readable}{state_markers[state]}")
+        infotexts.append("Status '{}': {}".format("+".join(statetexts), pgs_by_state["count"]))
 
-    return max(states), "%s, %s" % (pgs_info, ", ".join(infotexts))
+    return max(states), "{}, {}".format(pgs_info, ", ".join(infotexts))
 
 
 check_info["ceph_status.pgs"] = LegacyCheckDefinition(
+    service_name="Ceph PGs",
+    sections=["ceph_status"],
     discovery_function=inventory_ceph_status_pgs,
     check_function=check_ceph_status_pgs,
-    service_name="Ceph PGs",
 )
 
 # .
@@ -273,9 +284,10 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
 
 
 check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
+    service_name="Ceph MGRs",
+    sections=["ceph_status"],
     discovery_function=inventory_ceph_status_mgrs,
     check_function=check_ceph_status_mgrs,
-    service_name="Ceph MGRs",
     check_ruleset_name="ceph_mgrs",
     check_default_parameters={
         "epoch": (1, 2, 5),

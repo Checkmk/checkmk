@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -147,18 +147,18 @@ def check_sophos(item: str, _no_params: object, info: list[list[str]]) -> tuple[
         if item_name == item:
             state, state_readable = sophos_map_state[item_state]
             extra_info = item_info.get(item_state, "")
-            infotext = "Status: %s%s" % (state_readable, extra_info)
+            infotext = f"Status: {state_readable}{extra_info}"
             return state, infotext
     return None
 
 
 check_info["sophos"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2604"),
-    discovery_function=inventory_sophos,
-    check_function=check_sophos,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2604",
         oids=[OIDEnd(), "3"],
     ),
+    service_name="%s",
+    discovery_function=inventory_sophos,
+    check_function=check_sophos,
 )

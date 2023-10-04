@@ -4,7 +4,7 @@
 use log::{error, info};
 
 fn main() {
-    let (cli, paths) = match cmk_agent_ctl::init() {
+    let (cli, paths) = match cmk_agent_ctl::init(std::env::args_os()) {
         Ok(cli_and_paths) => cli_and_paths,
         Err(error) => {
             return exit_with_error(error);

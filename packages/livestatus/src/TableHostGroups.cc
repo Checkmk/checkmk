@@ -4,8 +4,8 @@
 // source code package.
 #include "livestatus/TableHostGroups.h"
 
+#include <algorithm>
 #include <memory>
-#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "livestatus/Column.h"
@@ -15,10 +15,12 @@
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/LogEntry.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 #include "livestatus/User.h"
+
+enum class HostState;
+
 TableHostGroups::TableHostGroups(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }

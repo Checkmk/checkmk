@@ -2,18 +2,17 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Simple download page for the builtin agents and plugins"""
+"""Simple download page for the built-in agents and plugins"""
 
 import abc
 import fnmatch
 import os
-from collections.abc import Collection, Iterator
+from collections.abc import Callable, Collection, Iterator
 
 import cmk.utils.paths
 import cmk.utils.render
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -24,13 +23,21 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils import agent
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
+from cmk.gui.watolib.mode import ModeRegistry, WatoMode
+
+
+def register(mode_registry: ModeRegistry) -> None:
+    mode_registry.register(ModeDownloadAgentsOther)
+    mode_registry.register(ModeDownloadAgentsWindows)
+    mode_registry.register(ModeDownloadAgentsLinux)
 
 
 class ABCModeDownloadAgents(WatoMode):
+    related_page_menu_hook: Callable[[], Iterator[PageMenuEntry]] = lambda: iter([])
+
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return ["download_agents"]
@@ -53,12 +60,7 @@ class ABCModeDownloadAgents(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
-        if bakery.has_agent_bakery():
-            yield PageMenuEntry(
-                title=_("Windows, Linux, Solaris, AIX"),
-                icon_name="agents",
-                item=make_simple_link(folder_preserving_link([("mode", "agents")])),
-            )
+        yield from ABCModeDownloadAgents.related_page_menu_hook()
 
         if self.name() != "download_agents_windows":
             yield PageMenuEntry(
@@ -180,7 +182,6 @@ class ABCModeDownloadAgents(WatoMode):
         forms.end()
 
 
-@mode_registry.register
 class ModeDownloadAgentsOther(ABCModeDownloadAgents):
     @classmethod
     def name(cls) -> str:
@@ -219,7 +220,6 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return exclude
 
 
-@mode_registry.register
 class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
     @classmethod
     def name(cls) -> str:
@@ -235,7 +235,6 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
         return cmk.utils.paths.agents_dir + "/windows"
 
 
-@mode_registry.register
 class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
     @classmethod
     def name(cls) -> str:

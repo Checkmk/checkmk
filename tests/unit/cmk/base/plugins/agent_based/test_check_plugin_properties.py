@@ -6,17 +6,14 @@
 from collections.abc import Generator, Sequence
 from itertools import chain
 
-from pytest import MonkeyPatch
-
-from tests.testlib.base import Scenario
-
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import HostName, ParsedSectionName
+from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.plugin_contexts import current_host
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.plugin_contexts import current_host
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
 
 
@@ -41,9 +38,7 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(
-    monkeypatch: MonkeyPatch, fix_register: FixRegister
-) -> None:
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(fix_register: FixRegister) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
     unless "handle_empty_info" has been set.
@@ -61,8 +56,6 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(
     just add an exception below. If maintaining this test becvomes too tedious,
     we can probably just remove it.
     """
-    Scenario().apply(monkeypatch)  # host_extra_conf needs the ruleset_matcher
-
     plugins_expected_to_discover_upon_empty = {
         "ewon",
         "printer_alerts",
@@ -89,7 +82,7 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(
                     else [plugin.discovery_default_parameters]
                 )
 
-            with current_host(HostName("testhost")):  # host_extra_conf needs a host_name()
+            with current_host(HostName("testhost")):  # get_host_values needs a host_name()
                 if list(plugin.discovery_function(**kwargs)):
                     plugins_discovering_upon_empty.add(str(plugin.name))
 
@@ -104,9 +97,7 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     trivial section without a parse_function is sufficient for your plugin you have to add it
     to the known exceptions below.
     """
-    known_exceptions = {
-        ParsedSectionName("statgrab_net"),
-    }
+    known_exceptions: set[ParsedSectionName] = set()  # currently no exceptions!
 
     # fix_register does not include trivial sections created by the trivial_section_factory
     registered_sections = {

@@ -29,7 +29,10 @@ def test_migrate_services():
 def test_migrate_services_already_migrated():
     original_data = {"services": ["ad_connect", "Microsoft.Compute/virtualMachines"]}
     migrated_data = _migrate_services(copy.deepcopy(original_data))
-    assert original_data == migrated_data
+    assert migrated_data == {
+        "services": ["ad_connect", "Microsoft.Compute/virtualMachines"],
+        "authority": "global",
+    }
 
 
 def test_all_services_present_in_gui():

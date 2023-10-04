@@ -6,14 +6,15 @@
 
 # mypy: disable-error-code="list-item"
 
-from typing import Any, Mapping, Optional, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import special_agent_info
 
 
 def agent_ddn_s2a_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: str | None
 ) -> Sequence[str]:
     return [
         ipaddress or hostname,

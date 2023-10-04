@@ -77,7 +77,7 @@ def check_hpux_fchba(item, _no_params, info):
 
 
 check_info["hpux_fchba"] = LegacyCheckDefinition(
-    check_function=check_hpux_fchba,
-    discovery_function=inventory_hpux_fchba,
     service_name="FC HBA %s",
+    discovery_function=inventory_hpux_fchba,
+    check_function=check_hpux_fchba,
 )

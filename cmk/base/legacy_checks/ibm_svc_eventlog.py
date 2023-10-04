@@ -54,7 +54,7 @@ def check_ibm_svc_eventlog(item, _no_params, info):
 
 
 check_info["ibm_svc_eventlog"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_eventlog,
-    discovery_function=inventory_ibm_svc_eventlog,
     service_name="Eventlog",
+    discovery_function=inventory_ibm_svc_eventlog,
+    check_function=check_ibm_svc_eventlog,
 )

@@ -17,8 +17,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, str]
 
 
-def parse_hyperv_vmstatus(info):
-    return {line[0]: " ".join(line[1:]) for line in info}
+def parse_hyperv_vmstatus(string_table):
+    return {line[0]: " ".join(line[1:]) for line in string_table}
 
 
 def discover_hyperv_vmstatus(section: Section) -> Iterable[tuple[None, dict]]:
@@ -37,7 +37,7 @@ def check_hyperv_vmstatus(_no_item, _no_params, parsed):
 
 check_info["hyperv_vmstatus"] = LegacyCheckDefinition(
     parse_function=parse_hyperv_vmstatus,
-    check_function=check_hyperv_vmstatus,
-    discovery_function=discover_hyperv_vmstatus,
     service_name="HyperV Status",
+    discovery_function=discover_hyperv_vmstatus,
+    check_function=check_hyperv_vmstatus,
 )

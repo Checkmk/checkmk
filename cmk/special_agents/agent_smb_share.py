@@ -166,7 +166,7 @@ def get_all_shared_files(
 
 def write_section(all_files: Generator[tuple[str, set[File]], None, None]) -> None:
     with SectionWriter("fileinfo", separator="|") as writer:
-        now = datetime.utcnow().replace(tzinfo=timezone.utc)
+        now = datetime.now(tz=timezone.utc)
         writer.append(int(datetime.timestamp(now)))
         writer.append("[[[header]]]")
         writer.append("name|status|size|time")

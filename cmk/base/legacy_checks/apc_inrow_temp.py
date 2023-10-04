@@ -19,11 +19,12 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.26.0 154 --> PowerNet-MIB::airIRRCUnitStatusLeavingFluidTemperatureMetric.0
 
 
-def parse_apc_inrow_temp(info):
+def parse_apc_inrow_temp(string_table):
     parsed = {}
-    if info:
+    if string_table:
         for what, what_item in zip(
-            info[0], ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"]
+            string_table[0],
+            ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"],
         ):
             if what not in ["", "-1"]:
                 parsed.setdefault(what_item, float(what) / 10)
@@ -44,14 +45,14 @@ def check_apc_inrow_temp(item, params, parsed):
 
 check_info["apc_inrow_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_inrow_temp,
-    discovery_function=inventory_apc_inrow_temp,
-    check_function=check_apc_inrow_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["7", "9", "11", "24", "26"],
     ),
+    parse_function=parse_apc_inrow_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_apc_inrow_temp,
+    check_function=check_apc_inrow_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

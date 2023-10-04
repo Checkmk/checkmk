@@ -7,8 +7,9 @@
 # mypy: disable-error-code="arg-type"
 
 import cmk.base.plugins.agent_based.kernel
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
@@ -48,15 +49,14 @@ def check_kernel(item, params, parsed):
         return 3, "item '%s' not unique (found %d times)" % (item, len(item_values))
 
     counter, value = item_values[0]
-    per_sec = get_rate(None, timestamp, value)
+    per_sec = get_rate(get_value_store(), "counter", timestamp, value)
     return check_levels(per_sec, counter, params, unit="/s", boundaries=(0, None))
 
 
 # This check is deprecated. Please have a look at werk #8969.
 check_info["kernel"] = LegacyCheckDefinition(
-    # section is already migrated!
-    check_function=check_kernel,
     service_name="Kernel %s",
+    check_function=check_kernel,
     check_ruleset_name="vm_counter",
 )
 
@@ -96,7 +96,7 @@ def check_kernel_performance(_no_item, params, parsed):
             yield 3, "item '%s' not unique (found %d times)" % (item_name, len(item_values))
 
         counter, value = item_values[0]
-        rate = get_rate(counter, timestamp, value)
+        rate = get_rate(get_value_store(), counter, timestamp, value)
 
         if counter in ["pswpin", "pswpout"]:
             levels = params.get(
@@ -116,8 +116,9 @@ def check_kernel_performance(_no_item, params, parsed):
 
 
 check_info["kernel.performance"] = LegacyCheckDefinition(
+    service_name="Kernel Performance",
+    sections=["kernel"],
     discovery_function=inventory_kernel_performance,
     check_function=check_kernel_performance,
-    service_name="Kernel Performance",
     check_ruleset_name="kernel_performance",
 )

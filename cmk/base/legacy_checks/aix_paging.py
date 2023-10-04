@@ -8,7 +8,7 @@
 
 import collections
 
-from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 
@@ -23,18 +23,18 @@ AIXPaging = collections.namedtuple(  # pylint: disable=collections-namedtuple-ca
 )
 
 
-def parse_aix_paging(info):
+def parse_aix_paging(string_table):
     map_type = {
         "lv": "logical volume",
         "nfs": "NFS",
     }
 
     parsed = {}
-    if len(info) <= 1:
+    if len(string_table) <= 1:
         return parsed
 
     # First line is the header
-    for line in info[1:]:
+    for line in string_table[1:]:
         try:
             # Always given in MB, eg. 1234MB
             size = int(line[3][:-2])
@@ -46,24 +46,29 @@ def parse_aix_paging(info):
             continue
         paging_type = map_type.get(line[7], "unknown[%s]" % line[7])
         parsed.setdefault(
-            "%s/%s" % (line[0], line[1]),
+            f"{line[0]}/{line[1]}",
             AIXPaging(line[2], size, usage, line[5], line[6], paging_type),
         )
     return parsed
 
 
-@get_parsed_item_data
-def check_aix_paging(item, params, data):
+def check_aix_paging(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     avail_mb = data.size_mb * (1 - data.usage_perc / 100.0)
     yield df_check_filesystem_single(item, data.size_mb, avail_mb, 0, None, None, params)
-    yield 0, "Active: %s, Auto: %s, Type: %s" % (data.active, data.auto, data.type)
+    yield 0, f"Active: {data.active}, Auto: {data.auto}, Type: {data.type}"
+
+
+def discover_aix_paging(section):
+    yield from ((item, {}) for item in section)
 
 
 check_info["aix_paging"] = LegacyCheckDefinition(
     parse_function=parse_aix_paging,
-    discovery_function=discover(),
-    check_function=check_aix_paging,
     service_name="Page Space %s",
+    discovery_function=discover_aix_paging,
+    check_function=check_aix_paging,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

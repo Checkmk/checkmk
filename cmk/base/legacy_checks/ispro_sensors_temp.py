@@ -42,12 +42,12 @@ def check_ispro_sensors_temp(item, params, info):
 
 check_info["ispro_sensors_temp"] = LegacyCheckDefinition(
     detect=DETECT_ISPRO_SENSORS,
-    discovery_function=inventory_ispro_sensors_temp,
-    check_function=check_ispro_sensors_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3",
         oids=["1.1.1.2", "1.1.1.3", "1.1.1.4", "2.2.1.3", "2.2.1.4", "2.2.1.5", "2.2.1.6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_ispro_sensors_temp,
+    check_function=check_ispro_sensors_temp,
     check_ruleset_name="temperature",
 )

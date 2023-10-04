@@ -36,11 +36,11 @@ from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
 # }
 
 
-def parse_kentix_amp_sensors(info):
+def parse_kentix_amp_sensors(string_table):
     info_flattened = []
 
-    for i in range(0, len(info[0]), 10):
-        info_flattened.append([a[0] for a in info[0][i : i + 10]])
+    for i in range(0, len(string_table[0]), 10):
+        info_flattened.append([a[0] for a in string_table[0][i : i + 10]])
 
     parsed = {}
     for line in info_flattened:
@@ -80,17 +80,17 @@ def check_kentix_amp_sensors_temperature(item, params, parsed):
 
 check_info["kentix_amp_sensors"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_amp_sensors,
-    discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
-    check_function=check_kentix_amp_sensors_temperature,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.1",
             oids=["2"],
         )
     ],
+    parse_function=parse_kentix_amp_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
+    check_function=check_kentix_amp_sensors_temperature,
+    check_ruleset_name="temperature",
 )
 
 # .
@@ -111,9 +111,10 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
+    sections=["kentix_amp_sensors"],
     discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
     check_function=check_kentix_amp_sensors_humidity,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )
 
@@ -149,7 +150,7 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
         infotext = "%.1f%%" % sensor_smoke
 
         if status > 0:
-            infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+            infotext += f" (warn/crit at {warn:.1f}%/{crit:.1f}%)"
 
         perfdata = [("smoke_perc", sensor_smoke, warn, crit, 0, 100)]
 
@@ -157,11 +158,12 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.smoke"] = LegacyCheckDefinition(
+    service_name="Smoke Detector %s",
+    sections=["kentix_amp_sensors"],
     discovery_function=lambda parsed: inventory_kentix_amp_sensors(
         parsed, kentix_amp_sensors_smoke_default_levels
     ),
     check_function=check_kentix_amp_sensors_smoke,
-    service_name="Smoke Detector %s",
     check_ruleset_name="smoke",
 )
 
@@ -185,9 +187,10 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.leakage"] = LegacyCheckDefinition(
+    service_name="Leakage %s",
+    sections=["kentix_amp_sensors"],
     discovery_function=lambda i: inventory_kentix_amp_sensors(i, None),
     check_function=check_kentix_amp_sensors_leakage,
-    service_name="Leakage %s",
 )
 
 # .

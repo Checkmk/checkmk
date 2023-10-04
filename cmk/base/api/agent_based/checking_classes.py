@@ -8,25 +8,42 @@
 from __future__ import annotations
 
 import enum
+import sys
 from collections.abc import Callable, Iterable, Sequence
-from typing import NamedTuple, Optional, overload, Self, Union
+from typing import NamedTuple, overload, Self
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.type_defs import EvalableFloat, MetricTuple, ParsedSectionName, RuleSetName
+from cmk.utils.check_utils import ParametersTypeAlias
+from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.checkresults import MetricTuple
+from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
+from cmk.base.api.agent_based.type_defs import RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
-_OptionalPair = Optional[tuple[Optional[float], Optional[float]]]
+_OptionalPair = tuple[float | None, float | None] | None
 
 
 class _KV(NamedTuple):
     name: str
     value: str
+
+
+class EvalableFloat(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+
+    def __str__(self) -> str:
+        return super().__repr__()
+
+    def __repr__(self) -> str:
+        if self > sys.float_info.max:
+            return "1e%d" % (sys.float_info.max_10_exp + 1)
+        if self < -1 * sys.float_info.max:
+            return "-1e%d" % (sys.float_info.max_10_exp + 1)
+        return super().__repr__()
 
 
 class ServiceLabel(_KV):
@@ -56,7 +73,7 @@ class Service(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_ServiceTuple",
         [
-            ("item", Optional[str]),
+            ("item", str | None),
             ("parameters", ParametersTypeAlias),
             ("labels", Sequence[ServiceLabel]),
         ],
@@ -84,7 +101,7 @@ class Service(
         item: str | None = None,
         parameters: ParametersTypeAlias | None = None,
         labels: Sequence[ServiceLabel] | None = None,
-    ) -> "Service":
+    ) -> Service:
         return super().__new__(
             cls,
             item=cls._parse_item(item),
@@ -128,14 +145,6 @@ class Service(
         )
         return f"{self.__class__.__name__}({args})"
 
-    def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
-        return AutocheckEntry(
-            check_plugin_name=name,
-            item=self.item,
-            parameters=unwrap_parameters(self.parameters),
-            service_labels={label.name: label.value for label in self.labels},
-        )
-
 
 @enum.unique
 class State(enum.Enum):
@@ -151,7 +160,7 @@ class State(enum.Enum):
         return int(self.value)
 
     @classmethod
-    def best(cls, *args: Union["State", int]) -> "State":
+    def best(cls, *args: State | int) -> State:
         """Returns the best of all passed states
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -187,7 +196,7 @@ class State(enum.Enum):
         return best
 
     @classmethod
-    def worst(cls, *args: Union["State", int]) -> "State":
+    def worst(cls, *args: State | int) -> State:
         """Returns the worst of all passed states.
 
         You can pass an arbitrary number of arguments, and the return value will be
@@ -218,8 +227,8 @@ class Metric(
         [
             ("name", str),
             ("value", EvalableFloat),
-            ("levels", tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
-            ("boundaries", tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
+            ("levels", tuple[EvalableFloat | None, EvalableFloat | None]),
+            ("boundaries", tuple[EvalableFloat | None, EvalableFloat | None]),
         ],
     )
 ):
@@ -247,7 +256,7 @@ class Metric(
         *,
         levels: _OptionalPair = None,
         boundaries: _OptionalPair = None,
-    ) -> "Metric":
+    ) -> Metric:
         cls._validate_name(name)
 
         if not isinstance(value, (int, float)):
@@ -343,9 +352,9 @@ class Result(ResultTuple):
         >>> # run function to make sure we have a working example
         >>> _ = list(my_check_function())
 
-    The ``notice`` keyword has the special property that it will only be displayed if the
-    corresponding state is not OK. Otherwise we assume it is sufficient if the information
-    is available in the details view:
+    The ``notice`` keyword has the special property that it will only be displayed in the summary
+    if the state passed to _this_ ``Result`` instance is not OK.
+    Otherwise we assume it is sufficient to show the information in the details view:
 
         >>> def my_check_function() -> None:
         ...     count = 23
@@ -370,7 +379,7 @@ class Result(ResultTuple):
         state: State,
         summary: str,
         details: str | None = None,
-    ) -> "Result":
+    ) -> Result:
         pass
 
     @overload
@@ -380,13 +389,13 @@ class Result(ResultTuple):
         state: State,
         notice: str,
         details: str | None = None,
-    ) -> "Result":
+    ) -> Result:
         pass
 
     def __new__(  # type: ignore[no-untyped-def]
         cls,
         **kwargs,
-    ) -> "Result":
+    ) -> Result:
         state, summary, details = _create_result_fields(**kwargs)
         return super().__new__(
             cls,
@@ -491,7 +500,7 @@ class IgnoreResults:
         return isinstance(other, IgnoreResults) and self._value == other._value
 
 
-CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
+CheckResult = Iterable[IgnoreResults | Metric | Result]
 CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]

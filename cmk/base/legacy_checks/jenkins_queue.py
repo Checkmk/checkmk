@@ -30,10 +30,10 @@ MAP_QUEUE_STATES = {
 }
 
 
-def parse_jenkins_queue(info):
+def parse_jenkins_queue(string_table):
     parsed = []
 
-    for line in info:
+    for line in string_table:
         parsed.extend(json.loads(line[0]))
 
     return parsed
@@ -99,18 +99,18 @@ def check_jenkins_queue(_no_item, params, parsed):
             if task_pending:
                 pending_tasks += 1
             pending_state = params["pending"]
-            long_output_str += ", Pending: %s%s" % (
+            long_output_str += ", Pending: {}{}".format(
                 MAP_QUEUE_STATES[task_pending],
                 state_markers[pending_state],
             )
 
-        long_output_str += ", In queue since: %s (%s)" % (
+        long_output_str += ", In queue since: {} ({})".format(
             get_age_human_readable(since),
             get_timestamp_human_readable(timestamp_in_queue),
         )
 
         if len_state:
-            long_output_str += " (warn/crit at %s/%s)%s" % (
+            long_output_str += " (warn/crit at {}/{}){}".format(
                 get_age_human_readable(levels[0]),
                 get_age_human_readable(levels[1]),
                 state_markers[len_state],
@@ -148,9 +148,9 @@ def check_jenkins_queue(_no_item, params, parsed):
 
 check_info["jenkins_queue"] = LegacyCheckDefinition(
     parse_function=parse_jenkins_queue,
-    check_function=check_jenkins_queue,
-    discovery_function=inventory_jenkins_queue,
     service_name="Jenkins Queue",
+    discovery_function=inventory_jenkins_queue,
+    check_function=check_jenkins_queue,
     check_ruleset_name="jenkins_queue",
     check_default_parameters={
         "in_queue_since": (3600, 7200),

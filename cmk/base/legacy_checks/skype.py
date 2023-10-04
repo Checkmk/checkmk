@@ -15,10 +15,10 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_average_timer,
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
-    WMISection,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.wmi import WMISection
 
 
 def parse_skype(string_table: StringTable) -> WMISection:
@@ -114,6 +114,7 @@ def check_skype(_no_item, params, parsed):
 
 check_info["skype"] = LegacyCheckDefinition(
     parse_function=parse_skype,
+    service_name="Skype Web Components",
     discovery_function=lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
@@ -125,9 +126,8 @@ check_info["skype"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype,
-    service_name="Skype Web Components",
     check_ruleset_name="skype",
-    # these defaults were specified by customer
+    # these defaults were specified by customer,
     check_default_parameters={
         "failed_search_requests": {"upper": (1.0, 2.0)},
         "failed_locations_requests": {"upper": (1.0, 2.0)},
@@ -156,7 +156,7 @@ def check_skype_mcu(_no_item, _no_params, parsed):
             "3": (2, "Unavailable"),
         }.get(value, (2, "unknown (%s)" % value))
 
-        return state[0], "%s: %s" % (label, state[1])
+        return state[0], f"{label}: {state[1]}"
 
     yield health(
         parsed["LS:DATAMCU - MCU Health And Performance"].get(0, "DATAMCU - MCU Health State"),
@@ -177,6 +177,8 @@ def check_skype_mcu(_no_item, _no_params, parsed):
 
 
 check_info["skype.mcu"] = LegacyCheckDefinition(
+    service_name="Skype MCU Health",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
@@ -187,7 +189,6 @@ check_info["skype.mcu"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype_mcu,
-    service_name="Skype MCU Health",
 )
 
 
@@ -225,6 +226,8 @@ def check_skype_conferencing(_no_item, params, parsed):
 
 
 check_info["skype.conferencing"] = LegacyCheckDefinition(
+    service_name="Skype Conferencing",
+    sections=["skype"],
     discovery_function=lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
@@ -233,7 +236,6 @@ check_info["skype.conferencing"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype_conferencing,
-    service_name="Skype Conferencing",
     check_ruleset_name="skype_conferencing",
     check_default_parameters={
         "incomplete_calls": {"upper": (20, 40)},
@@ -392,9 +394,10 @@ def check_skype_sip_stack(_no_item, params, parsed):
 
 
 check_info["skype.sip_stack"] = LegacyCheckDefinition(
+    service_name="Skype SIP Stack",
+    sections=["skype"],
     discovery_function=discover_skype_sip_stack,
     check_function=check_skype_sip_stack,
-    service_name="Skype SIP Stack",
     check_ruleset_name="skype_sip",
     check_default_parameters={
         "message_processing_time": {"upper": (1.0, 2.0)},  # for edge servers: < 3
@@ -458,6 +461,8 @@ def check_skype_mediation_server(_no_item, params, parsed):
 
 
 check_info["skype.mediation_server"] = LegacyCheckDefinition(
+    service_name="Skype Mediation Server",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
@@ -468,7 +473,6 @@ check_info["skype.mediation_server"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype_mediation_server,
-    service_name="Skype Mediation Server",
     check_ruleset_name="skype_mediation_server",
     check_default_parameters={
         "load_call_failure_index": {"upper": (10, 20)},
@@ -492,11 +496,12 @@ def check_skype_edge_auth(_no_item, params, parsed):
 
 
 check_info["skype.edge_auth"] = LegacyCheckDefinition(
+    service_name="Skype Edge Authentification",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:A/V Auth - Requests"]
     ),
     check_function=check_skype_edge_auth,
-    service_name="Skype Edge Authentification",
     check_ruleset_name="skype_edgeauth",
     check_default_parameters={
         "bad_requests": {"upper": (20, 40)},
@@ -567,11 +572,12 @@ def check_skype_av_edge(item, params, parsed):
 
 
 check_info["skype.edge"] = LegacyCheckDefinition(
+    service_name="Skype AV Edge %s",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"]
     ),
     check_function=check_skype_av_edge,
-    service_name="Skype AV Edge %s",
     check_ruleset_name="skype_edge",
     check_default_parameters={
         "authentication_failures": {"upper": (20, 40)},
@@ -602,11 +608,12 @@ def check_skype_data_proxy(item, params, parsed):
 
 
 check_info["skype.data_proxy"] = LegacyCheckDefinition(
+    service_name="Skype Data Proxy %s",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:DATAPROXY - Server Connections"]
     ),
     check_function=check_skype_data_proxy,
-    service_name="Skype Data Proxy %s",
     check_ruleset_name="skype_proxy",
     check_default_parameters={
         "throttled_connections": {"upper": (1, 2)},
@@ -637,11 +644,12 @@ def check_skype_xmpp_proxy(_no_item, params, parsed):
 
 
 check_info["skype.xmpp_proxy"] = LegacyCheckDefinition(
+    service_name="Skype XMPP Proxy",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:XmppFederationProxy - Streams"]
     ),
     check_function=check_skype_xmpp_proxy,
-    service_name="Skype XMPP Proxy",
     check_ruleset_name="skype_xmpp",
     check_default_parameters={
         "failed_outbound_streams": {"upper": (0.01, 0.02)},
@@ -668,9 +676,7 @@ def check_skype_mobile(_no_item, params, parsed):
             value = int(ucwa_table.get(instance, "UCWA - Active Session Count"))
         except KeyError:
             continue
-        yield 0, "%s: %s active" % (name, value), [
-            ("ucwa_active_sessions_%s" % name.lower(), value)
-        ]
+        yield 0, f"{name}: {value} active", [("ucwa_active_sessions_%s" % name.lower(), value)]
 
     yield from wmi_yield_raw_counter(
         parsed.get("LS:WEB - Throttling and Authentication"),
@@ -683,6 +689,8 @@ def check_skype_mobile(_no_item, params, parsed):
 
 
 check_info["skype.mobile"] = LegacyCheckDefinition(
+    service_name="Skype Mobile Sessions",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
@@ -691,7 +699,6 @@ check_info["skype.mobile"] = LegacyCheckDefinition(
         ],
     ),
     check_function=check_skype_mobile,
-    service_name="Skype Mobile Sessions",
     check_ruleset_name="skype_mobile",
     check_default_parameters={"requests_processing": {"upper": (10000, 20000)}},
 )

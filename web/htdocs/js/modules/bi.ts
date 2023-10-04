@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as ajax from "ajax";
 import * as d3 from "d3";
@@ -158,7 +160,12 @@ export function update_argument_hints() {
             // @ts-ignore
             return this.closest("tbody");
         });
+        const span = node.select(function () {
+            // @ts-ignore
+            return this.closest("span");
+        });
         const required_inputs = rule_arguments.length;
+        if (span.style("display") == "none") return;
 
         // Create nodes
         let newNodes = rule_body
@@ -333,13 +340,20 @@ interface BIRulePreviewJsonData {
 }
 
 export class BIRulePreview extends BIPreview {
+    _span_title: any = null;
+    _span_arguments: any = null;
     _check_update() {
+        if (this._span_title == null)
+            this._span_title = d3.selectAll("span.title");
+        if (this._span_arguments == null)
+            this._span_arguments = d3.selectAll("span.arguments");
+
         if (this._preview_active) {
-            d3.selectAll("span.title").style("display", null);
-            d3.selectAll("span.arguments").style("display", null);
+            this._span_title.style("display", null);
+            this._span_arguments.style("display", null);
         } else {
-            d3.selectAll("span.title").style("display", "none");
-            d3.selectAll("span.arguments").style("display", "none");
+            this._span_title.style("display", "none");
+            this._span_arguments.style("display", "none");
         }
 
         if (!this._preview_active) {
@@ -354,7 +368,7 @@ export class BIRulePreview extends BIPreview {
         this._trigger_update_if_required(params);
     }
 
-    _get_update_url() {
+    override _get_update_url() {
         return encodeURI("ajax_bi_rule_preview.py");
     }
 
@@ -369,7 +383,9 @@ export class BIRulePreview extends BIPreview {
         return example_arguments;
     }
 
-    _update_previews(json_data: CMKAjaxReponse<BIRulePreviewJsonData>) {
+    override _update_previews(
+        json_data: CMKAjaxReponse<BIRulePreviewJsonData>
+    ) {
         this._update_simulated_parameters(json_data.result.params);
         const nodes = d3
             .selectAll("#rule_p_nodes_container > tr")
@@ -447,7 +463,7 @@ export class BIAggregationPreview extends BIPreview {
         this._trigger_update_if_required(params);
     }
 
-    _get_update_url() {
+    override _get_update_url() {
         return encodeURI("ajax_bi_aggregation_preview.py");
     }
 
@@ -464,7 +480,9 @@ export class BIAggregationPreview extends BIPreview {
         return node_preview_div;
     }
 
-    _update_previews(json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>) {
+    override _update_previews(
+        json_data: CMKAjaxReponse<BIAggregationPreviewJsonData>
+    ) {
         const node_preview_div = this._get_preview_div(
             d3.select("div#aggr_d_node")
         );

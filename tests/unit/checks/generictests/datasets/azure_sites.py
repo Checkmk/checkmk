@@ -8,6 +8,16 @@
 
 checkname = "azure_sites"
 
+
+mock_item_state = {
+    "": {
+        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazspo-solutions-rg/providers/Microsoft.Web/sites/spo-solutions-fa1.total_Http5xx": (1572247078.0, 0.0),
+        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_CpuTime": (1572247078.0, 0.0),
+        "/subscriptions/e95edb66-81e8-4acd-9ae8-68623f1bf7e6/resourceGroups/cldazpaaswebapp06-rg/providers/Microsoft.Web/sites/zcldazwamonseas-as.total_Http5xx": (1572247078.0, 0.0),
+    }
+}
+
+
 info = [
     ["Resource"],
     [

@@ -9,15 +9,10 @@
 import time
 
 import cmk.base.plugins.agent_based.utils.memory as memory
-from cmk.base.check_api import (
-    check_levels,
-    get_average,
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, render
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -139,9 +134,10 @@ def camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = LegacyCheckDefinition(
+    service_name="Memory",
+    sections=["mem"],
     discovery_function=inventory_mem_linux,
     check_function=check_mem_linux,
-    service_name="Memory",
     check_ruleset_name="memory_linux",
     check_default_parameters={
         "levels_virtual": ("perc_used", (80.0, 90.0)),
@@ -233,11 +229,11 @@ def _do_averaging(
 ):
     used_avg = (
         get_average(
+            get_value_store(),
             "mem.win.%s" % paramname,
             timestamp,
             used / 1024.0,  # use kB for compatibility
             average_horizon_min,
-            initialize_zero=False,
         )
         * 1024
     )
@@ -246,7 +242,7 @@ def _do_averaging(
         "%d min average: %s (%s)"
         % (
             average_horizon_min,
-            get_percent_human_readable(100.0 * used_avg / total),
+            render.percent(100.0 * used_avg / total),
             get_bytes_human_readable(used_avg),
         ),
     )
@@ -349,9 +345,10 @@ def check_mem_windows(_no_item, params, section):
 
 
 check_info["mem.win"] = LegacyCheckDefinition(
-    check_function=check_mem_windows,
-    discovery_function=inventory_mem_win,
     service_name="Memory",
+    sections=["mem"],
+    discovery_function=inventory_mem_win,
+    check_function=check_mem_windows,
     check_ruleset_name="memory_pagefile_win",
     check_default_parameters={
         "memory": (80.0, 90.0),
@@ -418,7 +415,7 @@ def check_mem_vmalloc(_item, params, section):
             c_mb = float(loop_crit)
 
         loop_state = 0
-        infotxt = "%s %.1f MB" % (what, loop_val)
+        infotxt = f"{what} {loop_val:.1f} MB"
         if (loop_val >= c_mb) != neg:
             loop_state = 2
             infotxt += " (critical at %.1f MB!!)" % c_mb
@@ -432,7 +429,8 @@ def check_mem_vmalloc(_item, params, section):
 
 
 check_info["mem.vmalloc"] = LegacyCheckDefinition(
+    service_name="Vmalloc address space",
+    sections=["mem"],
     discovery_function=inventory_mem_vmalloc,
     check_function=check_mem_vmalloc,
-    service_name="Vmalloc address space",
 )

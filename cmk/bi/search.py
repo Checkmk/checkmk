@@ -11,8 +11,8 @@ from typing import Any
 from marshmallow import fields, post_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.type_defs import HostName
 
 from cmk.bi.lib import (
     ABCBISearch,
@@ -269,9 +269,7 @@ class ReferToSchema(OneOfSchema):
     }
 
     def get_obj_type(self, obj: str | dict[str, Any]) -> str:
-        if isinstance(obj, str):
-            return obj
-        return obj["type"]
+        return obj if isinstance(obj, str) else obj["type"]
 
 
 class BIHostSearchSchema(Schema):
@@ -288,10 +286,8 @@ class BIHostSearchSchema(Schema):
 
     @post_dump
     def post_dump(self, data: str | dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        if isinstance(data, str):
-            # Fixes legacy schema config: {"refer_to": "host"}
-            return {"type": data}
-        return data
+        # Fixes legacy schema config: {"refer_to": "host"}
+        return {"type": data} if isinstance(data, str) else data
 
 
 #   .--Service-------------------------------------------------------------.
@@ -386,7 +382,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
             for idx, value in enumerate(argument["values"]):
                 if len(results) <= idx:
                     results.append({})
-                results[idx]["$%s$" % key] = value
+                results[idx][f"${key}$"] = value
 
         return results
 
@@ -417,6 +413,4 @@ class BISearchSchema(OneOfSchema):
     type_schemas = {k: v.schema() for k, v in bi_search_registry.items()}
 
     def get_obj_type(self, obj: ABCBISearch | dict) -> str:
-        if isinstance(obj, dict):
-            return obj["type"]
-        return obj.kind()
+        return obj["type"] if isinstance(obj, dict) else obj.kind()

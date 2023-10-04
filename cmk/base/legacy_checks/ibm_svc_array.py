@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -18,7 +18,7 @@ from cmk.base.config import check_info
 # 30:SSD_mdisk1:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
 
 
-def parse_ibm_svc_array(info):
+def parse_ibm_svc_array(string_table):
     dflt_header = [
         "mdisk_id",
         "mdisk_name",
@@ -34,7 +34,7 @@ def parse_ibm_svc_array(info):
         "encrypt",
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:
@@ -60,14 +60,18 @@ def check_ibm_svc_array(item, _no_params, parsed):
         status = 1
 
     # add information
-    message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
+    message += f", RAID Level: {raid_level}, Tier: {tier}"
 
     yield status, message
 
 
+def discover_ibm_svc_array(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ibm_svc_array"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_array,
-    check_function=check_ibm_svc_array,
-    discovery_function=discover(),
     service_name="RAID Array %s",
+    discovery_function=discover_ibm_svc_array,
+    check_function=check_ibm_svc_array,
 )

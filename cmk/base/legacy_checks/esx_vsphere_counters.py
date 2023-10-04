@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
@@ -56,17 +57,18 @@ def inventory_esx_vsphere_counters_uptime(parsed):
 
 def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
     if "sys.uptime" not in parsed:
-        raise MKCounterWrapped("Counter data is missing")
+        raise IgnoreResultsError("Counter data is missing")
     uptime = int(parsed["sys.uptime"][""][0][0][-1])
     if uptime < 0:
-        raise MKCounterWrapped("Counter data is corrupt")
+        raise IgnoreResultsError("Counter data is corrupt")
     return check_uptime_seconds(params, uptime)
 
 
 check_info["esx_vsphere_counters.uptime"] = LegacyCheckDefinition(
+    service_name="Uptime",
+    sections=["esx_vsphere_counters"],
     discovery_function=inventory_esx_vsphere_counters_uptime,
     check_function=check_esx_vsphere_counters_uptime,
-    service_name="Uptime",
     check_ruleset_name="uptime",
 )
 
@@ -110,11 +112,12 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
         else:
             value = "not available"
 
-        yield 0, "Swap %s: %s" % (key, value)
+        yield 0, f"Swap {key}: {value}"
 
 
 check_info["esx_vsphere_counters.swap"] = LegacyCheckDefinition(
+    service_name="VMKernel Swap",
+    sections=["esx_vsphere_counters"],
     discovery_function=inventory_esx_vsphere_counters_swap,
     check_function=check_esx_vsphere_counters_swap,
-    service_name="VMKernel Swap",
 )

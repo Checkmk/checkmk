@@ -17,9 +17,9 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 # .1.3.6.1.4.1.25597.13.1.49.0 0
 
 
-def parse_fireeye_mailq(info):
-    if info:
-        return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], info[0]))
+def parse_fireeye_mailq(string_table):
+    if string_table:
+        return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], string_table[0]))
     return None
 
 
@@ -40,15 +40,15 @@ def check_fireeye_mailq(_no_item, params, parsed):
 
 check_info["fireeye_mailq"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_fireeye_mailq,
-    discovery_function=dicsover_fireeye_mailq,
-    check_function=check_fireeye_mailq,
-    service_name="Mail Queues",
-    check_ruleset_name="fireeye_mailq",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=["44", "45", "47", "48", "49"],
     ),
+    parse_function=parse_fireeye_mailq,
+    service_name="Mail Queues",
+    discovery_function=dicsover_fireeye_mailq,
+    check_function=check_fireeye_mailq,
+    check_ruleset_name="fireeye_mailq",
     check_default_parameters={
         "deferred": (1, 50),
         "hold": (500, 1000),

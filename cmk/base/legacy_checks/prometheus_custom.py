@@ -6,15 +6,9 @@
 
 import json
 
-from cmk.base.check_api import (
-    check_levels,
-    discover,
-    get_item_state,
-    get_parsed_item_data,
-    LegacyCheckDefinition,
-    set_item_state,
-)
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 ERROR_DETAILS = {
     "query error": "does not produce a valid result",
@@ -23,9 +17,9 @@ ERROR_DETAILS = {
 }
 
 
-def parse_prometheus_custom(info):
+def parse_prometheus_custom(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             prometheus_data = json.loads(line[0])
         except ValueError:
@@ -50,12 +44,13 @@ def _check_for_invalid_result(metric_details, promql_expression):
              infotext for the service to display
 
     """
-    expression_has_been_valid_before = get_item_state(promql_expression, False)
+    value_store = get_value_store()
+    expression_has_been_valid_before = value_store.get(promql_expression, False)
     expression_is_valid_now = "value" in metric_details
 
     if expression_is_valid_now:
         # Keep a record of the PromQL expressions which gave a valid result at least once
-        set_item_state(promql_expression, True)
+        value_store[promql_expression] = True
         return ()
 
     if expression_has_been_valid_before:
@@ -64,7 +59,7 @@ def _check_for_invalid_result(metric_details, promql_expression):
     else:
         status = 2
         infotext = ERROR_DETAILS[metric_details["invalid_info"]]
-    return status, "PromQL expression (%s) %s" % (promql_expression, infotext), []
+    return status, f"PromQL expression ({promql_expression}) {infotext}", []
 
 
 def _metric_levels(
@@ -112,8 +107,9 @@ def _metric_levels(
     return None
 
 
-@get_parsed_item_data
-def check_prometheus_custom(item, params, data):
+def check_prometheus_custom(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for metric_details in data["service_metrics"]:
         promql_expression = metric_details["promql_query"]
         metric_label = metric_details["label"]
@@ -140,10 +136,14 @@ def check_prometheus_custom(item, params, data):
         )
 
 
+def discover_prometheus_custom(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["prometheus_custom"] = LegacyCheckDefinition(
     parse_function=parse_prometheus_custom,
-    check_function=check_prometheus_custom,
-    discovery_function=discover(),
     service_name="%s",
+    discovery_function=discover_prometheus_custom,
+    check_function=check_prometheus_custom,
     check_ruleset_name="prometheus_custom",
 )

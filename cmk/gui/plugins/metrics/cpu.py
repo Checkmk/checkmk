@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.graphing._color import indexed_color
+from cmk.gui.graphing._utils import graph_info, MAX_CORES, metric_info
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.metrics.utils import graph_info, indexed_color, MAX_CORES, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -336,12 +337,12 @@ for i in range(MAX_CORES):
     # color wheel, times two for two shades each, we
     # can only draw 48 differently colored graphs
     metric_info["cpu_core_util_%d" % i] = {
-        "title": _l("Utilization Core %d") % (i + 1),
+        "title": _l("Utilization Core %d") % i,
         "unit": "%",
         "color": indexed_color(i, MAX_CORES),
     }
     metric_info["cpu_core_util_average_%d" % i] = {
-        "title": _l("Average utilization core %d") % (i + 1),
+        "title": _l("Average utilization core %d") % i,
         "unit": "%",
         "color": indexed_color(i, MAX_CORES),
     }
@@ -737,7 +738,6 @@ graph_info["cpu_utilization_6_guest"] = {
     ],
     "conflicting_metrics": [
         "util",
-        "cpu_util_steal",
     ],
     "omit_zero_metrics": True,
     "range": (0, "user,system,io_wait,cpu_util_steal,+,+,+,100,MAX"),

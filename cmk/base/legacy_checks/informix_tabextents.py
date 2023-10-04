@@ -12,11 +12,11 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_informix_tabextents(info):
+def parse_informix_tabextents(string_table):
     parsed = {}
     instance = None
     entry = None
-    for line in info:
+    for line in string_table:
         if instance is not None and line == ["(constant)", "TABEXTENTS"]:
             entry = {}
             parsed.setdefault(instance, [])
@@ -44,8 +44,9 @@ def check_informix_tabextents(item, params, parsed):
             if extents >= max_extents:
                 max_extents = extents
             long_output.append(
-                "[%s/%s] Extents: %s, Rows: %s"
-                % (entry["db"], entry["tab"], entry["extents"], entry["nrows"])
+                "[{}/{}] Extents: {}, Rows: {}".format(
+                    entry["db"], entry["tab"], entry["extents"], entry["nrows"]
+                )
             )
 
         warn, crit = params["levels"]
@@ -56,16 +57,20 @@ def check_informix_tabextents(item, params, parsed):
         elif max_extents >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (warn, crit)
-        return state, "%s\n%s" % (infotext, "\n".join(long_output)), [("max_extents", max_extents)]
+            infotext += f" (warn/crit at {warn}/{crit})"
+        return (
+            state,
+            "{}\n{}".format(infotext, "\n".join(long_output)),
+            [("max_extents", max_extents)],
+        )
     return None
 
 
 check_info["informix_tabextents"] = LegacyCheckDefinition(
     parse_function=parse_informix_tabextents,
+    service_name="Informix Table Extents %s",
     discovery_function=inventory_informix_tabextents,
     check_function=check_informix_tabextents,
-    service_name="Informix Table Extents %s",
     check_ruleset_name="informix_tabextents",
     check_default_parameters={
         "levels": (40, 70),

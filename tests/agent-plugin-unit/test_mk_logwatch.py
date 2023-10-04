@@ -12,7 +12,7 @@ import locale
 import os
 import re
 import sys
-from typing import Iterable, Mapping, Optional, Tuple, Union
+from typing import Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import pytest
 
@@ -21,11 +21,6 @@ if sys.version_info[0] == 2:
 else:
     import agents.plugins.mk_logwatch as lw
     unicode=str
-
-try:
-    from typing import Sequence  # noqa: F401
-except ImportError:
-    pass  # only needed for type comments
 
 _SEP = os.sep.encode()
 _SEP_U = _SEP.decode("utf-8")
@@ -105,15 +100,11 @@ def _get_parsed_config():
 
 
 def text_type():
-    if sys.version_info[0] == 2:
-        return unicode  # pylint: disable=undefined-variable  # noqa: F821
-    return str
+    return unicode if sys.version_info[0] == 2 else str
 
 
 def binary_type():
-    if sys.version_info[0] == 2:
-        return str  # pylint: disable=undefined-variable
-    return bytes
+    return str if sys.version_info[0] == 2 else bytes
 
 
 def ensure_text(s, encoding='utf-8', errors='strict'):
@@ -178,7 +169,7 @@ def test_options_setter_regex(option_string: str, expected_pattern: str,
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(tmpdir: Union[str,bytes]) -> None:
+def test_get_config_files(tmpdir: Union[str, bytes]) -> None:
     fake_config_dir = os.path.join(str(tmpdir), "test")
     os.mkdir(fake_config_dir)
 
@@ -288,7 +279,7 @@ def test_read_config_logfiles(parsed_config):
         ("local", os.path.join("/path/to/config", "logwatch.state.local")),
         ("::ffff:192.168.1.2", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
     ])
-def test_get_status_filename(env_var: str, expected_status_filename: str, monkeypatch ) -> None: # type: ignore[no-untyped-def]
+def test_get_status_filename(env_var: str, expected_status_filename: str, monkeypatch ) -> None:  # type: ignore[no-untyped-def]
     monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
         lw.ClusterConfigBlock(
@@ -358,7 +349,7 @@ def test_get_status_filename(env_var: str, expected_status_filename: str, monkey
         },
     }),
 ])
-def test_state_load(tmpdir:Union[str,bytes], state_data: str, state_dict: Mapping[str,Mapping[str,object]]) -> None:
+def test_state_load(tmpdir: Union[str, bytes], state_data: str, state_dict: Mapping[str,Mapping[str,object]]) -> None:
     # setup for reading
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
 
@@ -397,7 +388,7 @@ def test_state_load(tmpdir:Union[str,bytes], state_data: str, state_dict: Mappin
         }
     },
 ])
-def test_state_write(tmpdir: Union[str,bytes], state_dict: Mapping[str,Mapping[str,object]]) -> None:
+def test_state_write(tmpdir: Union[str, bytes], state_dict: Mapping[str,Mapping[str,object]]) -> None:
     # setup for writing
     file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
     state = lw.State(file_path)
@@ -430,7 +421,7 @@ STAR_FILES = [
 def _fix_for_os(pairs):
     # type: (Sequence[tuple[bytes, str]])  -> list[tuple[bytes, str]]
     def symlink_in_windows(s: str) -> bool:
-        return os.name == "nt" and s.find("symlink") != -1
+        return os.name == "nt" and "symlink" in s
 
     return [(os.sep.encode() + b, os.sep + s) for b, s in pairs if not symlink_in_windows(s)]
 
@@ -440,7 +431,7 @@ def _cvt(path):
 
 
 # NOTE: helper for mypy
-def _end_with(actual:Union[str,bytes], *, expected:bytes) -> bool:
+def _end_with(actual: Union[str, bytes], *, expected:bytes) -> bool:
     if isinstance(actual, str):
         assert isinstance(expected, str)
         return actual.endswith(expected)
@@ -818,8 +809,8 @@ def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
 
 def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
     info = [_get_file_info(tmpdir, f) for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log" )]
-    assert {s for(_, s) in info} == {0}
-    assert len({i for(i, _) in info}) == 2
+    assert {s for (_, s) in info} == {0}
+    assert len({i for (i, _) in info}) == 2
     assert info[0][0] != info[1][0]
     assert info[1][0] == info[2][0]
 

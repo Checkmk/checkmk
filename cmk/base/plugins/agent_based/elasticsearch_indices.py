@@ -8,9 +8,10 @@ import json
 import re
 import time
 from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, NotRequired, TypedDict
+from typing import Any, NotRequired
 
 import pydantic
+from typing_extensions import TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,

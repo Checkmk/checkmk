@@ -1,0 +1,14 @@
+Title: Activate changes: Performance improvement in very large distributed setups
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1692272438
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The speed at which changes are distributed to remote sites and activated when in a distributed setup with hundreds of sites has been improved.
+This is mainly due to improved parallelization, which means that more sites can perform their activation at the same time.
+
+The option to configure "Maximum parallel site activations" in the global settings has been removed as each site activation now uses much less memory, removing the need for limitation.

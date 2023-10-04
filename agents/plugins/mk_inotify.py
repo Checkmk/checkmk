@@ -17,7 +17,7 @@ except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore[import,no-redef]
 
 try:
-    from typing import Any, Dict, List, Set  # noqa: F401 # pylint: disable=unused-import
+    from typing import Any  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -146,9 +146,9 @@ if not opt_foreground:
 #   +----------------------------------------------------------------------+
 
 # Computed configuration
-folder_configs = {}  # type: Dict[str, Dict[str, Any]]
+folder_configs = {}  # type: dict[str, dict[str, Any]]
 # Data to be written to disk
-output = []  # type: List[str]
+output = []  # type: list[str]
 
 
 def get_watched_files():
@@ -325,7 +325,7 @@ def main():  # pylint: disable=too-many-branches
             if mode not in attributes["all_del_modes"]:
                 required_modes.add(mode)
 
-        files_to_monitor = {}  # type: Dict[str, Set]
+        files_to_monitor = {}  # type: dict[str, set]
         skip_modes = set([])
         for mode in required_modes:
             files_to_monitor.setdefault(mode, set([]))

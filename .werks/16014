@@ -1,0 +1,12 @@
+Title: emc_datadomain_disks: addition of "System" DataDomain status
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689775926
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

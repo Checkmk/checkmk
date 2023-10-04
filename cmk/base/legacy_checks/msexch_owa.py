@@ -31,8 +31,8 @@ def check_msexch_owa(_no_item, params, parsed):
 
 
 check_info["msexch_owa"] = LegacyCheckDefinition(
-    discovery_function=discover_msexch_owa,
-    check_function=check_msexch_owa,
     parse_function=parse_wmi_table,
     service_name="Exchange OWA",
+    discovery_function=discover_msexch_owa,
+    check_function=check_msexch_owa,
 )

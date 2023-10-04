@@ -1,10 +1,13 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import * as ajax from "ajax";
 import * as d3 from "d3";
 import {
+    AbstractNodeVisConstructor,
     FixLayer,
     layer_class_registry,
     LayerSelections,
@@ -123,7 +126,6 @@ export function compute_node_position(node: NodevisNode) {
 }
 
 export class LayoutManagerLayer extends FixLayer {
-    static class_name = "layout_manager";
     _mouse_events_overlay: LayoutingMouseEventsOverlay;
     layout_applier: LayoutApplier;
     toolbar_plugin: LayoutingToolbarPlugin;
@@ -135,7 +137,7 @@ export class LayoutManagerLayer extends FixLayer {
     allow_layout_updates = true; // Indicates if layout updates are allowed
 
     // Instantiated styles
-    _active_styles = {};
+    _active_styles: Record<string, AbstractLayoutStyle> = {};
 
     // Register layout manager toolbar plugin
 
@@ -158,15 +160,19 @@ export class LayoutManagerLayer extends FixLayer {
             .attr("id", "hierarchies");
     }
 
-    id(): string {
+    override class_name() {
         return "layout_manager";
     }
 
-    z_index(): number {
+    override id(): string {
+        return "layout_manager";
+    }
+
+    override z_index(): number {
         return 40;
     }
 
-    name(): string {
+    override name(): string {
         return "Layout Manager";
     }
 
@@ -238,13 +244,13 @@ export class LayoutManagerLayer extends FixLayer {
         return this._node_dragging_enforced || this._node_dragging_allowed;
     }
 
-    size_changed(): boolean {
+    override size_changed(): boolean {
         // TODO: check this
         //        node_visualization_layout_styles.force_simulation.size_changed()
         return false;
     }
 
-    update_data(): void {
+    override update_data(): void {
         this.toolbar_plugin.update_layout_configuration();
         const sorted_styles: [number, AbstractLayoutStyle][] = [];
         for (const idx in this._active_styles) {
@@ -268,7 +274,7 @@ export class LayoutManagerLayer extends FixLayer {
         this._mouse_events_overlay.update_data();
     }
 
-    update_gui(): void {
+    override update_gui(): void {
         for (const idx in this._active_styles) {
             this._active_styles[idx].update_gui();
         }
@@ -294,7 +300,7 @@ export class LayoutManagerLayer extends FixLayer {
         }
     }
 
-    zoomed(): void {
+    override zoomed(): void {
         for (const idx in this._active_styles) {
             this._active_styles[idx].zoomed();
         }
@@ -377,7 +383,7 @@ export class LayoutManagerLayer extends FixLayer {
         });
     }
 
-    delete_layout_for_aggregation(aggregation_name) {
+    delete_layout_for_aggregation(aggregation_name: string) {
         ajax.call_ajax("ajax_delete_bi_aggregation_layout.py", {
             method: "POST",
             post_data:
@@ -398,6 +404,8 @@ export class LayoutManagerLayer extends FixLayer {
             const layout_settings = chunk.layout_settings;
             const delayed_styles = layout_settings.config.delayed_style_configs;
             if (delayed_styles) {
+                //TODO: this might be a typo, delete delayed_style_configs instead??
+                //@ts-ignore
                 delete layout_settings.config["delayed_style_config"];
                 chunk.layout_settings.config.style_configs =
                     delayed_styles.concat(layout_settings.config.style_configs);
@@ -450,10 +458,12 @@ export class LayoutStyleConfiguration {
         style_option_spec: StyleOptionSpec[],
         options: StyleOptionValues,
         options_changed_callback: (
-            event,
+            event: d3.D3DragEvent<any, any, any>,
             changed_options: StyleOptionValues
         ) => void,
-        reset_default_options_callback: (event) => void
+        reset_default_options_callback: (
+            event: d3.D3DragEvent<any, any, any>
+        ) => void
     ) {
         if (style_option_spec.length == 0) {
             this.hide_configuration();
@@ -527,7 +537,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         this.active = false;
     }
 
-    id() {
+    override id() {
         return "layouting_toolbar";
     }
 
@@ -537,7 +547,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         return this._layout_style_configuration;
     }
 
-    setup_selections(content_selection: d3SelectionDiv) {
+    override setup_selections(content_selection: d3SelectionDiv) {
         this._div_selection = content_selection;
         this.setup_toolbar_elements(this._div_selection);
         this._layout_style_configuration = new LayoutStyleConfiguration(
@@ -644,7 +654,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             });
     }
 
-    render_togglebutton(selection: d3SelectionDiv): void {
+    override render_togglebutton(selection: d3SelectionDiv): void {
         selection.style("cursor", "pointer");
         const cell = selection.append("table").append("tr").append("td");
         cell.append("img")
@@ -653,11 +663,11 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .style("opacity", 1);
     }
 
-    enable_actions() {
+    override enable_actions() {
         this._world.layout_manager.show_layout_options();
         this.update_layout_configuration();
 
-        this._render_layout_configuration(this._configuration_div);
+        this._render_layout_configuration(this._configuration_div!);
 
         this._world.viewport.update_gui_of_layers();
         for (const idx in this._world.layout_manager._active_styles) {
@@ -671,7 +681,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .style("display", null);
     }
 
-    disable_actions() {
+    override disable_actions() {
         if (this._world.layout_manager.edit_layout) {
             this._world.layout_manager.hide_layout_options();
             this._world.viewport.update_gui_of_layers();
@@ -684,7 +694,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .style("display", "none");
     }
 
-    remove_content() {
+    override remove_content() {
         this.div_selection()
             .select("div.toolbar_layouting")
             .transition()
@@ -698,13 +708,13 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         const chunks = this._world.viewport.get_hierarchy_list();
         if (chunks.length > 0)
             this._render_aggregation_configuration(
-                this._configuration_div,
+                this._configuration_div!,
                 chunks[0]
             );
     }
 
     _render_aggregation_configuration(
-        into_selection,
+        into_selection: d3.Selection<HTMLDivElement, null, any, unknown>,
         chunk: NodeChunk | null
     ): void {
         let aggr_name = "Missing data";
@@ -722,12 +732,13 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .join(enter => enter.append("table").attr("id", "layout_settings"));
 
         table
-            .selectAll("tr.info")
+            .selectAll<HTMLTableRowElement, unknown>("tr.info")
             .data(
                 [
                     [["Aggregation name"], [aggr_name]],
                     [["Layout origin"], [origin_info]],
                 ],
+                // @ts-ignore
                 d => d[0]
             )
             .join("tr")
@@ -788,7 +799,9 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .attr("disabled", explicit_set ? null : true);
     }
 
-    _render_layout_configuration(into_selection) {
+    _render_layout_configuration<GType extends d3.BaseType, Data>(
+        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ) {
         this._world.nodes_layer.render_line_style(into_selection);
 
         const layers = this._world.viewport.get_layers();
@@ -800,7 +813,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         }
 
         const table_selection = into_selection
-            .selectAll("table#overlay_configuration")
+            .selectAll<HTMLTableElement, unknown>("table#overlay_configuration")
             .data([null])
             .style("width", "100%");
         const table_enter = table_selection
@@ -808,7 +821,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .append("table")
             .attr("id", "overlay_configuration")
             .style("width", "100%")
-            .on("change", event =>
+            .on("change", (event: Event) =>
                 this._overlay_checkbox_options_changed(event)
             );
 
@@ -844,6 +857,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
                 .attr("option_id", () => element)
                 .attr("overlay_id", d => d.id())
                 .attr("type", "checkbox")
+                // @ts-ignore
                 .merge(rows_enter)
                 .property("checked", d => {
                     if (!current_overlay_config[d.id()]) return false;
@@ -852,7 +866,9 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         }
     }
 
-    _render_layout_history(history_selection): void {
+    _render_layout_history<GType extends d3.BaseType, Data>(
+        history_selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ): void {
         const icons = [
             {
                 icon: "icon_undo.svg",
@@ -869,7 +885,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         ];
 
         const icon_selection = history_selection
-            .selectAll("img.icon")
+            .selectAll<HTMLImageElement, unknown>("img.icon")
             .data(icons);
 
         icon_selection
@@ -880,7 +896,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .attr("id", d => d.id)
             .attr("title", d => d.title)
             .attr("src", d => "themes/facelift/images/" + d.icon)
-            .on("click", (event, d) => d.handler())
+            .on("click", (_event: Event, d) => d.handler())
             .merge(icon_selection);
 
         if (this._world.layout_manager.layout_applier._undo_history.length == 0)
@@ -940,7 +956,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         // d3.json("ajax_get_all_bi_template_layouts.py", {credentials: "include"}).then((json_data)=>this.update_available_layouts(json_data.result))
     }
 
-    update_available_layouts(layouts): void {
+    update_available_layouts(layouts: any): void {
         this._world.layout_manager.layout_applier.layouts = layouts;
         let choices = [""];
         choices = choices.concat(Object.keys(layouts));
@@ -967,8 +983,8 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         this.update_save_layout_button();
     }
 
-    layout_changed_callback(event): void {
-        const selected_id = event.target.value;
+    layout_changed_callback(event: Event): void {
+        const selected_id = (<HTMLInputElement>event.target).value;
         this._world.layout_manager.layout_applier.apply_layout_id(selected_id);
         const current_style = this.layout_style_configuration().current_style;
         if (current_style)
@@ -982,10 +998,10 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
     }
 
     // TODO: check typing
-    _overlay_checkbox_options_changed(event): void {
+    _overlay_checkbox_options_changed(event: Event): void {
         const current_overlay_configs =
             this._world.viewport.get_overlay_configs();
-        const checkbox = d3.select(event.target);
+        const checkbox = d3.select(event.target as HTMLElement);
         const checked = checkbox.property("checked");
         const option_id = checkbox.attr("option_id");
         const overlay_id = checkbox.attr("overlay_id");
@@ -1119,7 +1135,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .property("value");
         const current_layout_group =
             this._world.layout_manager.layout_applier.get_current_layout();
-        const new_layout = {};
+        const new_layout: Record<string, SerializedNodevisLayout> = {};
         new_layout[new_id] = current_layout_group;
         // @ts-ignore
         this._world.layout_manager.save_layout_template(new_layout);
@@ -1145,19 +1161,26 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
         this._world.layout_manager.delete_layout_for_aggregation(aggr_name);
     }
 
-    add_text_input(into_selection, value) {
-        let input = into_selection.selectAll("input").data([""]);
+    add_text_input<GType extends d3.BaseType, Data>(
+        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
+        value: string
+    ) {
+        let input = into_selection
+            .selectAll<HTMLInputElement, unknown>("input")
+            .data([""]);
         input = input.enter().append("input").merge(input);
         input.attr("type", "text").attr("value", value);
     }
 
-    add_dropdown_choice(
-        into_selection,
-        choices,
-        default_choice,
-        callback_function
+    add_dropdown_choice<GType extends d3.BaseType, Data>(
+        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
+        choices: string[],
+        default_choice: string | null,
+        callback_function: (event: Event) => void
     ) {
-        let select = into_selection.selectAll("select").data([null]);
+        let select = into_selection
+            .selectAll<HTMLSelectElement, unknown>("select")
+            .data([null]);
         select = select
             .enter()
             .append("select")
@@ -1166,7 +1189,7 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
 
         let options = select
             .on("change", callback_function)
-            .selectAll("option")
+            .selectAll<HTMLOptionElement, unknown>("option")
             .data(choices);
         options.exit().remove();
         options = options.enter().append("option").merge(options);
@@ -1177,15 +1200,25 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             .text(d => d);
     }
 
-    render_table(selection, table_data) {
-        let table = selection.selectAll("table").data([""]);
+    render_table<GType extends d3.BaseType, Data>(
+        selection: d3.Selection<GType, Data, d3.BaseType, unknown>,
+        table_data: {headers: string[]; rows: string[]}
+    ) {
+        let table = selection
+            .selectAll<HTMLTableElement, unknown>("table")
+            .data([""]);
         table = table.enter().append("table").merge(table);
 
         if (table_data.headers) {
-            let thead = table.selectAll("thead").data([""]);
+            let thead = table
+                .selectAll<HTMLTableSectionElement, unknown>("thead")
+                .data([""]);
+            //@ts-ignore
             thead = thead.enter().append("thead").append("tr").merge(thead);
             // append the header row
-            const th = thead.selectAll("th").data(table_data.headers);
+            const th = thead
+                .selectAll<HTMLTableCellElement, unknown>("th")
+                .data(table_data.headers);
             th.enter()
                 .append("th")
                 .merge(th)
@@ -1193,16 +1226,20 @@ export class LayoutingToolbarPlugin extends ToolbarPluginBase {
             th.exit().remove();
         }
 
-        let tbody = table.selectAll("tbody").data([""]);
+        let tbody = table
+            .selectAll<HTMLTableSectionElement, unknown>("tbody")
+            .data([""]);
         tbody = tbody.enter().append("tbody").merge(tbody);
 
-        let tr = tbody.selectAll("tr").data(table_data.rows, d => d);
+        let tr = tbody
+            .selectAll<HTMLTableRowElement, string>("tr")
+            .data(table_data.rows, d => d);
         tr.exit().remove();
         tr = tr.enter().append("tr").merge(tr);
 
-        tr.selectAll("td")
+        tr.selectAll<HTMLTableCellElement, string>("td")
             .remove()
-            .selectAll("td")
+            .selectAll<HTMLTableCellElement, string>("td")
             .data(
                 d => d,
                 d => d
@@ -1233,14 +1270,17 @@ class LayoutingMouseEventsOverlay {
             .call(this.drag);
     }
 
-    _get_scaled_event_coords(event): {x: number; y: number} {
+    _get_scaled_event_coords(event: d3.D3DragEvent<any, any, any>): {
+        x: number;
+        y: number;
+    } {
         return {
             x: event.x / this._world.viewport.last_zoom.k,
             y: event.y / this._world.viewport.last_zoom.k,
         };
     }
 
-    _dragstarted(event) {
+    _dragstarted(event: d3.D3DragEvent<any, any, any>) {
         if (!this._world.layout_manager.is_node_drag_allowed()) return;
         event.sourceEvent.stopPropagation();
         this._dragged_node = d3.select(event.sourceEvent.target);
@@ -1271,7 +1311,7 @@ class LayoutingMouseEventsOverlay {
         this._world.layout_manager.dragging = true;
     }
 
-    _apply_drag_force(node: NodevisNode, x, y) {
+    _apply_drag_force(node: NodevisNode, x: number, y: number) {
         node.data.node_positioning["drag"] = {};
         const force = node.data.node_positioning["drag"];
         force.use_transition = false;
@@ -1281,7 +1321,7 @@ class LayoutingMouseEventsOverlay {
         force.fy = y;
     }
 
-    _dragging(event) {
+    _dragging(event: d3.D3DragEvent<any, any, any>) {
         if (
             this._dragged_node == null ||
             !this._world.layout_manager.is_node_drag_allowed()
@@ -1334,7 +1374,7 @@ class LayoutingMouseEventsOverlay {
         this._world.viewport.update_gui_of_layers();
     }
 
-    _dragended(_event) {
+    _dragended(_event: d3.D3DragEvent<any, any, any>) {
         this._world.layout_manager.dragging = false;
         if (
             this._dragged_node == null ||
@@ -1376,7 +1416,7 @@ class LayoutApplier {
     layout_style_factory: LayoutStyleFactory;
     current_layout_group: NodeVisualizationLayout;
 
-    layouts = {}; // Each chunk has its own layout
+    layouts: Record<any, any> = {}; // Each chunk has its own layout
     _align_layouts = true;
     _undo_history: LayoutHistoryStep[] = [];
     _undo_end_offset = 0;
@@ -1412,14 +1452,15 @@ class LayoutApplier {
         for (const [_key, style] of Object.entries(styles)) {
             if (node) {
                 elements.push({
-                    text: "Convert to " + style.description,
+                    text: "Convert to " + style.prototype.description(),
                     on: () => this._convert_node(node, style),
                     href: "",
                     img: "themes/facelift/images/icon_aggr.svg",
                 });
             } else {
                 elements.push({
-                    text: "Convert all nodes to " + style.description,
+                    text:
+                        "Convert all nodes to " + style.prototype.description(),
                     on: () => this._convert_all(style),
                     href: "",
                     img: "themes/facelift/images/icon_aggr.svg",
@@ -1449,7 +1490,7 @@ class LayoutApplier {
 
     _convert_node(
         node: NodevisNode,
-        style_class: typeof AbstractLayoutStyle | null
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null
     ) {
         const chunk_layout = node.data.chunk.layout_instance;
         if (chunk_layout == null) return;
@@ -1459,7 +1500,7 @@ class LayoutApplier {
         if (
             current_style &&
             style_class != null &&
-            current_style.type() == style_class.constructor.prototype.class_name
+            current_style.class_name() == style_class.prototype.class_name()
         )
             return;
 
@@ -1487,7 +1528,9 @@ class LayoutApplier {
         this._world.layout_manager.create_undo_step();
     }
 
-    _convert_all(style_class: typeof AbstractLayoutStyle | null) {
+    _convert_all(
+        style_class: AbstractNodeVisConstructor<AbstractLayoutStyle> | null
+    ) {
         const used_style: AbstractLayoutStyle[] = [];
         const current_style: AbstractLayoutStyle | null = null;
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
@@ -1560,7 +1603,7 @@ class LayoutApplier {
         return layout_settings;
     }
 
-    apply_layout_id(layout_id) {
+    apply_layout_id(layout_id: string) {
         this._world.viewport.get_hierarchy_list().forEach(chunk => {
             const new_layout = new NodeVisualizationLayout(
                 this._world.viewport,
@@ -1607,6 +1650,7 @@ class LayoutApplier {
             // TODO: When removing an explicit layout, the new layout should replace the explicit one
             if (!node_chunk.layout_instance) {
                 node_chunk.layout_instance = new NodeVisualizationLayout(
+                    //@ts-ignore
                     this,
                     "default"
                 );
@@ -1737,7 +1781,7 @@ class LayoutApplier {
         return Array.from(merged_styles.values());
     }
 
-    _get_grouped_styles(nodes_with_style) {
+    _get_grouped_styles(nodes_with_style: NodeWithStyle[]) {
         // Cycle through the sorted styles and add the box_leaf_nodes hint
         nodes_with_style.forEach(entry => {
             const box_leafs = entry.style.options.box_leaf_nodes == true;
@@ -1783,7 +1827,7 @@ class LayoutApplier {
         return grouped_styles;
     }
 
-    align_layouts(nodes_with_style) {
+    align_layouts(nodes_with_style: NodeWithStyle[]) {
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
             const bounding_rect = get_bounding_rect(node_chunk.nodes);
             const translate_perc = {
@@ -1946,7 +1990,10 @@ class LayoutApplier {
         }
     }
 
-    find_nodes_for_layout(layout, node_matcher: NodeMatcher): NodeWithStyle[] {
+    find_nodes_for_layout(
+        layout: NodeVisualizationLayout,
+        node_matcher: NodeMatcher
+    ): NodeWithStyle[] {
         const nodes: NodeWithStyle[] = [];
         layout.style_configs.forEach(style => {
             if (!style.matcher) return;

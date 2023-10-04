@@ -4,248 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import math
-from collections.abc import Callable, Mapping, Sequence
-from typing import Any
+from collections.abc import Callable
 from unittest.mock import Mock
 
 import pytest
 
-from cmk.utils.type_defs import ServiceDetails, ServiceState
+from cmk.utils.metrics import MetricName
+
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as config
 from cmk.base import check_api
-
-
-@pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_binary(value_eight: str | int) -> None:
-    oid_bin = check_api.BINARY(value_eight)
-    assert oid_bin.column == "8"
-    assert oid_bin.encoding == "binary"
-    assert oid_bin.save_to_cache is False
-
-
-@pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_cached(value_eight: str | int) -> None:
-    oid_cached = check_api.CACHED_OID(value_eight)
-    assert oid_cached.column == "8"
-    assert oid_cached.encoding == "string"
-    assert oid_cached.save_to_cache is True
-
-
-@check_api.get_parsed_item_data
-def check_foo(item, params, parsed_item_data):
-    return 2, "bar"
-
-
-def test_get_parsed_item_data() -> None:
-    params: dict[Any, Any] = {}
-    parsed = {1: "one", 3: {}, 4: [], 5: ""}
-    info = [[1, "one"], [2, "two"]]
-    assert check_foo(1, params, parsed) == (2, "bar")
-    assert check_foo(2, params, parsed) is None
-    assert check_foo(3, params, parsed) is None
-    assert check_foo(4, params, parsed) is None
-    assert check_foo(5, params, parsed) is None
-    output = (3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict")
-    assert check_foo(1, params, info) == output
-    assert check_foo.__name__ == "check_foo"
-
-
-def test_validate_filter() -> None:
-    assert check_api.validate_filter(sum)((1, 4)) == 5
-
-    with pytest.raises(ValueError):
-        check_api.validate_filter("nothing")
-
-    assert check_api.validate_filter(None)(1, 4) == 1
-
-
-@pytest.mark.parametrize(
-    "parsed, selector, result",
-    [
-        ({}, lambda x: x, None),
-        (
-            {
-                "one": None,
-                "two": None,
-            },
-            None,
-            [("one", {}), ("two", {})],
-        ),
-        (
-            {
-                "one": None,
-                "two": None,
-            },
-            lambda k, v: k,
-            [("one", {}), ("two", {})],
-        ),
-        (
-            {
-                "one": None,
-                "two": None,
-            },
-            lambda k, v: k.startswith("o"),
-            [("one", {})],
-        ),
-        (
-            {
-                "one": None,
-                "two": None,
-            },
-            lambda k, v: k == "one",
-            [("one", {})],
-        ),
-        (
-            {
-                "one": "enabled",
-                "two": {"load": 10, "max": 50},
-                "three": ["load", "capacity"],
-            },
-            lambda k, values: "load" in values if isinstance(values, dict) else False,
-            [("two", {})],
-        ),
-        (
-            {
-                "one": "enabled",
-                "two": {"load": 10, "max": 50, "Innodb_data_read": True},
-            },
-            lambda k, values: "Innodb_data_read" in values,
-            [("two", {})],
-        ),
-        (
-            {
-                "one": "enabled",
-                "two": {"load": 10, "Innodb_data_read": True},
-            },
-            lambda key, values: all(val in values for val in ["load", "max"]),
-            None,
-        ),
-        (
-            {
-                "one": [1],
-                "two": [2],
-                "three": [3],
-                "four": (),
-                "five": [],
-            },
-            lambda k, value: len(value) > 0,
-            [
-                ("one", {}),
-                ("two", {}),
-                ("three", {}),
-            ],
-        ),
-        (
-            [["one", 5, 3], ["two", 0, 0], ["three", 2, 8]],
-            lambda line: line[0],
-            [
-                ("one", {}),
-                ("two", {}),
-                ("three", {}),
-            ],
-        ),
-        (
-            [["one", 5, 3], ["two", 0, 0], ["three", 2, 8]],
-            lambda line: line[0].upper() if line[1] > 0 else False,
-            [
-                ("ONE", {}),
-                ("THREE", {}),
-            ],
-        ),
-    ],
-)
-def test_discover_inputs_and_filters(
-    parsed: Mapping[str, object], selector: Callable | None, result: Sequence[object] | None
-) -> None:
-    items = list(check_api.discover(selector)(parsed))
-    for item in items:
-        assert result is not None and item in result
-
-    if result is not None:
-        assert len(items) == len(result)
-    else:
-        assert not items
-
-
-def test_discover_decorator_key_match() -> None:
-    @check_api.discover
-    def selector(key, value):
-        return key == "hello"
-
-    # Pylint does not understand our decorator magic here. Investigate
-    assert list(
-        selector({"hola": "es", "hello": "en"})  # pylint: disable=no-value-for-parameter
-    ) == [("hello", {})]
-
-
-def test_discover_decorator_with_params() -> None:
-    @check_api.discover(default_params="empty")
-    def selector2(entry):
-        return "hello" in entry
-
-    assert list(selector2([["hello", "world"], ["hola", "mundo"]])) == [("hello", "empty")]
-
-
-def test_discover_decorator_returned_name() -> None:
-    @check_api.discover
-    def inventory_thecheck(key, value):
-        required_entries = ["used", "ready"]
-        if all(data in value for data in required_entries):
-            return key.upper()
-        return None
-
-    data = {
-        "host": [["mysql", 10, 10], ["home", 5, 8]],
-        "house": [["performance_schema", 5, 7], ["test", 1, 5]],
-        "try": ["used", "ready", "total"],
-    }
-
-    # Pylint does not understand our decorator magic here. Investigate
-    assert list(inventory_thecheck(data)) == [("TRY", {})]  # pylint: disable=no-value-for-parameter
-
-
-def test_discover_decorator_with_nested_entries() -> None:
-    @check_api.discover
-    def nested_discovery(instance, values):
-        for dbname, used, avail in values:
-            if (
-                dbname not in ["information_schema", "mysql", "performance_schema"]
-                and used != "NULL"
-                and avail != "NULL"
-            ):
-                yield f"{instance}:{dbname}"
-
-    data = {
-        "host": [["mysql", 10, 10], ["home", 5, 8]],
-        "house": [["performance_schema", 5, 7], ["test", 1, 5]],
-    }
-
-    # Pylint does not understand our decorator magic here. Investigate
-    assert sorted(nested_discovery(data)) == [  # pylint: disable=no-value-for-parameter
-        ("host:home", {}),
-        ("house:test", {}),
-    ]
-
-
-@pytest.mark.parametrize(
-    "parsed, selector, error",
-    [
-        (
-            {
-                "one": None,
-                "two": None,
-            },
-            lambda k: k,
-            (TypeError, r"takes 1 positional argument but 2 were"),
-        ),
-        (None, lambda k, v: k.startswith("o"), (ValueError, "and tuples you gave a")),
-        (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
-    ],
-)
-def test_discover_exceptions(parsed, selector, error) -> None:  # type: ignore[no-untyped-def]
-    with pytest.raises(error[0], match=error[1]):
-        next(check_api.discover(selector)(parsed))
 
 
 @pytest.mark.parametrize(
@@ -273,13 +42,6 @@ def test_boundaries(
 @pytest.mark.parametrize(
     "value, dsname, params, kwargs, result",
     [
-        (
-            5,
-            "battery",
-            None,
-            {"human_readable_func": check_api.get_percent_human_readable},
-            (0, "5.00%", [("battery", 5, None, None)]),
-        ),
         (
             6,
             "disk",
@@ -320,7 +82,7 @@ def test_boundaries(
 )
 def test_check_levels(  # type: ignore[no-untyped-def]
     value: float,
-    dsname: check_api.MetricName | None,
+    dsname: MetricName | None,
     params: None | tuple[float, ...],
     kwargs,
     result: check_api.ServiceCheckResult,

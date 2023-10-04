@@ -5,9 +5,10 @@
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final, TypedDict
+from typing import Final
 
 import boto3
+from typing_extensions import TypedDict
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.exceptions import MKGeneralException

@@ -15,7 +15,9 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 import cmk.utils.version as cmk_version
 
 
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
+@pytest.mark.skipif(
+    cmk_version.edition() is cmk_version.Edition.CRE, reason="No agent deployment in raw edition"
+)
 def test_deploy_agent(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/deploy_agent.py")
     assert response.json["result"].startswith("Missing or invalid")
@@ -30,7 +32,7 @@ def test_download_agent_shipped_with_checkmk(
     tmp_path: Path,
 ) -> None:
     agent_bin_data = bytes.fromhex("01 02 03 04 05")
-    mocked_agent_path = tmp_path / "agent_bin_mock.bin"
+    mocked_agent_path = tmp_path / "agent_bin_mock.deb"
     with open(mocked_agent_path, "wb") as fo:
         fo.write(agent_bin_data)
 
@@ -47,11 +49,13 @@ def test_download_agent_shipped_with_checkmk(
     )
 
     assert resp.body == agent_bin_data
-    assert resp.headers["Content-Disposition"] == 'attachment; filename="agent_bin_mock.bin"'
+    assert resp.headers["Content-Disposition"] == 'attachment; filename="agent_bin_mock.deb"'
     packed_agent_path_patched.assert_called_once()
 
 
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="endpoint not available in raw edition")
+@pytest.mark.skipif(
+    cmk_version.edition() is cmk_version.Edition.CRE, reason="endpoint not available in raw edition"
+)
 def test_openapi_agent_key_id_above_zero_regression(clients: ClientRegistry) -> None:
     # make sure this doesn't crash
     clients.Agent.bake_and_sign(key_id=0, passphrase="", expect_ok=False).assert_status_code(400)

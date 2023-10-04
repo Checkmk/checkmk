@@ -61,6 +61,12 @@ def _section_v2() -> Section:
     return parse(TABLE_2)
 
 
+def test_parsing_deals_with_missing_total() -> None:
+    assert parse([["[site no-total-available]"], ["1234 /omd/sites/no-total-available/tmp/"]])[
+        "no-total-available"
+    ]
+
+
 def test_discovery(section: Section) -> None:
     services = list(discovery(section))
     assert services == [Service(item="heute"), Service(item="test")]

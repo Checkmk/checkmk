@@ -51,7 +51,7 @@ import time
 
 #   Registered
 ##.
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -112,7 +112,7 @@ def check_suseconnect(_no_item, params, section: Section):
 
 check_info["suseconnect"] = LegacyCheckDefinition(
     service_name="SLES license",
-    # section is migrated already!
+    # section is migrated already!,
     discovery_function=inventory_suseconnect,
     check_function=check_suseconnect,
     check_ruleset_name="sles_license",

@@ -48,7 +48,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, st
 
 def inventory_cisco_stackpower(info):
     return [
-        ("%s %s" % (oid.split(".")[0], port_name), None)
+        ("{} {}".format(oid.split(".")[0], port_name), None)
         for oid, port_oper_status, _port_link_status, port_name in info
         if port_oper_status == "1"
     ]
@@ -66,18 +66,18 @@ def check_cisco_stackpower(item, params, info):
     }
 
     for oid, port_oper_status, port_link_status, port_name in info:
-        if item == "%s %s" % (oid.split(".")[0], port_name):
+        if item == "{} {}".format(oid.split(".")[0], port_name):
             yield map_oper_status[port_oper_status]
             yield map_status[port_link_status]
 
 
 check_info["cisco_stackpower"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
-    discovery_function=inventory_cisco_stackpower,
-    check_function=check_cisco_stackpower,
-    service_name="Stackpower Interface %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.500.1.3.2.1",
         oids=[OIDEnd(), "2", "5", "7"],
     ),
+    service_name="Stackpower Interface %s",
+    discovery_function=inventory_cisco_stackpower,
+    check_function=check_cisco_stackpower,
 )

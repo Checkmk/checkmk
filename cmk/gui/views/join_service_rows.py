@@ -15,11 +15,12 @@ from cmk.utils.regex import regex
 
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.painter.v0.base import columns_of_cells, JoinCell
-from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, LivestatusQuery, Row, Rows
 from cmk.gui.view import View
 from cmk.gui.views.sorter import SorterEntry
 from cmk.gui.views.store import get_permitted_views
+from cmk.gui.visuals import get_livestatus_filter_headers
+from cmk.gui.visuals.filter import Filter
 
 
 def join_service_row_post_processor(

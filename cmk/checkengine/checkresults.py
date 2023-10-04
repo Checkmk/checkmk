@@ -9,9 +9,25 @@ import dataclasses
 from collections.abc import Sequence
 
 from cmk.utils.check_utils import worst_service_state
-from cmk.utils.type_defs import HostName, MetricTuple, state_markers
+from cmk.utils.hostaddress import HostName
+from cmk.utils.metrics import MetricName
 
-__all__ = ["ActiveCheckResult", "ServiceCheckResult"]
+__all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_markers"]
+
+
+# Symbolic representations of states in plugin output
+# TODO(ml): Should probably be of type enum::int -> str
+state_markers = ("", "(!)", "(!!)", "(?)")
+
+
+MetricTuple = tuple[
+    MetricName,
+    float,
+    float | None,
+    float | None,
+    float | None,
+    float | None,
+]
 
 
 @dataclasses.dataclass

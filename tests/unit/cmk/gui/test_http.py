@@ -14,7 +14,7 @@ from werkzeug.test import create_environ
 
 import cmk.gui.http as http
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 global_request = request
@@ -477,3 +477,92 @@ def test_get_url_input() -> None:
     assert "not a valid" in "%s" % e
 
     assert global_request.get_url_input("no_url") == "2"
+
+
+# Test that content types will correctly be handled for content disposition
+
+
+@pytest.mark.parametrize(
+    "content_type, disposition_type, file_name",
+    [
+        (
+            "application/x-mkp",
+            ContentDispositionType.INLINE,
+            "file.mkp",
+        ),
+        (
+            "text/csv",
+            ContentDispositionType.ATTACHMENT,
+            "file.csv",
+        ),
+        (
+            "image/png",
+            ContentDispositionType.ATTACHMENT,
+            "file.png",
+        ),
+        (
+            "application/x-tgz",
+            ContentDispositionType.ATTACHMENT,
+            "file.tar.gz",
+        ),
+    ],
+)
+def test_content_disposition_valid(
+    content_type: str,
+    disposition_type: ContentDispositionType,
+    file_name: str,
+) -> None:
+    response.set_content_type(content_type)
+    response.set_content_disposition(disposition_type, file_name)
+
+
+@pytest.mark.parametrize(
+    "content_type, disposition_type, file_name",
+    [
+        (
+            "application/x-mkp",
+            ContentDispositionType.INLINE,
+            "file.mkz",
+        ),
+        (
+            "application/x-mkz",
+            ContentDispositionType.INLINE,
+            "file.mkp",
+        ),
+    ],
+)
+def test_content_disposition_invalid_extension(
+    content_type: str,
+    disposition_type: ContentDispositionType,
+    file_name: str,
+) -> None:
+    response.set_content_type(content_type)
+    with pytest.raises(
+        ValueError, match="Invalid file extension: Have you set the Content-Type header?"
+    ):
+        response.set_content_disposition(disposition_type, file_name)
+
+
+@pytest.mark.parametrize(
+    "content_type, disposition_type, file_name",
+    [
+        (
+            "application/x-mkp",
+            ContentDispositionType.INLINE,
+            "\\file.mkp",
+        ),
+        (
+            "application/x-mkp",
+            ContentDispositionType.INLINE,
+            '"file.mkp',
+        ),
+    ],
+)
+def test_content_disposition_invalid_characters(
+    content_type: str,
+    disposition_type: ContentDispositionType,
+    file_name: str,
+) -> None:
+    response.set_content_type(content_type)
+    with pytest.raises(ValueError, match="Invalid character in filename"):
+        response.set_content_disposition(disposition_type, file_name)

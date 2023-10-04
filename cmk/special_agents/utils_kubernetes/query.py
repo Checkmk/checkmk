@@ -15,11 +15,11 @@ import enum
 import json
 import logging
 from collections.abc import Iterable, Iterator, Mapping, MutableMapping
-from typing import final, NewType, Union
+from typing import final, NewType
 
 import requests
 import urllib3
-from pydantic import BaseModel, parse_obj_as, ValidationError
+from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
@@ -33,12 +33,9 @@ from cmk.special_agents.utils_kubernetes.prometheus_api import (
 
 TCPTimeout = NewType("TCPTimeout", tuple[int, int])
 
-HTTPResult = Union[
-    Response,
-    ValidationError,
-    json.JSONDecodeError,
-    requests.exceptions.RequestException,
-]
+HTTPResult = (
+    Response | ValidationError | json.JSONDecodeError | requests.exceptions.RequestException
+)
 
 
 class PrometheusEndpoints(enum.StrEnum):
@@ -73,14 +70,13 @@ class NoUsageConfig(BaseModel):
 
 
 class SessionConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     token: str
     usage_proxy: str
     usage_read_timeout: int
     usage_connect_timeout: int
     usage_verify_cert: bool
-
-    class Config:
-        allow_mutable = False
 
     def requests_timeout(self) -> TCPTimeout:
         return TCPTimeout((self.usage_connect_timeout, self.usage_read_timeout))
@@ -90,15 +86,14 @@ class SessionConfig(BaseModel):
 
 
 class APISessionConfig(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
     api_server_endpoint: str
     token: str
     api_server_proxy: str
     k8s_api_read_timeout: int
     k8s_api_connect_timeout: int
     verify_cert_api: bool
-
-    class Config:
-        allow_mutable = False
 
     def requests_timeout(self) -> TCPTimeout:
         return TCPTimeout((self.k8s_api_connect_timeout, self.k8s_api_read_timeout))
@@ -140,11 +135,12 @@ _AllConfigs = CollectorSessionConfig | PrometheusSessionConfig | NoUsageConfig
 
 
 def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
-    return parse_obj_as(_AllConfigs, arguments.__dict__)  # type: ignore[arg-type]
+    adapter = TypeAdapter(_AllConfigs)
+    return adapter.validate_python(arguments.__dict__)  # type: ignore[arg-type, return-value]
 
 
 def parse_api_session_config(arguments: argparse.Namespace) -> APISessionConfig:
-    return APISessionConfig.parse_obj(arguments.__dict__)
+    return APISessionConfig.model_validate(arguments.__dict__)
 
 
 def send_requests(

@@ -5,7 +5,6 @@
 
 from collections.abc import Iterable, Mapping
 from itertools import chain
-from typing import List
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature, TempParamType
@@ -20,7 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 Section = Mapping[str, float]
 
 
-def parse_gude_temp(string_table: List[StringTable]) -> Section:
+def parse_gude_temp(string_table: list[StringTable]) -> Section:
     return {
         f"Sensor {index}": float(reading) / 10
         for index, reading in chain.from_iterable(string_table)
@@ -46,10 +45,6 @@ check_info["gude_temp"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.66"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.67"),
     ),
-    parse_function=parse_gude_temp,
-    discovery_function=inventory_gude_temp,
-    check_function=check_gude_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.28507.{table}.1.6.1.1",
@@ -57,6 +52,10 @@ check_info["gude_temp"] = LegacyCheckDefinition(
         )
         for table in ["19", "38", "66", "67"]
     ],
+    parse_function=parse_gude_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_gude_temp,
+    check_function=check_gude_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (35.0, 40.0),

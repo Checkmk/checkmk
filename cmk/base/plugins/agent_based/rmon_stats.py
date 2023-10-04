@@ -9,7 +9,8 @@
 # The MIB is called RMON-MIB
 
 import time
-from typing import Literal, Mapping
+from collections.abc import Mapping
+from typing import Literal
 
 from .agent_based_api.v1 import (
     all_of,

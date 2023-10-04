@@ -72,7 +72,7 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
 
         try:
             os.mkdir(site.tmp_dir)
-            os.chmod(site.tmp_dir, 0o751)
+            os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
         except OSError as e:
             if e.errno != errno.EEXIST:  # File exists
                 raise
@@ -82,7 +82,7 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
     sys.stdout.flush()
     if not os.path.exists(site.tmp_dir):
         os.mkdir(site.tmp_dir)
-        os.chmod(site.tmp_dir, 0o751)
+        os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
     completed_process = subprocess.run(
@@ -230,8 +230,7 @@ def add_to_fstab(site: SiteContext, tmpfs_size: str | None = None) -> None:
             fstab.write("\n")
 
         fstab.write(
-            "tmpfs  %s tmpfs noauto,user,mode=751,uid=%s,gid=%s%s 0 0\n"
-            % (mountpoint, site.name, site.name, sizespec)
+            f"tmpfs  {mountpoint} tmpfs noauto,user,mode=751,uid={site.name},gid={site.name}{sizespec} 0 0\n"
         )
 
 

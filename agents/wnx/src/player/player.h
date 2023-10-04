@@ -13,11 +13,11 @@
 #include <optional>
 #include <string>
 
-#include "cma_core.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
+#include "wnx/cma_core.h"
+#include "wnx/logger.h"
 
 namespace cma::player {
 constexpr int kMaxPluginsToExec = 32;

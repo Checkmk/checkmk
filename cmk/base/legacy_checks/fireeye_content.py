@@ -22,13 +22,13 @@ SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtu
 )
 
 
-def parse_fireeye_content(info):
+def parse_fireeye_content(string_table):
     security_content_status_map = {
         "1": "OK",
         "0": "failed",
     }
 
-    version, update_status_raw, update_time_str = info[0]
+    version, update_status_raw, update_time_str = string_table[0]
     update_status = security_content_status_map.get(update_status_raw)
 
     # If content update has never completed, last_update_time contains no valid timestamp
@@ -68,13 +68,13 @@ def check_fireeye_content(_no_item, params, parsed):
 
 check_info["fireeye_content"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_fireeye_content,
-    discovery_function=discover_fireeye_content,
-    check_function=check_fireeye_content,
-    service_name="Security content",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["5", "6", "7"],
     ),
+    parse_function=parse_fireeye_content,
+    service_name="Security content",
+    discovery_function=discover_fireeye_content,
+    check_function=check_fireeye_content,
     check_ruleset_name="fireeye_content",
 )

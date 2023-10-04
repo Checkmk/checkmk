@@ -10,12 +10,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_atto_fibrebridge_chassis(info):
+def parse_atto_fibrebridge_chassis(string_table):
     parsed = {}
 
-    min_operating_temp = int(info[0][0])
-    max_operating_temp = int(info[0][1])
-    chassis_temp = int(info[0][2])
+    min_operating_temp = int(string_table[0][0])
+    max_operating_temp = int(string_table[0][1])
+    chassis_temp = int(string_table[0][2])
 
     parsed["temperature"] = {
         "dev_levels": (max_operating_temp, max_operating_temp),
@@ -23,7 +23,7 @@ def parse_atto_fibrebridge_chassis(info):
         "reading": chassis_temp,
     }
 
-    parsed["throughput_status"] = info[0][3]
+    parsed["throughput_status"] = string_table[0][3]
 
     return parsed
 
@@ -50,9 +50,10 @@ def check_atto_fibrebridge_chassis_temp(item, params, parsed):
 
 
 check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
+    sections=["atto_fibrebridge_chassis"],
     discovery_function=inventory_atto_fibrebridge_chassis_temp,
     check_function=check_atto_fibrebridge_chassis_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
 )
 
@@ -82,12 +83,12 @@ def check_atto_fibrebridge_chassis(_no_item, _no_params, parsed):
 
 check_info["atto_fibrebridge_chassis"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
-    parse_function=parse_atto_fibrebridge_chassis,
-    discovery_function=inventory_atto_fibrebridge_chassis,
-    check_function=check_atto_fibrebridge_chassis,
-    service_name="Throughput Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.2",
         oids=["4", "5", "8", "11"],
     ),
+    parse_function=parse_atto_fibrebridge_chassis,
+    service_name="Throughput Status",
+    discovery_function=inventory_atto_fibrebridge_chassis,
+    check_function=check_atto_fibrebridge_chassis,
 )

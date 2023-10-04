@@ -8,16 +8,16 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, render, SNMPTree
 
 
-def parse_huawei_wlc_devs(info):
+def parse_huawei_wlc_devs(string_table):
     parsed = {}
 
     # Devices
-    for name, cpu_perc, mem_perc in info:
+    for name, cpu_perc, mem_perc in string_table:
         if name:
             parsed[name] = {}
             for metric, value in (("cpu_percent", cpu_perc), ("mem_used_percent", mem_perc)):
@@ -28,11 +28,11 @@ def parse_huawei_wlc_devs(info):
 
 check_info["huawei_wlc_devs"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
-    parse_function=parse_huawei_wlc_devs,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1",
         oids=["2.1.13", "1.1.5", "1.1.7"],
     ),
+    parse_function=parse_huawei_wlc_devs,
 )
 
 
@@ -52,16 +52,16 @@ def check_huawei_wlc_devs_mem(item, params, parsed):
         val,
         "mem_used_percent",
         lev,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Used",
     )
 
 
 check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
-    discovery_function=discovery_huawei_wlc_devs_mem,
-    parse_function=parse_huawei_wlc_devs,
-    check_function=check_huawei_wlc_devs_mem,
     service_name="Device %s Memory",
+    sections=["huawei_wlc_devs"],
+    discovery_function=discovery_huawei_wlc_devs_mem,
+    check_function=check_huawei_wlc_devs_mem,
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -79,14 +79,14 @@ def check_huawei_wlc_devs_cpu(item, params, parsed):
     val = data.get("%s" % "cpu_percent")
 
     yield check_levels(
-        val, "cpu_percent", lev, human_readable_func=get_percent_human_readable, infoname="Usage"
+        val, "cpu_percent", lev, human_readable_func=render.percent, infoname="Usage"
     )
 
 
 check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
-    parse_function=parse_huawei_wlc_devs,
+    service_name="Device %s CPU",
+    sections=["huawei_wlc_devs"],
     discovery_function=discovery_huawei_wlc_devs_cpu,
     check_function=check_huawei_wlc_devs_cpu,
-    service_name="Device %s CPU",
     check_default_parameters={"levels": (80.0, 90.0)},
 )

@@ -5,7 +5,8 @@
 
 import datetime
 import json
-from typing import Any, Mapping, NamedTuple, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -50,7 +51,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
     snapshots = section  # just to be clear
 
     # use UTC-timestamp - don't use time.time() here since it's local
-    now = int(datetime.datetime.utcnow().timestamp())
+    now = int(datetime.datetime.now(tz=datetime.UTC).timestamp())
 
     if any(s for s in snapshots if s.time > now):
         yield Result(

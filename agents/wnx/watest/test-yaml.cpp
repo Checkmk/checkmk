@@ -6,18 +6,18 @@
 #include <filesystem>
 #include <ranges>
 
-#include "cfg.h"
-#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
 #include "providers/mrpe.h"
-#include "read_file.h"
-#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
+#include "watest/test_tools.h"
+#include "wnx/cfg.h"
+#include "wnx/cfg_details.h"
+#include "wnx/read_file.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -192,7 +192,8 @@ TEST(AgentConfig, AggregateMap) {
                                        vars::kPluginPattern);
         auto merged_yaml = full_yaml[vars::kPluginsExecution];
 
-        auto select = [merged_yaml](int index, const std::string &name) -> auto{
+        auto select = [merged_yaml](int index,
+                                    const std::string &name) -> auto {
             return merged_yaml[index][name].as<std::string>();
         };
 
@@ -214,7 +215,7 @@ TEST(AgentConfig, AggregateMap) {
 }
 
 TEST(AgentConfig, SmartMerge) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
@@ -313,7 +314,7 @@ TEST(AgentConfig, SmartMerge) {
 }
 
 TEST(AgentConfig, Aggregate) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     std::wstring temporary_name = L"tmp_";
     temporary_name += files::kDefaultMainConfig;
@@ -432,7 +433,7 @@ TEST(AgentConfig, Aggregate) {
 }
 
 TEST(AgentConfig, ReloadWithTimestamp) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     {
         // prepare file
@@ -477,17 +478,14 @@ TEST(AgentConfig, ReloadWithTimestamp) {
 }
 
 TEST(AgentConfig, GetValueTest) {
-    std::wstring key_path{L"System\\CurrentControlSet\\services\\"};
-    key_path += L"Ntfs";
-    auto type = wtools::GetRegistryValue(key_path, L"Type", 0);
-    EXPECT_EQ(type, 2);
-    auto group = wtools::GetRegistryValue(key_path, L"Group", L"");
-    EXPECT_EQ(group, L"Boot File System");
+    constexpr std::wstring_view key_path{
+        L"System\\CurrentControlSet\\services\\Ntfs"};
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Type", 0), 2);
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Group", L""),
+              L"Boot File System");
 
-    type = wtools::GetRegistryValue(key_path, L"Typex", 0);
-    EXPECT_EQ(type, 0);
-    group = wtools::GetRegistryValue(key_path, L"Groupf", L"--");
-    EXPECT_EQ(group, L"--");
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Typex", 0), 0);
+    EXPECT_EQ(wtools::GetRegistryValue(key_path, L"Groupf", L"--"), L"--");
 }
 
 TEST(AgentConfig, FoldersTest) {
@@ -537,25 +535,28 @@ TEST(AgentConfig, FoldersTest) {
 }
 }  // namespace cma::cfg::details
 
-namespace cma::cfg {  // to become friendly for cma::cfg classes
+namespace cma::cfg {
 
-TEST(AgentConfig, LogFile) {
-    auto fname = GetCurrentLogFileName();
-    EXPECT_TRUE(!fname.empty());
-}
+TEST(AgentConfig, LogFile) { EXPECT_FALSE(GetCurrentLogFileName().empty()); }
 
 TEST(AgentConfig, YamlRead) {
-    auto file = tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
-    auto ret = fs::exists(file);
-    ASSERT_TRUE(ret);
-
+    const auto file =
+        tst::MakePathToConfigTestFiles() / tst::kDefaultDevMinimum;
     auto result = LoadAndCheckYamlFile(file.wstring());
-    auto sz = result.size();
-    auto val_global = result["global"];
-    auto v = result["globalvas"];
-    EXPECT_TRUE(v.size() == 0);
-    EXPECT_TRUE(sz > 0);
+    EXPECT_GT(result.size(), 0U);
+    EXPECT_TRUE(result["global"].IsDefined());
+    EXPECT_FALSE(result["globalvas"].IsDefined());
 }
+
+namespace {
+template <typename... Args>
+std::vector<std::string> MakeStringVector(Args &&...args) {
+    std::vector<std::string> v;
+    static_assert((std::is_constructible_v<std::string, Args &&> && ...));
+    (v.emplace_back(std::forward<Args>(args)), ...);
+    return v;
+}
+}  // namespace
 
 TEST(AgentConfig, InternalArray) {
     const std::string key = "sections";
@@ -563,132 +564,57 @@ TEST(AgentConfig, InternalArray) {
         return YAML::Load(key + ": " + text + "\n");
     };
 
-    {
-        auto node = create_yaml("");
-        auto result = GetInternalArray(node, key);
-        ASSERT_TRUE(result.empty());
-    }
-
-    {
-        auto node = create_yaml("df ps");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 2);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-    }
-
-    {
-        auto node = create_yaml("[df, ps]");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 2);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-    }
-
-    {
-        auto node = create_yaml(" \n  - [df, ps]");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 2);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-    }
-
-    {
-        auto node = create_yaml(
-            " \n  - [df, ps]"
-            " \n  - xx");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 3);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-        EXPECT_EQ(result[2], "xx");
-    }
-
-    {
-        auto node = create_yaml(
-            " \n  - [df, ps]"
-            " \n  - [xx]");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 3);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-        EXPECT_EQ(result[2], "xx");
-    }
-
-    {
-        auto node = create_yaml(
-            " \n  - [df, ps]"
-            " \n  - "
-            " \n  - [xx]"
-            " \n  - yy zz");
-        auto result = GetInternalArray(node, key);
-        ASSERT_EQ(result.size(), 5);
-        EXPECT_EQ(result[0], "df");
-        EXPECT_EQ(result[1], "ps");
-        EXPECT_EQ(result[2], "xx");
-        EXPECT_EQ(result[3], "yy");
-        EXPECT_EQ(result[4], "zz");
-    }
+    ASSERT_TRUE(GetInternalArray(create_yaml(""), key).empty());
+    ASSERT_EQ(GetInternalArray(create_yaml("df ps"), key),
+              MakeStringVector("df", "ps"));
+    ASSERT_EQ(GetInternalArray(create_yaml("[df, ps]"), key),
+              MakeStringVector("df", "ps"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"), key),
+              MakeStringVector("df", "ps"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"
+                                           " \n  - xx"),
+                               key),
+              MakeStringVector("df", "ps", "xx"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"
+                                           " \n  - [xx]"),
+                               key),
+              MakeStringVector("df", "ps", "xx"));
+    ASSERT_EQ(GetInternalArray(create_yaml(" \n  - [df, ps]"
+                                           " \n  - "
+                                           " \n  - [xx]"
+                                           " \n  - yy zz"),
+                               key),
+              MakeStringVector("df", "ps", "xx", "yy", "zz"));
 }
 
 TEST(AgentConfig, FactoryConfig) {
-    auto temp_fs{tst::TempCfgFs::Create()};
+    const auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     const auto cfg = GetLoadedConfig();
-    EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
-
-    EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
-    auto port = GetVal(groups::kGlobal, vars::kPort, -1);
-    EXPECT_TRUE(port != -1);
-
-    auto encrypt = GetVal(groups::kGlobal, vars::kGlobalEncrypt, true);
-    EXPECT_TRUE(!encrypt);
-
-    auto try_kill_mode = GetVal(groups::kGlobal, vars::kTryKillPluginProcess,
-                                std::string("invalid"));
-    EXPECT_EQ(try_kill_mode, defaults::kTryKillPluginProcess);
-
-    auto password =
-        GetVal(groups::kGlobal, vars::kGlobalPassword, std::string("ppp"));
-    EXPECT_TRUE(password == "secret");
-
-    auto name = GetVal(groups::kGlobal, vars::kName, std::string(""));
-    EXPECT_TRUE(name.empty()) << "name should absent";
-
-    auto ipv6 = GetVal(groups::kGlobal, vars::kIpv6, true);
-    EXPECT_TRUE(!ipv6);
-
-    auto async = GetVal(groups::kGlobal, vars::kAsync, false);
-    EXPECT_TRUE(async);
-
-    auto flush = GetVal(groups::kGlobal, vars::kSectionFlush, true);
-    EXPECT_TRUE(flush) << "flush should absent";
-
-    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
-    EXPECT_TRUE(execute.size() > 3);
-
-    auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
-    EXPECT_TRUE(only_from.empty());
-
-    {
-        auto sections_enabled =
-            GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        EXPECT_EQ(sections_enabled.size(), 21);
-
-        auto sections_disabled =
-            GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
-        EXPECT_EQ(sections_disabled.size(), 0) << "no disabled sections";
-    }
+    EXPECT_NE(GetVal(groups::kGlobal, vars::kPort, -1), -1);
+    EXPECT_FALSE(GetVal(groups::kGlobal, vars::kGlobalEncrypt, true));
+    EXPECT_EQ(GetVal(groups::kGlobal, vars::kTryKillPluginProcess,
+                     std::string("invalid")),
+              defaults::kTryKillPluginProcess);
+    EXPECT_EQ(
+        GetVal(groups::kGlobal, vars::kGlobalPassword, std::string("ppp")),
+        "secret");
+    EXPECT_TRUE(GetVal(groups::kGlobal, vars::kName, std::string("")).empty());
+    EXPECT_FALSE(GetVal(groups::kGlobal, vars::kIpv6, true));
+    EXPECT_TRUE(GetVal(groups::kGlobal, vars::kAsync, false));
+    EXPECT_TRUE(GetVal(groups::kGlobal, vars::kSectionFlush, true));
+    EXPECT_GT(GetInternalArray(groups::kGlobal, vars::kExecute).size(), 3U);
+    EXPECT_TRUE(GetInternalArray(groups::kGlobal, vars::kOnlyFrom).empty());
+    EXPECT_EQ(GetInternalArray(groups::kGlobal, vars::kSectionsEnabled).size(),
+              21U);
+    EXPECT_TRUE(
+        GetInternalArray(groups::kGlobal, vars::kSectionsDisabled).empty());
 
     {
         auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
         EXPECT_TRUE(realtime.size() == 6);
-
-        auto encrypt = GetVal(realtime, vars::kRtEncrypt, true);
-        EXPECT_TRUE(!encrypt);
-
-        auto rt_port = GetVal(realtime, vars::kRtPort, 111);
-        EXPECT_EQ(rt_port, kDefaultRealtimePort);
+        EXPECT_FALSE(GetVal(realtime, vars::kRtEncrypt, true));
+        EXPECT_EQ(GetVal(realtime, vars::kRtPort, 111), kDefaultRealtimePort);
 
         EXPECT_EQ(GetVal(groups::kGlobal, vars::kGlobalWmiTimeout, 1),
                   kDefaultWmiTimeout);
@@ -697,33 +623,24 @@ TEST(AgentConfig, FactoryConfig) {
                          std::string{values::kCpuLoadWmi}),
                   values::kCpuLoadPerf);
 
-        auto passphrase =
-            GetVal(realtime, vars::kGlobalPassword, std::string());
-        EXPECT_TRUE(passphrase == "this is my password");
+        EXPECT_EQ(GetVal(realtime, vars::kGlobalPassword, std::string()),
+                  "this is my password");
 
-        auto run = GetInternalArray(realtime, vars::kRtRun);
-        EXPECT_TRUE(run.size() == 3);
+        EXPECT_EQ(GetInternalArray(realtime, vars::kRtRun).size(), 3U);
     }
     {
         auto logging = GetNode(groups::kGlobal, vars::kLogging);
-        EXPECT_EQ(logging.size(), 7);
-
-        auto log_location =
-            GetVal(logging, vars::kLogLocation, std::string(""));
-
-        EXPECT_TRUE(log_location.empty());
+        EXPECT_EQ(logging.size(), 7U);
+        EXPECT_TRUE(
+            GetVal(logging, vars::kLogLocation, std::string("")).empty());
 
         auto debug = GetVal(logging, vars::kLogDebug, std::string("xxx"));
         EXPECT_TRUE(debug == "yes" || debug == "all");
+        EXPECT_TRUE(GetVal(logging, vars::kLogWinDbg, false));
+        EXPECT_TRUE(GetVal(logging, vars::kLogEvent, false));
 
-        auto windbg = GetVal(logging, vars::kLogWinDbg, false);
-        EXPECT_TRUE(windbg);
-
-        auto event_log = GetVal(logging, vars::kLogEvent, false);
-        EXPECT_TRUE(event_log);
-
-        auto file_log = GetVal(logging, vars::kLogFile, std::string("a.log"));
-        EXPECT_TRUE(file_log.empty());
+        EXPECT_TRUE(
+            GetVal(logging, vars::kLogFile, std::string("a.log")).empty());
         EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileCount, 0),
                   cfg::kLogFileMaxCount);
         EXPECT_EQ(GetVal(logging, vars::kLogFileMaxFileSize, 0),
@@ -732,28 +649,25 @@ TEST(AgentConfig, FactoryConfig) {
 
     // winperf
     {
-        auto winperf_on = GetVal(groups::kWinPerf, vars::kEnabled, false);
-        EXPECT_TRUE(winperf_on);
+        EXPECT_TRUE(GetVal(groups::kWinPerf, vars::kEnabled, false));
 
-        auto winperf_counters =
-            GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-        EXPECT_EQ(winperf_counters.size(), 3);
-        for (const auto &[id, name] : winperf_counters) {
-            EXPECT_TRUE(!id.empty());
-            EXPECT_TRUE(!name.empty());
-        }
+        auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+        EXPECT_EQ(counters.size(), 3);
+        EXPECT_FALSE(rs::any_of(counters, [](auto &&a) {
+            const auto &[counter_id, counter_name] = a;
+            return counter_id.empty() || counter_name.empty();
+        }));
     }
 
     // mrpe
     {
-        auto mrpe_on = GetVal(groups::kMrpe, vars::kEnabled, false);
-        EXPECT_TRUE(mrpe_on);
-
-        auto mrpe_timeout = GetVal(groups::kMrpe, vars::kTimeout, 31);
-        EXPECT_EQ(mrpe_timeout, 60);
-        auto mrpe_parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, true);
-        EXPECT_FALSE(mrpe_parallel);
+        EXPECT_TRUE(GetVal(groups::kMrpe, vars::kEnabled, false));
+        EXPECT_EQ(GetVal(groups::kMrpe, vars::kTimeout, 31), 60);
+        EXPECT_FALSE(GetVal(groups::kMrpe, vars::kMrpeParallel, true));
     }
+
+    // extensions
+    // NOT TESTED here, see test-extensions
 
     // modules
     {
@@ -863,19 +777,18 @@ TEST(AgentConfig, UTF16LE) {
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);
 
-    cma::OnStart(cma::AppType::test);
+    OnStartTest();
 }
 
 TEST(AgentConfig, FailScenario_Simulation) {
     auto loader = [](auto &...str) -> bool {
-        auto cfg_files = cma::tools::ConstructVectorWstring(str...);
+        auto cfg_files = tools::ConstructVectorWstring(str...);
 
         auto ret = InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
         if (!ret) {
             return false;
         }
-        auto cfg = GetLoadedConfig();
-        return cfg.IsMap();
+        return GetLoadedConfig().IsMap();
     };
 
     details::KillDefaultConfig();
@@ -897,7 +810,7 @@ TEST(AgentConfig, FailScenario_Simulation) {
 
     auto node = GetNode(groups::kGlobal, "xxx2");
     EXPECT_TRUE(node.IsNull() || !node.IsDefined());
-    OnStart(AppType::test);
+    OnStartTest();
     EXPECT_FALSE(loader(L"StranegName.yml"));
 }
 
@@ -921,7 +834,7 @@ TEST(AgentConfig, CacheApi) {
 }
 
 TEST(AgentConfig, BackupCheck) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     // caching USER
@@ -935,7 +848,7 @@ TEST(AgentConfig, BackupCheck) {
             user_f, "user:\n  status: 'loaded'\nglobal:\n  port: 111");
     }
     ASSERT_TRUE(temp_fs->reloadConfig());
-    auto expected_name = GetCfg().getCacheDir() / source_name.filename();
+    const auto expected_name = GetCfg().getCacheDir() / source_name.filename();
 
     EXPECT_TRUE(fs::exists(expected_name));
     fs::remove(expected_name);
@@ -947,10 +860,10 @@ TEST(AgentConfig, LoadingCheck) {
     XLOG::setup::ChangeLogFileName("b.log");
     XLOG::setup::EnableDebugLog(false);
     XLOG::setup::EnableWinDbg(false);
-    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    const auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
-    auto fname =
+    const auto fname =
         wtools::ToStr(fs::path{XLOG::l.getLogParam().filename()}.filename());
     EXPECT_TRUE(fname == std::string{kDefaultLogFileName});
     EXPECT_TRUE(XLOG::d.isFileDbg());
@@ -969,7 +882,7 @@ TEST(AgentConfig, LoadingCheck) {
 }
 
 TEST(AgentConfig, FactoryConfigBase) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     Global g;
@@ -998,7 +911,7 @@ TEST(AgentConfig, FactoryConfigBase) {
 }
 
 TEST(AgentConfig, GlobalTest) {
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
     Global g;
@@ -1012,7 +925,7 @@ TEST(AgentConfig, GlobalTest) {
     fname = g.fullLogFileNameAsString();
     EXPECT_EQ(fname, std::string("C:\\Windows\\Logs\\") + kDefaultLogFileName);
 
-    if (cma::tools::win::IsElevated()) {
+    if (tools::win::IsElevated()) {
         g.setupLogEnvironment();
         fs::path logf = fname;
         fs::remove(logf);
@@ -1095,8 +1008,8 @@ TEST(AgentConfig, MergeSeqCombineValue) {
                              details::Combine::merge_value);
     YAML::Emitter emit;
     emit << target["logfile"];
-    auto result = emit.c_str();
-    auto table = cma::tools::SplitString(result, "\n");
+    const auto result = emit.c_str();
+    const auto table = cma::tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_USER_APP);
     EXPECT_EQ(table[1], LW_USER_SYS);
@@ -1110,8 +1023,8 @@ TEST(AgentConfig, MergeSeqCombine) {
                              details::Combine::merge);
     YAML::Emitter emit;
     emit << target["logfile"];
-    auto result = emit.c_str();
-    auto table = cma::tools::SplitString(result, "\n");
+    const auto result = emit.c_str();
+    const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_ROOT_APP);
     EXPECT_EQ(table[1], LW_ROOT_STAR);
@@ -1119,14 +1032,14 @@ TEST(AgentConfig, MergeSeqCombine) {
 }
 
 TEST(AgentConfig, MergeSeqOverride) {
-    YAML::Node user = YAML::Load(lw_user);
-    YAML::Node target = YAML::Load(lw_root);
+    const auto user = YAML::Load(lw_user);
+    const auto target = YAML::Load(lw_root);
     details::CombineSequence("name", target["logfile"], user["logfile"],
                              details::Combine::overwrite);
     YAML::Emitter emit;
     emit << target["logfile"];
-    auto result = emit.c_str();
-    auto table = cma::tools::SplitString(result, "\n");
+    const auto result = emit.c_str();
+    const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 2);
     EXPECT_EQ(table[0], LW_USER_APP);
     EXPECT_EQ(table[1], LW_USER_SYS);
@@ -1160,11 +1073,9 @@ static std::string node_text =
     "  sections:\n"
     "    - x y\n"
     "    - [z]\n"
-    "  disabled_sections: ~"
+    "  disabled_sections: ~";
 
-    ;
-
-static std::string node_ok =
+constexpr std::string_view g_node_ok =
     "global:\n"
     "  execute: []\n"  // expected clean
     "  realtime:\n"
@@ -1181,19 +1092,19 @@ static std::string node_ok =
     "  sections:\n"
     "    - x y\n"
     "    - [z]\n"
-    "  disabled_sections: ~"
+    "  disabled_sections: ~";
 
-    ;
-
-static YAML::Node generateTestNode(const std::string &node_text) {
+namespace {
+YAML::Node generateTestNode(std::string_view node_text) {
     try {
-        return YAML::Load(node_text);
+        return YAML::Load(std::string{node_text});
     } catch (const std::exception &e) {
         XLOG::l("exception '{}'", e.what());
     }
 
     return {};
 }
+}  // namespace
 
 TEST(AgentConfig, NodeCleanup) {
     const auto temp_fs = tst::TempCfgFs::Create();
@@ -1206,12 +1117,12 @@ TEST(AgentConfig, NodeCleanup) {
     YAML::Emitter emit;
     emit << node;
     const std::string value = emit.c_str();
-    EXPECT_EQ(value, node_ok);
+    EXPECT_EQ(value, g_node_ok);
     expected_count = RemoveInvalidNodes(node);
     EXPECT_EQ(expected_count, 0);
 }
 
-static std::string node_plugins_execution =
+constexpr std::string_view node_plugins_execution =
     "plugins:\n"
     "  execution:\n"  // expected clean
     "  - pattern: a_1\n"
@@ -1266,6 +1177,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
     for (int i = 0; i < 4; i++) {
         EXPECT_TRUE(exe_units[2].run());
         EXPECT_EQ(exe_units[2].retry(), 0);
+        EXPECT_FALSE(exe_units[2].repairInvalidUtf());
     }
 
     EXPECT_EQ(exe_units[3].pattern(), "s_eq_a_2600");
@@ -1275,6 +1187,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
     EXPECT_EQ(exe_units[4].pattern(), "s_2");
     EXPECT_EQ(exe_units[4].run(), false);
     EXPECT_EQ(exe_units[4].retry(), 1);
+    EXPECT_FALSE(exe_units[2].repairInvalidUtf());
 }
 
 TEST(AgentConfig, ApplyValueIfScalar) {
@@ -1284,7 +1197,8 @@ TEST(AgentConfig, ApplyValueIfScalar) {
         "async: yes\n"
         "cache_age: 193\n"
         "timeout: 77\n"
-        "retry_count: 7\n");
+        "retry_count: 7\n"
+        "repair_invalid_utf: yes\n");
     auto e_ = YAML::Load(
         "pattern: '*'\n"
         "_run: no\n"
@@ -1297,6 +1211,7 @@ TEST(AgentConfig, ApplyValueIfScalar) {
     int cache_age = 0;
     int timeout = kDefaultPluginTimeout;
     int retry = 0;
+    bool repair_invalid_utf = false;
     EXPECT_NO_THROW(ApplyValueIfScalar(YAML::Node(), run, ""));
     EXPECT_NO_THROW(ApplyValueIfScalar(e, run, ""));
     EXPECT_TRUE(run);
@@ -1324,6 +1239,9 @@ TEST(AgentConfig, ApplyValueIfScalar) {
     EXPECT_EQ(timeout, 77);
     EXPECT_NO_THROW(ApplyValueIfScalar(e, cache_age, vars::kPluginCacheAge));
     EXPECT_EQ(cache_age, 193);
+    EXPECT_NO_THROW(ApplyValueIfScalar(e, repair_invalid_utf,
+                                       vars::kPluginRepairInvalidUtf));
+    EXPECT_TRUE(repair_invalid_utf);
 }
 
 TEST(AgentConfig, ExeUnitTest) {
@@ -1334,6 +1252,7 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.timeout(), kDefaultPluginTimeout);
     EXPECT_EQ(e.cacheAge(), 0);
     EXPECT_EQ(e.retry(), 0);
+    EXPECT_FALSE(e.repairInvalidUtf());
     EXPECT_TRUE(e.group().empty());
     EXPECT_TRUE(e.user().empty());
 
@@ -1350,6 +1269,7 @@ TEST(AgentConfig, ExeUnitTest) {
     EXPECT_EQ(e.timeout(), 1);
     EXPECT_EQ(e.cacheAge(), 1111);
     EXPECT_EQ(e.retry(), 3);
+    EXPECT_FALSE(e.repairInvalidUtf());
 
     EXPECT_EQ(e.group(), "g");
     EXPECT_EQ(e.user(), "u u");
@@ -1372,22 +1292,26 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         "- pattern     : '1'\n"
         "  timeout     : 1\n"
         "  run         : yes\n"
+        "  repair_invalid_utf: yes\n"
         "\n"
         "- pattern     : '2'\n"
         "  timeout     : 2\n"
         "  run         : no\n"
+        "  repair_invalid_utf: yes\n"
         "\n"
         "- pattern     : '3'\n"
         "  group       : SomeUsers\n"
         "\n"
         "- pattern     : '4'\n"
         "  retry_count : 4\n"
+        "  repair_invalid_utf: no\n"
         "  user        : users_\n"
         "\n"
         "- pattern     : '5'\n"
         "  run         : false\n"
         "  async       : true\n"
         "  cache_age   : 5\n"
+        "  repair_invalid_utf: yes\n"
         "  group       : 'a a a '\n"
         "\n"
 
@@ -1405,14 +1329,15 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         int timeout;
         int cache_age;
         int retry;
+        bool repair_invalid_utf;
         std::string group;
         std::string user;
     } data[5] = {
-        {"1", false, true, 1, 0, 0, "", ""},
-        {"2", false, false, 2, 0, 0, "", ""},
-        {"3", false, true, kDefaultPluginTimeout, 0, 0, "SomeUsers", ""},
-        {"4", false, true, kDefaultPluginTimeout, 0, 4, "", "users_"},
-        {"5", true, false, kDefaultPluginTimeout, 120, 0, "a a a ", ""},
+        {"1", false, true, 1, 0, 0, true, "", ""},
+        {"2", false, false, 2, 0, 0, true, "", ""},
+        {"3", false, true, kDefaultPluginTimeout, 0, 0, false, "SomeUsers", ""},
+        {"4", false, true, kDefaultPluginTimeout, 0, 4, false, "", "users_"},
+        {"5", true, false, kDefaultPluginTimeout, 120, 0, true, "a a a ", ""},
     };
 
     int i = 0;
@@ -1423,6 +1348,7 @@ TEST(AgentConfig, ExeUnitTestYaml) {
         EXPECT_EQ(exe_units[i].timeout(), d.timeout);
         EXPECT_EQ(exe_units[i].cacheAge(), d.cache_age);
         EXPECT_EQ(exe_units[i].retry(), d.retry);
+        EXPECT_EQ(exe_units[i].repairInvalidUtf(), d.repair_invalid_utf);
         EXPECT_EQ(exe_units[i].group(), d.group);
         EXPECT_EQ(exe_units[i].user(), d.user);
         ++i;
@@ -1435,7 +1361,7 @@ static void SetCfgMode(YAML::Node cfg, std::string_view name,
 }
 
 TEST(AgentConfig, CleanupUninstall) {
-    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    const auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto cfg = GetLoadedConfig();
 

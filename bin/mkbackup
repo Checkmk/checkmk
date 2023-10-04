@@ -452,8 +452,7 @@ def complete_restore(state: State) -> None:
     cleanup_backup_job_states()
     duration = time.time() - (state.current_state.started or 0)
     log(
-        "--- Restore completed (Duration: %s, IO: %s/s) ---"
-        % (render.timespan(duration), render.fmt_bytes(state.current_state.bytes_per_second or 0))
+        f"--- Restore completed (Duration: {render.timespan(duration)}, IO: {render.fmt_bytes(state.current_state.bytes_per_second or 0)}/s) ---"
     )
 
 

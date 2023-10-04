@@ -11,7 +11,7 @@ does not work correctly on Windows and misses some of the outputs of check plugi
 Therefore if you want to get the output into a file the simply call the agent as follows:
 
 C+:
-C:\Program Files\Check_MK\> <b>check_mk_agent file output.txt</b>
+C:\Program Files\Check_MK\> check_mk_agent file output.txt
 C-:
 
 The output will then be written to the file <tt>output.txt</tt>.

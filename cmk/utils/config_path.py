@@ -35,9 +35,7 @@ class ConfigPath(abc.ABC):
         return self._path_elem
 
     def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, os.PathLike):
-            return False
-        return Path(self) == Path(other)
+        return Path(self) == Path(other) if isinstance(other, os.PathLike) else False
 
     def __hash__(self) -> int:
         return hash(type(self)) ^ hash(self._path_elem)

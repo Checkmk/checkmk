@@ -8,7 +8,6 @@
 
 #include <poll.h>
 
-#include <asio/basic_socket.hpp>
 #include <cassert>
 #include <cerrno>
 #include <chrono>
@@ -95,23 +94,10 @@ public:
         _pollfds.push_back({fd, toMask(e), 0});
     }
 
-    template <class Protocol, class SocketService>
-    void addFileDescriptor(
-        const asio::basic_socket<Protocol, SocketService> &sock, PollEvents e) {
-        addFileDescriptor(native_handle(sock), e);
-    }
-
     bool isFileDescriptorSet(int fd, PollEvents e) const {
         auto it = _fd_to_pollfd.find(fd);
         return it != _fd_to_pollfd.end() &&
                (_pollfds[it->second].revents & toMask(e)) != 0;
-    }
-
-    template <class Protocol, class SocketService>
-    bool isFileDescriptorSet(
-        const asio::basic_socket<Protocol, SocketService> &sock,
-        PollEvents e) const {
-        return isFileDescriptorSet(native_handle(sock), e);
     }
 
 private:
@@ -128,15 +114,6 @@ private:
             (is_empty_bit_mask(e & PollEvents::in) ? 0 : POLLIN) |
             (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT) |
             (is_empty_bit_mask(e & PollEvents::hup) ? 0 : POLLHUP));
-    }
-
-    template <class Protocol, class SocketService>
-    static int native_handle(
-        const asio::basic_socket<Protocol, SocketService> &sock) {
-        // socket::native_handle is not const but we just want the copy of an
-        // int here.
-        return const_cast<asio::basic_socket<Protocol, SocketService> &>(sock)
-            .native_handle();
     }
 };
 

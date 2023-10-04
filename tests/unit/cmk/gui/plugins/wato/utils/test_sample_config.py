@@ -18,7 +18,7 @@ def test_registered_generators() -> None:
         "ec_sample_rule_pack",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_generators += [
             "cee_agent_bakery",
             "cee_basic_config",
@@ -32,7 +32,7 @@ def test_get_sorted_generators() -> None:
         "basic_wato_config",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
             "cee_basic_config",
             "cee_agent_bakery",

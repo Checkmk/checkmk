@@ -6,10 +6,15 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_average, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+)
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 
@@ -20,7 +25,7 @@ def fireeye_counter_generic(value, what, average):
     # For the counter variable name, we remove all spaces
     # (e.g. 'fireeye.infected.url')
     counter = "fireeye_mail.%s" % what.replace(" ", ".").lower()
-    rate = get_rate(counter, this_time, value)
+    rate = get_rate(get_value_store(), counter, this_time, value, raise_overflow=True)
     state = 0
     if what == "Bypass" and rate > 0:
         state = 2
@@ -28,9 +33,9 @@ def fireeye_counter_generic(value, what, average):
     # (e.g. 'infected_rate')
     perfdata = [("%s_rate" % what.split(" ")[0].lower(), rate)]
     if average:
-        avg = get_average(" %s avg" % counter, this_time, rate, average)
+        avg = get_average(get_value_store(), " %s avg" % counter, this_time, rate, average)
         return (state, "%s: %.2f mails/%d seconds" % (what, avg * average, average), perfdata)
-    return (state, "%s: %.2f mails/s" % (what, rate), perfdata)
+    return (state, f"{what}: {rate:.2f} mails/s", perfdata)
 
 
 #   .--mail----------------------------------------------------------------.
@@ -64,10 +69,6 @@ def check_fireeye_mail(_no_item, params, info):
 
 check_info["fireeye_mail"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
-    check_function=check_fireeye_mail,
-    service_name="Received Mail Rates",
-    check_ruleset_name="fireeye_mail",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1",
         oids=[
@@ -89,6 +90,10 @@ check_info["fireeye_mail"] = LegacyCheckDefinition(
             "52",
         ],
     ),
+    service_name="Received Mail Rates",
+    discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
+    check_function=check_fireeye_mail,
+    check_ruleset_name="fireeye_mail",
 )
 
 #   .--attachment----------------------------------------------------------.
@@ -123,9 +128,10 @@ def check_fireeye_attachment(_no_item, params, info):
 
 
 check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
+    service_name="Mails Containing Attachment",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_attachment,
-    service_name="Mails Containing Attachment",
     check_ruleset_name="fireeye_mail",
 )
 
@@ -158,9 +164,10 @@ def check_fireeye_url(_no_item, params, info):
 
 
 check_info["fireeye_mail.url"] = LegacyCheckDefinition(
+    service_name="Mails Containing URL",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_url,
-    service_name="Mails Containing URL",
     check_ruleset_name="fireeye_mail",
 )
 
@@ -191,6 +198,7 @@ check_info["fireeye_mail.url"] = LegacyCheckDefinition(
 def check_fireeye_mail_statistics(_no_item, params, info):
     statistics_info = info[0][9:13]
     average = params.get("interval", 0)
+    value_store = get_value_store()
     for index, mail_containing in enumerate(
         [
             "Emails containing Attachment",
@@ -201,23 +209,26 @@ def check_fireeye_mail_statistics(_no_item, params, info):
     ):
         this_time = time.time()
         counter = "fireeye.stat.%s" % "".join(mail_containing.split(" ")[2:]).lower()
-        rate = get_rate(counter, this_time, int(statistics_info[index]))
+        rate = get_rate(
+            get_value_store(), counter, this_time, int(statistics_info[index]), raise_overflow=True
+        )
         perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
-            avg = get_average("%s.avg" % counter, this_time, rate, average)
+            avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)
             yield 0, "%s: %.2f per %d minutes" % (
                 mail_containing,
                 avg * 60 * average,
                 average,
             ), perfdata
         else:
-            yield 0, "%s: %.2f per minute" % (mail_containing, rate * 60), perfdata
+            yield 0, f"{mail_containing}: {rate * 60:.2f} per minute", perfdata
 
 
 check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
+    service_name="Mail Processing Statistics",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_mail_statistics,
-    service_name="Mail Processing Statistics",
     check_ruleset_name="fireeye_mail",
 )
 
@@ -238,7 +249,7 @@ check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
 
 def check_fireeye_mail_received(_no_item, params, info):
     start, end, received = info[0][13:16]
-    yield 0, "Mails received between %s and %s: %s" % (start, end, received)
+    yield 0, f"Mails received between {start} and {end}: {received}"
     start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
     end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
     rate = float(received) / (end_timestamp - start_timestamp)
@@ -246,8 +257,9 @@ def check_fireeye_mail_received(_no_item, params, info):
 
 
 check_info["fireeye_mail.received"] = LegacyCheckDefinition(
+    service_name="Mails Received",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_mail_received,
-    service_name="Mails Received",
     check_default_parameters={"rate": (6000, 7000)},
 )

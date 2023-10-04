@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 
 from ..agent_based_api.v1 import type_defs
 
@@ -11,8 +10,8 @@ from ..agent_based_api.v1 import type_defs
 # Use 'status-numeric' instead of 'status' field regardless of language.
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
 
-Object = Dict[str, str]
-Section = Dict[str, Object]
+Object = dict[str, str]
+Section = dict[str, Object]
 
 
 def _parse_hp_msa_objects(string_table: type_defs.StringTable) -> Section:

@@ -10,11 +10,11 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_informix_logusage(info):
+def parse_informix_logusage(string_table):
     parsed = {}
     instance = None
     entry = None
-    for line in info:
+    for line in string_table:
         if instance is not None and line == ["(constant)", "LOGUSAGE"]:
             entry = {}
             parsed.setdefault(instance, [])
@@ -52,7 +52,7 @@ def check_informix_logusage(item, params, parsed):
             size += int(entry["size"]) * pagesize
             used += int(entry["used"]) * pagesize
 
-        infotext = "Files: %s, Size: %s, Used: %s" % (
+        infotext = "Files: {}, Size: {}, Used: {}".format(
             logfiles,
             get_bytes_human_readable(size),
             get_bytes_human_readable(used),
@@ -65,7 +65,7 @@ def check_informix_logusage(item, params, parsed):
             elif size >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_bytes_human_readable(warn),
                     get_bytes_human_readable(crit),
                 )
@@ -86,16 +86,16 @@ def check_informix_logusage(item, params, parsed):
             elif used_perc >= warn_perc:
                 state = 1
             if state:
-                infotext += " (warn/crit at %.2f%%/%.2f%%)" % (warn_perc, crit_perc)
+                infotext += f" (warn/crit at {warn_perc:.2f}%/{crit_perc:.2f}%)"
 
             yield state, infotext
 
 
 check_info["informix_logusage"] = LegacyCheckDefinition(
     parse_function=parse_informix_logusage,
+    service_name="Informix Log Usage %s",
     discovery_function=inventory_informix_logusage,
     check_function=check_informix_logusage,
-    service_name="Informix Log Usage %s",
     check_ruleset_name="informix_logusage",
     check_default_parameters={"levels_perc": (80.0, 85.0)},
 )

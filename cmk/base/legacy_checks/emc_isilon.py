@@ -45,9 +45,10 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 
 
 check_info["emc_isilon.clusterhealth"] = LegacyCheckDefinition(
-    check_function=check_emc_isilon_clusterhealth,
-    discovery_function=inventory_emc_isilon_clusterhealth,
     service_name="Cluster Health",
+    sections=["emc_isilon"],
+    discovery_function=inventory_emc_isilon_clusterhealth,
+    check_function=check_emc_isilon_clusterhealth,
 )
 
 # .
@@ -69,13 +70,14 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
         rc = 0
     else:
         rc = 2
-    return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
+    return rc, f"nodeHealth for {nodename} reports status {statusmap[status]}"
 
 
 check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
-    check_function=check_emc_isilon_nodehealth,
-    discovery_function=inventory_emc_isilon_nodehealth,
     service_name="Node Health",
+    sections=["emc_isilon"],
+    discovery_function=inventory_emc_isilon_nodehealth,
+    check_function=check_emc_isilon_nodehealth,
 )
 
 # .
@@ -92,13 +94,14 @@ def check_emc_isilon_nodes(item, _no_params, info):
         rc = 0
     else:
         rc = 2
-    return rc, "Configured Nodes: %s / Online Nodes: %s" % (configured_nodes, online_nodes)
+    return rc, f"Configured Nodes: {configured_nodes} / Online Nodes: {online_nodes}"
 
 
 check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
-    check_function=check_emc_isilon_nodes,
-    discovery_function=inventory_emc_isilon_nodes,
     service_name="Nodes",
+    sections=["emc_isilon"],
+    discovery_function=inventory_emc_isilon_nodes,
+    check_function=check_emc_isilon_nodes,
 )
 
 # .
@@ -110,13 +113,14 @@ def inventory_emc_isilon_names(info):
 
 
 def check_emc_isilon_names(item, _no_params, info):
-    return 0, "Cluster Name is %s, Node Name is %s" % (info[0][0][0], info[1][0][0])
+    return 0, f"Cluster Name is {info[0][0][0]}, Node Name is {info[1][0][0]}"
 
 
 check_info["emc_isilon.names"] = LegacyCheckDefinition(
-    check_function=check_emc_isilon_names,
-    discovery_function=inventory_emc_isilon_names,
     service_name="Isilon Info",
+    sections=["emc_isilon"],
+    discovery_function=inventory_emc_isilon_names,
+    check_function=check_emc_isilon_names,
 )
 
 # .

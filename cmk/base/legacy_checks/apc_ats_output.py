@@ -6,14 +6,14 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 
-def parse_apc_ats_output(info):
+def parse_apc_ats_output(string_table):
     parsed = {}
-    for index, voltage_str, current_str, perc_load_str, power_str in info:
+    for index, voltage_str, current_str, perc_load_str, power_str in string_table:
         for key, value_str, factor in [
             ("voltage", voltage_str, 1),
             ("current", current_str, 0.1),
@@ -33,8 +33,9 @@ def discover_apc_ats_output(parsed):
     yield from ((item, {}) for item in parsed)
 
 
-@get_parsed_item_data
-def check_apc_ats_output(item, params, data):
+def check_apc_ats_output(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     voltage = data.get("voltage")
     power = data.get("power")
     current = data.get("current")
@@ -70,15 +71,15 @@ check_info["apc_ats_output"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.32"),
     ),
-    parse_function=parse_apc_ats_output,
-    discovery_function=discover_apc_ats_output,
-    check_function=check_apc_ats_output,
-    check_ruleset_name="apc_ats_output",
-    service_name="Phase %s output",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.4.3.1",
         oids=["1", "3", "4", "10", "13"],
     ),
+    parse_function=parse_apc_ats_output,
+    service_name="Phase %s output",
+    discovery_function=discover_apc_ats_output,
+    check_function=check_apc_ats_output,
+    check_ruleset_name="apc_ats_output",
     check_default_parameters={
         "output_voltage_max": (240, 250),
         "load_perc_max": (85, 95),

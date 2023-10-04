@@ -1,0 +1,20 @@
+Title: Analyze configuration: false positive in "Restricted address mismatch" test
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1695721351
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The "Restricted address mismatch" accidentally triggered a warning even if the
+corresponding "State in case of restricted address mismatch" entry of the
+"Checkmk Agent installation auditing" rule was left unconfigured.
+
+Additionally to the fix, this configuration test now also allows a <tt>CRIT</tt>
+state instead of the default <tt>WARN</tt>.
+
+
+

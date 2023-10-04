@@ -26,13 +26,13 @@ def check_sansymphony_ports(item, _no_params, info):
     for portname, porttype, portstatus in info:
         if portname == item:
             if portstatus == "True":
-                return 0, "%s Port %s is up" % (porttype, portname)
-            return 2, "%s Port %s is down" % (porttype, portname)
+                return 0, f"{porttype} Port {portname} is up"
+            return 2, f"{porttype} Port {portname} is down"
     return None
 
 
 check_info["sansymphony_ports"] = LegacyCheckDefinition(
-    check_function=check_sansymphony_ports,
-    discovery_function=inventory_sansymphony_ports,
     service_name="sansymphony Port %s",
+    discovery_function=inventory_sansymphony_ports,
+    check_function=check_sansymphony_ports,
 )

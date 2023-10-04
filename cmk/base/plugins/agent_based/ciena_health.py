@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Counter, Generic, Iterable, List, Mapping, Sequence, Type, TypeVar
+from collections import Counter
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Generic, TypeVar
 
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
@@ -26,7 +28,7 @@ SNMPDataTypeVar = TypeVar("SNMPDataTypeVar", bound=SNMPEnum)
 @dataclasses.dataclass(frozen=True)
 class SNMPData(Generic[SNMPDataTypeVar]):
     display_name: str
-    data_type: Type[SNMPDataTypeVar]
+    data_type: type[SNMPDataTypeVar]
     occurences: Mapping[SNMPDataTypeVar, int]
 
 
@@ -94,7 +96,7 @@ _REFERENCES_5171 = [
 
 
 def parse_ciena_health(
-    references: Iterable[tuple[str, Type[SNMPEnum]]], string_table: List[StringTable]
+    references: Iterable[tuple[str, type[SNMPEnum]]], string_table: list[StringTable]
 ) -> Section:
     return [
         SNMPData(display_name, data_type, data)

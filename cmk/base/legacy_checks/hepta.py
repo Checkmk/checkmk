@@ -36,7 +36,7 @@ def get_time(timefromdevice):
     return timedevice
 
 
-def parse_hepta(info):
+def parse_hepta(string_table):
     (
         (
             device_type,
@@ -49,7 +49,7 @@ def parse_hepta(info):
             sync_state,
         ),
     ) = (
-        info[0] or info[1]
+        string_table[0] or string_table[1]
     )
     return {
         "devicetype": device_type,
@@ -85,10 +85,6 @@ def check_hepta(item, params, parsed):
 
 check_info["hepta"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12527"),
-    parse_function=parse_hepta,
-    discovery_function=discover_hepta,
-    check_function=check_hepta,
-    service_name="HPF Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12527.29",
@@ -99,6 +95,10 @@ check_info["hepta"] = LegacyCheckDefinition(
             oids=["1.1.0", "1.3.0", "1.4.0", "1.5.0", "1.6.0", "2.1.2.0", "3.1.0", "3.5.0"],
         ),
     ],
+    parse_function=parse_hepta,
+    service_name="HPF Info",
+    discovery_function=discover_hepta,
+    check_function=check_hepta,
 )
 
 # .
@@ -138,10 +138,10 @@ def check_hepta_time_sync(item, params, parsed):
 
 
 check_info["hepta.syncmoduletimesyncstate"] = LegacyCheckDefinition(
-    parse_function=parse_hepta,
+    service_name="%s",
+    sections=["hepta"],
     discovery_function=inventory_hepta_time_sync,
     check_function=check_hepta_time_sync,
-    service_name="%s",
 )
 
 
@@ -178,10 +178,10 @@ def check_hepta_ntpsysstratum(item, params, parsed):
 
 
 check_info["hepta.ntpsysstratum"] = LegacyCheckDefinition(
-    parse_function=parse_hepta,
+    service_name="%s",
+    sections=["hepta"],
     discovery_function=inventory_hepta_ntpsysstratum,
     check_function=check_hepta_ntpsysstratum,
-    service_name="%s",
 )
 
 
@@ -211,8 +211,8 @@ def check_hepta_syncmoduletimelocal(item, params, parsed):
 
 
 check_info["hepta.syncmoduletimelocal"] = LegacyCheckDefinition(
-    parse_function=parse_hepta,
+    service_name="%s",
+    sections=["hepta"],
     discovery_function=inventory_hepta_syncmoduletimelocal,
     check_function=check_hepta_syncmoduletimelocal,
-    service_name="%s",
 )

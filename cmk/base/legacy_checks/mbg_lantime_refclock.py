@@ -50,8 +50,9 @@ def check_mbg_lantime_refclock(item, params, info):
             state = max(state, 1)
             thr_txt = " (!)"
         state_txt.append(
-            "Refclock State: %s%s"
-            % (mbg_lantime_refclock_refmode_map.get(ref_mode, "UNKNOWN"), thr_txt)
+            "Refclock State: {}{}".format(
+                mbg_lantime_refclock_refmode_map.get(ref_mode, "UNKNOWN"), thr_txt
+            )
         )
 
         # Handle gps state
@@ -60,8 +61,9 @@ def check_mbg_lantime_refclock(item, params, info):
             state = max(state, 2)
             thr_txt = " (!!)"
         state_txt.append(
-            "GPS State: %s%s"
-            % (mbg_lantime_refclock_gpsstate_map.get(gps_state, "UNKNOWN"), thr_txt)
+            "GPS State: {}{}".format(
+                mbg_lantime_refclock_gpsstate_map.get(gps_state, "UNKNOWN"), thr_txt
+            )
         )
 
         # Add gps position
@@ -75,7 +77,7 @@ def check_mbg_lantime_refclock(item, params, info):
         elif params[1] is not None and int(gps_sat_good) < params[0]:
             state = max(state, 1)
             thr_txt = " (!)"
-        state_txt.append("Satellites: %s/%s%s" % (gps_sat_good, gps_sat_total, thr_txt))
+        state_txt.append(f"Satellites: {gps_sat_good}/{gps_sat_total}{thr_txt}")
 
         perfdata = [("sat_good", gps_sat_good, params[0], params[1]), ("sat_total", gps_sat_total)]
 
@@ -86,11 +88,11 @@ def check_mbg_lantime_refclock(item, params, info):
 
 check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
-    check_function=check_mbg_lantime_refclock,
-    discovery_function=inventory_mbg_lantime_refclock,
-    service_name="LANTIME Refclock",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.2",
         oids=["4", "6", "7", "9", "10", "16"],
     ),
+    service_name="LANTIME Refclock",
+    discovery_function=inventory_mbg_lantime_refclock,
+    check_function=check_mbg_lantime_refclock,
 )

@@ -29,7 +29,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_oracle_sql(info):
+def parse_oracle_sql(string_table):
     def parse_perfdata(line):
         perfdata = []
         for entry in line.split():
@@ -47,7 +47,7 @@ def parse_oracle_sql(info):
 
     parsed = {}
     instance = None
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             item_name = tuple(line[0][3:-3].split("|"))
             instance = parsed.setdefault(
@@ -70,7 +70,7 @@ def parse_oracle_sql(info):
         infotext = ":".join(line[1:]).strip()
         if key.endswith("ERROR") or key.startswith("ERROR at line") or "|FAILURE|" in key:
             instance["parsing_error"].setdefault(("instance", "PL/SQL failure", 2), []).append(
-                "%s: %s" % (key.split("|")[-1], infotext)
+                "{}: {}".format(key.split("|")[-1], infotext)
             )
 
         elif key in ["details", "long"]:
@@ -110,7 +110,7 @@ def check_oracle_sql(item, params, parsed):
     data = parsed[item]
     for (error_key, error_title, error_state), error_lines in data["parsing_error"].items():
         error_state = params.get("%s_error_state" % error_key, error_state)
-        yield error_state, "%s: %s" % (error_title, " ".join(error_lines))
+        yield error_state, "{}: {}".format(error_title, " ".join(error_lines))
 
     perfdata = data["perfdata"]
     elapsed_time = data["elapsed"]
@@ -125,8 +125,8 @@ def check_oracle_sql(item, params, parsed):
 
 check_info["oracle_sql"] = LegacyCheckDefinition(
     parse_function=parse_oracle_sql,
+    service_name="ORA %s",
     discovery_function=inventory_oracle_sql,
     check_function=check_oracle_sql,
-    service_name="ORA %s",
     check_ruleset_name="oracle_sql",
 )

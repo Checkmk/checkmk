@@ -11,14 +11,14 @@
 
 import json
 
-from cmk.base.check_api import check_levels, discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_jira_workflow(info):
+def parse_jira_workflow(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         projects = json.loads(" ".join(line))
 
         for project in projects:
@@ -32,7 +32,7 @@ def parse_jira_workflow(info):
                     continue
 
                 try:
-                    parsed.setdefault("%s/%s" % (project.title(), workflow.title()), {}).update(
+                    parsed.setdefault(f"{project.title()}/{workflow.title()}", {}).update(
                         {workflow: issue_count}
                     )
                 except KeyError:
@@ -41,8 +41,9 @@ def parse_jira_workflow(info):
     return parsed
 
 
-@get_parsed_item_data
-def check_jira_workflow(item, params, item_data):
+def check_jira_workflow(item, params, parsed):
+    if not (item_data := parsed.get(item)):
+        return
     if not item_data:
         return
 
@@ -63,10 +64,14 @@ def check_jira_workflow(item, params, item_data):
         )
 
 
+def discover_jira_workflow(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["jira_workflow"] = LegacyCheckDefinition(
     parse_function=parse_jira_workflow,
-    check_function=check_jira_workflow,
-    discovery_function=discover(),
     service_name="Jira Workflow %s",
+    discovery_function=discover_jira_workflow,
+    check_function=check_jira_workflow,
     check_ruleset_name="jira_workflow",
 )

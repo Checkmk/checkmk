@@ -19,16 +19,16 @@ def check_steelhead_status(item, params, info):
     health, status = info[0]
     if health == "Healthy" and status == "running":
         return (0, "Healthy and running")
-    return (2, "Status is %s and %s" % (health, status))
+    return (2, f"Status is {health} and {status}")
 
 
 check_info["steelhead_status"] = LegacyCheckDefinition(
     detect=DETECT_STEELHEAD,
-    check_function=check_steelhead_status,
-    discovery_function=inventory_steelhead_status,
-    service_name="Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2",
         oids=["2", "3"],
     ),
+    service_name="Status",
+    discovery_function=inventory_steelhead_status,
+    check_function=check_steelhead_status,
 )

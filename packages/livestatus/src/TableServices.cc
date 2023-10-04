@@ -11,9 +11,7 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
-#include <sstream>
 #include <unordered_map>
-#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "livestatus/AttributeBitmaskColumn.h"
@@ -25,6 +23,7 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/DowntimeRenderer.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/DynamicFileColumn.h"
 #include "livestatus/DynamicRRDColumn.h"
 #include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
@@ -32,6 +31,7 @@
 #include "livestatus/ListColumn.h"
 #include "livestatus/Logger.h"
 #include "livestatus/MapUtils.h"
+#include "livestatus/PnpUtils.h"
 #include "livestatus/Query.h"
 #include "livestatus/RRDColumn.h"
 #include "livestatus/StringColumn.h"
@@ -74,36 +74,33 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         [](const IService &r) { return r.check_command_expanded(); }));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_log", "The file content of the Robotmk log",
-        offsets,
-        BlobFileReader<IService>{
-            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
-            [](const IService &r) {
-                return r.robotmk_dir() / "suite_last_log.html";
-            }}));
+        offsets, BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_log.html";
+        }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_log_gz",
         "The gzipped file content of the Robotmk log", offsets,
-        BlobFileReader<IService>{
-            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
-            [](const IService &r) {
-                return r.robotmk_dir() / "suite_last_log.html.gz";
-            }}));
+        BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_log.html.gz";
+            ;
+        }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_error_log",
         "The file content of the Robotmk error log", offsets,
-        BlobFileReader<IService>{
-            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
-            [](const IService &r) {
-                return r.robotmk_dir() / "suite_last_error_log.html";
-            }}));
+        BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_error_log.html";
+        }}));
     table->addColumn(std::make_unique<BlobColumn<IService>>(
         prefix + "robotmk_last_error_log_gz",
         "The gzipped file content of the Robotmk error log", offsets,
-        BlobFileReader<IService>{
-            [mc]() { return mc->paths()->robotmk_html_log_directory(); },
-            [](const IService &r) {
-                return r.robotmk_dir() / "suite_last_error_log.html.gz";
-            }}));
+        BlobFileReader<IService>{[mc](const IService &r) {
+            return mc->paths()->robotmk_html_log_directory() / r.robotmk_dir() /
+                   "suite_last_error_log.html.gz";
+            ;
+        }}));
 
     table->addColumn(std::make_unique<StringColumn<IService>>(
         prefix + "event_handler", "Command used as event handler", offsets,
@@ -565,6 +562,38 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "pending_flex_downtime",
         "Number of pending flexible downtimes", offsets,
         [](const IService &r) { return r.pending_flex_downtime(); }));
+    table->addDynamicColumn(std::make_unique<DynamicFileColumn<IService>>(
+        prefix + "prediction_file", "Fetch prediction data", offsets,
+        [mc](const IService &r) {
+            return mc->paths()->prediction_directory() /
+                   pnp_cleanup(r.host_name()) / pnp_cleanup(r.description());
+        },
+        [](const std::string &args) { return std::filesystem::path{args}; }));
+    table->addColumn(std::make_unique<ListColumn<IService>>(
+        prefix + "prediction_files", "List currently available predictions",
+        offsets, [mc](const IService &r, const Column & /* col */) {
+            auto out = std::vector<std::string>{};
+            const auto path = mc->paths()->prediction_directory() /
+                              pnp_cleanup(r.host_name()) /
+                              pnp_cleanup(r.description());
+            if (!std::filesystem::directory_entry{path}.is_directory()) {
+                return out;
+            }
+            for (const auto &metric_dir :
+                 std::filesystem::directory_iterator{path}) {
+                if (!metric_dir.is_directory()) {
+                    continue;
+                }
+                for (const auto &prediction :
+                     std::filesystem::directory_iterator{metric_dir}) {
+                    if (prediction.is_regular_file()) {
+                        out.emplace_back(
+                            std::filesystem::relative(prediction, path));
+                    }
+                }
+            }
+            return out;
+        }));
     table->addColumn(std::make_unique<BoolColumn<IService>>(
         prefix + "check_flapping_recovery_notification",
         "Whether to check to send a recovery notification when flapping stops (0/1)",

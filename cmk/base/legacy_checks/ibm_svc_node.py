@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
 
@@ -21,7 +21,7 @@ from cmk.base.config import check_info
 # 6:N4_164312:100025E315:500507680100D880:online:1:io_grp1:yes:2040000085543045:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n4164312::164312:::::
 
 
-def parse_ibm_svc_node(info):
+def parse_ibm_svc_node(string_table):
     dflt_header = [
         "id",
         "name",
@@ -43,7 +43,7 @@ def parse_ibm_svc_node(info):
         "site_name",
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         for data in rows:
             parsed.setdefault(data["IO_group_name"], []).append(data)
     return parsed
@@ -59,7 +59,7 @@ def check_ibm_svc_node(item, _no_params, parsed):
 
     for row in data:
         node_status = row["status"]
-        messages.append("Node %s is %s" % (row["name"], node_status))
+        messages.append("Node {} is {}".format(row["name"], node_status))
         nodes_of_iogroup += 1
         if node_status == "online":
             online_nodes += 1
@@ -79,9 +79,13 @@ def check_ibm_svc_node(item, _no_params, parsed):
     yield status, ", ".join(sorted(messages))
 
 
+def discover_ibm_svc_node(section):
+    yield from ((item, {}) for item in section)
+
+
 check_info["ibm_svc_node"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_node,
-    check_function=check_ibm_svc_node,
-    discovery_function=discover(),
     service_name="IO Group %s",
+    discovery_function=discover_ibm_svc_node,
+    check_function=check_ibm_svc_node,
 )

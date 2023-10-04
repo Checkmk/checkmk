@@ -1,7 +1,7 @@
 // Windows Tools
 #include "stdafx.h"
 
-#include "realtime.h"
+#include "wnx/realtime.h"
 
 #include <fmt/format.h>
 
@@ -10,15 +10,15 @@
 #include <string>
 #include <string_view>
 
-#include "asio.h"
-#include "cfg.h"
-#include "encryption.h"
-#include "logger.h"
 #include "providers/df.h"
 #include "providers/mem.h"
 #include "providers/p_perf_counters.h"
-#include "service_processor.h"
 #include "tools/_misc.h"
+#include "wnx/asio.h"
+#include "wnx/cfg.h"
+#include "wnx/encryption.h"
+#include "wnx/logger.h"
+#include "wnx/service_processor.h"
 
 using namespace std::string_literals;
 using namespace std::chrono_literals;

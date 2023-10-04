@@ -4,23 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-    MKCounterWrapped,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_dynamodb_table(info):
-    parsed = parse_aws(info)
+def parse_aws_dynamodb_table(string_table):
+    parsed = parse_aws(string_table)
 
     # the last entry contains the provisioned limits
     metrics = extract_aws_metrics_by_labels(
@@ -93,7 +88,7 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
     metric_val_avg = parsed.get(metric_id_avg)
 
     if metric_val_avg is None:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
     metric_name, unit = _capacity_metric_id_to_name_and_unit(metric_id_avg)
 
@@ -113,25 +108,22 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
             metric_name + "_perc",
             _capacity_params_to_levels(params_avg),
             infoname="Usage",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
-    for result in _check_capacity_minmax_metrics(params, parsed, capacity_units_to_check):
-        yield result
+    yield from _check_capacity_minmax_metrics(params, parsed, capacity_units_to_check)
 
 
 def check_aws_dynamodb_read_capacity(item, params, parsed):
-    for result in _check_aws_dynamodb_capacity(
+    yield from _check_aws_dynamodb_capacity(
         params.get("levels_read", {}), parsed, "ReadCapacityUnits"
-    ):
-        yield result
+    )
 
 
 def check_aws_dynamodb_write_capacity(item, params, parsed):
-    for result in _check_aws_dynamodb_capacity(
+    yield from _check_aws_dynamodb_capacity(
         params.get("levels_write", {}), parsed, "WriteCapacityUnits"
-    ):
-        yield result
+    )
 
 
 def inventory_aws_dynamodb_latency(parsed):
@@ -151,8 +143,8 @@ def check_aws_dynamodb_latency(item, params, parsed):
 
     for operation in ["Query", "GetItem", "PutItem"]:
         for statistic in ["Average", "Maximum"]:
-            metric_name = "aws_dynamodb_%s_%s_latency" % (operation.lower(), statistic.lower())
-            metric_id = "%s_%s_SuccessfulRequestLatency" % (operation, statistic)
+            metric_name = f"aws_dynamodb_{operation.lower()}_{statistic.lower()}_latency"
+            metric_id = f"{operation}_{statistic}_SuccessfulRequestLatency"
             metric_val = parsed.get(metric_id)
 
             if metric_val is not None:
@@ -160,7 +152,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
 
                 # SuccessfulRequestLatency and levels come in ms
                 metric_val *= 1e-3
-                levels = params.get("levels_seconds_%s_%s" % (operation.lower(), statistic.lower()))
+                levels = params.get(f"levels_seconds_{operation.lower()}_{statistic.lower()}")
                 if levels is not None:
                     levels = tuple(level * 1e-3 for level in levels)
 
@@ -168,18 +160,19 @@ def check_aws_dynamodb_latency(item, params, parsed):
                     metric_val,
                     metric_name,
                     levels,
-                    infoname="%s latency %s" % (statistic, operation),
+                    infoname=f"{statistic} latency {operation}",
                     human_readable_func=get_age_human_readable,
                 )
 
     if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
+        raise IgnoreResultsError("Currently no data from AWS")
 
 
 check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
+    service_name="AWS/DynamoDB Read Capacity",
+    sections=["aws_dynamodb_table"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"]),
     check_function=check_aws_dynamodb_read_capacity,
-    service_name="AWS/DynamoDB Read Capacity",
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
         "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
@@ -187,11 +180,12 @@ check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
 )
 
 check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
+    service_name="AWS/DynamoDB Write Capacity",
+    sections=["aws_dynamodb_table"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, ["Sum_ConsumedWriteCapacityUnits"]
     ),
     check_function=check_aws_dynamodb_write_capacity,
-    service_name="AWS/DynamoDB Write Capacity",
     check_ruleset_name="aws_dynamodb_capacity",
     check_default_parameters={
         "levels_%s" % op: {"levels_average": {"levels_upper": (80, 90)}} for op in ["read", "write"]
@@ -199,8 +193,9 @@ check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
 )
 
 check_info["aws_dynamodb_table.latency"] = LegacyCheckDefinition(
+    service_name="AWS/DynamoDB Latency",
+    sections=["aws_dynamodb_table"],
     discovery_function=inventory_aws_dynamodb_latency,
     check_function=check_aws_dynamodb_latency,
-    service_name="AWS/DynamoDB Latency",
     check_ruleset_name="aws_dynamodb_latency",
 )

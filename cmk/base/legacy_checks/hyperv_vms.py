@@ -52,9 +52,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_hyperv_vms(info):
+def parse_hyperv_vms(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) != 4:
             # skip lines containing invalid data like e.g.
             # ../tests/unit/checks/generictests/datasets/hyperv_vms.py, line 16 or 17
@@ -100,16 +100,16 @@ def check_hyperv_vms(item, params, parsed):
         # this means that the check is executed as a manual check
         if discovery_state is None:
             service_state = 3
-            message = "State is %s (%s), discovery state is not available" % (
+            message = "State is {} ({}), discovery state is not available".format(
                 vm["state"],
                 vm["state_msg"],
             )
         elif vm["state"] == discovery_state:
             service_state = 0
-            message = "State %s (%s) matches discovery" % (vm["state"], vm["state_msg"])
+            message = "State {} ({}) matches discovery".format(vm["state"], vm["state_msg"])
         else:
             service_state = 2
-            message = "State %s (%s) does not match discovery (%s)" % (
+            message = "State {} ({}) does not match discovery ({})".format(
                 vm["state"],
                 vm["state_msg"],
                 params["state"],
@@ -122,19 +122,19 @@ def check_hyperv_vms(item, params, parsed):
         # as a precaution, if in the future there are new VM states we do not know about
         if service_state is None:
             service_state = 3
-            message = "Unknown state %s (%s)" % (vm["state"], vm["state_msg"])
+            message = "Unknown state {} ({})".format(vm["state"], vm["state_msg"])
 
         else:
-            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+            message = "State is {} ({})".format(vm["state"], vm["state_msg"])
 
     yield service_state, message
 
 
 check_info["hyperv_vms"] = LegacyCheckDefinition(
     parse_function=parse_hyperv_vms,
-    check_function=check_hyperv_vms,
-    discovery_function=inventory_hyperv_vms,
     service_name="VM %s",
+    discovery_function=inventory_hyperv_vms,
+    check_function=check_hyperv_vms,
     check_ruleset_name="hyperv_vms",
     check_default_parameters={
         "FastSaved": 0,

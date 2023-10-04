@@ -27,13 +27,13 @@ def check_avaya_45xx_cpu(item, params, info):
 
 check_info["avaya_45xx_cpu"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
-    check_function=check_avaya_45xx_cpu,
-    discovery_function=inventory_avaya_45xx_cpu,
-    service_name="CPU utilization CPU %s",
-    check_ruleset_name="cpu_utilization_multiitem",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.8.1.1.5",
         oids=["3"],
     ),
+    service_name="CPU utilization CPU %s",
+    discovery_function=inventory_avaya_45xx_cpu,
+    check_function=check_avaya_45xx_cpu,
+    check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},
 )

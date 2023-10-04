@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from cmk.checkengine import Parameters
+from cmk.checkengine.parameters import Parameters
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError

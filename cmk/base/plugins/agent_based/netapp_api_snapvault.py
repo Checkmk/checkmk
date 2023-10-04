@@ -15,7 +15,9 @@
 # snapvault my_snap	state snapmirrored	source-system i1	destination-location d1:my_snap	policy Default	lag-time 82486	destination-system a2-b0-02	status idle
 # snapvault my_snap	state snapmirrored	source-system t1	destination-location d2:my_snap	policy Default	lag-time 73487	destination-system a2-b0-02	status idle
 
-from typing import Any, Dict, Iterable, Mapping, OrderedDict, Tuple
+from collections import OrderedDict
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -52,7 +54,7 @@ register.agent_section(
 def _prefilter_items(
     parsed: SectionSingleInstance,
     exclude_vserver: bool,
-) -> Iterable[Tuple[str, Dict[str, str]]]:
+) -> Iterable[tuple[str, dict[str, str]]]:
     if exclude_vserver:
         return [i for i in parsed.items() if ":" not in i[0]]
     return [i for i in parsed.items() if ":" in i[0] or "destination-location" not in i[1]]
@@ -78,7 +80,7 @@ def check_netapp_api_snapvault(
 
     for key in ["source-system", "destination-system", "policy", "status", "state"]:
         if key in snapvault:
-            yield Result(state=State.OK, summary="%s: %s" % (key.title(), snapvault[key]))
+            yield Result(state=State.OK, summary=f"{key.title()}: {snapvault[key]}")
 
     if "lag-time" not in snapvault:
         return

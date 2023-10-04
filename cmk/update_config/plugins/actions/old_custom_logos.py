@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 from logging import Logger
 from pathlib import Path
 
@@ -10,10 +11,10 @@ import cmk.utils.paths
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
 
-if version.is_managed_edition():
+if version.edition() is version.Edition.CME:
+    from cmk.gui.cme.type_defs import CustomerId  # pylint: disable=no-name-in-module,import-error
     from cmk.gui.cme.managed import (  # pylint: disable=no-name-in-module,import-error
         Customer,
-        CustomerId,
         load_customers,
         save_customers,
     )
@@ -24,9 +25,9 @@ from cmk.update_config.update_state import UpdateActionState
 
 class RemoveOldCustomLogos(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        """Remove old custom logo occurences, i.e. local image files "mk-logo.png" and customer
+        """Remove old custom logo occurrences, i.e. local image files "mk-logo.png" and customer
         config "globals" entries with key "logo"."""
-        if not version.is_managed_edition():
+        if version.edition() is not version.Edition.CME:
             return
 
         themes_path: Path = Path(cmk.utils.paths.local_web_dir, "htdocs/themes/")
@@ -35,15 +36,13 @@ class RemoveOldCustomLogos(UpdateAction):
             if logo_path.is_file():
                 logo_path.unlink()
 
-        try:
+        with contextlib.suppress(MKGeneralException):
             customers: dict[CustomerId, Customer] = load_customers()
             for config in customers.values():
                 globals_config: dict[str, dict] = config.get("globals", {})
                 if "logo" in globals_config:
                     del globals_config["logo"]
             save_customers(customers)
-        except MKGeneralException:
-            pass
 
 
 update_action_registry.register(

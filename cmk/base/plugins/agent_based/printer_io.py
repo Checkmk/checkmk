@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import Any, Dict, List, Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -73,7 +74,7 @@ class Tray(NamedTuple):
     level: int
 
 
-Section = Dict[str, Tray]
+Section = dict[str, Tray]
 
 STATES_MAP = {
     AvailabilityStatus.AVAILABLE_AND_IDLE: State.OK,
@@ -92,7 +93,7 @@ ALARM_MAP = {
 }
 
 
-def parse_printer_io(string_table: List[StringTable]) -> Section:
+def parse_printer_io(string_table: list[StringTable]) -> Section:
     parsed: Section = {}
     for line in string_table[0]:
         tray_index, name, descr, snmp_status_raw, capacity_unit, capacity_max, level = line[:7]
@@ -219,9 +220,7 @@ def check_printer_io(
     if tray.capacity_max in (-2, -1, 0):
         if tray.capacity_unit != " unknown":
             # -2: unknown, -1: no restriction, 0: due to saveint
-            yield Result(
-                state=State.OK, summary="Capacity: %s%s" % (tray.level, tray.capacity_unit)
-            )
+            yield Result(state=State.OK, summary=f"Capacity: {tray.level}{tray.capacity_unit}")
         return
 
     if tray.capacity_unit != " unknown":

@@ -41,9 +41,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_aix_hacmp_nodes(info):
+def parse_aix_hacmp_nodes(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 1:
             parsed[line[0]] = {}
 
@@ -76,7 +76,7 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
             infotext = "Network: %s" % network_name
 
             for if_name, attribute, ip_adr in parsed[item][network_name]:
-                infotext += ", interface: %s, attribute: %s, IP: %s" % (if_name, attribute, ip_adr)
+                infotext += f", interface: {if_name}, attribute: {attribute}, IP: {ip_adr}"
 
             return 0, infotext
     return None
@@ -84,7 +84,7 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
 
 check_info["aix_hacmp_nodes"] = LegacyCheckDefinition(
     parse_function=parse_aix_hacmp_nodes,
+    service_name="HACMP Node %s",
     discovery_function=inventory_aix_hacmp_nodes,
     check_function=check_aix_hacmp_nodes,
-    service_name="HACMP Node %s",
 )

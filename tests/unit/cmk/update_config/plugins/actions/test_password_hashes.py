@@ -7,10 +7,11 @@ import datetime
 
 import pytest
 
-from tests.unit.cmk.gui.test_userdb import _load_users_uncached
+from tests.unit.cmk.gui.userdb.test_userdb import _load_users_uncached
 
-from cmk.utils.crypto.password_hashing import is_unsupported_legacy_hash, PasswordHash
-from cmk.utils.type_defs import UserId
+from cmk.utils.crypto.password import PasswordHash
+from cmk.utils.crypto.password_hashing import is_unsupported_legacy_hash
+from cmk.utils.user import UserId
 
 from cmk.gui.userdb import save_users, Users, UserSpec
 

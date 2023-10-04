@@ -78,7 +78,7 @@ def check_dell_idrac_disks(item, _no_params, info):
         display_name,
     ) in info:
         if disk_name == item:
-            yield 0, "[%s] Size: %s" % (
+            yield 0, "[{}] Size: {}".format(
                 display_name,
                 get_bytes_human_readable(int(capacity_MB) * 1024 * 1024),
             )
@@ -88,7 +88,7 @@ def check_dell_idrac_disks(item, _no_params, info):
                 (component_state, "component_states", "Component state"),
             ]:
                 state, state_readable = map_states[what_key][what]
-                yield state, "%s: %s" % (what_text, state_readable)
+                yield state, f"{what_text}: {state_readable}"
 
             if smart_alert != "0":
                 yield 2, "Smart alert on disk"
@@ -103,11 +103,11 @@ def check_dell_idrac_disks(item, _no_params, info):
 
 check_info["dell_idrac_disks"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,
-    check_function=check_dell_idrac_disks,
-    discovery_function=inventory_dell_idrac_disks,
-    service_name="Disk %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.4.1",
         oids=["2", "4", "11", "22", "24", "31", "50", "55"],
     ),
+    service_name="Disk %s",
+    discovery_function=inventory_dell_idrac_disks,
+    check_function=check_dell_idrac_disks,
 )

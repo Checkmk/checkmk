@@ -14,7 +14,8 @@
 # the latter can be one of the following:
 
 from collections import Counter
-from typing import Any, List, Mapping, MutableMapping, NamedTuple
+from collections.abc import Mapping, MutableMapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -56,7 +57,7 @@ SectionFjdaryeDisk = Mapping[str, FjdaryeDisk]
 ###### fjdarye_disks ######
 
 
-def parse_fjdarye_disks(string_table: List[StringTable]) -> SectionFjdaryeDisk:
+def parse_fjdarye_disks(string_table: list[StringTable]) -> SectionFjdaryeDisk:
     fjdarye_disks: MutableMapping[str, FjdaryeDisk] = {}
     for device in string_table:
         if not device:

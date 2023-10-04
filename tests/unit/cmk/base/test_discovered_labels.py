@@ -10,6 +10,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import (
     _Label,
     DiscoveredHostLabelsStore,
@@ -17,9 +18,7 @@ from cmk.utils.labels import (
     HostLabelValueDict,
     ServiceLabel,
 )
-from cmk.utils.type_defs import HostName, SectionName
-
-import cmk.base.config as config
+from cmk.utils.sectionname import SectionName
 
 
 class TestServiceLabel:
@@ -102,7 +101,6 @@ def test_label_validation() -> None:
 
 def test_discovered_host_labels_path(discovered_host_labels_dir: Path) -> None:
     hostname = "test.host.de"
-    config.get_config_cache().initialize()
     assert not (discovered_host_labels_dir / hostname).exists()
     DiscoveredHostLabelsStore(HostName(hostname)).save(
         [HostLabel("something", "wonderful", SectionName("norris"))]

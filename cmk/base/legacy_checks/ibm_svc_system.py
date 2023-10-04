@@ -89,12 +89,12 @@ def check_ibm_svc_system(item, _no_params, info):
         if line[0] in ("name", "location", "code_level", "email_contact_location"):
             if message != "":
                 message += ", "
-            message += "%s: %s" % (line[0], line[1])
+            message += f"{line[0]}: {line[1]}"
     return 0, message
 
 
 check_info["ibm_svc_system"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_system,
-    discovery_function=inventory_ibm_svc_system,
     service_name="Info",
+    discovery_function=inventory_ibm_svc_system,
+    check_function=check_ibm_svc_system,
 )

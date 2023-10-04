@@ -12,13 +12,15 @@ from dataclasses import dataclass
 from typing import NamedTuple, Self, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.sectionname import SectionMap
 
-from cmk.checkengine._typedefs import HostKey, Parameters, SourceType
 from cmk.checkengine.discovery._utils import QualifiedDiscovery
+from cmk.checkengine.fetcher import HostKey, SourceType
+from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.sectionparser import Provider, ResolvedResult
 
 __all__ = [
@@ -74,7 +76,7 @@ def analyse_cluster_labels(
         node_name: QualifiedDiscovery[_HostLabel](
             preexisting=existing_host_labels.get(node_name, ()),
             current=discovered_host_labels.get(node_name, ()),
-        ).kept()
+        ).present
         for node_name in node_names
     }
 
@@ -86,14 +88,14 @@ def analyse_cluster_labels(
             nodes_labels for node in node_names if (nodes_labels := kept_labels.get(node))
         ),
     )
-    kept_labels[cluster_name] = cluster_labels.kept()
+    kept_labels[cluster_name] = cluster_labels.present
 
     return cluster_labels, kept_labels
 
 
 def discover_host_labels(
     host_name: HostName,
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -138,7 +140,7 @@ def _all_parsing_results(
 
 
 def _discover_host_labels_for_source_type(
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     *,
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],

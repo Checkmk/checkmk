@@ -7,7 +7,7 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 pytestmark = pytest.mark.checks
 
@@ -67,18 +67,18 @@ result_parsed_over_time = [
             },
             (
                 0,
-                "Total CPU (2min average): 0%, 2 CPUs",
+                "Total CPU (2min average): 13.33%, 2 CPUs",
                 [
                     ("util", 13.333333333333334, 80.0, 90.0, 0, 2),
-                    ("util_average", 0, 80.0, 90.0, 0, 100),
+                    ("util_average", 13.333333333333334, 80.0, 90.0, 0, 100),
                 ],
             ),
             (
                 0,
-                "Total CPU (2min average): 0.42%, 2 CPUs",
+                "Total CPU (2min average): 4.49%, 2 CPUs",
                 [
                     ("util", 0.8333333333333334, 80.0, 90.0, 0, 2),
-                    ("util_average", 0.4166666666666667, 80.0, 90.0, 0, 100),
+                    ("util_average", 4.494498568501489, 80.0, 90.0, 0, 100),
                 ],
             ),
         ),
@@ -91,7 +91,7 @@ def test_cluster_mode_check_function(
     monkeypatch.setattr("time.time", lambda: 0)
     try:
         check.run_check("clu1-01", params, result_parsed_over_time[0])
-    except MKCounterWrapped:
+    except IgnoreResultsError:
         pass
     monkeypatch.setattr("time.time", lambda: 60)
     result = check.run_check("clu1-01", params, result_parsed_over_time[1])

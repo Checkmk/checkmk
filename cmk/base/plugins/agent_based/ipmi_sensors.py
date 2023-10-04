@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from .agent_based_api.v1 import register, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -16,7 +17,7 @@ def _na_str(str_value: str) -> str:
     return "" if str_value in _NA_VALUES else str_value
 
 
-def _na_float(str_value: str) -> Optional[float]:
+def _na_float(str_value: str) -> float | None:
     return None if str_value in _NA_VALUES else float(str_value)
 
 
@@ -40,9 +41,9 @@ def _parse_status_txt(status_txt: str) -> Status:
 def parse_ipmi_sensors(string_table: StringTable) -> ipmi_utils.Section:
     section: ipmi_utils.Section = {}
     for line in string_table:
-        _sid, sensorname, *reading_levels_and_more, status_txt = [
+        _sid, sensorname, *reading_levels_and_more, status_txt = (
             x.strip(" \n\t\x00") for x in line
-        ]
+        )
         status_from_text = _parse_status_txt(status_txt)
         sensorname = sensorname.replace(" ", "_")
 

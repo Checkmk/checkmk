@@ -10,19 +10,18 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
-    get_percent_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_emcvnx_storage_pools(info):
+def parse_emcvnx_storage_pools(string_table):
     parsed = {}
     section = None
     pool_name = None
     tier_name = None
-    for line in info:
+    for line in string_table:
         line = [x.strip() for x in line]
 
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
@@ -47,7 +46,7 @@ def parse_emcvnx_storage_pools(info):
                 tier_name = None
 
             elif tier_name is not None:
-                parsed[pool_name].setdefault("%s_%s" % (tier_name, line[0]), line[1])
+                parsed[pool_name].setdefault(f"{tier_name}_{line[0]}", line[1])
 
             else:
                 parsed[pool_name].setdefault(line[0], line[1])
@@ -106,7 +105,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
         )
 
         state = 0
-        infotext = "Percent full: %s" % get_percent_human_readable(percent_full)
+        infotext = "Percent full: %s" % render.percent(percent_full)
         if "percent_full" in params:
             perc_full_warn, perc_full_crit = params["percent_full"]
             if percent_full >= perc_full_crit:
@@ -114,7 +113,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
             elif percent_full >= perc_full_warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (
+                infotext += " (warn/crit at {}/{})".format(
                     get_bytes_human_readable(perc_full_warn),
                     get_bytes_human_readable(perc_full_crit),
                 )
@@ -124,7 +123,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
             "[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, "
             + "Total subscribed capacity: %s"
         ) % (
-            get_percent_human_readable(percent_subscribed),
+            render.percent(percent_subscribed),
             get_bytes_human_readable(over_subscribed),
             get_bytes_human_readable(total_subscribed_capacity),
         ), [
@@ -139,9 +138,9 @@ def check_emcvnx_storage_pools(item, params, parsed):
 
 check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_storage_pools,
+    service_name="Pool %s General",
     discovery_function=inventory_emcvnx_storage_pools,
     check_function=check_emcvnx_storage_pools,
-    service_name="Pool %s General",
     check_ruleset_name="emcvnx_storage_pools",
     check_default_parameters={"percent_full": (70.0, 90.0)},
 )
@@ -185,11 +184,12 @@ def inventory_emcvnx_storage_pools_tiering(parsed):
         yield pool_name, {}
 
 
-@get_parsed_item_data
-def check_emcvnx_storage_pools_tiering(item, params, data):
+def check_emcvnx_storage_pools_tiering(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     for key in ("FAST Cache", "Relocation Status", "Relocation Rate"):
         if key in data:
-            yield 0, "%s: %s" % (key.capitalize(), data[key])
+            yield 0, f"{key.capitalize()}: {data[key]}"
 
     for direction in ("Up", "Down", "Within Tiers"):
         value_raw = data.get("Data to Move %s (GBs)" % direction)
@@ -229,9 +229,10 @@ def check_emcvnx_storage_pools_tiering(item, params, data):
 
 
 check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
+    service_name="Pool %s Tiering Status",
+    sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools_tiering,
     check_function=check_emcvnx_storage_pools_tiering,
-    service_name="Pool %s Tiering Status",
     check_ruleset_name="emcvnx_storage_pools_tiering",
     check_default_parameters={
         "time_to_complete": (21 * 60 * 60 * 24, 28 * 60 * 60 * 24),
@@ -242,13 +243,13 @@ check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
 def inventory_emcvnx_storage_pools_tieringtypes(parsed):
     for pool_name, data in parsed.items():
         for tier_name in data.get("tier_names", []):
-            yield "%s %s" % (pool_name, tier_name), {}
+            yield f"{pool_name} {tier_name}", {}
 
 
 def _get_item_data_and_tier(item, parsed):
     for pool_name, data in parsed.items():
         for tier_name in data.get("tier_names", []):
-            if item == "%s %s" % (pool_name, tier_name):
+            if item == f"{pool_name} {tier_name}":
                 return data, tier_name
     return None, None
 
@@ -299,11 +300,11 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
             "emcvnx_perc_subscribed",
             None,
             infoname="Percent subscribed",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
     for direction in ("for Higher", "for Lower", "Within"):
-        value_raw = data.get("%s_Data Targeted %s Tier (GBs)" % (tier_name, direction))
+        value_raw = data.get(f"{tier_name}_Data Targeted {direction} Tier (GBs)")
         if value_raw is not None:
             value = float(value_raw) * 1024**3
             short_dir = direction.split()[-1].lower()
@@ -317,9 +318,10 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tieringtypes"] = LegacyCheckDefinition(
+    service_name="Pool %s tiering",
+    sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools_tieringtypes,
     check_function=check_emcvnx_storage_pools_tieringtypes,
-    service_name="Pool %s tiering",
 )
 
 # .
@@ -344,8 +346,9 @@ def _emcvnx_get_text_perf(
         return str(field), []
 
 
-@get_parsed_item_data
-def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
+def check_emcvnx_storage_pools_deduplication(item, _no_params, parsed):
+    if not (data := parsed.get(item)):
+        return
     yield 0, "State: %s" % data.get("Deduplication State", "unknown")
     yield 0, "Status: %s" % data.get("Deduplication Status", "unknown").split("(")[0]
     yield 0, "Rate: %s" % data.get("Deduplication Rate", "unknown")
@@ -359,7 +362,7 @@ def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
         data,
         "Deduplication Percent Completed",
         "emcvnx_dedupl_perc_completed",
-        format_func=get_percent_human_readable,
+        format_func=render.percent,
         factor=1.0,
     )
     yield 0, "Percent completed: %s" % txt, perf
@@ -376,7 +379,8 @@ def check_emcvnx_storage_pools_deduplication(_no_item, _no_params, data):
 
 
 check_info["emcvnx_storage_pools.deduplication"] = LegacyCheckDefinition(
+    service_name="Pool %s Deduplication",
+    sections=["emcvnx_storage_pools"],
     discovery_function=inventory_emcvnx_storage_pools,
     check_function=check_emcvnx_storage_pools_deduplication,
-    service_name="Pool %s Deduplication",
 )

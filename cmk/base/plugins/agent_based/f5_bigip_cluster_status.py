@@ -5,7 +5,7 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import List, Mapping, Optional
+from collections.abc import Mapping
 
 from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -26,8 +26,8 @@ STATE_NAMES = {
 
 
 def parse_f5_bigip_cluster_status(
-    string_table: List[StringTable],
-) -> Optional[NodeState]:
+    string_table: list[StringTable],
+) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_cluster_status([[['4']]])
     4
@@ -73,7 +73,7 @@ def _check_f5_bigip_cluster_status_common(
 
 def _cluster_check_f5_bigip_cluster_status_common(
     params: F5BigipClusterStatusVSResult,
-    section: Mapping[str, Optional[NodeState]],
+    section: Mapping[str, NodeState | None],
     is_gt_v11_2: bool,
 ) -> CheckResult:
     """
@@ -116,7 +116,7 @@ def check_f5_bigip_cluster_status(
 
 def cluster_check_f5_bigip_cluster_status(
     params: F5BigipClusterStatusVSResult,
-    section: Mapping[str, Optional[NodeState]],
+    section: Mapping[str, NodeState | None],
 ) -> CheckResult:
     """
     >>> for r in cluster_check_f5_bigip_cluster_status(
@@ -159,7 +159,7 @@ def check_f5_bigip_cluster_status_v11_2(
 
 def cluster_check_f5_bigip_cluster_status_v11_2(
     params: F5BigipClusterStatusVSResult,
-    section: Mapping[str, Optional[NodeState]],
+    section: Mapping[str, NodeState | None],
 ) -> CheckResult:
     yield from _cluster_check_f5_bigip_cluster_status_common(params, section, True)
 
@@ -187,7 +187,7 @@ register.check_plugin(
 # F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 
 
-def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[NodeState]:
+def parse_f5_bigip_vcmpfailover(string_table: list[StringTable]) -> NodeState | None:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_vcmpfailover([[["0", "4"]]])
     4

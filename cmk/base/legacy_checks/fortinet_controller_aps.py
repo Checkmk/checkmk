@@ -22,7 +22,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
-def parse_fortinet_controller_aps(info):
+def parse_fortinet_controller_aps(string_table):
     map_oper_state = {
         "0": "unknown",
         "1": "enabled",
@@ -42,7 +42,7 @@ def parse_fortinet_controller_aps(info):
     }
 
     parsed = {}
-    ap_table, client_table = info
+    ap_table, client_table = string_table
     for descr, id_, location, uptime_str, oper_state, availability in ap_table:
         try:
             uptime = int(uptime_str)
@@ -89,7 +89,7 @@ def check_fortinet_controller_aps(item, params, parsed):
         state = 3
     elif oper_state in ["disabled", "no license", "power down"]:
         state = 1
-    yield state, "[%s] Operational: %s" % (data["descr"], oper_state)
+    yield state, "[{}] Operational: {}".format(data["descr"], oper_state)
 
     avail_state = data["availability"]
     state = 0
@@ -101,7 +101,7 @@ def check_fortinet_controller_aps(item, params, parsed):
 
     client_count_24 = data["clients_count_24"]
     client_count_5 = data["clients_count_5"]
-    yield 0, "Connected clients (2,4 ghz/5 ghz): %s/%s" % (client_count_24, client_count_5), [
+    yield 0, f"Connected clients (2,4 ghz/5 ghz): {client_count_24}/{client_count_5}", [
         ("5ghz_clients", client_count_5),
         ("24ghz_clients", client_count_24),
     ]
@@ -117,10 +117,6 @@ def check_fortinet_controller_aps(item, params, parsed):
 
 check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15983"),
-    parse_function=parse_fortinet_controller_aps,
-    discovery_function=inventory_fortinet_controller_aps,
-    check_function=check_fortinet_controller_aps,
-    service_name="AP %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.15983.1.1.4.2.1.1",
@@ -131,4 +127,8 @@ check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
             oids=["5", "9"],
         ),
     ],
+    parse_function=parse_fortinet_controller_aps,
+    service_name="AP %s",
+    discovery_function=inventory_fortinet_controller_aps,
+    check_function=check_fortinet_controller_aps,
 )

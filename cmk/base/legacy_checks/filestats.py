@@ -11,10 +11,8 @@ import re
 
 from cmk.base.check_api import (
     check_levels,
-    discover,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_parsed_item_data,
     LegacyCheckDefinition,
     state_markers,
 )
@@ -48,10 +46,10 @@ from cmk.base.config import check_info
 #   '----------------------------------------------------------------------'
 
 
-def parse_filestats(info):
+def parse_filestats(string_table):
     sections_info = {}
     current = []  # should never be used, but better safe than sorry
-    for line in info:
+    for line in string_table:
         if not line:
             continue
         if line[0].startswith("[[["):
@@ -123,8 +121,8 @@ def check_filestats_extremes(files, params, show_files=False):
 
         files_with_metric.sort(key=lambda f: f.get(key))  # pylint: disable=cell-var-from-loop
         for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
-            levels = params.get("max%s_%s" % (key, label), (None, None)) + params.get(
-                "min%s_%s" % (key, label), (None, None)
+            levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
+                f"min{key}_{label}", (None, None)
             )
             yield check_levels(
                 efile[key],
@@ -137,8 +135,8 @@ def check_filestats_extremes(files, params, show_files=False):
         if not show_files:
             continue
 
-        min_label_levels = params.get("max%s_%s" % (key, minlabel), (None, None)) + params.get(
-            "min%s_%s" % (key, minlabel), (None, None)
+        min_label_levels = params.get(f"max{key}_{minlabel}", (None, None)) + params.get(
+            f"min{key}_{minlabel}", (None, None)
         )
         for efile in files_with_metric:
             state, _text, _no_perf = check_levels(
@@ -149,15 +147,15 @@ def check_filestats_extremes(files, params, show_files=False):
             if state == 0:
                 break
             if efile["path"] not in long_output:
-                text = "Age: %s, Size: %s%s" % (
+                text = "Age: {}, Size: {}{}".format(
                     get_age_human_readable(efile["age"]),
                     get_bytes_human_readable(efile["size"]),
                     state_markers[state],
                 )
                 long_output[efile["path"]] = text
 
-        max_label_levels = params.get("max%s_%s" % (key, maxlabel), (None, None)) + params.get(
-            "min%s_%s" % (key, maxlabel), (None, None)
+        max_label_levels = params.get(f"max{key}_{maxlabel}", (None, None)) + params.get(
+            f"min{key}_{maxlabel}", (None, None)
         )
         for efile in reversed(files_with_metric):
             state, _text, _no_perf = check_levels(
@@ -168,7 +166,7 @@ def check_filestats_extremes(files, params, show_files=False):
             if state == 0:
                 break
             if efile["path"] not in long_output:
-                text = "Age: %s, Size: %s%s" % (
+                text = "Age: {}, Size: {}{}".format(
                     get_age_human_readable(efile["age"]),
                     get_bytes_human_readable(efile["size"]),
                     state_markers[state],
@@ -191,8 +189,9 @@ def check_filestats_extremes(files, params, show_files=False):
 #   '----------------------------------------------------------------------'
 
 
-@get_parsed_item_data
-def check_filestats(_item, params, data):
+def check_filestats(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     _output_variety, reported_lines = data
     sumry = [s for s in reported_lines if s.get("type") == "summary"]
     count = sumry[0].get("count", None) if sumry else None
@@ -261,11 +260,12 @@ def check_filestats(_item, params, data):
     yield 0, "\n" + "\n".join(remaining_files_output)
 
 
-@get_parsed_item_data
-def check_filestats_single(_item, params, data):
+def check_filestats_single(item, params, parsed):
+    if not (data := parsed.get(item)):
+        return
     _output_variety, reported_lines = data
     if len(reported_lines) != 1:
-        yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats)."
+        yield 1, "Received multiple filestats per single file service. Please check agent plugin configuration (mk_filestats). For example, if there are multiple non-utf-8 filenames, then they may be mapped to the same file service."
 
     single_stat = [i for i in reported_lines if i.get("type") == "file"][0]
     if single_stat.get("size") is None and single_stat.get("age") is None:
@@ -290,27 +290,26 @@ def check_filestats_single(_item, params, data):
         )
 
 
-@discover
-def discover_filestats(key, data):
-    return data[0] != "single_file"
+def discover_filestats(section):
+    yield from ((item, {}) for item, data in section.items() if data[0] != "single_file")
 
 
-@discover
-def discover_filestats_single(key, data):
-    return data[0] == "single_file"
+def discover_filestats_single(section):
+    yield from ((item, {}) for item, data in section.items() if data[0] == "single_file")
 
 
 check_info["filestats.single"] = LegacyCheckDefinition(
+    service_name="File %s",
+    sections=["filestats"],
     discovery_function=discover_filestats_single,
     check_function=check_filestats_single,
-    service_name="File %s",
     check_ruleset_name="filestats_single",
 )
 
 check_info["filestats"] = LegacyCheckDefinition(
     parse_function=parse_filestats,
+    service_name="File group %s",
     discovery_function=discover_filestats,
     check_function=check_filestats,
-    service_name="File group %s",
     check_ruleset_name="filestats",
 )

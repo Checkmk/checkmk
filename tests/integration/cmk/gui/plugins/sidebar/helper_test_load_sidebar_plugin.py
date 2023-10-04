@@ -6,6 +6,6 @@
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
-from cmk.gui.plugins.sidebar.utils import snapin_registry
+from cmk.gui.sidebar import snapin_registry
 
 print("test" in snapin_registry)

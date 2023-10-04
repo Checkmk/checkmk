@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import {d3SelectionDiv, NodevisWorld} from "nodevis/type_defs";
 
@@ -9,6 +11,7 @@ export class ToolbarPluginBase {
     _div_selection: d3SelectionDiv | null = null;
     active: boolean;
     description = "";
+    content_selection: d3SelectionDiv | undefined = undefined;
 
     constructor(world: NodevisWorld, description: string) {
         this._world = world;

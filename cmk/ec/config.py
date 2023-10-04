@@ -13,11 +13,12 @@ from collections.abc import (
     Sequence,
 )
 from re import Pattern
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal
+
+from typing_extensions import TypedDict
 
 from cmk.utils.exceptions import MKException
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]
@@ -35,7 +36,7 @@ class UseSNMPTrapTranslation(TypedDict, total=False):
     add_description: Literal[True]
 
 
-SNMPTrapTranslation = Union[Literal[False], tuple[Literal[True], UseSNMPTrapTranslation]]
+SNMPTrapTranslation = Literal[False] | tuple[Literal[True], UseSNMPTrapTranslation]
 
 
 class EMailActionConfig(TypedDict):
@@ -133,10 +134,7 @@ StatePatterns = TypedDict(
     total=False,
 )
 
-State = Union[
-    Literal[-1, 0, 1, 2, 3],
-    tuple[Literal["text_pattern"], StatePatterns],
-]
+State = Literal[-1, 0, 1, 2, 3] | tuple[Literal["text_pattern"], StatePatterns]
 
 
 class Count(TypedDict):
@@ -170,7 +168,7 @@ class Rule(TypedDict, total=False):
     hits: int
     id: str
     invert_matching: bool
-    livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
+    livetime: tuple[int, Iterable[Literal["open", "ack"]]]
     match: TextPattern
     match_application: TextPattern
     match_facility: int

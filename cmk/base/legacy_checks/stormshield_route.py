@@ -33,7 +33,7 @@ def check_stormshield_route(item, params, info):
         if line[0] == item:
             _index, typ, name, gateway_name, gateway_type, state = line
             yield route_state_mapping[state]
-            infotext = "Type: %s, Router name: %s, Gateway name: %s, Gateway type: %s" % (
+            infotext = "Type: {}, Router name: {}, Gateway name: {}, Gateway type: {}".format(
                 route_type_mapping[typ],
                 name,
                 gateway_name,
@@ -44,11 +44,11 @@ def check_stormshield_route(item, params, info):
 
 check_info["stormshield_route"] = LegacyCheckDefinition(
     detect=DETECT_STORMSHIELD,
-    discovery_function=inventory_stormshield_route,
-    check_function=check_stormshield_route,
-    service_name="Gateway %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.14.1.1",
         oids=["1", "2", "4", "5", "7", "9"],
     ),
+    service_name="Gateway %s",
+    discovery_function=inventory_stormshield_route,
+    check_function=check_stormshield_route,
 )

@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-import tests.testlib as testlib
+import tests.testlib.utils as testlibutils
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -65,6 +65,12 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ty="dir",
             ident="topology",
             site_path="var/check_mk/topology",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="apache_proccess_tuning",
+            site_path="etc/check_mk/apache.d/wato",
             excludes=[],
         ),
     ]
@@ -133,7 +139,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if testlib.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
+    if testlibutils.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
         # CEE paths are added when the CEE plugins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
@@ -142,7 +148,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
         ]
 
-    if testlib.is_managed_repo() and edition is not cmk_version.Edition.CME:
+    if testlibutils.is_managed_repo() and edition is not cmk_version.Edition.CME:
         # CME paths are added when the CME plugins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [
@@ -391,15 +397,16 @@ def _create_get_config_sync_file_infos_test_config(base_dir: Path) -> None:
 
 def test_get_file_names_to_sync() -> None:
     remote, central = _get_test_file_infos()
-    to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
+    sync_delta = activate_changes.get_file_names_to_sync(
         site_id=SiteId("remote"),
         site_logger=logger,
-        central_file_infos=central,
-        remote_file_infos=remote,
+        sync_state=activate_changes.SyncState(
+            central_file_infos=central, remote_file_infos=remote, remote_config_generation=0
+        ),
         file_filter_func=None,
     )
 
-    assert sorted(to_sync_new + to_sync_changed) == sorted(
+    assert sorted(sync_delta.to_sync_new + sync_delta.to_sync_changed) == sorted(
         [
             "both-differ-mode",
             "both-differ-size",
@@ -412,7 +419,7 @@ def test_get_file_names_to_sync() -> None:
         ]
     )
 
-    assert sorted(to_delete) == sorted(
+    assert sorted(sync_delta.to_delete) == sorted(
         [
             "remote-only",
             "central-link-remote-dir-with-file/file",

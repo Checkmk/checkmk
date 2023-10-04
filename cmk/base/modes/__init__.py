@@ -9,12 +9,13 @@ import textwrap
 from collections.abc import Callable, Sequence
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.tags import TagID
-from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
+from cmk.base.config import ConfigCache
 
 OptionSpec = str
 Argument = str
@@ -129,9 +130,12 @@ class Modes:
         return options
 
     def parse_hostname_list(
-        self, args: list[str], with_clusters: bool = True, with_foreign_hosts: bool = False
+        self,
+        config_cache: ConfigCache,
+        args: list[str],
+        with_clusters: bool = True,
+        with_foreign_hosts: bool = False,
     ) -> Sequence[HostName]:
-        config_cache = config.get_config_cache()
         if with_foreign_hosts:
             valid_hosts = config_cache.all_configured_realhosts()
         else:
@@ -426,4 +430,4 @@ keepalive_option = Option(
 
 modes = Modes()
 
-load_plugins(__file__, __package__)
+import_plugins(__file__, __package__)

@@ -54,14 +54,20 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
 )
+from cmk.utils.hostaddress import HostName
 from cmk.utils.i18n import _
 from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree, SDRawTree
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.user import UserId
 
-if cmk_version.is_enterprise_edition():
+if cmk_version.edition() in [
+    cmk_version.Edition.CEE,
+    cmk_version.Edition.CME,
+    cmk_version.Edition.CCE,
+    cmk_version.Edition.CSE,
+]:
     from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
         cmc_specific_attrs,
     )
@@ -152,6 +158,7 @@ class DiagnosticsDump:
             HWDiagnosticsElement(),
             EnvironmentDiagnosticsElement(),
             FilesSizeCSVDiagnosticsElement(),
+            SELinuxJSONDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
@@ -181,7 +188,7 @@ class DiagnosticsDump:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
         # CEE options
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
             if rel_checkmk_core_files:
                 optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
@@ -594,7 +601,7 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return dict(os.environ)
 
 
-class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "mkp_find_all.json"
@@ -610,11 +617,11 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> str:
-        return subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
 
 
-class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "mkp_show_all.json"
@@ -630,11 +637,11 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> str:
-        return subprocess.check_output(["mkp", "show-all", "--json"], text=True)
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
 
 
-class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
+class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @property
     def ident(self) -> str:
         return "mkp_list.json"
@@ -650,8 +657,32 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "See the corresponding commandline help for more details."
         )
 
-    def _collect_infos(self) -> str:
-        return subprocess.check_output(["mkp", "list", "--json"], text=True)
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        return json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True))
+
+
+class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    @property
+    def ident(self) -> str:
+        return "selinux"
+
+    @property
+    def title(self) -> str:
+        return _("SELinux information")
+
+    @property
+    def description(self) -> str:
+        return _("Output of `sestatus`. See the corresponding commandline help for more details.")
+
+    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+        if not (selinux_binary := shutil.which("sestatus")):
+            return {}
+
+        return {
+            line.split(":")[0]: line.split(":")[1].lstrip()
+            for line in subprocess.check_output(selinux_binary, text=True).split("\n")
+            if ":" in line
+        }
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):

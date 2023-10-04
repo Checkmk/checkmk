@@ -7,7 +7,9 @@ from collections.abc import Callable
 
 import pytest
 
-from cmk.utils.type_defs import ParsedSectionName, SectionName
+from cmk.utils.sectionname import SectionName
+
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPDetectSpecification, SNMPTree
@@ -42,7 +44,7 @@ def test_validate_parse_function_type(parse_function: object) -> None:
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
             parse_function,  # type:ignore[arg-type]
-            expected_annotation=(str, "str"),  # irrelevant for test
+            expected_annotations={(str, "str")},  # irrelevant for test
         )
 
 
@@ -59,7 +61,7 @@ def test_validate_parse_function_value(parse_function: Callable[..., None]) -> N
     with pytest.raises(ValueError):
         section_plugins._validate_parse_function(
             parse_function,
-            expected_annotation=(str, "str"),  # ignored
+            expected_annotations={(str, "str")},  # ignored
         )
 
 
@@ -70,12 +72,12 @@ def test_validate_parse_function_annotation_string_table() -> None:
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
             _parse_function,
-            expected_annotation=(StringByteTable, "StringByteTable"),
+            expected_annotations={(StringByteTable, "StringByteTable")},
         )
 
     section_plugins._validate_parse_function(
         _parse_function,
-        expected_annotation=(list[StringTable], "List[StringTable]"),
+        expected_annotations={(list[StringTable], "List[StringTable]")},
     )
 
 

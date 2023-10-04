@@ -65,6 +65,6 @@ elif spool_dir:
         fd, b"To: %s\n\n%s" % (recipient.encode("utf-8"), quote_message(message).encode("utf-8"))
     )
     os.close(fd)
-    os.chmod(path, 0o660)
+    os.chmod(path, 0o660)  # nosec B103 # BNS:ce45cd
     filename = path.split("/")[-1]
     shutil.move(path, spool_dir + "/" + filename)

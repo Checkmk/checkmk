@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
 def format_hitachi_hnas_name(nodeid, sensorid, new_format):
     # net item format is used in 1.2.7i? and newer
     if new_format:
-        return "Node %s Sensor %s" % (nodeid, sensorid)
-    return "%s.%s" % (nodeid, sensorid)
+        return f"Node {nodeid} Sensor {sensorid}"
+    return f"{nodeid}.{sensorid}"
 
 
 def inventory_hitachi_hnas_temp(info):
@@ -55,12 +55,12 @@ def check_hitachi_hnas_temp(item, params, info):
 
 check_info["hitachi_hnas_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_temp,
-    discovery_function=inventory_hitachi_hnas_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.9.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_hitachi_hnas_temp,
+    check_function=check_hitachi_hnas_temp,
     check_ruleset_name="temperature",
 )

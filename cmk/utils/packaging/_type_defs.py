@@ -5,11 +5,12 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Iterable, Iterator
+from collections.abc import Iterable
 from functools import cached_property
-from typing import Literal, Union
+from typing import Any, Literal
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, ConfigDict, field_validator, GetCoreSchemaHandler
+from pydantic_core import core_schema
 from semver import VersionInfo
 
 
@@ -17,24 +18,24 @@ class PackageError(Exception):
     pass
 
 
-_SortKeyElement = Union[
+_SortKeyElement = (
     # First element makes sure
     #  a) Never compare different types
     #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
     #  c) A larger set of fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
-    tuple[Literal[0], str],
-    tuple[Literal[1], int],
-    tuple[Literal[2], None],
-]
+    tuple[Literal[0], str]
+    | tuple[Literal[1], int]
+    | tuple[Literal[2], None]
+)
 
 
 class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
-    _MISMATCH_MSG = "A package version must not contain slashes"
+    _MISMATCH_MSG = "Invalid version %r. A package version must not contain slashes"
 
     def __new__(cls, value: str) -> PackageVersion:
         if "/" in value:
-            raise ValueError(cls._MISMATCH_MSG)
+            raise ValueError(cls._MISMATCH_MSG % value)
         return super().__new__(cls, value)
 
     @classmethod
@@ -42,8 +43,12 @@ class PackageVersion(str):
         return cls(value)
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[str | PackageVersion], PackageVersion]]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
 
     @staticmethod
     def parse_semver(raw: str) -> VersionInfo:
@@ -80,7 +85,7 @@ class PackageVersion(str):
 class PackageName(str):
     _REGEX = re.compile(r"^[^\d\W][-\w]*$")
     _MISMATCH_MSG = (
-        "A package name must only consist of letters, digits, dash and "
+        "Invalid name %r. A package name must only consist of letters, digits, dash and "
         "underscore and it must start with a letter or underscore."
     )
 
@@ -89,23 +94,33 @@ class PackageName(str):
         return cls(value)
 
     @classmethod
-    def __get_validators__(cls) -> Iterator[Callable[[str | PackageName], PackageName]]:
-        yield cls.validate
+    def __get_pydantic_core_schema__(
+        cls, source_type: Any, _handler: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
+        )
 
     def __new__(cls, value: str) -> PackageName:
         if not cls._REGEX.match(value):
-            raise ValueError(cls._MISMATCH_MSG)
+            raise ValueError(cls._MISMATCH_MSG % value)
         return super().__new__(cls, value)
 
 
-class PackageID(BaseModel, frozen=True):
+class PackageID(BaseModel):
+    # FIXME: implement `__get_pydantic_core_schema__` on your custom type to fully support it.
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+
     name: PackageName
     version: PackageVersion
 
-    @validator("name")
+    @field_validator("name")
     def make_name(cls, value: str) -> PackageName:  # pylint: disable=no-self-argument
         return PackageName(value)
 
-    @validator("version")
+    @field_validator("version")
     def make_version(cls, value: str) -> PackageVersion:  # pylint: disable=no-self-argument
         return PackageVersion(value)

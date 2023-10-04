@@ -6,7 +6,9 @@
 Common functions used in Prometheus related Special agents
 """
 
-from typing import Literal, TypedDict
+from typing import Literal
+
+from typing_extensions import TypedDict
 
 from cmk.utils import password_store
 

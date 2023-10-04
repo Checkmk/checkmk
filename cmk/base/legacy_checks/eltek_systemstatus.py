@@ -29,11 +29,11 @@ def check_eltek_systemstatus(_no_item, _no_params, info):
 
 check_info["eltek_systemstatus"] = LegacyCheckDefinition(
     detect=DETECT_ELTEK,
-    discovery_function=inventory_eltek_systemstatus,
-    check_function=check_eltek_systemstatus,
-    service_name="System Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.2",
         oids=["2"],
     ),
+    service_name="System Status",
+    discovery_function=inventory_eltek_systemstatus,
+    check_function=check_eltek_systemstatus,
 )

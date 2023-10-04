@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from cmk.utils.type_defs import AgentRawData
+from cmk.utils.agentdatatype import AgentRawData
 
 from ._cache import FileCache
 

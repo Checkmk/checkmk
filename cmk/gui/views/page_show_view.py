@@ -8,15 +8,19 @@
 from __future__ import annotations
 
 import functools
+import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
 from typing import Any
+from urllib.parse import quote_plus
 
 import livestatus
+from livestatus import SiteId
 
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
+from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.log as log
 import cmk.gui.visuals as visuals
@@ -33,7 +37,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter.v0.base import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import (
     ColumnName,
     PainterParameters,
@@ -46,6 +49,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
+from cmk.gui.visuals import (
+    filters_allowed_for_infos,
+    get_livestatus_filter_headers,
+    get_only_sites_from_context,
+)
+from cmk.gui.visuals.filter import Filter
 
 from . import availability
 from .row_post_processing import post_process_rows
@@ -72,7 +81,7 @@ def page_show_view() -> None:
         view = View(view_name, view_spec, context)
         view.row_limit = get_limit()
 
-        view.only_sites = visuals.get_only_sites_from_context(context)
+        view.only_sites = get_only_sites_from_context(context)
 
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
         view.want_checkboxes = get_want_checkboxes()
@@ -183,11 +192,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: ignore[no-untyped-def]
-    from cmk.utils.livestatus_helpers.queries import Query
-
-    from cmk.gui.plugins.openapi.utils import create_url
-
+def _add_rest_api_menu_entries(view_renderer: ABCViewRenderer, queries: list[str]) -> None:
     entries: list[PageMenuEntry] = []
     for text_query in set(queries):
         if "\nStats:" in text_query:
@@ -197,7 +202,7 @@ def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: igno
         except ValueError:
             continue
         try:
-            url = create_url(omd_site(), query)
+            url = _create_url(omd_site(), query)
         except ValueError:
             continue
         table = query.table.__tablename__
@@ -215,6 +220,46 @@ def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: igno
             entries=entries,
         ),
     )
+
+
+def _create_url(site: SiteId, query: Query) -> str:
+    """Create a REST-API query URL.
+
+    Examples:
+
+        >>> _create_url('heute',
+        ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
+        '/heute/check_mk/api/1.0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
+
+    Args:
+        site:
+            A valid site-name.
+
+        query:
+            The Query() instance which the endpoint shall create again.
+
+    Returns:
+        The URL.
+
+    Raises:
+        A ValueError when no URL could be created.
+
+    """
+    table = query.table.__tablename__
+    try:
+        domain_type = {
+            "hosts": "host",
+            "services": "service",
+        }[table]
+    except KeyError:
+        raise ValueError(f"Could not find a domain-type for table {table}.")
+    url = f"/{site}/check_mk/api/1.0/domain-types/{domain_type}/collections/all"
+    query_dict = query.dict_repr()
+    if query_dict:
+        query_string_value = quote_plus(json.dumps(query_dict))
+        url += f"?query={query_string_value}"
+
+    return url
 
 
 def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
@@ -372,7 +417,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
 
 def _get_all_active_filters(view: View) -> list[Filter]:
     # Always allow the users to specify all allowed filters using the URL
-    use_filters = list(visuals.filters_allowed_for_infos(view.datasource.infos).values())
+    use_filters = list(filters_allowed_for_infos(view.datasource.infos).values())
 
     # See process_view() for more information about this hack
     if _is_ec_unrelated_host_view(view.spec):

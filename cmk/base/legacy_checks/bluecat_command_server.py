@@ -33,14 +33,14 @@ def check_bluecat_command_server(item, params, info):
 
 check_info["bluecat_command_server"] = LegacyCheckDefinition(
     detect=DETECT_BLUECAT,
-    check_function=check_bluecat_command_server,
-    discovery_function=inventory_bluecat_command_server,
-    service_name="Command Server",
-    check_ruleset_name="bluecat_command_server",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.7.2.1",
         oids=["1"],
     ),
+    service_name="Command Server",
+    discovery_function=inventory_bluecat_command_server,
+    check_function=check_bluecat_command_server,
+    check_ruleset_name="bluecat_command_server",
     check_default_parameters={
         "oper_states": {
             "warning": [2, 3, 4],

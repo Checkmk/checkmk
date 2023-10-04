@@ -17,9 +17,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_veeam_client(info):
+def parse_veeam_client(string_table):
     data = {}
-    for line in info:
+    for line in string_table:
         if line[0] == "Status":
             if len(line) == 2:
                 last_status = line[1]
@@ -89,7 +89,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         size_info.append(get_bytes_human_readable(TransferedSizeByte))
         size_legend.append("transferred")
 
-    infotexts.append("Size (%s): %s" % ("/".join(size_legend), "/ ".join(size_info)))
+    infotexts.append("Size ({}): {}".format("/".join(size_legend), "/ ".join(size_info)))
 
     # Bugged agent plugins were reporting . instead of : as separator for
     # the time. This has been fixed in the agent, but be compatible to old agent.
@@ -114,18 +114,18 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
         if age >= crit:
             state = 2
             label = "(!!)"
-            levels = " (Warn/Crit: %s/%s)" % (
+            levels = " (Warn/Crit: {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
         elif age >= warn:
             state = max(state, 1)
             label = "(!)"
-            levels = " (Warn/Crit: %s/%s)" % (
+            levels = " (Warn/Crit: {}/{})".format(
                 get_age_human_readable(warn),
                 get_age_human_readable(crit),
             )
-        infotexts.append("Last backup: %s ago%s%s" % (get_age_human_readable(age), label, levels))
+        infotexts.append(f"Last backup: {get_age_human_readable(age)} ago{label}{levels}")
 
     # Check duration only if currently not running
     if data["Status"] not in ["InProgress", "Pending"]:
@@ -143,7 +143,7 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
     if "AvgSpeedBps" in data:
         avg_speed_bps = int(data["AvgSpeedBps"])
         perfdata.append(("avgspeed", avg_speed_bps))
-        infotexts.append(("Average Speed: %s" % render.iobandwidth(avg_speed_bps)))
+        infotexts.append("Average Speed: %s" % render.iobandwidth(avg_speed_bps))
 
     # Append backup server if available
     if "BackupServer" in data:
@@ -154,9 +154,9 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 
 check_info["veeam_client"] = LegacyCheckDefinition(
     parse_function=parse_veeam_client,
-    check_function=check_veeam_client,
-    discovery_function=inventory_veeam_client,
     service_name="VEEAM Client %s",
+    discovery_function=inventory_veeam_client,
+    check_function=check_veeam_client,
     check_ruleset_name="veeam_backup",
     check_default_parameters={
         "age": (108000, 172800),  # 30h/2d

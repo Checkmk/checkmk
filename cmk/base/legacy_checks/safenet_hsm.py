@@ -8,17 +8,23 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+    startswith,
+)
 
 
-def parse_safenet_hsm(info):
+def parse_safenet_hsm(string_table):
     return {
-        "operation_requests": int(info[0][0]),
-        "operation_errors": int(info[0][1]),
-        "critical_events": int(info[0][2]),
-        "noncritical_events": int(info[0][3]),
+        "operation_requests": int(string_table[0][0]),
+        "operation_errors": int(string_table[0][1]),
+        "critical_events": int(string_table[0][2]),
+        "noncritical_events": int(string_table[0][3]),
     }
 
 
@@ -62,11 +68,13 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
     def check_event_rate(event_type):
         events = parsed[event_type + "_events"]
-        event_rate = get_rate(event_type + "_events", now, events)
-        infotext = "%.2f %s events/s" % (event_rate, event_type)
+        event_rate = get_rate(
+            get_value_store(), event_type + "_events", now, events, raise_overflow=True
+        )
+        infotext = f"{event_rate:.2f} {event_type} events/s"
         if params.get(event_type + "_event_rate"):
             warn, crit = params[event_type + "_event_rate"]
-            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
             perfdata = [(event_type + "event_rate", event_rate, warn, crit)]
             if event_rate >= crit:
                 status = 2
@@ -88,9 +96,10 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
 
 check_info["safenet_hsm.events"] = LegacyCheckDefinition(
+    service_name="HSM Safenet Event Stats",
+    sections=["safenet_hsm"],
     discovery_function=inventory_safenet_hsm_events,
     check_function=check_safenet_hsm_events,
-    service_name="HSM Safenet Event Stats",
     check_ruleset_name="safenet_hsm_eventstats",
     check_default_parameters={
         "critical_event_rate": (0.0001, 0.0005),
@@ -124,7 +133,9 @@ def check_safenet_hsm(_no_item, params, parsed):
     now = time.time()
 
     def check_operation_request_rate(operation_requests):
-        request_rate = get_rate("operation_requests", now, operation_requests)
+        request_rate = get_rate(
+            get_value_store(), "operation_requests", now, operation_requests, raise_overflow=True
+        )
 
         status, infotext, extra_perf = check_levels(
             request_rate, "request_rate", params["request_rate"], unit="1/s", infoname="Requests"
@@ -133,11 +144,13 @@ def check_safenet_hsm(_no_item, params, parsed):
         return status, infotext, perfdata
 
     def check_operation_error_rate(operation_errors):
-        error_rate = get_rate("operation_errors", now, operation_errors)
+        error_rate = get_rate(
+            get_value_store(), "operation_errors", now, operation_errors, raise_overflow=True
+        )
         infotext = "%.2f operation errors/s" % error_rate
         if params.get("error_rate"):
             warn, crit = params["error_rate"]
-            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
             perfdata = [("error_rate", error_rate, warn, crit)]
             if error_rate >= crit:
                 status = 2
@@ -179,14 +192,14 @@ check_info["safenet_hsm"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12383"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
     ),
-    parse_function=parse_safenet_hsm,
-    discovery_function=inventory_safenet_hsm,
-    check_function=check_safenet_hsm,
-    service_name="HSM Operation Stats",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12383.3.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_safenet_hsm,
+    service_name="HSM Operation Stats",
+    discovery_function=inventory_safenet_hsm,
+    check_function=check_safenet_hsm,
     check_ruleset_name="safenet_hsm_operstats",
     check_default_parameters={"error_rate": (0.01, 0.05), "request_rate": None},
 )

@@ -103,7 +103,7 @@ class MKBackupStream:
 
         variables: dict[str, dict[str, Any]] = {"keys": {}}
         if path.exists():
-            exec(path.read_text(), variables, variables)
+            exec(path.read_text(), variables, variables)  # nosec B102 # BNS:aee528
         # TODO: Verify value of keys.
         return variables["keys"]
 

@@ -18,11 +18,11 @@ janitza_umg_device_map = {
 }
 
 
-def parse_janitza_umg_inphase(info):
+def parse_janitza_umg_inphase(string_table):
     def flatten(line):
         return [x[0] for x in line]
 
-    dev_type = janitza_umg_device_map[info[0][0][0]]
+    dev_type = janitza_umg_device_map[string_table[0][0][0]]
 
     info_offsets = {
         "508": {
@@ -42,10 +42,10 @@ def parse_janitza_umg_inphase(info):
         },
     }[dev_type]
 
-    rmsphase = flatten(info[1])
-    sumphase = flatten(info[2])
-    energy = flatten(info[info_offsets["energy"]])
-    sumenergy = flatten(info[info_offsets["sumenergy"]])
+    rmsphase = flatten(string_table[1])
+    sumphase = flatten(string_table[2])
+    energy = flatten(string_table[info_offsets["energy"]])
+    sumenergy = flatten(string_table[info_offsets["sumenergy"]])
 
     if dev_type in ["508", "604"]:
         num_phases = 4
@@ -83,7 +83,7 @@ def parse_janitza_umg_inphase(info):
 
     result["Total"] = {"power": int(sumphase[0]), "energy": int(sumenergy[0])}
 
-    misc = flatten(info[info_offsets["misc"]])
+    misc = flatten(string_table[info_offsets["misc"]])
     result["Frequency"] = int(misc[0])
     # temperature not present in UMG508 and UMG604
     if len(misc) > 1:
@@ -105,11 +105,6 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.4"),
     ),
-    parse_function=parse_janitza_umg_inphase,
-    discovery_function=inventory_janitza_umg_inphase,
-    check_function=check_elphase,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.1.2",
@@ -148,6 +143,11 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
             oids=["8"],
         ),
     ],
+    parse_function=parse_janitza_umg_inphase,
+    service_name="Input %s",
+    discovery_function=inventory_janitza_umg_inphase,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
     check_default_parameters={},
 )
 
@@ -172,9 +172,10 @@ def check_janitza_umg_freq(item, params, parsed):
 
 
 check_info["janitza_umg.freq"] = LegacyCheckDefinition(
+    service_name="Frequency %s",
+    sections=["janitza_umg"],
     discovery_function=inventory_janitza_umg_freq,
     check_function=check_janitza_umg_freq,
-    service_name="Frequency %s",
     check_ruleset_name="efreq",
     check_default_parameters={"levels_lower": (0, 0)},
 )
@@ -198,9 +199,10 @@ def check_janitza_umg_temp(item, params, parsed):
 
 
 check_info["janitza_umg.temp"] = LegacyCheckDefinition(
+    service_name="Temperature External %s",
+    sections=["janitza_umg"],
     discovery_function=inventory_janitza_umg_temp,
     check_function=check_janitza_umg_temp,
-    service_name="Temperature External %s",
     check_ruleset_name="temperature",
     check_default_parameters={},
 )

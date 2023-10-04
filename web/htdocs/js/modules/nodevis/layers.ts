@@ -1,6 +1,8 @@
-// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/**
+ * Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
 
 import "nodevis/node_types";
 import "nodevis/link_types";
@@ -31,26 +33,29 @@ import {
 import {DefaultTransition} from "nodevis/utils";
 
 export class LayeredDebugLayer extends ToggleableLayer {
-    static class_name = "debug_layer";
     _anchor_info?: d3SelectionG;
 
-    id() {
+    override class_name(): string {
         return "debug_layer";
     }
 
-    z_index(): number {
+    override id() {
+        return "debug_layer";
+    }
+
+    override z_index(): number {
         return 20;
     }
 
-    name() {
+    override name() {
         return "Debug Layer";
     }
 
-    setup() {
+    override setup() {
         this.overlay_active = false;
     }
 
-    update_gui() {
+    override update_gui() {
         this._div_selection
             .selectAll("td#Simulation")
             .text(
@@ -160,7 +165,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
             .on("mousemove.translation_info", null);
     }
 
-    size_changed() {
+    override size_changed() {
         if (!this.overlay_active) return;
     }
 
@@ -168,7 +173,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
         this._world.viewport.reset_zoom();
     }
 
-    zoomed() {
+    override zoomed() {
         if (!this.overlay_active || !this._anchor_info) return;
         // TODO: check if toString is working
         this._anchor_info.attr(
@@ -182,7 +187,7 @@ export class LayeredDebugLayer extends ToggleableLayer {
             .text("X: " + last_zoom.x + " / Y:" + last_zoom.y);
     }
 
-    mousemove(event) {
+    mousemove(event: MouseEvent) {
         const coords = d3.pointer(event);
         this._div_selection
             .selectAll("td#Mouse")
@@ -191,21 +196,23 @@ export class LayeredDebugLayer extends ToggleableLayer {
 }
 
 export class LayeredIconOverlay extends ToggleableLayer {
-    static class_name = "node_icon_overlay";
-
-    id() {
+    override class_name(): string {
         return "node_icon_overlay";
     }
 
-    z_index(): number {
+    override id() {
+        return "node_icon_overlay";
+    }
+
+    override z_index(): number {
         return 10;
     }
 
-    name() {
+    override name() {
         return "Node icons";
     }
 
-    update_gui() {
+    override update_gui() {
         const nodes: NodevisNode[] = [];
         this._world.viewport.get_all_nodes().forEach(node => {
             if (!node.data.icon_image) return;
@@ -257,10 +264,9 @@ export class LayeredIconOverlay extends ToggleableLayer {
 //#   +--------------------------------------------------------------------+
 
 export class LayeredNodesLayer extends FixLayer {
-    static class_name = "nodes";
-    node_instances: {[name: string]: AbstractGUINode};
-    link_instances: {[name: string]: AbstractLink};
-    _links_for_node: {[name: string]: AbstractLink[]} = {};
+    node_instances: Record<string, AbstractGUINode>;
+    link_instances: Record<string, AbstractLink>;
+    _links_for_node: Record<string, AbstractLink[]> = {};
     last_scale: number;
 
     nodes_selection: d3SelectionG;
@@ -293,7 +299,11 @@ export class LayeredNodesLayer extends FixLayer {
             .style("display", "none");
     }
 
-    id() {
+    override class_name(): string {
+        return "nodes";
+    }
+
+    override id() {
         return "nodes";
     }
 
@@ -317,19 +327,21 @@ export class LayeredNodesLayer extends FixLayer {
         }
     }
 
-    z_index(): number {
+    override z_index(): number {
         return 50;
     }
 
-    name() {
+    override name() {
         return "Nodes Layer";
     }
 
-    setup(): void {
+    override setup(): void {
         return;
     }
 
-    render_line_style(into_selection: d3SelectionG): void {
+    render_line_style<GType extends d3.BaseType, Data>(
+        into_selection: d3.Selection<GType, Data, d3.BaseType, unknown>
+    ): void {
         const line_style_row = into_selection
             .selectAll("table.line_style tr")
             .data([null])
@@ -371,8 +383,10 @@ export class LayeredNodesLayer extends FixLayer {
             .text(d => d);
     }
 
-    _change_line_style(event): void {
-        const new_line_style = d3.select(event.target).property("value");
+    _change_line_style(event: Event): void {
+        const new_line_style = d3
+            .select(event.target as HTMLElement)
+            .property("value");
         this._world.viewport.get_hierarchy_list().forEach(node_chunk => {
             // @ts-ignore
             node_chunk.layout_instance.line_config.style = new_line_style;
@@ -385,7 +399,7 @@ export class LayeredNodesLayer extends FixLayer {
         this.update_gui(true);
     }
 
-    zoomed(): void {
+    override zoomed(): void {
         // Interrupt any gui transitions whenever the zoom factor is changed
         if (this.last_scale != this._world.viewport.last_zoom.k)
             this._svg_selection
@@ -401,7 +415,7 @@ export class LayeredNodesLayer extends FixLayer {
         this.last_scale = this._world.viewport.last_zoom.k;
     }
 
-    update_data(): void {
+    override update_data(): void {
         this._update_nodes();
         this._update_links();
     }
@@ -411,7 +425,7 @@ export class LayeredNodesLayer extends FixLayer {
             .get_all_nodes()
             .filter(d => !d.data.invisible);
 
-        const old_node_instances: {[name: string]: AbstractGUINode} =
+        const old_node_instances: Record<string, AbstractGUINode> =
             this.node_instances;
         this.node_instances = {};
 
@@ -448,7 +462,11 @@ export class LayeredNodesLayer extends FixLayer {
             });
     }
 
-    _add_node_vanish_animation(node, node_id, old_node_instances) {
+    _add_node_vanish_animation(
+        node: d3.Selection<SVGGElement, unknown, null, undefined>,
+        node_id: string,
+        old_node_instances: Record<string, AbstractGUINode>
+    ) {
         const old_instance = old_node_instances[node_id];
         if (!old_instance) {
             node.remove();
@@ -516,7 +534,6 @@ export class LayeredNodesLayer extends FixLayer {
         const node_class = node_type_class_registry.get_class(
             node_data.data.node_type
         );
-        // @ts-ignore
         return new node_class(this._world, node_data);
     }
 
@@ -524,10 +541,11 @@ export class LayeredNodesLayer extends FixLayer {
         const link_class = link_type_class_registry.get_class(
             link_data.config.type
         );
+
         return new link_class(this._world, link_data);
     }
 
-    update_gui(force = false): void {
+    override update_gui(force = false): void {
         this._update_position_of_context_menu();
         if (!force && this._world.force_simulation._simulation.alpha() < 0.11) {
             for (const idx in this.node_instances)
@@ -540,8 +558,9 @@ export class LayeredNodesLayer extends FixLayer {
         for (const idx in this.node_instances)
             this.node_instances[idx].update_position();
 
-        for (const idx in this.link_instances)
+        for (const idx in this.link_instances) {
             this.link_instances[idx].update_position();
+        }
 
         // Disable node transitions after each update step
         for (const idx in this.node_instances)
@@ -549,7 +568,10 @@ export class LayeredNodesLayer extends FixLayer {
                 false;
     }
 
-    render_context_menu(event: MouseEvent, node_id: string | null): void {
+    override render_context_menu(
+        event: MouseEvent,
+        node_id: string | null
+    ): void {
         if (!this._world.layout_manager.edit_layout && !node_id) return; // Nothing to show
 
         //        let coords : Coords = {x: 0, y:0};
@@ -682,7 +704,7 @@ export class LayeredNodesLayer extends FixLayer {
             .style("top", new_coords.y + "px");
     }
 
-    hide_context_menu(): void {
+    override hide_context_menu(): void {
         this.popup_menu_selection.selectAll("*").remove();
         this.popup_menu_selection.style("display", "none");
     }

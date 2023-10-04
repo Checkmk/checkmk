@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Simple python script to replace version in the file
-# first param is a file usually wnx\src\common\wnx_version.h
+# first param is a file usually wnx\include\common\wnx_version.h
 # second param is version without double quotes, for example, 2.0.0i1
 
 import re

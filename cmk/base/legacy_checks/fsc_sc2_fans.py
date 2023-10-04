@@ -16,13 +16,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 check_info["fsc_sc2_fans"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
-    discovery_function=inventory_fsc_sc2_fans,
-    check_function=check_fsc_sc2_fans,
-    service_name="FSC %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.5.2.1",
         oids=["3", "5", "6"],
     ),
+    service_name="FSC %s",
+    discovery_function=inventory_fsc_sc2_fans,
+    check_function=check_fsc_sc2_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters=FAN_FSC_SC2_CHECK_DEFAULT_PARAMETERS,
 )

@@ -112,6 +112,27 @@ def make_confirmed_form_submit_link(
     )
 
 
+def show_confirm_cancel_dialog(title: str, confirm_url: str, cancel_url: str | None = None) -> None:
+    html.javascript(
+        "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
+        % (
+            json.dumps(
+                {
+                    "title": title,
+                    "confirmButtonText": _("Confirm"),
+                    "cancelButtonText": _("Cancel"),
+                    "customClass": {
+                        "confirmButton": "confirm_question",
+                        "icon": "confirm_icon" + " confirm_question",
+                    },
+                }
+            ),
+            json.dumps(confirm_url),
+            f"()=>{{location.href = {json.dumps(cancel_url)}}}" if cancel_url else "null",
+        )
+    )
+
+
 def confirmed_form_submit_options(
     title: str | None = None,
     suffix: str | None = None,
@@ -821,9 +842,15 @@ def inpage_search_form(mode: str | None = None, default_value: str = "") -> None
     html.buttonlink(reset_url, "", obj_id=reset_button_id, title=_("Reset"))
     html.end_form()
     html.javascript(
-        "cmk.page_menu.inpage_search_init(%s, %s)"
-        % (json.dumps(reset_button_id), json.dumps(was_submitted))
+        f"cmk.page_menu.inpage_search_init({json.dumps(reset_button_id)}, {json.dumps(was_submitted)})"
     )
+
+
+def get_search_expression() -> None | str:
+    search = request.get_str_input("search")
+    if search is not None:
+        search = search.strip().lower()
+    return search
 
 
 class PageMenuPopupsRenderer:

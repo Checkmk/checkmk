@@ -26,13 +26,13 @@ def check_enterasys_cpu_util(item, params, info):
 
 check_info["enterasys_cpu_util"] = LegacyCheckDefinition(
     detect=DETECT_ENTERASYS,
-    check_function=check_enterasys_cpu_util,
-    discovery_function=inventory_enterasys_cpu_util,
-    service_name="CPU util %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5624.1.2.49.1.1.1.1",
         oids=[OIDEnd(), "3"],
     ),
+    service_name="CPU util %s",
+    discovery_function=inventory_enterasys_cpu_util,
+    check_function=check_enterasys_cpu_util,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={
         "levels": (90.0, 95.0),

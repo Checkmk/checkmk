@@ -5,11 +5,13 @@
 
 from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
-from typing import Any, TypedDict
+from typing import Any
 
 import pytest
+from typing_extensions import TypedDict
 
-from cmk.base.api.agent_based.utils import GetRateError, Metric, Result, State
+from cmk.base.api.agent_based.checking_classes import Metric, Result, State
+from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults
 from cmk.base.plugins.agent_based.utils.size_trend import size_trend
 

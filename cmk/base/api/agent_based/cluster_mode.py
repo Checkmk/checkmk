@@ -7,14 +7,15 @@
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
-from typing import Any, Final, NamedTuple, Protocol
+from typing import Any, Final, Literal, NamedTuple, Protocol
 
-from cmk.utils.type_defs import ClusterMode, HostName, state_markers
+from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine import CheckPlugin
-from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import ServiceID
+from cmk.checkengine.checkresults import state_markers
 
 from cmk.base.api.agent_based.checking_classes import (
+    CheckPlugin,
     CheckResult,
     IgnoreResults,
     IgnoreResultsError,
@@ -29,6 +30,8 @@ _Kwargs = Mapping[str, Any]
 _NON_SECTION_KEYS: Final = {"item", "params"}
 
 _INF = float("inf")
+
+ClusterMode = Literal["native", "failover", "worst", "best"]
 
 
 class Selector(Protocol):
@@ -57,7 +60,7 @@ def get_cluster_check_function(
     value_store_manager: ValueStoreManager,
 ) -> Callable[..., Iterable[object]]:
     if mode == "native":
-        return plugin.cluster_function or _unfit_for_clustering
+        return plugin.cluster_check_function or _unfit_for_clustering
 
     executor = NodeCheckExecutor(
         service_id=service_id,
@@ -69,7 +72,7 @@ def get_cluster_check_function(
             _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
-            check_function=plugin.function,
+            check_function=plugin.check_function,
             label="active",
             selector=State.worst,
             levels_additional_nodes_count=(1, _INF),
@@ -81,7 +84,7 @@ def get_cluster_check_function(
             _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
-            check_function=plugin.function,
+            check_function=plugin.check_function,
             label="worst",
             selector=State.worst,
             levels_additional_nodes_count=(_INF, _INF),
@@ -93,7 +96,7 @@ def get_cluster_check_function(
             _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
-            check_function=plugin.function,
+            check_function=plugin.check_function,
             label="best",
             selector=State.best,
             levels_additional_nodes_count=(_INF, _INF),

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import Any, Final, Mapping, NamedTuple, Optional
+from collections.abc import Mapping
+from typing import Any, Final, NamedTuple
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -22,7 +23,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 class JobSpec(NamedTuple):
-    last_run_duration: Optional[float]
+    last_run_duration: float | None
     last_run_outcome: str
     last_run_datetime: str
     enabled: bool
@@ -70,7 +71,7 @@ _STATUS_MAPPING: Final = {
 }
 
 
-def _calculate_seconds(raw_duration: str) -> Optional[float]:
+def _calculate_seconds(raw_duration: str) -> float | None:
     """Return the number of seconds from a string in HHMMSS format.
     The strings are of variable length, e.g. 124 = 1 minute 24 seconds.
 

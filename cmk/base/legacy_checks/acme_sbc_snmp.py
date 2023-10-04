@@ -46,7 +46,7 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 3, "Unknown score: %s" % score
         return
     warn, crit = params.get("levels_lower", (None, None))
-    levels_msg = " (warn/crit at or below %s%%/%s%%)" % (warn, crit)
+    levels_msg = f" (warn/crit at or below {warn}%/{crit}%)"
     score_msg = "Score: %s%%" % score
     if crit is not None and score <= crit:
         yield 2, score_msg + levels_msg
@@ -58,13 +58,13 @@ def check_acme_sbc_snmp(_no_item, params, info):
 
 check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_sbc_snmp,
-    check_function=check_acme_sbc_snmp,
-    service_name="ACME SBC health",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.2.1.1",
         oids=["3", "4"],
     ),
+    service_name="ACME SBC health",
+    discovery_function=inventory_acme_sbc_snmp,
+    check_function=check_acme_sbc_snmp,
     check_ruleset_name="acme_sbc_snmp",
     check_default_parameters={
         "levels_lower": (99, 75),

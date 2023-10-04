@@ -11,7 +11,7 @@ from cmk.base.plugins.agent_based.utils.dell import DETECT_OPENMANAGE
 
 
 def inventory_dell_om_disks(info):
-    return [("%s:%s:%s" % (x[3], x[4], x[5]), None) for x in info]
+    return [(f"{x[3]}:{x[4]}:{x[5]}", None) for x in info]
 
 
 def check_dell_om_disks(item, _no_params, info):
@@ -65,7 +65,7 @@ def check_dell_om_disks(item, _no_params, info):
     }
 
     for name, dstate, pid, eid, cid, tid, sizeMB, btype, sstate, smart, mt in info:
-        ditem = "%s:%s:%s" % (eid, cid, tid)
+        ditem = f"{eid}:{cid}:{tid}"
         if ditem == item:
             state = 0
             dstate = saveint(dstate)
@@ -74,7 +74,7 @@ def check_dell_om_disks(item, _no_params, info):
             smart = saveint(smart)
             mt = saveint(mt)
             size = saveint(sizeMB) * 1024 * 1024
-            msg = ["%s (%s, %s)" % (name, pid, get_bytes_human_readable(size))]
+            msg = [f"{name} ({pid}, {get_bytes_human_readable(size)})"]
             label = ""
             if smart == 2:
                 dstate = 34
@@ -90,7 +90,7 @@ def check_dell_om_disks(item, _no_params, info):
                 state = 0
                 label = ""
 
-            msg.append("state %s%s" % (pdisk_state.get(dstate, "ukn (%s)" % dstate), label))
+            msg.append("state {}{}".format(pdisk_state.get(dstate, "ukn (%s)" % dstate), label))
             msg.append("Bus Type: %s" % bus_type.get(btype, "unk (%s)" % btype))
 
             if sstate != 5:
@@ -104,12 +104,11 @@ def check_dell_om_disks(item, _no_params, info):
 
 check_info["dell_om_disks"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_disks,
-    discovery_function=inventory_dell_om_disks,
-    service_name="Physical Disk %s",
-    # There is no other way to find out that openmanage is present.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10893.1.20.130.4.1",
         oids=["2", "4", "6", "9", "10", "15", "11", "21", "22", "31", "35"],
     ),
+    service_name="Physical Disk %s",
+    discovery_function=inventory_dell_om_disks,
+    check_function=check_dell_om_disks,
 )

@@ -28,13 +28,13 @@ def check_unitrends_replication(item, _no_params, info):
         return 0, "All Replications in the last 24 hours Successfull"
     messages = []
     for _application, result, _complete, target, instance in not_successfull:
-        messages.append("Target: %s, Result: %s, Instance: %s  " % (target, result, instance))
+        messages.append(f"Target: {target}, Result: {result}, Instance: {instance}  ")
     # TODO: Maybe a good place to use multiline output here
     return 2, "Errors from the last 24 hours: " + "/ ".join(messages)
 
 
 check_info["unitrends_replication"] = LegacyCheckDefinition(
-    check_function=check_unitrends_replication,
-    discovery_function=inventory_unitrends_replication,
     service_name="Replicaion %s",
+    discovery_function=inventory_unitrends_replication,
+    check_function=check_unitrends_replication,
 )

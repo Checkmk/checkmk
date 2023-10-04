@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 # <<<db2_bp_hitratios>>>
 # [[[db2taddm:CMDBS1]]]
@@ -19,8 +20,8 @@ from cmk.base.config import check_info
 # BP8                             100.00                 100.00                       -                     -
 
 
-def parse_db2_bp_hitratios(info):
-    pre_parsed = parse_db2_dbs(info)
+def parse_db2_bp_hitratios(string_table):
+    pre_parsed = parse_db2_dbs(string_table)
 
     # Some databases run in DPF mode. This means they are split over several instances
     # Each instance has its own bufferpool hitratio information. We create on service for each instance
@@ -44,7 +45,7 @@ def parse_db2_bp_hitratios(info):
             for line in lines[header_idx + 1 :]:
                 if line[0] == "IBMDEFAULTBP":
                     current_node_offset += 1
-                    current_instance = "%s DPF %s" % (instance, node_names[current_node_offset])
+                    current_instance = f"{instance} DPF {node_names[current_node_offset]}"
                     databases.setdefault(current_instance, [node_headers])
                 if current_instance in databases:
                     databases[current_instance].append(line)
@@ -58,14 +59,14 @@ def inventory_db2_bp_hitratios(parsed):
     for key, values in parsed.items():
         for field in values[1:]:
             if not field[0].startswith("IBMSYSTEMBP"):
-                yield "%s:%s" % (key, field[0]), {}
+                yield f"{key}:{field[0]}", {}
 
 
 def check_db2_bp_hitratios(item, _no_params, parsed):
     db_instance, field = item.rsplit(":", 1)
     db = parsed.get(db_instance)
     if not db:
-        raise MKCounterWrapped("Login into database failed")
+        raise IgnoreResultsError("Login into database failed")
 
     headers = db[0]
     for line in db[1:]:
@@ -81,7 +82,7 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
                     "INDEX_HIT": "Index",
                     "XDA_HIT": "XDA",
                 }
-                yield 0, "%s: %s%%" % (map_key_to_text[key], value), [
+                yield 0, f"{map_key_to_text[key]}: {value}%", [
                     ("%sratio" % key.lower(), float(value), None, None, 0, 100)
                 ]
             break
@@ -90,6 +91,6 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
 check_info["db2_bp_hitratios"] = LegacyCheckDefinition(
     parse_function=parse_db2_bp_hitratios,
     service_name="DB2 BP-Hitratios %s",
-    check_function=check_db2_bp_hitratios,
     discovery_function=inventory_db2_bp_hitratios,
+    check_function=check_db2_bp_hitratios,
 )

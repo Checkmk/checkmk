@@ -30,11 +30,11 @@ def check_mbg_lantime_ng_power(item, _no_params, info):
 
 check_info["mbg_lantime_ng_power"] = LegacyCheckDefinition(
     detect=DETECT_MBG_LANTIME_NG,
-    check_function=check_mbg_lantime_ng_power,
-    discovery_function=inventory_mbg_lantime_ng_power,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.0.2.1",
         oids=["1", "2"],
     ),
+    service_name="Power Supply %s",
+    discovery_function=inventory_mbg_lantime_ng_power,
+    check_function=check_mbg_lantime_ng_power,
 )

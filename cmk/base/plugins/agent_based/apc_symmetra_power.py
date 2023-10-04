@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
-
 from cmk.base.plugins.agent_based.utils.apc import DETECT
 
 from .agent_based_api.v1 import register, SNMPTree
@@ -12,7 +10,7 @@ from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse_apc_symmetra_power(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
 ) -> dict[str, int]:
     section: dict[str, int] = {}
     for phase_index, output_load_str in string_table[0]:

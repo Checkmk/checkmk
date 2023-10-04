@@ -16,7 +16,7 @@ from flask.ctx import RequestContext
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.sites as sites

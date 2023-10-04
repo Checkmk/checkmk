@@ -20,7 +20,7 @@ from cmk.base.config import check_info
 Section = Mapping
 
 
-def parse_ibm_svc_host(info):
+def parse_ibm_svc_host(string_table):
     dflt_header = [
         "id",
         "name",
@@ -32,7 +32,7 @@ def parse_ibm_svc_host(info):
         "host_cluster_id",
         "host_cluster_name",
     ]
-    return parse_ibm_svc_with_header(info, dflt_header)
+    return parse_ibm_svc_with_header(string_table, dflt_header)
 
 
 def discover_ibm_svc_host(section: Section) -> Iterable[tuple[None, dict]]:
@@ -75,7 +75,7 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
             ("offline", offline),
             ("other", other),
         ]
-        yield 0, "%s active, %s inactive" % (active, inactive), perfdata
+        yield 0, f"{active} active, {inactive} inactive", perfdata
 
         if degraded > 0:
             yield (not params["always_ok"] and 1 or 0), "%s degraded" % degraded
@@ -107,13 +107,13 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
                 state = 1
             else:
                 state = 0
-            yield state, "%s %s" % (value, ident), [(ident, value, warn, crit)]
+            yield state, f"{value} {ident}", [(ident, value, warn, crit)]
 
 
 check_info["ibm_svc_host"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_host,
-    check_function=check_ibm_svc_host,
-    discovery_function=discover_ibm_svc_host,
     service_name="Hosts",
+    discovery_function=discover_ibm_svc_host,
+    check_function=check_ibm_svc_host,
     check_ruleset_name="ibm_svc_host",
 )

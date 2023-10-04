@@ -9,12 +9,12 @@ import queue
 import stat
 import threading
 import types
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Generator, Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Generator, Type
 
 import pytest
+from pydantic import BaseModel
 from pytest import MonkeyPatch
 
 from tests.testlib import import_module_hack, wait_until
@@ -51,7 +51,7 @@ class FakeIo:
 
 
 @pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
-def test_object_store(io: Type[FileIo], exists: bool, tmp_path: Path) -> None:
+def test_object_store(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
     a.write_obj("aaaaa")
@@ -67,7 +67,7 @@ def test_object_store_fake_io() -> None:
 
 
 @pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
-def test_object_store_locked(io: Type[FileIo], exists: bool, tmp_path: Path) -> None:
+def test_object_store_locked(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "locked_hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
     with a.locked():
@@ -80,7 +80,7 @@ def test_object_store_locked(io: Type[FileIo], exists: bool, tmp_path: Path) -> 
 
 
 @pytest.mark.parametrize("io,exists", [(RealIo, True), (FakeIo, False)])
-def test_object_store_default(io: Type[FileIo], exists: bool, tmp_path: Path) -> None:
+def test_object_store_default(io: type[FileIo], exists: bool, tmp_path: Path) -> None:
     test_file = tmp_path / "locked_hurz"
     a = ObjectStore(test_file, serializer=TextSerializer(), io=io)
     assert a.read_obj(default="zz") == "zz"
@@ -852,3 +852,23 @@ def tests_standard_format_loader():
     variables = get_hosts_file_variables()
     standard_loader.apply(_hosts_mk_test_data, variables)
     assert variables["all_hosts"] == ["test"]
+
+
+def test_pydantic_store_serialization(tmp_path: Path) -> None:
+    store_path = tmp_path / "MyModel"
+
+    class MyModel(BaseModel):
+        unit: str
+        test: int
+
+    my_store = store.PydanticStore(store_path, MyModel)
+    with my_store.locked():
+        my_store.write_obj(MyModel(unit="bar", test=42))
+    assert store_path.read_text() == '{"unit":"bar","test":42}'
+
+    other_store = store.PydanticStore(store_path, MyModel)
+    with other_store.locked():
+        deserialized_object = other_store.read_obj(default=MyModel(unit="foo", test=0))
+    assert isinstance(deserialized_object, MyModel)
+    assert deserialized_object.unit == "bar"
+    assert deserialized_object.test == 42

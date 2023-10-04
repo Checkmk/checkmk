@@ -1,0 +1,16 @@
+title: Extreme VSP Switch: Fan State and Speed
+agents: snmp
+catalog: hw/network/netextreme
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the fan state and speed of a Extreme VSP Switch.
+ The fan state can be 'unknown', 'up', 'down'.
+ The fan type can be 'low', 'medium', 'high'.
+ Also, if available, the RPM of the fan in displayed.
+
+item:
+ The id of the VSP Switch Fan is the item.
+
+discovery:
+ One service is created for every VSP Switch Fan available.

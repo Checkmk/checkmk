@@ -12,7 +12,7 @@ from typing import Any
 
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import TimeRange, Timestamp
+from cmk.utils.prediction import TimeRange, Timestamp
 
 import cmk.gui.forms as forms
 import cmk.gui.valuespec as valuespec
@@ -193,8 +193,8 @@ class PainterOptions:
             vs.render_input("po_%s" % name, view_spec.get(name, self.get(name)))
         forms.end()
 
-        html.button("_update_painter_options", _("Submit"), "submit")
-        html.button("_reset_painter_options", _("Reset"), "submit")
+        html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
+        html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
 
         html.hidden_fields()
         html.end_form()

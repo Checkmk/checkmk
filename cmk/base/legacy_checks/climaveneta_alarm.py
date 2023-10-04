@@ -83,11 +83,11 @@ def check_climaveneta_alarm(item, params, info):
 
 check_info["climaveneta_alarm"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
-    check_function=check_climaveneta_alarm,
-    discovery_function=inventory_climaveneta_alarm,
-    service_name="Alarm Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",
         oids=[OIDEnd(), "1"],
     ),
+    service_name="Alarm Status",
+    discovery_function=inventory_climaveneta_alarm,
+    check_function=check_climaveneta_alarm,
 )

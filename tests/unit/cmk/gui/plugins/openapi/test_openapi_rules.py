@@ -21,8 +21,9 @@ from tests.testlib.rest_api_client import (
 )
 
 from cmk.utils import paths
+from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.store import load_mk_file
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.check_mk_automations
 import cmk.gui.watolib.rulespecs
@@ -129,7 +130,7 @@ def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
     value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
     clients.Rule.create(
-        ruleset="checkgroup_parameters:filesystem",
+        ruleset=RuleGroup.CheckgroupParameters("filesystem"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -140,7 +141,7 @@ def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
     value_raw = "{'levels': (10.0, 5.0)}"
     resp = clients.Rule.create(
-        ruleset="checkgroup_parameters:memory_percentage_used",
+        ruleset=RuleGroup.CheckgroupParameters("memory_percentage_used"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -165,7 +166,7 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
         ),
     }"""
     resp = clients.Rule.create(
-        ruleset="active_checks:http",
+        ruleset=RuleGroup.ActiveChecks("http"),
         value_raw=value_raw,
         conditions={},
         folder="~",
@@ -177,7 +178,7 @@ def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
 
 def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
     resp = clients.Ruleset.list(search_options="?used=0")
-    ruleset = next(r for r in resp.json["value"] if "special_agents:gcp" == r["id"])
+    ruleset = next(r for r in resp.json["value"] if RuleGroup.SpecialAgents("gcp") == r["id"])
     assert (
         ruleset["links"][0]["href"]
         == "http://localhost/NO_SITE/check_mk/api/1.0/objects/ruleset/special_agents%253Agcp"
@@ -234,7 +235,7 @@ def test_openapi_create_rule(
 
 def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
-        ruleset="extra_host_conf:notification_options",
+        ruleset=RuleGroup.ExtraHostConf("notification_options"),
         folder="/",
         properties={"description": "Test", "disabled": False},
         value_raw="'d,u,r,f,s'",
@@ -252,7 +253,7 @@ def test_openapi_list_rules_with_hyphens(
         "get_elements",
         lambda x: {"fileinfo_groups": "some title"},
     )
-    STATIC_CHECKS_FILEINFO_GROUPS = "static_checks:fileinfo-groups"
+    STATIC_CHECKS_FILEINFO_GROUPS = RuleGroup.StaticChecks("fileinfo-groups")
     _, result = _create_rule(
         clients,
         "/",
@@ -313,7 +314,7 @@ def test_openapi_delete_rule(
     ).assert_status_code(404)
 
 
-@pytest.mark.parametrize("ruleset", ["host_groups", "special_agents:gcp"])
+@pytest.mark.parametrize("ruleset", ["host_groups", RuleGroup.SpecialAgents("gcp")])
 def test_openapi_show_ruleset(clients: ClientRegistry, ruleset: str) -> None:
     resp = clients.Ruleset.get(ruleset_id=urllib.parse.quote(ruleset))
     assert resp.json["extensions"]["name"] == ruleset
@@ -440,7 +441,7 @@ def test_openapi_move_rule_before_specific_rule(
 
 def test_create_rule_permission_error_regression(clients: ClientRegistry) -> None:
     clients.Rule.create(
-        ruleset="active_checks:cmk_inv",
+        ruleset=RuleGroup.ActiveChecks("cmk_inv"),
         folder="~",
         properties={"disabled": False},
         value_raw='{"status_data_inventory": True}',
@@ -507,7 +508,7 @@ def test_user_needs_folder_permissions_to_move_rules(
     )
 
     resp = clients.Rule.create(
-        ruleset="active_checks:cmk_inv",
+        ruleset=RuleGroup.ActiveChecks("cmk_inv"),
         folder="~" + source_folder,
         properties={"disabled": False},
         value_raw='{"status_data_inventory": True}',
@@ -545,7 +546,7 @@ def test_openapi_deprecated_filter_regression(clients: ClientRegistry) -> None:
 
     # checkgroup_parameters:jvm_threads is deprecated.
     clients.Rule.create(
-        ruleset="checkgroup_parameters:jvm_threads",
+        ruleset=RuleGroup.CheckgroupParameters("jvm_threads"),
         value_raw="'(80, 100)'",
         conditions={"host_name": {"match_on": ["heute"], "operator": "one_of"}},
         properties={},
@@ -579,7 +580,9 @@ def test_openapi_cannot_move_rules_from_different_rulesets_regression(
     )
     lhs_rule_id = resp.json["id"]
 
-    resp = clients.Rule.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    resp = clients.Rule.create(
+        RuleGroup.ActiveChecks("tcp"), value_raw=repr((1, {})), conditions={}
+    )
     rhs_rule_id = resp.json["id"]
 
     clients.Rule.move(
@@ -592,7 +595,9 @@ def test_openapi_cannot_move_rules_from_different_rulesets_regression(
 
 
 def test_openapi_cannot_move_rule_before_or_after_itself(clients: ClientRegistry) -> None:
-    resp = clients.Rule.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    resp = clients.Rule.create(
+        RuleGroup.ActiveChecks("tcp"), value_raw=repr((1, {})), conditions={}
+    )
     rule_id = resp.json["id"]
 
     clients.Rule.move(

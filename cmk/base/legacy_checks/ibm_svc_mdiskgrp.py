@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
@@ -44,7 +45,7 @@ def ibm_svc_mdiskgrp_to_mb(size):
     return size
 
 
-def parse_ibm_svc_mdiskgrp(info):
+def parse_ibm_svc_mdiskgrp(string_table):
     dflt_header = [
         "id",
         "name",
@@ -76,7 +77,7 @@ def parse_ibm_svc_mdiskgrp(info):
         "site_name",
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         try:
             data = rows[0]
         except IndexError:
@@ -127,7 +128,7 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
         return  # provisioning does not make sense when capacity is 0
 
     provisioning = 100.0 * virtual_capacity / capacity
-    infotext = "Provisioning: %s" % get_percent_human_readable(provisioning)
+    infotext = "Provisioning: %s" % render.percent(provisioning)
     state = 0
     if "provisioning_levels" in params:
         warn, crit = params["provisioning_levels"]
@@ -136,9 +137,9 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
         elif provisioning >= warn:
             state = 1
         if state:
-            infotext += " (warn/crit at %s/%s)" % (
-                get_percent_human_readable(warn),
-                get_percent_human_readable(crit),
+            infotext += " (warn/crit at {}/{})".format(
+                render.percent(warn),
+                render.percent(crit),
             )
         warn_mb = capacity * mb * warn / 100
         crit_mb = capacity * mb * crit / 100
@@ -155,9 +156,9 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
 
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_mdiskgrp,
-    check_function=check_ibm_svc_mdiskgrp,
-    discovery_function=inventory_ibm_svc_mdiskgrp,
     service_name="Pool Capacity %s",
+    discovery_function=inventory_ibm_svc_mdiskgrp,
+    check_function=check_ibm_svc_mdiskgrp,
     check_ruleset_name="ibm_svc_mdiskgrp",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

@@ -10,17 +10,17 @@ Version: 2.2.0b1
 
 The following properties are monitored for both devices:
 <ul>
-<li>Fan status<\li>
-<li>Power supply status<\li>
-<li>Memory health<\li>
-<\ul>
+<li>Fan status</li>
+<li>Power supply status</li>
+<li>Memory health</li>
+</ul>
 The following properties are monitored for 5171:
 <ul>
-<li>Disk health<\li>
-<li>CPU health<\li>
-<\ul>
+<li>Disk health</li>
+<li>CPU health</li>
+</ul>
 The following properties are monitored for 5142:
 <ul>
-<li>Tmpfs<\li>
-<li>Sysfs<\li>
-<\ul>
+<li>Tmpfs</li>
+<li>Sysfs</li>
+</ul>

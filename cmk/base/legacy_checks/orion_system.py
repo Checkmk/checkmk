@@ -6,14 +6,14 @@
 
 # mypy: disable-error-code="index,attr-defined"
 
-from cmk.base.check_api import discover, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.elphase import check_elphase
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_orion_system(info):
+def parse_orion_system(string_table):
     map_charge_states = {
         "1": (0, "float charging"),
         "2": (0, "discharge"),
@@ -34,7 +34,7 @@ def parse_orion_system(info):
         _battery_current_limit,
         rectifier_current,
         system_power,
-    ) = info[0]
+    ) = string_table[0]
 
     parsed = {
         "charging": {
@@ -83,14 +83,14 @@ def check_orion_system_temp(item, params, parsed):
 
 check_info["orion_system"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
-    parse_function=parse_orion_system,
-    discovery_function=inventory_orion_system_temp,
-    check_function=check_orion_system_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20246.2.3.1.1.1.2.3",
         oids=["1", "2", "3", "4", "5", "6", "7", "8"],
     ),
+    parse_function=parse_orion_system,
+    service_name="Temperature %s",
+    discovery_function=inventory_orion_system_temp,
+    check_function=check_orion_system_temp,
     check_ruleset_name="temperature",
 )
 
@@ -108,10 +108,16 @@ def check_orion_system_charging(item, params, parsed):
 
 
 check_info["orion_system.charging"] = LegacyCheckDefinition(
+    service_name="Charge %s",
+    sections=["orion_system"],
     discovery_function=inventory_orion_system_charging,
     check_function=check_orion_system_charging,
-    service_name="Charge %s",
 )
+
+
+def discover_orion_system_electrical(parsed):
+    for entity in parsed["electrical"]:
+        yield entity, {}
 
 
 def check_orion_system_electrical(item, params, parsed):
@@ -119,8 +125,9 @@ def check_orion_system_electrical(item, params, parsed):
 
 
 check_info["orion_system.dc"] = LegacyCheckDefinition(
-    discovery_function=lambda parsed: discover()(parsed["electrical"]),
-    check_function=check_orion_system_electrical,
     service_name="Direct Current %s",
+    sections=["orion_system"],
+    discovery_function=discover_orion_system_electrical,
+    check_function=check_orion_system_electrical,
     check_ruleset_name="ups_outphase",
 )

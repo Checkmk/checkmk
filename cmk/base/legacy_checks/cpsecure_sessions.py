@@ -47,11 +47,11 @@ def check_cpsecure_sessions(item, params, info):
 
 check_info["cpsecure_sessions"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.26546.1.1.2"),
-    check_function=check_cpsecure_sessions,
-    discovery_function=inventory_cpsecure_sessions,
-    service_name="Number of %s sessions",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.26546.3.1.2.1.1.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Number of %s sessions",
+    discovery_function=inventory_cpsecure_sessions,
+    check_function=check_cpsecure_sessions,
 )

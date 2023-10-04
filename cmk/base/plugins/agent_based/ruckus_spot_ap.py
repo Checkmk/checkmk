@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, Final, Mapping, NamedTuple, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any, Final, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,

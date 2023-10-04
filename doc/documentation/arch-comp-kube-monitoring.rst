@@ -17,10 +17,10 @@ The Kubernetes monitoring solution consists of the Checkmk special agent which
 is executed in the context of the Checkmk site and optionally of the Checkmk
 Kubernetes collectors which are deployed to the Kubernetes environment.
 
-The collectors are responsible for collecting memory and cpu usage data of
-running applications. Some Kubernetes environments such as Openshift are too
+The collectors are responsible for collecting memory and CPU usage data of
+running applications. Some Kubernetes environments such as OpenShift are too
 restrictive for the collectors to run successfully. In such case, an
-environment specific alternative is developed (e.g. Openshift Prometheus).
+environment specific alternative is developed (e.g. OpenShift Prometheus).
 
 The Kubernetes special agent is responsible for querying the data from the
 Kubernetes API as well as aggregating the usage data collected by the
@@ -38,7 +38,7 @@ There are some key characteristics which should be kept in mind:
     * For Kubernetes API data: The Kubernetes API server (mandatory)
     * For usage metrics (optional & one of):
         * The Checkmk collectors: cluster collector & node collectors (Vanilla, GKE, EKS, other supported versions)
-        * Openshift Prometheus (for Openshift)
+        * OpenShift Prometheus (for OpenShift)
 * The Kubernetes API is the mandatory data source; the monitoring solution will not work without it
 
 Prometheus as additional data source while all others can optionally opt to the
@@ -58,7 +58,7 @@ The collectors
 The collectors retrieve the usage metrics from the running containers
 
 * Node Collector
-    * set of pods which are deployed through Daemonsets (a Daemonset ensures that a copy of the pod runs on each node of the cluster):
+    * set of pods which are deployed through DaemonSets (a DaemonSet ensures that a copy of the pod runs on each node of the cluster):
         * container usage metrics: relies on the cAdvisor to determine the container usage data of all container running on a node (`container metrics daemonset template <https://github.com/Checkmk/checkmk_kube_agent/blob/main/deploy/charts/checkmk/templates/node-collector-container-metrics-ds.yaml>`_)
         * node specific: machine-sections contains an adjusted Checkmk agent to send node specific Checkmk sections (`machine-sections daemonset template <https://github.com/Checkmk/checkmk_kube_agent/blob/main/deploy/charts/checkmk/templates/node-collector-machine-sections-ds.yaml>`_)
     * sends the data to the Cluster Collector at fixed time intervals
@@ -82,7 +82,7 @@ Querying the Kubernetes API:
 
 * object references (e.g. a deployment manages multiple pods)
     * an API deployment response contains references to the managed pods but details of each pods must be queried separately
-    * not all references are direct (e.g. statefulset -> manages replicaset -> manages pods)
+    * not all references are direct (e.g. StatefulSet -> manages ReplicaSet -> manages pods)
 * response depends on the Kubernetes version
     * fields can be added, deprecated, removed depending on the Kubernetes version
 
@@ -113,7 +113,7 @@ The 'transformation' functions which translate the Kubernetes API object respons
 the associating self-defined pydantic model are present in `utils_kubernetes/transform*.py`.
 In most cases, the models will look very similar to the Kubernetes API response.
 
-The rest of the special agent exclusively works with the 'transformed' api
+The rest of the special agent exclusively works with the 'transformed' API
 pydantic models which allows the agent to be version agnostic.
 
 The collector usage metrics are queried and mapped to the already parsed objects from

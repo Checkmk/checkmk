@@ -35,12 +35,12 @@ def check_stormshield_policy(item, params, info):
 
 check_info["stormshield_policy"] = LegacyCheckDefinition(
     detect=DETECT_STORMSHIELD,
-    discovery_function=inventory_stormshield_policy,
-    check_function=check_stormshield_policy,
-    service_name="Policy %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.8.1.1",
         oids=["2", "3", "5"],
     ),
+    service_name="Policy %s",
+    discovery_function=inventory_stormshield_policy,
+    check_function=check_stormshield_policy,
     check_ruleset_name="stormshield",
 )

@@ -7,14 +7,15 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 Section = Mapping[str, float]
 
 
-def parse_cadvisor_cpu(info):
-    cpu_info = json.loads(info[0][0])
+def parse_cadvisor_cpu(string_table):
+    cpu_info = json.loads(string_table[0][0])
     parsed = {}
     for cpu_name, cpu_entries in cpu_info.items():
         if len(cpu_entries) != 1:
@@ -37,29 +38,27 @@ def check_cadvisor_cpu(_item, params, parsed):
     cpu_system = parsed["cpu_system"]
     cpu_total = cpu_user + cpu_system
 
-    yield check_levels(
-        cpu_user, "user", None, human_readable_func=get_percent_human_readable, infoname="User"
-    )
+    yield check_levels(cpu_user, "user", None, human_readable_func=render.percent, infoname="User")
     yield check_levels(
         cpu_system,
         "system",
         None,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="System",
     )
     yield check_levels(
         cpu_total,
         "util",
         params.get("util"),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Total CPU",
     )
 
 
 check_info["cadvisor_cpu"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_cpu,
+    service_name="CPU utilization",
     discovery_function=discover_cadvisor_cpu,
     check_function=check_cadvisor_cpu,
-    service_name="CPU utilization",
     check_ruleset_name="cpu_utilization",
 )

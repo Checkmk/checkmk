@@ -11,10 +11,10 @@ from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
 
 
-def parse_ddn_s2a_stats(info):
+def parse_ddn_s2a_stats(string_table):
     return {
         key: value[0] if key.startswith("All_ports") else value
-        for key, value in parse_ddn_s2a_api_response(info).items()
+        for key, value in parse_ddn_s2a_api_response(string_table).items()
     }
 
 
@@ -64,9 +64,10 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
+    service_name="DDN S2A Read Hits %s",
+    sections=["ddn_s2a_stats"],
     discovery_function=inventory_ddn_s2a_stats_readhits,
     check_function=check_ddn_s2a_stats_readhits,
-    service_name="DDN S2A Read Hits %s",
     check_ruleset_name="read_hits",
 )
 
@@ -103,7 +104,7 @@ def check_ddn_s2a_stats_io(item, params, parsed):
         else:
             warn, crit = levels
             perfdata = [(perfname, value, warn, crit)]
-            levelstext = " (warn/crit at %.2f/%.2f 1/s)" % (warn, crit)
+            levelstext = f" (warn/crit at {warn:.2f}/{crit:.2f} 1/s)"
             if value >= crit:
                 status = 2
                 infotext += levelstext
@@ -131,9 +132,10 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
+    service_name="DDN S2A IO %s",
+    sections=["ddn_s2a_stats"],
     discovery_function=inventory_ddn_s2a_stats_io,
     check_function=check_ddn_s2a_stats_io,
-    service_name="DDN S2A IO %s",
     check_ruleset_name="storage_iops",
     check_default_parameters={
         "total": (28000, 33000),
@@ -166,9 +168,9 @@ def check_ddn_s2a_stats(item, params, parsed):
             status = 0
         else:
             warn, crit = levels
-            warn_mb, crit_mb = [x / (1024 * 1024.0) for x in levels]
+            warn_mb, crit_mb = (x / (1024 * 1024.0) for x in levels)
             perfdata = [(perfname, value, warn, crit)]
-            levelstext = " (warn/crit at %.2f/%.2f MB/s)" % (warn_mb, crit_mb)
+            levelstext = f" (warn/crit at {warn_mb:.2f}/{crit_mb:.2f} MB/s)"
             if value >= crit:
                 status = 2
                 infotext += levelstext
@@ -204,9 +206,9 @@ def check_ddn_s2a_stats(item, params, parsed):
 
 check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_stats,
+    service_name="DDN S2A Data Rate %s",
     discovery_function=inventory_ddn_s2a_stats,
     check_function=check_ddn_s2a_stats,
-    service_name="DDN S2A Data Rate %s",
     check_ruleset_name="storage_throughput",
     check_default_parameters={
         "total": (4800 * 1024 * 1024, 5500 * 1024 * 1024),

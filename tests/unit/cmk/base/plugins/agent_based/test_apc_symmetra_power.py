@@ -11,7 +11,7 @@ import pytest
 
 from tests.testlib.snmp import snmp_is_detected
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 # SUP-12323
 DATA0 = """

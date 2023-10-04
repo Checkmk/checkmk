@@ -2,11 +2,6 @@ load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_r
 load("@python_modules//:requirements.bzl", "all_requirements")
 
 config_setting(
-    name = "no_own_openssl",
-    values = {"define": "no-own-openssl=true"},
-)
-
-config_setting(
     name = "git_ssl_no_verify",
     values = {"define": "git-ssl-no-verify=true"},
 )
@@ -24,11 +19,9 @@ config_setting(
         "%s_requirements.txt" % module,
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@openssl",
         "@python",
-    ] + select({
-        ":no_own_openssl": [],
-        "//conditions:default": ["@openssl"],
-    }),
+    ],
     outs = [
         "compiled_%s" % module,
     ],
@@ -50,11 +43,9 @@ config_setting(
         "@freetds",
         "@omd_packages//:agent-receiver",
         "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@openssl",
         "@python",
-    ] + select({
-        ":no_own_openssl": [],
-        "//conditions:default": ["@openssl"],
-    }),
+    ],
     outs = [
         "compiled_%s" % module,
     ],

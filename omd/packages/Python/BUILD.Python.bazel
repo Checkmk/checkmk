@@ -22,16 +22,6 @@ filegroup(
     ),
 )
 
-#
-# This should be put somewhere toplevel, also avoiding the deprecated
-# --define syntax, see
-# https://bazel.build/docs/configurable-attributes
-#
-config_setting(
-    name = "no_own_openssl",
-    values = {"define": "no-own-openssl=true"},
-)
-
 out_binaries = [
     "python%s" % PYTHON_VERSION_MAJOR,
     "python%s" % PYTHON_MAJOR_DOT_MINOR,
@@ -53,13 +43,9 @@ configure_make(
     args = ["-j2"],
     configure_command = "configure",
     configure_in_place = True,
-    configure_options = select({
-        ":no_own_openssl": [],
-        "//conditions:default": [
-            "--with-openssl=$EXT_BUILD_DEPS/openssl",
-            "--with-openssl-rpath=auto",
-        ],
-    }) + [
+    configure_options = [
+        "--with-openssl=$EXT_BUILD_DEPS/openssl",
+        "--with-openssl-rpath=auto",
         "CFLAGS='-Dredacted=\"redacted\"'",
         "--enable-optimizations",
         "--enable-shared",
@@ -118,10 +104,5 @@ configure_make(
         pyMaj = PYTHON_VERSION_MAJOR,
         pyMajMin = PYTHON_MAJOR_DOT_MINOR,
     ),
-    deps = select(
-        {
-            ":no_own_openssl": [],
-            "//conditions:default": ["@openssl"],
-        },
-    ),
+    deps = ["@openssl"],
 )

@@ -21,13 +21,8 @@ PACKAGE_PYTHON_BIN             := $(PACKAGE_PYTHON_DESTDIR)/bin
 PACKAGE_PYTHON_EXECUTABLE      := $(PACKAGE_PYTHON_BIN)/python$(PYTHON_VERSION_MAJOR)
 PACKAGE_PYTHON_SYSCONFIGDATA := $(PACKAGE_PYTHON_PYTHONPATH)/$(PYTHON_SYSCONFIGDATA)
 
-# on Centos8 we don't build our own OpenSSL, so we have to inform the build about it
-ifeq ($(DISTRO_CODE),el8)
-OPTIONAL_BUILD_ARGS := BAZEL_EXTRA_ARGS="--define no-own-openssl=true"
-endif
-
 $(PYTHON_BUILD):
-	$(OPTIONAL_BUILD_ARGS) $(BAZEL_BUILD) @python//:python
+	$(BAZEL_BUILD) @python//:python
 
 $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 	mkdir -p "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)"

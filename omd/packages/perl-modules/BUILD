@@ -66,4 +66,5 @@ genrule(
         mkdir -p $@
         cp -r perl-modules/{bin,lib,man} $@
     """,
+    visibility = ["//visibility:public"],
 )

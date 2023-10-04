@@ -1,0 +1,15 @@
+Title: Prevent notification in alert handler when notifications are disabled
+Class: fix
+Compatible: compat
+Component: core
+Date: 1696417057
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the alert handler would send notifications even if they were
+disabled through the master control.
+
+This issue has been resolved.
+

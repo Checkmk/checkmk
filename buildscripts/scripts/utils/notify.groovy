@@ -34,7 +34,7 @@ def notify_error(error) {
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
     try {
-        def isChangeValidation = currentBuild.fullProjectName.contains("change_validation");
+        def isChangeValidation = currentBuild.fullProjectName.contains("cv");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
         def isTesting = currentBuild.fullProjectName.contains("Testing");

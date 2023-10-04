@@ -44,7 +44,7 @@ if sys.stdout.isatty():
     tty_underline = "\033[4m"
     tty_normal = "\033[0m"
 
-    def tty_colors(codes):
+    def tty_colors(codes: list[int]) -> str:
         return "\033[%sm" % (";".join([str(c) for c in codes]))
 
 else:
@@ -66,7 +66,7 @@ else:
     tty_normal = ""
     tty_ok = "OK"
 
-    def tty_colors(codes):
+    def tty_colors(codes: list[int]) -> str:
         return ""
 
 
@@ -230,7 +230,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def try_migrate_werk_ids():
+def try_migrate_werk_ids() -> None:
     if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile(".my_ids"):
         try:
             # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
@@ -551,7 +551,7 @@ def show_werk(werk: Werk) -> None:
 def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
-    filters: dict[str, list] = {}
+    filters: dict[str, list[str]] = {}
 
     for a in args.filter:
         if a == "current":
@@ -609,7 +609,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 # CSV Table has the following columns:
 # Component;ID;Title;Class;Effort
 def output_csv(werks: list[Werk]) -> None:
-    def line(*l):
+    def line(*l: int | str) -> None:
         sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
 
     nr = 1
@@ -679,8 +679,7 @@ def get_input(what: str, default: str = "") -> str:
     return value
 
 
-def get_long_input(what):
-    # type (str) -> str
+def get_long_input(what: str) -> str:
     sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
     usertext = sys.stdin.read()
     # remove leading and trailing empty lines
@@ -984,7 +983,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
 def get_werk_ids() -> list[int]:
     try:
-        return ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())
+        return ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())  # type: ignore
     except Exception:
         return []
 

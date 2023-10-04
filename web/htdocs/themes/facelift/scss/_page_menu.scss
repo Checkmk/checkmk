@@ -694,6 +694,15 @@ div.page_menu_popup {
   }
 }
 
+div#inpage_search_result_info {
+  color: $font-color-dimmed;
+  padding-left: 8px;
+
+  &.result_with_row_info {
+    position: absolute;
+  }
+}
+
 button,
 input.button {
   padding: 8px 16px;

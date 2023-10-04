@@ -452,6 +452,12 @@ class Table:
             row_info = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
             html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
+        if request.var("search") is not None:
+            html.javascript(
+                "cmk.utils.set_inpage_search_result_info(%s);"
+                % json.dumps(_("Results: %d") % len(rows) if rows else _("No results"))
+            )
+
         table_id = self.id
 
         num_cols = self._get_num_cols(rows)

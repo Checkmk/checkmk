@@ -291,6 +291,26 @@ export function update_row_info(text: string) {
     }
 }
 
+export function set_inpage_search_result_info(text: string) {
+    const row_info_div: HTMLElement | null =
+        document.getElementById("row_info");
+    const page_menu_popups_div: HTMLElement | null =
+        document.getElementById("page_menu_popups");
+    if (row_info_div || page_menu_popups_div) {
+        const result_div: HTMLElement = document.createElement("div");
+        result_div.id = "inpage_search_result_info";
+        result_div.innerHTML = text;
+        if (row_info_div) {
+            result_div.className = "result_with_row_info";
+            row_info_div.before(result_div);
+            return;
+        }
+        if (page_menu_popups_div) {
+            page_menu_popups_div.after(result_div);
+        }
+    }
+}
+
 // Function gets the value of the given url parameter
 export function get_url_param(
     name: string,

@@ -457,6 +457,10 @@ class ModeAjaxDiagHost(AjaxPage):
                 snmpv3_auth_proto = {
                     str(DropdownChoice.option_id("md5")): "md5",
                     str(DropdownChoice.option_id("sha")): "sha",
+                    str(DropdownChoice.option_id("SHA-224")): "SHA-224",
+                    str(DropdownChoice.option_id("SHA-256")): "SHA-256",
+                    str(DropdownChoice.option_id("SHA-384")): "SHA-384",
+                    str(DropdownChoice.option_id("SHA-512")): "SHA-512",
                 }.get(api_request.get("snmpv3_auth_proto", ""), "")
 
                 args[8] = snmpv3_auth_proto

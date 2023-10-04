@@ -1,0 +1,12 @@
+Title: SNMPv3 authentication protocol selection in host
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1696429191
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p35
+
+In the authentication protocol selection in the host connection test the following settings were not
+correctly passed to the backend: SHA-224, SHA-256, SHA-384, SHA-512.

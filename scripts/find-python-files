@@ -33,7 +33,6 @@ get_candidates_from_filesystem() {
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
     SEARCH+=" cmk"
-    SEARCH+=" cmk_metrics"
     SEARCH+=" doc"
     PRUNE+=" -path $(realpath doc/treasures) -prune -o" # our "treasures" need much more love before they can be linted
     if [ -d "enterprise" ]; then

@@ -307,7 +307,6 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
 
 _COMPONENTS = (
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
-    (Component("tests.unit.cmk_metrics"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
     (Component("tests.integration.cmk.post_rename_site"), _allow_default_plus_component_under_test),
@@ -428,7 +427,7 @@ class CMKModuleLayerChecker(BaseChecker):
         # Emacs' flycheck stores files to be checked in a temporary file with a prefix.
         parts[-1] = removeprefix(parts[-1], "flycheck_")
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
-        if parts[0] not in ("cmk", "tests", "cmk_metrics"):
+        if parts[0] not in ("cmk", "tests"):
             parts = [parts[-1]]
         return ModuleName(".".join(parts))
 

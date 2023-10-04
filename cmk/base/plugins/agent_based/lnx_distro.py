@@ -15,26 +15,6 @@ _Line = list[str]
 Section = Mapping[str, _Line]
 
 
-def parse_lnx_distro(string_table: StringTable) -> Section:
-    parsed: dict[str, list[str]] = {}
-    filename = None
-    for line in string_table:
-        if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            filename = line[0][3:-3]
-        elif filename is not None:
-            parsed.setdefault(filename, line)
-        elif filename is None:
-            # stay compatible to older versions of output
-            parsed.setdefault(line[0], line[1:])
-    return parsed
-
-
-register.agent_section(
-    name="lnx_distro",
-    parse_function=parse_lnx_distro,
-)
-
-
 def inv_lnx_parse_os(line: _Line) -> _KVPairs:
     for entry in line:
         if entry.count("=") == 0:
@@ -175,17 +155,41 @@ _HANDLERS: Final = (
 )
 
 
-def inventory_lnx_distro(section: Section) -> InventoryResult:
+def parse_lnx_distro(string_table: StringTable) -> Section:
+    parsed: dict[str, list[str]] = {}
+    section: Section = {}
+    filename = None
+    for line in string_table:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            filename = line[0][3:-3]
+        elif filename is not None:
+            parsed.setdefault(filename, line)
+        elif filename is None:
+            # stay compatible to older versions of output
+            parsed.setdefault(line[0], line[1:])
+
     for file_name, handler in _HANDLERS:
-        if file_name in section:
-            yield Attributes(
-                path=["software", "os"],
-                inventory_attributes={
-                    "type": "Linux",
-                    **dict(handler(section[file_name])),
-                },
-            )
+        if file_name in parsed:
+            section = dict(handler(parsed[file_name]))
             break
+            
+    return section
+
+
+register.agent_section(
+    name="lnx_distro",
+    parse_function=parse_lnx_distro,
+)
+
+
+def inventory_lnx_distro(section: Section) -> InventoryResult:
+    yield Attributes(
+        path=["software", "os"],
+        inventory_attributes={
+            "type": "Linux",
+            **section,
+        },
+    )
 
 
 register.inventory_plugin(

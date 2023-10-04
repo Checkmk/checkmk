@@ -130,6 +130,18 @@ impl Authentication {
             access_token: auth[keys::ACCESS_TOKEN].as_str().map(str::to_string),
         })
     }
+    pub fn username(&self) -> &str {
+        &self.username
+    }
+    pub fn password(&self) -> Option<&String> {
+        self.password.as_ref()
+    }
+    pub fn auth_type(&self) -> &AuthType {
+        &self.auth_type
+    }
+    pub fn access_token(&self) -> Option<&String> {
+        self.access_token.as_ref()
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -170,7 +182,7 @@ impl Connection {
         })
     }
     pub fn hostname(&self) -> &str {
-        self.hostname.as_ref()
+        &self.hostname
     }
     pub fn fail_over_partner(&self) -> Option<&String> {
         self.fail_over_partner.as_ref()
@@ -380,15 +392,11 @@ mod tests {
 
     #[test]
     fn test_authentication_from_yaml() {
-        assert_eq!(
-            Authentication::from_yaml(&create_authentication_yaml_full()).unwrap(),
-            Authentication {
-                username: "foo".to_owned(),
-                password: Some("bar".to_owned()),
-                auth_type: AuthType::Windows,
-                access_token: Some("baz".to_owned())
-            }
-        );
+        let a = Authentication::from_yaml(&create_authentication_yaml_full()).unwrap();
+        assert_eq!(a.username(), "foo");
+        assert_eq!(a.password(), Some(&"bar".to_owned()));
+        assert_eq!(a.auth_type(), &AuthType::Windows);
+        assert_eq!(a.access_token(), Some(&"baz".to_owned()));
     }
 
     fn create_authentication_yaml_full() -> Vec<Yaml> {
@@ -420,15 +428,11 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml_mini() {
-        assert_eq!(
-            Authentication::from_yaml(&create_authentication_yaml_mini()).unwrap(),
-            Authentication {
-                username: "foo".to_owned(),
-                password: None,
-                auth_type: AuthType::System,
-                access_token: None
-            }
-        );
+        let a = Authentication::from_yaml(&create_authentication_yaml_mini()).unwrap();
+        assert_eq!(a.username(), "foo");
+        assert_eq!(a.password(), None);
+        assert_eq!(a.auth_type(), &AuthType::System);
+        assert_eq!(a.access_token(), None);
     }
 
     fn create_authentication_yaml_mini() -> Vec<Yaml> {
@@ -444,19 +448,17 @@ authentication:
 
     #[test]
     fn test_connection_from_yaml() {
+        let c = Connection::from_yaml(&create_connection_yaml_full()).unwrap();
+        assert_eq!(c.hostname(), "alice");
+        assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
+        assert_eq!(c.port(), 9999);
+        assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
+        assert_eq!(c.timeout(), 341);
+        let tls = c.tls().unwrap();
+        assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
-            Connection::from_yaml(&create_connection_yaml_full()).unwrap(),
-            Connection {
-                hostname: "alice".to_owned(),
-                fail_over_partner: Some("bob".to_owned()),
-                port: 9999,
-                socket: Some(PathBuf::from(r"C:\path\to\file_socket")),
-                tls: Some(ConnectionTls {
-                    ca: PathBuf::from(r"C:\path\to\file_ca"),
-                    client_certificate: PathBuf::from(r"C:\path\to\file_client"),
-                }),
-                timeout: 341,
-            }
+            tls.client_certificate(),
+            PathBuf::from(r"C:\path\to\file_client")
         );
     }
 

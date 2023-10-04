@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, perfometer_info, TB
+from cmk.gui.graphing import perfometer_info
+from cmk.gui.graphing._utils import GB, MAX_NUMBER_HOPS, MB, TB
 
 # .
 #   .--Perf-O-Meters-------------------------------------------------------.

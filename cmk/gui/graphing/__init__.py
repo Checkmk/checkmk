@@ -10,9 +10,11 @@ from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_templates import TemplateGraphRecipeBuilder
 from ._perfometer import (
     DualPerfometerSpec,
+    get_first_matching_perfometer,
     LegacyPerfometer,
     LinearPerfometerSpec,
     LogarithmicPerfometerSpec,
+    perfometer_info,
     PerfometerSpec,
     StackedPerfometerSpec,
 )
@@ -31,9 +33,11 @@ def register(page_registry: PageRegistry) -> None:
 __all__ = [
     "register",
     "DualPerfometerSpec",
+    "get_first_matching_perfometer",
     "LegacyPerfometer",
     "LinearPerfometerSpec",
     "LogarithmicPerfometerSpec",
+    "perfometer_info",
     "PerfometerSpec",
     "StackedPerfometerSpec",
 ]

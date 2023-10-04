@@ -23,7 +23,6 @@ import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.metrics import MetricName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -36,22 +35,18 @@ from cmk.gui.graphing import (
     LegacyPerfometer,
     LinearPerfometerSpec,
     LogarithmicPerfometerSpec,
+    perfometer_info,
     PerfometerSpec,
     StackedPerfometerSpec,
 )
-from cmk.gui.graphing._expression import parse_conditional_expression, parse_expression
+from cmk.gui.graphing._expression import parse_expression
 from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
 from cmk.gui.graphing._unit_info import unit_info
-from cmk.gui.graphing._utils import (
-    CombinedSingleMetricSpec,
-    parse_perf_data,
-    perfometer_info,
-    translate_metrics,
-)
+from cmk.gui.graphing._utils import CombinedSingleMetricSpec, parse_perf_data, translate_metrics
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -114,7 +109,6 @@ def _register_pre_21_plugin_api() -> None:
         "metric_info",
         "P",
         "PB",
-        "perfometer_info",
         "scale_symbols",
         "skype_mobile_devices",
         "T",
@@ -123,6 +117,9 @@ def _register_pre_21_plugin_api() -> None:
     ):
         legacy_api_module.__dict__[name] = graphing_utils.__dict__[name]
         legacy_plugin_utils.__dict__[name] = graphing_utils.__dict__[name]
+
+    legacy_api_module.__dict__["perfometer_info"] = perfometer_info
+    legacy_plugin_utils.__dict__["perfometer_info"] = perfometer_info
 
     legacy_api_module.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
     legacy_plugin_utils.__dict__["unit_info"] = graphing_unit_info.__dict__["unit_info"]
@@ -257,104 +254,6 @@ def translate_perf_data(
 #   +----------------------------------------------------------------------+
 #   |  Implementation of Perf-O-Meters                                     |
 #   '----------------------------------------------------------------------'
-
-
-def _get_metric_names(
-    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
-) -> Sequence[MetricName]:
-    """Returns all metric names which are used within a perfometer.
-    This is used for checking which perfometer can be displayed for a given service later.
-    """
-    if perfometer["type"] == "linear":
-        metric_names = [
-            m.name
-            for s in perfometer["segments"]
-            for m in parse_expression(s, translated_metrics).metrics()
-        ]
-        if (total := perfometer.get("total")) is not None:
-            metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
-
-        if (label := perfometer.get("label")) is not None:
-            metric_names += [
-                m.name for m in parse_expression(label[0], translated_metrics).metrics()
-            ]
-        return metric_names
-
-    if perfometer["type"] == "logarithmic":
-        return [
-            m.name for m in parse_expression(perfometer["metric"], translated_metrics).metrics()
-        ]
-
-    if perfometer["type"] in ("stacked", "dual"):
-        if "perfometers" not in perfometer:
-            raise MKGeneralException(
-                _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
-                % perfometer
-            )
-
-        return [
-            metric_name
-            for sub_perfometer in perfometer["perfometers"]
-            for metric_name in _get_metric_names(sub_perfometer, translated_metrics)
-        ]
-    raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
-
-
-def _skip_perfometer_by_metric_names(
-    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
-) -> bool:
-    metric_names = set(_get_metric_names(perfometer, translated_metrics))
-    available_metric_names = set(translated_metrics.keys())
-    return not metric_names.issubset(available_metric_names)
-
-
-def _total_values_exists(value: str | int | float, translated_metrics: TranslatedMetrics) -> bool:
-    """
-    Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
-    The value could be a percentage value (e.g. '100.0') in this case no need to look here for missing data
-    """
-    if not isinstance(value, str):
-        return True
-
-    if ":" not in value:
-        return True
-
-    perf_name, perf_param = value.split(":", 1)
-    if perf_param not in translated_metrics[perf_name]["scalar"].keys():
-        return False
-
-    return True
-
-
-def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> bool:
-    if not translated_metrics:
-        return False
-
-    if _skip_perfometer_by_metric_names(perfometer, translated_metrics):
-        return False
-
-    if perfometer["type"] == "linear":
-        if "condition" in perfometer:
-            try:
-                return parse_conditional_expression(
-                    perfometer["condition"], translated_metrics
-                ).evaluate(translated_metrics)
-            except Exception:
-                return False
-
-        if "total" in perfometer:
-            return _total_values_exists(perfometer["total"], translated_metrics)
-
-    return True
-
-
-def get_first_matching_perfometer(translated_metrics: TranslatedMetrics) -> PerfometerSpec | None:
-    for perfometer in perfometer_info:
-        if not isinstance(perfometer, dict):
-            continue
-        if _perfometer_possible(perfometer, translated_metrics):
-            return perfometer
-    return None
 
 
 MetricRendererStack = list[list[tuple[int | float, str]]]

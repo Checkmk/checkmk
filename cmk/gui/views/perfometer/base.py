@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.metrics as metrics
-from cmk.gui.graphing import PerfometerSpec
+from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Perfdata, Row, TranslatedMetrics
@@ -163,7 +163,7 @@ class Perfometer:
 
         Returns None in case there is no matching definition found.
         """
-        perfometer_definition = metrics.get_first_matching_perfometer(translated_metrics)
+        perfometer_definition = get_first_matching_perfometer(translated_metrics)
         if not perfometer_definition:
             return None
 

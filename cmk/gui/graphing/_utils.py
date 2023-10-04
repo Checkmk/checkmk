@@ -65,7 +65,6 @@ from ._graph_specification import (
     MetricOperation,
     MetricOpRRDChoice,
 )
-from ._perfometer import LegacyPerfometer, PerfometerSpec
 from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType
 from ._unit_info import unit_info
 
@@ -243,7 +242,6 @@ class AutomaticDict(OrderedDict[str, GraphTemplateRegistration]):
 
 metric_info: dict[MetricName_, MetricInfo] = {}
 check_metrics: dict[str, dict[MetricName_, CheckMetricEntry]] = {}
-perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")

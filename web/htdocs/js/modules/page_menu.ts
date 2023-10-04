@@ -299,12 +299,7 @@ export function inpage_search_init(
     ) as HTMLButtonElement;
     if (!reset_button) return;
 
-    if (was_submitted) {
-        const submit_button = (
-            reset_button.parentNode as HTMLElement
-        ).getElementsByClassName("button submit")[0] as HTMLElement;
-        utils.add_class(submit_button, "hidden");
-    } else {
+    if (!was_submitted) {
         reset_button.disabled = true;
     }
 }

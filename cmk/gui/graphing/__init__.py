@@ -9,14 +9,13 @@ from ._explicit_graphs import ExplicitGraphRecipeBuilder
 from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_templates import TemplateGraphRecipeBuilder
 from ._perfometer import (
-    DualPerfometerSpec,
     get_first_matching_perfometer,
     LegacyPerfometer,
-    LinearPerfometerSpec,
     LogarithmicPerfometerSpec,
+    MetricometerRendererLogarithmic,
     perfometer_info,
     PerfometerSpec,
-    StackedPerfometerSpec,
+    renderer_registry,
 )
 from ._timeseries import register_time_series_expressions
 from ._utils import time_series_expression_registry
@@ -32,12 +31,11 @@ def register(page_registry: PageRegistry) -> None:
 
 __all__ = [
     "register",
-    "DualPerfometerSpec",
     "get_first_matching_perfometer",
     "LegacyPerfometer",
-    "LinearPerfometerSpec",
     "LogarithmicPerfometerSpec",
+    "MetricometerRendererLogarithmic",
     "perfometer_info",
     "PerfometerSpec",
-    "StackedPerfometerSpec",
+    "renderer_registry",
 ]

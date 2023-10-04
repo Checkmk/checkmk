@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.metrics as metrics
-from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec
+from cmk.gui.graphing import get_first_matching_perfometer, PerfometerSpec, renderer_registry
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.log import logger
 from cmk.gui.type_defs import Perfdata, Row, TranslatedMetrics
@@ -66,9 +65,7 @@ class Perfometer:
         if not perfometer_definition:
             return None, None
 
-        renderer = metrics.renderer_registry.get_renderer(
-            perfometer_definition, self._translated_metrics
-        )
+        renderer = renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_label(), render_metricometer(renderer.get_stack())
 
     def _render_legacy_perfometer(self) -> tuple[str | None, HTML | None]:
@@ -147,9 +144,7 @@ class Perfometer:
         if not perfometer_definition:
             return None
 
-        renderer = metrics.renderer_registry.get_renderer(
-            perfometer_definition, self._translated_metrics
-        )
+        renderer = renderer_registry.get_renderer(perfometer_definition, self._translated_metrics)
         return renderer.get_sort_value()
 
     def _get_perfometer_definition(

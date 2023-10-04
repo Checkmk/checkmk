@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub mod ms_sql;
-mod yaml;
+pub mod yaml;
 use anyhow::Result;
 use ms_sql::Config as MsSqlConfig;
 use std::path::Path;

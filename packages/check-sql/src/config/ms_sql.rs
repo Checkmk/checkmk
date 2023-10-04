@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::config::yaml;
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 use yaml_rust::Yaml;
@@ -30,6 +31,12 @@ mod keys {
     pub const CACHED: &str = "cached";
     pub const CACHE_AGE: &str = "cache_age";
     pub const DISABLED: &str = "disabled";
+
+    pub const INSTANCE_FILTER: &str = "instance_filter";
+    pub const DETECT: &str = "detect";
+    pub const ALL: &str = "all";
+    pub const INCLUDE: &str = "include";
+    pub const EXCLUDE: &str = "exclude";
 }
 
 mod defaults {
@@ -49,6 +56,9 @@ mod defaults {
         "connections",
     ];
     pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
+
+    pub const INSTANCE_FILTER_DETECT: &str = "yes";
+    pub const INSTANCE_FILTER_ALL: &str = "no";
 }
 
 #[derive(PartialEq, Debug)]
@@ -56,7 +66,7 @@ pub struct Config {
     auth: Authentication,
     conn: Connection,
     sqls: Sqls,
-    instance_filter: Option<InstanceFilter>,
+    instance_filter: InstanceFilter,
     mode: Mode,
     instances: Vec<Instance>,
 }
@@ -67,7 +77,7 @@ impl Default for Config {
             auth: Authentication::default(),
             conn: Connection::default(),
             sqls: Sqls::default(),
-            instance_filter: None,
+            instance_filter: InstanceFilter::default(),
             mode: Mode::Port,
             instances: vec![],
         }
@@ -84,8 +94,8 @@ impl Config {
     pub fn sqls(&self) -> &Sqls {
         &self.sqls
     }
-    pub fn instance_filter(&self) -> Option<&InstanceFilter> {
-        self.instance_filter.as_ref()
+    pub fn instance_filter(&self) -> &InstanceFilter {
+        &self.instance_filter
     }
     pub fn mode(&self) -> &Mode {
         &self.mode
@@ -114,8 +124,8 @@ impl Default for Authentication {
     }
 }
 impl Authentication {
-    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self> {
-        let auth = &yaml[0][keys::AUTHENTICATION];
+    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+        let auth = &yaml[keys::AUTHENTICATION];
         Ok(Self {
             username: auth[keys::USERNAME]
                 .as_str()
@@ -161,8 +171,8 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self> {
-        let conn = &yaml[0][keys::CONNECTION];
+    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+        let conn = &yaml[keys::CONNECTION];
         Ok(Self {
             hostname: conn[keys::HOSTNAME]
                 .as_str()
@@ -271,8 +281,8 @@ impl Default for Sqls {
 }
 
 impl Sqls {
-    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self> {
-        let sqls = &yaml[0][keys::SQLS];
+    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+        let sqls = &yaml[keys::SQLS];
         if sqls.is_badvalue() {
             return Ok(Sqls::default());
         }
@@ -314,7 +324,63 @@ fn get_string_vector(yaml: &Yaml, key: &str, default: &[&str]) -> Result<Vec<Str
 }
 
 #[derive(PartialEq, Debug)]
-pub struct InstanceFilter {}
+pub struct InstanceFilter {
+    detect: String,
+    all: String,
+    include: Vec<String>,
+    exclude: Vec<String>,
+}
+
+impl Default for InstanceFilter {
+    fn default() -> Self {
+        Self {
+            detect: defaults::INSTANCE_FILTER_DETECT.to_owned(),
+            all: defaults::INSTANCE_FILTER_DETECT.to_owned(),
+            include: vec![],
+            exclude: vec![],
+        }
+    }
+}
+
+impl InstanceFilter {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+        let filter = &yaml[keys::INSTANCE_FILTER];
+        if filter.is_badvalue() {
+            Ok(InstanceFilter::default())
+        } else {
+            Ok(Self {
+                detect: load_assuming_bool(filter, keys::DETECT, defaults::INSTANCE_FILTER_DETECT)?,
+                all: load_assuming_bool(filter, keys::ALL, defaults::INSTANCE_FILTER_ALL)?,
+                include: get_string_vector(filter, keys::INCLUDE, &[])?,
+                exclude: get_string_vector(filter, keys::EXCLUDE, &[])?,
+            })
+        }
+    }
+    pub fn detect(&self) -> bool {
+        yaml::to_bool(&self.detect).unwrap()
+    }
+    pub fn all(&self) -> bool {
+        yaml::to_bool(&self.all).unwrap()
+    }
+    pub fn include(&self) -> &Vec<String> {
+        &self.include
+    }
+    pub fn exclude(&self) -> &Vec<String> {
+        &self.exclude
+    }
+}
+
+/// load a string from using key with default.
+/// If obtained string is not bool-like -> error
+fn load_assuming_bool(yaml: &Yaml, key: &str, default: &str) -> Result<String> {
+    Ok(ensure_bool_string(yaml[key].as_str().unwrap_or(default))?.to_string())
+}
+
+/// returns error if string is not bool-like
+fn ensure_bool_string(value: &str) -> Result<&str> {
+    let _ = yaml::to_bool(value)?;
+    Ok(value)
+}
 
 #[derive(PartialEq, Debug)]
 pub enum Mode {
@@ -371,8 +437,8 @@ mod tests {
     use super::*;
     use yaml_rust::YamlLoader;
 
-    fn create_yaml(source: &str) -> Vec<Yaml> {
-        YamlLoader::load_from_str(source).expect("fix test string!")
+    fn create_yaml(source: &str) -> Yaml {
+        YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
     }
 
     #[test]
@@ -383,7 +449,7 @@ mod tests {
                 auth: Authentication::default(),
                 conn: Connection::default(),
                 sqls: Sqls::default(),
-                instance_filter: None,
+                instance_filter: InstanceFilter::default(),
                 mode: Mode::Port,
                 instances: vec![],
             }
@@ -399,7 +465,7 @@ mod tests {
         assert_eq!(a.access_token(), Some(&"baz".to_owned()));
     }
 
-    fn create_authentication_yaml_full() -> Vec<Yaml> {
+    fn create_authentication_yaml_full() -> Yaml {
         const SOURCE: &str = r#"
 authentication:
   username: "foo"
@@ -435,7 +501,7 @@ authentication:
         assert_eq!(a.access_token(), None);
     }
 
-    fn create_authentication_yaml_mini() -> Vec<Yaml> {
+    fn create_authentication_yaml_mini() -> Yaml {
         const SOURCE: &str = r#"
 authentication:
   username: "foo"
@@ -462,7 +528,7 @@ authentication:
         );
     }
 
-    fn create_connection_yaml_full() -> Vec<Yaml> {
+    fn create_connection_yaml_full() -> Yaml {
         const SOURCE: &str = r#"
 connection:
   hostname: "alice"
@@ -476,6 +542,7 @@ connection:
 "#;
         create_yaml(SOURCE)
     }
+
     #[test]
     fn test_connection_from_yaml_default() {
         assert_eq!(
@@ -488,7 +555,7 @@ connection:
         );
     }
 
-    fn create_connection_yaml_default() -> Vec<Yaml> {
+    fn create_connection_yaml_default() -> Yaml {
         const SOURCE: &str = r#"
 connection:
   _nothing: "nothing"
@@ -504,7 +571,7 @@ connection:
         assert_eq!(s.cache_age(), 900);
     }
 
-    fn create_sqls_yaml_full() -> Vec<Yaml> {
+    fn create_sqls_yaml_full() -> Yaml {
         const SOURCE: &str = r#"
 sqls:
   always:
@@ -530,9 +597,52 @@ sqls:
         assert_eq!(s, Sqls::from_yaml(&create_yaml("_sqls:\n")).unwrap());
     }
 
-    fn create_sqls_yaml_default() -> Vec<Yaml> {
+    fn create_sqls_yaml_default() -> Yaml {
         const SOURCE: &str = r#"
 sqls:
+  _nothing: "nothing"
+"#;
+        create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_instance_filter_from_yaml_full() {
+        let filter = InstanceFilter::from_yaml(&create_instance_filter_yaml_full()).unwrap();
+        assert!(!filter.detect());
+        assert!(filter.all());
+        assert_eq!(filter.include(), &vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(filter.exclude(), &vec!["c".to_string(), "d".to_string()]);
+    }
+
+    fn create_instance_filter_yaml_full() -> Yaml {
+        const SOURCE: &str = r#"
+instance_filter:
+  detect: no
+  all: yes
+  include: ["a", "b" ]
+  exclude: ["c", "d" ]
+"#;
+        create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_instance_filter_from_yaml_default() {
+        let filter = InstanceFilter::from_yaml(&create_instance_filter_yaml_default()).unwrap();
+        assert_eq!(
+            filter.detect(),
+            yaml::to_bool(defaults::INSTANCE_FILTER_DETECT).unwrap()
+        );
+        assert_eq!(
+            filter.all(),
+            yaml::to_bool(defaults::INSTANCE_FILTER_ALL).unwrap()
+        );
+        assert!(filter.include().is_empty());
+        assert!(filter.exclude().is_empty());
+    }
+
+    fn create_instance_filter_yaml_default() -> Yaml {
+        const SOURCE: &str = r#"
+instance_filter:
   _nothing: "nothing"
 "#;
         create_yaml(SOURCE)

@@ -96,28 +96,94 @@ parse_options() {
     readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
-run_setup_environment() {
-    echo "Run setup environment"
+REPO_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
+
+run_pipenv() {
+    # make sure we don't use "$HOME/.cache" accidentally (expands to /.cache, if HOME is not set)
+    : "${PIPENV_CACHE_DIR:="${REPO_PATH}/.cache"}"
+    export PIPENV_CACHE_DIR
+
+    # Enforce a non localized environment. The reason for this configuration is
+    # that the parameters and outputs of the monitoring plug-ins are localized. If
+    # they are called from the core, they are always language-neutral. During
+    # manual testing, the plugins may behave differently depending on the
+    # localization of the user's environment variables. This can lead to confusion
+    # during tests.
+    if [ -z "$LANG" ]; then
+        INSTALLED_LOCALES=$(locale -a)
+        for i in "C.UTF-8" "C.utf8" "en_US.utf8" "C"; do
+            if echo "$INSTALLED_LOCALES" | grep -q -w -F "$i"; then
+                export LANG="$i" LC_ALL="$i"
+                break
+            fi
+        done
+    fi
+
+    PIPENV_VENV_IN_PROJECT=true \
+        PIPENV_NOSPIN=true \
+        PIPENV_HIDE_EMOJIS=true \
+        PIPENV_NO_INHERIT=true \
+        PIPENV_PIPFILE="${REPO_PATH}"/Pipfile \
+        PIPENV_IGNORE_VIRTUALENVS=1 \
+        pipenv "$@"
 }
 
 run_check_format() {
-    echo "Run check format"
+    # shellcheck disable=SC2086
+    run_pipenv run isort --settings-path "$REPO_PATH"/pyproject.toml $1
+
+    # shellcheck disable=SC2086
+    run_pipenv run black $1
+
+    # shellcheck disable=SC2086
+    run_pipenv run flake8 $1
+
+    # shellcheck disable=SC2086
+    run_pipenv run autoflake --remove-all-unused-imports -i $1
 }
 
 run_mypy() {
-    echo "Run mypy"
+    # shellcheck disable=SC2086
+    run_pipenv run mypy --scripts-are-modules --show-error-codes $1
 }
 
 run_pylint() {
-    echo "Run pylint"
+    # shellcheck disable=SC2086
+    run_pipenv run pylint $1
 }
 
 run_unit_tests() {
-    echo "Run unit tests"
+    run_pipenv run python -m pytest \
+        --color=yes \
+        --code-highlight=yes \
+        "$REPO_PATH/tests/unit"
 }
 
 run_documentation() {
     echo "Run documentation"
+}
+
+get_candidates_from_filesystem() {
+    cd "$REPO_PATH" || exit $?
+
+    SEARCH="cmk_metrics tests"
+
+    # Resolve search paths to real paths before the search for performance reasons
+    # shellcheck disable=SC2086
+    REAL_SEARCH=$(realpath $SEARCH)
+
+    # shellcheck disable=SC2086
+    find -L \
+        $REAL_SEARCH \
+        -name .mypy_cache -prune -o \
+        -name .venv -prune -o \
+        -type f -print0
+}
+
+filter_for_python_files() {
+    sort --zero-terminated |
+        xargs --no-run-if-empty --null \
+            grep --binary-files=without-match --files-with-matches '^#!.*python3$'
 }
 
 main() {
@@ -125,10 +191,13 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format
-    test ${RUN_MYPY} = yes && run_mypy
-    test ${RUN_PYLINT} = yes && run_pylint
+
+    test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv install --dev
+
+    python_files=$(get_candidates_from_filesystem | filter_for_python_files)
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"
+    test ${RUN_MYPY} = yes && run_mypy "$python_files"
+    test ${RUN_PYLINT} = yes && run_pylint "$python_files"
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     true

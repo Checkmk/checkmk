@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 import cmk.gui.metrics as metrics
-from cmk.gui.type_defs import UnitInfo
+from cmk.gui.type_defs import PerfometerSpec, TranslatedMetrics, UnitInfo
 
 
 def test_registered_renderers() -> None:
@@ -216,3 +216,86 @@ class TestMetricometerRendererLogarithmic:
         if perfometer_render:
             unit_info["perfometer_render"] = perfometer_render
         assert self._renderer(unit_info).get_label() == expected_result
+
+
+@pytest.mark.parametrize(
+    "perfometer, translated_metrics",
+    [
+        pytest.param(
+            {
+                "type": "linear",
+                "segments": ["m1", "m2,m3,+", "m4,10,*"],
+                "total": 100.0,
+                "label": ("m1,m2,/", "%"),
+            },
+            {
+                "m1": {"value": 1, "unit": "", "color": "#111111"},
+                "m2": {"value": 2, "unit": "", "color": "#222222"},
+                "m3": {"value": 3, "unit": "", "color": "#333333"},
+                "m4": {"value": 4, "unit": "", "color": "#444444"},
+            },
+            id="linear with total float",
+        ),
+        pytest.param(
+            {
+                "type": "linear",
+                "segments": ["m1", "m2,m3,+", "m4,10,*"],
+                "total": "m5:max",
+                "label": ("m1,m2,/", "%"),
+            },
+            {
+                "m1": {"value": 1, "unit": "", "color": "#111111"},
+                "m2": {"value": 2, "unit": "", "color": "#222222"},
+                "m3": {"value": 3, "unit": "", "color": "#333333"},
+                "m4": {"value": 4, "unit": "", "color": "#444444"},
+                "m5": {"value": 5, "unit": "", "color": "#555555", "scalar": {"max": 5}},
+            },
+            id="linear with total RPN expression",
+        ),
+        pytest.param(
+            {
+                "type": "linear",
+                "segments": ["m1", "m2,m3,+", "m4,10,*"],
+                "total": 100.0,
+                "condition": "m1,m2,<",
+            },
+            {
+                "m1": {"value": 1, "unit": "", "color": "#111111"},
+                "m2": {"value": 2, "unit": "", "color": "#222222"},
+                "m3": {"value": 3, "unit": "", "color": "#333333"},
+                "m4": {"value": 4, "unit": "", "color": "#444444"},
+            },
+            id="linear with condition",
+        ),
+        pytest.param(
+            {
+                "type": "logarithmic",
+                "metric": "m1",
+                "half_value": 5,
+                "exponent": 2,
+            },
+            {
+                "m1": {"value": 1, "unit": "", "color": "#111111"},
+            },
+            id="logarithmic with metric name",
+        ),
+        pytest.param(
+            {
+                "type": "logarithmic",
+                "metric": "m1,m2,+",
+                "half_value": 5,
+                "exponent": 2,
+            },
+            {
+                "m1": {"value": 1, "unit": "", "color": "#111111"},
+                "m2": {"value": 2, "unit": "", "color": "#222222"},
+            },
+            id="logarithmic with RPN expression",
+        ),
+    ],
+)
+def test__perfometer_possible(
+    perfometer: PerfometerSpec,
+    translated_metrics: TranslatedMetrics,
+) -> None:
+    assert metrics.Perfometers()._perfometer_possible(perfometer, translated_metrics)

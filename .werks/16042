@@ -1,0 +1,13 @@
+Title: Change default number of host/service columns to 1
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1696411300
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+To improve our users' overview on builtin views, the default number of host/service columns is changed from 3 to 1.
+Also, the according display option "Number of columns" is renamed to "Entries per row".
+

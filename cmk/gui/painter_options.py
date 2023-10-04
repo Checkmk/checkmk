@@ -190,7 +190,7 @@ class PainterOptions:
             if name == "refresh":
                 vs.render_input("po_%s" % name, view_spec.get("browser_reload", self.get(name)))
                 continue
-            vs.render_input("po_%s" % name, view_spec.get(name, self.get(name)))
+            vs.render_input("po_%s" % name, self.get(name, view_spec.get(name)))
         forms.end()
 
         html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
@@ -234,7 +234,7 @@ class PainterOptionNumColumns(PainterOption):
     @property
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
-            title=_("Number of columns"),
+            title=_("Entries per row"),
             choices=[(x, str(x)) for x in active_config.view_option_columns],
         )
 

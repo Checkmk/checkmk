@@ -172,7 +172,7 @@ def parse_lnx_distro(string_table: StringTable) -> Section:
         if file_name in parsed:
             section = dict(handler(parsed[file_name]))
             break
-            
+
     return section
 
 

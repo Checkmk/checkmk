@@ -1821,16 +1821,6 @@ perfometer_info.append(
         "type": "linear",
         "segments": ["license_percentage"],
         "total": 100.0,
-        "color": "16/a",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
-        "segments": ["license_percentage"],
-        "total": 100.0,
-        "color": "16/a",
     }
 )
 
@@ -1860,7 +1850,6 @@ perfometer_info.append(
         "metric": "number_of_pending_tasks_rate",
         "half_value": 10,
         "exponent": 2,
-        "unit": "count",
     }
 )
 

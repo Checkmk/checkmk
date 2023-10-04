@@ -29,7 +29,6 @@ class _LinearPerfometerSpec(TypedDict):
     total: int | float | str
     condition: NotRequired[str]
     label: NotRequired[tuple[str, str] | None]  # (expression, unit)
-    color: NotRequired[str]
 
 
 class LogarithmicPerfometerSpec(TypedDict):
@@ -37,7 +36,6 @@ class LogarithmicPerfometerSpec(TypedDict):
     metric: str
     half_value: int | float
     exponent: int | float
-    unit: NotRequired[str]
 
 
 class _DualPerfometerSpec(TypedDict):

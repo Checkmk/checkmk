@@ -14,6 +14,7 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
@@ -52,6 +53,57 @@ PerfometerSpec: TypeAlias = (
     _LinearPerfometerSpec | LogarithmicPerfometerSpec | _DualPerfometerSpec | _StackedPerfometerSpec
 )
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
+
+
+def _parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> None:
+    for index, perfometer in reversed(list(enumerate(perfometers))):
+        if isinstance(perfometer, dict):
+            continue
+
+        if not isinstance(perfometer, tuple) or len(perfometer) != 2:
+            raise MKGeneralException(_("Invalid perfometer declaration: %r") % perfometer)
+
+        # Convert legacy tuple based perfometer
+        perfometer_type, perfometer_args = perfometer[0], perfometer[1]
+        if perfometer_type == "dual":
+            sub_performeters = perfometer_args[:]
+            _parse_perfometers(sub_performeters)
+            perfometers[index] = {
+                "type": "dual",
+                "perfometers": sub_performeters,
+            }
+
+        elif perfometer_type == "stacked":
+            sub_performeters = perfometer_args[:]
+            _parse_perfometers(sub_performeters)
+            perfometers[index] = {
+                "type": "stacked",
+                "perfometers": sub_performeters,
+            }
+
+        elif perfometer_type == "linear" and len(perfometer_args) == 3:
+            required, total, label = perfometer_args
+            perfometers[index] = {
+                "type": "linear",
+                "segments": required,
+                "total": total,
+                "label": label,
+            }
+
+        else:
+            logger.warning(
+                _("Could not convert perfometer to dict format: %r. Ignoring this one."), perfometer
+            )
+            perfometers.pop(index)
+
+
+def parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> None:
+    # During implementation of the metric system the perfometers were first defined using
+    # tuples. This has been replaced with a dict based syntax. This function converts the
+    # old known formats from tuple to dict.
+    # All shipped perfometers have been converted to the dict format with 1.5.0i3.
+    # TODO: Remove this one day.
+    _parse_perfometers(perfometers)
 
 
 def _get_metric_names(

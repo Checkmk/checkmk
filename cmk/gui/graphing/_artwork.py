@@ -268,7 +268,7 @@ def compute_graph_artwork(
         requested_vrange=graph_data_range.get("vertical_range"),
         requested_start_time=int(graph_data_range["time_range"][0]),
         requested_end_time=int(graph_data_range["time_range"][1]),
-        requested_step=graph_data_range["step"],
+        requested_step=int(graph_data_range["step"]),
         pin_time=pin_time,
         # Definition itself, for reproducing the graph
         definition=graph_recipe,

@@ -24,19 +24,38 @@ mod keys {
     pub const TIMEOUT: &str = "timeout";
     pub const CA: &str = "ca";
     pub const CLIENT_CERTIFICATE: &str = "client_certificate";
+
+    pub const SQLS: &str = "sqls";
+    pub const ALWAYS: &str = "always";
+    pub const CACHED: &str = "cached";
+    pub const CACHE_AGE: &str = "cache_age";
+    pub const DISABLED: &str = "disabled";
 }
 
 mod defaults {
     pub const CONNECTION_HOST_NAME: &str = "localhost";
     pub const CONNECTION_PORT: u16 = 1433;
     pub const CONNECTION_TIMEOUT: u32 = 5;
+    pub const SQLS_CACHE_AGE: u32 = 600;
+    pub const SQLS_ALWAYS: &[&str] = &[
+        "instance",
+        "databases",
+        "counters",
+        "blocked_sessions",
+        "transactionlogs",
+        "clusters",
+        "mirroring",
+        "availability_groups",
+        "connections",
+    ];
+    pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 }
 
 #[derive(PartialEq, Debug)]
 pub struct Config {
     auth: Authentication,
     conn: Connection,
-    sqls: Option<Sqls>,
+    sqls: Sqls,
     instance_filter: Option<InstanceFilter>,
     mode: Mode,
     instances: Vec<Instance>,
@@ -47,7 +66,7 @@ impl Default for Config {
         Self {
             auth: Authentication::default(),
             conn: Connection::default(),
-            sqls: None,
+            sqls: Sqls::default(),
             instance_filter: None,
             mode: Mode::Port,
             instances: vec![],
@@ -62,8 +81,8 @@ impl Config {
     pub fn conn(&self) -> &Connection {
         &self.conn
     }
-    pub fn sqls(&self) -> Option<&Sqls> {
-        self.sqls.as_ref()
+    pub fn sqls(&self) -> &Sqls {
+        &self.sqls
     }
     pub fn instance_filter(&self) -> Option<&InstanceFilter> {
         self.instance_filter.as_ref()
@@ -215,7 +234,72 @@ impl ConnectionTls {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Sqls {}
+pub struct Sqls {
+    always: Vec<String>,
+    cached: Vec<String>,
+    disabled: Vec<String>,
+    cache_age: u32,
+}
+
+impl Default for Sqls {
+    fn default() -> Self {
+        Self {
+            always: defaults::SQLS_ALWAYS
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            cached: defaults::SQLS_CACHED
+                .iter()
+                .map(|s| s.to_string())
+                .collect(),
+            disabled: vec![],
+            cache_age: defaults::SQLS_CACHE_AGE,
+        }
+    }
+}
+
+impl Sqls {
+    pub fn from_yaml(yaml: &[Yaml]) -> Result<Self> {
+        let sqls = &yaml[0][keys::SQLS];
+        if sqls.is_badvalue() {
+            return Ok(Sqls::default());
+        }
+        Ok(Self {
+            always: get_string_vector(sqls, keys::ALWAYS, defaults::SQLS_ALWAYS)?,
+            cached: get_string_vector(sqls, keys::CACHED, defaults::SQLS_CACHED)?,
+            disabled: get_string_vector(sqls, keys::DISABLED, &[])?,
+            cache_age: sqls[keys::CACHE_AGE]
+                .as_i64()
+                .map(|v| v as u32)
+                .unwrap_or(defaults::SQLS_CACHE_AGE),
+        })
+    }
+    pub fn always(&self) -> &Vec<String> {
+        &self.always
+    }
+    pub fn cached(&self) -> &Vec<String> {
+        &self.cached
+    }
+    pub fn disabled(&self) -> &Vec<String> {
+        &self.disabled
+    }
+    pub fn cache_age(&self) -> u32 {
+        self.cache_age
+    }
+}
+
+fn get_string_vector(yaml: &Yaml, key: &str, default: &[&str]) -> Result<Vec<String>> {
+    if yaml[key].is_badvalue() {
+        Ok(default.iter().map(|&a| str::to_string(a)).collect())
+    } else {
+        yaml[key]
+            .as_vec()
+            .unwrap_or(&vec![])
+            .iter()
+            .map(|v| v.as_str().map(str::to_string).context("Not string"))
+            .collect()
+    }
+}
 
 #[derive(PartialEq, Debug)]
 pub struct InstanceFilter {}
@@ -286,7 +370,7 @@ mod tests {
             Config {
                 auth: Authentication::default(),
                 conn: Connection::default(),
-                sqls: None,
+                sqls: Sqls::default(),
                 instance_filter: None,
                 mode: Mode::Port,
                 instances: vec![],
@@ -405,6 +489,48 @@ connection:
     fn create_connection_yaml_default() -> Vec<Yaml> {
         const SOURCE: &str = r#"
 connection:
+  _nothing: "nothing"
+"#;
+        create_yaml(SOURCE)
+    }
+    #[test]
+    fn test_sqls_from_yaml_full() {
+        let s = Sqls::from_yaml(&create_sqls_yaml_full()).unwrap();
+        assert_eq!(s.always(), &vec!["aaa".to_string(), "bbb".to_string()]);
+        assert_eq!(s.cached(), &vec!["ccc".to_string(), "ddd".to_string()]);
+        assert_eq!(s.disabled(), &vec!["eee".to_string()]);
+        assert_eq!(s.cache_age(), 900);
+    }
+
+    fn create_sqls_yaml_full() -> Vec<Yaml> {
+        const SOURCE: &str = r#"
+sqls:
+  always:
+    - "aaa"
+    - "bbb"
+  cached:
+    - "ccc"
+    - "ddd"
+  disabled:
+    - "eee"
+  cache_age: 900
+"#;
+        create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_sqls_from_yaml_default() {
+        let s = Sqls::from_yaml(&create_sqls_yaml_default()).unwrap();
+        assert_eq!(s.always(), defaults::SQLS_ALWAYS.clone());
+        assert_eq!(s.cached(), defaults::SQLS_CACHED.clone());
+        assert!(s.disabled().is_empty());
+        assert_eq!(s.cache_age(), defaults::SQLS_CACHE_AGE);
+        assert_eq!(s, Sqls::from_yaml(&create_yaml("_sqls:\n")).unwrap());
+    }
+
+    fn create_sqls_yaml_default() -> Vec<Yaml> {
+        const SOURCE: &str = r#"
+sqls:
   _nothing: "nothing"
 "#;
         create_yaml(SOURCE)

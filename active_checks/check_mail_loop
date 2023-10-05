@@ -23,7 +23,7 @@ from cmk.utils.mailbox import (
     CheckResult,
     FetchMailsError,
     Mailbox,
-    MailMessages,
+    POPIMAPMailMessages,
     SendMailError,
 )
 
@@ -185,7 +185,7 @@ def _regex_pattern(subject: str) -> re.Pattern:
 
 def fetch_mail_timestamps(
     args: Args,
-    mails: MailMessages,
+    mails: POPIMAPMailMessages,
     expected_mails: MailDict,
     now: int = int(time.time()),
 ) -> Tuple[MailDict, MailDict]:

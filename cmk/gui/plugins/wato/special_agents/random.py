@@ -7,9 +7,9 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsTesting
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import FixedValue
+from cmk.gui.wato import RulespecGroupDatasourceProgramsTesting
 from cmk.gui.watolib.rulespecs import Rulespec
 
 

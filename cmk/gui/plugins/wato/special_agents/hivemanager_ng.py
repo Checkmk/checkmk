@@ -7,9 +7,11 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.valuespec import Dictionary, HTTPUrl, TextInput
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import (
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupDatasourceProgramsHardware,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 

@@ -7,6 +7,7 @@ import cmk.utils.paths
 
 import cmk.gui.plugins.wato as api_module
 import cmk.gui.plugins.wato.datasource_programs as datasource_programs
+import cmk.gui.plugins.wato.special_agents.common
 import cmk.gui.plugins.wato.utils as wato_utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
@@ -77,6 +78,18 @@ from ._notification_parameter import (
     register_notification_parameters,
 )
 from ._permissions import PermissionSectionWATO
+from ._rulespec_groups import (
+    RulespecGroupActiveChecks,
+    RulespecGroupDatasourcePrograms,
+    RulespecGroupDatasourceProgramsApps,
+    RulespecGroupDatasourceProgramsCloud,
+    RulespecGroupDatasourceProgramsCustom,
+    RulespecGroupDatasourceProgramsHardware,
+    RulespecGroupDatasourceProgramsOS,
+    RulespecGroupDatasourceProgramsTesting,
+    RulespecGroupIntegrateOtherServices,
+    RulespecGroupVMCloudContainer,
+)
 from .pages._password_store_valuespecs import (
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
@@ -253,16 +266,19 @@ def register() -> None:  # pylint: disable=too-many-branches
     ):
         api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]
 
-    for name in (
-        "RulespecGroupDatasourcePrograms",
-        "RulespecGroupDatasourceProgramsOS",
-        "RulespecGroupDatasourceProgramsApps",
-        "RulespecGroupDatasourceProgramsCloud",
-        "RulespecGroupDatasourceProgramsContainer",
-        "RulespecGroupDatasourceProgramsCustom",
-        "RulespecGroupDatasourceProgramsHardware",
-        "RulespecGroupDatasourceProgramsTesting",
+    for name, value in (
+        ("RulespecGroupVMCloudContainer", RulespecGroupVMCloudContainer),
+        ("RulespecGroupDatasourcePrograms", RulespecGroupDatasourcePrograms),
+        ("RulespecGroupDatasourceProgramsOS", RulespecGroupDatasourceProgramsOS),
+        ("RulespecGroupDatasourceProgramsApps", RulespecGroupDatasourceProgramsApps),
+        ("RulespecGroupDatasourceProgramsCloud", RulespecGroupDatasourceProgramsCloud),
+        ("RulespecGroupDatasourceProgramsCustom", RulespecGroupDatasourceProgramsCustom),
+        ("RulespecGroupDatasourceProgramsHardware", RulespecGroupDatasourceProgramsHardware),
+        ("RulespecGroupDatasourceProgramsTesting", RulespecGroupDatasourceProgramsTesting),
+        ("RulespecGroupIntegrateOtherServices", RulespecGroupIntegrateOtherServices),
+        ("RulespecGroupActiveChecks", RulespecGroupActiveChecks),
+        ("MigrateToIndividualOrStoredPassword", MigrateToIndividualOrStoredPassword),
     ):
         datasource_programs.__dict__[name] = cmk.gui.plugins.wato.special_agents.common.__dict__[
             name
-        ]
+        ] = value

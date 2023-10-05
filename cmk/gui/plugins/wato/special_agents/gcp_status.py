@@ -7,9 +7,9 @@ from cmk.utils import gcp_constants
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, ListChoice
+from cmk.gui.wato import RulespecGroupVMCloudContainer
 
 
 def _regions_to_monitor() -> list[tuple[str, str]]:

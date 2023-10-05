@@ -12,7 +12,6 @@ from cmk.utils.version import edition, Edition
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.mkeventd import syslog_facilities
-from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -33,7 +32,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupActiveChecks
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 

@@ -8,9 +8,12 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, ListOfStrings, RegExp, TextInput
-from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import (
+    HTTPProxyReference,
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupDatasourceProgramsApps,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 

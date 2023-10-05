@@ -104,6 +104,7 @@ from ._notification_parameter import NotificationParameter as NotificationParame
 from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
 from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO
+from ._rulespec_groups import RulespecGroupActiveChecks as RulespecGroupActiveChecks
 from ._rulespec_groups import (
     RulespecGroupCheckParametersApplications as RulespecGroupCheckParametersApplications,
 )
@@ -131,9 +132,30 @@ from ._rulespec_groups import (
 from ._rulespec_groups import (
     RulespecGroupCheckParametersVirtualization as RulespecGroupCheckParametersVirtualization,
 )
+from ._rulespec_groups import RulespecGroupDatasourcePrograms as RulespecGroupDatasourcePrograms
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsApps as RulespecGroupDatasourceProgramsApps,
+)
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsCloud as RulespecGroupDatasourceProgramsCloud,
+)
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsCustom as RulespecGroupDatasourceProgramsCustom,
+)
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsHardware as RulespecGroupDatasourceProgramsHardware,
+)
+from ._rulespec_groups import RulespecGroupDatasourceProgramsOS as RulespecGroupDatasourceProgramsOS
+from ._rulespec_groups import (
+    RulespecGroupDatasourceProgramsTesting as RulespecGroupDatasourceProgramsTesting,
+)
 from ._rulespec_groups import (
     RulespecGroupDiscoveryCheckParameters as RulespecGroupDiscoveryCheckParameters,
 )
+from ._rulespec_groups import (
+    RulespecGroupIntegrateOtherServices as RulespecGroupIntegrateOtherServices,
+)
+from ._rulespec_groups import RulespecGroupVMCloudContainer as RulespecGroupVMCloudContainer
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,

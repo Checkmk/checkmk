@@ -9,7 +9,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -24,7 +23,11 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import HTTPProxyReference, MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import (
+    HTTPProxyReference,
+    MigrateToIndividualOrStoredPassword,
+    RulespecGroupVMCloudContainer,
+)
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 # Note: the first element of the tuple should match the id of the metric specified in ALL_SERVICES

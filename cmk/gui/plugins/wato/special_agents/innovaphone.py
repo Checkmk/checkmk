@@ -7,12 +7,10 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import (
-    connection_set,
-    RulespecGroupDatasourceProgramsHardware,
-)
+from cmk.gui.plugins.wato.special_agents.common import connection_set
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary
+from cmk.gui.wato import RulespecGroupDatasourceProgramsHardware
 from cmk.gui.watolib.rulespecs import Rulespec
 
 

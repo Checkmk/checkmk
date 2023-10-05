@@ -6,9 +6,9 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
+from cmk.gui.wato import RulespecGroupIntegrateOtherServices
 
 
 def _valuespec_active_checks_notify_count():

@@ -7,7 +7,6 @@
 from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -16,7 +15,7 @@ from cmk.gui.valuespec import (
     NetworkPort,
     TextInput,
 )
-from cmk.gui.wato import IndividualOrStoredPassword
+from cmk.gui.wato import IndividualOrStoredPassword, RulespecGroupDatasourceProgramsApps
 from cmk.gui.watolib.rulespecs import HostRulespec, Rulespec, rulespec_registry
 
 

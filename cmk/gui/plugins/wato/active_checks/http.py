@@ -11,10 +11,6 @@ from cmk.utils.rulesets.definition import RuleGroup
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks.common import (
-    ip_address_family_http,
-    RulespecGroupActiveChecks,
-)
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -31,7 +27,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+from cmk.gui.wato import MigrateToIndividualOrStoredPassword, RulespecGroupActiveChecks
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
 
 
@@ -121,6 +117,22 @@ def _active_checks_http_hostspec() -> Dictionary:
                 ),
             ),
         ],
+    )
+
+
+def ip_address_family_http():
+    return (
+        "address_family",
+        DropdownChoice(
+            title=_("IP address family"),
+            choices=[
+                (None, _("Primary address family")),
+                ("ipv4", _("Use any network address")),
+                ("ipv4_enforced", _("Enforce IPv4")),
+                ("ipv6", _("Enforce IPv6")),
+            ],
+            default_value=None,
+        ),
     )
 
 

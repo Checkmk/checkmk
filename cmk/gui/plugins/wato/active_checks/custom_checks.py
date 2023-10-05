@@ -5,10 +5,9 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, MigrateNotUpdated, TextInput
-from cmk.gui.wato import PluginCommandLine
+from cmk.gui.wato import PluginCommandLine, RulespecGroupIntegrateOtherServices
 
 
 def _valuespec_custom_checks() -> MigrateNotUpdated:

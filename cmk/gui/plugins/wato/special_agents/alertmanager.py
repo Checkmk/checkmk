@@ -12,7 +12,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     api_request_connection_elements,
-    RulespecGroupVMCloudContainer,
 )
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
@@ -24,6 +23,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     TextInput,
 )
+from cmk.gui.wato import RulespecGroupVMCloudContainer
 
 
 def _deprecate_dynamic_host_adress(*value: object, **kwargs: object) -> typing.NoReturn:

@@ -10,6 +10,7 @@ from cmk.gui.plugins.wato.special_agents import common
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import Dictionary, ListChoice
+from cmk.gui.wato import RulespecGroupVMCloudContainer
 
 
 def _valuespec_special_agents_aws_status() -> Dictionary:
@@ -30,7 +31,7 @@ def _valuespec_special_agents_aws_status() -> Dictionary:
 
 rulespec_registry.register(
     HostRulespec(
-        group=common.RulespecGroupVMCloudContainer,
+        group=RulespecGroupVMCloudContainer,
         name=RuleGroup.SpecialAgents("aws_status"),
         valuespec=_valuespec_special_agents_aws_status,
         doc_references={DocReference.AWS: _("Monitoring Amazon Web Services (AWS)")},

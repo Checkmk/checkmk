@@ -432,12 +432,19 @@ from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_in
             },
             None,
         ),
-        # TODO: This fails as the regex "transferred" does not yet catch the following line:
-        # INFO: transferred 128.00 KiB in <1 seconds
         (
             "proxmox_ve-backup-2023-09-23.log",
-            {},
-            BackupTask.LogParseWarning,
+            {
+                "255": {
+                    "archive_name": "/mnt/pve/backup/dump/vzdump-qemu-255-2023_09_23-04_35_29.vma.zst",
+                    "archive_size": 2000,
+                    "started_time": "2023-09-23 04:35:29",
+                    "total_duration": 0.0,
+                    "transfer_size": 131072,
+                    "transfer_time": 1,
+                }
+            },
+            None,
         ),
     ),
 )

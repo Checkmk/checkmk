@@ -5,7 +5,7 @@
 def main() {
     def docker_args = "${mount_reference_repo_dir}";
 
-    def target_path = "/home/mkde/all_werks_v2.json"
+    def target_path = "/home/mkde/werks/all_werks_v2.json"
     def targets_credentials = [
         [env.WEB_STAGING, "web-staging"],
         ["checkmk.com", "checkmk-deploy"],

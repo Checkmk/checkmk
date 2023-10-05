@@ -122,10 +122,7 @@ disable_memoryview_promotion = true
 module = [
     "cmk.cee.bakery.*",
     "cmk.gui.background_job",
-    "cmk.gui.backup.backup",
     "cmk.gui.mobile.views",
-    "cmk.gui.plugins.wato.bi_config",
-    "cmk.gui.plugins.wato.utils.main_menu",
     "cmk.gui.views.layout",
     "cmk.gui.wato.pages.bulk_discovery",
     "cmk.gui.wato.pages.bulk_edit",

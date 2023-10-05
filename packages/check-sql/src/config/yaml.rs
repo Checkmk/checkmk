@@ -2,12 +2,77 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use std::fs::File;
 use std::io::Read;
-use std::path::Path;
-use yaml_rust::yaml::Yaml;
+use std::path::{Path, PathBuf};
 use yaml_rust::YamlLoader;
+pub type Yaml = yaml_rust::yaml::Yaml;
+
+pub trait Get {
+    fn get(&self, key: &str) -> &Self
+    where
+        Self: Sized;
+    fn get_string(&self, key: &str) -> Option<String>
+    where
+        Self: Sized;
+    fn get_int<T>(&self, key: &str, default: T) -> T
+    where
+        Self: Sized,
+        T: std::convert::TryFrom<i64>;
+    fn get_pathbuf(&self, key: &str) -> Option<PathBuf>;
+    fn get_string_vector(&self, key: &str, default: &[&str]) -> Result<Vec<String>>;
+    /// load a string from using key with default.
+    /// If obtained string is not bool-like -> error
+    fn get_bool(&self, key: &str, default: bool) -> Result<bool>;
+}
+
+impl Get for Yaml {
+    fn get(&self, key: &str) -> &Self {
+        &self[key]
+    }
+
+    fn get_string(&self, key: &str) -> Option<String> {
+        self[key].as_str().map(str::to_string)
+    }
+
+    fn get_pathbuf(&self, key: &str) -> Option<PathBuf> {
+        self[key].as_str().map(PathBuf::from)
+    }
+
+    /// always with default
+    fn get_int<T>(&self, key: &str, default: T) -> T
+    where
+        T: std::convert::TryFrom<i64>,
+    {
+        if let Some(value) = self[key].as_i64() {
+            TryInto::try_into(value).unwrap_or(default)
+        } else {
+            default
+        }
+    }
+
+    fn get_string_vector(&self, key: &str, default: &[&str]) -> Result<Vec<String>> {
+        if self[key].is_badvalue() {
+            Ok(default.iter().map(|&a| str::to_string(a)).collect())
+        } else {
+            self[key]
+                .as_vec()
+                .unwrap_or(&vec![])
+                .iter()
+                .map(|v| v.as_str().map(str::to_string).context("Not string"))
+                .collect()
+        }
+    }
+
+    fn get_bool(&self, key: &str, default: bool) -> Result<bool> {
+        if let Some(v) = self[key].as_str() {
+            to_bool(v)
+        } else {
+            Ok(default)
+        }
+    }
+}
 
 pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
     let content = read_file(file_name)?;
@@ -25,7 +90,7 @@ fn load_from_str(content: &str) -> Result<Vec<Yaml>> {
     Ok(YamlLoader::load_from_str(content)?)
 }
 
-pub fn to_bool(value: &str) -> Result<bool> {
+fn to_bool(value: &str) -> Result<bool> {
     match value.to_lowercase().as_ref() {
         "yes" | "true" => Ok(true),
         "no" | "false" => Ok(false),

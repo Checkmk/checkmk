@@ -2,10 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::yaml;
+use crate::config::yaml::{Get, Yaml};
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
-use yaml_rust::Yaml;
 
 mod keys {
     pub const AUTHENTICATION: &str = "authentication";
@@ -57,8 +56,8 @@ mod defaults {
     ];
     pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 
-    pub const INSTANCE_FILTER_DETECT: &str = "yes";
-    pub const INSTANCE_FILTER_ALL: &str = "no";
+    pub const INSTANCE_FILTER_DETECT: bool = true;
+    pub const INSTANCE_FILTER_ALL: bool = false;
 }
 
 #[derive(PartialEq, Debug)]
@@ -125,19 +124,18 @@ impl Default for Authentication {
 }
 impl Authentication {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        let auth = &yaml[keys::AUTHENTICATION];
+        let auth = yaml.get(keys::AUTHENTICATION);
         Ok(Self {
-            username: auth[keys::USERNAME]
-                .as_str()
-                .context("bad/absent username")?
-                .to_owned(),
-            password: auth[keys::PASSWORD].as_str().map(str::to_string),
-            auth_type: match auth[keys::TYPE].as_str().unwrap_or(keys::SYSTEM) {
-                keys::SYSTEM => AuthType::System,
-                keys::WINDOWS => AuthType::Windows,
+            username: auth
+                .get_string(keys::USERNAME)
+                .context("bad/absent username")?,
+            password: auth.get_string(keys::PASSWORD),
+            auth_type: match auth.get_string(keys::TYPE).as_deref() {
+                Some(keys::SYSTEM) | None => AuthType::System,
+                Some(keys::WINDOWS) => AuthType::Windows,
                 _ => bail!("unknown auth type"),
             },
-            access_token: auth[keys::ACCESS_TOKEN].as_str().map(str::to_string),
+            access_token: auth.get_string(keys::ACCESS_TOKEN),
         })
     }
     pub fn username(&self) -> &str {
@@ -172,23 +170,16 @@ pub struct Connection {
 
 impl Connection {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        let conn = &yaml[keys::CONNECTION];
+        let conn = yaml.get(keys::CONNECTION);
         Ok(Self {
-            hostname: conn[keys::HOSTNAME]
-                .as_str()
-                .unwrap_or(defaults::CONNECTION_HOST_NAME)
-                .to_owned(),
-            fail_over_partner: conn[keys::FAIL_OVER_PARTNER].as_str().map(str::to_string),
-            port: conn[keys::PORT]
-                .as_i64()
-                .map(|v| v as u16)
-                .unwrap_or(defaults::CONNECTION_PORT),
-            socket: conn[keys::SOCKET].as_str().map(PathBuf::from),
+            hostname: conn
+                .get_string(keys::HOSTNAME)
+                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string()),
+            fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
+            port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
+            socket: conn.get_pathbuf(keys::SOCKET),
             tls: ConnectionTls::from_yaml(conn)?,
-            timeout: conn[keys::TIMEOUT]
-                .as_i64()
-                .map(|v| v as u32)
-                .unwrap_or(defaults::CONNECTION_TIMEOUT),
+            timeout: conn.get_int::<u32>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
         })
     }
     pub fn hostname(&self) -> &str {
@@ -232,18 +223,14 @@ pub struct ConnectionTls {
 
 impl ConnectionTls {
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let tls = &yaml[keys::TLS];
+        let tls = yaml.get(keys::TLS);
         if tls.is_badvalue() {
             return Ok(None);
         }
         Ok(Some(Self {
-            ca: tls[keys::CA]
-                .as_str()
-                .map(PathBuf::from)
-                .context("Bad/Missing CA")?,
-            client_certificate: tls[keys::CLIENT_CERTIFICATE]
-                .as_str()
-                .map(PathBuf::from)
+            ca: tls.get_pathbuf(keys::CA).context("Bad/Missing CA")?,
+            client_certificate: tls
+                .get_pathbuf(keys::CLIENT_CERTIFICATE)
                 .context("bad/Missing CLIENT_CERTIFICATE")?,
         }))
     }
@@ -282,18 +269,15 @@ impl Default for Sqls {
 
 impl Sqls {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        let sqls = &yaml[keys::SQLS];
+        let sqls = yaml.get(keys::SQLS);
         if sqls.is_badvalue() {
             return Ok(Sqls::default());
         }
         Ok(Self {
-            always: get_string_vector(sqls, keys::ALWAYS, defaults::SQLS_ALWAYS)?,
-            cached: get_string_vector(sqls, keys::CACHED, defaults::SQLS_CACHED)?,
-            disabled: get_string_vector(sqls, keys::DISABLED, &[])?,
-            cache_age: sqls[keys::CACHE_AGE]
-                .as_i64()
-                .map(|v| v as u32)
-                .unwrap_or(defaults::SQLS_CACHE_AGE),
+            always: sqls.get_string_vector(keys::ALWAYS, defaults::SQLS_ALWAYS)?,
+            cached: sqls.get_string_vector(keys::CACHED, defaults::SQLS_CACHED)?,
+            disabled: sqls.get_string_vector(keys::DISABLED, &[])?,
+            cache_age: sqls.get_int(keys::CACHE_AGE, defaults::SQLS_CACHE_AGE),
         })
     }
     pub fn always(&self) -> &Vec<String> {
@@ -310,23 +294,10 @@ impl Sqls {
     }
 }
 
-fn get_string_vector(yaml: &Yaml, key: &str, default: &[&str]) -> Result<Vec<String>> {
-    if yaml[key].is_badvalue() {
-        Ok(default.iter().map(|&a| str::to_string(a)).collect())
-    } else {
-        yaml[key]
-            .as_vec()
-            .unwrap_or(&vec![])
-            .iter()
-            .map(|v| v.as_str().map(str::to_string).context("Not string"))
-            .collect()
-    }
-}
-
 #[derive(PartialEq, Debug)]
 pub struct InstanceFilter {
-    detect: String,
-    all: String,
+    detect: bool,
+    all: bool,
     include: Vec<String>,
     exclude: Vec<String>,
 }
@@ -334,8 +305,8 @@ pub struct InstanceFilter {
 impl Default for InstanceFilter {
     fn default() -> Self {
         Self {
-            detect: defaults::INSTANCE_FILTER_DETECT.to_owned(),
-            all: defaults::INSTANCE_FILTER_DETECT.to_owned(),
+            detect: defaults::INSTANCE_FILTER_DETECT,
+            all: defaults::INSTANCE_FILTER_ALL,
             include: vec![],
             exclude: vec![],
         }
@@ -344,23 +315,23 @@ impl Default for InstanceFilter {
 
 impl InstanceFilter {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        let filter = &yaml[keys::INSTANCE_FILTER];
+        let filter = yaml.get(keys::INSTANCE_FILTER);
         if filter.is_badvalue() {
             Ok(InstanceFilter::default())
         } else {
             Ok(Self {
-                detect: load_assuming_bool(filter, keys::DETECT, defaults::INSTANCE_FILTER_DETECT)?,
-                all: load_assuming_bool(filter, keys::ALL, defaults::INSTANCE_FILTER_ALL)?,
-                include: get_string_vector(filter, keys::INCLUDE, &[])?,
-                exclude: get_string_vector(filter, keys::EXCLUDE, &[])?,
+                detect: filter.get_bool(keys::DETECT, defaults::INSTANCE_FILTER_DETECT)?,
+                all: filter.get_bool(keys::ALL, defaults::INSTANCE_FILTER_ALL)?,
+                include: filter.get_string_vector(keys::INCLUDE, &[])?,
+                exclude: filter.get_string_vector(keys::EXCLUDE, &[])?,
             })
         }
     }
     pub fn detect(&self) -> bool {
-        yaml::to_bool(&self.detect).unwrap()
+        self.detect
     }
     pub fn all(&self) -> bool {
-        yaml::to_bool(&self.all).unwrap()
+        self.all
     }
     pub fn include(&self) -> &Vec<String> {
         &self.include
@@ -368,18 +339,6 @@ impl InstanceFilter {
     pub fn exclude(&self) -> &Vec<String> {
         &self.exclude
     }
-}
-
-/// load a string from using key with default.
-/// If obtained string is not bool-like -> error
-fn load_assuming_bool(yaml: &Yaml, key: &str, default: &str) -> Result<String> {
-    Ok(ensure_bool_string(yaml[key].as_str().unwrap_or(default))?.to_string())
-}
-
-/// returns error if string is not bool-like
-fn ensure_bool_string(value: &str) -> Result<&str> {
-    let _ = yaml::to_bool(value)?;
-    Ok(value)
 }
 
 #[derive(PartialEq, Debug)]
@@ -626,16 +585,10 @@ instance_filter:
     }
 
     #[test]
-    fn test_instance_filter_from_yaml_default() {
+    fn test_instances_from_yaml_default() {
         let filter = InstanceFilter::from_yaml(&create_instance_filter_yaml_default()).unwrap();
-        assert_eq!(
-            filter.detect(),
-            yaml::to_bool(defaults::INSTANCE_FILTER_DETECT).unwrap()
-        );
-        assert_eq!(
-            filter.all(),
-            yaml::to_bool(defaults::INSTANCE_FILTER_ALL).unwrap()
-        );
+        assert_eq!(filter.detect(), defaults::INSTANCE_FILTER_DETECT);
+        assert_eq!(filter.all(), defaults::INSTANCE_FILTER_ALL);
         assert!(filter.include().is_empty());
         assert!(filter.exclude().is_empty());
     }

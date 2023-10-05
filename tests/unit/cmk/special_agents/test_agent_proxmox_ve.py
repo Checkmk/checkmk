@@ -432,6 +432,13 @@ from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_in
             },
             None,
         ),
+        # TODO: This fails as the regex "transferred" does not yet catch the following line:
+        # INFO: transferred 128.00 KiB in <1 seconds
+        (
+            "proxmox_ve-backup-2023-09-23.log",
+            {},
+            BackupTask.LogParseWarning,
+        ),
     ),
 )
 def test_parse_backup_logs(  # type:ignore[no-untyped-def]

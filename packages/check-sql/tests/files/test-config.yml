@@ -1,6 +1,6 @@
 ---
 mssql:
-  defaults: # mandatory, to be used if no specific config
+  standard: # mandatory, to be used if no specific config
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
@@ -34,14 +34,14 @@ mssql:
       disabled: # optional
         - "someOtherSQL"
       cache_age: 600 # optional(default:600)
-    instances: # optional
+    discovery: # optional
       detect: yes # optional(default:yes)
       all: no # optional(default:no) prio 1; ignore include/exclude if yes
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
   instances: # optional
-    - instance: "INST1" # mandatory
+    - sid: "INST1" # mandatory
       authentication: # optional, same as above
       connection: # optional,  same as above
       alias: "someApplicationName" # optional

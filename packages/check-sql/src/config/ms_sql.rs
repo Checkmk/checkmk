@@ -31,7 +31,7 @@ mod keys {
     pub const CACHE_AGE: &str = "cache_age";
     pub const DISABLED: &str = "disabled";
 
-    pub const INSTANCE_FILTER: &str = "instance_filter";
+    pub const DISCOVERY: &str = "discovery";
     pub const DETECT: &str = "detect";
     pub const ALL: &str = "all";
     pub const INCLUDE: &str = "include";
@@ -56,8 +56,8 @@ mod defaults {
     ];
     pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 
-    pub const INSTANCE_FILTER_DETECT: bool = true;
-    pub const INSTANCE_FILTER_ALL: bool = false;
+    pub const DISCOVERY_DETECT: bool = true;
+    pub const DISCOVERY_ALL: bool = false;
 }
 
 #[derive(PartialEq, Debug)]
@@ -65,7 +65,7 @@ pub struct Config {
     auth: Authentication,
     conn: Connection,
     sqls: Sqls,
-    instance_filter: InstanceFilter,
+    discovery: Discovery,
     mode: Mode,
     instances: Vec<Instance>,
 }
@@ -76,7 +76,7 @@ impl Default for Config {
             auth: Authentication::default(),
             conn: Connection::default(),
             sqls: Sqls::default(),
-            instance_filter: InstanceFilter::default(),
+            discovery: Discovery::default(),
             mode: Mode::Port,
             instances: vec![],
         }
@@ -93,8 +93,8 @@ impl Config {
     pub fn sqls(&self) -> &Sqls {
         &self.sqls
     }
-    pub fn instance_filter(&self) -> &InstanceFilter {
-        &self.instance_filter
+    pub fn discovery(&self) -> &Discovery {
+        &self.discovery
     }
     pub fn mode(&self) -> &Mode {
         &self.mode
@@ -295,35 +295,35 @@ impl Sqls {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct InstanceFilter {
+pub struct Discovery {
     detect: bool,
     all: bool,
     include: Vec<String>,
     exclude: Vec<String>,
 }
 
-impl Default for InstanceFilter {
+impl Default for Discovery {
     fn default() -> Self {
         Self {
-            detect: defaults::INSTANCE_FILTER_DETECT,
-            all: defaults::INSTANCE_FILTER_ALL,
+            detect: defaults::DISCOVERY_DETECT,
+            all: defaults::DISCOVERY_ALL,
             include: vec![],
             exclude: vec![],
         }
     }
 }
 
-impl InstanceFilter {
+impl Discovery {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        let filter = yaml.get(keys::INSTANCE_FILTER);
-        if filter.is_badvalue() {
-            Ok(InstanceFilter::default())
+        let discovery = yaml.get(keys::DISCOVERY);
+        if discovery.is_badvalue() {
+            Ok(Discovery::default())
         } else {
             Ok(Self {
-                detect: filter.get_bool(keys::DETECT, defaults::INSTANCE_FILTER_DETECT)?,
-                all: filter.get_bool(keys::ALL, defaults::INSTANCE_FILTER_ALL)?,
-                include: filter.get_string_vector(keys::INCLUDE, &[])?,
-                exclude: filter.get_string_vector(keys::EXCLUDE, &[])?,
+                detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
+                all: discovery.get_bool(keys::ALL, defaults::DISCOVERY_ALL)?,
+                include: discovery.get_string_vector(keys::INCLUDE, &[])?,
+                exclude: discovery.get_string_vector(keys::EXCLUDE, &[])?,
             })
         }
     }
@@ -408,7 +408,7 @@ mod tests {
                 auth: Authentication::default(),
                 conn: Connection::default(),
                 sqls: Sqls::default(),
-                instance_filter: InstanceFilter::default(),
+                discovery: Discovery::default(),
                 mode: Mode::Port,
                 instances: vec![],
             }
@@ -565,17 +565,17 @@ sqls:
     }
 
     #[test]
-    fn test_instance_filter_from_yaml_full() {
-        let filter = InstanceFilter::from_yaml(&create_instance_filter_yaml_full()).unwrap();
-        assert!(!filter.detect());
-        assert!(filter.all());
-        assert_eq!(filter.include(), &vec!["a".to_string(), "b".to_string()]);
-        assert_eq!(filter.exclude(), &vec!["c".to_string(), "d".to_string()]);
+    fn test_discovery_from_yaml_full() {
+        let discovery = Discovery::from_yaml(&create_discovery_yaml_full()).unwrap();
+        assert!(!discovery.detect());
+        assert!(discovery.all());
+        assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
     }
 
-    fn create_instance_filter_yaml_full() -> Yaml {
+    fn create_discovery_yaml_full() -> Yaml {
         const SOURCE: &str = r#"
-instance_filter:
+discovery:
   detect: no
   all: yes
   include: ["a", "b" ]
@@ -585,17 +585,17 @@ instance_filter:
     }
 
     #[test]
-    fn test_instances_from_yaml_default() {
-        let filter = InstanceFilter::from_yaml(&create_instance_filter_yaml_default()).unwrap();
-        assert_eq!(filter.detect(), defaults::INSTANCE_FILTER_DETECT);
-        assert_eq!(filter.all(), defaults::INSTANCE_FILTER_ALL);
-        assert!(filter.include().is_empty());
-        assert!(filter.exclude().is_empty());
+    fn test_discovery_from_yaml_default() {
+        let discovery = Discovery::from_yaml(&create_discovery_yaml_default()).unwrap();
+        assert_eq!(discovery.detect(), defaults::DISCOVERY_DETECT);
+        assert_eq!(discovery.all(), defaults::DISCOVERY_ALL);
+        assert!(discovery.include().is_empty());
+        assert!(discovery.exclude().is_empty());
     }
 
-    fn create_instance_filter_yaml_default() -> Yaml {
+    fn create_discovery_yaml_default() -> Yaml {
         const SOURCE: &str = r#"
-instance_filter:
+discovery:
   _nothing: "nothing"
 "#;
         create_yaml(SOURCE)

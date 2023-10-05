@@ -756,12 +756,6 @@ def make_post_package_change_actions(
     return _execute_post_package_change_actions
 
 
-def invalidate_visuals_cache():
-    """Invalidate visuals cache to use the current data"""
-    for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
-        file.unlink(missing_ok=True)
-
-
 def reload_apache() -> None:
     try:
         subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)

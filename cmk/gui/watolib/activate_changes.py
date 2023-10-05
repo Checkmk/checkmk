@@ -55,6 +55,7 @@ from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
 from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
+from cmk.utils.visuals import invalidate_visuals_cache
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -2578,7 +2579,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                 ((packaging.PackagePart.GUI, packaging.PackagePart.WEB), packaging.reload_apache),
                 (
                     (packaging.PackagePart.GUI, packaging.PackagePart.WEB),
-                    packaging.invalidate_visuals_cache,
+                    invalidate_visuals_cache,
                 ),
                 (
                     (

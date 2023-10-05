@@ -13,7 +13,6 @@ from cmk.utils import paths
 from cmk.utils.packaging import (
     disable,
     Installer,
-    invalidate_visuals_cache,
     make_post_package_change_actions,
     Manifest,
     PackageID,
@@ -24,6 +23,7 @@ from cmk.utils.packaging import (
     reload_apache,
 )
 from cmk.utils.setup_search_index import request_index_rebuild
+from cmk.utils.visuals import invalidate_visuals_cache
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

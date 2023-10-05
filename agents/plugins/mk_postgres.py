@@ -1197,6 +1197,18 @@ def parse_env_file(env_file):
     return pg_database, pg_port, pg_version
 
 
+def _parse_INSTANCE_value(value, config_separator):
+    # type: (str, str) -> tuple[str, str, str, str]
+    keys = value.split(config_separator)
+    if len(keys) == 3:
+        # Old format (deprecated in Werk 16016), but we don't force updates unless there is
+        # a substantial benefit.
+        keys = keys + [""]
+    env_file, pg_user, pg_passfile, instance_name = keys
+    env_file = env_file.strip()
+    return env_file, pg_user, pg_passfile, instance_name or env_file.split(os.sep)[-1].split(".")[0]
+
+
 def parse_postgres_cfg(postgres_cfg, config_separator):
     # type: (List[str], str) -> Tuple[str, List[Dict[str, Optional[str]]]]
     """
@@ -1213,18 +1225,13 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
         if key == "DBUSER":
             dbuser = value.rstrip()
         if key == "INSTANCE":
-            keys = value.split(config_separator)
-            if len(keys) == 3:
-                # Old format (deprecated in Werk 16016), but we don't force updates unless there is
-                # a substantial benefit.
-                env_file, pg_user, pg_passfile = keys
-            else:
-                env_file, pg_user, pg_passfile, instance_name = keys
-            env_file = env_file.strip()
+            env_file, pg_user, pg_passfile, instance_name = _parse_INSTANCE_value(
+                value, config_separator
+            )
             pg_database, pg_port, pg_version = parse_env_file(env_file)
             instances.append(
                 {
-                    "name": instance_name or env_file.split(os.sep)[-1].split(".")[0],
+                    "name": instance_name,
                     "pg_user": pg_user.strip(),
                     "pg_passfile": pg_passfile.strip(),
                     "pg_database": pg_database,

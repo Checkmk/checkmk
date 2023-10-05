@@ -8,7 +8,7 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterator
-from typing import cast, overload
+from typing import cast, Literal, overload
 
 import cmk.utils.render as render
 from cmk.utils.crypto.password import Password
@@ -913,10 +913,29 @@ class ModeEditUser(WatoMode):
         html.begin_form("user", method="POST")
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
+        is_automation_user = self._user.get("automation_secret", None) is not None
 
         if self._can_edit_users:
             self._render_identity(custom_user_attr_topics)
-            self._render_security(custom_user_attr_topics)
+            self._render_security(
+                {
+                    "password",
+                    "automation",
+                    "disable_password",
+                    "idle_timeout",
+                    "custom_user_attributes",
+                },
+                custom_user_attr_topics,
+                is_automation_user,
+            )
+        elif is_automation_user:
+            self._render_security(
+                {
+                    "automation",
+                },
+                None,
+                is_automation_user,
+            )
 
         # Contact groups
         forms.header(_("Contact Groups"), isopen=False)
@@ -1092,155 +1111,175 @@ class ModeEditUser(WatoMode):
                 )
 
     def _render_security(  # pylint: disable=too-many-branches
-        self, custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]]
+        self,
+        options_to_render: set[
+            Literal[
+                "password",
+                "automation",
+                "disable_password",
+                "idle_timeout",
+                "roles",
+                "custom_user_attributes",
+            ]
+        ],
+        custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]] | None,
+        is_automation: bool,
     ) -> None:
         forms.header(_("Security"))
-        forms.section(_("Authentication"))
 
-        is_automation = self._user.get("automation_secret", None) is not None
-        html.radiobutton(
-            "authmethod", "password", not is_automation, _("Normal user login with password")
-        )
-        html.open_ul()
-        html.open_table()
-        html.open_tr()
-        html.td(_("password:"))
-        html.open_td()
+        if "password" in options_to_render or "automation" in options_to_render:
+            forms.section(_("Authentication"))
 
-        if not self._is_locked("password"):
-            html.password_input("_password_" + self._pw_suffix(), autocomplete="new-password")
-            html.password_meter()
+        if "password" in options_to_render:
+            html.radiobutton(
+                "authmethod", "password", not is_automation, _("Normal user login with password")
+            )
+            html.open_ul()
+            html.open_table()
+            html.open_tr()
+            html.td(_("password:"))
+            html.open_td()
+
+            if not self._is_locked("password"):
+                html.password_input("_password_" + self._pw_suffix(), autocomplete="new-password")
+                html.password_meter()
+                html.close_td()
+                html.close_tr()
+
+                html.open_tr()
+                html.td(_("repeat:"))
+                html.open_td()
+                html.password_input("_password2_" + self._pw_suffix(), autocomplete="new-password")
+                html.write_text(" (%s)" % _("optional"))
+                html.close_td()
+                html.close_tr()
+
+                html.open_tr()
+                html.td("%s:" % _("Enforce change"))
+                html.open_td()
+                # Only make password enforcement selection possible when user is allowed to change the PW
+                if self._is_new_user or (
+                    user_may(self._user_id, "general.edit_profile")
+                    and user_may(self._user_id, "general.change_password")
+                ):
+                    html.checkbox(
+                        "enforce_pw_change",
+                        bool(self._user.get("enforce_pw_change")),
+                        label=_("Change password at next login or access"),
+                    )
+                else:
+                    html.write_text(
+                        _("Not permitted to change the password. Change can not be enforced.")
+                    )
+            else:
+                html.i(_("The password can not be changed (It is locked by the user connector)."))
+                html.hidden_field("_password", "")
+                html.hidden_field("_password2", "")
+
             html.close_td()
             html.close_tr()
+            html.close_table()
+            html.close_ul()
 
-            html.open_tr()
-            html.td(_("repeat:"))
-            html.open_td()
-            html.password_input("_password2_" + self._pw_suffix(), autocomplete="new-password")
-            html.write_text(" (%s)" % _("optional"))
-            html.close_td()
-            html.close_tr()
+        if "automation" in options_to_render:
+            html.radiobutton(
+                "authmethod", "secret", is_automation, _("Automation secret for machine accounts")
+            )
+            html.open_ul()
+            html.password_input(
+                "_auth_secret",
+                "",
+                size=30,
+                id_="automation_secret",
+                placeholder="******" if "automation_secret" in self._user else "",
+                autocomplete="off",
+            )
+            html.write_text(" ")
+            html.open_b(style=["position: relative", "top: 4px;"])
+            html.write_text(" &nbsp;")
+            html.icon_button(
+                "javascript:cmk.wato.randomize_secret('automation_secret', 20, '%s');"
+                % _("Copied secret to clipboard"),
+                _("Create random secret and copy secret to clipboard"),
+                "random",
+            )
+            html.close_b()
+            html.close_ul()
 
-            html.open_tr()
-            html.td("%s:" % _("Enforce change"))
-            html.open_td()
-            # Only make password enforcement selection possible when user is allowed to change the PW
-            if self._is_new_user or (
-                user_may(self._user_id, "general.edit_profile")
-                and user_may(self._user_id, "general.change_password")
-            ):
+        if "password" in options_to_render:
+            html.help(
+                _(
+                    "If you want the user to be able to login "
+                    "then specify a password here. Users without a login make sense "
+                    "if they are monitoring contacts that are just used for "
+                    "notifications. The repetition of the password is optional. "
+                    "<br>For accounts used by automation processes (such as fetching "
+                    "data from views for further procession), set the method to "
+                    "<u>secret</u>. The secret will be stored in a local file. Processes "
+                    "with read access to that file will be able to use Multisite as "
+                    "a webservice without any further configuration."
+                )
+            )
+
+        if "disable_password" in options_to_render:
+            # Locking
+            forms.section(_("Disable password"), simple=True)
+            if not self._is_locked("locked"):
                 html.checkbox(
-                    "enforce_pw_change",
-                    bool(self._user.get("enforce_pw_change")),
-                    label=_("Change password at next login or access"),
+                    "locked",
+                    bool(self._user.get("locked")),
+                    label=_("disable the login to this account"),
                 )
             else:
                 html.write_text(
-                    _("Not permitted to change the password. Change can not be enforced.")
+                    _("Login disabled") if self._user.get("locked", False) else _("Login possible")
                 )
-        else:
-            html.i(_("The password can not be changed (It is locked by the user connector)."))
-            html.hidden_field("_password", "")
-            html.hidden_field("_password2", "")
-
-        html.close_td()
-        html.close_tr()
-        html.close_table()
-        html.close_ul()
-
-        html.radiobutton(
-            "authmethod", "secret", is_automation, _("Automation secret for machine accounts")
-        )
-
-        html.open_ul()
-        html.password_input(
-            "_auth_secret",
-            "",
-            size=30,
-            id_="automation_secret",
-            placeholder="******" if "automation_secret" in self._user else "",
-            autocomplete="off",
-        )
-        html.write_text(" ")
-        html.open_b(style=["position: relative", "top: 4px;"])
-        html.write_text(" &nbsp;")
-        html.icon_button(
-            "javascript:cmk.wato.randomize_secret('automation_secret', 20, '%s');"
-            % _("Copied secret to clipboard"),
-            _("Create random secret and copy secret to clipboard"),
-            "random",
-        )
-        html.close_b()
-        html.close_ul()
-
-        html.help(
-            _(
-                "If you want the user to be able to login "
-                "then specify a password here. Users without a login make sense "
-                "if they are monitoring contacts that are just used for "
-                "notifications. The repetition of the password is optional. "
-                "<br>For accounts used by automation processes (such as fetching "
-                "data from views for further procession), set the method to "
-                "<u>secret</u>. The secret will be stored in a local file. Processes "
-                "with read access to that file will be able to use Multisite as "
-                "a webservice without any further configuration."
+                html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
+            html.help(
+                _(
+                    "Disabling the password will prevent a user from logging in while "
+                    "retaining the original password. Notifications are not affected "
+                    "by this setting."
+                )
             )
-        )
 
-        # Locking
-        forms.section(_("Disable password"), simple=True)
-        if not self._is_locked("locked"):
-            html.checkbox(
-                "locked",
-                bool(self._user.get("locked")),
-                label=_("disable the login to this account"),
-            )
-        else:
-            html.write_text(
-                _("Login disabled") if self._user.get("locked", False) else _("Login possible")
-            )
-            html.hidden_field("locked", "1" if self._user.get("locked", False) else "")
-        html.help(
-            _(
-                "Disabling the password will prevent a user from logging in while "
-                "retaining the original password. Notifications are not affected "
-                "by this setting."
-            )
-        )
-
-        forms.section(_("Idle timeout"))
-        idle_timeout = self._user.get("idle_timeout")
-        if not self._is_locked("idle_timeout"):
-            get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
-        else:
-            html.write_text(idle_timeout)
-            html.hidden_field("idle_timeout", idle_timeout)
-
-        # Roles
-        forms.section(_("Roles"))
-        is_member_of_at_least_one = False
-        html.open_table()
-        for role_id, role in sorted(self._roles.items(), key=lambda x: (x[1]["alias"], x[0])):
-            html.open_tr()
-            html.open_td()
-            if not self._is_locked("roles"):
-                html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
-                url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
-                html.a(role["alias"], href=url)
+        if "idle_timeout" in options_to_render:
+            forms.section(_("Idle timeout"))
+            idle_timeout = self._user.get("idle_timeout")
+            if not self._is_locked("idle_timeout"):
+                get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
             else:
-                is_member = role_id in self._user.get("roles", [])
-                if is_member:
-                    is_member_of_at_least_one = True
+                html.write_text(idle_timeout)
+                html.hidden_field("idle_timeout", idle_timeout)
+
+        if "roles" in options_to_render:
+            # Roles
+            forms.section(_("Roles"))
+            is_member_of_at_least_one = False
+            html.open_table()
+            for role_id, role in sorted(self._roles.items(), key=lambda x: (x[1]["alias"], x[0])):
+                html.open_tr()
+                html.open_td()
+                if not self._is_locked("roles"):
+                    html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
                     url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
                     html.a(role["alias"], href=url)
-                html.hidden_field("role_" + role_id, "1" if is_member else "")
-            html.close_td()
-            html.close_tr()
-        html.close_table()
+                else:
+                    is_member = role_id in self._user.get("roles", [])
+                    if is_member:
+                        is_member_of_at_least_one = True
+                        url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
+                        html.a(role["alias"], href=url)
+                    html.hidden_field("role_" + role_id, "1" if is_member else "")
+                html.close_td()
+                html.close_tr()
+            html.close_table()
 
-        if self._is_locked("roles") and not is_member_of_at_least_one:
-            html.i(_("No roles assigned."))
-        self._show_custom_user_attributes(custom_user_attr_topics.get("security", []))
+            if self._is_locked("roles") and not is_member_of_at_least_one:
+                html.i(_("No roles assigned."))
+
+        if "custom_user_attributes" in options_to_render and custom_user_attr_topics:
+            self._show_custom_user_attributes(custom_user_attr_topics.get("security", []))
 
     def _lockable_input(self, name: str, dflt: str | None) -> None:
         # TODO: The cast is a big fat lie: value can be None, but things somehow seem to "work" even then. :-/

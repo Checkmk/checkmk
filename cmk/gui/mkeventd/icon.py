@@ -64,12 +64,15 @@ class MkeventdIcon(Icon):
         if not args:
             return None
 
-        # Handle -a, -H and -L options. Sorry for the hack. We currently
-        # have no better idea
-        if len(args) >= 2 and args[0] == "-H":
-            args = args[2:]  # skip two arguments
-        if len(args) >= 1 and args[0] in ["-a", "-L", "-l"]:
-            args = args[1:]
+        # First, we remove options without arguments
+        for element in ["-a", "-L", "-l"]:
+            if element in args:
+                args.remove(element)
+
+        # Then, we remove options with 1 argument
+        for i, element in enumerate(args):
+            if element in ["-H", "-s"]:
+                args = args[:i] + args[i + 2 :]
 
         if len(args) >= 1:
             host = _get_hostname(args, row)

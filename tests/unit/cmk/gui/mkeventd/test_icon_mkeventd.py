@@ -170,7 +170,7 @@ class IconRenderResult(NamedTuple):
                 row={
                     "site": "heute",
                     "host_name": "heute",
-                    "service_check_command": "check_mk_active-mkevents!-L '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                    "service_check_command": "check_mk_active-mkevents!'-L' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
                 custom_vars={},
@@ -181,6 +181,63 @@ class IconRenderResult(NamedTuple):
                 url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
             id="-L parameter handling",
+        ),
+        # Check how the parser handles two single parameters in service_check_command
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'-a' '-l' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="Handling of multiple parameters without arguments",
+        ),
+        # Check how the parser handles -H parameter in service_check_command
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'-H' '127.0.0.1:12345' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="Handling of parameter with argument",
+        ),
+        # Check how the parser handles -H parameter in service_check_command
+        pytest.param(
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'-H' '127.0.0.1:12345' '-L' '-a' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
+            id="Handling of multiple parameters with and without argument",
         ),
     ],
 )

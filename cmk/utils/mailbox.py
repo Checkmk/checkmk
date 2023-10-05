@@ -27,9 +27,10 @@ import socket
 import sys
 import time
 import warnings
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from datetime import datetime
+from email.message import Message as POPIMAPMessage
 from typing import Any, Literal
 
 import urllib3
@@ -42,10 +43,9 @@ from exchangelib import (  # type: ignore[import]
     EWSTimeZone,
     Identity,
     IMPERSONATION,
-    OAUTH2,
-    OAuth2Credentials,
-    protocol,
 )
+from exchangelib import Message as EWSMessage
+from exchangelib import OAUTH2, OAuth2Credentials, protocol  # type: ignore[import]
 
 import cmk.utils.password_store
 
@@ -56,9 +56,10 @@ CheckResult = tuple[Status, str, PerfData]
 
 MailIndex = int
 
-Message = Any
+Message = POPIMAPMessage | EWSMessage
 
-MailMessages = dict[MailIndex, Message]
+MailMessages = Mapping[MailIndex, Message]  # type: ignore[valid-type]
+POPIMAPMailMessages = Mapping[MailIndex, POPIMAPMessage]
 
 
 class EWS:
@@ -215,7 +216,7 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
 
 
 def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
-    """Return the payload part of the (badly typed) result of IMAP/POP functions or eventlually
+    """Return the payload part of the (badly typed) result of IMAP/POP functions or eventually
     raise an exception if the result is not "OK"
     """
     if isinstance(data, tuple):
@@ -356,7 +357,8 @@ class Mailbox:
             return self._connection.folders()
         raise AssertionError("connection must be IMAP4[_SSL] or EWS")
 
-    def _fetch_mails(self) -> MailMessages:
+    def fetch_mails(self, subject_pattern: str = "") -> MailMessages:
+        """Return mails contained in the currently selected folder matching @subject_pattern"""
         assert self._connection is not None
 
         def _fetch_mails_pop3() -> MailMessages:
@@ -390,24 +392,24 @@ class Mailbox:
                     ) from exc
             return mails
 
+        pattern = re.compile(subject_pattern) if subject_pattern else None
         try:
             inbox_protocol = self.inbox_protocol()
             if inbox_protocol == "POP3":
-                return _fetch_mails_pop3()
+                return {
+                    num: msg
+                    for num, msg in _fetch_mails_pop3().items()
+                    if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
+                }
             if inbox_protocol == "IMAP":
-                return _fetch_mails_imap()
+                return {
+                    num: msg
+                    for num, msg in _fetch_mails_imap().items()
+                    if pattern is None or pattern.match(msg.get("Subject", ""))  # type: ignore[attr-defined]
+                }
             raise NotImplementedError(f"Fetching mails is not implemented for {inbox_protocol}")
         except Exception as exc:
             raise FetchMailsError("Failed to check for mails: %r" % exc) from exc
-
-    def fetch_mails(self, subject_pattern: str = "") -> MailMessages:
-        """Return mails contained in the currently selected folder matching @subject_pattern"""
-        pattern = re.compile(subject_pattern) if subject_pattern else None
-        return {
-            index: msg
-            for index, msg in self._fetch_mails().items()
-            if pattern is None or pattern.match(msg.get("Subject", ""))
-        }
 
     def select_folder(self, folder_name: str) -> int:
         """Select folder @folder_name and return the number of mails contained"""

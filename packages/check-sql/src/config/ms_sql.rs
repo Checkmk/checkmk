@@ -36,6 +36,10 @@ mod keys {
     pub const EXCLUDE: &str = "exclude";
 
     pub const MODE: &str = "mode";
+
+    pub const SID: &str = "sid";
+    pub const ALIAS: &str = "alias";
+    pub const PIGGYBACK: &str = "piggyback";
 }
 
 mod values {
@@ -289,17 +293,17 @@ impl Default for Sqls {
 }
 
 impl Sqls {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let sqls = yaml.get(keys::SQLS);
         if sqls.is_badvalue() {
-            return Ok(Sqls::default());
+            return Ok(None);
         }
-        Ok(Self {
+        Ok(Some(Self {
             always: sqls.get_string_vector(keys::ALWAYS, defaults::SQLS_ALWAYS)?,
             cached: sqls.get_string_vector(keys::CACHED, defaults::SQLS_CACHED)?,
             disabled: sqls.get_string_vector(keys::DISABLED, &[])?,
             cache_age: sqls.get_int(keys::CACHE_AGE, defaults::SQLS_CACHE_AGE),
-        })
+        }))
     }
     pub fn always(&self) -> &Vec<String> {
         &self.always
@@ -390,25 +394,42 @@ impl TryFrom<Option<&str>> for Mode {
 
 #[derive(PartialEq, Debug)]
 pub struct Instance {
-    name: String,
+    sid: String,
     auth: Authentication,
-    conn: Option<Connection>,
-    alias: String,
+    conn: Connection,
+    alias: Option<String>,
     piggyback: Option<Piggyback>,
 }
 
 impl Instance {
-    pub fn name(&self) -> &String {
-        &self.name
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+        use yaml_rust::YamlEmitter;
+
+        let mut out_str = String::new();
+        let mut emitter = YamlEmitter::new(&mut out_str);
+        emitter.dump(yaml).unwrap(); // dump the YAML object to a String
+        println!("{}", out_str);
+        Ok(Some(Self {
+            sid: yaml
+                .get_string(keys::SID)
+                .context("Bad/Missing sid in instance")?,
+            auth: Authentication::from_yaml(yaml)?,
+            conn: Connection::from_yaml(yaml)?,
+            alias: yaml.get_string(keys::ALIAS),
+            piggyback: Piggyback::from_yaml(yaml)?,
+        }))
+    }
+    pub fn sid(&self) -> &String {
+        &self.sid
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
     }
-    pub fn conn(&self) -> Option<&Connection> {
-        self.conn.as_ref()
+    pub fn conn(&self) -> &Connection {
+        &self.conn
     }
-    pub fn alias(&self) -> &String {
-        &self.alias
+    pub fn alias(&self) -> Option<&String> {
+        self.alias.as_ref()
     }
     pub fn piggyback(&self) -> Option<&Piggyback> {
         self.piggyback.as_ref()
@@ -418,16 +439,29 @@ impl Instance {
 #[derive(PartialEq, Debug)]
 pub struct Piggyback {
     hostname: String,
-    sqls: Option<Sqls>,
+    sqls: Sqls,
 }
 
 impl Piggyback {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+        let piggyback = yaml.get(keys::PIGGYBACK);
+        if piggyback.is_badvalue() {
+            return Ok(None);
+        }
+        Ok(Some(Self {
+            hostname: piggyback
+                .get_string(keys::HOSTNAME)
+                .context("Bad/Missing hostname in piggyback")?,
+            sqls: Sqls::from_yaml(piggyback)?.context("sqls is absent")?,
+        }))
+    }
+
     pub fn hostname(&self) -> &String {
         &self.hostname
     }
 
-    pub fn sqls(&self) -> Option<&Sqls> {
-        self.sqls.as_ref()
+    pub fn sqls(&self) -> &Sqls {
+        &self.sqls
     }
 }
 
@@ -563,7 +597,7 @@ connection:
     }
     #[test]
     fn test_sqls_from_yaml_full() {
-        let s = Sqls::from_yaml(&create_sqls_yaml_full()).unwrap();
+        let s = Sqls::from_yaml(&create_sqls_yaml_full()).unwrap().unwrap();
         assert_eq!(s.always(), &vec!["aaa".to_string(), "bbb".to_string()]);
         assert_eq!(s.cached(), &vec!["ccc".to_string(), "ddd".to_string()]);
         assert_eq!(s.disabled(), &vec!["eee".to_string()]);
@@ -588,12 +622,14 @@ sqls:
 
     #[test]
     fn test_sqls_from_yaml_default() {
-        let s = Sqls::from_yaml(&create_sqls_yaml_default()).unwrap();
+        let s = Sqls::from_yaml(&create_sqls_yaml_default())
+            .unwrap()
+            .unwrap();
         assert_eq!(s.always(), defaults::SQLS_ALWAYS.clone());
         assert_eq!(s.cached(), defaults::SQLS_CACHED.clone());
         assert!(s.disabled().is_empty());
         assert_eq!(s.cache_age(), defaults::SQLS_CACHE_AGE);
-        assert_eq!(s, Sqls::from_yaml(&create_yaml("_sqls:\n")).unwrap());
+        assert!(Sqls::from_yaml(&create_yaml("_sqls:\n")).unwrap().is_none());
     }
 
     fn create_sqls_yaml_default() -> Yaml {
@@ -657,5 +693,102 @@ discovery:
             Mode::from_yaml(&create_yaml("mode: Special")).unwrap(),
             Mode::Special
         );
+    }
+
+    #[test]
+    fn test_piggyback() {
+        let piggyback = Piggyback::from_yaml(&create_piggyback_yaml_default())
+            .unwrap()
+            .unwrap();
+        assert_eq!(piggyback.hostname(), "piggy_host");
+        let sqls = piggyback.sqls();
+        assert_eq!(
+            sqls.always(),
+            &["alw1", "alw2"].map(str::to_string).to_vec()
+        );
+        assert_eq!(
+            sqls.cached(),
+            &["cache1", "cache2"].map(str::to_string).to_vec()
+        );
+        assert_eq!(sqls.disabled(), &["disabled"].map(str::to_string).to_vec());
+        assert_eq!(sqls.cache_age(), 111);
+    }
+
+    fn create_piggyback_yaml_default() -> Yaml {
+        const SOURCE: &str = r#"
+piggyback:
+  hostname: "piggy_host"
+  sqls:
+    always:
+      - "alw1"
+      - "alw2"
+    cached:
+      - "cache1"
+      - "cache2"
+    disabled:
+      - "disabled"
+    cache_age: 111
+"#;
+        create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_piggyback_error() {
+        assert!(Piggyback::from_yaml(&create_piggyback_yaml_no_hostname()).is_err());
+        assert!(Piggyback::from_yaml(&create_piggyback_yaml_no_sqls()).is_err());
+    }
+
+    fn create_piggyback_yaml_no_hostname() -> Yaml {
+        const SOURCE: &str = r#"
+piggyback:
+  _hostname: "piggy_host"
+  sqls:
+    cache_age: 111
+"#;
+        create_yaml(SOURCE)
+    }
+
+    fn create_piggyback_yaml_no_sqls() -> Yaml {
+        const SOURCE: &str = r#"
+piggyback:
+  hostname: "piggy_host"
+  _sqls:
+    cache_age: 111
+"#;
+        create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_piggyback_none() {
+        assert_eq!(
+            Piggyback::from_yaml(&create_yaml("source:\n  xxx")).unwrap(),
+            None
+        );
+    }
+    #[test]
+    fn test_instance() {
+        let instance = Instance::from_yaml(&create_instance()).unwrap().unwrap();
+        assert_eq!(instance.sid(), "INST1");
+        assert_eq!(instance.auth().username(), "u1");
+        assert_eq!(instance.conn().hostname(), "h1");
+        assert_eq!(instance.alias().unwrap(), "a1");
+        assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
+        assert_eq!(instance.piggyback().unwrap().sqls().cache_age(), 123);
+    }
+
+    fn create_instance() -> Yaml {
+        const SOURCE: &str = r#"
+    sid: "INST1"
+    authentication:
+      username: "u1"
+    connection:
+      hostname: "h1"
+    alias: "a1"
+    piggyback:
+      hostname: "piggy"
+      sqls:
+        cache_age: 123
+"#;
+        create_yaml(SOURCE)
     }
 }

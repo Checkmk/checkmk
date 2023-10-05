@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::yaml::{Get, Yaml};
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::path::{Path, PathBuf};
 
 mod keys {
@@ -36,6 +36,8 @@ mod keys {
     pub const ALL: &str = "all";
     pub const INCLUDE: &str = "include";
     pub const EXCLUDE: &str = "exclude";
+
+    pub const MODE: &str = "mode";
 }
 
 mod defaults {
@@ -348,6 +350,25 @@ pub enum Mode {
     Special,
 }
 
+impl Mode {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+        Mode::try_from(yaml.get_string(keys::MODE).as_deref())
+    }
+}
+
+impl TryFrom<Option<&str>> for Mode {
+    type Error = anyhow::Error;
+
+    fn try_from(str: Option<&str>) -> Result<Self> {
+        match str.map(str::to_ascii_lowercase).as_deref() {
+            Some("port") | None => Ok(Mode::Port),
+            Some("socket") => Ok(Mode::Socket),
+            Some("special") => Ok(Mode::Special),
+            _ => Err(anyhow!("unsupported mode")),
+        }
+    }
+}
+
 #[derive(PartialEq, Debug)]
 pub struct Instance {
     name: String,
@@ -599,5 +620,23 @@ discovery:
   _nothing: "nothing"
 "#;
         create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_mode_try_from() {
+        assert!(Mode::try_from(Some("a")).is_err());
+        assert_eq!(Mode::try_from(None).unwrap(), Mode::Port);
+        assert_eq!(Mode::try_from(Some("poRt")).unwrap(), Mode::Port);
+        assert_eq!(Mode::try_from(Some("soCKET")).unwrap(), Mode::Socket);
+        assert_eq!(Mode::try_from(Some("SPecial")).unwrap(), Mode::Special);
+    }
+
+    #[test]
+    fn test_mode_from_yaml() {
+        assert!(Mode::from_yaml(&create_yaml("mode: Zu")).is_err());
+        assert_eq!(
+            Mode::from_yaml(&create_yaml("mode: Special")).unwrap(),
+            Mode::Special
+        );
     }
 }

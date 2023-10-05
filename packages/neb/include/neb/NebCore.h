@@ -182,6 +182,7 @@ public:
     [[nodiscard]] std::chrono::system_clock::time_point lastCommandCheckTime()
         const override;
     [[nodiscard]] int32_t intervalLength() const override;
+    [[nodiscard]] int32_t maxLongOutputSize() const override;
     [[nodiscard]] int32_t numHosts() const override;
     [[nodiscard]] int32_t numServices() const override;
     [[nodiscard]] std::string programVersion() const override;

@@ -178,6 +178,9 @@ TableStatus::TableStatus(ICore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn<ICore>>(
         "interval_length", "The default interval length", offsets,
         [](const ICore &r) { return r.intervalLength(); }));
+    addColumn(std::make_unique<IntColumn<ICore>>(
+        "max_long_output_size", "Maximum length of long output", offsets,
+        [](const ICore &r) { return r.maxLongOutputSize(); }));
 
     addColumn(std::make_unique<IntColumn<ICore>>(
         "num_hosts", "The total number of hosts", offsets,

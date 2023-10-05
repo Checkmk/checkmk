@@ -414,6 +414,7 @@ std::chrono::system_clock::time_point NebCore::lastCommandCheckTime() const {
         nagios_compat_last_command_check());
 }
 int32_t NebCore::intervalLength() const { return interval_length; }
+int32_t NebCore::maxLongOutputSize() const { return 0; }
 int32_t NebCore::numHosts() const { return g_num_hosts; }
 int32_t NebCore::numServices() const { return g_num_services; }
 std::string NebCore::programVersion() const { return get_program_version(); }

@@ -214,6 +214,7 @@ class DummyMonitoringCore : public ICore {
         return {};
     }
     [[nodiscard]] int32_t intervalLength() const override { return {}; }
+    [[nodiscard]] int32_t maxLongOutputSize() const override { return {}; }
     [[nodiscard]] int32_t numHosts() const override { return {}; }
     [[nodiscard]] int32_t numServices() const override { return {}; }
     [[nodiscard]] std::string programVersion() const override { return {}; }
@@ -1081,6 +1082,7 @@ ColumnDefinitions status_columns() {
         {"influxdb_queue_usage", ColumnType::double_},
         {"influxdb_queue_usage_rate", ColumnType::double_},
         {"interval_length", ColumnType::int_},
+        {"max_long_output_size", ColumnType::int_},
         {"last_command_check", ColumnType::time},
         {"last_log_rotation", ColumnType::time},
         {"license_usage_history", ColumnType::blob},

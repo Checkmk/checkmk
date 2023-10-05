@@ -35,6 +35,7 @@ from cmk.checkengine.parser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
+import cmk.base.core_config as core_config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
@@ -159,13 +160,26 @@ class _Builder:
         def make_special_agents() -> Iterable[Source]:
             for agentname, params in self.config_cache.special_agents(self.host_name):
                 with suppress(KeyError):
+                    cmdline = self.config_cache.make_special_agent_cmdline(
+                        self.host_name,
+                        self.ipaddress,
+                        agentname,
+                        params,
+                    )
+                    stdin = core_config.make_special_agent_stdin(
+                        self.host_name,
+                        self.ipaddress,
+                        agentname,
+                        params,
+                    )
                     yield SpecialAgentSource(
                         self.config_cache,
                         self.host_name,
                         self.ipaddress,
                         max_age=self.max_age_agent,
                         agent_name=agentname,
-                        params=params,
+                        cmdline=cmdline,
+                        stdin=stdin,
                     )
 
         special_agents = tuple(make_special_agents())

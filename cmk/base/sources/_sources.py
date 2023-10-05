@@ -5,7 +5,6 @@
 
 # TODO This module should be freed from base deps.
 
-from collections.abc import Mapping
 from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
@@ -30,7 +29,6 @@ from cmk.checkengine.fetcher import SourceInfo, SourceType
 from cmk.checkengine.parser import SectionNameCollection
 
 import cmk.base.config as config
-import cmk.base.core_config as core_config
 from cmk.base.config import ConfigCache
 
 from ._api import Source
@@ -370,7 +368,8 @@ class SpecialAgentSource(Source[AgentRawData]):
         *,
         max_age: MaxAge,
         agent_name: str,
-        params: Mapping[str, object],
+        stdin: str | None,
+        cmdline: str,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -378,7 +377,8 @@ class SpecialAgentSource(Source[AgentRawData]):
         self.ipaddress: Final = ipaddress
         self._max_age: Final = max_age
         self._agent_name: Final = agent_name
-        self._params: Final = params
+        self._stdin: Final = stdin
+        self._cmdline: Final = cmdline
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -391,18 +391,8 @@ class SpecialAgentSource(Source[AgentRawData]):
 
     def fetcher(self) -> Fetcher[AgentRawData]:
         return ProgramFetcher(
-            cmdline=self.config_cache.make_special_agent_cmdline(
-                self.host_name,
-                self.ipaddress,
-                self._agent_name,
-                self._params,
-            ),
-            stdin=core_config.make_special_agent_stdin(
-                self.host_name,
-                self.ipaddress,
-                self._agent_name,
-                self._params,
-            ),
+            cmdline=self._cmdline,
+            stdin=self._stdin,
             is_cmc=config.is_cmc(),
         )
 

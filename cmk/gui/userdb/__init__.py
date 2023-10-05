@@ -16,6 +16,7 @@ from ._check_credentials import user_exists_according_to_profile as user_exists_
 from ._check_credentials import user_locked as user_locked
 from ._connections import active_connections as active_connections
 from ._connections import active_connections_by_type as active_connections_by_type
+from ._connections import builtin_connections
 from ._connections import clear_user_connection_cache as clear_user_connection_cache
 from ._connections import connection_choices as connection_choices
 from ._connections import connections_by_type as connections_by_type
@@ -103,6 +104,7 @@ __all__ = [
     "UserSpec",
     "write_contacts_and_users_file",
     "UserSyncBackgroundJob",
+    "builtin_connections",
 ]
 
 

@@ -69,8 +69,7 @@ def _get_connections_for(configs: list[dict[str, Any]]) -> list[tuple[str, UserC
 
 
 def _get_connection_configs() -> list[dict[str, Any]]:
-    # The htpasswd connector is enabled by default and always executed first.
-    return [_HTPASSWD_CONNECTION] + active_config.user_connections
+    return builtin_connections + active_config.user_connections
 
 
 _HTPASSWD_CONNECTION = {
@@ -78,6 +77,9 @@ _HTPASSWD_CONNECTION = {
     "id": "htpasswd",
     "disabled": False,
 }
+# The htpasswd connector is enabled by default and always executed first.
+# NOTE: This list may be appended to in edition specific registration functions.
+builtin_connections = [_HTPASSWD_CONNECTION]
 
 
 # The saved configuration for user connections is a bit inconsistent, let's fix

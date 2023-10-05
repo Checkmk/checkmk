@@ -1,0 +1,15 @@
+Title: dcd handle connection failure during phase 1.1 more leniently
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1699533379
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p37
+
+In some cases, it is possible that the connection fails
+when the dcd attempts to fetch the result from a remote site
+during phase 1.1. This werk introduces proper error handling
+for such scenarios in order to prevent any unexpected
+follow-up behaviour.

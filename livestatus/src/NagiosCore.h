@@ -144,6 +144,7 @@ public:
     std::chrono::system_clock::time_point programStartTime() const override;
     std::chrono::system_clock::time_point lastCommandCheckTime() const override;
     int32_t intervalLength() const override;
+    int32_t maxLongOutputSize() const override;
     int32_t numHosts() const override;
     int32_t numServices() const override;
     std::string programVersion() const override;

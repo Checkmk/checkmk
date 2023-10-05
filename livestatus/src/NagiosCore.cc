@@ -336,6 +336,7 @@ std::chrono::system_clock::time_point NagiosCore::lastCommandCheckTime() const {
         nagios_compat_last_command_check());
 }
 int32_t NagiosCore::intervalLength() const { return interval_length; }
+int32_t NagiosCore::maxLongOutputSize() const { return 0; }
 int32_t NagiosCore::numHosts() const { return g_num_hosts; }
 int32_t NagiosCore::numServices() const { return g_num_services; }
 std::string NagiosCore::programVersion() const { return get_program_version(); }

@@ -120,6 +120,7 @@ public:
     [[nodiscard]] virtual std::chrono::system_clock::time_point
     lastCommandCheckTime() const = 0;
     [[nodiscard]] virtual int32_t intervalLength() const = 0;
+    [[nodiscard]] virtual int32_t maxLongOutputSize() const = 0;
     [[nodiscard]] virtual int32_t numHosts() const = 0;
     [[nodiscard]] virtual int32_t numServices() const = 0;
     [[nodiscard]] virtual std::string programVersion() const = 0;

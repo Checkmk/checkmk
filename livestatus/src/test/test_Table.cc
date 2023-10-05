@@ -766,6 +766,7 @@ static ColumnDefinitions status_columns() {
         {"influxdb_queue_usage", ColumnType::double_},
         {"influxdb_queue_usage_rate", ColumnType::double_},
         {"interval_length", ColumnType::int_},
+        {"max_long_output_size", ColumnType::int_},
         {"is_trial_expired", ColumnType::int_},
         {"last_command_check", ColumnType::time},
         {"last_log_rotation", ColumnType::time},

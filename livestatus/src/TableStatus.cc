@@ -189,6 +189,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "interval_length", "The default interval length", offsets,
         [](const TableStatus & /*r*/) { return interval_length; }));
+    addColumn(std::make_unique<IntColumn<TableStatus>>(
+        "max_long_output_size", "Maximum length of long output", offsets,
+        [mc](const TableStatus & /*r*/) { return mc->maxLongOutputSize(); }));
 
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "num_hosts", "The total number of hosts", offsets,

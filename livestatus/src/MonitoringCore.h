@@ -94,6 +94,7 @@ public:
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
     virtual std::chrono::system_clock::time_point last_config_change() = 0;
     [[nodiscard]] virtual size_t maxLinesPerLogFile() const = 0;
+    [[nodiscard]] virtual int32_t maxLongOutputSize() const = 0;
 
     [[nodiscard]] virtual Command find_command(
         const std::string &name) const = 0;

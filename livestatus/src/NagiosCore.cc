@@ -108,6 +108,8 @@ size_t NagiosCore::maxLinesPerLogFile() const {
     return _limits._max_lines_per_logfile;
 }
 
+int32_t NagiosCore::maxLongOutputSize() const { return 0; }
+
 Command NagiosCore::find_command(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {

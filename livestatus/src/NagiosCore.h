@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <map>
@@ -78,6 +79,7 @@ public:
     std::chrono::system_clock::time_point last_logfile_rotation() override;
     std::chrono::system_clock::time_point last_config_change() override;
     size_t maxLinesPerLogFile() const override;
+    int32_t maxLongOutputSize() const override;
 
     Command find_command(const std::string &name) const override;
     std::vector<Command> commands() const override;

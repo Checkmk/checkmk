@@ -197,7 +197,7 @@ class BackupTask:
                 ),
                 (
                     "transferred",
-                    r"^INFO: transferred (.*) in (\d+) seconds \(.*\)$",
+                    r"^INFO: transferred (.*) in <?(\d+) seconds(.*)$",
                 ),
                 (
                     "uploaded",

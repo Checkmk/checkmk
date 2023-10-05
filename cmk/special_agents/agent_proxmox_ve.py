@@ -218,6 +218,7 @@ class BackupTask:
             {"started_time", "total_duration", "transfer_size", "transfer_time"},
             {"started_time", "total_duration", "upload_amount", "upload_time", "upload_total"},
             {"started_time", "total_duration", "backup_amount", "backup_time", "backup_total"},
+            {"started_time", "total_duration", "archive_name", "archive_size"},
         )
 
         result: Dict[str, Dict[str, Any]] = {}  # mutable Mapping[str, Mapping[str, Any]]

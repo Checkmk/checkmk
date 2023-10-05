@@ -447,6 +447,18 @@ from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_in
             },
             None,
         ),
+        (
+            "proxmox_ve-backup-2023-10-01.log",
+            {
+                "9001": {
+                    "archive_name": "/mnt/pve/backup/dump/vzdump-qemu-9001-2023_10_01-07_00_01.vma.zst",
+                    "archive_size": 1050000000,
+                    "started_time": "2023-10-01 07:00:01",
+                    "total_duration": 46.0,
+                },
+            },
+            None,
+        ),
     ),
 )
 def test_parse_backup_logs(logfile, expected_results, expected_exception) -> None:

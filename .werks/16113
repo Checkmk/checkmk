@@ -1,0 +1,12 @@
+Title: event console: Incorrect title and link to the event console
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1696513660
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p35
+
+This Werk fixes the generation of the title and the link to access the event console when the responsible command has more than one argument.

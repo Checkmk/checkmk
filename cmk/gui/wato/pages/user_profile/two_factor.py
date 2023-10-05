@@ -87,7 +87,14 @@ fido2.features.webauthn_json_mapping.enabled = True
 def make_fido2_server() -> Fido2Server:
     rp_id = request.host
     logger.debug("Using %r as relaying party ID", rp_id)
-    return Fido2Server(PublicKeyCredentialRpEntity(name="Checkmk", id=rp_id))
+    # apparently the browsers allow localhost as a secure domain, but the
+    # Fido2Server does not. We do not really care if the rp_id is also the
+    # origin sent from the browser. We feel the browser is supposed to check
+    # for that. So the verify_origin function should always return True...
+    return Fido2Server(
+        PublicKeyCredentialRpEntity(name="Checkmk", id=rp_id),
+        verify_origin=lambda _o: True,
+    )
 
 
 overview_page_name: str = "user_two_factor_overview"

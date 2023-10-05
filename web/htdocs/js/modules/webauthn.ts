@@ -84,6 +84,12 @@ export function register() {
             throw new Error("Error getting registration data!");
         })
         .then(function (options) {
+            if (!("credentials" in navigator)) {
+                throw new DOMException(
+                    "navigator does not have credentials property, probably no https?",
+                    "SecurityError"
+                );
+            }
             return navigator.credentials.create(
                 parseCreationOptionsFromJSON(options)
             );
@@ -182,6 +188,12 @@ export function login() {
             throw new Error("No credential available to authenticate!");
         })
         .then(function (options) {
+            if (!("credentials" in navigator)) {
+                throw new DOMException(
+                    "navigator does not have credentials property, probably no https?",
+                    "SecurityError"
+                );
+            }
             return navigator.credentials.get(
                 parseRequestOptionsFromJSON(options)
             );
@@ -192,7 +204,6 @@ export function login() {
                 assertionPkc.response as AuthenticatorAssertionResponse;
             return fetch("user_webauthn_login_complete.py", {
                 method: "POST",
-                headers: {"Content-Type": "application/cbor"},
                 body: JSON.stringify({
                     credentialId: btoa(
                         String.fromCharCode(

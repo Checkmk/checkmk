@@ -600,23 +600,10 @@ class Endpoint:
 
         _verify_parameters(self.path, path_schema)
 
-        def _mandatory_parameter_names(*_params):
-            schema: type[Schema]
-            req = []
-            for schema in _params:
-                if not schema:
-                    continue
-                for name, field in schema().declared_fields.items():
-                    if field.required:
-                        req.append(field.attribute or name)
-            return tuple(sorted(req))
-
-        params = _mandatory_parameter_names(header_schema, path_schema, query_schema)
-
         # Call to see if a Rule can be constructed. Will throw an AttributeError if not possible.
         _ = self.default_path
 
-        ENDPOINT_REGISTRY.add_endpoint(self, params)
+        ENDPOINT_REGISTRY.add_endpoint(self)
 
         if (
             self.content_type == "application/json"

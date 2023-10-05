@@ -396,7 +396,6 @@ class EndpointEntry(TypedDict, total=True):
     href: str
     method: HTTPMethod
     rel: LinkRelation
-    parameters: Sequence[OpenAPIParameter]
 
 
 EndpointKey = tuple[str, LinkRelation]

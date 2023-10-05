@@ -1,0 +1,28 @@
+INFO: trying to get global lock - waiting...
+INFO: got global lock
+INFO: starting new backup job: vzdump --quiet 1 --storage backup --mailto foo@bar.de --pool infr --mailnotification failure --mode snapshot --compress zstd
+INFO: skip external VMs: 666
+INFO: Starting Backup of VM 255 (qemu)
+INFO: Backup started at 2023-09-23 04:35:29
+INFO: status = running
+INFO: VM Name: foobar.de
+INFO: exclude disk 'scsi0' 'PVE99-0005:255/vm-255-disk-1.qcow2' (backup=no)
+INFO: exclude disk 'scsi1' 'PVE99-0005:255/vm-255-disk-2.qcow2' (backup=no)
+INFO: include disk 'efidisk0' 'PVE99-0005:255/vm-255-disk-0.qcow2' 128K
+INFO: backup mode: snapshot
+INFO: ionice priority: 7
+INFO: creating vzdump archive '/mnt/pve/backup/dump/vzdump-qemu-255-2023_09_23-04_35_29.vma.zst'
+INFO: issuing guest-agent 'fs-freeze' command
+INFO: issuing guest-agent 'fs-thaw' command
+INFO: started backup task '123456789'
+INFO: resuming VM again
+INFO: 100% (128.0 KiB of 128.0 KiB) in 0s, read: 128.0 KiB/s, write: 128.0 KiB/s
+INFO: transferred 128.00 KiB in <1 seconds
+INFO: archive file size: 2KB
+INFO: prune older backups with retention: keep-last=2
+INFO: removing backup 'backup:backup/vzdump-qemu-255-2023_09_09-04_23_10.vma.zst'
+INFO: pruned 1 backup(s) not covered by keep-retention policy
+INFO: Finished Backup of VM 255 (00:00:00)
+INFO: Backup finished at 2023-09-23 04:35:29
+INFO: Backup job finished successfully
+TASK OK

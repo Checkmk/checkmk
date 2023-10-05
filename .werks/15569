@@ -1,0 +1,21 @@
+Title: Handle template backups with agent_proxmox
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696513059
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Till now, template backups were ignored by the special agent proxmox as they are missing some previously required data.
+We now continue processing those kind of backups with a minimal set of information:
+
+<ul>
+<li> started_time
+<li> total_duration
+<li> archive_name
+<li> archive_size
+</ul>
+

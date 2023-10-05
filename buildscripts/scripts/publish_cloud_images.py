@@ -138,7 +138,7 @@ class AWSPublisher(CloudPublisher):
         image_id = self.get_ami_image_id()
         update_details = {
             "Version": {
-                "VersionTitle": self.version,
+                "VersionTitle": str(self.version),
                 "ReleaseNotes": self.build_release_notes_url(str(self.version)),
             },
             "DeliveryOptions": [

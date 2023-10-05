@@ -138,6 +138,7 @@ def test_upload_signing_keys(
     delete_key(logged_in_page, fingerprint)
 
 
+@pytest.mark.skip("Skipped due to CMK-14702")
 def test_add_key(logged_in_page: PPage) -> None:
     """Add a key, aka let Checkmk generate it."""
     go_to_signature_page(logged_in_page)

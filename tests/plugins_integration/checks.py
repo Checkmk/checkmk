@@ -307,9 +307,9 @@ def process_check_output(
         check_canons = {}
 
     check_results = {
-        _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
+        _: item.get("extensions") for _, item in sorted(get_check_results(site, host_name).items())
     }
-    for check_id in sorted(check_results):
+    for check_id in check_results:
         logger.debug('> Processing check id "%s"...', check_id)
         check_canon = check_canons.get(check_id, {})
         check_result = check_results.get(check_id, {})

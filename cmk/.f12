@@ -44,15 +44,14 @@ TARGET="${ROOT}/share/check_mk/checks/"
 # would screw up our include caching mechanism!
 sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/legacy_checks/" "${TARGET}"
 sudo find "${TARGET}" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
-# modern check plugins:
-sudo rsync -rlpgoD --exclude="__pycache__" --delete-after "base/plugins/agent_based/" "${ROOT}/lib/python3/cmk/base/plugins/agent_based/"
 
 echo "Copy files..."
 sudo rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
     --exclude="base/legacy_checks" \
-    --exclude="base/plugins/agent_based" \
+    --exclude="__pycache__" \
+    --delete-after \
     -aR \
     "${PYTHON3_PATHS[@]}" \
     "$ROOT"/lib/python3/cmk/

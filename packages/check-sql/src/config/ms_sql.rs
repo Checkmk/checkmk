@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::yaml::{Get, Yaml};
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 use std::path::{Path, PathBuf};
 
 mod keys {
@@ -12,8 +12,6 @@ mod keys {
     pub const PASSWORD: &str = "password";
     pub const TYPE: &str = "type";
     pub const ACCESS_TOKEN: &str = "access_token";
-    pub const SYSTEM: &str = "system";
-    pub const WINDOWS: &str = "windows";
 
     pub const CONNECTION: &str = "connection";
     pub const HOSTNAME: &str = "hostname";
@@ -38,6 +36,19 @@ mod keys {
     pub const EXCLUDE: &str = "exclude";
 
     pub const MODE: &str = "mode";
+}
+
+mod values {
+    /// AuthType::System
+    pub const SYSTEM: &str = "system";
+    /// AuthType::Windows
+    pub const WINDOWS: &str = "windows";
+    /// Mode::Port
+    pub const PORT: &str = "port";
+    /// Mode::Socket
+    pub const SOCKET: &str = "socket";
+    /// AuthType::Special
+    pub const SPECIAL: &str = "special";
 }
 
 mod defaults {
@@ -132,11 +143,7 @@ impl Authentication {
                 .get_string(keys::USERNAME)
                 .context("bad/absent username")?,
             password: auth.get_string(keys::PASSWORD),
-            auth_type: match auth.get_string(keys::TYPE).as_deref() {
-                Some(keys::SYSTEM) | None => AuthType::System,
-                Some(keys::WINDOWS) => AuthType::Windows,
-                _ => bail!("unknown auth type"),
-            },
+            auth_type: AuthType::try_from(auth.get_string(keys::TYPE).as_deref())?,
             access_token: auth.get_string(keys::ACCESS_TOKEN),
         })
     }
@@ -158,6 +165,18 @@ impl Authentication {
 pub enum AuthType {
     System,
     Windows,
+}
+
+impl TryFrom<Option<&str>> for AuthType {
+    type Error = anyhow::Error;
+
+    fn try_from(str: Option<&str>) -> Result<Self> {
+        match str.map(str::to_ascii_lowercase).as_deref() {
+            Some(values::SYSTEM) | None => Ok(AuthType::System),
+            Some(values::WINDOWS) => Ok(AuthType::Windows),
+            _ => Err(anyhow!("unsupported auth type")),
+        }
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -361,9 +380,9 @@ impl TryFrom<Option<&str>> for Mode {
 
     fn try_from(str: Option<&str>) -> Result<Self> {
         match str.map(str::to_ascii_lowercase).as_deref() {
-            Some("port") | None => Ok(Mode::Port),
-            Some("socket") => Ok(Mode::Socket),
-            Some("special") => Ok(Mode::Special),
+            Some(values::PORT) | None => Ok(Mode::Port),
+            Some(values::SOCKET) => Ok(Mode::Socket),
+            Some(values::SPECIAL) => Ok(Mode::Special),
             _ => Err(anyhow!("unsupported mode")),
         }
     }

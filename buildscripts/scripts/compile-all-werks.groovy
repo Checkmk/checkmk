@@ -57,7 +57,7 @@ def main() {
 
     targets_credentials.each{target_credential ->
         def target = target_credential[0];
-        def credentials_id = targets_credentials[1];
+        def credentials_id = target_credential[1];
 
         stage("Update werks on ${target}") {
             withCredentials([

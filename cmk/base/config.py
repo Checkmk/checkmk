@@ -1237,11 +1237,10 @@ def service_description(
     )
 
     return get_final_service_description(
-        matcher,
-        hostname,
         _format_item_with_template(
             *_get_service_description_template_and_item(check_plugin_name, plugin, item)
         ),
+        get_service_translations(matcher, hostname),
     )
 
 
@@ -1278,9 +1277,8 @@ def _format_item_with_template(template: str, item: Item) -> str:
 
 
 def get_final_service_description(
-    matcher: RulesetMatcher, hostname: HostName, description: ServiceName
+    description: ServiceName, translations: cmk.utils.translations.TranslationOptions
 ) -> ServiceName:
-    translations = get_service_translations(matcher, hostname)
     # Note: at least strip the service description.
     # Some plugins introduce trailing whitespaces, but Nagios silently drops leading
     # and trailing spaces in the configuration file.

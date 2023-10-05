@@ -11,8 +11,8 @@ from typing import Callable, Literal
 
 import cmk.utils.config_warnings as config_warnings
 from cmk.utils.hostaddress import HostName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.servicename import ServiceName
+from cmk.utils.translations import TranslationOptions
 
 import cmk.base.config as base_config
 import cmk.base.core_config as core_config
@@ -124,6 +124,7 @@ class ActiveCheckConfig:
         self,
         host_name: HostName,
         host_attrs: Mapping[str, str],
+        translations: TranslationOptions,
         macros: Mapping[str, str] | None = None,
         stored_passwords: Mapping[str, str] | None = None,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
@@ -131,20 +132,19 @@ class ActiveCheckConfig:
         self.host_name = host_name
         self.host_alias = host_attrs["alias"]
         self.host_attrs = host_attrs
+        self.translations = translations
         self.macros = macros or {}
         self.stored_passwords = stored_passwords or {}
         self.escape_func = escape_func
 
     def get_active_service_data(
-        self,
-        matcher: RulesetMatcher,
-        active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+        self, active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
     ) -> Iterator[ActiveServiceData]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
         with plugin_contexts.current_host(self.host_name):
             for plugin_name, plugin_params in active_checks:
-                service_iterator = self._get_service_iterator(matcher, plugin_name, plugin_params)
+                service_iterator = self._get_service_iterator(plugin_name, plugin_params)
 
                 if not service_iterator:
                     continue
@@ -160,7 +160,6 @@ class ActiveCheckConfig:
 
     def _get_service_iterator(
         self,
-        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]] | None:
@@ -171,7 +170,7 @@ class ActiveCheckConfig:
                 service_description=plugin_info_dict.get("service_description"),
                 service_generator=plugin_info_dict.get("service_generator"),
             )
-            return self._iterate_legacy_services(matcher, plugin_name, plugin_info, plugin_params)
+            return self._iterate_legacy_services(plugin_name, plugin_info, plugin_params)
 
         if (command := get_active_check(plugin_name.replace("check_", ""))) is not None:
             return self._iterate_services(command, plugin_params)
@@ -234,15 +233,12 @@ class ActiveCheckConfig:
 
     def _iterate_legacy_services(
         self,
-        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_info: PluginInfo,
         plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         for params in plugin_params:
-            for desc, args in self._iter_active_check_services(
-                matcher, plugin_name, plugin_info, params
-            ):
+            for desc, args in self._iter_active_check_services(plugin_name, plugin_info, params):
                 args_without_macros = self._replace_macros(args)
                 command_line = plugin_info.command_line.replace("$ARG1$", args_without_macros)
                 yield desc, args_without_macros, command_line, params
@@ -304,7 +300,6 @@ class ActiveCheckConfig:
 
     def _active_check_service_description(
         self,
-        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_info: PluginInfo,
         params: Mapping[str, object],
@@ -321,11 +316,10 @@ class ActiveCheckConfig:
             "$HOSTALIAS$", self.host_alias
         )
 
-        return base_config.get_final_service_description(matcher, self.host_name, description)
+        return base_config.get_final_service_description(description, self.translations)
 
     def _iter_active_check_services(
         self,
-        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_info: PluginInfo,
         params: Mapping[str, object],
@@ -337,9 +331,7 @@ class ActiveCheckConfig:
                 yield str(desc), str(args)
             return
 
-        description = self._active_check_service_description(
-            matcher, plugin_name, plugin_info, params
-        )
+        description = self._active_check_service_description(plugin_name, plugin_info, params)
 
         if not plugin_info.argument_function:
             raise InvalidPluginInfoError
@@ -354,7 +346,6 @@ class ActiveCheckConfig:
 
     def get_active_service_descriptions(
         self,
-        matcher: RulesetMatcher,
         active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     ) -> Iterator[ActiveServiceDescription]:
         # remove setting the host context when deleting the old API
@@ -362,7 +353,7 @@ class ActiveCheckConfig:
         with plugin_contexts.current_host(self.host_name):
             for plugin_name, plugin_params in active_checks:
                 service_iterator = self._get_service_description_iterator(
-                    matcher, plugin_name, plugin_params
+                    plugin_name, plugin_params
                 )
 
                 if not service_iterator:
@@ -379,7 +370,6 @@ class ActiveCheckConfig:
 
     def _get_service_description_iterator(
         self,
-        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[ActiveServiceDescription] | None:
@@ -391,7 +381,7 @@ class ActiveCheckConfig:
                 service_generator=plugin_info_dict.get("service_generator"),
             )
             return self._iterate_legacy_service_descriptions(
-                matcher, plugin_name, plugin_info, plugin_params
+                plugin_name, plugin_info, plugin_params
             )
 
         if (command := get_active_check(plugin_name.replace("check_", ""))) is not None:
@@ -401,7 +391,6 @@ class ActiveCheckConfig:
 
     def _iterate_legacy_service_descriptions(
         self,
-        matcher: RulesetMatcher,
         plugin_name: str,
         plugin_info: PluginInfo,
         plugin_params: Sequence[Mapping[str, object]],
@@ -414,9 +403,7 @@ class ActiveCheckConfig:
                     yield ActiveServiceDescription(plugin_name, str(description), params)
                 return
 
-            description = self._active_check_service_description(
-                matcher, plugin_name, plugin_info, params
-            )
+            description = self._active_check_service_description(plugin_name, plugin_info, params)
             yield ActiveServiceDescription(plugin_name, str(description), params)
 
     def _iterate_service_descriptions(

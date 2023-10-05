@@ -428,8 +428,7 @@ def active_check_preview_rows(
         return f"WAITING - {pretty} check, cannot be done offline"
 
     active_check_config = command_config.ActiveCheckConfig(
-        host_name,
-        host_attrs,
+        host_name, host_attrs, config.get_service_translations(ruleset_matcher, host_name)
     )
 
     return list(
@@ -449,7 +448,7 @@ def active_check_preview_rows(
                 found_on_nodes=[host_name],
             )
             for active_service in active_check_config.get_active_service_descriptions(
-                ruleset_matcher, active_checks_
+                active_checks_
             )
         }.values()
     )
@@ -1284,12 +1283,11 @@ class AutomationAnalyseServices(Automation):
         active_check_config = command_config.ActiveCheckConfig(
             host_name,
             host_attrs,
+            translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
         )
 
         active_checks = config_cache.active_checks(host_name)
-        for active_service in active_check_config.get_active_service_descriptions(
-            config_cache.ruleset_matcher, active_checks
-        ):
+        for active_service in active_check_config.get_active_service_descriptions(active_checks):
             if active_service.description == servicedesc:
                 return {
                     "origin": "active",
@@ -2110,14 +2108,13 @@ class AutomationActiveCheck(Automation):
         active_check_config = command_config.ActiveCheckConfig(
             host_name,
             host_attrs,
-            {**host_macros, **resource_macros},
-            cmk.utils.password_store.load(),
+            translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
+            macros={**host_macros, **resource_macros},
+            stored_passwords=cmk.utils.password_store.load(),
         )
 
         active_check = dict(config_cache.active_checks(host_name)).get(plugin, [])
-        for service_data in active_check_config.get_active_service_data(
-            config_cache.ruleset_matcher, [(plugin, active_check)]
-        ):
+        for service_data in active_check_config.get_active_service_data([(plugin, active_check)]):
             if service_data.description != item:
                 continue
 

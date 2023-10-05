@@ -8,7 +8,6 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.rulesets.ruleset_matcher import LabelManager, RulesetMatcher
 
 import cmk.base.command_config as command_config
 import cmk.base.config as base_config
@@ -21,22 +20,6 @@ from cmk.base.command_config import (
 )
 
 from cmk.commands.v1 import ActiveCheckCommand, ActiveService, Secret, SecretType
-
-
-def make_ruleset_matcher() -> RulesetMatcher:
-    return RulesetMatcher(
-        host_tags={},
-        host_paths={},
-        labels=LabelManager(
-            explicit_host_labels={},
-            host_label_rules=(),
-            service_label_rules=(),
-            discovered_labels_of_service=lambda *args: {},
-        ),
-        all_configured_hosts=set(),
-        clusters_of={},
-        nodes_of={},
-    )
 
 
 @pytest.mark.parametrize(
@@ -440,12 +423,10 @@ def test_get_active_service_data(
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     active_check_config = ActiveCheckConfig(
-        hostname, host_attrs, macros, stored_passwords=stored_passwords
+        hostname, host_attrs, translations={}, macros=macros, stored_passwords=stored_passwords
     )
 
-    services = list(
-        active_check_config.get_active_service_data(make_ruleset_matcher(), active_checks)
-    )
+    services = list(active_check_config.get_active_service_data(active_checks))
     assert services == expected_result
 
 
@@ -560,11 +541,9 @@ def test_get_active_service_data_warnings(
     monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(hostname, host_attrs)
+    active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
 
-    services = list(
-        active_check_config.get_active_service_data(make_ruleset_matcher(), active_checks)
-    )
+    services = list(active_check_config.get_active_service_data(active_checks))
     assert services == expected_result
 
     captured = capsys.readouterr()
@@ -748,11 +727,9 @@ def test_get_active_service_descriptions(
     monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(hostname, host_attrs)
+    active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
 
-    descriptions = list(
-        active_check_config.get_active_service_descriptions(make_ruleset_matcher(), active_checks)
-    )
+    descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
     assert descriptions == expected_result
 
 
@@ -796,11 +773,9 @@ def test_get_active_service_descriptions_warnings(
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(hostname, host_attrs)
+    active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
 
-    descriptions = list(
-        active_check_config.get_active_service_descriptions(make_ruleset_matcher(), active_checks)
-    )
+    descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
     assert descriptions == expected_result
 
     captured = capsys.readouterr()

@@ -470,14 +470,13 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         hostname,
         host_attrs,
         stored_passwords=stored_passwords,
+        translations=config.get_service_translations(config_cache.ruleset_matcher, hostname),
         escape_func=lambda a: a.replace("\\", "\\\\").replace("!", "\\!"),
     )
 
     active_checks = config_cache.active_checks(hostname)
     actchecks = [name for name, params in active_checks if params]
-    for service_data in active_check_config.get_active_service_data(
-        config_cache.ruleset_matcher, active_checks
-    ):
+    for service_data in active_check_config.get_active_service_data(active_checks):
         if do_omit_service(hostname, service_data.description):
             continue
 
@@ -525,6 +524,10 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     # Legacy checks via custom_checks
     custchecks = config_cache.custom_checks(hostname)
+    translations = config.get_service_translations(
+        config_cache.ruleset_matcher,
+        hostname,
+    )
     if custchecks:
         cfg.write("\n\n# Custom checks\n")
         for entry in custchecks:
@@ -535,7 +538,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             description = config.get_final_service_description(
-                config_cache.ruleset_matcher, hostname, entry["service_description"]
+                entry["service_description"], translations
             )
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

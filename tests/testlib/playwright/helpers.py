@@ -314,7 +314,7 @@ class PPage(LocatorHelper):
         all_hosts.click()
 
     def select_host(self, host_name: str) -> None:
-        self.main_area.locator(f"td:has-text('{host_name}')").click()
+        self.main_area.locator(f"td a:has-text('{host_name}')").click()
 
     def goto_add_sidebar_element(self) -> None:
         self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()

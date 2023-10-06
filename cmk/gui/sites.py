@@ -83,6 +83,7 @@ class SiteStatus(TypedDict, total=False):
     livestatus_version: str
     program_start: int
     program_version: str
+    max_long_output_size: int
     state: Literal["online", "disabled", "down", "unreach", "dead", "waiting", "missing", "unknown"]
 
 
@@ -296,12 +297,22 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     for response in g.live.query(
         "GET status\n"
         "Cache: reload\n"
-        "Columns: livestatus_version program_version program_start num_hosts num_services "
+        "Columns: livestatus_version program_version program_start num_hosts num_services max_long_output_size "
         "core_pid edition"
     ):
 
         try:
-            site_id, v1, v2, ps, num_hosts, num_services, pid, remote_edition = response
+            (
+                site_id,
+                v1,
+                v2,
+                ps,
+                num_hosts,
+                num_services,
+                max_long_output_size,
+                pid,
+                remote_edition,
+            ) = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -343,6 +354,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
                     "program_start": ps,
                     "num_hosts": num_hosts,
                     "num_services": num_services,
+                    "max_long_output_size": max_long_output_size,
                     "core": v2.startswith("Check_MK") and "cmc" or "nagios",
                     "core_pid": pid,
                 }

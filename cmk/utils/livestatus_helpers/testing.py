@@ -203,11 +203,11 @@ class MockLiveStatusConnection:
             ...     response = live.result_of_next_query(
             ...         'GET status\\n'
             ...         'Columns: livestatus_version program_version program_start '
-            ...         'num_hosts num_services core_pid edition'
+            ...         'num_hosts num_services max_long_output_size core_pid edition'
             ...     )[0]
-            ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36, 'raw']]
+            ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 2, 2000, 36, 'raw']]
             ...     assert len(response) == 1
-            ...     assert len(response[0]) == 7
+            ...     assert len(response[0]) == 8
 
         Some Stats calls are supported as well:
 
@@ -231,7 +231,7 @@ class MockLiveStatusConnection:
             ...
             livestatus.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
              * 'GET status\\nColumns: livestatus_version program_version \
-program_start num_hosts num_services core_pid edition'
+program_start num_hosts num_services max_long_output_size core_pid edition'
             <BLANKLINE>
             No queries were sent to site NO_SITE.
 
@@ -360,7 +360,7 @@ program_start num_hosts num_services core_pid edition'
             # We expect this query and give the expected result.
             query = [
                 "GET status",
-                "Columns: livestatus_version program_version program_start num_hosts num_services core_pid edition",
+                "Columns: livestatus_version program_version program_start num_hosts num_services max_long_output_size core_pid edition",
             ]
             self.expect_query(query, force_pos=0)  # first query to be expected
 
@@ -746,6 +746,7 @@ def _default_tables() -> dict[TableName, ResultList]:
                 "livestatus_version": _today,
                 "program_version": f"Check_MK {_today}",
                 "program_start": _program_start_timestamp,
+                "max_long_output_size": 2000,
                 "num_hosts": 1,
                 "num_services": 36,
                 "helper_usage_fetcher": 0.00151953,

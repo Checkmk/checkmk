@@ -615,17 +615,11 @@ class ScalarBounds(TypedDict, total=False):
     max: float
 
 
-class _TranslatedMetricRequired(TypedDict):
-    scale: list[float]
-
-
-class TranslatedMetric(_TranslatedMetricRequired, total=False):
-    # All keys seem to be optional. At least in one situation there is a translation object
-    # constructed which only has the scale member (see
-    # CustomGraphPage._show_metric_type_combined_summary)
+class TranslatedMetric(TypedDict):
     orig_name: list[str]
     value: float
     scalar: ScalarBounds
+    scale: list[float]
     auto_graph: bool
     title: str
     unit: UnitInfo

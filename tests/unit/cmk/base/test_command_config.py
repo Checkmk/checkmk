@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.command_config as command_config
 import cmk.base.config as base_config
@@ -17,9 +19,16 @@ from cmk.base.command_config import (
     ActiveServiceData,
     ActiveServiceDescription,
     HostAddressConfiguration,
+    SpecialAgent,
 )
 
+import cmk
 from cmk.commands.v1 import ActiveCheckCommand, ActiveService, Secret, SecretType
+
+
+class TestSpecialAgentConfiguration(NamedTuple):
+    args: Sequence[str]
+    stdin: str | None
 
 
 @pytest.mark.parametrize(
@@ -817,3 +826,59 @@ def test_get_host_address_config(
 ) -> None:
     host_config = _get_host_address_config(hostname, host_attrs)
     assert host_config == expected_result
+
+
+@pytest.mark.parametrize(
+    ("info_func_result", "expected_cmdline", "expected_stdin"),
+    [
+        ("arg0 arg;1", "arg0 arg;1", None),
+        (["arg0", "arg;1"], "arg0 'arg;1'", None),
+        (TestSpecialAgentConfiguration(["arg0"], None), "arg0", None),
+        (TestSpecialAgentConfiguration(["arg0", "arg;1"], None), "arg0 'arg;1'", None),
+        (TestSpecialAgentConfiguration(["list0", "list1"], None), "list0 list1", None),
+        (
+            TestSpecialAgentConfiguration(["arg0", "arg;1"], "stdin_blob"),
+            "arg0 'arg;1'",
+            "stdin_blob",
+        ),
+        (
+            TestSpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
+            "list0 list1",
+            "stdin_blob",
+        ),
+    ],
+)
+def test_iter_special_agent_commands(
+    info_func_result: object,
+    expected_cmdline: str,
+    expected_stdin: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
+    monkeypatch.setitem(
+        base_config.special_agent_info,
+        "test_agent",
+        lambda a, b, c: info_func_result,
+    )
+
+    special_agent = SpecialAgent(HostName("test_host"), HostAddress("127.0.0.1"))
+    commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
+
+    assert len(commands) == 1
+    agent_path = tmp_path / "special" / "agent_test_agent"
+    assert commands[0].cmdline == f"{agent_path} {expected_cmdline}"
+    assert commands[0].stdin == expected_stdin
+
+
+def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", tmp_path)
+
+    (tmp_path / "special").mkdir(exist_ok=True)
+    local_agent_path = tmp_path / "special" / "agent_test_agent"
+    local_agent_path.touch()
+
+    special_agent = SpecialAgent(HostName("test_host"), HostAddress("127.0.0.1"))
+    agent_path = special_agent._make_source_path("test_agent")
+
+    assert agent_path == local_agent_path

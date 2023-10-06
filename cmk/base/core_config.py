@@ -417,21 +417,6 @@ def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
 #   '----------------------------------------------------------------------'
 
 
-def make_special_agent_stdin(
-    hostname: HostName,
-    ipaddress: HostAddress | None,
-    agentname: str,
-    params: Mapping[str, object],
-) -> str | None:
-    info_func = config.special_agent_info[agentname]
-    # TODO: We call a user supplied function here.
-    # If this crashes during config generation, it can get quite ugly.
-    # We should really wrap this and implement proper sanitation and exception handling.
-    # Deal with this when modernizing the API (CMK-3812).
-    agent_configuration = info_func(params, hostname, ipaddress)
-    return getattr(agent_configuration, "stdin", None)
-
-
 def get_cmk_passive_service_attributes(
     config_cache: ConfigCache,
     host_name: HostName,

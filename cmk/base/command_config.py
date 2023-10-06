@@ -7,10 +7,12 @@ import shlex
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv6Address
+from pathlib import Path
 from typing import Callable, Literal
 
 import cmk.utils.config_warnings as config_warnings
-from cmk.utils.hostaddress import HostName
+import cmk.utils.paths
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.translations import TranslationOptions
 
@@ -71,6 +73,12 @@ class PluginInfo:
     service_generator: Callable[
         [HostAddressConfiguration, Mapping[str, object]], Iterator[tuple[str, str]]
     ] | None = None
+
+
+@dataclass(frozen=True)
+class SpecialAgentCommand:
+    cmdline: str
+    stdin: str | None = None
 
 
 def _get_host_address_config(
@@ -411,3 +419,63 @@ class ActiveCheckConfig:
     ) -> Iterator[ActiveServiceDescription]:
         for desc, _args, _command_line, params in self._iterate_services(command, plugin_params):
             yield ActiveServiceDescription(f"check_{command.name}", desc, params)
+
+
+class SpecialAgent:
+    def __init__(self, host_name: HostName, host_address: HostAddress | None):
+        self.host_name = host_name
+        self.host_address = host_address
+
+    def make_special_agent_stdin(
+        self,
+        agent_name: str,
+        params: Mapping[str, object],
+    ) -> str | None:
+        info_func = base_config.special_agent_info[agent_name]
+        # TODO: We call a user supplied function here.
+        # If this crashes during config generation, it can get quite ugly.
+        # We should really wrap this and implement proper sanitation and exception handling.
+        # Deal with this when modernizing the API (CMK-3812).
+        agent_configuration = info_func(params, self.host_name, self.host_address)
+        return getattr(agent_configuration, "stdin", None)
+
+    def _make_source_path(self, agent_name: str) -> Path:
+        file_name = f"agent_{agent_name}"
+        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
+        if local_path.exists():
+            return local_path
+        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
+
+    def _make_source_args(self, agent_name: str, params: Mapping[str, object]) -> str:
+        info_func = base_config.special_agent_info[agent_name]
+        # TODO: CMK-3812 (see above)
+        agent_configuration = info_func(params, self.host_name, self.host_address)
+        return base_config.commandline_arguments(self.host_name, None, agent_configuration)
+
+    def make_special_agent_cmdline(
+        self,
+        agent_name: str,
+        params: Mapping[str, object],
+    ) -> str:
+        """
+        Raises:
+            KeyError if the special agent is deactivated.
+
+        """
+        path = self._make_source_path(agent_name)
+        args = self._make_source_args(agent_name, params)
+        return f"{path} {args}"
+
+    def iter_special_agent_commands(
+        self, agent_name: str, params: Mapping[str, object]
+    ) -> Iterator[SpecialAgentCommand]:
+        cmdline = self.make_special_agent_cmdline(
+            agent_name,
+            params,
+        )
+        stdin = self.make_special_agent_stdin(
+            agent_name,
+            params,
+        )
+
+        yield SpecialAgentCommand(cmdline, stdin)

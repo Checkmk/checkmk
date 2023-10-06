@@ -2177,45 +2177,6 @@ class ConfigCache:
             self.ruleset_matcher.get_host_values(host_name, datasource_programs)[0],
         )
 
-    def make_special_agent_cmdline(
-        self,
-        hostname: HostName,
-        ip_address: HostAddress | None,
-        agentname: str,
-        params: Mapping[str, object],
-    ) -> str:
-        """
-        Raises:
-            KeyError if the special agent is deactivated.
-
-        """
-
-        def _make_source_path(agentname: str) -> Path:
-            file_name = f"agent_{agentname}"
-            local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
-            if local_path.exists():
-                return local_path
-            return Path(cmk.utils.paths.agents_dir) / "special" / file_name
-
-        def _make_source_args(
-            hostname: HostName,
-            ip_address: HostAddress | None,
-            agentname: str,
-        ) -> str:
-            info_func = special_agent_info[agentname]
-            # TODO: CMK-3812 (see above)
-            agent_configuration = info_func(params, hostname, ip_address)
-            args = commandline_arguments(hostname, None, agent_configuration)
-            return self.translate_commandline(hostname, ip_address, args)
-
-        path = _make_source_path(agentname)
-        args = _make_source_args(
-            hostname,
-            ip_address,
-            agentname,
-        )
-        return f"{path} {args}"
-
     def make_piggyback_fetcher(
         self, host_name: HostName, ip_address: HostAddress | None
     ) -> PiggybackFetcher:

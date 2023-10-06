@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p11
+Version: 2.2.0p12
 
 Previously, the validity of agent data for discovery and HW/SW inventory checks was 2 minutes.
 When checking is performed with a longer interval, the discovery would re-trigger fetching of the agent data.

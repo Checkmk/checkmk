@@ -6,7 +6,7 @@ Date: 1696495573
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0p11
+Version: 2.2.0p12
 
 Previously, a missing datasource error would be shown in a discovery
 page of a cluster host if the cluster host had 'No IP' configured

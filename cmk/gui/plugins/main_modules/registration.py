@@ -17,6 +17,7 @@ from cmk.gui import (
     crash_reporting,
     cron,
     dashboard,
+    default_permissions,
     graphing,
     inventory,
     login,
@@ -92,6 +93,7 @@ def register_sites_options() -> None:
 
 
 def register() -> None:
+    default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()
     visuals.register(page_registry, visual_info_registry, filter_registry)
     views_registration.register(

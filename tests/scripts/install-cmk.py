@@ -230,10 +230,9 @@ class PackageManagerDEB(ABCPackageManager):
         return f"check-mk-{edition.long}-{version}_0.{self.distro_name}_amd64.deb"
 
     def _install_package(self, package_path: Path) -> None:
-        # As long as we do not have all dependencies preinstalled, we need to ensure that the
-        # package mirror information are up-to-date
-        self._execute(["apt-get", "update"])
-        self._execute(["apt", "install", "-y", package_path])
+        # all dependencies are installed via install-cmk-dependencies.sh in the Dockerfile
+        # this step should fail in case additional packages would be required
+        self._execute(["dpkg", "-i", package_path])
 
 
 class ABCPackageManagerRPM(ABCPackageManager):
@@ -243,12 +242,12 @@ class ABCPackageManagerRPM(ABCPackageManager):
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
     def _install_package(self, package_path: Path) -> None:
-        self._execute(["zypper", "in", "-y", package_path])
+        self._execute(["rpm", "-i", package_path])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):
     def _install_package(self, package_path: Path) -> None:
-        self._execute(["/usr/bin/yum", "-y", "install", package_path])
+        self._execute(["rpm", "-i", package_path])
 
 
 if __name__ == "__main__":

@@ -188,6 +188,7 @@ RUN /opt/install-musl-tools.sh
 COPY scripts/install-pipenv.sh /opt/
 RUN /opt/install-pipenv.sh
 
+COPY scripts/UBUNTU_20.04.mk /opt/
 COPY scripts/install-cmk-dependencies.sh /opt/
 RUN /opt/install-cmk-dependencies.sh
 
@@ -204,7 +205,7 @@ COPY scripts/install-buildifier.sh /opt/
 RUN /opt/install-buildifier.sh
 
 # save a massive 108kB of space
-RUN rm /opt/*.sh /opt/strip_binaries
+RUN rm /opt/*.sh /opt/strip_binaries /opt/*.mk
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

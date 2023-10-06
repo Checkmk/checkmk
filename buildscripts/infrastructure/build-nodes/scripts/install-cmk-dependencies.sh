@@ -8,16 +8,45 @@
 
 set -e -o pipefail
 
-echo "Add Check_MK-pubkey.gpg to gpg"
-gpg --import /opt/Check_MK-pubkey.gpg
+TARGET_DIR="/opt"
+FILE_NAME=$(echo "${DISTRO^^}.mk" | tr '-' '_')
+
+extract_needed_packages() {
+    echo "Extracting needed packages of $FILE_NAME"
+    mkdir -p "$TARGET_DIR"
+    cd "$TARGET_DIR"
+    echo -e ".PHONY: needed-packages\nneeded-packages:\n\t@echo \$(OS_PACKAGES) > needed-packages\n" |
+        make -f - -f "${FILE_NAME}" --no-print-directory needed-packages
+}
+
+add_gpg_key() {
+    echo "Add Check_MK-pubkey.gpg to RPM"
+    rpm --import "$TARGET_DIR"/Check_MK-pubkey.gpg
+}
+
+cleanup() {
+    rm -f "$TARGET_DIR"/needed-packages
+    rm -rf /var/lib/apt/lists/*
+}
+
+extract_needed_packages
 
 case "$DISTRO" in
-    centos-* | sles-*)
-        echo "Add Check_MK-pubkey.gpg to RPM"
-        rpm --import /opt/Check_MK-pubkey.gpg
+    centos-*)
+        add_gpg_key
+        # shellcheck disable=SC2046  # we want word splitting here
+        yum install -y $(cat "$TARGET_DIR"/needed-packages)
+        ;;
+    sles-*)
+        add_gpg_key
+        # shellcheck disable=SC2046  # we want word splitting here
+        zypper in -y $(cat "$TARGET_DIR"/needed-packages)
+        ;;
+    ubuntu-* | debian-*)
+        apt-get update
+        # shellcheck disable=SC2046  # we want word splitting here
+        apt-get install -y $(cat "$TARGET_DIR"/needed-packages)
         ;;
 esac
 
-# TODO: Install distro specific dependencies of Checkmk to make building of
-# daily test container faster (since dependency installation is not needed
-# anymore)
+cleanup

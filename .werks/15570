@@ -1,0 +1,20 @@
+Title: Handle redirect RoutingRules of azure's application gateways
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1696591284
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you're having a http redirect routing rule configured in your azure application gateway, the parsing of the section may have failed with:
+C+:
+pydantic.error_wrappers.ValidationError: 10 validation errors for AppGateway
+C-:
+
+This is due to the fact, that a redirect routing rule may not have the previously required information (backendAddressPool and backendHttpSettings).
+Those fields are now not required anymore.
+
+

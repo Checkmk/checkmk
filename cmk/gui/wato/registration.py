@@ -32,6 +32,7 @@ from . import (
     _check_mk_configuration,
     _main_module_topics,
     _main_modules,
+    _nagvis_auth,
     _omd_configuration,
     _permissions,
     _pre_21_plugin_api,
@@ -104,5 +105,6 @@ def register(
     _check_mk_configuration.register(config_variable_registry, config_variable_group_registry)
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(config_domain_registry, config_variable_registry)
+    _nagvis_auth.register(permission_section_registry, permission_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     snapin_registry.register(VirtualHostTree)

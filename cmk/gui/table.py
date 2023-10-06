@@ -27,6 +27,7 @@ from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
@@ -453,10 +454,7 @@ class Table:
             html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
         if request.var("search") is not None:
-            html.javascript(
-                "cmk.utils.set_inpage_search_result_info(%s);"
-                % json.dumps(_("Results: %d") % len(rows) if rows else _("No results"))
-            )
+            set_inpage_search_result_info(len(rows))
 
         table_id = self.id
 

@@ -1,0 +1,13 @@
+Title: Inpage search: Allow searching for folders on hosts page
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1696575294
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Until now, it was only possible to search for hosts on the "Setup" - "Hosts"
+page. The inpage search in the page menu now also allows searching for folders.
+

@@ -292,6 +292,35 @@ export function update_row_info(text: string) {
 }
 
 export function set_inpage_search_result_info(text: string) {
+    // First, check if result line is already shown, e.g. on hosts page for folder search.
+    // If so, just update the result number
+    const result_with_row_info: HTMLElement | null = document.getElementById(
+        "inpage_search_result_info"
+    );
+    if (result_with_row_info) {
+        const [new_text, new_count] = text.split(":");
+        const [_old_text, old_count] =
+            result_with_row_info.innerHTML.split(":");
+
+        // "No results" in both cases
+        if (!new_count && !old_count) return;
+
+        // No results before
+        if (!old_count) {
+            result_with_row_info.innerHTML = text;
+            return;
+        }
+
+        // No results after
+        if (!new_count) return;
+
+        // Results before and after
+        result_with_row_info.innerHTML =
+            new_text + ": " + (Number(old_count) + Number(new_count));
+
+        return;
+    }
+
     const row_info_div: HTMLElement | null =
         document.getElementById("row_info");
     const page_menu_popups_div: HTMLElement | null =

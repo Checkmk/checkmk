@@ -6,6 +6,7 @@
 
 import abc
 import operator
+import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
 
@@ -51,6 +52,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -712,10 +714,23 @@ class ModeFolder(WatoMode):
             html.open_div(
                 class_="folders"
             )  # This won't hurt even if there are no visible subfolders
+
+            if (searched_folder := request.var("search")) is not None:
+                match_regex = re.compile(searched_folder.lower(), re.IGNORECASE)
+                search_results = 0
             for subfolder in sorted(
                 self._folder.subfolders(only_visible=True), key=operator.methodcaller("title")
             ):
+                if searched_folder is not None:
+                    if not match_regex.search(subfolder.title()):
+                        continue
+                    search_results += 1
+
                 self._show_subfolder(subfolder)
+
+            if searched_folder is not None:
+                set_inpage_search_result_info(search_results)
+
             html.close_div()
             html.open_div(
                 class_=["floatfolder", "unlocked", "newfolder"],

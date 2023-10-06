@@ -170,20 +170,41 @@ void KillProcessesByFullPath(const fs::path &path) noexcept {
     });
 }
 
+namespace {
+bool IsSameProcess(const PROCESSENTRY32W &entry, const fs::path &path_end,
+                   uint32_t need_pid) noexcept {
+    const auto pid = entry.th32ProcessID;
+    const auto exe = fs::path{GetProcessPath(pid)};
+
+    return (exe.wstring().ends_with(path_end.wstring()) || exe == path_end) &&
+           (pid == need_pid);
+}
+}  // namespace
+
 void KillProcessesByPathEndAndPid(const fs::path &path_end,
                                   uint32_t need_pid) noexcept {
     ScanProcessList([&](const PROCESSENTRY32W &entry) {
-        const auto pid = entry.th32ProcessID;
-        const auto exe = fs::path{GetProcessPath(pid)};
-
-        if ((exe.wstring().ends_with(path_end.wstring()) || exe == path_end) &&
-            pid == need_pid) {
-            XLOG::d.i("Killing process '{}' with pid {}", exe, pid);
-            KillProcess(pid, 99);
-            return false;
+        if (!IsSameProcess(entry, path_end, need_pid)) {
+            return true;
         }
-        return true;
+        XLOG::d.i("Killing process '{}' with pid {}", path_end, need_pid);
+        KillProcess(need_pid, 99);
+        return false;
     });
+}
+
+bool FindProcessByPathEndAndPid(const fs::path &path_end,
+                                uint32_t need_pid) noexcept {
+    bool found{false};
+    ScanProcessList([&](const PROCESSENTRY32W &entry) {
+        if (!IsSameProcess(entry, path_end, need_pid)) {
+            return true;
+        }
+        found = true;
+        return false;
+    });
+
+    return found;
 }
 
 void AppRunner::prepareResources(std::wstring_view command_line,

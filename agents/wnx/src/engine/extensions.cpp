@@ -109,34 +109,42 @@ std::optional<uint32_t> RunExtension(const std::wstring &command) {
     }
     return {};
 }
+
+std::optional<ProcessInfo> StartExtension(const Extension &extension) {
+    XLOG::l.i("Agent extension '{}' to be processed", extension.name);
+    if (extension.binary.empty() || extension.mode == Mode::no) {
+        return {};
+    }
+
+    fs::path path{ReplacePredefinedMarkers(extension.binary)};
+    if (std::error_code ec;
+        !fs::exists(path, ec) && (extension.mode != Mode::yes)) {
+        XLOG::l.i("'{}' not found, skipping", path);
+        return {};
+    }
+
+    auto to_run = path.wstring();
+
+    if (!extension.command_line.empty()) {
+        to_run += L" "s + wtools::ConvertToUtf16(extension.command_line);
+    }
+    if (const auto pid = RunExtension(to_run); pid.has_value()) {
+        XLOG::l.i("Agent extension '{}' started, pid is {}",
+                  wtools::ToUtf8(to_run), *pid);
+        return ProcessInfo{path, *pid, extension};
+    } else {
+        XLOG::l("Agent extension '{}' failed to start", wtools::ToUtf8(to_run));
+        return {};
+    }
+}
 }  // namespace
 
 std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions) {
     std::vector<ProcessInfo> started;
-    for (auto &&[name, binary, command_line, mode] : extensions) {
-        XLOG::l.i("Agent extension '{}' to be processed", name);
-        if (binary.empty() || mode == Mode::no) {
-            continue;
-        }
-
-        fs::path path{ReplacePredefinedMarkers(binary)};
-        if (std::error_code ec; !fs::exists(path, ec) && (mode != Mode::yes)) {
-            XLOG::l.i("'{}' not found, skipping", path);
-            continue;
-        }
-
-        auto to_run = path.wstring();
-
-        if (!command_line.empty()) {
-            to_run += L" "s + wtools::ConvertToUtf16(command_line);
-        }
-        if (auto pid = RunExtension(to_run); pid.has_value()) {
-            XLOG::l.i("Agent extension '{}' started, pid is {}",
-                      wtools::ToUtf8(to_run), *pid);
-            started.emplace_back(path, *pid);
-        } else {
-            XLOG::l("Agent extension '{}' failed to start",
-                    wtools::ToUtf8(to_run));
+    for (const auto &extension : extensions) {
+        auto ret = StartExtension(extension);
+        if (ret.has_value()) {
+            started.emplace_back(*ret);
         }
     }
     return started;
@@ -144,8 +152,24 @@ std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions) {
 
 void KillAll(const std::vector<ProcessInfo> &processes) {
     XLOG::l.i("Killing Agent extensions");
-    for (auto &&[path, pid] : processes) {
+    for (auto &&[path, pid, _] : processes) {
         wtools::KillProcessesByPathEndAndPid(path, pid);
+    }
+}
+
+void ValidateAndRestart(std::vector<ProcessInfo> &processes) {
+    for (auto &process : processes) {
+        if (!wtools::FindProcessByPathEndAndPid(process.path, process.pid)) {
+            XLOG::l.i("Agent extensions {} is dead", process.extension.name);
+            const auto ret = StartExtension(process.extension);
+            if (ret.has_value()) {
+                process.pid = ret->pid;
+                XLOG::l.i("Agent extensions {} is restarted",
+                          process.extension.name);
+            }
+            XLOG::l.i("Agent extensions {} failed to restart",
+                      process.extension.name);
+        }
     }
 }
 

@@ -21,7 +21,11 @@ struct Extension {
 };
 
 std::vector<Extension> GetAll(YAML::Node node);
-using ProcessInfo = std::pair<std::filesystem::path, uint32_t>;
+struct ProcessInfo {
+    std::filesystem::path path;
+    uint32_t pid;
+    Extension extension;
+};
 std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions);
 void KillAll(const std::vector<ProcessInfo> &processes);
 

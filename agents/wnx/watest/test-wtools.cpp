@@ -197,6 +197,17 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
     }
 }
 
+TEST_F(WtoolsKillProcFixture, FindProcsByFullPathAndPidComponent) {
+    const auto maybe_pid = RunProcess();
+    ASSERT_TRUE(maybe_pid.has_value());
+
+    EXPECT_FALSE(FindProcessByPathEndAndPid(test_exe_.filename(), 4));
+    cma::tools::sleep(500ms);
+    EXPECT_TRUE(FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid));
+    KillProcessesByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+    EXPECT_FALSE(FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid));
+}
+
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
 protected:
     void SetUp() override {

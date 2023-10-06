@@ -264,7 +264,7 @@ class AzurePublisher(CloudPublisher):
         self.resource_group = resource_group
         # Use Checkmk_Cloud_Edition_2.2b5 for e.g. testing
         self.gallery_image_name = (
-            f"Checkmk_Cloud_Edition_{self.version.version.major}.{self.version.version.minor}"
+            f"Checkmk-Cloud-Edition-{self.version.version.major}.{self.version.version.minor}"
         )
         self.compute_client = ComputeManagementClient(
             credentials,

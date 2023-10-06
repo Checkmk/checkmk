@@ -50,6 +50,6 @@ class UpdateLdapConnectionIds(UpdateAction):
 
 update_action_registry.register(
     UpdateLdapConnectionIds(
-        name="ldap_connection_ids", title="Update LDAP connection ids", sort_index=10
+        name="ldap_connection_ids", title="Update LDAP connection ids", sort_index=21
     )
 )

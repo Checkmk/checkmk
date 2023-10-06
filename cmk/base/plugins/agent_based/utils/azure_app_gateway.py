@@ -35,8 +35,9 @@ class BackendAddressPool(BaseModel):
 class RoutingRule(BaseModel):
     name: str
     httpListener: Mapping[str, str]
-    backendAddressPool: Mapping[str, str]
-    backendHttpSettings: Mapping[str, str]
+    # Those are missing for e.g. http redirect rules, see SUP-15950
+    backendAddressPool: Mapping[str, str] = {}
+    backendHttpSettings: Mapping[str, str] = {}
 
 
 class AppGateway(BaseModel):

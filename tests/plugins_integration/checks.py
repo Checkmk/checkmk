@@ -33,6 +33,7 @@ class CheckModes(IntEnum):
 class CheckConfig:
     mode: CheckModes = CheckModes.DEFAULT
     skip_masking: bool = False
+    skip_cleanup: bool = False
     dump_types: list[str] | None = None
     data_dir: str | None = None
     dump_dir: str | None = None
@@ -397,8 +398,9 @@ def setup_host(site: Site, host_name: str) -> Iterator:
     try:
         yield
     finally:
-        logger.info('Deleting host "%s"...', host_name)
-        site.openapi.delete_host(host_name)
+        if not config.skip_cleanup:
+            logger.info('Deleting host "%s"...', host_name)
+            site.openapi.delete_host(host_name)
 
 
 def setup_hosts(site: Site, host_names: list[str]) -> None:

@@ -108,6 +108,7 @@ def pytest_configure(config):
         else checks.CheckModes.DEFAULT
     )
     checks.config.skip_masking = config.getoption("--skip-masking")
+    checks.config.skip_cleanup = config.getoption("--skip-cleanup")
     checks.config.data_dir = config.getoption(name="--data-dir")
     checks.config.dump_dir = config.getoption(name="--dump-dir")
     checks.config.response_dir = config.getoption(name="--response-dir")
@@ -133,7 +134,8 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(name="test_site", scope="session")
 def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
-    for site in get_site_factory(prefix="plugins_").get_test_site():
+    skip_cleanup = request.config.getoption("--skip-cleanup")
+    for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
         # NOTE: the snmpwalks folder cannot be changed!
         walk_path = site.path("var/check_mk/snmpwalks")
@@ -177,7 +179,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 
         yield site
 
-        if os.getenv("CLEANUP", "1") == "1" and not request.config.getoption("--skip-cleanup"):
+        if os.getenv("CLEANUP", "1") == "1" and not skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
             assert execute(["sudo", "rm", "-rf", dump_path]).returncode == 0

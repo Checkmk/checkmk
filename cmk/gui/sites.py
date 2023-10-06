@@ -110,7 +110,8 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
     """Returns a list of host/service/contact groups (pairs of name/alias)
 
     Groups are collected via livestatus from all sites. In case no alias is defined
-    the name is used as second element. The list is sorted by lower case alias in the first place."""
+    the name is used as second element. The list is sorted by lower case alias in the first place.
+    """
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
     groups = cast(List[Tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
@@ -207,12 +208,20 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     for response in g.live.query(
         "GET status\n"
         "Cache: reload\n"
-        "Columns: livestatus_version program_version program_start num_hosts num_services "
+        "Columns: livestatus_version program_version program_start num_hosts num_services max_long_output_size "
         "core_pid"
     ):
-
         try:
-            site_id, v1, v2, ps, num_hosts, num_services, pid = response
+            (
+                site_id,
+                v1,
+                v2,
+                ps,
+                num_hosts,
+                num_services,
+                max_long_output_size,
+                pid,
+            ) = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -234,6 +243,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
                 "program_start": ps,
                 "num_hosts": num_hosts,
                 "num_services": num_services,
+                "max_long_output_size": max_long_output_size,
                 "core": v2.startswith("Check_MK") and "cmc" or "nagios",
                 "core_pid": pid,
             }

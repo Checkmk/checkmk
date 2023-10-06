@@ -1704,6 +1704,19 @@ def _set_expected_queries(painter_ident, live):
             "GET hosts\nColumns: host_name\nLocaltime: 1523811000\nOutputFormat: json\nKeepAlive: on\nResponseHeader: fixed16"
         )
         return
+    if painter_ident == "svc_long_plugin_output":
+        live.add_table(
+            "status",
+            [
+                {
+                    "max_long_output_size": 2000,
+                }
+            ],
+        )
+        live.expect_query(
+            "GET status\nColumns: max_long_output_size\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16",
+        )
+        return
 
 
 def _load_notes_into_files(notes_dirs: list[Path], notes: list[dict[str, Any]]) -> list[str]:

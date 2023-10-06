@@ -275,7 +275,7 @@ class CMKFetcher:
                 make_sources(
                     host_name_,
                     ip_address_,
-                    ConfigCache.address_family(host_name),
+                    ConfigCache.address_family(host_name_),
                     config_cache=self.config_cache,
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if nodes is None else False

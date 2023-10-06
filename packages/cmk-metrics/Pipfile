@@ -12,6 +12,3 @@ mypy = "*"
 pylint = "*"
 pytest = "*"
 marshmallow = "*"  # direct dependency of pytest
-
-[requires]
-python_version = "3.11"

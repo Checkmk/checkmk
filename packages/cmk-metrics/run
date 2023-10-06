@@ -192,7 +192,7 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
 
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv install --dev
+    test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv sync --dev
 
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
     test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"

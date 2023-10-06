@@ -259,7 +259,6 @@ class FixRegister:
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
         import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel,cmk-module-layer-violation
-        import cmk.base.plugins.commands.register as commands_register  # pylint: disable=import-outside-toplevel,cmk-module-layer-violation
 
         config._initialize_data_structures()
         assert not config.check_info
@@ -275,7 +274,6 @@ class FixRegister:
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
         self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
         self._inventory_plugins = copy.deepcopy(register._config.registered_inventory_plugins)
-        self._active_checks = copy.deepcopy(commands_register.registered_active_checks)
 
     @property
     def snmp_sections(self):

@@ -155,7 +155,6 @@ def test_find_missing_plugins(
         set(all_pages)
         - {str(plugin_name) for plugin_name in fix_register.check_plugins}
         - {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        - {f"check_{name}" for name in fix_register._active_checks}
         - {
             "check-mk",
             "check-mk-inventory",

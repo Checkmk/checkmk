@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-from cmk.gui.plugins.wato.ac_tests import ACTestGenericCheckHelperUsage
+from cmk.gui.wato._ac_tests import ACTestGenericCheckHelperUsage
 
 
 def test_local_connection_mocked(mock_livestatus: MockLiveStatusConnection) -> None:

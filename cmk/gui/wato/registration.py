@@ -14,6 +14,7 @@ from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.page_handler import page_handler
+from cmk.gui.watolib.analyze_configuration import ACTestRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
@@ -23,6 +24,7 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
 from cmk.gui.watolib.search import MatchItemGeneratorRegistry
 
 from . import (
+    _ac_tests,
     _check_mk_configuration,
     _main_module_topics,
     _main_modules,
@@ -66,6 +68,7 @@ def register(
     snapin_registry: SnapinRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
     mega_menu_registry: MegaMenuRegistry,
+    ac_test_registry: ACTestRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -93,5 +96,6 @@ def register(
     _rulespec_groups.register(rulespec_group_registry)
     _pre_21_plugin_api.register()
     _check_mk_configuration.register(config_variable_registry, config_variable_group_registry)
+    _ac_tests.register(ac_test_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     snapin_registry.register(VirtualHostTree)

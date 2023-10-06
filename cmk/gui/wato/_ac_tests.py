@@ -39,11 +39,11 @@ from cmk.gui.userdb import active_connections as active_connections_
 from cmk.gui.userdb import htpasswd
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 from cmk.gui.watolib.analyze_configuration import (
-    ac_test_registry,
     ACResultState,
     ACSingleResult,
     ACTest,
     ACTestCategories,
+    ACTestRegistry,
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
@@ -55,7 +55,36 @@ from cmk.gui.watolib.sites import SiteManagementFactory
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-@ac_test_registry.register
+def register(ac_test_registry: ACTestRegistry) -> None:
+    ac_test_registry.register(ACTestPersistentConnections)
+    ac_test_registry.register(ACTestLiveproxyd)
+    ac_test_registry.register(ACTestLivestatusUsage)
+    ac_test_registry.register(ACTestTmpfs)
+    ac_test_registry.register(ACTestLDAPSecured)
+    ac_test_registry.register(ACTestLivestatusSecured)
+    ac_test_registry.register(ACTestNumberOfUsers)
+    ac_test_registry.register(ACTestHTTPSecured)
+    ac_test_registry.register(ACTestOldDefaultCredentials)
+    ac_test_registry.register(ACTestMknotifydCommunicationEncrypted)
+    ac_test_registry.register(ACTestBackupConfigured)
+    ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
+    ac_test_registry.register(ACTestEscapeHTMLDisabled)
+    ac_test_registry.register(ACTestApacheNumberOfProcesses)
+    ac_test_registry.register(ACTestApacheProcessUsage)
+    ac_test_registry.register(ACTestCheckMKHelperUsage)
+    ac_test_registry.register(ACTestCheckMKFetcherUsage)
+    ac_test_registry.register(ACTestCheckMKCheckerUsage)
+    ac_test_registry.register(ACTestAlertHandlerEventTypes)
+    ac_test_registry.register(ACTestGenericCheckHelperUsage)
+    ac_test_registry.register(ACTestSizeOfExtensions)
+    ac_test_registry.register(ACTestBrokenGUIExtension)
+    ac_test_registry.register(ACTestESXDatasources)
+    ac_test_registry.register(ACTestDeprecatedCheckPlugins)
+    ac_test_registry.register(ACTestDeprecatedInventoryPlugins)
+    ac_test_registry.register(ACTestUnexpectedAllowedIPRanges)
+    ac_test_registry.register(ACTestCheckMKCheckerNumber)
+
+
 class ACTestPersistentConnections(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -116,7 +145,6 @@ class ACTestPersistentConnections(ACTest):
         )
 
 
-@ac_test_registry.register
 class ACTestLiveproxyd(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -164,7 +192,6 @@ class ACTestLiveproxyd(ACTest):
         )
 
 
-@ac_test_registry.register
 class ACTestLivestatusUsage(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -230,7 +257,6 @@ class ACTestLivestatusUsage(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestTmpfs(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -282,7 +308,6 @@ class ACTestTmpfs(ACTest):
         return False
 
 
-@ac_test_registry.register
 class ACTestLDAPSecured(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -320,7 +345,6 @@ class ACTestLDAPSecured(ACTest):
                 )
 
 
-@ac_test_registry.register
 class ACTestLivestatusSecured(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -357,7 +381,6 @@ class ACTestLivestatusSecured(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestNumberOfUsers(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -397,7 +420,6 @@ class ACTestNumberOfUsers(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestHTTPSecured(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -434,7 +456,6 @@ class ACTestHTTPSecured(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestOldDefaultCredentials(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -473,7 +494,6 @@ class ACTestOldDefaultCredentials(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestMknotifydCommunicationEncrypted(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -528,7 +548,6 @@ class ACTestMknotifydCommunicationEncrypted(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestBackupConfigured(ACTest):
     def category(self) -> str:
         return ACTestCategories.reliability
@@ -565,7 +584,6 @@ class ACTestBackupConfigured(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestBackupNotEncryptedConfigured(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -596,7 +614,6 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 )
 
 
-@ac_test_registry.register
 class ACTestEscapeHTMLDisabled(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -676,7 +693,6 @@ class ABCACApacheTest(ACTest, abc.ABC):
         return response.text
 
 
-@ac_test_registry.register
 class ACTestApacheNumberOfProcesses(ABCACApacheTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -768,7 +784,6 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
         return int(writable_private[:-1]) * 1024.0
 
 
-@ac_test_registry.register
 class ACTestApacheProcessUsage(ABCACApacheTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -812,7 +827,6 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
         )
 
 
-@ac_test_registry.register
 class ACTestCheckMKHelperUsage(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -872,7 +886,6 @@ class ACTestCheckMKHelperUsage(ACTest):
         )
 
 
-@ac_test_registry.register
 class ACTestCheckMKFetcherUsage(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -947,7 +960,6 @@ class ACTestCheckMKFetcherUsage(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestCheckMKCheckerUsage(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -1023,7 +1035,6 @@ class ACTestCheckMKCheckerUsage(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestAlertHandlerEventTypes(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -1054,7 +1065,6 @@ class ACTestAlertHandlerEventTypes(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestGenericCheckHelperUsage(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -1113,7 +1123,6 @@ class ACTestGenericCheckHelperUsage(ACTest):
         )
 
 
-@ac_test_registry.register
 class ACTestSizeOfExtensions(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance
@@ -1162,7 +1171,6 @@ class ACTestSizeOfExtensions(ACTest):
         )
 
 
-@ac_test_registry.register
 class ACTestBrokenGUIExtension(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1192,7 +1200,6 @@ class ACTestBrokenGUIExtension(ACTest):
             )
 
 
-@ac_test_registry.register
 class ACTestESXDatasources(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1234,7 +1241,6 @@ class ACTestESXDatasources(ACTest):
             yield ACSingleResult(state=ACResultState.OK, text=_("No configured rules are affected"))
 
 
-@ac_test_registry.register
 class ACTestDeprecatedCheckPlugins(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1271,7 +1277,6 @@ class ACTestDeprecatedCheckPlugins(ACTest):
         )
 
 
-@ac_test_registry.register
 class ACTestDeprecatedInventoryPlugins(ACTest):
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1309,7 +1314,6 @@ def _site_is_using_livestatus_proxy(site_id):
     return site_configs[site_id].get("proxy") is not None
 
 
-@ac_test_registry.register
 class ACTestUnexpectedAllowedIPRanges(ACTest):
     def category(self) -> str:
         return ACTestCategories.security
@@ -1365,7 +1369,6 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         ]
 
 
-@ac_test_registry.register
 class ACTestCheckMKCheckerNumber(ACTest):
     def category(self) -> str:
         return ACTestCategories.performance

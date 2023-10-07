@@ -5054,6 +5054,10 @@ msgstr "Todas as execuções de alertas de manipuladores."
 msgid "All applications"
 msgstr "Todas as aplicações"
 
+#, fuzzy
+msgid "All backup codes have been deleted"
+msgstr "O backup foi apagado."
+
 msgid "All but first page"
 msgstr "Tudo menos a primeira página"
 
@@ -19554,6 +19558,10 @@ msgstr "Nível de entidade usado para criar hospedeiros Checkmk piggyback"
 msgid "Entries"
 msgstr "Inscrições"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "Inscrições"
+
 msgid "Entry"
 msgstr "Entrada"
 
@@ -21406,6 +21414,9 @@ msgstr "Arquivar finalmente um evento sem qualquer outra acção"
 
 msgid "Find differences..."
 msgstr "Encontrar diferenças..."
+
+msgid "Find on this page ..."
+msgstr ""
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Monitoramento do Eventlog do Windows Finetune"
@@ -27208,10 +27219,6 @@ msgstr ""
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr ""
-"Se regenerar códigos de backup, invalida automaticamente os códigos antigos."
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -29273,6 +29280,14 @@ msgstr "Faixa vertical inválida: de deve ser inferior a"
 msgid "Invalid visual type"
 msgstr "Tipo visual inválido"
 
+#, fuzzy
+msgid "Invalidate all backup codes"
+msgstr "Regenerar códigos de backup"
+
+#, fuzzy
+msgid "Invalidate all codes"
+msgstr "Incluir todos os nós"
+
 msgid "Inventorize containers' network configuration"
 msgstr "Inventariar a configuração de rede dos contentores"
 
@@ -30401,10 +30416,6 @@ msgstr "Plugins de verificação legados"
 
 msgid "Legacy inventory plugins"
 msgstr "Plugins de inventário legados"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "Legado Performeter encontrado: %r"
 
 msgid "Legacy run"
 msgstr "Execução antiga"
@@ -36528,6 +36539,10 @@ msgstr "Sem restrições (descobrir todas as unidades)"
 msgid "No restrictions to specific objects"
 msgstr "Sem restrições a objetos específicos"
 
+#, fuzzy
+msgid "No results"
+msgstr "Resultados"
+
 msgid "No roles assigned."
 msgstr "Nenhum papel atribuído."
 
@@ -37456,9 +37471,6 @@ msgstr "Número de clientes"
 
 msgid "Number of clients connected to a Device."
 msgstr "Número de clientes conectados a um Dispositivo."
-
-msgid "Number of columns"
-msgstr "Número de colunas"
 
 msgid "Number of columns: "
 msgstr "Número de colunas: "
@@ -44674,6 +44686,10 @@ msgid "Resulting state if the status is \"warmup\""
 msgstr "Estado resultante se o status for \"aquecimento\""
 
 msgid "Results"
+msgstr "Resultados"
+
+#, fuzzy, python-format
+msgid "Results: %d"
 msgstr "Resultados"
 
 msgid "Resumables"
@@ -70096,10 +70112,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Você tem regras %d para implantar o plugin de atualização"
 
 #, python-format
-msgid "You have %d unused backup codes left."
-msgstr "Restam-lhe %d códigos de salvaguarda não utilizados."
-
-#, python-format
 msgid ""
 "You have %d unused backup codes left. You can use them as one-time password "
 "if your key is not available."
@@ -72864,6 +72876,23 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
+#~ msgid "Number of columns"
+#~ msgstr "Número de colunas"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "Se regenerar códigos de backup, invalida automaticamente os códigos "
+#~ "antigos."
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "Legado Performeter encontrado: %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "Restam-lhe %d códigos de salvaguarda não utilizados."
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Falha no carregamento não foi \"%s\": %s"
@@ -73899,11 +73928,6 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #~| msgid "Folder: %s"
 #~ msgid "Mode: %s"
 #~ msgstr "Pasta: %s"
-
-#, fuzzy, python-format
-#~| msgid "Results"
-#~ msgid "Result: %s"
-#~ msgstr "Resultados"
 
 #, fuzzy, python-format
 #~| msgid ""

@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-10-02 23:08+0000\n"
+"PO-Revision-Date: 2023-10-06 06:00+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -5056,6 +5056,9 @@ msgstr "Alle Alerthandlerausführungen."
 msgid "All applications"
 msgstr "Alle Anwendungen"
 
+msgid "All backup codes have been deleted"
+msgstr "Alle Backup-Codes wurden gelöscht"
+
 msgid "All but first page"
 msgstr "Alle Seiten bis auf Seite 1"
 
@@ -8144,7 +8147,8 @@ msgid ""
 "Buttons for switching globally states such as enabling checks and "
 "notifications"
 msgstr ""
-"Knopf für Umschalten von globalem Status: Einschalten von Checks und Alarme"
+"Knöpfe zum globalen Ändern von Stati, wie z.B. Aktivierung von Checks und "
+"Benachrichtigungen"
 
 msgid "By"
 msgstr "Von"
@@ -19514,6 +19518,10 @@ msgstr ""
 msgid "Entries"
 msgstr "Einträge"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "Einträge"
+
 msgid "Entry"
 msgstr "Eintrag"
 
@@ -21365,6 +21373,10 @@ msgstr "Ereignis ohne weitere Aktion endgültig Archivieren"
 
 msgid "Find differences..."
 msgstr "Unterschiede finden..."
+
+#, fuzzy
+msgid "Find on this page ..."
+msgstr "Diese Ansicht hinzufügen zu..."
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Windows Eventlog-Überwachung justieren"
@@ -27166,10 +27178,6 @@ msgstr ""
 "Wenn Sie Ihre Lizenz von einem %s gekauft haben, kontaktieren Sie diesen "
 "bitte."
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr ""
-"Wenn Sie Backup-Codes neu generieren, werden alte Codes automatisch ungültig."
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -29223,6 +29231,12 @@ msgstr ""
 msgid "Invalid visual type"
 msgstr "Ungültiger Typ des Anzeigeobjekts"
 
+msgid "Invalidate all backup codes"
+msgstr "Alle Backup-Codes ungültig machen"
+
+msgid "Invalidate all codes"
+msgstr "Alle Codes ungültig machen"
+
 msgid "Inventorize containers' network configuration"
 msgstr "Die Netzwerkkonfigurationen der Container inventarisieren"
 
@@ -29779,7 +29793,7 @@ msgid "Key"
 msgstr "Schlüssel"
 
 msgid "Key ID"
-msgstr ""
+msgstr "Schlüssel-ID"
 
 msgid "Key from password store"
 msgstr "Schlüssel aus dem Passwortspeicher"
@@ -30353,10 +30367,6 @@ msgstr "Veraltete Checkplugins"
 
 msgid "Legacy inventory plugins"
 msgstr "Veraltete Inventurplugins"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "Veraltetes Perfometer angetroffen: %r"
 
 msgid "Legacy run"
 msgstr "Veralteter Lauf"
@@ -36435,6 +36445,10 @@ msgstr "Keine Einschränkungen (alle Einheiten erkennen)"
 msgid "No restrictions to specific objects"
 msgstr "Keine Einschränkung auf bestimmte Objekte"
 
+#, fuzzy
+msgid "No results"
+msgstr "Ergebnisse"
+
 msgid "No roles assigned."
 msgstr "Keine Rollen zugewiesen."
 
@@ -37361,9 +37375,6 @@ msgstr "Anzahl von Clients"
 
 msgid "Number of clients connected to a Device."
 msgstr "Anzahl der am Gerät angemeldeten Benutzer."
-
-msgid "Number of columns"
-msgstr "Anzahl der Spalten"
 
 msgid "Number of columns: "
 msgstr "Spaltenzahl: "
@@ -44538,6 +44549,10 @@ msgstr "Resultierender Zustand, wenn der Status \"warmup\" ist"
 
 msgid "Results"
 msgstr "Ergebnisse"
+
+#, fuzzy, python-format
+msgid "Results: %d"
+msgstr "Ergebnis:"
 
 msgid "Resumables"
 msgstr "Zusammenfassungen"
@@ -53167,7 +53182,6 @@ msgstr ""
 "Pull-Modus arbeiten. Bitte beachten Sie: Im Legacy-Pull-Modus werden die "
 "übertragenen Daten nicht verschlüsselt."
 
-#, fuzzy
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
 "for their number, size and age. Files are grouped according to the "
@@ -53177,7 +53191,8 @@ msgstr ""
 "Das Agenten-Plugin <tt>mk_filestats</tt> überwacht einen konfigurierten Satz "
 "von Dateien auf deren Anzahl, Größe und Alter. Die Dateien werden "
 "entsprechend dem konfigurierten Abschnitt gruppiert. Es kann auch eine "
-"einzelne Datei überwacht werden."
+"einzelne Datei überwacht werden. Wenn keine Abschnitte angegeben werden, "
+"erzeugt das Plugin keine Ausgabe."
 
 msgid ""
 "The agent plugin <tt>mk_logwatch.py</tt> monitors a configured set of text "
@@ -67685,6 +67700,15 @@ msgid ""
 "below) in order to avoid automatic invalidation of existing agent package "
 "signatures."
 msgstr ""
+"Wenn diese Option aktiviert ist, werden automatisch aktualisierte Monitoring-"
+"Agenten erstellt, wenn Konfigurationsänderungen aktiviert werden und die "
+"Agenten veraltet sind. Agenten werden aktualisiert, wenn sich ihre "
+"Konfiguration geändert hat (aufgrund einer Änderung in den Regeln der "
+"Monitoring-Agenten).<br><i>Achtung</i>: Back-Prozesse, die durch diese "
+"Option aufgerufen werden, erhöhen <i>nicht</i> die <i>Bake-Revision</i> "
+"(falls konfiguriert, siehe Option <i>Apply bake revision</i> unten), um eine "
+"automatische Ungültigmachung bestehender Signaturen von Agentenpaketen zu "
+"vermeiden."
 
 msgid ""
 "When this option is enabled, then <b>every</b> incoming message is being "
@@ -69938,10 +69962,6 @@ msgstr "Sie haben %d gebackene Agenten, die das Update Plugin beinhalten"
 #, python-format
 msgid "You have %d rules for deploying the update plugin"
 msgstr "Sie haben %d Regeln für die Bereitstellung des Update-Plugins"
-
-#, python-format
-msgid "You have %d unused backup codes left."
-msgstr "Sie haben %d unbenutzte Backup-Codes übrig."
 
 #, python-format
 msgid ""
@@ -72713,6 +72733,23 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Number of columns"
+#~ msgstr "Anzahl der Spalten"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "Wenn Sie Backup-Codes neu generieren, werden alte Codes automatisch "
+#~ "ungültig."
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "Veraltetes Perfometer angetroffen: %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "Sie haben %d unbenutzte Backup-Codes übrig."
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Werk \"%s\" kann nicht geladen werden: %s"
@@ -73728,11 +73765,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 #~| msgid "Folder: %s"
 #~ msgid "Mode: %s"
 #~ msgstr "Ordner: %s"
-
-#, fuzzy, python-format
-#~| msgid "Result:"
-#~ msgid "Result: %s"
-#~ msgstr "Ergebnis:"
 
 #, fuzzy, python-format
 #~| msgid ""
@@ -78590,9 +78622,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Add this graph collection to..."
 #~ msgstr "Diese Graphensammlung hinzufügen zu..."
-
-#~ msgid "Add this view to..."
-#~ msgstr "Diese Ansicht hinzufügen zu..."
 
 #~ msgid "Age of jobs controlled by mk-job"
 #~ msgstr "Alter von Jobs, die mit mk-job überwacht werden"

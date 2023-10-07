@@ -4965,6 +4965,10 @@ msgstr "すべてのアラートハンドラの実行。"
 msgid "All applications"
 msgstr "すべてのアプリケーション"
 
+#, fuzzy
+msgid "All backup codes have been deleted"
+msgstr "バックアップが削除されました。"
+
 msgid "All but first page"
 msgstr "最初のページを除くすべて"
 
@@ -19245,6 +19249,10 @@ msgstr "Checkmkピギーバックホストの作成に使用するエンティ�
 msgid "Entries"
 msgstr "エントリー"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "エントリー"
+
 msgid "Entry"
 msgstr "エントリ"
 
@@ -21078,6 +21086,9 @@ msgstr ""
 
 msgid "Find differences..."
 msgstr "違いを見つける..."
+
+msgid "Find on this page ..."
+msgstr ""
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Finetune Windows Eventlog monitoring"
@@ -26749,9 +26760,6 @@ msgstr ""
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr "バックアップコードを再生成すると、古いコードは自動的に無効になります。"
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -28740,6 +28748,14 @@ msgstr "無効な垂直範囲: from は to よりも低くする必要があり�
 msgid "Invalid visual type"
 msgstr "無効なビジュアルタイプ"
 
+#, fuzzy
+msgid "Invalidate all backup codes"
+msgstr "バックアップコードを再作成する"
+
+#, fuzzy
+msgid "Invalidate all codes"
+msgstr "すべてのノードを含める"
+
 msgid "Inventorize containers' network configuration"
 msgstr "コンテナのネットワーク構成をインベントライズする"
 
@@ -29876,10 +29892,6 @@ msgstr "レガシーチェックプラグイン"
 
 msgid "Legacy inventory plugins"
 msgstr "レガシーインベントリプラグイン"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "検出されたレガシー動作監視器: %r"
 
 msgid "Legacy run"
 msgstr "レガシーラン"
@@ -35978,6 +35990,10 @@ msgstr "制限なし（全ユニットを発見）"
 msgid "No restrictions to specific objects"
 msgstr "特定のオブジェクトに制限はありません"
 
+#, fuzzy
+msgid "No results"
+msgstr "結果"
+
 msgid "No roles assigned."
 msgstr "役割は割り当てられていません。"
 
@@ -36900,9 +36916,6 @@ msgstr "クライアント数"
 
 msgid "Number of clients connected to a Device."
 msgstr "デバイスに接続されているクライアントの数。"
-
-msgid "Number of columns"
-msgstr "列の数"
 
 msgid "Number of columns: "
 msgstr "列の数: "
@@ -44049,6 +44062,10 @@ msgid "Resulting state if the status is \"warmup\""
 msgstr "ステータスが\"ウォームアップ\"の場合の結果の状態"
 
 msgid "Results"
+msgstr "結果"
+
+#, fuzzy, python-format
+msgid "Results: %d"
 msgstr "結果"
 
 msgid "Resumables"
@@ -68595,10 +68612,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "更新プラグインをデプロイするための %d ルールがあります"
 
 #, python-format
-msgid "You have %d unused backup codes left."
-msgstr "未使用のバックアップコードが%d個残っています。"
-
-#, python-format
 msgid ""
 "You have %d unused backup codes left. You can use them as one-time password "
 "if your key is not available."
@@ -71336,6 +71349,22 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "Number of columns"
+#~ msgstr "列の数"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "バックアップコードを再生成すると、古いコードは自動的に無効になります。"
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "検出されたレガシー動作監視器: %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "未使用のバックアップコードが%d個残っています。"
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "\"%s\"の読み込みに失敗しました: %s"
@@ -72291,11 +72320,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~| msgid "Folder: %s"
 #~ msgid "Mode: %s"
 #~ msgstr "フォルダ: %s"
-
-#, fuzzy, python-format
-#~| msgid "Results"
-#~ msgid "Result: %s"
-#~ msgstr "結果"
 
 #, fuzzy, python-format
 #~| msgid ""

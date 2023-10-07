@@ -5047,6 +5047,10 @@ msgstr "Alle waarschuwings handler executies."
 msgid "All applications"
 msgstr "Alle toepassingen"
 
+#, fuzzy
+msgid "All backup codes have been deleted"
+msgstr "De backup is verwijderd."
+
 msgid "All but first page"
 msgstr "Alles behalve de eerste pagina"
 
@@ -19510,6 +19514,10 @@ msgstr "Entiteitsniveau gebruikt om Checkmk piggyback hosts te creëren"
 msgid "Entries"
 msgstr "Inzendingen"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "Inzendingen"
+
 msgid "Entry"
 msgstr "Ingang"
 
@@ -21356,6 +21364,9 @@ msgstr "Eindelijk een gebeurtenis archiveren zonder verdere actie"
 
 msgid "Find differences..."
 msgstr "Zoek verschillen..."
+
+msgid "Find on this page ..."
+msgstr ""
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Verfijn Windows Eventlog monitoring"
@@ -27161,10 +27172,6 @@ msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 "Als u uw licentie hebt gekocht via een %s, neem dan contact met hen op."
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr ""
-"Als u back-upcodes regenereert, maakt u oude codes automatisch ongeldig."
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -29222,6 +29229,14 @@ msgstr "Ongeldig verticaal bereik: van moet lager zijn dan tot"
 msgid "Invalid visual type"
 msgstr "Ongeldig visueel type"
 
+#, fuzzy
+msgid "Invalidate all backup codes"
+msgstr "Back-upcodes opnieuw genereren"
+
+#, fuzzy
+msgid "Invalidate all codes"
+msgstr "Alle knooppunten opnemen"
+
 msgid "Inventorize containers' network configuration"
 msgstr "Inventariseer de netwerkconfiguratie van containers"
 
@@ -30357,10 +30372,6 @@ msgstr "Plugins voor oudere controles"
 
 msgid "Legacy inventory plugins"
 msgstr "Verouderde inventaris plugins"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "Legacy performeter tegengekomen: %r"
 
 msgid "Legacy run"
 msgstr "Erfenis run"
@@ -36458,6 +36469,10 @@ msgstr "Geen beperkingen (ontdek alle eenheden)"
 msgid "No restrictions to specific objects"
 msgstr "Geen beperkingen tot specifieke objecten"
 
+#, fuzzy
+msgid "No results"
+msgstr "Resultaten"
+
 msgid "No roles assigned."
 msgstr "Geen rollen toegewezen."
 
@@ -37386,9 +37401,6 @@ msgstr "Aantal cliënten"
 
 msgid "Number of clients connected to a Device."
 msgstr "Aantal cliënten verbonden met een Apparaat."
-
-msgid "Number of columns"
-msgstr "Aantal kolommen"
 
 msgid "Number of columns: "
 msgstr "Aantal kolommen: "
@@ -44556,6 +44568,10 @@ msgid "Resulting state if the status is \"warmup\""
 msgstr "Resulterende status als de status \"warmup\" is"
 
 msgid "Results"
+msgstr "Resultaten"
+
+#, fuzzy, python-format
+msgid "Results: %d"
 msgstr "Resultaten"
 
 msgid "Resumables"
@@ -70024,10 +70040,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Je hebt %d regels voor het implementeren van de update plugin"
 
 #, python-format
-msgid "You have %d unused backup codes left."
-msgstr "U heeft %d ongebruikte back-up codes over."
-
-#, python-format
 msgid ""
 "You have %d unused backup codes left. You can use them as one-time password "
 "if your key is not available."
@@ -72789,6 +72801,22 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
+#~ msgid "Number of columns"
+#~ msgstr "Aantal kolommen"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "Als u back-upcodes regenereert, maakt u oude codes automatisch ongeldig."
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "Legacy performeter tegengekomen: %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "U heeft %d ongebruikte back-up codes over."
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Het laden van werk \"%s\" is mislukt: %s"
@@ -73805,11 +73833,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #~| msgid "Folder: %s"
 #~ msgid "Mode: %s"
 #~ msgstr "Map: %s"
-
-#, fuzzy, python-format
-#~| msgid "Results"
-#~ msgid "Result: %s"
-#~ msgstr "Resultaten"
 
 #, fuzzy, python-format
 #~| msgid ""

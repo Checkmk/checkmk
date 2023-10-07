@@ -5060,6 +5060,10 @@ msgstr "Tutte le esecuzioni dei gestori di allarmi."
 msgid "All applications"
 msgstr "Tutte le applicazioni"
 
+#, fuzzy
+msgid "All backup codes have been deleted"
+msgstr "Il backup è stato cancellato."
+
 msgid "All but first page"
 msgstr "Tutti tranne la prima pagina"
 
@@ -19580,6 +19584,10 @@ msgstr "Livello di entità utilizzato per creare host di Checkmk piggyback"
 msgid "Entries"
 msgstr "Voci"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "Voci"
+
 msgid "Entry"
 msgstr "Ingresso"
 
@@ -21438,6 +21446,9 @@ msgstr "Archiviare infine un evento senza ulteriori azioni"
 
 msgid "Find differences..."
 msgstr "Trova le differenze..."
+
+msgid "Find on this page ..."
+msgstr ""
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Mettere a punto il monitoraggio del registro eventi di Windows"
@@ -27248,11 +27259,6 @@ msgstr ""
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr ""
-"Se si rigenerano i codici di backup, si invalidano automaticamente i vecchi "
-"codici."
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -29322,6 +29328,14 @@ msgstr "Intervallo verticale non valido: from deve essere inferiore a to"
 msgid "Invalid visual type"
 msgstr "Tipo di visualizzazione non valido"
 
+#, fuzzy
+msgid "Invalidate all backup codes"
+msgstr "Rigenerare i codici di backup"
+
+#, fuzzy
+msgid "Invalidate all codes"
+msgstr "Includere tutti i nodi"
+
 msgid "Inventorize containers' network configuration"
 msgstr "Inventariare la configurazione di rete dei container"
 
@@ -30453,10 +30467,6 @@ msgstr "Plugin di controllo legacy"
 
 msgid "Legacy inventory plugins"
 msgstr "Plugin di inventario legacy"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "Performer legacy incontrato: %r"
 
 msgid "Legacy run"
 msgstr "Corsa dell'eredità"
@@ -36584,6 +36594,10 @@ msgstr "Nessuna restrizione (scoprire tutte le unità)"
 msgid "No restrictions to specific objects"
 msgstr "Nessuna restrizione a oggetti specifici"
 
+#, fuzzy
+msgid "No results"
+msgstr "Risultati"
+
 msgid "No roles assigned."
 msgstr "Nessun ruolo assegnato."
 
@@ -37514,9 +37528,6 @@ msgstr "Numero di clienti"
 
 msgid "Number of clients connected to a Device."
 msgstr "Numero di client connessi a un dispositivo."
-
-msgid "Number of columns"
-msgstr "Numero di colonne"
 
 msgid "Number of columns: "
 msgstr "Numero di colonne: "
@@ -44750,6 +44761,10 @@ msgid "Resulting state if the status is \"warmup\""
 msgstr "Stato risultante se lo stato è \"riscaldamento\""
 
 msgid "Results"
+msgstr "Risultati"
+
+#, fuzzy, python-format
+msgid "Results: %d"
 msgstr "Risultati"
 
 msgid "Resumables"
@@ -70257,10 +70272,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Hai %d regole per distribuire il plugin di aggiornamento"
 
 #, python-format
-msgid "You have %d unused backup codes left."
-msgstr "Sono rimasti %d codici di backup inutilizzati."
-
-#, python-format
 msgid ""
 "You have %d unused backup codes left. You can use them as one-time password "
 "if your key is not available."
@@ -73035,6 +73046,23 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
+#~ msgid "Number of columns"
+#~ msgstr "Numero di colonne"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "Se si rigenerano i codici di backup, si invalidano automaticamente i "
+#~ "vecchi codici."
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "Performer legacy incontrato: %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "Sono rimasti %d codici di backup inutilizzati."
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Impossibile caricare il lavoro \"%s\": %s"
@@ -74049,11 +74077,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #~| msgid "Folder: %s"
 #~ msgid "Mode: %s"
 #~ msgstr "Cartella: %s"
-
-#, fuzzy, python-format
-#~| msgid "Results"
-#~ msgid "Result: %s"
-#~ msgstr "Risultati"
 
 #, fuzzy, python-format
 #~| msgid ""

@@ -5108,6 +5108,10 @@ msgstr "Toutes les exécutions du gestionnaire d'alerte."
 msgid "All applications"
 msgstr "Toutes les applications"
 
+#, fuzzy
+msgid "All backup codes have been deleted"
+msgstr "La sauvegarde a été supprimée."
+
 msgid "All but first page"
 msgstr "Tout sauf la première page"
 
@@ -19758,6 +19762,10 @@ msgstr "Niveau d'entité utilisé pour créer des hôtes Checkmk piggyback"
 msgid "Entries"
 msgstr "Entrées"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "Entrées"
+
 msgid "Entry"
 msgstr "Entrée"
 
@@ -21623,6 +21631,10 @@ msgstr "Archiver définitivement un événement sans autre forme de procès"
 
 msgid "Find differences..."
 msgstr "Trouver les différences..."
+
+#, fuzzy
+msgid "Find on this page ..."
+msgstr "Ajouter cette vue à..."
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Optimiser la surveillance du journal des événements de Windows"
@@ -27497,11 +27509,6 @@ msgstr ""
 msgid "If you purchased your license through a %s, please contact them."
 msgstr ""
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr ""
-"Si vous régénérez des codes de sauvegarde, vous invalidez automatiquement "
-"les anciens codes."
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -29595,6 +29602,14 @@ msgstr "Plage verticale non valide : de doit être inférieur à à à"
 msgid "Invalid visual type"
 msgstr "Type de visuel non valide"
 
+#, fuzzy
+msgid "Invalidate all backup codes"
+msgstr "Régénérer les codes de sauvegarde"
+
+#, fuzzy
+msgid "Invalidate all codes"
+msgstr "Inclure tous les nœuds"
+
 msgid "Inventorize containers' network configuration"
 msgstr "Inventorier la configuration réseau des conteneurs"
 
@@ -30735,10 +30750,6 @@ msgstr "Plugins de vérification de l'héritage"
 
 msgid "Legacy inventory plugins"
 msgstr "Anciens plugins d'inventaire"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "Legacy performeter encountered : %r"
 
 msgid "Legacy run"
 msgstr "Course de l'héritage"
@@ -36899,6 +36910,10 @@ msgstr "Aucune restriction (découvrez toutes les unités)"
 msgid "No restrictions to specific objects"
 msgstr "Aucune restriction à des objets spécifiques"
 
+#, fuzzy
+msgid "No results"
+msgstr "Résultats"
+
 msgid "No roles assigned."
 msgstr "Aucun rôle attribué."
 
@@ -37836,9 +37851,6 @@ msgstr "Nombre de clients"
 
 msgid "Number of clients connected to a Device."
 msgstr "Nombre de clients connectés à un dispositif."
-
-msgid "Number of columns"
-msgstr "Nombre de colonnes"
 
 msgid "Number of columns: "
 msgstr "Nombre de colonnes : "
@@ -45138,6 +45150,10 @@ msgid "Resulting state if the status is \"warmup\""
 msgstr "État résultant si l'état est \"warmup\""
 
 msgid "Results"
+msgstr "Résultats"
+
+#, fuzzy, python-format
+msgid "Results: %d"
 msgstr "Résultats"
 
 msgid "Resumables"
@@ -70987,10 +71003,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Vous avez %d règles pour déployer le plugin de mise à jour"
 
 #, python-format
-msgid "You have %d unused backup codes left."
-msgstr "Il vous reste %d codes de sauvegarde non utilisés."
-
-#, python-format
 msgid ""
 "You have %d unused backup codes left. You can use them as one-time password "
 "if your key is not available."
@@ -73774,6 +73786,23 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
+#~ msgid "Number of columns"
+#~ msgstr "Nombre de colonnes"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "Si vous régénérez des codes de sauvegarde, vous invalidez automatiquement "
+#~ "les anciens codes."
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "Legacy performeter encountered : %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "Il vous reste %d codes de sauvegarde non utilisés."
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Impossible de charger le travail \"%s\" : %s"
@@ -74777,11 +74806,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 #~| msgid "Folder: %s"
 #~ msgid "Mode: %s"
 #~ msgstr "Dossier : %s"
-
-#, fuzzy, python-format
-#~| msgid "Results"
-#~ msgid "Result: %s"
-#~ msgstr "Résultats"
 
 #, fuzzy, python-format
 #~| msgid ""
@@ -78721,10 +78745,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 #~ msgid "Active checks (HTTP, TCP, etc.)"
 #~ msgstr "Contrôles actifs (HTTP, TCP, etc.)"
-
-#, fuzzy
-#~ msgid "Add this view to..."
-#~ msgstr "Ajouter cette vue à..."
 
 #~ msgid "Age of jobs controlled by mk-job"
 #~ msgstr "Âge des jobs contrôlées par mk-job"

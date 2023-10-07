@@ -5079,6 +5079,10 @@ msgstr "Toate execuțiile gestionarilor de alerte."
 msgid "All applications"
 msgstr "Toate aplicațiile"
 
+#, fuzzy
+msgid "All backup codes have been deleted"
+msgstr "Copia de rezervă a fost ștearsă."
+
 msgid "All but first page"
 msgstr "Toate, cu excepția primei pagini"
 
@@ -19681,6 +19685,10 @@ msgstr ""
 msgid "Entries"
 msgstr "Intrări"
 
+#, fuzzy
+msgid "Entries per row"
+msgstr "Intrări"
+
 msgid "Entry"
 msgstr "Intrare"
 
@@ -21545,6 +21553,10 @@ msgstr "Arhivați în cele din urmă un eveniment fără nicio altă acțiune"
 
 msgid "Find differences..."
 msgstr "Găsiți diferențe..."
+
+#, fuzzy
+msgid "Find on this page ..."
+msgstr "Adaugă acesta vedere la..."
 
 msgid "Finetune Windows Eventlog monitoring"
 msgstr "Finetune Windows Eventlog monitorizare"
@@ -27388,10 +27400,6 @@ msgstr ""
 "Dacă v-ați achiziționat licența prin intermediul unui %s, vă rugăm să îl "
 "contactați."
 
-msgid "If you regenerate backup codes, you automatically invalidate old codes."
-msgstr ""
-"Dacă regenerați codurile de rezervă, invalidați automat codurile vechi."
-
 msgid ""
 "If you regenerate backup codes, you automatically invalidate the existing "
 "codes."
@@ -29477,6 +29485,14 @@ msgstr "Interval vertical nevalabil: de la trebuie să fie mai mic decât la"
 msgid "Invalid visual type"
 msgstr "Tip vizual nevalabil"
 
+#, fuzzy
+msgid "Invalidate all backup codes"
+msgstr "Regenerarea codurilor de rezervă"
+
+#, fuzzy
+msgid "Invalidate all codes"
+msgstr "Includeți toate nodurile"
+
 msgid "Inventorize containers' network configuration"
 msgstr "Inventarierea containerelor' configurația rețelei"
 
@@ -30613,10 +30629,6 @@ msgstr "Plugin-uri de verificare a moștenirii"
 
 msgid "Legacy inventory plugins"
 msgstr "Plugin-uri de inventar vechi"
-
-#, python-format
-msgid "Legacy performeter encountered: %r"
-msgstr "A fost întâlnit un performer moștenit: %r"
 
 msgid "Legacy run"
 msgstr "Rularea moștenirii"
@@ -36773,6 +36785,10 @@ msgstr "Fără restricții (descoperă toate unitățile)"
 msgid "No restrictions to specific objects"
 msgstr "Nu există restricții pentru anumite obiecte"
 
+#, fuzzy
+msgid "No results"
+msgstr "Rezultate"
+
 msgid "No roles assigned."
 msgstr "Nu sunt atribuite roluri."
 
@@ -37709,9 +37725,6 @@ msgstr "Număr de clienți"
 
 msgid "Number of clients connected to a Device."
 msgstr "Numărul de clienți conectați la un dispozitiv."
-
-msgid "Number of columns"
-msgstr "Număr de coloane"
 
 msgid "Number of columns: "
 msgstr "Numărul de coloane: "
@@ -44970,6 +44983,10 @@ msgstr "Starea rezultată în cazul în care starea este \"warmup\""
 
 msgid "Results"
 msgstr "Rezultate"
+
+#, fuzzy, python-format
+msgid "Results: %d"
+msgstr "(altul: %s)"
 
 msgid "Resumables"
 msgstr "Resumabile"
@@ -70677,10 +70694,6 @@ msgid "You have %d rules for deploying the update plugin"
 msgstr "Aveți %d reguli pentru implementarea plugin-ului de actualizare"
 
 #, python-format
-msgid "You have %d unused backup codes left."
-msgstr "Mai aveți %d coduri de rezervă neutilizate."
-
-#, python-format
 msgid ""
 "You have %d unused backup codes left. You can use them as one-time password "
 "if your key is not available."
@@ -73477,6 +73490,22 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#~ msgid "Number of columns"
+#~ msgstr "Număr de coloane"
+
+#~ msgid ""
+#~ "If you regenerate backup codes, you automatically invalidate old codes."
+#~ msgstr ""
+#~ "Dacă regenerați codurile de rezervă, invalidați automat codurile vechi."
+
+#, python-format
+#~ msgid "Legacy performeter encountered: %r"
+#~ msgstr "A fost întâlnit un performer moștenit: %r"
+
+#, python-format
+#~ msgid "You have %d unused backup codes left."
+#~ msgstr "Mai aveți %d coduri de rezervă neutilizate."
+
 #, python-format
 #~ msgid "Failed to load werk \"%s\": %s"
 #~ msgstr "Nu a reușit să încarce werk \"%s\": %s."
@@ -74266,10 +74295,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #, fuzzy, python-format
 #~ msgid "Mode: %s"
-#~ msgstr "(altul: %s)"
-
-#, fuzzy, python-format
-#~ msgid "Result: %s"
 #~ msgstr "(altul: %s)"
 
 #, fuzzy, python-format
@@ -75637,9 +75662,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #, fuzzy
 #~ msgid "Add this graph collection to..."
-#~ msgstr "Adaugă acesta vedere la..."
-
-#~ msgid "Add this view to..."
 #~ msgstr "Adaugă acesta vedere la..."
 
 #, fuzzy

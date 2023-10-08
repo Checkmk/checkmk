@@ -26,7 +26,9 @@ def parse_ucd_cpu_load(string_table: List[StringTable]) -> Section | None:
                 for int_cpu_load_str, float_cpu_load_str in cpu_loads
             )
         ),
-        num_cpus=len(cpu_count) if cpu_count else 1,  # fallback to 1 if we don't get the number of cpu's from SNMP
+        num_cpus=len(cpu_count)
+        if cpu_count
+        else 1,  # fallback to 1 if we don't get the number of cpu's from SNMP
     )
 
 

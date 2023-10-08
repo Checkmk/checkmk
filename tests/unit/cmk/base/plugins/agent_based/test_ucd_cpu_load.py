@@ -5,7 +5,6 @@
 
 import pytest
 from typing import List
-
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.ucd_cpu_load import parse_ucd_cpu_load
 from cmk.base.plugins.agent_based.utils.cpu import Load, Section

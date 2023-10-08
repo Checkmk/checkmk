@@ -12,6 +12,9 @@ from typing_extensions import TypedDict
 
 from livestatus import SiteId
 
+import omdlib.main  # pylint: disable=wrong-import-order
+from omdlib.contexts import SiteContext  # pylint: disable=wrong-import-order
+
 from cmk.utils.store import load_text_from_file
 
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
@@ -178,3 +181,24 @@ class TestConfigDomainCACertificates:
         # also test changed order:
         remote_cas = ConfigDomainCACertificates()._remote_sites_cas([remote1_older, remote1_newer])
         assert remote_cas[SiteId("heute_remote_1")].not_valid_after == longest_validity
+
+    def test_remote_root_ca_in_remote_site_cas(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        site_id = "tested"
+        ca_path = tmp_path / site_id / "etc" / "ssl"
+        ca_path.mkdir(parents=True, exist_ok=True)
+        ca_pem = ca_path / "ca.pem"
+        site_pem = ca_path / "sites" / ("%s.pem" % site_id)
+
+        monkeypatch.setattr(
+            omdlib.main,
+            "cert_dir",
+            lambda x: ca_path,
+        )
+
+        assert not site_pem.exists()
+        omdlib.main.initialize_site_ca(SiteContext(site_id))
+
+        remote_cas = ConfigDomainCACertificates()._remote_sites_cas([ca_pem.read_text()])
+        assert SiteId(site_id) in remote_cas

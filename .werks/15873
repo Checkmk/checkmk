@@ -1,0 +1,13 @@
+Title: ucd_cpu_load: Consider the number of CPUs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1697635673
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The number of CPUs in <i>UCD SNMP Daemon: CPU Utilization</i> was hardcoded to 1, which is mostly wrong today.
+
+With this Werk we count the number of CPUs by fetching {HOST-RESOURCES-V2-MIB::hrProcessorFrwID}.
+If this is not available the check falls back to 1 CPU.

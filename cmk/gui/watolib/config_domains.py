@@ -342,9 +342,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 key=lambda cert: cert.not_valid_after,
             )
             if (
-                site_id := CN_TEMPLATE.extract_site(
-                    cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].rfc4514_string()
-                )
+                (cns := cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME))
+                and (site_id := CN_TEMPLATE.extract_site(cns[0].rfc4514_string()))
             )
         }
 

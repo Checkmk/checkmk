@@ -84,7 +84,7 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
         alias=alias,
         type=type_,
         speed=int(high_speed) * 1000 * 1000 if high_speed else int(speed),
-        oper_status=int(oper_status),
+        oper_status=int(oper_status) if oper_status.isdigit() else None,
         phys_address=render_mac_address(sub_table[-2]),
         admin_status=int(admin_status) if admin_status else None,
         last_change=_process_last_change(last_change),

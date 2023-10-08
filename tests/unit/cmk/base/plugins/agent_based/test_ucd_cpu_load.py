@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.utils.cpu import Load, Section
         pytest.param(
             [
                 [["312", "3.123213"], ["280", "2.78897"], ["145", "1.34563546"]],
-                [['.0.0'], ['.0.0'], ['.0.0'], ['.0.0']],
+                [[".0.0"], [".0.0"], [".0.0"], [".0.0"]],
             ],
             Section(
                 load=Load(load1=3.123213, load5=2.78897, load15=1.34563546),

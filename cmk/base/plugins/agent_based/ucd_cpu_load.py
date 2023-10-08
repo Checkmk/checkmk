@@ -48,6 +48,6 @@ register.snmp_section(
                 "1",  # HOST-RESOURCES-V2-MIB::hrProcessorFrwID
             ],
         ),
-    ],   
+    ],
     detect=UCD,
 )

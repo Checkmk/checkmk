@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 import pytest
+from cryptography.x509 import load_pem_x509_certificate
 from pytest_mock import MockerFixture
 
 import omdlib
@@ -31,15 +32,24 @@ def test_initialize_site_ca(
     site_id = "tested"
     ca_path = tmp_path / site_id / "etc" / "ssl"
     ca_path.mkdir(parents=True, exist_ok=True)
+    ca_pem = ca_path / "ca.pem"
+    site_pem = ca_path / "sites" / ("%s.pem" % site_id)
 
     mocker.patch(
         "omdlib.main.cert_dir",
         return_value=ca_path,
     )
 
+    assert not site_pem.exists()
     omdlib.main.initialize_site_ca(omdlib.main.SiteContext(site_id))
-    assert (ca_path / "ca.pem").exists()
-    assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()
+
+    assert ca_pem.exists()
+    ca_cert = load_pem_x509_certificate(ca_pem.read_bytes())
+    assert ca_cert.subject.rfc4514_string() == f"CN=Site '{site_id}' local CA"
+
+    assert site_pem.exists()
+    site_cert = load_pem_x509_certificate(site_pem.read_bytes())
+    assert site_cert.subject.rfc4514_string() == f"CN={site_id}"
 
 
 def test_hostname() -> None:

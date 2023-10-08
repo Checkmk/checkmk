@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from typing import List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.ucd_cpu_load import parse_ucd_cpu_load
@@ -34,5 +35,5 @@ from cmk.base.plugins.agent_based.utils.cpu import Load, Section
         ),
     ],
 )
-def test_parse_ucd_cpu_load(string_table: StringTable, expected_section: Section) -> None:
+def test_parse_ucd_cpu_load(string_table: List[StringTable], expected_section: Section) -> None:
     assert parse_ucd_cpu_load(string_table) == expected_section

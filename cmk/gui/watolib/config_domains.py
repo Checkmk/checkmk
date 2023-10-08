@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from cryptography.x509 import Certificate, load_pem_x509_certificate
+from cryptography.x509.oid import NameOID
 
 from livestatus import SiteId
 
@@ -340,7 +341,11 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 (load_pem_x509_certificate(raw.encode()) for raw in trusted_cas),
                 key=lambda cert: cert.not_valid_after,
             )
-            if (site_id := CN_TEMPLATE.extract_site(cert.subject.rfc4514_string()))
+            if (
+                site_id := CN_TEMPLATE.extract_site(
+                    cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].rfc4514_string()
+                )
+            )
         }
 
     # this is only a non-member, because it used in update config to 2.2

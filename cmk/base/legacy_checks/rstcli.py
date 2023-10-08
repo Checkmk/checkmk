@@ -112,7 +112,7 @@ def parse_rstcli(string_table):
     volumes = {}
     for section in rstcli_sections:
         if section[0] == "VOLUME INFORMATION":
-            volumes = parse_rstcli_volumes(section[1])
+            volumes.update(parse_rstcli_volumes(section[1]))
         elif section[0].startswith("DISKS IN VOLUME"):
             volume = section[0].split(":")[1].strip()
             volumes[volume]["Disks"] = parse_rstcli_disks(section[1])

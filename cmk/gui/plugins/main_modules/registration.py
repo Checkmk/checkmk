@@ -125,6 +125,8 @@ def register() -> None:
         painter_registry,
         sorter_registry,
         command_registry,
+        config_variable_group_registry,
+        config_variable_registry,
     )
     watolib.register(rulespec_group_registry)
 

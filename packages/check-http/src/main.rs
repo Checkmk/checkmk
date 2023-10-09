@@ -8,7 +8,7 @@ mod pwstore;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let patched_args = replace_passwords::patch_args(std::env::args());
+    let patched_args = pwstore::patch_args(std::env::args());
     let args = cli::Args::parse_from(patched_args);
 
     let mut cli_headers = HeaderMap::new();

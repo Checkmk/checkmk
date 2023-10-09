@@ -10,7 +10,7 @@ from base64 import b64decode
 from collections.abc import Sequence
 from datetime import datetime
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel, Json, TypeAdapter
 
 
 class JSON(BaseModel, frozen=True):
@@ -46,11 +46,49 @@ class ConfigReadingError(JSON, frozen=True):
     config_reading_error: str
 
 
+class RobotFrameworkConfig(JSON, frozen=True):
+    robot_target: str
+    variable_file: str
+    argument_file: str | None
+    retry_strategy: str
+
+
+class ExecutionConfig(JSON, frozen=True):
+    n_retries_max: int
+    execution_interval_seconds: int
+    timeout: int
+
+
+class EnvironmentConfig(JSON, frozen=True):
+    type: str
+    binary_path: str
+    robocorp_home_path: str
+    robot_yaml_path: str
+    build_timeout: int
+
+
+class SessionConfig(JSON, frozen=True):
+    type: str
+
+
+class SuiteConfig(JSON, frozen=True):
+    robot_framework_config: RobotFrameworkConfig
+    execution_config: ExecutionConfig
+    environment_config: EnvironmentConfig
+    session_config: SessionConfig
+
+
+class ConfigFileValue(JSON, frozen=True):
+    working_directory: str
+    results_directory: str
+    suites: dict[str, SuiteConfig]
+
+
 class ConfigFileContent(JSON, frozen=True):
-    config_file_content: str
+    config_file_content: Json[ConfigFileValue]
 
 
-Section = list[Result]
+Section = list[Result | ConfigFileContent]
 
 SubSection = Result | ConfigReadingError | ConfigFileContent
 
@@ -62,5 +100,5 @@ def _parse_line(line: str) -> SubSection:
 
 def parse(string_table: Sequence[Sequence[str]]) -> Section:
     subsections = [_parse_line(line[0]) for line in string_table]
-    results = [s for s in subsections if isinstance(s, Result)]
+    results = [s for s in subsections if isinstance(s, (Result, ConfigFileContent))]
     return Section(results)

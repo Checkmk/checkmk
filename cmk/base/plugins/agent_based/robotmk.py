@@ -77,15 +77,19 @@ def _item(result: robotmk_api.Result, test: robotmk_api.Test) -> str:
 
 def discover(section: robotmk_api.Section) -> DiscoveryResult:
     for result in section:
-        for test in result.tests:
-            yield Service(
-                item=_item(result, test),
-                labels=[
-                    ServiceLabel("robotmk", "true"),
-                    ServiceLabel("robotmk/html_last_error_log", "yes"),
-                    ServiceLabel("robotmk/html_last_log", "yes"),
-                ],
-            )
+        if isinstance(result, robotmk_api.Result):
+            for test in result.tests:
+                yield Service(
+                    item=_item(result, test),
+                    labels=[
+                        ServiceLabel("robotmk", "true"),
+                        ServiceLabel("robotmk/html_last_error_log", "yes"),
+                        ServiceLabel("robotmk/html_last_log", "yes"),
+                    ],
+                )
+        if isinstance(result, robotmk_api.ConfigFileContent):
+            for suite in result.config_file_content.suites:
+                yield Service(item=suite)
 
 
 def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
@@ -101,15 +105,28 @@ def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
     )
 
 
+def _check_config_file_content(result: robotmk_api.ConfigFileContent, item: str) -> CheckResult:
+    for suite in result.config_file_content.suites:
+        if suite == item:
+            yield Result(state=State.OK, summary="This Suite was discovered!")
+
+
+def _check_result(params: Params, result: robotmk_api.Result, item: str) -> CheckResult:
+    for test in result.tests:
+        if _item(result, test) == item:
+            html = result.decode_html()
+            _transmit_to_livestatus(html, "suite_last_log.html")
+            if test.status is robotmk_api.Outcome.FAIL:
+                _transmit_to_livestatus(html, "suite_last_error_log.html")
+                yield from _check_test(params, test)
+
+
 def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResult:
     for result in section:
-        for test in result.tests:
-            if _item(result, test) == item:
-                html = result.decode_html()
-                _transmit_to_livestatus(html, "suite_last_log.html")
-                if test.status is robotmk_api.Outcome.FAIL:
-                    _transmit_to_livestatus(html, "suite_last_error_log.html")
-                yield from _check_test(params, test)
+        if isinstance(result, robotmk_api.ConfigFileContent):
+            yield from _check_config_file_content(result, item)
+        elif isinstance(result, robotmk_api.Result):
+            yield from _check_result(params, result, item)
 
 
 register.check_plugin(

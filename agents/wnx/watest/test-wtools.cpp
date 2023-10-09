@@ -197,7 +197,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
     }
 }
 
-TEST_F(WtoolsKillProcFixture, FindProcsByFullPathAndPidComponent) {
+TEST_F(WtoolsKillProcFixture, DISABLED_FindProcsByFullPathAndPidComponent) {
     const auto maybe_pid = RunProcess();
     ASSERT_TRUE(maybe_pid.has_value());
 

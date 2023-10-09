@@ -63,6 +63,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     RestrictToNotificationNumbers,
 )
 from cmk.gui.rest_api_types.notifications_types import (
+    CustomPlugin,
     get_plugin_from_api_request,
     get_plugin_from_mk_file,
     NotificationPlugin,
@@ -189,7 +190,7 @@ class BulkNotAllowedException(Exception):
 @dataclass
 class NotificationMethod:
     notification_bulking: CheckboxNotificationBulking
-    notify_plugin: NotificationPlugin
+    notify_plugin: NotificationPlugin | CustomPlugin
 
     @classmethod
     def from_mk_file_format(

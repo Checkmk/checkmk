@@ -1,0 +1,11 @@
+README.md
+pyproject.toml
+setup.cfg
+test/test_smth.py
+werks/__init__.py
+werks.egg-info/PKG-INFO
+werks.egg-info/SOURCES.txt
+werks.egg-info/dependency_links.txt
+werks.egg-info/requires.txt
+werks.egg-info/top_level.txt
+werks/cli/__init__.py

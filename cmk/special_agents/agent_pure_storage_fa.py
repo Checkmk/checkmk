@@ -67,7 +67,7 @@ _SECTIONS = [
         name="alerts",
         path="alerts",
         min_version=_RestVersion(2, 2),
-        params={"filters": "open"},
+        params={"filter": "state='open'"},
     ),
 ]
 

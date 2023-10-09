@@ -1,4 +1,4 @@
-title: Kubernetes: Checkmk Cluster Collector
+title: Kubernetes: Cluster Collector for Vanilla Kubernetes, AWS Elastic Kubernetes Service (EKS), Azure Kubernetes Service (AKS), Google Kubernetes Engine (GKE), VMware Tanzu
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPLv2

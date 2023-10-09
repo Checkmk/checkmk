@@ -136,24 +136,6 @@ def _perfometer_has_required_metrics_or_scalars(
     raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
-def _total_values_exists(value: str | int | float, translated_metrics: TranslatedMetrics) -> bool:
-    """
-    Only if the value has a suffix like ':min'/':max' we need to check if the value actually exists in the scalar data
-    The value could be a percentage value (e.g. '100.0') in this case no need to look here for missing data
-    """
-    if not isinstance(value, str):
-        return True
-
-    if ":" not in value:
-        return True
-
-    perf_name, perf_param = value.split(":", 1)
-    if perf_param not in translated_metrics[perf_name]["scalar"].keys():
-        return False
-
-    return True
-
-
 def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> bool:
     if not translated_metrics:
         return False
@@ -169,9 +151,6 @@ def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: Transla
                 ).evaluate(translated_metrics)
             except Exception:
                 return False
-
-        if "total" in perfometer:
-            return _total_values_exists(perfometer["total"], translated_metrics)
 
     return True
 

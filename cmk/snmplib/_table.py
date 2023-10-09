@@ -39,7 +39,6 @@ SNMPScanFunction = Callable[[OIDFunction], bool]
 
 _ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
 _ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
-_ResultColumnsDecoded = list[list[SNMPDecodedValues]]
 
 
 def get_snmp_table(
@@ -98,7 +97,31 @@ def get_snmp_table(
         index_encoding = columns[index_column][-1]
         columns[index_column] = fetchoid, index_rows, index_encoding
 
-    return _make_table(columns, partial(ensure_str, encoding=backend.config.character_encoding))
+    # Here we have to deal with a nasty problem: Some brain-dead devices
+    # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
+    # in the interfaces MIB with 64 bit counters. So we need to look at
+    # the OIDs and watch out for gaps we need to fill with dummy values.
+    sanitized_columns = _sanitize_snmp_table_columns(columns)
+
+    # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
+    # get python byte strings. But for Checkmk we need unicode strings now.
+    # Convert them by using the standard Checkmk approach for incoming data
+    decoded_columns = [
+        _decode_column(
+            column, value_encoding, partial(ensure_str, encoding=backend.config.character_encoding)
+        )
+        for column, value_encoding in sanitized_columns
+    ]
+
+    if not decoded_columns:
+        return []
+
+    # Now construct table by swapping X and Y.
+    new_info = []
+    for index in range(len(decoded_columns[0])):
+        row = [c[index] for c in decoded_columns]
+        new_info.append(row)
+    return new_info
 
 
 def _make_index_rows(
@@ -123,23 +146,6 @@ def _make_index_rows(
                 assert_never(index_format)
         index_rows.append((o, val))
     return index_rows
-
-
-def _make_table(
-    columns: _ResultColumnsUnsanitized, ensure_str_cb: Callable[[str | bytes], str]
-) -> Sequence[SNMPTable]:
-    # Here we have to deal with a nasty problem: Some brain-dead devices
-    # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
-    # in the interfaces MIB with 64 bit counters. So we need to look at
-    # the OIDs and watch out for gaps we need to fill with dummy values.
-    sanitized_columns = _sanitize_snmp_table_columns(columns)
-
-    # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
-    # get python byte strings. But for Checkmk we need unicode strings now.
-    # Convert them by using the standard Checkmk approach for incoming data
-    decoded_columns = _sanitize_snmp_encoding(sanitized_columns, ensure_str_cb)
-
-    return _construct_snmp_table_of_rows(decoded_columns)
 
 
 def _oid_to_bin(oid: OID) -> SNMPRawValue:
@@ -222,14 +228,6 @@ def _perform_snmpwalk(
     return rowinfo
 
 
-def _sanitize_snmp_encoding(
-    columns: _ResultColumnsSanitized, ensure_str_cb: Callable[[str | bytes], str]
-) -> _ResultColumnsDecoded:
-    return [
-        _decode_column(column, value_encoding, ensure_str_cb) for column, value_encoding in columns
-    ]
-
-
 def _decode_column(
     column: list[SNMPRawValue],
     value_encoding: SNMPValueEncoding,
@@ -301,15 +299,3 @@ def _are_ascending_oids(oid_list: list[OID]) -> bool:
         if _cmp_oids(oid_list[a], oid_list[a + 1]) > 0:  # == 0 should never happen
             return False
     return True
-
-
-def _construct_snmp_table_of_rows(columns: _ResultColumnsDecoded) -> Sequence[SNMPTable]:
-    if not columns:
-        return []
-
-    # Now construct table by swapping X and Y.
-    new_info = []
-    for index in range(len(columns[0])):
-        row = [c[index] for c in columns]
-        new_info.append(row)
-    return new_info

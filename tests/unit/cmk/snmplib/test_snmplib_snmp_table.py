@@ -116,12 +116,11 @@ def test_get_snmp_table(
 def test_sanitize_snmp_encoding(
     encoding: str | None,
     columns: _snmp_table._ResultColumnsSanitized,
-    expected: _snmp_table._ResultColumnsDecoded,
+    expected: Sequence[Sequence[_snmp_table.SNMPDecodedValues]],
 ) -> None:
-    assert (
-        _snmp_table._sanitize_snmp_encoding(columns, partial(ensure_str, encoding=encoding))
-        == expected
-    )
+    assert [
+        _snmp_table._decode_column(c, v, partial(ensure_str, encoding=encoding)) for c, v in columns
+    ] == expected
 
 
 def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:

@@ -60,7 +60,7 @@ function RcvJob($j, $name){
 # Bases
 $msb = {
 & Set-Location $using:host_dir
-& "$Env:msbuild_exe" $args 
+& "C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe" $args 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error: " $LASTEXITCODE -foreground Red
     throw "Failed"

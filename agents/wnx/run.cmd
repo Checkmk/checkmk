@@ -196,8 +196,8 @@ goto :eof
 :check_msvc
 if not "%arg_setup%" == "1" goto :eof
 powershell Write-Host "Looking for MSVC 2022..." -Foreground White
-set msbuild_exe=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
-if not exist "%msbuild_exe%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red & call :halt 8
+set msbuild=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
+if not exist "%msbuild%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red & call :halt 8
 powershell Write-Host "[+] Found MSVC 2022" -Foreground Green
 goto :eof
 
@@ -275,7 +275,7 @@ goto :eof
 if not "%arg_msi%" == "1" powershell Write-Host "Skipped MSI Build" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Building MSI..." -Foreground White
 del /Y %build_dir%\install\Release\check_mk_service.msi
-"%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red & call :halt 8
 goto :eof
 
@@ -311,7 +311,7 @@ goto :eof
 if not "%arg_sign%" == "1" powershell Write-Host "Signing binaries skipped" -Foreground Yellow & goto :eof
 powershell Write-Host "run:Signing binary..." -Foreground White
 :: to be sure that all artifacts are up to date
-"%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
+"%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
 if errorlevel 1 call powershell Write-Host "Failed to attach USB token" -Foreground Red & :halt 91
 del /Q %hash_file% 2>nul

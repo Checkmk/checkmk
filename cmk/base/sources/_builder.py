@@ -160,17 +160,16 @@ class _Builder:
         def make_special_agents() -> Iterable[Source]:
             for agentname, params in self.config_cache.special_agents(self.host_name):
                 special_agent = SpecialAgent(self.host_name, self.ipaddress)
-                with suppress(KeyError):
-                    for agent_data in special_agent.iter_special_agent_commands(agentname, params):
-                        yield SpecialAgentSource(
-                            self.config_cache,
-                            self.host_name,
-                            self.ipaddress,
-                            max_age=self.max_age_agent,
-                            agent_name=agentname,
-                            cmdline=agent_data.cmdline,
-                            stdin=agent_data.stdin,
-                        )
+                for agent_data in special_agent.iter_special_agent_commands(agentname, params):
+                    yield SpecialAgentSource(
+                        self.config_cache,
+                        self.host_name,
+                        self.ipaddress,
+                        max_age=self.max_age_agent,
+                        agent_name=agentname,
+                        cmdline=agent_data.cmdline,
+                        stdin=agent_data.stdin,
+                    )
 
         special_agents = tuple(make_special_agents())
 

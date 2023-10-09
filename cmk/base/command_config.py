@@ -426,19 +426,6 @@ class SpecialAgent:
         self.host_name = host_name
         self.host_address = host_address
 
-    def make_special_agent_stdin(
-        self,
-        agent_name: str,
-        params: Mapping[str, object],
-    ) -> str | None:
-        info_func = base_config.special_agent_info[agent_name]
-        # TODO: We call a user supplied function here.
-        # If this crashes during config generation, it can get quite ugly.
-        # We should really wrap this and implement proper sanitation and exception handling.
-        # Deal with this when modernizing the API (CMK-3812).
-        agent_configuration = info_func(params, self.host_name, self.host_address)
-        return getattr(agent_configuration, "stdin", None)
-
     def _make_source_path(self, agent_name: str) -> Path:
         file_name = f"agent_{agent_name}"
         local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
@@ -446,36 +433,30 @@ class SpecialAgent:
             return local_path
         return Path(cmk.utils.paths.agents_dir) / "special" / file_name
 
-    def _make_source_args(self, agent_name: str, params: Mapping[str, object]) -> str:
-        info_func = base_config.special_agent_info[agent_name]
-        # TODO: CMK-3812 (see above)
-        agent_configuration = info_func(params, self.host_name, self.host_address)
-        return base_config.commandline_arguments(self.host_name, None, agent_configuration)
-
     def make_special_agent_cmdline(
         self,
         agent_name: str,
-        params: Mapping[str, object],
+        agent_configuration: base_config.SpecialAgentInfoFunctionResult,
     ) -> str:
-        """
-        Raises:
-            KeyError if the special agent is deactivated.
-
-        """
         path = self._make_source_path(agent_name)
-        args = self._make_source_args(agent_name, params)
+        args = base_config.commandline_arguments(self.host_name, None, agent_configuration)
         return f"{path} {args}"
 
     def iter_special_agent_commands(
         self, agent_name: str, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommand]:
+        if (info_func := base_config.special_agent_info.get(agent_name)) is None:
+            return
+        # TODO: We call a user supplied function here.
+        # If this crashes during config generation, it can get quite ugly.
+        # We should really wrap this and implement proper sanitation and exception handling.
+        # Deal with this when modernizing the API (CMK-3812).
+        agent_configuration = info_func(params, self.host_name, self.host_address)
+
         cmdline = self.make_special_agent_cmdline(
             agent_name,
-            params,
+            agent_configuration,
         )
-        stdin = self.make_special_agent_stdin(
-            agent_name,
-            params,
-        )
+        stdin = getattr(agent_configuration, "stdin", None)
 
         yield SpecialAgentCommand(cmdline, stdin)

@@ -927,22 +927,20 @@ perfometer_info.append(
 
 perfometer_info.append(
     {
-        "type": "stacked",
+        "type": "dual",
         "perfometers": [
-            {
-                "type": "dual",
-                "perfometers": [
-                    {"type": "linear", "label": None, "segments": ["total_hitratio"], "total": 100},
-                    {"type": "linear", "label": None, "segments": ["data_hitratio"], "total": 100},
-                ],
-            },
-            {
-                "type": "dual",
-                "perfometers": [
-                    {"type": "linear", "label": None, "segments": ["index_hitratio"], "total": 100},
-                    {"type": "linear", "label": None, "segments": ["xda_hitratio"], "total": 100},
-                ],
-            },
+            {"type": "linear", "segments": ["total_hitratio"], "total": 100},
+            {"type": "linear", "segments": ["data_hitratio"], "total": 100},
+        ],
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "dual",
+        "perfometers": [
+            {"type": "linear", "segments": ["index_hitratio"], "total": 100},
+            {"type": "linear", "segments": ["xda_hitratio"], "total": 100},
         ],
     }
 )
@@ -1504,88 +1502,47 @@ perfometer_info.append(
         "total": "20,oracle_db_time,oracle_db_time,30,/,/,+",
     }
 )
+
 perfometer_info.append(
     {
-        "type": "stacked",
+        "type": "dual",
         "perfometers": [
             {
-                "type": "dual",
-                "perfometers": [
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_s_rb",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_s_wb",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                ],
+                "type": "logarithmic",
+                "metric": "oracle_ios_f_total_s_rb,oracle_ios_f_total_l_rb,+",
+                "half_value": 50.0,
+                "exponent": 2,
             },
             {
-                "type": "dual",
-                "perfometers": [
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_l_rb",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_l_wb",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                ],
+                "type": "logarithmic",
+                "metric": "oracle_ios_f_total_s_wb,oracle_ios_f_total_l_wb,+",
+                "half_value": 50.0,
+                "exponent": 2,
             },
         ],
     }
 )
+
 perfometer_info.append(
     {
-        "type": "stacked",
+        "type": "dual",
         "perfometers": [
             {
-                "type": "dual",
-                "perfometers": [
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_s_r",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_s_w",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                ],
+                "type": "logarithmic",
+                "metric": "oracle_ios_f_total_s_r,oracle_ios_f_total_l_r,+",
+                "half_value": 50.0,
+                "exponent": 2,
             },
             {
-                "type": "dual",
-                "perfometers": [
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_l_r",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                    {
-                        "type": "logarithmic",
-                        "metric": "oracle_ios_f_total_l_w",
-                        "half_value": 50.0,
-                        "exponent": 2,
-                    },
-                ],
+                "type": "logarithmic",
+                "metric": "oracle_ios_f_total_s_w,oracle_ios_f_total_l_w,+",
+                "half_value": 50.0,
+                "exponent": 2,
             },
         ],
     }
 )
+
 perfometer_info.append(
     {
         "type": "stacked",

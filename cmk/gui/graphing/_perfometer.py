@@ -50,7 +50,7 @@ class _DualPerfometerSpec(TypedDict):
 
 class _StackedPerfometerSpec(TypedDict):
     type: Literal["stacked"]
-    perfometers: Sequence[_LinearPerfometerSpec | LogarithmicPerfometerSpec | _DualPerfometerSpec]
+    perfometers: Sequence[_LinearPerfometerSpec | LogarithmicPerfometerSpec]
 
 
 PerfometerSpec: TypeAlias = (

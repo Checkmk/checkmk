@@ -549,6 +549,7 @@ bool FindProcessByPid(uint32_t pid) {
     wtools::ScanProcessList([&found, pid](const PROCESSENTRY32 &entry) {
         if (entry.th32ProcessID == pid) {
             found = true;
+            return false;
         }
         return true;
     });
@@ -701,7 +702,6 @@ world::ExternalPort::IoParam AsIoParam(
                    : std::optional<uint32_t>{},
     };
 }
-
 }  // namespace
 
 /// <HOSTING THREAD>

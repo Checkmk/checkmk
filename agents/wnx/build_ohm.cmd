@@ -5,8 +5,8 @@
 :: Script to build Open Hardware Monitor
 :: 
 @echo off
-if "%msbuild%" == "" set msbuild=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
-if not exist "%msbuild%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
+if "%msbuild_exe%" == "" set msbuild_exe=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
+if not exist "%msbuild_exe%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
 
 make install_extlibs
 
@@ -14,8 +14,8 @@ set cur_dir=%cd%
 set arte=%cur_dir%\..\..\artefacts
 set all_dir=%cur_dir%\build\ohm\
 
-powershell Write-Host "Building OHM using %msbuild%" -Foreground White
-"%msbuild%" .\ohm\ohm.sln /p:OutDir=%all_dir%;TargetFrameworkVersion=v4.6;Configuration=Release
+powershell Write-Host "Building OHM using %msbuild_exe%" -Foreground White
+"%msbuild_exe%" .\ohm\ohm.sln /p:OutDir=%all_dir%;TargetFrameworkVersion=v4.6;Configuration=Release
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 14
 :: copy %build_dir%\ohm_host.exe %arte%\ /y || powershell Write-Host "Failed to copy ohm_host.exe" -Foreground Red && exit /b 33
 :: copy %build_dir%\ohm_bridge.dll %arte%\ /Y || powershell Write-Host "Failed to copy ohm_host.exe" -Foreground Red && exit /b 35

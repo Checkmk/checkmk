@@ -40,7 +40,6 @@ from cmk.gui.watolib.notifications import (
     NotificationRule,
     save_notification_rules,
 )
-from cmk.gui.watolib.user_scripts import user_script_choices
 
 from cmk import fields
 
@@ -76,16 +75,6 @@ def _create_or_update_rule(
                 title=_("Not found"),
                 detail=_("The rule_id %s does not exist.") % rule_id,
             )
-
-    plugin_name = incoming_rule_config["notification_method"]["notify_plugin"]["plugin_params"][
-        "plugin_name"
-    ]
-    if plugin_name not in [n for (n, _) in user_script_choices("notifications")]:
-        raise ProblemException(
-            status=400,
-            title=_("Plugin doesn't exist"),
-            detail=_("The plugin '%s' is not a valid notification plugin.") % plugin_name,
-        )
 
     try:
         all_rules[rule_from_request.rule_id] = rule_from_request

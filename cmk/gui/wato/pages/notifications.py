@@ -1560,7 +1560,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def _notification_script_choices_with_parameters(self):
         choices = []
         for script_name, title in notification_script_choices():
-            if script_name in notification_parameter_registry:
+            if script_name in notification_parameter_registry and script_name is not None:
                 vs: Dictionary | ListOfStrings = notification_parameter_registry[script_name]().spec
             else:
                 vs = ListOfStrings(

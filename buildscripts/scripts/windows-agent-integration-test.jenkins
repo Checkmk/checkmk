@@ -1,8 +1,22 @@
-def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+def FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/');
 
 properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    pipelineTriggers([triggers: [upstream(upstreamProjects: "${FOLDER_ID}/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
+    buildDiscarder(
+        logRotator(
+            artifactDaysToKeepStr: '',
+            artifactNumToKeepStr: '',
+            daysToKeepStr: '7',
+            numToKeepStr: '14'
+        )
+    ),
+    pipelineTriggers([
+        triggers: [
+            upstream(
+                upstreamProjects: "${FOLDER_ID}/windows-agent-build",
+                threshold: hudson.model.Result.SUCCESS
+            )
+        ]
+    ]),
 ])
 
 node('win_210_agent_integration') {

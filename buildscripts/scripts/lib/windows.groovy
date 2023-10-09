@@ -1,7 +1,7 @@
 // library for Windows builds
 package lib
 
-FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/');
 
 def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'

@@ -21,4 +21,10 @@ TEST(Extensions, GetAll) {
     EXPECT_EQ(extensions[0].mode, Mode::automatic);
 }
 
+TEST(Extensions, FindBinary) {
+    EXPECT_EQ(FindBinary("powerShell"), "powershell.exe");
+    EXPECT_EQ(FindBinary("powerShell.exE"), "powershell.exe");
+    EXPECT_EQ(FindBinary("powerShel-l"), "powerShel-l");
+}
+
 }  // namespace cma::cfg::extensions

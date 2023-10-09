@@ -29,4 +29,9 @@ struct ProcessInfo {
 std::vector<ProcessInfo> StartAll(const std::vector<Extension> &extensions);
 void KillAll(const std::vector<ProcessInfo> &processes);
 
+/// searchs for predefined binary on path(case ignored)
+/// - powershell
+/// - powershell.exe
+std::string FindBinary(std::string_view name);
+
 }  // namespace cma::cfg::extensions

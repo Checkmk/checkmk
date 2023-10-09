@@ -21,6 +21,15 @@ namespace fs = std::filesystem;
 using namespace std::string_literals;
 
 namespace cma::cfg::extensions {
+std::string FindBinary(std::string_view name) {
+    if (tools::IsEqual(name, "powershell") ||
+        tools::IsEqual(name, "powershell.exe")) {
+        auto found = wtools::ToUtf8(cma::FindPowershellExe());
+        return found.empty() ? std::string{name} : found;
+    }
+    return std::string{name};
+}
+
 namespace {
 Mode ToMode(std::string_view mode) {
     std::string m{mode};
@@ -36,15 +45,6 @@ Mode ToMode(std::string_view mode) {
     }
     XLOG::t("Bad mode value {}, fallback to no", m);
     return Mode::no;
-}
-
-std::string FindBinary(std::string_view name) {
-    if (tools::IsEqual(name, "powershell") ||
-        tools::IsEqual(name, "powershell.exe")) {
-        auto found = wtools::ToUtf8(cma::FindPowershellExe());
-        return found.empty() ? std::string{name} : found;
-    }
-    return std::string{name};
 }
 
 std::vector<Extension> GatherExtensions(const YAML::Node &group) {

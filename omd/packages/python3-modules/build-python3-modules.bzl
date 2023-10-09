@@ -26,7 +26,8 @@ def build_python_module(name, srcs, outs, cmd, **kwargs):
     )
 
 build_cmd = """
-    # Needed beacause RULEDIR is relative and we need absolute paths as prefix
+    set -e
+    # Needed because RULEDIR is relative and we need absolute paths as prefix
     export HOME=$$PWD
 
     # Path to external dependencies
@@ -63,6 +64,14 @@ build_cmd = """
     export NPY_NUM_BUILD_JOBS=4
 
     export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+
+    # rust-openssl uses pkg-config to find the openssl libraries (good idea). But pkg-config is broken in the bazel build environment.
+    # Therefore we need to give it some pointers. Here is the logic to find the openssl libaries to link against.
+    # https://github.com/sfackler/rust-openssl/blob/10cee24f49cd3f37da1dbf663ba67bca6728db1f/openssl-sys/build/find_normal.rs#L8
+    # TODO: we should ideally adjust the PKG_CONFIG_PATH to add the openssl pkgconfig files
+
+    export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
+    export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
     # install requirements
     export CFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python3.11/"

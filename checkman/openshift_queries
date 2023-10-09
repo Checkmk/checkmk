@@ -1,4 +1,4 @@
-title: Kubernetes: OpenShift Cluster Collector
+title: Kubernetes: Cluster Collector for OpenShift
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPLv2

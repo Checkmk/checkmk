@@ -24,17 +24,17 @@ if "%~1"=="-?" goto Usage
 if "%~1"=="-A"              (set int_arg_all=1)           & shift & goto CheckOpts
 if "%~1"=="--all"           (set int_arg_all=1)           & shift & goto CheckOpts
 
-if "%~1"=="-C"              (set int_arg_component=1)     & shift & goto CheckOpts
-if "%~1"=="--component"     (set int_arg_component=1)     & shift & goto CheckOpts
+if "%~1"=="-C"              (set int_arg_component=1)     & (set int_arg_build=1)     & shift & goto CheckOpts
+if "%~1"=="--component"     (set int_arg_component=1)     & (set int_arg_build=1)     & shift & goto CheckOpts
 
-if "%~1"=="-E"              (set int_arg_ext=1)           & shift & goto CheckOpts
-if "%~1"=="--ext"           (set int_arg_ext=1)           & shift & goto CheckOpts
+if "%~1"=="-E"              (set int_arg_ext=1)           & (set int_arg_build=1)     & shift & goto CheckOpts
+if "%~1"=="--ext"           (set int_arg_ext=1)           & (set int_arg_build=1)     & shift & goto CheckOpts
 
 if "%~1"=="-S"              (set int_arg_simulation=1)    & shift & goto CheckOpts
 if "%~1"=="--simulation"    (set int_arg_simulation=1)    & shift & goto CheckOpts
 
-if "%~1"=="-I"              (set int_arg_integration=1)   & shift & goto CheckOpts
-if "%~1"=="--integration"   (set int_arg_integration=1)   & shift & goto CheckOpts
+if "%~1"=="-I"              (set int_arg_integration=1)   & (set int_arg_build=1)     & shift & goto CheckOpts
+if "%~1"=="--integration"   (set int_arg_integration=1)   & (set int_arg_build=1)     & shift & goto CheckOpts
 
 if "%~1"=="-P"              (set int_arg_plugins=1)       & shift & goto CheckOpts
 if "%~1"=="--plugins"       (set int_arg_plugins=1)       & shift & goto CheckOpts
@@ -57,6 +57,7 @@ set arte=%cur_dir%\..\..\artefacts
 set CHECKMK_GIT_DIR=%cur_dir%\..\..\
 
 
+call :watest_build
 call :component
 call :ext
 call :simulation
@@ -67,6 +68,16 @@ goto :end
 
 goto :end
 
+
+
+:watest_build
+if not "%int_arg_build%" == "1" powershell Write-Host "Skipped build watest" -Foreground Yellow & goto :eof
+call scripts\unpack_packs.cmd
+make install_extlibs || ( powershell Write-Host "Failed to install packages" -Foreground Red & call :halt 33 )
+call build_watest.cmd
+if errorlevel 1 powershell write-Host "Build watest FAIL!" -Foreground Red & call :halt 19
+powershell write-Host "Build watest SUCCESS!" -Foreground Green
+goto :eof
 
 
 :component

@@ -6,7 +6,7 @@
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
 from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.permissions import PermissionSection, PermissionSectionRegistry
 
 from cmk import fields
 
@@ -20,7 +20,10 @@ CONNECTION_MODE_FIELD = fields.String(
 )
 
 
-@permission_section_registry.register
+def register(permission_section_registry: PermissionSectionRegistry) -> None:
+    permission_section_registry.register(PermissionSectionAgentRegistration)
+
+
 class PermissionSectionAgentRegistration(PermissionSection):
     @property
     def name(self) -> str:

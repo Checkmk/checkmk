@@ -32,8 +32,8 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
-    permission_section_registry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
 from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
@@ -43,8 +43,11 @@ from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async
 from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry, permission_section_registry: PermissionSectionRegistry
+) -> None:
     page_registry.register_page("clear_failed_notifications")(ClearFailedNotificationPage)
+    permission_section_registry.register(PermissionSectionNotificationPlugins)
 
 
 class FailedNotificationTimes(NamedTuple):
@@ -62,7 +65,6 @@ g_columns: list[str] = [
 ]
 
 
-@permission_section_registry.register
 class PermissionSectionNotificationPlugins(PermissionSection):
     @property
     def name(self) -> str:

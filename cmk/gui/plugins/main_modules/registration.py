@@ -13,12 +13,14 @@ from cmk.utils.version import edition, Edition
 
 import cmk.gui.help
 from cmk.gui import (
+    agent_registration,
     autocompleters,
     crash_reporting,
     cron,
     dashboard,
     default_permissions,
     graphing,
+    gui_background_job,
     inventory,
     login,
     logwatch,
@@ -98,6 +100,7 @@ def register() -> None:
     visuals.register(page_registry, visual_info_registry, filter_registry)
     views_registration.register(
         permission_section_registry,
+        permission_registry,
         page_registry,
         visual_type_registry,
         register_post_config_load_hook,
@@ -204,7 +207,7 @@ def register() -> None:
     robotmk.register(page_registry)
     cron.register(page_registry)
     node_visualization.register(page_registry, filter_registry)
-    notifications.register(page_registry)
+    notifications.register(page_registry, permission_section_registry)
     user_message.register(page_registry)
     valuespec.register(page_registry)
     autocompleters.register(page_registry)
@@ -220,7 +223,9 @@ def register() -> None:
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)
     background_job_registration.register(page_registry, mode_registry, main_module_registry)
+    gui_background_job.register(permission_section_registry, permission_registry)
     graphing.register(page_registry)
+    agent_registration.register(permission_section_registry)
 
 
 register()

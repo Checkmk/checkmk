@@ -24,9 +24,9 @@ from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import (
     Permission,
-    permission_registry,
-    permission_section_registry,
+    PermissionRegistry,
     PermissionSection,
+    PermissionSectionRegistry,
 )
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
@@ -39,26 +39,39 @@ from .group import CommandGroup, CommandGroupRegistry
 from .registry import CommandRegistry
 
 
-def register_command_groups(registry: CommandGroupRegistry) -> None:
-    registry.register(CommandGroupVarious)
-    registry.register(CommandGroupFakeCheck)
-    registry.register(CommandGroupAcknowledge)
-    registry.register(CommandGroupDowntimes)
-
-
-def register_commands(registry: CommandRegistry) -> None:
-    registry.register(CommandReschedule)
-    registry.register(CommandNotifications)
-    registry.register(CommandToggleActiveChecks)
-    registry.register(CommandTogglePassiveChecks)
-    registry.register(CommandClearModifiedAttributes)
-    registry.register(CommandFakeCheckResult)
-    registry.register(CommandCustomNotification)
-    registry.register(CommandAcknowledge)
-    registry.register(CommandAddComment)
-    registry.register(CommandScheduleDowntimes)
-    registry.register(CommandRemoveDowntime)
-    registry.register(CommandRemoveComments)
+def register(
+    command_group_registry: CommandGroupRegistry,
+    command_registry: CommandRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
+    command_group_registry.register(CommandGroupVarious)
+    command_group_registry.register(CommandGroupFakeCheck)
+    command_group_registry.register(CommandGroupAcknowledge)
+    command_group_registry.register(CommandGroupDowntimes)
+    command_registry.register(CommandReschedule)
+    command_registry.register(CommandNotifications)
+    command_registry.register(CommandToggleActiveChecks)
+    command_registry.register(CommandTogglePassiveChecks)
+    command_registry.register(CommandClearModifiedAttributes)
+    command_registry.register(CommandFakeCheckResult)
+    command_registry.register(CommandCustomNotification)
+    command_registry.register(CommandAcknowledge)
+    command_registry.register(CommandAddComment)
+    command_registry.register(CommandScheduleDowntimes)
+    command_registry.register(CommandRemoveDowntime)
+    command_registry.register(CommandRemoveComments)
+    permission_section_registry.register(PermissionSectionAction)
+    permission_registry.register(PermissionActionReschedule)
+    permission_registry.register(PermissionActionNotifications)
+    permission_registry.register(PermissionActionEnableChecks)
+    permission_registry.register(PermissionActionClearModifiedAttributes)
+    permission_registry.register(PermissionActionFakeChecks)
+    permission_registry.register(PermissionActionCustomNotification)
+    permission_registry.register(PermissionActionAcknowledge)
+    permission_registry.register(PermissionActionAddComment)
+    permission_registry.register(PermissionActionDowntimes)
+    permission_registry.register(PermissionRemoveAllDowntimes)
 
 
 class CommandGroupVarious(CommandGroup):
@@ -75,7 +88,6 @@ class CommandGroupVarious(CommandGroup):
         return 20
 
 
-@permission_section_registry.register
 class PermissionSectionAction(PermissionSection):
     @property
     def name(self) -> str:
@@ -99,14 +111,12 @@ class PermissionSectionAction(PermissionSection):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionReschedule = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="reschedule",
-        title=_l("Reschedule checks"),
-        description=_l("Reschedule host and service checks"),
-        defaults=["user", "admin"],
-    )
+PermissionActionReschedule = Permission(
+    section=PermissionSectionAction,
+    name="reschedule",
+    title=_l("Reschedule checks"),
+    description=_l("Reschedule host and service checks"),
+    defaults=["user", "admin"],
 )
 
 
@@ -191,14 +201,12 @@ class CommandReschedule(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionNotifications = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="notifications",
-        title=_l("Enable/disable notifications"),
-        description=_l("Enable and disable notifications on hosts and services"),
-        defaults=[],
-    )
+PermissionActionNotifications = Permission(
+    section=PermissionSectionAction,
+    name="notifications",
+    title=_l("Enable/disable notifications"),
+    description=_l("Enable and disable notifications on hosts and services"),
+    defaults=[],
 )
 
 
@@ -293,14 +301,12 @@ class CommandNotifications(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionEnableChecks = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="enablechecks",
-        title=_l("Enable/disable checks"),
-        description=_l("Enable and disable active or passive checks on hosts and services"),
-        defaults=[],
-    )
+PermissionActionEnableChecks = Permission(
+    section=PermissionSectionAction,
+    name="enablechecks",
+    title=_l("Enable/disable checks"),
+    description=_l("Enable and disable active or passive checks on hosts and services"),
+    defaults=[],
 )
 
 
@@ -467,17 +473,15 @@ class CommandTogglePassiveChecks(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionClearModifiedAttributes = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="clearmodattr",
-        title=_l("Reset modified attributes"),
-        description=_l(
-            "Reset all manually modified attributes of a host "
-            "or service (like disabled notifications)"
-        ),
-        defaults=[],
-    )
+PermissionActionClearModifiedAttributes = Permission(
+    section=PermissionSectionAction,
+    name="clearmodattr",
+    title=_l("Reset modified attributes"),
+    description=_l(
+        "Reset all manually modified attributes of a host "
+        "or service (like disabled notifications)"
+    ),
+    defaults=[],
 )
 
 
@@ -544,14 +548,12 @@ class CommandClearModifiedAttributes(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionFakeChecks = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="fakechecks",
-        title=_l("Fake check results"),
-        description=_l("Manually submit check results for host and service checks"),
-        defaults=["admin"],
-    )
+PermissionActionFakeChecks = Permission(
+    section=PermissionSectionAction,
+    name="fakechecks",
+    title=_l("Fake check results"),
+    description=_l("Manually submit check results for host and service checks"),
+    defaults=["admin"],
 )
 
 
@@ -697,17 +699,15 @@ class CommandFakeCheckResult(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionCustomNotification = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="customnotification",
-        title=_l("Send custom notification"),
-        description=_l(
-            "Manually let the core send a notification to a host or service in order "
-            "to test if notifications are setup correctly"
-        ),
-        defaults=["user", "admin"],
-    )
+PermissionActionCustomNotification = Permission(
+    section=PermissionSectionAction,
+    name="customnotification",
+    title=_l("Send custom notification"),
+    description=_l(
+        "Manually let the core send a notification to a host or service in order "
+        "to test if notifications are setup correctly"
+    ),
+    defaults=["user", "admin"],
 )
 
 
@@ -810,14 +810,12 @@ class CommandCustomNotification(Command):
 #   |                                                      |___/           |
 #   '----------------------------------------------------------------------'
 
-PermissionActionAcknowledge = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="acknowledge",
-        title=_l("Acknowledge"),
-        description=_l("Acknowledge host and service problems and remove acknowledgements"),
-        defaults=["user", "admin"],
-    )
+PermissionActionAcknowledge = Permission(
+    section=PermissionSectionAction,
+    name="acknowledge",
+    title=_l("Acknowledge"),
+    description=_l("Acknowledge host and service problems and remove acknowledgements"),
+    defaults=["user", "admin"],
 )
 
 
@@ -1009,14 +1007,12 @@ class CommandAcknowledge(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionAddComment = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="addcomment",
-        title=_l("Add comments"),
-        description=_l("Add comments to hosts or services, and remove comments"),
-        defaults=["user", "admin"],
-    )
+PermissionActionAddComment = Permission(
+    section=PermissionSectionAction,
+    name="addcomment",
+    title=_l("Add comments"),
+    description=_l("Add comments to hosts or services, and remove comments"),
+    defaults=["user", "admin"],
 )
 
 
@@ -1093,24 +1089,20 @@ class CommandAddComment(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-PermissionActionDowntimes = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="downtimes",
-        title=_l("Set/Remove downtimes"),
-        description=_l("Schedule and remove downtimes on hosts and services"),
-        defaults=["user", "admin"],
-    )
+PermissionActionDowntimes = Permission(
+    section=PermissionSectionAction,
+    name="downtimes",
+    title=_l("Set/Remove downtimes"),
+    description=_l("Schedule and remove downtimes on hosts and services"),
+    defaults=["user", "admin"],
 )
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="remove_all_downtimes",
-        title=_l("Remove all downtimes"),
-        description=_l('Allow the user to use the action "Remove all" downtimes'),
-        defaults=["user", "admin"],
-    )
+PermissionRemoveAllDowntimes = Permission(
+    section=PermissionSectionAction,
+    name="remove_all_downtimes",
+    title=_l("Remove all downtimes"),
+    description=_l('Allow the user to use the action "Remove all" downtimes'),
+    defaults=["user", "admin"],
 )
 
 

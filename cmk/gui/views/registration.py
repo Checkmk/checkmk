@@ -10,17 +10,12 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
-from cmk.gui.permissions import PermissionSectionRegistry
+from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
 
-from . import icon, inventory, perfometer
+from . import command, icon, inventory, perfometer
 from ._permissions import PermissionSectionViews
-from .command import (
-    command_group_registry,
-    command_registry,
-    register_command_groups,
-    register_commands,
-)
+from .command import command_group_registry, command_registry
 from .datasource_selection import page_select_datasource
 from .host_tag_plugins import register_tag_plugins
 from .icon.page_ajax_popup_action_menu import ajax_popup_action_menu
@@ -37,6 +32,7 @@ from .visual_type import VisualTypeViews
 
 def register(
     permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
     page_registry: PageRegistry,
     visual_type_registry: VisualTypeRegistry,
     register_post_config_load_hook: Callable[[Callable[[], None]], None],
@@ -62,8 +58,9 @@ def register(
     register_layouts(layout_registry)
     painters.register(painter_option_registry, painter_registry)
     register_sorters(sorter_registry)
-    register_command_groups(command_group_registry)
-    register_commands(command_registry)
+    command.register(
+        command_group_registry, command_registry, permission_section_registry, permission_registry
+    )
     register_data_sources(data_source_registry)
     perfometer.register(sorter_registry, painter_registry)
     icon.register(

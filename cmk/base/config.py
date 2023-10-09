@@ -18,7 +18,6 @@ import numbers
 import os
 import pickle
 import py_compile
-import shlex
 import socket
 import struct
 import sys
@@ -35,18 +34,7 @@ from collections.abc import (
 from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
-from typing import (
-    Any,
-    AnyStr,
-    assert_never,
-    cast,
-    Final,
-    Literal,
-    NamedTuple,
-    overload,
-    Protocol,
-    TypedDict,
-)
+from typing import Any, AnyStr, assert_never, cast, Final, Literal, NamedTuple, overload, TypedDict
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -385,16 +373,6 @@ CheckIncludes = list[str]
 class CheckmkCheckParameters(NamedTuple):
     enabled: bool
 
-
-class SpecialAgentConfiguration(Protocol):
-    args: Sequence[str]
-    # None makes the stdin of subprocess /dev/null
-    stdin: str | None
-
-
-SpecialAgentInfoFunctionResult = (
-    str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentConfiguration
-)
 
 # Note: being more specific here makes no sense,
 # as it prevents us from typing the individual
@@ -1399,87 +1377,6 @@ def get_http_proxy(http_proxy: tuple[str, str]) -> HTTPProxyConfig:
     return http_proxy_config_from_user_setting(
         http_proxy,
         http_proxies,
-    )
-
-
-def _prepare_check_command(
-    command_spec: CheckCommandArguments,
-    hostname: HostName,
-    description: ServiceName | None,
-    passwords_from_store: Mapping[str, str],
-) -> str:
-    """Prepares a check command for execution by Checkmk
-
-    In case a list is given it quotes element if necessary. It also prepares password store entries
-    for the command line. These entries will be completed by the executed program later to get the
-    password from the password store.
-    """
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
-    for arg in command_spec:
-        if isinstance(arg, (int, float)):
-            formatted.append(str(arg))
-
-        elif isinstance(arg, str):
-            formatted.append(shlex.quote(arg))
-
-        elif isinstance(arg, tuple) and len(arg) == 3:
-            pw_ident, preformated_arg = arg[1:]
-            try:
-                password = passwords_from_store[pw_ident]
-            except KeyError:
-                if hostname and description:
-                    descr = f' used by service "{description}" on host "{hostname}"'
-                elif hostname:
-                    descr = f' used by host host "{hostname}"'
-                else:
-                    descr = ""
-
-                console.warning(
-                    f'The stored password "{pw_ident}"{descr} does not exist (anymore).'
-                )
-                password = "%%%"
-
-            pw_start_index = str(preformated_arg.index("%s"))
-            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, pw_ident))
-
-        else:
-            raise MKGeneralException(f"Invalid argument for command line: {arg!r}")
-
-    if passwords:
-        pw = ",".join(["@".join(p) for p in passwords])
-        pw_store_arg = f"--pwstore={pw}"
-        formatted = [shlex.quote(pw_store_arg)] + formatted
-
-    return " ".join(formatted)
-
-
-def commandline_arguments(
-    hostname: HostName,
-    description: ServiceName | None,
-    commandline_args: SpecialAgentInfoFunctionResult,
-    passwords_from_store: Mapping[str, str] | None = None,
-) -> str:
-    """Commandline arguments for special agents or active checks."""
-    if isinstance(commandline_args, str):
-        return commandline_args
-
-    # Some special agents also have stdin configured
-    args = getattr(commandline_args, "args", commandline_args)
-
-    if not isinstance(args, list):
-        raise MKGeneralException(
-            "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)."
-            % (hostname, description)
-        )
-
-    return _prepare_check_command(
-        args,
-        hostname,
-        description,
-        cmk.utils.password_store.load() if passwords_from_store is None else passwords_from_store,
     )
 
 

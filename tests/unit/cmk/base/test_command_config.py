@@ -9,6 +9,8 @@ from typing import NamedTuple
 
 import pytest
 
+from cmk.utils import password_store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.command_config as command_config
@@ -18,6 +20,7 @@ from cmk.base.command_config import (
     ActiveCheckConfig,
     ActiveServiceData,
     ActiveServiceDescription,
+    commandline_arguments,
     HostAddressConfiguration,
     SpecialAgent,
 )
@@ -882,3 +885,92 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
     agent_path = special_agent._make_source_path("test_agent")
 
     assert agent_path == local_agent_path
+
+
+def test_commandline_arguments_basics() -> None:
+    assert (
+        commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2") == "args 123 -x 1 -y 2"
+    )
+
+    assert (
+        commandline_arguments(HostName("bla"), "blub", ["args", "1; echo", "-x", "1", "-y", "2"])
+        == "args '1; echo' -x 1 -y 2"
+    )
+
+    assert (
+        commandline_arguments(HostName("bla"), "blub", ["args", "1 2 3", "-d=2", "--hallo=eins", 9])
+        == "args '1 2 3' -d=2 --hallo=eins 9"
+    )
+
+    with pytest.raises(MKGeneralException):
+        commandline_arguments(HostName("bla"), "blub", (1, 2))
+
+
+@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
+def test_commandline_arguments_password_store(pw: str) -> None:
+    password_store.save({"pw-id": pw})
+    assert commandline_arguments(
+        HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
+    ) == "--pwstore=2@11@pw-id arg1 '--password=%s' arg3" % ("*" * len(pw))
+
+
+def test_commandline_arguments_not_existing_password(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    commandline_arguments(
+        HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
+    )
+    assert (
+        commandline_arguments(
+            HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
+        )
+        == "--pwstore=2@11@pw-id arg1 '--password=***' arg3"
+    )
+    captured = capsys.readouterr()
+    assert 'The stored password "pw-id" used by service "blub" on host "bla"' in captured.out
+
+
+def test_active_check_arguments_password_store_sanitization() -> None:
+    """Check that the --pwstore argument is properly sanitized.
+    This is a regression test for CMK-14149.
+    """
+    pw_id = "pw-id; echo HI;"
+    pw = "the password"
+    password_store.save({pw_id: pw})
+    assert commandline_arguments(
+        HostName("bla"), "blub", ["arg1", ("store", pw_id, "--password=%s"), "arg3"]
+    ) == "'--pwstore=2@11@pw-id; echo HI;' arg1 '--password=%s' arg3" % ("*" * len(pw))
+
+
+def test_commandline_arguments_wrong_types() -> None:
+    with pytest.raises(MKGeneralException):
+        commandline_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
+
+    with pytest.raises(MKGeneralException):
+        commandline_arguments(HostName("bla"), "blub", (1, 2))
+
+
+def test_commandline_arguments_str() -> None:
+    assert (
+        commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2") == "args 123 -x 1 -y 2"
+    )
+
+
+def test_commandline_arguments_list() -> None:
+    assert commandline_arguments(HostName("bla"), "blub", ["a", "123"]) == "a 123"
+
+
+def test_commandline_arguments_list_with_numbers() -> None:
+    assert commandline_arguments(HostName("bla"), "blub", [1, 1.2]) == "1 1.2"
+
+
+def test_commandline_arguments_list_with_pwstore_reference() -> None:
+    assert (
+        commandline_arguments(HostName("bla"), "blub", ["a", ("store", "pw1", "--password=%s")])
+        == "--pwstore=2@11@pw1 a '--password=***'"
+    )
+
+
+def test_commandline_arguments_list_with_invalid_type() -> None:
+    with pytest.raises(MKGeneralException):
+        commandline_arguments(HostName("bla"), "blub", [None])  # type: ignore[list-item]

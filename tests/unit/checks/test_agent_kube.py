@@ -9,9 +9,7 @@ import pytest
 
 from tests.testlib import SpecialAgent
 
-from cmk.base.config import (  # pylint: disable=cmk-module-layer-violation
-    SpecialAgentInfoFunctionResult,
-)
+from cmk.base.command_config import SpecialAgentInfoFunctionResult
 
 from cmk.special_agents.agent_kube import (  # pylint: disable=cmk-module-layer-violation
     parse_arguments,

@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from collections.abc import Sequence
 from functools import partial
+from typing import NoReturn
 
 import pytest
 from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.exceptions import MKSNMPError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.sectionname import SectionName
@@ -23,6 +26,7 @@ from cmk.snmplib import (
     get_snmp_table,
     SNMPBackend,
     SNMPBackendEnum,
+    SNMPContextTimeout,
     SNMPHostConfig,
     SNMPTable,
     SpecialColumn,
@@ -44,6 +48,7 @@ SNMPConfig = SNMPHostConfig(
     timing={},
     oid_range_limits={},
     snmpv3_contexts=[],
+    snmpv3_contexts_skip_on_timeout=False,
     character_encoding="ascii",
     snmp_backend=SNMPBackendEnum.CLASSIC,
 )
@@ -171,3 +176,53 @@ def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     # credentials is v3 -> INLINE
     monkeypatch.setattr(ConfigCache, "_snmp_credentials", lambda *args: ("a", "p"))
     assert config_cache.get_snmp_backend(HostName("not_included")) is SNMPBackendEnum.INLINE
+
+
+def test_walk_passes_on_timeout_with_snmpv3_context_skip_on_timeout() -> None:
+    class Backend(SNMPBackend):
+        def get(self, /, *args: object, **kw: object) -> NoReturn:
+            assert False
+
+        def walk(self, /, *args: object, **kw: object) -> NoReturn:
+            raise SNMPContextTimeout
+
+    with pytest.raises(MKSNMPError) as excinfo:
+        _snmp_table.get_snmpwalk(
+            None,
+            ".1.2.3",
+            ".4.5.6",
+            walk_cache={},
+            save_walk_cache=False,
+            backend=Backend(
+                SNMPConfig._replace(snmpv3_contexts_skip_on_timeout=True),
+                logging.getLogger("test"),
+            ),
+        )
+
+    # pylint: disable=unidiomatic-typecheck
+    assert type(excinfo.value) is not SNMPContextTimeout
+
+
+def test_walk_raises_on_timeout_without_snmpv3_context_skip_on_timeout() -> None:
+    class Backend(SNMPBackend):
+        def get(self, /, *args: object, **kw: object) -> NoReturn:
+            assert False
+
+        def walk(self, /, *args: object, **kw: object) -> NoReturn:
+            raise SNMPContextTimeout
+
+    with pytest.raises(MKSNMPError) as excinfo:
+        _snmp_table.get_snmpwalk(
+            None,
+            ".1.2.3",
+            ".4.5.6",
+            walk_cache={},
+            save_walk_cache=False,
+            backend=Backend(
+                SNMPConfig._replace(snmpv3_contexts_skip_on_timeout=False),
+                logging.getLogger("test"),
+            ),
+        )
+
+    # pylint: disable=unidiomatic-typecheck
+    assert type(excinfo.value) is SNMPContextTimeout

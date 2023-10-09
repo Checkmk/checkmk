@@ -85,6 +85,7 @@ class SNMPHostConfig(NamedTuple):
     timing: SNMPTiming
     oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
     snmpv3_contexts: Sequence[tuple[SectionName | None, Sequence[SNMPContext]]]
+    snmpv3_contexts_skip_on_timeout: bool
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
 

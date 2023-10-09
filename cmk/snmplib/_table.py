@@ -77,7 +77,7 @@ def get_snmp_table(
             index_column = len(columns)
             index_format = oid.column
         else:
-            rowinfo = _get_snmpwalk(
+            rowinfo = get_snmpwalk(
                 section_name,
                 tree.base,
                 fetchoid,
@@ -174,7 +174,7 @@ def _key_oid_pairs(pair1: tuple[OID, SNMPRawValue]) -> list[int]:
     return _oid_to_intlist(pair1[0].lstrip("."))
 
 
-def _get_snmpwalk(
+def get_snmpwalk(
     section_name: SectionName | None,
     base_oid: str,
     fetchoid: OID,
@@ -204,6 +204,9 @@ def _get_snmpwalk(
                 context=context,
             )
         except SNMPContextTimeout:
+            if not backend.config.snmpv3_contexts_skip_on_timeout:
+                raise
+
             console.vverbose(f"Timeout for SNMP context {context}.  Skipping for now.")
             skip.add(context)
             continue

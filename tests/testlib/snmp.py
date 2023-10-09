@@ -19,19 +19,20 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 SNMP_HOST_CONFIG: Final = SNMPHostConfig(
-    False,
-    HostName("unittest"),
-    HostAddress("127.0.0.1"),
-    "",
-    0,
-    False,
-    False,
-    0,
-    {},
-    {},
-    [],
-    None,
-    SNMPBackendEnum.STORED_WALK,
+    is_ipv6_primary=False,
+    hostname=HostName("unittest"),
+    ipaddress=HostAddress("127.0.0.1"),
+    credentials="",
+    port=0,
+    is_bulkwalk_host=False,
+    is_snmpv2or3_without_bulkwalk_host=False,
+    bulk_walk_size_of=0,
+    timing={},
+    oid_range_limits={},
+    snmpv3_contexts=[],
+    snmpv3_contexts_skip_on_timeout=False,
+    character_encoding=None,
+    snmp_backend=SNMPBackendEnum.STORED_WALK,
 )
 
 

@@ -744,13 +744,11 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             mc_.LoadDefault();
         }
 
-        std::vector<cfg::extensions::ProcessInfo> processes;
-        if (is_service) {
-            processes = cfg::extensions::StartAll(
-                cfg::extensions::GetAll(cfg::GetLoadedConfig()));
-        }
-
-        ON_OUT_OF_SCOPE(cfg::extensions::KillAll(processes));
+        auto to_load = is_service
+                           ? cfg::extensions::GetAll(cfg::GetLoadedConfig())
+                           : std::vector<cfg::extensions::Extension>{};
+        cfg::extensions::ExtensionsManager em{
+            to_load, cfg::vars::kExtensionDefaultCheckPeriod};
 
         preStartBinaries();
 

@@ -8,6 +8,7 @@
 
 #include "wnx/extensions.h"
 
+#include <condition_variable>
 #include <filesystem>
 #include <set>
 #include <string>
@@ -19,6 +20,7 @@
 
 namespace fs = std::filesystem;
 using namespace std::string_literals;
+using namespace std::chrono_literals;
 
 namespace cma::cfg::extensions {
 std::string FindBinary(std::string_view name) {
@@ -116,7 +118,9 @@ std::optional<ProcessInfo> StartExtension(const Extension &extension) {
         return {};
     }
 
-    fs::path path{ReplacePredefinedMarkers(extension.binary)};
+    const auto exe = FindBinary(ReplacePredefinedMarkers(extension.binary));
+
+    fs::path path{exe};
     if (std::error_code ec;
         !fs::exists(path, ec) && (extension.mode != Mode::yes)) {
         XLOG::l.i("'{}' not found, skipping", path);
@@ -169,6 +173,39 @@ void ValidateAndRestart(std::vector<ProcessInfo> &processes) {
             }
             XLOG::l.i("Agent extensions {} failed to restart",
                       process.extension.name);
+        }
+    }
+}
+
+ExtensionsManager::~ExtensionsManager() {
+    {
+        std::scoped_lock l(mutex_);
+        stop_requested_ = true;
+    }
+    t_.join();
+    KillAll(processes_);
+}
+
+void ExtensionsManager::thread_proc() {
+    processes_ = StartAll(extensions_);
+    if (processes_.empty()) {
+        return;
+    }
+    auto check_point = validate_period_.has_value()
+                           ? std::optional{std::chrono::steady_clock::now() +
+                                           *validate_period_ * 1s}
+                           : std::nullopt;
+    while (true) {
+        std::unique_lock lock(mutex_);
+        if (cv_.wait_until(lock, std::chrono::steady_clock::now() + 100ms,
+                           [&] { return stop_requested_; })) {
+            break;
+        }
+        if (check_point.has_value() &&
+            std::chrono::steady_clock::now() > *check_point) {
+            check_point =
+                std::chrono::steady_clock::now() + *validate_period_ * 1s;
+            ValidateAndRestart(processes_);
         }
     }
 }

@@ -34,4 +34,31 @@ void KillAll(const std::vector<ProcessInfo> &processes);
 /// - powershell.exe
 std::string FindBinary(std::string_view name);
 
+class ExtensionsManager {
+public:
+    explicit ExtensionsManager(const std::vector<Extension> &extensions,
+                               std::optional<uint32_t> validate_period)
+        : extensions_{extensions}
+        , validate_period_(validate_period)
+        , t_{&ExtensionsManager::thread_proc, this} {}
+    ExtensionsManager(const ExtensionsManager &) = delete;
+    ExtensionsManager &operator=(const ExtensionsManager &) = delete;
+    ExtensionsManager(ExtensionsManager &&) = delete;
+    ExtensionsManager &operator=(ExtensionsManager &&) = delete;
+
+    ~ExtensionsManager();
+
+    std::vector<ProcessInfo> processes() { return processes_; };
+
+private:
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    bool stop_requested_{false};
+    void thread_proc();
+    std::vector<Extension> extensions_;
+    std::optional<uint32_t> validate_period_;
+    std::vector<ProcessInfo> processes_;
+    std::jthread t_;
+};
+
 }  // namespace cma::cfg::extensions

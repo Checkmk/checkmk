@@ -295,26 +295,28 @@ class Maximum(MetricDeclaration):
 
 @dataclass(frozen=True, kw_only=True)
 class Percent(MetricDeclaration):
-    reference: MetricDeclaration
-    metric: Metric
+    """percentage = 100 * percent_value / base_value"""
+
+    percent_value: MetricDeclaration
+    base_value: MetricDeclaration
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
         return MetricExpressionResult(
             (
                 Fraction(
-                    dividend=Product([ConstantFloat(100.0), self.reference]),
-                    divisor=MaximumOf(self.metric),
+                    dividend=Product([ConstantFloat(100.0), self.percent_value]),
+                    divisor=self.base_value,
                 )
                 .evaluate(translated_metrics)
                 .value
             ),
             unit_info["%"],
-            self.reference.evaluate(translated_metrics).color,
+            self.percent_value.evaluate(translated_metrics).color,
         )
 
     def metrics(self) -> Iterator[Metric]:
-        yield from self.reference.metrics()
-        yield from self.metric.metrics()
+        yield from self.percent_value.metrics()
+        yield from self.base_value.metrics()
 
 
 # Special metric declarations for custom graphs
@@ -458,11 +460,11 @@ def _parse_single_expression(
     if ":" in var_name:
         var_name, scalar_name = var_name.split(":")
         metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
-        reference = _from_scalar(scalar_name, metric)
-        return Percent(reference=reference, metric=metric) if percent else reference
+        scalar = _from_scalar(scalar_name, metric)
+        return Percent(percent_value=scalar, base_value=MaximumOf(metric)) if percent else scalar
 
     metric = Metric(var_name, consolidation_func_name or enforced_consolidation_func_name)
-    return Percent(reference=metric, metric=metric) if percent else metric
+    return Percent(percent_value=metric, base_value=MaximumOf(metric)) if percent else metric
 
 
 RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">", ">=", "<", "<="]

@@ -203,8 +203,8 @@ def test_evaluate_cpu_utilization(
             "metric_name(%)",
             MetricExpression(
                 declaration=Percent(
-                    reference=Metric(name="metric_name"),
-                    metric=Metric(name="metric_name"),
+                    percent_value=Metric(name="metric_name"),
+                    base_value=MaximumOf(metric=Metric(name="metric_name")),
                 )
             ),
             20.0,
@@ -228,8 +228,8 @@ def test_evaluate_cpu_utilization(
             "metric_name:warn(%)",
             MetricExpression(
                 declaration=Percent(
-                    reference=WarningOf(metric=Metric(name="metric_name")),
-                    metric=Metric(name="metric_name"),
+                    percent_value=WarningOf(metric=Metric(name="metric_name")),
+                    base_value=MaximumOf(metric=Metric(name="metric_name")),
                 )
             ),
             40.0,
@@ -253,8 +253,8 @@ def test_evaluate_cpu_utilization(
             "metric_name:crit(%)",
             MetricExpression(
                 declaration=Percent(
-                    reference=CriticalOf(metric=Metric(name="metric_name")),
-                    metric=Metric(name="metric_name"),
+                    percent_value=CriticalOf(metric=Metric(name="metric_name")),
+                    base_value=MaximumOf(metric=Metric(name="metric_name")),
                 )
             ),
             60.0,
@@ -278,8 +278,8 @@ def test_evaluate_cpu_utilization(
             "metric_name:min(%)",
             MetricExpression(
                 declaration=Percent(
-                    reference=MinimumOf(metric=Metric(name="metric_name")),
-                    metric=Metric(name="metric_name"),
+                    percent_value=MinimumOf(metric=Metric(name="metric_name")),
+                    base_value=MaximumOf(metric=Metric(name="metric_name")),
                 )
             ),
             0.0,
@@ -303,8 +303,8 @@ def test_evaluate_cpu_utilization(
             "metric_name:max(%)",
             MetricExpression(
                 declaration=Percent(
-                    reference=MaximumOf(metric=Metric(name="metric_name")),
-                    metric=Metric(name="metric_name"),
+                    percent_value=MaximumOf(metric=Metric(name="metric_name")),
+                    base_value=MaximumOf(metric=Metric(name="metric_name")),
                 )
             ),
             100.0,

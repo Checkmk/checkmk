@@ -830,13 +830,17 @@ def _create_nagios_config_commands(cfg: NagiosConfig) -> None:
 
     # active_checks
     for acttype in cfg.active_checks_to_define:
-        act_info = config.active_check_info[acttype]
+        command_line = (
+            act_info["command_line"]
+            if (act_info := config.active_check_info.get(acttype)) is not None
+            else f"check_{acttype} $ARG1$"
+        )
         cfg.write(
             _format_nagios_object(
                 "command",
                 {
                     "command_name": "check_mk_active-%s" % acttype,
-                    "command_line": core_config.autodetect_plugin(act_info["command_line"]),
+                    "command_line": core_config.autodetect_plugin(command_line),
                 },
             )
         )

@@ -10,7 +10,7 @@ from collections.abc import Callable, MutableMapping, Sequence
 from functools import partial
 from typing import assert_never
 
-from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName
@@ -20,6 +20,8 @@ from ._typedefs import (
     ensure_str,
     OID,
     SNMPBackend,
+    SNMPContext,
+    SNMPContextTimeout,
     SNMPRawValue,
     SNMPRowInfo,
     SNMPValueEncoding,
@@ -189,13 +191,22 @@ def _get_snmpwalk(
     added_oids: set[OID] = set()
     rowinfo: SNMPRowInfo = []
 
+    skip: set[SNMPContext] = set()
     for context in backend.config.snmpv3_contexts_of(section_name):
-        rows = backend.walk(
-            fetchoid,
-            section_name=section_name,
-            table_base_oid=base_oid,
-            context=context,
-        )
+        if context in skip:
+            continue
+
+        try:
+            rows = backend.walk(
+                fetchoid,
+                section_name=section_name,
+                table_base_oid=base_oid,
+                context=context,
+            )
+        except SNMPContextTimeout:
+            console.vverbose(f"Timeout for SNMP context {context}.  Skipping for now.")
+            skip.add(context)
+            continue
 
         # I've seen a broken device (Mikrotik Router), that broke after an
         # update to RouterOS v6.22. It would return 9 time the same OID when
@@ -213,6 +224,9 @@ def _get_snmpwalk(
             else:
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
+
+    if skip and not rowinfo:
+        raise MKSNMPError("SNMP Error on %s: SNMP query timed out" % backend.config.hostname)
 
     walk_cache[fetchoid] = (save_walk_cache, rowinfo)
     return rowinfo

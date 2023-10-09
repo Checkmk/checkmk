@@ -10,6 +10,7 @@ import logging
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal, NamedTuple
 
+from cmk.utils.exceptions import MKSNMPError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
@@ -20,6 +21,11 @@ OIDRange = tuple[int, int]
 RangeLimit = tuple[Literal["first", "last"], int] | tuple[Literal["mid"], OIDRange]
 SNMPRawValue = bytes
 SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
+
+
+class SNMPContextTimeout(MKSNMPError):
+    pass
+
 
 # TODO: Be more specific about the possible tuples
 # if the credentials are a string, we use that as community,

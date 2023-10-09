@@ -357,8 +357,10 @@ TEST(PluginTest, ApplyGroupUser_Component) {
     auto group_name =
         wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
     PluginEntry pe("c:\\a\\x.cmd");
-    auto get_usr = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().first; };
-    auto get_pwd = [ptr_pe = &pe]() -> auto{ return ptr_pe->getUser().second; };
+    auto get_usr = [ptr_pe = &pe]() -> auto { return ptr_pe->getUser().first; };
+    auto get_pwd = [ptr_pe = &pe]() -> auto {
+        return ptr_pe->getUser().second;
+    };
     ASSERT_TRUE(get_usr().empty());
     ASSERT_TRUE(get_pwd().empty());
 
@@ -1425,9 +1427,7 @@ public:
 private:
     [[nodiscard]] PathVector prepareFilesAndStructures(
         const PluginDescVector &plugin_desc_arr, std::string_view code) const {
-        const fs::path temp_folder =
-            tst::GetTempDir() /
-            ::testing::UnitTest::GetInstance()->current_test_info()->name();
+        const fs::path temp_folder = tst::GetTempDir() / tst::GetUnitTestName();
         fs::create_directories(temp_folder);
         PathVector pv;
         for (auto &pd : plugin_desc_arr) {

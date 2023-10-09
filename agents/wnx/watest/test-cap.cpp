@@ -53,8 +53,7 @@ public:
     [[nodiscard]] fs::path target_dir() const { return temp.out(); }
 
 private:
-    tst::TempDirPair temp{
-        ::testing::UnitTest::GetInstance()->current_test_info()->name()};
+    tst::TempDirPair temp{tst::GetUnitTestName()};
 };
 
 TEST_F(CapTestFixture, CheckAreFilesSame) {
@@ -328,8 +327,8 @@ TEST(CapTest, GetProcessToKill) {
 TEST(CapTest, StoreFileAgressive) {
     ASSERT_TRUE(IsStoreFileAgressive()) << "should be set normally";
 
-    auto work = tst::MakeTempFolderInTempPath(wtools::ConvertToUtf16(
-        ::testing::UnitTest::GetInstance()->current_test_info()->name()));
+    auto work = tst::MakeTempFolderInTempPath(
+        wtools::ConvertToUtf16(tst::GetUnitTestName()));
     fs::create_directories(work);
 
     fs::path ping(R"(c:\windows\system32\ping.exe)");

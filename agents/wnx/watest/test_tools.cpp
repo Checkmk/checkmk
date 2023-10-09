@@ -152,6 +152,10 @@ fs::path MakePathToCapTestFiles(const std::wstring &root) {
     return r.lexically_normal();
 }
 
+std::string GetUnitTestName() {
+    return ::testing::UnitTest::GetInstance()->current_test_info()->name();
+}
+
 void SafeCleanTempDir() {
     fs::path temp_dir = cma::cfg::GetTempDir();
     if (temp_dir.wstring().find(L"\\tmp", 0) == std::wstring::npos) {

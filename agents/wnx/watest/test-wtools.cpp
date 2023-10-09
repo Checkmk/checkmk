@@ -197,15 +197,18 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {
     }
 }
 
-TEST_F(WtoolsKillProcFixture, DISABLED_FindProcsByFullPathAndPidComponent) {
+TEST_F(WtoolsKillProcFixture, FindProcsByFullPathAndPidComponent) {
     const auto maybe_pid = RunProcess();
     ASSERT_TRUE(maybe_pid.has_value());
 
     EXPECT_FALSE(FindProcessByPathEndAndPid(test_exe_.filename(), 4));
-    cma::tools::sleep(500ms);
-    EXPECT_TRUE(FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid));
+    EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
+        return FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+    })) << fmt::format("process {} not found", test_exe_.filename());
     KillProcessesByPathEndAndPid(test_exe_.filename(), *maybe_pid);
-    EXPECT_FALSE(FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid));
+    EXPECT_TRUE(tst::WaitForSuccessSilent(5000ms, [&]() {
+        return !FindProcessByPathEndAndPid(test_exe_.filename(), *maybe_pid);
+    })) << fmt::format("process {} still found", test_exe_.filename());
 }
 
 class WtoolsKillProcessTreeFixture : public ::testing::Test {

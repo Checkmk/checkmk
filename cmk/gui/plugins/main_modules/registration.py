@@ -178,6 +178,7 @@ def register() -> None:
         main_module_topic_registry,
         main_module_registry,
         rulespec_group_registry,
+        config_domain_registry,
         config_variable_registry,
         config_variable_group_registry,
         snapin_registry,

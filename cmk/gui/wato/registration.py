@@ -16,7 +16,11 @@ from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.analyze_configuration import ACTestRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
-from cmk.gui.watolib.config_domain_name import ConfigVariableGroupRegistry, ConfigVariableRegistry
+from cmk.gui.watolib.config_domain_name import (
+    ConfigDomainRegistry,
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
+)
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -28,6 +32,7 @@ from . import (
     _check_mk_configuration,
     _main_module_topics,
     _main_modules,
+    _omd_configuration,
     _permissions,
     _pre_21_plugin_api,
     _rulespec_groups,
@@ -63,6 +68,7 @@ def register(
     main_module_topic_registry: MainModuleTopicRegistry,
     main_module_registry: MainModuleRegistry,
     rulespec_group_registry: RulespecGroupRegistry,
+    config_domain_registry: ConfigDomainRegistry,
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
     snapin_registry: SnapinRegistry,
@@ -97,5 +103,6 @@ def register(
     _pre_21_plugin_api.register()
     _check_mk_configuration.register(config_variable_registry, config_variable_group_registry)
     _ac_tests.register(ac_test_registry)
+    _omd_configuration.register(config_domain_registry, config_variable_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, mega_menu_registry)
     snapin_registry.register(VirtualHostTree)

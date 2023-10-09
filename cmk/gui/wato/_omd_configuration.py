@@ -16,7 +16,6 @@ from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.wato.utils import ConfigVariableGroupSiteManagement, ReplicationPath
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -31,16 +30,33 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.activate_changes import add_replication_paths
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
-    config_domain_registry,
-    config_variable_registry,
     ConfigDomainName,
+    ConfigDomainRegistry,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableRegistry,
     SerializedSettings,
     wato_fileheader,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_variable_groups import ConfigVariableGroupSiteManagement
 from cmk.gui.watolib.sites import LivestatusViaTCP
+
+
+def register(
+    config_domain_registry: ConfigDomainRegistry, config_variable_registry: ConfigVariableRegistry
+) -> None:
+    config_domain_registry.register(ConfigDomainDiskspace)
+    config_domain_registry.register(ConfigDomainApache)
+    config_domain_registry.register(ConfigDomainRRDCached)
+    config_variable_registry.register(ConfigVariableSiteAutostart)
+    config_variable_registry.register(ConfigVariableSiteCore)
+    config_variable_registry.register(ConfigVariableSiteLivestatusTCP)
+    config_variable_registry.register(ConfigVariableSiteDiskspaceCleanup)
+    config_variable_registry.register(ConfigVariableSiteApacheProcessTuning)
+    config_variable_registry.register(ConfigVariableSiteRRDCachedTuning)
+
 
 # .
 #   .--omd config----------------------------------------------------------.
@@ -55,7 +71,6 @@ from cmk.gui.watolib.sites import LivestatusViaTCP
 #   '----------------------------------------------------------------------'
 
 
-@config_variable_registry.register
 class ConfigVariableSiteAutostart(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -76,7 +91,6 @@ class ConfigVariableSiteAutostart(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableSiteCore(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -112,7 +126,6 @@ class ConfigVariableSiteCore(ConfigVariable):
         return cores
 
 
-@config_variable_registry.register
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -151,7 +164,6 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
 
 # TODO: Diskspace cleanup does not support site specific globals!
-@config_domain_registry.register
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
@@ -226,7 +238,6 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         }
 
 
-@config_variable_registry.register
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -346,7 +357,6 @@ add_replication_paths(
 #   '----------------------------------------------------------------------'
 
 
-@config_domain_registry.register
 class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -424,7 +434,6 @@ class ConfigDomainApache(ABCConfigDomain):
         return value
 
 
-@config_variable_registry.register
 class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -470,7 +479,6 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
 #   '----------------------------------------------------------------------'
 
 
-@config_domain_registry.register
 class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -549,7 +557,6 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         return value
 
 
-@config_variable_registry.register
 class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement

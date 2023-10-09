@@ -7,8 +7,7 @@ import pytest
 
 from cmk.gui.graphing._expression import (
     ConditionalMetricDeclaration,
-    ConstantFloat,
-    ConstantInt,
+    Constant,
     CriticalOf,
     Difference,
     GreaterEqualThan,
@@ -87,7 +86,7 @@ def test_evaluate_cpu_utilization(
             "check_mk-openvpn_clients",
             "if_in_octets,8,*@bits/s",
             MetricExpression(
-                declaration=Product(factors=[Metric(name="if_in_octets"), ConstantInt(value=8)]),
+                declaration=Product(factors=[Metric(name="if_in_octets"), Constant(value=8)]),
                 explicit_unit_name="bits/s",
             ),
             16.0,
@@ -141,7 +140,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97",
-            MetricExpression(declaration=ConstantInt(value=97)),
+            MetricExpression(declaration=Constant(value=97)),
             97.0,
             "count",
             "#000000",
@@ -151,7 +150,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97,
-            MetricExpression(declaration=ConstantInt(value=97)),
+            MetricExpression(declaration=Constant(value=97)),
             97.0,
             "count",
             "#000000",
@@ -161,7 +160,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0",
-            MetricExpression(declaration=ConstantFloat(value=97.0)),
+            MetricExpression(declaration=Constant(value=97.0)),
             97.0,
             "",
             "#000000",
@@ -171,7 +170,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             97.0,
-            MetricExpression(declaration=ConstantFloat(value=97.0)),
+            MetricExpression(declaration=Constant(value=97.0)),
             97.0,
             "",
             "#000000",
@@ -181,7 +180,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0@bytes",
-            MetricExpression(declaration=ConstantFloat(value=97.0), explicit_unit_name="bytes"),
+            MetricExpression(declaration=Constant(value=97.0), explicit_unit_name="bytes"),
             97.0,
             "bytes",
             "#000000",
@@ -191,7 +190,7 @@ def test_evaluate_cpu_utilization(
             [],
             "check_mk-foo",
             "97.0#123456",
-            MetricExpression(declaration=ConstantFloat(value=97.0), explicit_color="123456"),
+            MetricExpression(declaration=Constant(value=97.0), explicit_color="123456"),
             97.0,
             "",
             "#123456",
@@ -372,7 +371,7 @@ def test_parse_and_evaluate(
             "metric_name,100,>",
             GreaterThan(
                 left=Metric(name="metric_name"),
-                right=ConstantInt(100),
+                right=Constant(100),
             ),
             False,
             id="conditional greater than",
@@ -383,7 +382,7 @@ def test_parse_and_evaluate(
             "metric_name,100,>=",
             GreaterEqualThan(
                 left=Metric(name="metric_name"),
-                right=ConstantInt(100),
+                right=Constant(100),
             ),
             True,
             id="conditional greater equal than",
@@ -394,7 +393,7 @@ def test_parse_and_evaluate(
             "metric_name,100,<",
             LessThan(
                 left=Metric(name="metric_name"),
-                right=ConstantInt(100),
+                right=Constant(100),
             ),
             False,
             id="conditional less than",
@@ -405,7 +404,7 @@ def test_parse_and_evaluate(
             "metric_name,100,<=",
             LessEqualThan(
                 left=Metric(name="metric_name"),
-                right=ConstantInt(100),
+                right=Constant(100),
             ),
             True,
             id="conditional less equal than",
@@ -447,7 +446,7 @@ def test_parse_and_evaluate(
                                 Metric(name="failed_notifications"),
                             ]
                         ),
-                        ConstantInt(value=2),
+                        Constant(value=2),
                     ]
                 ),
             ),
@@ -476,7 +475,7 @@ def test_parse_and_evaluate(
                                 Metric(name="failed_notifications"),
                             ]
                         ),
-                        ConstantInt(value=2),
+                        Constant(value=2),
                     ]
                 ),
             ),
@@ -505,7 +504,7 @@ def test_parse_and_evaluate(
                                 Metric(name="failed_notifications"),
                             ]
                         ),
-                        ConstantInt(value=2),
+                        Constant(value=2),
                     ]
                 ),
             ),

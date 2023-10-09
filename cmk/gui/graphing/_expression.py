@@ -39,7 +39,7 @@ def _choose_operator_color(a: str, b: str) -> str:
 
 @dataclass(frozen=True)
 class MetricExpressionResult:
-    value: float
+    value: int | float
     unit_info: UnitInfo
     color: str
 
@@ -59,25 +59,15 @@ class MetricDeclaration(abc.ABC):
 
 
 @dataclass(frozen=True)
-class ConstantInt(MetricDeclaration):
-    value: int
+class Constant(MetricDeclaration):
+    value: int | float
 
     def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
-        return MetricExpressionResult(float(self.value), unit_info["count"], "#000000")
-
-    def metrics(self) -> Iterator[Metric]:
-        yield from ()
-
-    def scalars(self) -> Iterator[WarningOf | CriticalOf | MinimumOf | MaximumOf]:
-        yield from ()
-
-
-@dataclass(frozen=True)
-class ConstantFloat(MetricDeclaration):
-    value: float
-
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
-        return MetricExpressionResult(self.value, unit_info[""], "#000000")
+        return MetricExpressionResult(
+            self.value,
+            unit_info["count"] if isinstance(self.value, int) else unit_info[""],
+            "#000000",
+        )
 
     def metrics(self) -> Iterator[Metric]:
         yield from ()
@@ -353,7 +343,7 @@ class Percent(MetricDeclaration):
         return MetricExpressionResult(
             (
                 Fraction(
-                    dividend=Product([ConstantFloat(100.0), self.percent_value]),
+                    dividend=Product([Constant(100.0), self.percent_value]),
                     divisor=self.base_value,
                 )
                 .evaluate(translated_metrics)
@@ -503,12 +493,12 @@ def _parse_single_expression(
 ) -> MetricDeclaration:
     if expression not in translated_metrics:
         try:
-            return ConstantInt(int(expression))
+            return Constant(int(expression))
         except ValueError:
             pass
 
         try:
-            return ConstantFloat(float(expression))
+            return Constant(float(expression))
         except ValueError:
             pass
 
@@ -616,7 +606,7 @@ def _resolve_stack(
                 resolved.append(Product([left, right]))
             case "/":
                 # Handle zero division by always adding a tiny bit to the divisor
-                resolved.append(Fraction(dividend=left, divisor=Sum([right, ConstantFloat(1e-16)])))
+                resolved.append(Fraction(dividend=left, divisor=Sum([right, Constant(1e-16)])))
             case "MIN":
                 resolved.append(Minimum([left, right]))
             case "MAX":
@@ -663,11 +653,8 @@ def parse_expression(
     translated_metrics: TranslatedMetrics,
     enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> MetricExpression:
-    if isinstance(expression, int):
-        return MetricExpression(ConstantInt(expression))
-
-    if isinstance(expression, float):
-        return MetricExpression(ConstantFloat(expression))
+    if isinstance(expression, (int, float)):
+        return MetricExpression(Constant(expression))
 
     (
         stack,

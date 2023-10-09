@@ -18,8 +18,7 @@ from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from ._expression import (
-    ConstantFloat,
-    ConstantInt,
+    Constant,
     has_required_metrics_or_scalars,
     parse_conditional_expression,
     parse_expression,
@@ -372,7 +371,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         result = self._label_expression.evaluate(self._translated_metrics)
         unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
 
-        if isinstance(self._label_expression, (ConstantInt, ConstantFloat)):
+        if isinstance(self._label_expression, Constant):
             value = unit_info_.get("conversion", lambda v: v)(self._label_expression.value)
         else:
             value = result.value
@@ -380,7 +379,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return self._render_value(unit_info_, value)
 
     def _evaluate_total(self) -> float:
-        if isinstance(self._total.declaration, (ConstantInt, ConstantFloat)):
+        if isinstance(self._total.declaration, Constant):
             return self._unit().get("conversion", lambda v: v)(self._total.declaration.value)
         return self._total.evaluate(self._translated_metrics).value
 

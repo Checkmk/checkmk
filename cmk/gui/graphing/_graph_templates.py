@@ -19,8 +19,7 @@ from cmk.gui.type_defs import Row, TranslatedMetrics
 
 from ._expression import (
     Average,
-    ConstantFloat,
-    ConstantInt,
+    Constant,
     Difference,
     Fraction,
     Maximum,
@@ -226,8 +225,8 @@ def _to_metric_operation(
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    if isinstance(declaration, (ConstantInt, ConstantFloat)):
-        return MetricOpConstant(value=declaration.value)
+    if isinstance(declaration, Constant):
+        return MetricOpConstant(value=float(declaration.value))
     if isinstance(declaration, Metric):
         return MetricOpRRDSource(
             site_id=lq_row["site"],

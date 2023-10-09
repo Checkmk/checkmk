@@ -10,7 +10,6 @@ from typing import Any, Callable, Literal, NotRequired, TypeAlias, TypedDict
 
 from cmk.utils import plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.metrics import MetricName
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
@@ -18,7 +17,13 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from ._expression import ConstantFloat, ConstantInt, parse_conditional_expression, parse_expression
+from ._expression import (
+    ConstantFloat,
+    ConstantInt,
+    has_required_metrics_or_scalars,
+    parse_conditional_expression,
+    parse_expression,
+)
 from ._unit_info import unit_info
 
 LegacyPerfometer = tuple[str, Any]
@@ -106,53 +111,29 @@ def parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> N
     _parse_perfometers(perfometers)
 
 
-def _get_metric_names(
-    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
-) -> Sequence[MetricName]:
-    """Returns all metric names which are used within a perfometer.
-    This is used for checking which perfometer can be displayed for a given service later.
-    """
-    if perfometer["type"] == "linear":
-        metric_names = [
-            m.name
-            for s in perfometer["segments"]
-            for m in parse_expression(s, translated_metrics).metrics()
-        ]
-        if (total := perfometer.get("total")) is not None:
-            metric_names += [m.name for m in parse_expression(total, translated_metrics).metrics()]
-
-        if (label := perfometer.get("label")) is not None:
-            metric_names += [
-                m.name for m in parse_expression(label[0], translated_metrics).metrics()
-            ]
-        return metric_names
-
-    if perfometer["type"] == "logarithmic":
-        return [
-            m.name for m in parse_expression(perfometer["metric"], translated_metrics).metrics()
-        ]
-
-    if perfometer["type"] in ("stacked", "dual"):
-        if "perfometers" not in perfometer:
-            raise MKGeneralException(
-                _("Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)")
-                % perfometer
-            )
-
-        return [
-            metric_name
-            for sub_perfometer in perfometer["perfometers"]
-            for metric_name in _get_metric_names(sub_perfometer, translated_metrics)
-        ]
-    raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
-
-
-def _skip_perfometer_by_metric_names(
+def _perfometer_has_required_metrics_or_scalars(
     perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
 ) -> bool:
-    metric_names = set(_get_metric_names(perfometer, translated_metrics))
-    available_metric_names = set(translated_metrics.keys())
-    return not metric_names.issubset(available_metric_names)
+    if perfometer["type"] == "linear":
+        expressions = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
+        if (total := perfometer.get("total")) is not None:
+            expressions.append(parse_expression(total, translated_metrics))
+        if (label := perfometer.get("label")) is not None:
+            expressions.append(parse_expression(label[0], translated_metrics))
+        return has_required_metrics_or_scalars(expressions, translated_metrics)
+
+    if perfometer["type"] == "logarithmic":
+        return has_required_metrics_or_scalars(
+            [parse_expression(perfometer["metric"], translated_metrics)], translated_metrics
+        )
+
+    if perfometer["type"] in ("dual", "stacked"):
+        return all(
+            _perfometer_has_required_metrics_or_scalars(p, translated_metrics)
+            for p in perfometer["perfometers"]
+        )
+
+    raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
 def _total_values_exists(value: str | int | float, translated_metrics: TranslatedMetrics) -> bool:
@@ -177,7 +158,7 @@ def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: Transla
     if not translated_metrics:
         return False
 
-    if _skip_perfometer_by_metric_names(perfometer, translated_metrics):
+    if not _perfometer_has_required_metrics_or_scalars(perfometer, translated_metrics):
         return False
 
     if perfometer["type"] == "linear":

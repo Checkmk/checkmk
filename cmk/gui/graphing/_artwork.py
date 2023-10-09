@@ -261,9 +261,9 @@ def compute_graph_artwork(
         time_axis=_compute_graph_t_axis(start_time, end_time, width, step),
         mark_requested_end_time=graph_recipe.mark_requested_end_time,
         # Displayed range
-        start_time=start_time,
-        end_time=end_time,
-        step=step,
+        start_time=int(start_time),
+        end_time=int(end_time),
+        step=int(step),
         explicit_vertical_range=graph_recipe.explicit_vertical_range,
         requested_vrange=graph_data_range.get("vertical_range"),
         requested_start_time=int(graph_data_range["time_range"][0]),
@@ -1060,7 +1060,7 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
 
     return {
         "labels": labels,
-        "range": (start_time - step, end_time + step),
+        "range": (int(start_time - step), int(end_time + step)),
         "title": _add_step_to_title(title_label, step),
     }
 

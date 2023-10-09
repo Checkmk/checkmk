@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Configuration variables for the notification via cmk --notify"""
 
-# TODO: Remove all configuration for legacy-Email to deprecated, or completely
-# remove from Setup.
-
-
 import cmk.utils.paths
 
 from cmk.gui.i18n import _
@@ -23,15 +19,24 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
-    config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
+    ConfigVariableRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.utils import site_neutral_path
 
 
-@config_variable_registry.register
+def register(config_variable_registry: ConfigVariableRegistry) -> None:
+    config_variable_registry.register(ConfigVariableNotificationFallbackEmail)
+    config_variable_registry.register(ConfigVariableNotificationFallbackFormat)
+    config_variable_registry.register(ConfigVariableNotificationBacklog)
+    config_variable_registry.register(ConfigVariableNotificationBulkInterval)
+    config_variable_registry.register(ConfigVariableNotificationPluginTimeout)
+    config_variable_registry.register(ConfigVariableNotificationLogging)
+    config_variable_registry.register(ConfigVariableFailedNotificationHorizon)
+
+
 class ConfigVariableNotificationFallbackEmail(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -58,7 +63,6 @@ class ConfigVariableNotificationFallbackEmail(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableNotificationFallbackFormat(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -87,7 +91,6 @@ class ConfigVariableNotificationFallbackFormat(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableNotificationBacklog(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -113,7 +116,6 @@ class ConfigVariableNotificationBacklog(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableNotificationBulkInterval(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -140,7 +142,6 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
         return True
 
 
-@config_variable_registry.register
 class ConfigVariableNotificationPluginTimeout(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -159,7 +160,6 @@ class ConfigVariableNotificationPluginTimeout(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableNotificationLogging(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
@@ -187,7 +187,6 @@ class ConfigVariableNotificationLogging(ConfigVariable):
         )
 
 
-@config_variable_registry.register
 class ConfigVariableFailedNotificationHorizon(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications

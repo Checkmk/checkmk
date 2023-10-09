@@ -16,6 +16,39 @@ DBUSER=postgres
 INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass:
 INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:
 ----------------------------------------------------------
+
+Example of an environment file:
+
+-----/home/postgres/db1.env-----------------------------------------
+export PGDATABASE="data"
+export PGPORT="5432"
+export PGVERSION="14"
+----------------------------------------------------------
+
+Inside of the environment file, only `PGPORT` is mandatory.
+In case there is no `INSTANCE` specified by the postgres.cfg, then the plugin assumes defaults.
+For example, the configuration
+
+-----postgres.cfg-----------------------------------------
+DBUSER=postgres
+PG_BINARY_PATH=/usr/bin/psql
+----------------------------------------------------------
+
+is equivalent to
+
+-----postgres.cfg-----------------------------------------
+DBUSER=postgres
+PG_BINARY_PATH=/usr/bin/psql
+INSTANCE=/home/postgres/does-not-exist.env:postgres::postgres
+----------------------------------------------------------
+
+-----/home/postgres/does-not-exist.env--------------------
+export PGDATABASE="main"
+export PGPORT="5432"
+----------------------------------------------------------
+
+The only difference being `/home/postgres/does-not-exist.env` does not exist in the first setup.
+Different defaults are chosen for Windows.
 """
 
 __version__ = "2.1.0p36"

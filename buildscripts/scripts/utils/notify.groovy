@@ -74,6 +74,11 @@ def notify_error(error) {
                 notify_emails += "max.linke@checkmk.com"
             }
 
+            /// Inform nile devs if our extensions fail
+            if (currentBuild.fullProjectName.contains("test-extension-compatibility")) {
+                notify_emails.addAll(TEAM_NILE_MAIL.split(","))
+            }
+
             /// fallback - for investigation
             notify_emails = notify_emails ?: [
                 "timotheus.bachinger@checkmk.com",

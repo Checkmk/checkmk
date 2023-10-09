@@ -57,7 +57,7 @@ class BasePerm(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def iter_perms(self) -> Iterable[str]:
+    def iter_perms(self) -> Iterable[Perm]:
         raise NotImplementedError
 
     def validate(self, permissions: Sequence[str]) -> bool:
@@ -65,7 +65,7 @@ class BasePerm(abc.ABC):
         return self.has_permission(FakeUser(permissions))
 
     def __contains__(self, item):
-        return item in list(self.iter_perms())
+        return item in (p.name for p in self.iter_perms())
 
 
 class Optional(BasePerm):
@@ -86,7 +86,7 @@ class Optional(BasePerm):
         It's okay if we don't have the permission, so we accept it all the time."""
         return True
 
-    def iter_perms(self) -> Iterable[str]:
+    def iter_perms(self) -> Iterable[Perm]:
         return self.perm.iter_perms()
 
 
@@ -103,7 +103,7 @@ class MultiPerm(BasePerm, abc.ABC):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}([{', '.join([repr(o) for o in self.perms])})"
 
-    def iter_perms(self) -> Iterable[str]:
+    def iter_perms(self) -> Iterable[Perm]:
         return itertools.chain(*[perm.iter_perms() for perm in self.perms])
 
 
@@ -120,7 +120,7 @@ class NoPerm(BasePerm):
         """
         return False
 
-    def iter_perms(self) -> Iterable[str]:
+    def iter_perms(self) -> Iterable[Perm]:
         return iter([])
 
 
@@ -139,8 +139,8 @@ class Perm(BasePerm):
         This method asks the user object if it has said permission."""
         return user.has_permission(self.name)
 
-    def iter_perms(self) -> Iterable[str]:
-        return iter([self.name])
+    def iter_perms(self) -> Iterable[Perm]:
+        return iter([self])
 
 
 class AllPerm(MultiPerm):
@@ -219,3 +219,17 @@ class AnyPerm(MultiPerm):
 
         Is verified if any one of the child permissions is verified."""
         return any(perm.has_permission(user) for perm in self.perms)
+
+
+class OkayToIgnorePerm(Perm):
+    """A permission which does not raise an error if it is not present in Checkmk during built-time.
+
+    Introduced mainly since some components were removed in the CSE edition. Removing a
+    component also removes the associating permissions. Some general endpoints make use of
+    those permissions beyond its component specific endpoints and this would lead to an error
+    if the permission is not present. This permission will also not get rendered in the
+    documentation.
+
+    Consider this as a workaround since clear separation of edition specific permissions would
+    require a restructure of the entire endpoint specific permissions specification system.
+    """

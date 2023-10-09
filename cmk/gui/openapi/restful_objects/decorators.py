@@ -1256,7 +1256,10 @@ class Endpoint:
         if self.permissions_required is not None:
             # Check that all the names are known to the system.
             for perm in self.permissions_required.iter_perms():
-                if perm not in permission_registry:
+                if isinstance(perm, permissions.OkayToIgnorePerm):
+                    continue
+
+                if perm.name not in permission_registry:
                     # NOTE:
                     #   See rest_api.py. dynamic_permission() have to be loaded before request
                     #   for this to work reliably.
@@ -1596,16 +1599,23 @@ def _permission_descriptions(
     def _count_perms(_perms):
         return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
-    def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
+    def _add_desc(  # pylint: disable=too-many-branches
+        permission: permissions.BasePerm, indent: int, desc_list: list[str]
+    ) -> None:
         if isinstance(permission, permissions.Undocumented):
             # Don't render
             return
 
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
-        if isinstance(permission, permissions.Perm):
+        if isinstance(permission, (permissions.Perm, permissions.OkayToIgnorePerm)):
             perm_name = permission.name
-            desc = description_map.get(perm_name) or permission_registry[perm_name].description
+            try:
+                desc = description_map.get(perm_name) or permission_registry[perm_name].description
+            except KeyError:
+                if isinstance(permission, permissions.OkayToIgnorePerm):
+                    return
+                raise
             _description.append(f"{prefix} * `{perm_name}`: {desc}")
         elif isinstance(permission, permissions.AllPerm):
             # If AllOf only contains one permission, we don't need to show the AllOf

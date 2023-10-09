@@ -10,22 +10,20 @@ def main() {
     check_environment_variables([
         "DOCKER_TAG",
     ]);
-            
+
     stage("Check for extension actuality") {
         dir("${checkout_dir}") {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 docker_image_from_alias("IMAGE_TESTING").inside() {
-                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                        sh("""
-                            scripts/run-pipenv run \
-                              tests/extension_compatibility/output_extensions_sorted_by_downloads.py \
-                                | sed -n "1,\$(wc -l < tests/extension_compatibility/current_extensions_under_test.txt)p" \
-                                > /tmp/extension_compatibility.txt
-                            diff -u --color \
-                                tests/extension_compatibility/current_extensions_under_test.txt \
-                                /tmp/extension_compatibility.txt
-                        """);
-                    }
+                    sh("""
+                        scripts/run-pipenv run \
+                          tests/extension_compatibility/output_extensions_sorted_by_downloads.py \
+                            | sed -n "1,\$(wc -l < tests/extension_compatibility/current_extensions_under_test.txt)p" \
+                            > /tmp/extension_compatibility.txt
+                        diff -u --color \
+                            tests/extension_compatibility/current_extensions_under_test.txt \
+                            /tmp/extension_compatibility.txt
+                    """);
                 }
             }
         }

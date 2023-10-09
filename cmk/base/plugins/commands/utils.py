@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 from cmk.base.plugins.commands.register import registered_active_checks
 
 from cmk.commands.v1 import ActiveCheckCommand
@@ -10,3 +12,7 @@ from cmk.commands.v1 import ActiveCheckCommand
 
 def get_active_check(plugin_name: str) -> ActiveCheckCommand | None:
     return registered_active_checks.get(plugin_name)
+
+
+def get_all_active_check_names() -> Sequence[str]:
+    return list(registered_active_checks.keys())

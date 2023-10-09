@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import logging
 import os
 import subprocess
@@ -112,6 +113,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.plugins.commands.utils import get_all_active_check_names
 from cmk.base.sources import make_parser
 
 from ._localize import do_localize
@@ -403,7 +405,12 @@ def mode_list_checks() -> None:
     all_checks: list[CheckPluginName | str] = [
         p.name for p in agent_based_register.iter_all_check_plugins()
     ]  #
-    all_checks += ["check_%s" % name for name in config.active_check_info]
+
+    # active checks using both new and old API have to be collected
+    all_checks += [
+        "check_%s" % name
+        for name in itertools.chain(config.active_check_info, get_all_active_check_names())
+    ]
 
     for plugin_name in sorted(all_checks, key=str):
         ds_protocol = _get_ds_protocol(plugin_name)

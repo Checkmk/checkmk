@@ -174,7 +174,7 @@ def _key_oid_pairs(pair1: tuple[OID, SNMPRawValue]) -> list[int]:
 
 def _get_snmpwalk(
     section_name: SectionName | None,
-    base: str,
+    base_oid: str,
     fetchoid: OID,
     *,
     walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
@@ -185,18 +185,7 @@ def _get_snmpwalk(
         cache_info = walk_cache[fetchoid][1]
         console.vverbose(f"Already fetched OID: {fetchoid}\n")
         return cache_info
-    info = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    walk_cache[fetchoid] = (save_walk_cache, info)
-    return info
 
-
-def _perform_snmpwalk(
-    section_name: SectionName | None,
-    base_oid: str,
-    fetchoid: OID,
-    *,
-    backend: SNMPBackend,
-) -> SNMPRowInfo:
     added_oids: set[OID] = set()
     rowinfo: SNMPRowInfo = []
 
@@ -225,6 +214,7 @@ def _perform_snmpwalk(
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
 
+    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
     return rowinfo
 
 

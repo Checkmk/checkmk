@@ -5,7 +5,6 @@
 """Modes for managing folders"""
 
 import abc
-import operator
 import re
 from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import TypeVar
@@ -27,7 +26,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.num_split import key_num_split
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
@@ -53,6 +51,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import set_inpage_search_result_info
+from cmk.gui.utils.sort import natural_sort
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     DocReference,
@@ -718,9 +717,11 @@ class ModeFolder(WatoMode):
             if (searched_folder := request.var("search")) is not None:
                 match_regex = re.compile(searched_folder.lower(), re.IGNORECASE)
                 search_results = 0
-            for subfolder in sorted(
-                self._folder.subfolders(only_visible=True), key=operator.methodcaller("title")
-            ):
+
+            subfolders_dict = {x.title(): x for x in self._folder.subfolders(only_visible=True)}
+
+            for title in natural_sort(subfolders_dict.keys()):
+                subfolder = subfolders_dict[title]
                 if searched_folder is not None:
                     if not match_regex.search(subfolder.title()):
                         continue
@@ -887,7 +888,7 @@ class ModeFolder(WatoMode):
         if not self._folder.has_hosts():
             return
 
-        hostnames = sorted(self._folder.hosts().keys(), key=key_num_split)
+        hostnames = natural_sort(self._folder.hosts().keys())
 
         html.div("", id_="row_info")
 
@@ -920,7 +921,12 @@ class ModeFolder(WatoMode):
                     table.limit_hint = max_hosts
                     continue
                 self._show_host_row(
-                    rendered_hosts, table, hostname, colspan, host_errors, contact_group_names
+                    rendered_hosts,
+                    table,
+                    HostName(hostname),
+                    colspan,
+                    host_errors,
+                    contact_group_names,
                 )
 
         html.hidden_field("selection_id", weblib.selection_id())
@@ -1358,4 +1364,5 @@ class PageAjaxSetFoldertree(AjaxPage):
         check_csrf_token()
         api_request = self.webapi_request()
         user.save_file("foldertree", (api_request.get("topic"), api_request.get("target")))
+
         return None

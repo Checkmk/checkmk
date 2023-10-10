@@ -285,9 +285,25 @@ class ModeRevertChanges(WatoMode, activate_changes.ActivateChanges):
             request,
             [("mode", ModeActivateChanges.name())],
         )
+        message = html.render_div(
+            (
+                html.render_span(_("Info:"), class_="underline")
+                + _(
+                    " This also includes any changes made since the last activation that did not "
+                    "require manual activation (marked with "
+                )
+                + html.render_icon("info_circle")
+                + ")"
+            ),
+            class_="confirm_info",
+        )
 
         show_confirm_cancel_dialog(
-            _("Do you really want revert the following changes?"), confirm_url, cancel_url
+            _("Revert changes?"),
+            confirm_url,
+            cancel_url,
+            message,
+            confirm_text=_("Revert changes"),
         )
 
         _change_table(self._all_changes, _("Revert changes"))
@@ -310,8 +326,6 @@ def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
                 css.append("foreign")
             if not user.may("wato.activateforeign"):
                 css.append("not_permitted")
-            if has_been_activated(change):
-                css.append("has_been_activated")
 
             table.row(css=[" ".join(css)])
 
@@ -321,7 +335,7 @@ def _change_table(changes, title: str):  # type:ignore[no-untyped-def]
                 html.write_html(rendered)
 
             if has_been_activated(change):
-                html.icon("info", _("This change is already activated"))
+                html.icon("info_circle", _("This change is already activated"))
 
             table.cell(_("Time"), render.date_and_time(change["time"]), css=["narrow nobr"])
             table.cell(_("User"), css=["narrow nobr"])

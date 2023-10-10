@@ -3686,7 +3686,7 @@ def ajax_popup_host_action_menu() -> None:
         remove_tls_options: dict[str, str | dict[str, str]] = confirmed_form_submit_options(
             title=_('Remove TLS registration of host "%s"') % hostname,
             message=remove_tls_registration_help(),
-            confirm_button=_("Remove"),
+            confirm_text=_("Remove"),
             warning=True,
         )
         html.open_a(
@@ -3708,7 +3708,7 @@ def ajax_popup_host_action_menu() -> None:
     if request.get_str_input("show_delete_link"):
         delete_host_options: dict[str, str | dict[str, str]] = confirmed_form_submit_options(
             title=_("Delete host"),
-            confirm_button=_("Remove"),
+            confirm_text=_("Remove"),
             suffix=host.name(),
         )
         html.open_a(

@@ -112,14 +112,21 @@ def make_confirmed_form_submit_link(
     )
 
 
-def show_confirm_cancel_dialog(title: str, confirm_url: str, cancel_url: str | None = None) -> None:
+def show_confirm_cancel_dialog(
+    title: str,
+    confirm_url: str,
+    cancel_url: str | None = None,
+    message: str | HTML | None = None,
+    confirm_text: str | None = None,
+) -> None:
     html.javascript(
         "cmk.forms.confirm_dialog(%s, ()=>{location.href = %s;}, %s)"
         % (
             json.dumps(
                 {
                     "title": title,
-                    "confirmButtonText": _("Confirm"),
+                    "html": escaping.escape_text(message),
+                    "confirmButtonText": confirm_text if confirm_text else _("Confirm"),
                     "cancelButtonText": _("Cancel"),
                     "customClass": {
                         "confirmButton": "confirm_question",
@@ -136,17 +143,17 @@ def show_confirm_cancel_dialog(title: str, confirm_url: str, cancel_url: str | N
 def confirmed_form_submit_options(
     title: str | None = None,
     suffix: str | None = None,
-    message: str | None = None,
-    confirm_button: str | None = None,
-    cancel_button: str | None = None,
+    message: str | HTML | None = None,
+    confirm_text: str | None = None,
+    cancel_text: str | None = None,
     icon: str | None = None,
     warning: bool = False,
 ) -> dict[str, str | dict[str, str]]:
     return {
         "title": get_confirm_link_title(title, suffix),
         "html": escaping.escape_text(message),
-        "confirmButtonText": confirm_button if confirm_button else _("Delete"),
-        "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
+        "confirmButtonText": confirm_text if confirm_text else _("Delete"),
+        "cancelButtonText": cancel_text if cancel_text else _("Cancel"),
         "icon": "warning" if warning else "question",
         "customClass": {
             "confirmButton": "confirm_warning" if warning else "confirm_question",

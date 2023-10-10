@@ -24,6 +24,7 @@ from cmk.utils.crypto.certificate import (
     RsaPrivateKey,
     Signature,
     WrongPasswordError,
+    X509Name,
 )
 from cmk.utils.crypto.password import Password
 
@@ -38,6 +39,7 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
         == self_signed_cert.private_key.public_key
     )
 
+    assert self_signed_cert.certificate._is_self_signed()
     self_signed_cert.certificate.verify_is_signed_by(self_signed_cert.certificate)
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
@@ -278,14 +280,17 @@ def test_subject_alt_names(
     """test setting and retrieval of subject-alt-names (DNS)"""
     assert (
         Certificate._create(
-            public_key=self_signed_cert.private_key.public_key,
-            signing_key=self_signed_cert.private_key,
-            common_name="unittest",
-            organization="unit",
+            subject_public_key=self_signed_cert.private_key.public_key,
+            subject_name=X509Name.create(
+                organizational_unit="unit",
+                organization_name="unit",
+                common_name="unittest",
+            ),
+            subject_alt_dns_names=sans,
             expiry=relativedelta(days=1),
             start_date=datetime.now(),
-            organizational_unit_name="unit",
-            subject_alt_dns_names=sans,
+            issuer_signing_key=self_signed_cert.private_key,
+            issuer_name=X509Name.create(common_name="unittest"),
         ).get_subject_alt_names()
         == expected
     )

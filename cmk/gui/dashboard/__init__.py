@@ -52,13 +52,15 @@ from .page_show_dashboard import (
 )
 from .store import get_all_dashboards, get_dashlet, get_permitted_dashboards
 from .title_macros import render_title_with_macros_string
-from .type_defs import DashboardConfig
+from .type_defs import DashboardConfig, DashboardName
 from .visual_type import VisualTypeDashboards
 
 __all__ = [
     "register",
     "load_plugins",
     "DashletConfig",
+    "DashletRegistry",
+    "DashboardName",
     "DashboardConfig",
     "builtin_dashboards",
     "MAX",

@@ -23,6 +23,8 @@ from functools import cache
 from pathlib import Path
 from typing import NamedTuple, NoReturn
 
+from pydantic import BaseModel
+
 from ..parse import WerkV2ParseResult
 
 
@@ -52,6 +54,17 @@ class Werk(NamedTuple):
     path: Path
     id: WerkId
     content: WerkV2ParseResult
+
+
+class Config(BaseModel):
+    editions: list[tuple[str, str]]
+    components: list[tuple[str, str]]
+    edition_components: dict[str, list[tuple[str, str]]]
+    classes: list[tuple[str, str, str]]
+    levels: list[tuple[str, str]]
+    compatible: list[tuple[str, str]]
+    online_url: str
+    current_version: str
 
 
 WerkMetadata = dict[str, str]
@@ -294,6 +307,28 @@ def get_last_werk() -> WerkId:
     return g_last_werk
 
 
+@cache
+def get_valid_choices() -> dict[str, set[str]]:
+    return {
+        "compatible": {e[0] for e in get_config().compatible},
+        "class": {e[0] for e in get_config().classes},
+        "edition": {e[0] for e in get_config().editions},
+        "component": {e[0] for e in all_components()},
+        "level": {e[0] for e in get_config().levels},
+    }
+
+
+@cache
+def get_config() -> Config:
+    globals_: dict[str, object] = {}
+    with open("config") as f_config:
+        exec(f_config.read(), globals_, globals_)  # nosec B102 # BNS:aee528
+
+    globals_.pop("__builtins__")
+    globals_["current_version"] = load_current_version()
+    return Config.model_validate(globals_)
+
+
 def load_config() -> None:
     global g_last_werk, valid_choices
     with open("config") as f_config:
@@ -303,14 +338,6 @@ def load_config() -> None:
             g_last_werk = WerkId(int(f_last.read()))
     except Exception:
         g_last_werk = None
-
-    valid_choices = {
-        "compatible": {e[0] for e in compatible},
-        "class": {e[0] for e in classes},
-        "edition": {e[0] for e in editions},
-        "component": {e[0] for e in all_components()},
-        "level": {e[0] for e in levels},
-    }
 
 
 def load_werks() -> dict[WerkId, Werk]:
@@ -396,7 +423,7 @@ def load_werk(werk_path: Path) -> Werk:
 
 
 def validate_werk(werk: Werk) -> None:
-    for key, choices in valid_choices.items():
+    for key, choices in get_valid_choices().items():
         if (value := werk.content.metadata[key]) not in choices:
             raise ValueError(f"Invalid value {value!r} for '{key}'")
 
@@ -427,7 +454,7 @@ def git_add(werk: Werk) -> None:
 
 def git_commit(werk: Werk, custom_files: list[str]) -> None:
     title = werk.content.metadata["title"]
-    for classid, _classname, prefix in classes:
+    for classid, _classname, prefix in get_config().classes:
         if werk.content.metadata["class"] == classid:
             if prefix:
                 title = f"{prefix} {title}"
@@ -547,16 +574,16 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
 
     for a in args.filter:
         if a == "current":
-            a = g_current_version
+            a = get_config().current_version
 
         hit = False
         for tp, values in [
-            ("edition", editions),
+            ("edition", get_config().editions),
             ("component", all_components()),
-            ("level", levels),
-            ("class", classes),
+            ("level", get_config().levels),
+            ("class", get_config().classes),
             ("version", versions),
-            ("compatible", compatible),
+            ("compatible", get_config().compatible),
         ]:
             for v in values:  # type: ignore[attr-defined] # all of them are iterable.
                 if isinstance(v, tuple):
@@ -603,7 +630,7 @@ def output_csv(werks: list[Werk]) -> None:
         sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
 
     nr = 1
-    for entry in components:
+    for entry in get_config().components:
         if isinstance(entry, tuple) and len(entry) == 2:
             name, alias = entry
         elif isinstance(entry, str):  # TODO: Hmmm...
@@ -638,7 +665,7 @@ def output_csv(werks: list[Werk]) -> None:
 
 def werk_class(werk: Werk) -> str:
     cl = werk.content.metadata["class"]
-    for entry in classes:
+    for entry in get_config().classes:
         # typing: why would this be? LH: Tuple[str, str, str], RH: str
         if entry == cl:  # type: ignore[comparison-overlap]
             return cl
@@ -730,14 +757,14 @@ def input_choice(
 
 
 def get_edition_components(edition: str) -> list[tuple[str, str]]:
-    return components + edition_components.get(edition, [])
+    return get_config().components + get_config().edition_components.get(edition, [])
 
 
 def all_components() -> list[tuple[str, str]]:
-    c = components
-    for ed_components in edition_components.values():
+    c = get_config().components.copy()
+    for ed_components in get_config().edition_components.values():
         c += ed_components
-    return components
+    return c
 
 
 werk_notes = """
@@ -759,17 +786,16 @@ def main_new(args: argparse.Namespace) -> None:
 
     metadata: WerkMetadata = {}
     metadata["date"] = str(int(time.time()))
-    assert g_current_version
-    metadata["version"] = g_current_version
+    metadata["version"] = get_config().current_version
     metadata["title"] = get_input("Title")
     if metadata["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    metadata["class"] = input_choice("Class", classes)
-    metadata["edition"] = input_choice("Edition", editions)
+    metadata["class"] = input_choice("Class", get_config().classes)
+    metadata["edition"] = input_choice("Edition", get_config().editions)
     metadata["component"] = input_choice("Component", get_edition_components(metadata["edition"]))
-    metadata["level"] = input_choice("Level", levels)
-    metadata["compatible"] = input_choice("Compatible", compatible)
+    metadata["level"] = input_choice("Level", get_config().levels)
+    metadata["compatible"] = input_choice("Compatible", get_config().compatible)
 
     werk_id = next_werk_id()
     metadata["id"] = str(werk_id)
@@ -804,7 +830,7 @@ def main_blame(args: argparse.Namespace) -> None:
 
 def main_url(args: argparse.Namespace) -> None:
     wid = get_werk_arg(WerkId(args.id))
-    sys.stdout.write(online_url % wid.id + "\n")
+    sys.stdout.write(get_config().online_url % wid.id + "\n")
 
 
 def main_delete(args: argparse.Namespace) -> None:
@@ -939,9 +965,10 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
     if found_werk_path is not None:
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
-        assert g_current_version
-        change_werk_version(found_werk_path, g_current_version)
-        sys.stdout.write(f"Changed version of werk {found_werk_path} to {g_current_version}.\n")
+        change_werk_version(found_werk_path, get_config().current_version)
+        sys.stdout.write(
+            f"Changed version of werk {found_werk_path} to {get_config().current_version}.\n"
+        )
 
     if pick.returncode:
         # Exit with the result of the pick. This may be a merge conflict, so
@@ -1060,26 +1087,8 @@ def use_markdown() -> bool:
 #   |_| |_| |_|\__,_|_|_| |_|
 #
 
-# default config
-editions: list[tuple[str, str]] = []
-components: list[tuple[str, str]] = []
-edition_components: dict[str, list[tuple[str, str]]] = {}
-classes: list[tuple[str, str, str]] = []
-levels: list[tuple[str, str]] = []
-compatible: list[tuple[str, str]] = []
-valid_choices: dict[str, set[str]] = {}
-online_url = ""
-current_version = None
-
-g_current_version = None
-
 
 def main(argv: Sequence[str] | None = None) -> None:
     goto_werksdir()
-    load_config()
-    global g_current_version
-    g_current_version = current_version or load_current_version()
-    if not g_current_version:
-        raise SystemExit("Unable to determine project version")
     main_args = parse_arguments(argv or sys.argv[1:])
     main_args.func(main_args)

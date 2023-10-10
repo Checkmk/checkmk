@@ -25,6 +25,11 @@ export function enable_select2_dropdowns(container) {
     if (!container) container = $(document);
 
     elements = $(container).find(".select2-enable").not(".vlof_prototype .select2-enable");
+    const max_wait_seconds = 3; // Let the user wait for max 3 seconds. We can convert ~60-80 selects per second.
+    if (elements.length > max_wait_seconds * 60) {
+        // If we've got too many of those, we bail out early instead of letting the user wait potentially "forever".
+        return;
+    }
     elements.select2({
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,

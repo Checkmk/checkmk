@@ -3,8 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from typing import Any, Mapping, NamedTuple, Sequence
+
+from dateutil import tz
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -44,6 +47,11 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
+# <<<mssql_backup:sep(124)>>>
+# -|-|date_tz|UTC|-
+# MSSQL_SQL0x4|master|2016-07-08 20:20:27|D
+# ...
+
 
 class Backup(NamedTuple):
     timestamp: float | None
@@ -66,11 +74,23 @@ _MAP_BACKUP_TYPES = {
 }
 
 
-def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
+def _parse_date_and_time(
+    b_date: str, b_time: str | None, tz_info: datetime.tzinfo | None
+) -> float | None:
     try:
         if b_time is None:
             return int(b_date)
-        return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
+
+        if tz_info is None:
+            # mssql agent plugin is older and does not yet provide information in which timezone
+            # the dates/times are in
+            return time.mktime(time.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S"))
+
+        return (
+            datetime.datetime.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S")
+            .replace(tzinfo=tz_info)
+            .timestamp()
+        )
     except ValueError:
         return None
 
@@ -86,6 +106,8 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
 
     parsed: dict[str, list[Backup]] = {}
 
+    string_table, tz_info = _parse_time_zone(string_table)
+
     line: Sequence[str | None]
     for line in string_table:
         if len(line) <= 2:
@@ -98,13 +120,27 @@ def parse_mssql_backup(string_table: StringTable) -> Section:
         # (fill up with Nones)
         b_time, b_type, b_state = (_get_word(line, i) for i in (3, 4, 5))
 
-        timestamp = _parse_date_and_time(b_date, b_time)
+        timestamp = _parse_date_and_time(b_date, b_time, tz_info)
 
         item = "%s %s" % (inst, tablespace)
         backup = Backup(timestamp, _MAP_BACKUP_TYPES.get(b_type) if b_type else None, b_state or "")
         parsed.setdefault(item, []).append(backup)
 
     return parsed
+
+
+def _parse_time_zone(string_table: StringTable) -> tuple[StringTable, datetime.tzinfo | None]:
+    """
+    >>> _parse_time_zone([["-","-", "date_tz", "UTC", "-"], ["srv","db","date","time","D"]])
+    ([['srv', 'db', 'date', 'time', 'D']], tzfile('/usr/share/zoneinfo/UTC'))
+    >>> _parse_time_zone([["srv","db","date","time","D"]])
+    ([['srv', 'db', 'date', 'time', 'D']], None)
+    """
+    tz_info = None
+    if string_table[0][2] == "date_tz":
+        tz_info = tz.gettz(string_table[0][3])
+        string_table = string_table[1:]
+    return string_table, tz_info
 
 
 register.agent_section(

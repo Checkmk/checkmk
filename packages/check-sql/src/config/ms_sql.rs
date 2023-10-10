@@ -403,12 +403,6 @@ pub struct Instance {
 
 impl Instance {
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        use yaml_rust::YamlEmitter;
-
-        let mut out_str = String::new();
-        let mut emitter = YamlEmitter::new(&mut out_str);
-        emitter.dump(yaml).unwrap(); // dump the YAML object to a String
-        println!("{}", out_str);
         Ok(Some(Self {
             sid: yaml
                 .get_string(keys::SID)

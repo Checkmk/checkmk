@@ -250,9 +250,7 @@ class BackupTask:
 
         for linenr, line in enumerate(logs):
             try:
-                # TODO: use assignment expressions together with elif and w/o continue
-                start_vmid = extract_single_value(line, "start_vm")
-                if start_vmid:
+                if start_vmid := extract_single_value(line, "start_vm"):
                     if current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
                         raise BackupTask.LogParseError(
@@ -261,10 +259,8 @@ class BackupTask:
                         )
                     current_vmid = start_vmid
                     current_dataset = {}
-                    continue
 
-                finish_vm = extract_tuple(line, "finish_vm", 2)
-                if finish_vm:
+                elif finish_vm := extract_tuple(line, "finish_vm", 2):
                     stop_vmid, duration_str = finish_vm
                     if stop_vmid != current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
@@ -282,10 +278,8 @@ class BackupTask:
                         )
                     result[current_vmid] = current_dataset
                     current_vmid = ""
-                    continue
 
-                error_vm = extract_tuple(line, "error_vm", 2)
-                if error_vm:
+                elif error_vm := extract_tuple(line, "error_vm", 2):
                     error_vmid, error_msg = error_vm
                     if current_vmid and error_vmid != current_vmid:
                         # this is a consistency problem - we have to abort parsing this log file
@@ -296,38 +290,30 @@ class BackupTask:
                     LOGGER.warning("Found error for VM %r: %r", error_vmid, error_msg)
                     result[error_vmid] = {**current_dataset, **{"error": error_msg}}
                     current_vmid = ""
-                    continue
 
-                started_time = extract_single_value(line, "started_time")
-                if started_time:
+                elif started_time := extract_single_value(line, "started_time"):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr,
                             "Found start date while no VM was active",
                         )
                     current_dataset["started_time"] = started_time
-                    continue
 
-                failed_at_time = extract_single_value(line, "failed_job")
-                if failed_at_time:
+                elif failed_at_time := extract_single_value(line, "failed_job"):
                     # in case a backup job fails we store the time it failed as
                     # 'started_time' in order to be able to sort backup jobs
                     for backup_data in result.values():
                         backup_data.setdefault("started_time", failed_at_time)
-                    continue
 
-                bytes_written = extract_tuple(line, "bytes_written", 2)
-                if bytes_written:
+                elif bytes_written := extract_tuple(line, "bytes_written", 2):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found bandwidth information while no VM was active"
                         )
                     current_dataset["bytes_written_size"] = int(bytes_written[0])
                     current_dataset["bytes_written_bandwidth"] = to_bytes(bytes_written[1])
-                    continue
 
-                transferred = extract_tuple(line, "transferred", 2)
-                if transferred:
+                elif transferred := extract_tuple(line, "transferred", 2):
                     transfer_size, transfer_time = transferred
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
@@ -335,29 +321,23 @@ class BackupTask:
                         )
                     current_dataset["transfer_size"] = to_bytes(transfer_size)
                     current_dataset["transfer_time"] = int(transfer_time)
-                    continue
 
-                archive_name = extract_single_value(line, "create_archive")
-                if archive_name:
+                elif archive_name := extract_single_value(line, "create_archive"):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr,
                             "Found archive name without active VM",
                         )
                     current_dataset["archive_name"] = archive_name
-                    continue
 
-                archive_size = extract_single_value(line, "archive_size")
-                if archive_size:
+                elif archive_size := extract_single_value(line, "archive_size"):
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
                             linenr, "Found archive size information without active VM"
                         )
                     current_dataset["archive_size"] = to_bytes(archive_size)
-                    continue
 
-                uploaded = extract_tuple(line, "uploaded", 5)
-                if uploaded:
+                elif uploaded := extract_tuple(line, "uploaded", 5):
                     _, upload_amount, upload_total, upload_time, _ = uploaded
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
@@ -366,10 +346,8 @@ class BackupTask:
                     current_dataset["upload_amount"] = to_bytes(upload_amount)
                     current_dataset["upload_total"] = to_bytes(upload_total)
                     current_dataset["upload_time"] = float(upload_time)
-                    continue
 
-                backuped = extract_tuple(line, "backuped", 5)
-                if backuped:
+                elif backuped := extract_tuple(line, "backuped", 5):
                     _, backup_amount, backup_total, _, backup_time = backuped
                     if not current_vmid:
                         raise BackupTask.LogParseWarning(
@@ -378,7 +356,6 @@ class BackupTask:
                     current_dataset["backup_amount"] = to_bytes(backup_amount)
                     current_dataset["backup_total"] = to_bytes(backup_total)
                     current_dataset["backup_time"] = float(backup_time)
-                    continue
 
             except BackupTask.LogParseWarning as exc:
                 if strict:

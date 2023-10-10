@@ -464,23 +464,6 @@ def worst_service_state(*states: int, default: int) -> int:
 * We use Black for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
 * We use isort for automatic sorting of imports in Python code.
-* Multi line imports: Use braces instead of continuation character
-
-    ```python
-    from germany import bmw, \
-        mercedes, \
-        audi
-    ```
-
-    vs.
-
-    ```python
-    from germany import (
-        bmw,
-        mercedes,
-        audi,
-    )
-    ```
 
 ### Automatic formatting with black and isort
 

@@ -194,9 +194,12 @@ pub struct Connection {
 }
 
 impl Connection {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let conn = yaml.get(keys::CONNECTION);
-        Ok(Self {
+        if conn.is_badvalue() {
+            return Ok(None);
+        }
+        Ok(Some(Self {
             hostname: conn
                 .get_string(keys::HOSTNAME)
                 .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string()),
@@ -205,7 +208,7 @@ impl Connection {
             socket: conn.get_pathbuf(keys::SOCKET),
             tls: ConnectionTls::from_yaml(conn)?,
             timeout: conn.get_int::<u32>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
-        })
+        }))
     }
     pub fn hostname(&self) -> &str {
         &self.hostname
@@ -408,7 +411,7 @@ impl Instance {
                 .get_string(keys::SID)
                 .context("Bad/Missing sid in instance")?,
             auth: Authentication::from_yaml(yaml)?,
-            conn: Connection::from_yaml(yaml)?,
+            conn: Connection::from_yaml(yaml)?.unwrap_or_default(),
             alias: yaml.get_string(keys::ALIAS),
             piggyback: Piggyback::from_yaml(yaml)?,
         }))
@@ -541,7 +544,9 @@ authentication:
 
     #[test]
     fn test_connection_from_yaml() {
-        let c = Connection::from_yaml(&create_connection_yaml_full()).unwrap();
+        let c = Connection::from_yaml(&create_connection_yaml_full())
+            .unwrap()
+            .unwrap();
         assert_eq!(c.hostname(), "alice");
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), 9999);
@@ -573,12 +578,14 @@ connection:
     #[test]
     fn test_connection_from_yaml_default() {
         assert_eq!(
-            Connection::from_yaml(&create_connection_yaml_default()).unwrap(),
+            Connection::from_yaml(&create_connection_yaml_default())
+                .unwrap()
+                .unwrap(),
             Connection::default()
         );
         assert_eq!(
             Connection::from_yaml(&create_yaml("nothing: ")).unwrap(),
-            Connection::default()
+            None
         );
     }
 

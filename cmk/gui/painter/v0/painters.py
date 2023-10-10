@@ -878,7 +878,9 @@ class PainterSvcNotesURLExpanded(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         content: HTML = HTMLWriter.render_a(
-            row["service_notes_url_expanded"], href=row["service_notes_url_expanded"]
+            row["service_notes_url_expanded"],
+            href=row["service_notes_url_expanded"],
+            target="_blank",
         )
         return (None, content)
 
@@ -2032,7 +2034,7 @@ class PainterHostNotesURLExpanded(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         content: HTML = HTMLWriter.render_a(
-            row["host_notes_url_expanded"], href=row["host_notes_url_expanded"]
+            row["host_notes_url_expanded"], href=row["host_notes_url_expanded"], target="_blank"
         )
         return (None, content)
 

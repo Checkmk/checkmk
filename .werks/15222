@@ -1,0 +1,23 @@
+Title: Add column painters Notes URL for Services & Hosts
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1696856998
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Add clickable column painters to display a clickable link for:
+
+* Service notes URL expanded
+* Host notes URL expanded
+
+Usefull if you e.g. configured "Notes URL for Services" like this
+
+https://wiki.company.tld/show_notes?host=$HOSTNAME$&service=$SERVICEDESC$
+
+and use this painter in the service view as a column, it will provide you a clickable link like this
+
+https://wiki.company.tld/show_notes?host=webserver1.company.tld&service=Check_MK

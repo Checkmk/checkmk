@@ -129,14 +129,39 @@ PERMISSIONS = permissions.AllPerm(
     ]
 )
 
+BULK_CREATE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Optional(permissions.Perm("wato.manage_hosts")),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+        permissions.Undocumented(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                ]
+            )
+        ),
+    ]
+)
+
 UPDATE_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.edit_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
         permissions.Undocumented(
-            permissions.Perm("wato.see_all_folders")
-        ),  # only used to check if user can see a host
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                    # only used to check if user can see a host
+                    permissions.Perm("wato.see_all_folders"),
+                ]
+            )
+        ),
     ]
 )
 
@@ -145,7 +170,20 @@ def with_access_check_permission(perm: permissions.BasePerm) -> permissions.Base
     """To check if a user can see a host, we currently need the 'wato.see_all_folders' permission.
     Since this use is done internally only, we want to add it without documenting it."""
     return permissions.AllPerm(
-        [perm, permissions.Undocumented(permissions.Perm("wato.see_all_folders"))]
+        [
+            perm,
+            permissions.Undocumented(
+                permissions.AnyPerm(
+                    [
+                        permissions.Perm("bi.see_all"),
+                        permissions.Perm("general.see_all"),
+                        permissions.Perm("mkeventd.seeall"),
+                        # is only used to check if a user can see a host
+                        permissions.Perm("wato.see_all_folders"),
+                    ],
+                )
+            ),
+        ]
     )
 
 
@@ -235,7 +273,7 @@ class BulkHostActionWithFailedHosts(api_error.ApiError):
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
-    permissions_required=PERMISSIONS,
+    permissions_required=BULK_CREATE_PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
 def bulk_create_hosts(params: Mapping[str, Any]) -> Response:

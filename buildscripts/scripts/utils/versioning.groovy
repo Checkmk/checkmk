@@ -92,7 +92,7 @@ def get_cmk_version(branch, version) {
 
 def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
     if(distro_list) {
-        return distro_list.trim().split(' ');
+        return distro_list.trim().replaceAll(',', ' ').split(' ');
     }
     docker_image_from_alias("IMAGE_TESTING").inside() {
         dir("${checkout_dir}") {

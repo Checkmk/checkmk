@@ -707,20 +707,23 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
+    ' The last backup date is converted to UTC in the process by removing the timezone offset, given in 15 min
+    ' intervals (or as 127 if unknown)
     Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
     addOutput(sections("backup"))
+    addOutput("-|-|date_tz|UTC|-")
     sqlString = "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
                 "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
                 "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
                 "BEGIN " & _
-                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - 60 * 15 * IIF(time_zone <> 127, time_zone, 0)), ''19700101''), 120) AS last_backup_date, " & _
                     "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
                     "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
                     "GROUP BY type, machine_name,database_name ' " & _
                 "END " & _
                 "ELSE " & _
                 "BEGIN " & _
-                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - 60 * 15 * IIF(b.time_zone <> 127, b.time_zone, 0)), ''19700101''), 120) AS last_backup_date,  " & _
                     "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
                     "FROM msdb.dbo.backupset b  " & _
                     "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _

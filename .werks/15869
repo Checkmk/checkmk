@@ -1,0 +1,13 @@
+Title: Missing sections in agent output
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1696947311
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This fixes missing sections in the Checkmk agent for Linux, AIX, Solaris, FreeBSD and OpenWrt.
+A race condition when creating cached agent data caused the agent to crash.
+

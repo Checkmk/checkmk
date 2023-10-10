@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable, Iterable, Literal, Protocol
 
 import cmk.utils.config_warnings as config_warnings
+import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -36,6 +37,10 @@ CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
 
 
 class InvalidPluginInfoError(Exception):
+    pass
+
+
+class SpecialAgentError(Exception):
     pass
 
 
@@ -543,11 +548,15 @@ class SpecialAgent:
     ) -> Iterator[SpecialAgentCommand]:
         if (info_func := base_config.special_agent_info.get(agent_name)) is None:
             return
-        # TODO: We call a user supplied function here.
-        # If this crashes during config generation, it can get quite ugly.
-        # We should really wrap this and implement proper sanitation and exception handling.
-        # Deal with this when modernizing the API (CMK-3812).
-        agent_configuration = info_func(params, self.host_name, self.host_address)
+
+        try:
+            agent_configuration = info_func(params, self.host_name, self.host_address)
+        except RuntimeError as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise SpecialAgentError(
+                f"Config creation for special agent {agent_name} failed on {self.host_name}: {e}"
+            ) from e
 
         cmdline = self.make_special_agent_cmdline(
             agent_name,

@@ -5,10 +5,11 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Type
 
 import pytest
 
+import cmk.utils.debug
 from cmk.utils import password_store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -873,6 +874,46 @@ def test_iter_special_agent_commands(
     agent_path = tmp_path / "special" / "agent_test_agent"
     assert commands[0].cmdline == f"{agent_path} {expected_cmdline}"
     assert commands[0].stdin == expected_stdin
+
+
+@pytest.mark.parametrize(
+    "debug_enabled,exception_type,exception_message",
+    [
+        (
+            False,
+            Exception,
+            "Can't create argument list",
+        ),
+        (True, Exception, "Can't create argument list"),
+    ],
+)
+def test_iter_special_agent_commands_info_func_crash(
+    debug_enabled: bool,
+    exception_type: Type[Exception],
+    exception_message: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def argument_function_with_exception(_a, _b, _c):
+        raise Exception("Can't create argument list")
+
+    monkeypatch.setitem(
+        base_config.special_agent_info,
+        "test_agent",
+        argument_function_with_exception,
+    )
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: debug_enabled,
+    )
+
+    special_agent = SpecialAgent(HostName("test_host"), HostAddress("127.0.0.1"))
+
+    with pytest.raises(
+        exception_type,
+        match=exception_message,
+    ):
+        list(special_agent.iter_special_agent_commands("test_agent", {}))
 
 
 def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -923,6 +923,7 @@ class ModeEditUser(WatoMode):
                     "automation",
                     "disable_password",
                     "idle_timeout",
+                    "roles",
                     "custom_user_attributes",
                 },
                 custom_user_attr_topics,

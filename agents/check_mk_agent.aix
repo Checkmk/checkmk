@@ -636,6 +636,7 @@ run_cached() {
 
     # ideally, these should be independent parameters:
     CREATION_TIMEOUT=$((MAXAGE * 2))
+    OUTPUT_TIMEOUT=$((MAXAGE * 3))
     REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
@@ -645,8 +646,8 @@ run_cached() {
     MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
 
     if ${MK_RUN_SYNC_PARTS}; then
-        if [ -s "${CACHEFILE}" ]; then
-            # Output the file (even if it is outdated)
+        if [ -s "${CACHEFILE}" ] && [ $((NOW - MTIME)) -le "${OUTPUT_TIMEOUT}" ]; then
+            # Output the file (if it is not too outdated)
             CACHE_INFO="cached(${MTIME},${MAXAGE})"
             # prefix or insert cache info, unless already present.
             # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
@@ -684,7 +685,6 @@ run_cached() {
                     else
                         rm -f "${cfile}"
                     fi
-                    rm -f "${CACHEFILE}"
                 } >"${CACHEFILE}".fail 2>&1
             fi
         done
@@ -704,13 +704,13 @@ run_cached() {
             cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}.fail" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}.fail" || rm -f "${CACHEFILE}.new.\$\$"
 HERE
         fi
 
     fi
 
-    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
 }
 
 #

@@ -2421,6 +2421,7 @@ run_cached() {
     CMD="${2}"
 
     CREATION_TIMEOUT=$((MAXAGE * 2))
+    OUTPUT_TIMEOUT=$((MAXAGE * 3))
     REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"
@@ -2429,8 +2430,8 @@ run_cached() {
     NOW="$(get_epoch)"
     MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
 
-    if [ -s "${CACHEFILE}" ]; then
-        # Output the file (even if it is outdated)
+    if [ -s "${CACHEFILE}" ] && [ $((NOW - MTIME)) -le "${OUTPUT_TIMEOUT}" ]; then
+        # Output the file (if it is not too outdated)
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
         # prefix or insert cache info, unless already present.
         # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
@@ -2486,18 +2487,18 @@ run_cached() {
         if $MK_ORA_DEBUG; then
             cat <<HERE | "${THIS_SHELL}"
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}.new.\$\$"
 HERE
         else
             cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}.new.\$\$"
 HERE
 
         fi
     fi
 
-    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO NOW TRYING_SINCE
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE OUTPUT_TIMEOUT
 }
 
 # .

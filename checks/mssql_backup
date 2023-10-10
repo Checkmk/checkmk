@@ -31,6 +31,16 @@
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
+# <<<mssql_backup:sep(124)>>>
+# -|-|date_tz|UTC|-
+# MSSQL_SQL0x4|master|2016-07-08 20:20:27|D
+# ...
+
+import datetime
+from typing import Optional
+
+from dateutil import tz
+
 discovery_mssql_backup = []
 
 factory_settings["mssql_backup_default_levels"] = {
@@ -46,11 +56,25 @@ factory_settings["mssql_backup_default_levels"] = {
 
 
 def parse_mssql_backup(info):
-    def _parse_date_and_time(b_date, b_time):
+    def _parse_date_and_time(
+        b_date: str,
+        b_time: Optional[str],
+        tz_info: Optional[datetime.tzinfo],
+    ) -> Optional[float]:
         try:
             if b_time is None:
                 return int(b_date)
-            return time.mktime(time.strptime("%s %s" % (b_date, b_time), "%Y-%m-%d %H:%M:%S"))
+
+            if tz_info is None:
+                # mssql agent plugin is older and does not yet provide information in which timezone
+                # the dates/times are in
+                return time.mktime(time.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S"))
+
+            return (
+                datetime.datetime.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S")
+                .replace(tzinfo=tz_info)
+                .timestamp()
+            )
         except ValueError:
             return None
 
@@ -69,6 +93,9 @@ def parse_mssql_backup(info):
     Backup = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "Backup", ["timestamp", "type", "state"]
     )
+
+    info, tz_info = _parse_time_zone(info)
+
     for line in info:
         if len(line) <= 2:
             continue
@@ -78,13 +105,27 @@ def parse_mssql_backup(info):
 
         # (fill up with Nones)
         inst, tablespace, b_date, b_time, b_type, b_state = line + [None] * (6 - len(line))
-        timestamp = _parse_date_and_time(b_date, b_time)
+        timestamp = _parse_date_and_time(b_date, b_time, tz_info)
 
         item = "%s %s" % (inst, tablespace)
         backup = Backup(timestamp, map_backup_types.get(b_type), b_state or "")
         parsed.setdefault(item, []).append(backup)
 
     return parsed
+
+
+def _parse_time_zone(string_table):
+    """
+    >>> _parse_time_zone([["-","-", "date_tz", "UTC", "-"], ["srv","db","date","time","D"]])
+    ([['srv', 'db', 'date', 'time', 'D']], tzfile('/usr/share/zoneinfo/UTC'))
+    >>> _parse_time_zone([["srv","db","date","time","D"]])
+    ([['srv', 'db', 'date', 'time', 'D']], None)
+    """
+    tz_info = None
+    if string_table[0][2] == "date_tz":
+        tz_info = tz.gettz(string_table[0][3])
+        string_table = string_table[1:]
+    return string_table, tz_info
 
 
 def inventory_mssql_backup(parsed):

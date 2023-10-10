@@ -94,13 +94,15 @@ def _download_extension(url: str) -> bytes:
 
 @contextlib.contextmanager
 def _install_extension(site: Site, path: Path) -> Iterator[_ExtensionName]:
+    name = None
     try:
         name = _add_extension(site, path)
         _enable_extension(site, name)
         yield name
     finally:
-        _disable_extension(site, name)
-        _remove_extension(site, name)
+        if name:
+            _disable_extension(site, name)
+            _remove_extension(site, name)
 
 
 def _add_extension(site: Site, path: Path) -> _ExtensionName:

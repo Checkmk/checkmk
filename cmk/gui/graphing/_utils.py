@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Literal, NamedTuple, NewType
+from typing import Any, Literal, NamedTuple, NewType, Self
 
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -131,6 +131,59 @@ class GraphTemplate:
     range: GraphRangeSpec | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]
+
+    @classmethod
+    def from_name(cls, name: str) -> Self:
+        if name.startswith("METRIC_"):
+            name = name[7:]
+        return cls(
+            id=f"METRIC_{name}",
+            title=None,
+            metrics=[MetricDefinition(expression=name, line_type="area")],
+            scalars=[
+                f"{name}:warn",
+                f"{name}:crit",
+            ],
+            conflicting_metrics=[],
+            optional_metrics=[],
+            consolidation_function=None,
+            range=None,
+            omit_zero_metrics=False,
+        )
+
+    @classmethod
+    def from_template(cls, ident: str, template: GraphTemplateRegistration) -> Self:
+        def _parse_raw_metric(
+            raw_metric: (
+                tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
+            )
+        ) -> MetricDefinition:
+            expression = raw_metric[0]
+            line_type = raw_metric[1]
+            if len(raw_metric) == 2:
+                return MetricDefinition(
+                    expression=expression,
+                    line_type=line_type,
+                )
+            return MetricDefinition(
+                expression=expression,
+                line_type=line_type,
+                title=str(raw_metric[-1]),
+            )
+
+        return cls(
+            id=ident,
+            title=str(template["title"]) if "title" in template else None,
+            scalars=template.get("scalars", []),
+            conflicting_metrics=template.get("conflicting_metrics", []),
+            optional_metrics=template.get("optional_metrics", []),
+            consolidation_function=template.get("consolidation_function"),
+            range=template.get("range"),
+            omit_zero_metrics=template.get("omit_zero_metrics", False),
+            # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
+            # https://github.com/python/mypy/issues/1178
+            metrics=[_parse_raw_metric(raw_metric) for raw_metric in template["metrics"]],
+        )
 
 
 @dataclass(frozen=True)
@@ -680,38 +733,8 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 
 def graph_templates_internal() -> dict[str, GraphTemplate]:
-    def _parse_raw_metric(
-        raw_metric: (
-            tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-        )
-    ) -> MetricDefinition:
-        expression = raw_metric[0]
-        line_type = raw_metric[1]
-        if len(raw_metric) == 2:
-            return MetricDefinition(
-                expression=expression,
-                line_type=line_type,
-            )
-        return MetricDefinition(
-            expression=expression,
-            line_type=line_type,
-            title=str(raw_metric[-1]),
-        )
-
     return {
-        template_id: GraphTemplate(
-            id=template_id,
-            title=str(template["title"]) if "title" in template else None,
-            scalars=template.get("scalars", []),
-            conflicting_metrics=template.get("conflicting_metrics", []),
-            optional_metrics=template.get("optional_metrics", []),
-            consolidation_function=template.get("consolidation_function"),
-            range=template.get("range"),
-            omit_zero_metrics=template.get("omit_zero_metrics", False),
-            # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
-            # https://github.com/python/mypy/issues/1178
-            metrics=[_parse_raw_metric(raw_metric) for raw_metric in template["metrics"]],
-        )
+        template_id: GraphTemplate.from_template(template_id, template)
         for template_id, template in graph_info.items()
     }
 
@@ -770,27 +793,10 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
 
 def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
-        return _generic_graph_template(template_id[7:])
+        return GraphTemplate.from_name(template_id)
     if template_id in graph_info:
         return graph_templates_internal()[template_id]
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
-
-
-def _generic_graph_template(metric_name: str) -> GraphTemplate:
-    return GraphTemplate(
-        id="METRIC_" + metric_name,
-        title=None,
-        metrics=[MetricDefinition(expression=metric_name, line_type="area")],
-        scalars=[
-            metric_name + ":warn",
-            metric_name + ":crit",
-        ],
-        conflicting_metrics=[],
-        optional_metrics=[],
-        consolidation_function=None,
-        range=None,
-        omit_zero_metrics=False,
-    )
 
 
 def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[GraphTemplate]:
@@ -838,7 +844,7 @@ def _get_implicit_graph_templates(
 ) -> Iterable[GraphTemplate]:
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
-            yield _generic_graph_template(metric_name)
+            yield GraphTemplate.from_name(metric_name)
 
 
 def applicable_metrics(

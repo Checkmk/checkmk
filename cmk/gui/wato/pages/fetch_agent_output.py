@@ -34,15 +34,20 @@ from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(
+    page_registry: PageRegistry, automation_command_registry: AutomationCommandRegistry
+) -> None:
     page_registry.register_page("fetch_agent_output")(PageFetchAgentOutput)
     page_registry.register_page("download_agent_output")(PageDownloadAgentOutput)
+    automation_command_registry.register(AutomationFetchAgentOutputStart)
+    automation_command_registry.register(AutomationFetchAgentOutputGetStatus)
+    automation_command_registry.register(AutomationFetchAgentOutputGetFile)
 
 
 # .
@@ -223,7 +228,6 @@ class ABCAutomationFetchAgentOutput(AutomationCommand, abc.ABC):
         return FetchAgentOutputRequest.deserialize(ast.literal_eval(ascii_input))
 
 
-@automation_command_registry.register
 class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._start_fetch() to execute the background job on a remote site"""
 
@@ -242,7 +246,6 @@ def start_fetch_agent_job(api_request):
         pass
 
 
-@automation_command_registry.register
 class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
     """Is called by AgentOutputPage._get_job_status() to execute the background job on a remote site"""
 
@@ -345,7 +348,6 @@ class PageDownloadAgentOutput(AgentOutputPage):
         return raw_response
 
 
-@automation_command_registry.register
 class AutomationFetchAgentOutputGetFile(ABCAutomationFetchAgentOutput):
     def command_name(self) -> str:
         return "fetch-agent-output-get-file"

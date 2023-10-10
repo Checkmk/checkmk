@@ -74,7 +74,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     ValueSpec,
 )
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
@@ -87,9 +87,14 @@ _CHECKMK_FILES_NOTE = _(
 )
 
 
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mode_registry: ModeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     page_registry.register_page("download_diagnostics_dump")(PageDownloadDiagnosticsDump)
     mode_registry.register(ModeDiagnostics)
+    automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
 
 
 class ModeDiagnostics(WatoMode):
@@ -729,7 +734,6 @@ class PageDownloadDiagnosticsDump(Page):
         response.set_data(file_content)
 
 
-@automation_command_registry.register
 class AutomationDiagnosticsDumpGetFile(AutomationCommand):
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"

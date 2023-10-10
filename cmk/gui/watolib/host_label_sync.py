@@ -35,7 +35,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
 from cmk.gui.utils.request_context import copy_request_context
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.paths import wato_var_dir
@@ -291,7 +291,6 @@ def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEnt
     return updated_host_labels
 
 
-@automation_command_registry.register
 class AutomationDiscoveredHostLabelSync(AutomationCommand):
     """Called by execute_site_sync to perform the sync with a remote site"""
 

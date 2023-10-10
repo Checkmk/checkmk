@@ -65,7 +65,7 @@ from cmk.gui.watolib.activate_changes import (
     is_foreign_change,
     prevent_discard_changes,
 )
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
@@ -75,11 +75,16 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from .sites import sort_sites
 
 
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mode_registry: ModeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     page_registry.register_page("ajax_start_activation")(PageAjaxStartActivation)
     page_registry.register_page("ajax_activation_state")(PageAjaxActivationState)
     mode_registry.register(ModeActivateChanges)
     mode_registry.register(ModeRevertChanges)
+    automation_command_registry.register(AutomationActivateChanges)
 
 
 class ActivationState(enum.Enum):
@@ -992,7 +997,6 @@ class ActivateChangesRequest(NamedTuple):
     domains: DomainRequests
 
 
-@automation_command_registry.register
 class AutomationActivateChanges(AutomationCommand):
     def command_name(self):
         return "activate-changes"

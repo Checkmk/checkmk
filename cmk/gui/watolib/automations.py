@@ -56,7 +56,7 @@ from cmk.gui.utils.compatibility import (
     make_incompatible_info,
 )
 from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
@@ -631,7 +631,6 @@ def _start_remote_automation_job(
     return job_id
 
 
-@automation_command_registry.register
 class AutomationCheckmkAutomationStart(AutomationCommand):
     """Called by do_remote_automation_in_background_job to execute the background job on a remote site"""
 
@@ -649,7 +648,6 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
         return job.get_job_id()
 
 
-@automation_command_registry.register
 class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     """Called by do_remote_automation_in_background_job to get the background job state from on a
     remote site"""

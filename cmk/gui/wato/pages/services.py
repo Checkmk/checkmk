@@ -63,7 +63,7 @@ from cmk.gui.view_utils import format_plugin_output, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
@@ -105,10 +105,15 @@ class TableGroupEntry(NamedTuple):
     help_text: str
 
 
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    mode_registry: ModeRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     page_registry.register_page("ajax_service_discovery")(ModeAjaxServiceDiscovery)
     page_registry.register_page("wato_ajax_execute_check")(ModeAjaxExecuteCheck)
     mode_registry.register(ModeDiscovery)
+    automation_command_registry.register(AutomationServiceDiscoveryJob)
 
 
 class ModeDiscovery(WatoMode):
@@ -204,7 +209,6 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
     raise_errors: bool
 
 
-@automation_command_registry.register
 class AutomationServiceDiscoveryJob(AutomationCommand):
     """Is called by _get_check_table() to execute the background job on a remote site"""
 

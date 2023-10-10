@@ -92,7 +92,7 @@ from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
     DomainRequest,
@@ -2849,7 +2849,6 @@ class SyncDelta:
     to_delete: list[str]
 
 
-@automation_command_registry.register
 class AutomationGetConfigSyncState(AutomationCommand):
     """Called on remote site from a central site to get the current config sync state
 
@@ -3023,7 +3022,6 @@ class ReceiveConfigSyncRequest(NamedTuple):
     config_generation: int
 
 
-@automation_command_registry.register
 class AutomationReceiveConfigSync(AutomationCommand):
     """Called on remote site from a central site to update the Checkmk configuration
 

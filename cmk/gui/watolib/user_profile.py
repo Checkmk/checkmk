@@ -28,7 +28,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
 from cmk.gui.utils.script_helpers import make_request_context
 from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.utils import mk_eval, mk_repr
@@ -45,7 +45,6 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 # Hopefully we have no large bulks of users changing their passwords at the same
 # time. In this case the implementation does not scale well. We would need to
 # change this to some kind of profile bulk sync per site.
-# TODO: Should we move this to watolib?
 
 
 class SynchronizationResult:
@@ -244,7 +243,6 @@ class PushUserProfilesRequest(NamedTuple):
     user_profiles: dict
 
 
-@automation_command_registry.register
 class PushUserProfilesToSite(AutomationCommand):
     def command_name(self):
         return "push-profiles"

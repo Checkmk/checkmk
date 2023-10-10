@@ -26,7 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.host_attributes import (
     ExcludeIPRange,
@@ -171,7 +171,6 @@ def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None
         write_folder.save()
 
 
-@automation_command_registry.register
 class AutomationNetworkScan(AutomationCommand):
     def command_name(self) -> str:
         return "network-scan"

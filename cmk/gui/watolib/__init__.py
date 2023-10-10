@@ -39,14 +39,25 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.network_scan import execute_network_scan_job as _execute_network_scan_job
 
 from . import rulespec_groups
+from .activate_changes import AutomationGetConfigSyncState, AutomationReceiveConfigSync
+from .agent_registration import AutomationRemoveTLSRegistration
+from .analyze_configuration import AutomationCheckAnalyzeConfig
+from .automation_commands import AutomationCommandRegistry
+from .automations import AutomationCheckmkAutomationGetStatus, AutomationCheckmkAutomationStart
+from .host_label_sync import AutomationDiscoveredHostLabelSync
+from .network_scan import AutomationNetworkScan
 from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
+from .user_profile import PushUserProfilesToSite
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
 _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
-def register(rulespec_group_registry: RulespecGroupRegistry) -> None:
+def register(
+    rulespec_group_registry: RulespecGroupRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+) -> None:
     _register_automation_commands()
     _register_gui_background_jobs()
     _register_hooks()
@@ -61,6 +72,15 @@ def register(rulespec_group_registry: RulespecGroupRegistry) -> None:
     )
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
+    automation_command_registry.register(PushUserProfilesToSite)
+    automation_command_registry.register(AutomationGetConfigSyncState)
+    automation_command_registry.register(AutomationReceiveConfigSync)
+    automation_command_registry.register(AutomationRemoveTLSRegistration)
+    automation_command_registry.register(AutomationCheckAnalyzeConfig)
+    automation_command_registry.register(AutomationDiscoveredHostLabelSync)
+    automation_command_registry.register(AutomationNetworkScan)
+    automation_command_registry.register(AutomationCheckmkAutomationStart)
+    automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
 
 
 def _register_automation_commands() -> None:

@@ -3,10 +3,13 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::yaml::{Get, Yaml};
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::path::{Path, PathBuf};
 
 mod keys {
+    pub const MSSQL: &str = "mssql";
+    pub const STANDARD: &str = "standard";
+
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";
     pub const PASSWORD: &str = "password";
@@ -36,6 +39,8 @@ mod keys {
     pub const EXCLUDE: &str = "exclude";
 
     pub const MODE: &str = "mode";
+
+    pub const INSTANCES: &str = "instances";
 
     pub const SID: &str = "sid";
     pub const ALIAS: &str = "alias";
@@ -74,7 +79,7 @@ mod defaults {
     pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 
     pub const DISCOVERY_DETECT: bool = true;
-    pub const DISCOVERY_ALL: bool = false;
+    pub const DISCOVERY_ALL: bool = true;
 }
 
 #[derive(PartialEq, Debug)]
@@ -101,6 +106,34 @@ impl Default for Config {
 }
 
 impl Config {
+    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+        let mssql = yaml.get(keys::MSSQL);
+        if mssql.is_badvalue() {
+            return Ok(None);
+        }
+        let standard = mssql.get(keys::STANDARD);
+        if standard.is_badvalue() {
+            bail!("standard key is absent");
+        }
+
+        let auth = Authentication::from_yaml(standard)?;
+        let conn = Connection::from_yaml(standard)?.unwrap_or_default();
+        let sqls = Sqls::from_yaml(standard)?.unwrap_or_default();
+        let instances: Result<Vec<Instance>> = mssql
+            .get_yaml_vector(keys::INSTANCES)
+            .into_iter()
+            .map(|v| Instance::from_yaml(&v, &auth, &conn, &sqls))
+            .collect();
+
+        Ok(Some(Self {
+            auth,
+            conn,
+            sqls,
+            discovery: Discovery::from_yaml(standard)?,
+            mode: Mode::from_yaml(standard)?,
+            instances: instances?,
+        }))
+    }
     pub fn auth(&self) -> &Authentication {
         &self.auth
     }
@@ -121,7 +154,7 @@ impl Config {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Authentication {
     username: String,
     password: Option<String>,
@@ -165,7 +198,7 @@ impl Authentication {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub enum AuthType {
     System,
     Windows,
@@ -183,7 +216,7 @@ impl TryFrom<Option<&str>> for AuthType {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Connection {
     hostname: String,
     fail_over_partner: Option<String>,
@@ -243,7 +276,7 @@ impl Default for Connection {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct ConnectionTls {
     ca: PathBuf,
     client_certificate: PathBuf,
@@ -270,7 +303,7 @@ impl ConnectionTls {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Sqls {
     always: Vec<String>,
     cached: Vec<String>,
@@ -345,15 +378,14 @@ impl Discovery {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
         let discovery = yaml.get(keys::DISCOVERY);
         if discovery.is_badvalue() {
-            Ok(Discovery::default())
-        } else {
-            Ok(Self {
-                detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
-                all: discovery.get_bool(keys::ALL, defaults::DISCOVERY_ALL)?,
-                include: discovery.get_string_vector(keys::INCLUDE, &[])?,
-                exclude: discovery.get_string_vector(keys::EXCLUDE, &[])?,
-            })
+            return Ok(Discovery::default());
         }
+        Ok(Self {
+            detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
+            all: discovery.get_bool(keys::ALL, defaults::DISCOVERY_ALL)?,
+            include: discovery.get_string_vector(keys::INCLUDE, &[])?,
+            exclude: discovery.get_string_vector(keys::EXCLUDE, &[])?,
+        })
     }
     pub fn detect(&self) -> bool {
         self.detect
@@ -405,16 +437,21 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        Ok(Some(Self {
+    pub fn from_yaml(
+        yaml: &Yaml,
+        auth: &Authentication,
+        conn: &Connection,
+        sqls: &Sqls,
+    ) -> Result<Self> {
+        Ok(Self {
             sid: yaml
                 .get_string(keys::SID)
                 .context("Bad/Missing sid in instance")?,
-            auth: Authentication::from_yaml(yaml)?,
-            conn: Connection::from_yaml(yaml)?.unwrap_or_default(),
+            auth: Authentication::from_yaml(yaml).unwrap_or(auth.clone()),
+            conn: Connection::from_yaml(yaml)?.unwrap_or(conn.clone()),
             alias: yaml.get_string(keys::ALIAS),
-            piggyback: Piggyback::from_yaml(yaml)?,
-        }))
+            piggyback: Piggyback::from_yaml(yaml, sqls)?,
+        })
     }
     pub fn sid(&self) -> &String {
         &self.sid
@@ -440,7 +477,7 @@ pub struct Piggyback {
 }
 
 impl Piggyback {
-    pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
+    pub fn from_yaml(yaml: &Yaml, sqls: &Sqls) -> Result<Option<Self>> {
         let piggyback = yaml.get(keys::PIGGYBACK);
         if piggyback.is_badvalue() {
             return Ok(None);
@@ -449,7 +486,7 @@ impl Piggyback {
             hostname: piggyback
                 .get_string(keys::HOSTNAME)
                 .context("Bad/Missing hostname in piggyback")?,
-            sqls: Sqls::from_yaml(piggyback)?.context("sqls is absent")?,
+            sqls: Sqls::from_yaml(piggyback)?.unwrap_or(sqls.clone()),
         }))
     }
 
@@ -466,6 +503,60 @@ impl Piggyback {
 mod tests {
     use super::*;
     use yaml_rust::YamlLoader;
+    /// copied from tests/files/test-config.yaml
+    const TEST_CONFIG: &str = r#"
+---
+mssql:
+  standard: # mandatory, to be used if no specific config
+    authentication: # mandatory
+      username: "foo" # mandatory
+      password: "bar" # optional
+      type: "system" # optional(default: "system")
+      access_token: "baz" # optional
+    connection: # optional
+      hostname: "localhost" # optional(default: "localhost")
+      failoverpartner: "localhost2" # optional
+      port: 1433 # optional(default: 1433)
+      socket: 'C:\path\to\file' # optional
+      tls: # optional
+        ca: 'C:\path\to\file' # mandatory
+        client_certificate: 'C:\path\to\file' # mandatory
+      timeout: 5 # optional(default: 5)
+    sqls: # optional
+      always: # optional(default)
+        - "instance"
+        - "databases"
+        - "counters"
+        - "blocked_sessions"
+        - "transactionlogs"
+        - "clusters"
+        - "mirroring"
+        - "availability_groups"
+        - "connections"
+      cached: # optional(default)
+        - "tablespaces"
+        - "datafiles"
+        - "backup"
+        - "jobs"
+      disabled: # optional
+        - "someOtherSQL"
+      cache_age: 600 # optional(default:600)
+    discovery: # optional
+      detect: yes # optional(default:yes)
+      all: no # optional(default:no) prio 1; ignore include/exclude if yes
+      include: ["foo", "bar"] # optional prio 2; use instance even if excluded
+      exclude: ["baz"] # optional, prio 3
+    mode: "port" # optional(default:"port") - "socket", "port" or "special"
+  instances: # optional
+    - sid: "INST1" # mandatory
+      authentication: # optional, same as above
+      connection: # optional,  same as above
+      alias: "someApplicationName" # optional
+      piggyback: # optional
+        hostname: "myPiggybackHost" # mandatory
+        sqls: # optional, same as above
+    - sid: "INST2" # mandatory
+"#;
 
     fn create_yaml(source: &str) -> Yaml {
         YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
@@ -664,8 +755,8 @@ discovery:
     #[test]
     fn test_discovery_from_yaml_default() {
         let discovery = Discovery::from_yaml(&create_discovery_yaml_default()).unwrap();
-        assert_eq!(discovery.detect(), defaults::DISCOVERY_DETECT);
-        assert_eq!(discovery.all(), defaults::DISCOVERY_ALL);
+        assert!(discovery.detect());
+        assert!(discovery.all());
         assert!(discovery.include().is_empty());
         assert!(discovery.exclude().is_empty());
     }
@@ -698,7 +789,7 @@ discovery:
 
     #[test]
     fn test_piggyback() {
-        let piggyback = Piggyback::from_yaml(&create_piggyback_yaml_default())
+        let piggyback = Piggyback::from_yaml(&create_piggyback_yaml_default(), &Sqls::default())
             .unwrap()
             .unwrap();
         assert_eq!(piggyback.hostname(), "piggy_host");
@@ -735,8 +826,16 @@ piggyback:
 
     #[test]
     fn test_piggyback_error() {
-        assert!(Piggyback::from_yaml(&create_piggyback_yaml_no_hostname()).is_err());
-        assert!(Piggyback::from_yaml(&create_piggyback_yaml_no_sqls()).is_err());
+        assert!(
+            Piggyback::from_yaml(&create_piggyback_yaml_no_hostname(), &Sqls::default()).is_err()
+        );
+        assert_eq!(
+            Piggyback::from_yaml(&create_piggyback_yaml_no_sqls(), &Sqls::default())
+                .unwrap()
+                .unwrap()
+                .sqls(),
+            &Sqls::default()
+        );
     }
 
     fn create_piggyback_yaml_no_hostname() -> Yaml {
@@ -762,13 +861,19 @@ piggyback:
     #[test]
     fn test_piggyback_none() {
         assert_eq!(
-            Piggyback::from_yaml(&create_yaml("source:\n  xxx")).unwrap(),
+            Piggyback::from_yaml(&create_yaml("source:\n  xxx"), &Sqls::default()).unwrap(),
             None
         );
     }
     #[test]
     fn test_instance() {
-        let instance = Instance::from_yaml(&create_instance()).unwrap().unwrap();
+        let instance = Instance::from_yaml(
+            &create_instance(),
+            &Authentication::default(),
+            &Connection::default(),
+            &Sqls::default(),
+        )
+        .unwrap();
         assert_eq!(instance.sid(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
         assert_eq!(instance.conn().hostname(), "h1");
@@ -791,5 +896,48 @@ piggyback:
         cache_age: 123
 "#;
         create_yaml(SOURCE)
+    }
+    #[test]
+    fn test_config() {
+        let c = Config::from_yaml(&create_yaml(TEST_CONFIG))
+            .unwrap()
+            .unwrap();
+        assert_eq!(c.instances().len(), 2);
+        assert!(c.instances()[0].piggyback().is_some());
+        assert_eq!(
+            c.instances()[0].piggyback().unwrap().hostname(),
+            "myPiggybackHost"
+        );
+        assert_eq!(c.instances()[0].sid(), "INST1");
+        assert_eq!(c.instances()[1].sid(), "INST2");
+        assert_eq!(c.mode(), &Mode::Port);
+        assert_eq!(
+            c.discovery().include(),
+            &vec!["foo".to_string(), "bar".to_string()]
+        );
+        assert_eq!(c.discovery().exclude(), &vec!["baz".to_string()]);
+        assert!(!c.discovery().all());
+        assert!(c.discovery().detect());
+        assert_eq!(c.auth().username(), "foo");
+        assert_eq!(c.auth().password().unwrap(), "bar");
+        assert_eq!(c.auth().auth_type(), &AuthType::System);
+        assert_eq!(c.auth().access_token().unwrap(), "baz");
+        assert_eq!(c.conn().hostname(), "localhost");
+        assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");
+        assert_eq!(c.conn().port(), defaults::CONNECTION_PORT);
+        assert_eq!(
+            c.conn().socket().unwrap(),
+            &PathBuf::from(r"C:\path\to\file")
+        );
+        assert_eq!(c.conn().tls().unwrap().ca(), Path::new(r"C:\path\to\file"));
+        assert_eq!(
+            c.conn().tls().unwrap().client_certificate(),
+            Path::new(r"C:\path\to\file")
+        );
+        assert_eq!(c.conn().timeout(), defaults::CONNECTION_TIMEOUT);
+        assert_eq!(c.sqls().always(), defaults::SQLS_ALWAYS);
+        assert_eq!(c.sqls().cached(), defaults::SQLS_CACHED);
+        assert_eq!(c.sqls().disabled(), &vec!["someOtherSQL".to_string()]);
+        assert_eq!(c.sqls().cache_age(), defaults::SQLS_CACHE_AGE);
     }
 }

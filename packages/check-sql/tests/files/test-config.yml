@@ -5,18 +5,18 @@ mssql:
       username: "foo" # mandatory
       password: "bar" # optional
       type: "system" # optional(default: "system")
-      access_token: "baz" # optional
+      access_token: "baz" # optional, no default
     connection: # optional
-      hostname: "localhost" # optional(default: "localhost")
-      failoverpartner: "localhost2" # optional
-      port: 1433 # optional(default: 1433)
-      socket: 'C:\path\to\file' # optional
+      hostname: "localhost" # optional, default: "localhost"
+      failoverpartner: "localhost2" # optional, no default
+      port: 1433 # optional, default: 1433
+      socket: 'C:\path\to\file' # optional, no default
       tls: # optional
         ca: 'C:\path\to\file' # mandatory
         client_certificate: 'C:\path\to\file' # mandatory
-      timeout: 5 # optional(default: 5)
+      timeout: 5 # optional, default: 5
     sqls: # optional
-      always: # optional(default)
+      always: # optional, default
         - "instance"
         - "databases"
         - "counters"
@@ -31,15 +31,15 @@ mssql:
         - "datafiles"
         - "backup"
         - "jobs"
-      disabled: # optional
+      disabled: # optional, no default
         - "someOtherSQL"
-      cache_age: 600 # optional(default:600)
+      cache_age: 600 # optional, default: 600
     discovery: # optional
-      detect: yes # optional(default:yes)
-      all: no # optional(default:no) prio 1; ignore include/exclude if yes
-      include: ["foo", "bar"] # optional prio 2; use instance even if excluded
-      exclude: ["baz"] # optional, prio 3
-    mode: "port" # optional(default:"port") - "socket", "port" or "special"
+      detect: yes # optional, default
+      all: yes # optional, default: yes / prio 1; ignore include/exclude if yes
+      include: ["foo", "bar"] # optional, no default /prio 2; use instance even if excluded
+      exclude: ["baz"] # optional, no default / prio 3
+    mode: "port" # optional, default: "port" / can be "socket", "port" or "special"
   instances: # optional
     - sid: "INST1" # mandatory
       authentication: # optional, same as above
@@ -47,4 +47,5 @@ mssql:
       alias: "someApplicationName" # optional
       piggyback: # optional
         hostname: "myPiggybackHost" # mandatory
-        sqls: # mandatory, same as above
+        sqls: # optional, no default / same as above
+    - sid: "INST2" # mandatory

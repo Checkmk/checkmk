@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import time
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
@@ -48,6 +49,10 @@ from cmk.agent_based.v2 import (
 # MSSQL_SQL0x4|msdb|2016-07-08 20:20:43|D
 # MSSQL_SQL0x4|msdb|2016-07-11 20:20:07|I
 
+# <<<mssql_backup:sep(124)>>>
+# MSSQL_SQL0x4|master|2016-07-08 20:20:27+00:00|D
+# ...
+
 
 class Backup(NamedTuple):
     timestamp: float | None
@@ -74,7 +79,17 @@ def _parse_date_and_time(b_date: str, b_time: str | None) -> float | None:
     try:
         if b_time is None:
             return int(b_date)
-        return time.mktime(time.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S"))
+
+        tz = None
+        if "+" in b_time:
+            b_time, tz = b_time.split("+")
+
+        result = datetime.datetime.strptime(f"{b_date} {b_time}", "%Y-%m-%d %H:%M:%S")
+
+        if tz == "00:00":  # only +00:00 is currently supported
+            result = result.replace(tzinfo=datetime.timezone.utc)
+
+        return result.timestamp()
     except ValueError:
         return None
 

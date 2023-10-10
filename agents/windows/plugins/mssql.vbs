@@ -707,6 +707,8 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
+    ' The last backup date is converted to UTC in the process by removing the timezone offset, given in 15 min
+    ' intervals (or as 127 if unknown)
     Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
     addOutput(sections("backup"))
     sqlString = "" & _
@@ -717,7 +719,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         "BEGIN " & _
         "SET @SQLCommand = ' " & _
             "SELECT " & _
-            "  CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+            "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date, " & _
             "  type, " & _
             "  machine_name, " & _
             "  ''True'' as is_primary_replica, " & _
@@ -739,7 +741,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         "BEGIN " & _
         "SET @SQLCommand = ' " & _
             "SELECT " & _
-            "  CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+            "  CONVERT(VARCHAR, DATEADD(s, MAX(DATEDIFF(s, ''19700101'', b.backup_finish_date) - (CASE WHEN time_zone IS NOT NULL AND time_zone <> 127 THEN 60 * 15 * time_zone ELSE 0 END)), ''19700101''), 120) AS last_backup_date," & _
             "  b.type, " & _
             "  b.machine_name, " & _
             "  isnull(rep.is_primary_replica, 0) as is_primary_replica, " & _
@@ -792,7 +794,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
                If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
                    addOutput("MSSQL_" & instance_id & "|" & backup_database & _
-                             "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
+                             "|" & Replace(lastBackupDate, " ", "|") & "+00:00" & "|" & backup_type)
                End If
            End If
        Next

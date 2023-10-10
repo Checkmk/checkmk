@@ -245,7 +245,6 @@ def _verify_check_result(
         return True, ""
 
     if mode == CheckModes.UPDATE or (mode == CheckModes.ADD and not canon_data):
-        canon_data = result_data
         logger.info(
             "[%s] Canon %s!",
             check_id,

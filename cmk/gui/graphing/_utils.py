@@ -158,17 +158,11 @@ class GraphTemplate:
                 tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
             )
         ) -> MetricDefinition:
-            expression = raw_metric[0]
-            line_type = raw_metric[1]
-            if len(raw_metric) == 2:
-                return MetricDefinition(
-                    expression=expression,
-                    line_type=line_type,
-                )
+            expression, line_type, *title = raw_metric
             return MetricDefinition(
                 expression=expression,
                 line_type=line_type,
-                title=str(raw_metric[-1]),
+                title=str(title[0]) if title else "",
             )
 
         return cls(

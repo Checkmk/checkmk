@@ -224,7 +224,7 @@ def register() -> None:
     register_row_post_processor(join_service_row_post_processor)
     background_job_registration.register(page_registry, mode_registry, main_module_registry)
     gui_background_job.register(permission_section_registry, permission_registry)
-    graphing.register(page_registry)
+    graphing.register(page_registry, config_variable_registry)
     agent_registration.register(permission_section_registry)
 
 

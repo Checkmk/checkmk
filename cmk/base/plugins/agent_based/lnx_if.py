@@ -67,7 +67,7 @@ class EthtoolInterface:
 
 @dataclass
 class IPLinkInterface:
-    state_infos: Sequence[str]
+    state_infos: Sequence[str] | None = None
     link_ether: str = ""
     inet: MutableSequence[str] = field(default_factory=list)
     inet6: MutableSequence[str] = field(default_factory=list)
@@ -165,7 +165,7 @@ def _get_speed(speed_text: str) -> int:
 
 
 def _get_oper_status(
-    link_detected: str | None, state_infos: Sequence[str], ifInOctets: int
+    link_detected: str | None, state_infos: Sequence[str] | None, ifInOctets: int
 ) -> Literal["1", "2", "4"]:
     # Link state from ethtool. If ethtool has no information about
     # this NIC, we set the state to unknown.
@@ -205,7 +205,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     if_table = []
     for index, (nic, ethtool_interface) in enumerate(sorted(ethtool_stats.items())):
         ifInOctets = ethtool_interface.counters[0]
-        iplink_interface = ip_stats.get(nic, IPLinkInterface(state_infos=[]))
+        iplink_interface = ip_stats.get(nic, IPLinkInterface())
         if_table.append(
             interfaces.InterfaceWithCounters(
                 interfaces.Attributes(

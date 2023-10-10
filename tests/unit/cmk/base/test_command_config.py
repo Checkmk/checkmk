@@ -23,6 +23,7 @@ from cmk.base.command_config import (
     commandline_arguments,
     HostAddressConfiguration,
     SpecialAgent,
+    SpecialAgentInfoFunctionResult,
 )
 
 import cmk
@@ -887,90 +888,116 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
     assert agent_path == local_agent_path
 
 
-def test_commandline_arguments_basics() -> None:
-    assert (
-        commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2") == "args 123 -x 1 -y 2"
+@pytest.mark.parametrize(
+    "args, passwords_from_store, password_store_elements, expected_result",
+    [
+        pytest.param("args 123 -x 1 -y 2", None, {}, "args 123 -x 1 -y 2", id="string argument"),
+        pytest.param(
+            ["args", "1; echo", "-x", "1", "-y", "2"],
+            None,
+            {},
+            "args '1; echo' -x 1 -y 2",
+            id="list argument",
+        ),
+        pytest.param(
+            ["args", "1 2 3", "-d=2", "--hallo=eins", 9],
+            None,
+            {},
+            "args '1 2 3' -d=2 --hallo=eins 9",
+            id="list argument with numbers",
+        ),
+        pytest.param(
+            ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
+            {"pw-id": ["abc", "123", "x'äd!?", "aädg"]},
+            {},
+            "--pwstore=2@11@pw-id arg1 '--password=****' arg3",
+            id="passwords_from_store",
+        ),
+        pytest.param(
+            ["arg1", ("store", "pw-id", "--password=%s"), "arg3"],
+            None,
+            {"pw-id": ["abc", "123", "x'äd!?", "aädg"]},
+            "--pwstore=2@11@pw-id arg1 '--password=****' arg3",
+            id="password store argument",
+        ),
+        pytest.param(
+            ["arg1", ("store", "pw-id; echo HI;", "--password=%s"), "arg3"],
+            None,
+            {"pw-id; echo HI;": "the password"},
+            "'--pwstore=2@11@pw-id; echo HI;' arg1 '--password=************' arg3",
+            id="password store sanitization (CMK-14149)",
+        ),
+    ],
+)
+def test_commandline_arguments(
+    args: SpecialAgentInfoFunctionResult,
+    passwords_from_store: Mapping[str, str] | None,
+    password_store_elements: Mapping[str, str],
+    expected_result: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(password_store, "load", lambda: password_store_elements)
+    cmdline_args = commandline_arguments(
+        HostName("test"), "test service", args, passwords_from_store
     )
-
-    assert (
-        commandline_arguments(HostName("bla"), "blub", ["args", "1; echo", "-x", "1", "-y", "2"])
-        == "args '1; echo' -x 1 -y 2"
-    )
-
-    assert (
-        commandline_arguments(HostName("bla"), "blub", ["args", "1 2 3", "-d=2", "--hallo=eins", 9])
-        == "args '1 2 3' -d=2 --hallo=eins 9"
-    )
-
-    with pytest.raises(MKGeneralException):
-        commandline_arguments(HostName("bla"), "blub", (1, 2))
+    assert cmdline_args == expected_result
 
 
-@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
-def test_commandline_arguments_password_store(pw: str) -> None:
-    password_store.save({"pw-id": pw})
-    assert commandline_arguments(
-        HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
-    ) == "--pwstore=2@11@pw-id arg1 '--password=%s' arg3" % ("*" * len(pw))
-
-
-def test_commandline_arguments_not_existing_password(
+@pytest.mark.parametrize(
+    "host_name, service_name, expected_warning",
+    [
+        pytest.param(
+            HostName("test"),
+            "test service",
+            'The stored password "pw-id" used by service "test service" on host "test" does not exist (anymore).',
+            id="host and service names present",
+        ),
+        pytest.param(
+            HostName("test"),
+            None,
+            'The stored password "pw-id" used by host host "test" does not exist (anymore).',
+            id="service name not present",
+        ),
+        pytest.param(
+            None,
+            None,
+            'The stored password "pw-id" does not exist (anymore).',
+            id="host and service names not present",
+        ),
+    ],
+)
+def test_commandline_arguments_nonexisting_password(
+    host_name: HostName,
+    service_name: str,
+    expected_warning: str,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     commandline_arguments(
-        HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
-    )
-    assert (
-        commandline_arguments(
-            HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
-        )
-        == "--pwstore=2@11@pw-id arg1 '--password=***' arg3"
+        host_name, service_name, ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
     )
     captured = capsys.readouterr()
-    assert 'The stored password "pw-id" used by service "blub" on host "bla"' in captured.out
+    assert expected_warning in captured.out
 
 
-def test_active_check_arguments_password_store_sanitization() -> None:
-    """Check that the --pwstore argument is properly sanitized.
-    This is a regression test for CMK-14149.
-    """
-    pw_id = "pw-id; echo HI;"
-    pw = "the password"
-    password_store.save({pw_id: pw})
-    assert commandline_arguments(
-        HostName("bla"), "blub", ["arg1", ("store", pw_id, "--password=%s"), "arg3"]
-    ) == "'--pwstore=2@11@pw-id; echo HI;' arg1 '--password=%s' arg3" % ("*" * len(pw))
+@pytest.mark.parametrize(
+    "args",
+    [
+        pytest.param(None, id="None argument"),
+        pytest.param(1, id="integer argument"),
+        pytest.param((1, 2), id="integer tuple"),
+    ],
+)
+def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int] | None) -> None:
+    with pytest.raises(
+        MKGeneralException,
+        match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Host: test, Service: test service\).",
+    ):
+        commandline_arguments(HostName("test"), "test service", args)  # type: ignore[arg-type]
 
 
-def test_commandline_arguments_wrong_types() -> None:
-    with pytest.raises(MKGeneralException):
-        commandline_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
-
-    with pytest.raises(MKGeneralException):
-        commandline_arguments(HostName("bla"), "blub", (1, 2))
-
-
-def test_commandline_arguments_str() -> None:
-    assert (
-        commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2") == "args 123 -x 1 -y 2"
-    )
-
-
-def test_commandline_arguments_list() -> None:
-    assert commandline_arguments(HostName("bla"), "blub", ["a", "123"]) == "a 123"
-
-
-def test_commandline_arguments_list_with_numbers() -> None:
-    assert commandline_arguments(HostName("bla"), "blub", [1, 1.2]) == "1 1.2"
-
-
-def test_commandline_arguments_list_with_pwstore_reference() -> None:
-    assert (
-        commandline_arguments(HostName("bla"), "blub", ["a", ("store", "pw1", "--password=%s")])
-        == "--pwstore=2@11@pw1 a '--password=***'"
-    )
-
-
-def test_commandline_arguments_list_with_invalid_type() -> None:
-    with pytest.raises(MKGeneralException):
-        commandline_arguments(HostName("bla"), "blub", [None])  # type: ignore[list-item]
+def test_commandline_arguments_invalid_argument() -> None:
+    with pytest.raises(
+        MKGeneralException,
+        match=r"Invalid argument for command line: \(1, 2\)",
+    ):
+        commandline_arguments(HostName("test"), "test service", ["arg1", (1, 2), "arg3"])  # type: ignore[list-item]

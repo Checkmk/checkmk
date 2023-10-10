@@ -1101,7 +1101,9 @@ run_cached() {
         # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
-            if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${CREATION_TIMEOUT}" ]; then
+            TRYING_SINCE="$(get_file_atime "${cfile}")"
+            [ -n "${TRYING_SINCE}" ] || break # race condition: file vanished
+            if [ $((NOW - TRYING_SINCE)) -ge "${CREATION_TIMEOUT}" ]; then
                 {
                     echo "<<<checkmk_cached_plugins:sep(124)>>>"
                     pid="${cfile##*.new.}"
@@ -1138,7 +1140,7 @@ HERE
 
     fi
 
-    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO
+    unset NAME MAXAGE CREATION_TIMEOUT REFRESH_INTERVAL CACHEFILE NOW MTIME CACHE_INFO TRYING_SINCE
 }
 
 #

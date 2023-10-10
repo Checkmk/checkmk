@@ -503,8 +503,9 @@ impl Piggyback {
 mod tests {
     use super::*;
     use yaml_rust::YamlLoader;
-    /// copied from tests/files/test-config.yaml
-    const TEST_CONFIG: &str = r#"
+    mod data {
+        /// copied from tests/files/test-config.yaml
+        pub const TEST_CONFIG: &str = r#"
 ---
 mssql:
   standard: # mandatory, to be used if no specific config
@@ -557,6 +558,90 @@ mssql:
         sqls: # optional, same as above
     - sid: "INST2" # mandatory
 "#;
+        pub const AUTHENTICATION_FULL: &str = r#"
+authentication:
+  username: "foo"
+  password: "bar"
+  type: "windows"
+  access_token: "baz"
+"#;
+        pub const AUTHENTICATION_MINI: &str = r#"
+authentication:
+  username: "foo"
+  _password: "bar"
+  _type: "system"
+  _access_token: "baz"
+"#;
+
+        pub const CONNECTION_FULL: &str = r#"
+connection:
+  hostname: "alice"
+  failoverpartner: "bob"
+  port: 9999
+  socket: 'C:\path\to\file_socket'
+  tls:
+    ca: 'C:\path\to\file_ca'
+    client_certificate: 'C:\path\to\file_client'
+  timeout: 341
+"#;
+        pub const SQLS_FULL: &str = r#"
+sqls:
+  always:
+    - "aaa"
+    - "bbb"
+  cached:
+    - "ccc"
+    - "ddd"
+  disabled:
+    - "eee"
+  cache_age: 900
+"#;
+        pub const DISCOVERY_FULL: &str = r#"
+discovery:
+  detect: no
+  all: yes
+  include: ["a", "b" ]
+  exclude: ["c", "d" ]
+"#;
+        pub const PIGGYBACK_FULL: &str = r#"
+piggyback:
+  hostname: "piggy_host"
+  sqls:
+    always:
+      - "alw1"
+      - "alw2"
+    cached:
+      - "cache1"
+      - "cache2"
+    disabled:
+      - "disabled"
+    cache_age: 111
+"#;
+        pub const INSTANCE: &str = r#"
+sid: "INST1"
+authentication:
+  username: "u1"
+connection:
+  hostname: "h1"
+alias: "a1"
+piggyback:
+  hostname: "piggy"
+  sqls:
+    cache_age: 123
+"#;
+        pub const PIGGYBACK_NO_HOSTNAME: &str = r#"
+piggyback:
+  _hostname: "piggy_host"
+  sqls:
+    cache_age: 111
+"#;
+        pub const PIGGYBACK_NO_SQLS: &str = r#"
+piggyback:
+  hostname: "piggy_host"
+  _sqls:
+    cache_age: 111
+"#;
+    }
 
     fn create_yaml(source: &str) -> Yaml {
         YamlLoader::load_from_str(source).expect("fix test string!")[0].clone()
@@ -579,22 +664,11 @@ mssql:
 
     #[test]
     fn test_authentication_from_yaml() {
-        let a = Authentication::from_yaml(&create_authentication_yaml_full()).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), Some(&"bar".to_owned()));
         assert_eq!(a.auth_type(), &AuthType::Windows);
         assert_eq!(a.access_token(), Some(&"baz".to_owned()));
-    }
-
-    fn create_authentication_yaml_full() -> Yaml {
-        const SOURCE: &str = r#"
-authentication:
-  username: "foo"
-  password: "bar"
-  type: "windows"
-  access_token: "baz"
-"#;
-        create_yaml(SOURCE)
     }
 
     #[test]
@@ -615,27 +689,16 @@ authentication:
 
     #[test]
     fn test_authentication_from_yaml_mini() {
-        let a = Authentication::from_yaml(&create_authentication_yaml_mini()).unwrap();
+        let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
         assert_eq!(a.auth_type(), &AuthType::System);
         assert_eq!(a.access_token(), None);
     }
 
-    fn create_authentication_yaml_mini() -> Yaml {
-        const SOURCE: &str = r#"
-authentication:
-  username: "foo"
-  _password: "bar"
-  _type: "system"
-  _access_token: "baz"
-"#;
-        create_yaml(SOURCE)
-    }
-
     #[test]
     fn test_connection_from_yaml() {
-        let c = Connection::from_yaml(&create_connection_yaml_full())
+        let c = Connection::from_yaml(&create_yaml(data::CONNECTION_FULL))
             .unwrap()
             .unwrap();
         assert_eq!(c.hostname(), "alice");
@@ -649,21 +712,6 @@ authentication:
             tls.client_certificate(),
             PathBuf::from(r"C:\path\to\file_client")
         );
-    }
-
-    fn create_connection_yaml_full() -> Yaml {
-        const SOURCE: &str = r#"
-connection:
-  hostname: "alice"
-  failoverpartner: "bob"
-  port: 9999
-  socket: 'C:\path\to\file_socket'
-  tls:
-    ca: 'C:\path\to\file_ca'
-    client_certificate: 'C:\path\to\file_client'
-  timeout: 341
-"#;
-        create_yaml(SOURCE)
     }
 
     #[test]
@@ -689,27 +737,13 @@ connection:
     }
     #[test]
     fn test_sqls_from_yaml_full() {
-        let s = Sqls::from_yaml(&create_sqls_yaml_full()).unwrap().unwrap();
+        let s = Sqls::from_yaml(&create_yaml(data::SQLS_FULL))
+            .unwrap()
+            .unwrap();
         assert_eq!(s.always(), &vec!["aaa".to_string(), "bbb".to_string()]);
         assert_eq!(s.cached(), &vec!["ccc".to_string(), "ddd".to_string()]);
         assert_eq!(s.disabled(), &vec!["eee".to_string()]);
         assert_eq!(s.cache_age(), 900);
-    }
-
-    fn create_sqls_yaml_full() -> Yaml {
-        const SOURCE: &str = r#"
-sqls:
-  always:
-    - "aaa"
-    - "bbb"
-  cached:
-    - "ccc"
-    - "ddd"
-  disabled:
-    - "eee"
-  cache_age: 900
-"#;
-        create_yaml(SOURCE)
     }
 
     #[test]
@@ -734,22 +768,11 @@ sqls:
 
     #[test]
     fn test_discovery_from_yaml_full() {
-        let discovery = Discovery::from_yaml(&create_discovery_yaml_full()).unwrap();
+        let discovery = Discovery::from_yaml(&create_yaml(data::DISCOVERY_FULL)).unwrap();
         assert!(!discovery.detect());
         assert!(discovery.all());
         assert_eq!(discovery.include(), &vec!["a".to_string(), "b".to_string()]);
         assert_eq!(discovery.exclude(), &vec!["c".to_string(), "d".to_string()]);
-    }
-
-    fn create_discovery_yaml_full() -> Yaml {
-        const SOURCE: &str = r#"
-discovery:
-  detect: no
-  all: yes
-  include: ["a", "b" ]
-  exclude: ["c", "d" ]
-"#;
-        create_yaml(SOURCE)
     }
 
     #[test]
@@ -789,7 +812,7 @@ discovery:
 
     #[test]
     fn test_piggyback() {
-        let piggyback = Piggyback::from_yaml(&create_piggyback_yaml_default(), &Sqls::default())
+        let piggyback = Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_FULL), &Sqls::default())
             .unwrap()
             .unwrap();
         assert_eq!(piggyback.hostname(), "piggy_host");
@@ -806,56 +829,19 @@ discovery:
         assert_eq!(sqls.cache_age(), 111);
     }
 
-    fn create_piggyback_yaml_default() -> Yaml {
-        const SOURCE: &str = r#"
-piggyback:
-  hostname: "piggy_host"
-  sqls:
-    always:
-      - "alw1"
-      - "alw2"
-    cached:
-      - "cache1"
-      - "cache2"
-    disabled:
-      - "disabled"
-    cache_age: 111
-"#;
-        create_yaml(SOURCE)
-    }
-
     #[test]
     fn test_piggyback_error() {
         assert!(
-            Piggyback::from_yaml(&create_piggyback_yaml_no_hostname(), &Sqls::default()).is_err()
+            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_NO_HOSTNAME), &Sqls::default())
+                .is_err()
         );
         assert_eq!(
-            Piggyback::from_yaml(&create_piggyback_yaml_no_sqls(), &Sqls::default())
+            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_NO_SQLS), &Sqls::default())
                 .unwrap()
                 .unwrap()
                 .sqls(),
             &Sqls::default()
         );
-    }
-
-    fn create_piggyback_yaml_no_hostname() -> Yaml {
-        const SOURCE: &str = r#"
-piggyback:
-  _hostname: "piggy_host"
-  sqls:
-    cache_age: 111
-"#;
-        create_yaml(SOURCE)
-    }
-
-    fn create_piggyback_yaml_no_sqls() -> Yaml {
-        const SOURCE: &str = r#"
-piggyback:
-  hostname: "piggy_host"
-  _sqls:
-    cache_age: 111
-"#;
-        create_yaml(SOURCE)
     }
 
     #[test]
@@ -868,7 +854,7 @@ piggyback:
     #[test]
     fn test_instance() {
         let instance = Instance::from_yaml(
-            &create_instance(),
+            &create_yaml(data::INSTANCE),
             &Authentication::default(),
             &Connection::default(),
             &Sqls::default(),
@@ -882,24 +868,9 @@ piggyback:
         assert_eq!(instance.piggyback().unwrap().sqls().cache_age(), 123);
     }
 
-    fn create_instance() -> Yaml {
-        const SOURCE: &str = r#"
-    sid: "INST1"
-    authentication:
-      username: "u1"
-    connection:
-      hostname: "h1"
-    alias: "a1"
-    piggyback:
-      hostname: "piggy"
-      sqls:
-        cache_age: 123
-"#;
-        create_yaml(SOURCE)
-    }
     #[test]
     fn test_config() {
-        let c = Config::from_yaml(&create_yaml(TEST_CONFIG))
+        let c = Config::from_yaml(&create_yaml(data::TEST_CONFIG))
             .unwrap()
             .unwrap();
         assert_eq!(c.instances().len(), 2);

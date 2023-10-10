@@ -143,11 +143,10 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     cma::tools::WideUpper(test_dir);
 
     EXPECT_EQ(KillProcessesByDir(test_dir), 2);
-    cma::tools::sleep(500ms);
-
-    auto [path, pid] = FindExpectedProcess();
-    EXPECT_TRUE(path.empty());
-    EXPECT_EQ(pid, 0);
+    EXPECT_TRUE(tst::WaitForSuccessSilent(1500ms, []() {
+        auto [path, pid] = FindExpectedProcess();
+        return path.empty() && pid == 0;
+    }));
 
     EXPECT_EQ(KillProcessesByDir(test_dir), 0);
     EXPECT_EQ(KillProcessesByDir(""), -1);
@@ -158,11 +157,10 @@ TEST_F(WtoolsKillProcFixture, KillProcsByFullPath) {
     EXPECT_EQ(RunProcesses(1), 1);
     ASSERT_EQ(RunProcesses(1), 1);  // additional process
     KillProcessesByFullPath(test_exe_);
-    cma::tools::sleep(500ms);
-
-    auto [path, pid] = FindExpectedProcess();
-    EXPECT_TRUE(path.empty());
-    EXPECT_EQ(pid, 0);
+    EXPECT_TRUE(tst::WaitForSuccessSilent(1500ms, []() {
+        auto [path, pid] = FindExpectedProcess();
+        return path.empty() && pid == 0;
+    }));
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByFullPathAndPidComponent) {

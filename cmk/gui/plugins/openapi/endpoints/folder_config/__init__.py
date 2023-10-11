@@ -291,6 +291,13 @@ def move(params: Mapping[str, Any]) -> Response:
 
     dest_folder: Folder = params["body"]["destination"]
 
+    if folder.is_root():
+        raise ProblemException(
+            title="Problem moving folder",
+            detail="You can't move the root folder.",
+            status=400,
+        )
+
     try:
         parent = folder.parent()
         assert parent is not None

@@ -943,3 +943,9 @@ def test_openapi_folder_with_extended_characters_parent(clients: ClientRegistry)
 
     assert res.json["id"] == f"~{extended_characters}~second_level_folder"
     assert res.json["extensions"]["path"] == f"/{extended_characters}/second_level_folder"
+
+
+def test_move_root_folder(clients: ClientRegistry) -> None:
+    resp = clients.Folder.move(folder_name="~", destination="/", expect_ok=False)
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "You can't move the root folder."

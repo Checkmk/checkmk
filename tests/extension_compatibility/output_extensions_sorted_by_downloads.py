@@ -5,11 +5,15 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import requests
 from pydantic import BaseModel
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from cmk.utils.version import __version__, parse_check_mk_version
 
 
 def main(parsed_version: int) -> None:
@@ -61,9 +65,4 @@ class _ExchangeResponseAllPackages(BaseModel, frozen=True):
 
 
 if __name__ == "__main__":
-    import sys
-
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-    from cmk.utils.version import __version__, parse_check_mk_version
-
     main(parse_check_mk_version(__version__))

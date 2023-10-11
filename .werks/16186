@@ -1,0 +1,13 @@
+Title: Correct the response schemes in audit log endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1697026334
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk removes the 'link' attributes from the response schema as these endpoints do not provide such information.
+
+

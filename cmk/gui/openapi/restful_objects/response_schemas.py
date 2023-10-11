@@ -277,7 +277,7 @@ class ActionResult(OneOfSchema):
     }
 
 
-class DomainObject(Linkable):
+class DomainObjectBase(BaseSchema):
     domainType: gui_fields.Field = fields.String(
         required=True,
         description='The "domain-type" of the object.',
@@ -295,6 +295,10 @@ class DomainObject(Linkable):
     extensions: gui_fields.Field = fields.Dict(
         description="All the attributes of the domain object."
     )
+
+
+class DomainObject(DomainObjectBase, Linkable):
+    ...
 
 
 class MoveFolder(BaseSchema):
@@ -342,7 +346,7 @@ class CollectionItem(OneOfSchema):
     type_field_remove = False
 
 
-class DomainObjectCollection(Linkable):
+class DomainObjectBaseCollection(BaseSchema):
     id = fields.String(
         description="The name of this collection.",
         load_default="all",
@@ -359,6 +363,10 @@ class DomainObjectCollection(Linkable):
         many=True,
     )
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
+
+
+class DomainObjectCollection(DomainObjectBaseCollection, Linkable):
+    ...
 
 
 class VersionCapabilities(BaseSchema):

@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.DCDConnectionSpec = dict[str, Any]
 
-from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
+from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
 
 
-class AuditLogEntry(DomainObject):
-    domain_type = fields.Constant(
-        "audit_log",
-        description="The domain type of the objects in the collection.",
-    )
-
+class AuditLogExtension(BaseSchema):
     time = fields.Integer(description="Timestamp of when the event occurred")
     user_id = fields.String(description="User id of whom provoked the event")
     action = fields.String(description="Action that was performed")
@@ -23,11 +18,18 @@ class AuditLogEntry(DomainObject):
     object_name = fields.String(description="Object name associated to the event", allow_none=True)
 
 
-class AuditLogEntryCollection(DomainObjectCollection):
-    domain_type = fields.Constant(
-        "audit_log",
-        description="The domain type of the objects in the collection.",
+class AuditLogEntry(BaseSchema):
+    title = fields.String(
+        description="A human readable title of this object. Can be used for " "user interfaces.",
     )
+
+    extensions = fields.Nested(
+        AuditLogExtension,
+        description="Data and Meta-Data of this audit log entry.",
+    )
+
+
+class AuditLogEntryCollection(BaseSchema):
     value = fields.List(
         fields.Nested(AuditLogEntry),
         description="A list of audit log objects.",

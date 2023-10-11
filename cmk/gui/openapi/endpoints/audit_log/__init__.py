@@ -91,8 +91,6 @@ def get_all(params: Mapping[str, Any]) -> Response:
 
 def _create_collection(collection: Sequence[AuditLogStore.Entry]) -> AuditLogResponse:
     new_collection: AuditLogResponse = {
-        "id": "all",
-        "domain_type": "audit_log",
         "value": [_create_entry(entry) for entry in collection],
     }
 
@@ -101,14 +99,15 @@ def _create_collection(collection: Sequence[AuditLogStore.Entry]) -> AuditLogRes
 
 def _create_entry(entry: AuditLogStore.Entry) -> AuditLogResponse:
     result: AuditLogResponse = {
-        "domain_type": "audit_log",
-        "time": entry.time,
-        "user_id": entry.user_id,
-        "action": entry.action,
-        "summary": str(entry.text),
-        "details": "" if entry.diff_text is None else entry.diff_text,
-        "object_type": None if entry.object_ref is None else entry.object_ref.ident,
-        "object_name": None if entry.object_ref is None else entry.object_ref.object_type.name,
+        "title": str(entry.text),
+        "extensions": {
+            "time": entry.time,
+            "user_id": entry.user_id,
+            "action": entry.action,
+            "details": "" if entry.diff_text is None else entry.diff_text,
+            "object_type": None if entry.object_ref is None else entry.object_ref.ident,
+            "object_name": None if entry.object_ref is None else entry.object_ref.object_type.name,
+        },
     }
 
     return result

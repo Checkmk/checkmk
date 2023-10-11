@@ -43,6 +43,7 @@ config_setting(
         "@freetds",
         "@omd_packages//:agent-receiver",
         "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@omd_packages//packages:werks",
         "@openssl",
         "@python",
     ],
@@ -62,6 +63,7 @@ config_setting(
 ) for module, dep in [
     ("cython3", "git+https://github.com/JonasScharpf/pymssql.git@cython3_fix_v227"),
     ("agent-receiver", "$(execpath @omd_packages//:agent-receiver)"),
+    ("werks", "$(execpath @omd_packages//packages:werks)"),
 ]]
 
 genrule(
@@ -71,6 +73,7 @@ genrule(
         for module in all_requirements + [
             "cython3",
             "agent-receiver",
+            "werks",
         ]
     ],
     outs = [
@@ -112,7 +115,7 @@ genrule(
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
-        
+
         # Fix gunicorn permissios
         chmod +x $(RULEDIR)/python3-modules/bin/gunicorn
     """,

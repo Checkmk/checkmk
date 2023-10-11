@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Package with our SNMP stuff."""
 
-from ._detect import evaluate_snmp_detection as evaluate_snmp_detection
+from ._detect import SNMPDetectAtom as SNMPDetectAtom
 from ._detect import SNMPDetectBaseType as SNMPDetectBaseType
 from ._detect import SNMPDetectSpec as SNMPDetectSpec
 from ._getoid import get_single_oid as get_single_oid

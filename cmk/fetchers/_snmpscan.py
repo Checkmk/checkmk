@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from collections.abc import Collection, Iterable
+import re
+from collections.abc import Callable, Collection, Iterable
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.log import console
+from cmk.utils.regex import regex
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import evaluate_snmp_detection, get_single_oid, SNMPBackend, SNMPDetectBaseType
+from cmk.snmplib import get_single_oid, SNMPBackend, SNMPDetectAtom, SNMPDetectBaseType
 
 import cmk.fetchers._snmpcache as snmp_cache
 
@@ -122,7 +124,7 @@ def _find_sections(
             backend=backend,
         )
         try:
-            if evaluate_snmp_detection(
+            if _evaluate_snmp_detection(
                 detect_spec=specs,
                 oid_value_getter=oid_value_getter,
             ):
@@ -139,6 +141,33 @@ def _find_sections(
             if on_error is OnError.WARN:
                 console.warning("   Exception in SNMP scan function of %s" % name)
     return frozenset(found_sections)
+
+
+def _evaluate_snmp_detection(
+    *,
+    detect_spec: SNMPDetectBaseType,
+    oid_value_getter: Callable[[str], str | None],
+) -> bool:
+    """Evaluate a SNMP detection specification
+
+    Return True if and and only if at least all conditions in one "line" are True
+    """
+
+    def _impl(
+        atom: SNMPDetectAtom,
+        oid_value_getter: Callable[[str], str | None],
+    ) -> bool:
+        oid, pattern, flag = atom
+        value = oid_value_getter(oid)
+        if value is None:
+            # check for "not_exists"
+            return pattern == ".*" and not flag
+        # ignore case!
+        return bool(regex(pattern, re.IGNORECASE | re.DOTALL).fullmatch(value)) is flag
+
+    return any(
+        all(_impl(atom, oid_value_getter) for atom in alternative) for alternative in detect_spec
+    )
 
 
 def _output_snmp_check_plugins(

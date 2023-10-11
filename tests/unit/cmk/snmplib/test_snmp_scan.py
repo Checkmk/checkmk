@@ -19,7 +19,7 @@ from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import evaluate_snmp_detection, OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
@@ -116,7 +116,7 @@ def test_evaluate_snmp_detection(
     expected_result: bool,
 ) -> None:
     assert (
-        evaluate_snmp_detection(
+        snmp_scan._evaluate_snmp_detection(
             detect_spec=fix_plugin_legacy.check_info[name]["detect"],
             oid_value_getter=oids_data.get,
         )

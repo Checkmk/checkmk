@@ -30,7 +30,6 @@ from cmk.gui.background_job import (
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
@@ -589,7 +588,6 @@ def _process_update_requests(
     job_interface.send_result_message(_("Search index successfully updated"))
 
 
-@job_registry.register
 class SearchIndexBackgroundJob(BackgroundJob):
     job_prefix = "search_index"
 

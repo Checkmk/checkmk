@@ -27,7 +27,6 @@ from cmk.gui.background_job import (
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -130,7 +129,6 @@ def execute_host_label_sync_job() -> DiscoveredHostLabelSyncJob | None:
     return job
 
 
-@job_registry.register
 class DiscoveredHostLabelSyncJob(BackgroundJob):
     """This job synchronizes the discovered host labels from remote sites to the central site
 

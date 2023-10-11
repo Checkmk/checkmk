@@ -19,9 +19,9 @@ import cmk.gui.forms as forms
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -57,8 +57,9 @@ from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from ._bulk_actions import get_hosts_from_checkboxes
 
 
-def register(mode_registry: ModeRegistry) -> None:
+def register(mode_registry: ModeRegistry, job_registry: BackgroundJobRegistry) -> None:
     mode_registry.register(ModeParentScan)
+    job_registry.register(ParentScanBackgroundJob)
 
 
 class ParentScanTask(NamedTuple):
@@ -91,8 +92,6 @@ class ParentScanSettings(NamedTuple):
     ping_probes: int
 
 
-# TODO: This job should be executable multiple times at once
-@job_registry.register
 class ParentScanBackgroundJob(BackgroundJob):
     job_prefix = "parent_scan"
 

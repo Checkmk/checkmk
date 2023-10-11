@@ -17,12 +17,7 @@ from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscover
 
 from cmk.checkengine.discovery import DiscoveryResult
 
-from cmk.gui.background_job import (
-    BackgroundJob,
-    BackgroundProcessInterface,
-    InitialStatusArgs,
-    job_registry,
-)
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -111,8 +106,6 @@ def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True
     )
 
 
-# TODO: This job should be executable multiple times at once
-@job_registry.register
 class BulkDiscoveryBackgroundJob(BackgroundJob):
     job_prefix = "bulk_discovery"
 

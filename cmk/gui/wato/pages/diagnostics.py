@@ -43,9 +43,9 @@ from cmk.automations.results import CreateDiagnosticsDumpResult
 
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -91,10 +91,12 @@ def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
 ) -> None:
     page_registry.register_page("download_diagnostics_dump")(PageDownloadDiagnosticsDump)
     mode_registry.register(ModeDiagnostics)
     automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
+    job_registry.register(DiagnosticsDumpBackgroundJob)
 
 
 class ModeDiagnostics(WatoMode):
@@ -582,7 +584,6 @@ class ModeDiagnostics(WatoMode):
         ]
 
 
-@job_registry.register
 class DiagnosticsDumpBackgroundJob(BackgroundJob):
     job_prefix = "diagnostics_dump"
 

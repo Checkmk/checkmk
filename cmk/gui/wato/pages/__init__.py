@@ -5,6 +5,7 @@
 
 from cmk.utils.version import edition, Edition
 
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -55,6 +56,7 @@ def register(
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
 ) -> None:
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
@@ -65,9 +67,9 @@ def register(
     bulk_import.register(mode_registry)
     check_catalog.register(mode_registry)
     custom_attributes.register(mode_registry)
-    diagnostics.register(page_registry, mode_registry, automation_command_registry)
+    diagnostics.register(page_registry, mode_registry, automation_command_registry, job_registry)
     download_agents.register(mode_registry)
-    fetch_agent_output.register(page_registry, automation_command_registry)
+    fetch_agent_output.register(page_registry, automation_command_registry, job_registry)
     folders.register(page_registry, mode_registry)
     global_settings.register(mode_registry)
     groups.register(mode_registry)
@@ -77,7 +79,7 @@ def register(
     not_implemented.register(mode_registry)
     notifications.register(mode_registry)
     object_parameters.register(mode_registry)
-    parentscan.register(mode_registry)
+    parentscan.register(mode_registry, job_registry)
     password_store.register(mode_registry)
     pattern_editor.register(mode_registry)
     predefined_conditions.register(mode_registry)

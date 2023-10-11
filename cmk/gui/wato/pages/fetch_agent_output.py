@@ -16,8 +16,8 @@ from cmk.utils.site import omd_site
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
+    BackgroundJobRegistry,
     InitialStatusArgs,
-    job_registry,
     JobStatusSpec,
 )
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -41,13 +41,16 @@ from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 
 
 def register(
-    page_registry: PageRegistry, automation_command_registry: AutomationCommandRegistry
+    page_registry: PageRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
 ) -> None:
     page_registry.register_page("fetch_agent_output")(PageFetchAgentOutput)
     page_registry.register_page("download_agent_output")(PageDownloadAgentOutput)
     automation_command_registry.register(AutomationFetchAgentOutputStart)
     automation_command_registry.register(AutomationFetchAgentOutputGetStatus)
     automation_command_registry.register(AutomationFetchAgentOutputGetFile)
+    job_registry.register(FetchAgentOutputBackgroundJob)
 
 
 # .
@@ -261,7 +264,6 @@ def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatu
     return job.get_status_snapshot().status
 
 
-@job_registry.register
 class FetchAgentOutputBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 

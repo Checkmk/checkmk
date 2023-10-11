@@ -16,6 +16,7 @@ import cmk.gui.watolib.builtin_attributes as builtin_attributes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import register_job as _register_job
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 from cmk.gui.watolib import _sync_remote_sites
@@ -39,14 +40,26 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.network_scan import execute_network_scan_job as _execute_network_scan_job
 
 from . import rulespec_groups
-from .activate_changes import AutomationGetConfigSyncState, AutomationReceiveConfigSync
+from .activate_changes import (
+    ActivateChangesSchedulerBackgroundJob,
+    ActivationCleanupBackgroundJob,
+    AutomationGetConfigSyncState,
+    AutomationReceiveConfigSync,
+)
 from .agent_registration import AutomationRemoveTLSRegistration
 from .analyze_configuration import AutomationCheckAnalyzeConfig
 from .automation_commands import AutomationCommandRegistry
-from .automations import AutomationCheckmkAutomationGetStatus, AutomationCheckmkAutomationStart
-from .host_label_sync import AutomationDiscoveredHostLabelSync
+from .automations import (
+    AutomationCheckmkAutomationGetStatus,
+    AutomationCheckmkAutomationStart,
+    CheckmkAutomationBackgroundJob,
+)
+from .bulk_discovery import BulkDiscoveryBackgroundJob
+from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
+from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from .network_scan import AutomationNetworkScan
 from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
+from .search import SearchIndexBackgroundJob
 from .user_profile import PushUserProfilesToSite
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -57,9 +70,10 @@ _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 def register(
     rulespec_group_registry: RulespecGroupRegistry,
     automation_command_registry: AutomationCommandRegistry,
+    job_registry: BackgroundJobRegistry,
 ) -> None:
     _register_automation_commands()
-    _register_gui_background_jobs()
+    _register_gui_background_jobs(job_registry)
     _register_hooks()
     _register_config_domains()
     _register_host_attributes()
@@ -67,9 +81,7 @@ def register(
     _register_pages()
     _register_cronjobs()
     _register_folder_stub_validators()
-    _sync_remote_sites.register(
-        _automation_commands.automation_command_registry, _background_job.job_registry
-    )
+    _sync_remote_sites.register(_automation_commands.automation_command_registry, job_registry)
     rulespec_groups.register(rulespec_group_registry)
     rulespec_group_registry.register(RulespecGroupEnforcedServices)
     automation_command_registry.register(PushUserProfilesToSite)
@@ -93,14 +105,18 @@ def _register_automation_commands() -> None:
         _automation_commands.automation_command_registry.register(cls)
 
 
-def _register_gui_background_jobs() -> None:
-    clss: Sequence[type[_background_job.BackgroundJob]] = (
-        _config_domains.OMDConfigChangeBackgroundJob,
-        _automatic_host_removal.HostRemovalBackgroundJob,
-        _autodiscovery.AutodiscoveryBackgroundJob,
-    )
-    for cls in clss:
-        _background_job.job_registry.register(cls)
+def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
+    job_registry.register(_config_domains.OMDConfigChangeBackgroundJob)
+    job_registry.register(_automatic_host_removal.HostRemovalBackgroundJob)
+    job_registry.register(_autodiscovery.AutodiscoveryBackgroundJob)
+    job_registry.register(BulkDiscoveryBackgroundJob)
+    job_registry.register(SearchIndexBackgroundJob)
+    job_registry.register(ActivationCleanupBackgroundJob)
+    job_registry.register(ActivateChangesSchedulerBackgroundJob)
+    job_registry.register(RenameHostsBackgroundJob)
+    job_registry.register(RenameHostBackgroundJob)
+    job_registry.register(DiscoveredHostLabelSyncJob)
+    job_registry.register(CheckmkAutomationBackgroundJob)
 
 
 def _register_config_domains() -> None:

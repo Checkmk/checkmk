@@ -27,7 +27,6 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
-    job_registry,
 )
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
@@ -425,7 +424,6 @@ class AutomationRenameHostsUUIDLink(AutomationCommand):
         return _RenameHostsUUIDLinkRequest(renamings=json.loads(request.get_request()["renamings"]))
 
 
-@job_registry.register
 class RenameHostsBackgroundJob(BackgroundJob):
     job_prefix = "rename-hosts"
 
@@ -467,7 +465,6 @@ class RenameHostsBackgroundJob(BackgroundJob):
         return makeuri(request, [])
 
 
-@job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
     def __init__(self, host, title=None) -> None:  # type: ignore[no-untyped-def]
         super().__init__(title)

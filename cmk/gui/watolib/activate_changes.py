@@ -72,7 +72,6 @@ from cmk.gui.background_job import (
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
     JobStatusSpec,
 )
 from cmk.gui.config import active_config
@@ -1847,7 +1846,6 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         return generic_site_components, custom_site_components
 
 
-@job_registry.register
 class ActivationCleanupBackgroundJob(BackgroundJob):
     job_prefix = "activation_cleanup"
 
@@ -2326,7 +2324,6 @@ def _handle_active_tasks(
         active_tasks["activate_remote_changes"].pop(site_id)
 
 
-@job_registry.register
 class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30

@@ -39,7 +39,6 @@ from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
     JobStatusSpec,
 )
 from cmk.gui.config import active_config
@@ -672,7 +671,6 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
         return dict(response[0]), response[1]
 
 
-@job_registry.register
 class CheckmkAutomationBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 

@@ -8,8 +8,7 @@ mod pwstore;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let patched_args = pwstore::patch_args(std::env::args());
-    let args = cli::Args::parse_from(patched_args);
+    let args = cli::Cli::parse();
 
     let mut cli_headers = HeaderMap::new();
     if let Some(ua) = args.user_agent {
@@ -23,7 +22,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let now = Instant::now();
 
-    let resp = client.get(args.url).send().await?;
+    let mut req = client.get(args.url);
+    if let Some(user) = args.auth_user {
+        req = req.basic_auth(
+            user,
+            args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
+        );
+    }
+    let resp = req.send().await?;
 
     let headers = resp.headers();
     println!("{:#?}", headers);

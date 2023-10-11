@@ -10,7 +10,6 @@ use std::{collections::HashMap, env, fs, path::PathBuf};
 const PW_STORE_FILE: &str = "var/check_mk/stored_passwords";
 const PW_STORE_SECRET_FILE: &str = "etc/password_store.secret";
 const OMD_ROOT: &str = "OMD_ROOT";
-const PW_STORE_ARG: &str = "--pwstore=";
 
 const VERSION_LENGTH: usize = 2;
 const SALT_LENGTH: usize = 16;
@@ -24,40 +23,11 @@ const KEY_SIZE: usize = 32;
 
 type AesGcmCustom = AesGcm<Aes256, U16>;
 
-pub fn patch_args(args: env::Args) -> Vec<String> {
-    let mut args_vec: Vec<_> = args.collect();
+pub fn password_from_store(pw_id: &str) -> AnyhowResult<String> {
+    let (pw_store_bytes, secret) = load_pw_store_bytes()?;
+    let pw_store = unpack_pw_store(&pw_store_bytes, &secret)?;
 
-    let first_arg = &args_vec[1];
-    if !first_arg.starts_with(PW_STORE_ARG) {
-        return args_vec;
-    };
-
-    let parts: Vec<_> = first_arg[PW_STORE_ARG.len()..].splitn(3, '@').collect();
-
-    if parts.len() != 3 {
-        println!("pwstore: Invalid --pwstore entry: {}", first_arg);
-        std::process::exit(3);
-    }
-
-    let target_arg_num: usize = parts[0].parse().unwrap();
-    let insert_pos: usize = parts[1].parse().unwrap();
-    let pw_id = parts[2];
-
-    let (pw_store_bytes, secret) = load_pw_store_bytes().unwrap();
-    let pw_store = unpack_pw_store(&pw_store_bytes, &secret).unwrap();
-    let pw = lookup_pw(&pw_store, pw_id).unwrap();
-
-    let target_arg = &args_vec[target_arg_num];
-    args_vec[target_arg_num] = format!(
-        "{}{}{}",
-        &target_arg[..insert_pos],
-        &pw,
-        &target_arg[insert_pos + pw.len()..]
-    );
-
-    args_vec.remove(1);
-
-    args_vec
+    lookup_pw(&pw_store, pw_id)
 }
 
 fn load_pw_store_bytes() -> AnyhowResult<(Vec<u8>, Vec<u8>)> {
@@ -108,7 +78,7 @@ fn decrypt(ciphertext: &[u8], key: &[u8], nonce: &[u8], tag: &[u8]) -> AeadResul
     cipher.decrypt(Nonce::from_slice(nonce), tagged_ciphertext.as_slice())
 }
 
-fn lookup_pw<'store>(pw_store: &'store str, pw_id: &'store str) -> AnyhowResult<&'store str> {
+fn lookup_pw(pw_store: &str, pw_id: &str) -> AnyhowResult<String> {
     let p: Option<HashMap<&str, &str>> = pw_store
         .split_whitespace()
         .map(|entry| entry.split_once(':'))
@@ -120,5 +90,5 @@ fn lookup_pw<'store>(pw_store: &'store str, pw_id: &'store str) -> AnyhowResult<
     parsed_store
         .get(pw_id)
         .ok_or(anyhow!("Couldn't find requested ID in password store"))
-        .map(|&pw| pw)
+        .map(|&pw| pw.to_owned())
 }

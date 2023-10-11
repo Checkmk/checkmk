@@ -34,6 +34,7 @@ from cmk.gui import (
     user_message,
     valuespec,
     visuals,
+    weblib,
     werks,
 )
 from cmk.gui.background_job import job_registry
@@ -246,6 +247,7 @@ def register() -> None:
     gui_background_job.register(permission_section_registry, permission_registry)
     graphing.register(page_registry, config_variable_registry)
     agent_registration.register(permission_section_registry)
+    weblib.register(page_registry)
 
 
 register()

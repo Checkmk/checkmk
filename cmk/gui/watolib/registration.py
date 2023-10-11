@@ -5,8 +5,7 @@
 
 from collections.abc import Callable, Sequence
 
-import cmk.gui.weblib as _webling
-from cmk.gui import hooks, pages
+from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import register_job
 
@@ -88,7 +87,6 @@ def register(
     _register_config_domains(config_domain_registry)
     _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
-    _register_pages()
     _register_cronjobs()
     _register_folder_stub_validators()
     _sync_remote_sites.register(automation_command_registry, job_registry)
@@ -189,14 +187,6 @@ def _register_hooks() -> None:
     )
     for name, func in args:
         hooks.register_builtin(name, func)
-
-
-def _register_pages() -> None:
-    for name, func in (
-        ("tree_openclose", _webling.ajax_tree_openclose),
-        ("ajax_set_rowselection", _webling.ajax_set_rowselection),
-    ):
-        pages.register(name)(func)
 
 
 def _register_cronjobs() -> None:

@@ -2,6 +2,8 @@
 
 #include "providers/internal.h"
 
+#include <time.h>
+
 #include <chrono>
 #include <functional>
 #include <mutex>
@@ -16,9 +18,23 @@ using namespace std::chrono_literals;
 namespace cma::provider {
 
 namespace {
+tm GetTimeAsTm(std::chrono::system_clock::time_point time_point) {
+    const auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
+    tm buf;
+    const auto *_ = localtime_s(&in_time_t, &buf);
+    return buf;
+}
+
+std::string TimeToString(std::chrono::system_clock::time_point time_point) {
+    std::stringstream sss;
+    const auto time_value = GetTimeAsTm(time_point);
+    sss << std::put_time(&time_value, "%Y-%m-%d %T") << std::ends;
+    return sss.str();
+}
+
 // Confirmed values with AB from LA(3600s)
-const std::unordered_map<std::string_view, std::chrono::seconds>
-    &GetDelaysOnFail() {
+const std::unordered_map<std::string_view, std::chrono::seconds> &
+GetDelaysOnFail() {
     const static std::unordered_map<std::string_view, std::chrono::seconds>
         delays_on_fail = {
             {kDotNetClrMemory, cfg::G_DefaultDelayOnFail},  //
@@ -146,7 +162,7 @@ void Basic::disableSectionTemporary() {
     // report using _system_ clock
     const auto sys_clock = std::chrono::system_clock::now() + delay_on_fail_;
     XLOG::d.w("Resetting time for earliest start of the section '{}' at '{}'",
-              getUniqName(), tools::TimeToString(sys_clock));
+              getUniqName(), TimeToString(sys_clock));
 }
 
 /// true when data exist.

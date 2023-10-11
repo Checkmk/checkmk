@@ -53,10 +53,10 @@ inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
 /// C++ concepts library doesn't support now ContiguosContainer
 template <typename C>
 concept VectorLike = requires(C c) {
-                         c[0];
-                         c.data();
-                         c.size();
-                     };
+    c[0];
+    c.data();
+    c.size();
+};
 template <VectorLike Data>
 std::string_view ToView(const Data &input) {
     return {reinterpret_cast<const char *>(input.data()),
@@ -548,16 +548,6 @@ inline std::string JoinVector(const std::vector<std::string> &values,
 template <typename T>
 void ConcatVector(std::vector<T> &target, const std::vector<T> &source) {
     std::ranges::copy(source, std::back_inserter(target));
-}
-
-inline std::string TimeToString(
-    std::chrono::system_clock::time_point time_point) {
-    auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
-    std::stringstream sss;
-    const auto *loc_time = std::localtime(&in_time_t);  // NOLINT
-    auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
-    sss << p_time << std::ends;
-    return sss.str();
 }
 
 inline auto SecondsSinceEpoch() {

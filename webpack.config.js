@@ -43,6 +43,7 @@ module.exports = {
     },
     entry: {
         main: "./web/htdocs/js/index.ts",
+        vue: "./web/htdocs/js/cmk_vue.ts",
         mobile: "./web/htdocs/js/mobile.ts",
         side: "./web/htdocs/js/side_index.ts",
         facelift: "./web/htdocs/themes/facelift/theme.scss",

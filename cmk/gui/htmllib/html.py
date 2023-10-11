@@ -57,6 +57,12 @@ from .tag_rendering import (
 from .type_defs import RequireConfirmation
 
 
+def use_vue_rendering():
+    return active_config.experimental_features.get("use_vue_rendering") or html.request.has_var(
+        "use_vue_rendering"
+    )
+
+
 class HTMLGenerator(HTMLWriter):
     def __init__(
         self,
@@ -279,13 +285,13 @@ class HTMLGenerator(HTMLWriter):
         main_javascript: str = "main",
         force: bool = False,
     ) -> None:
+        javascript_files = [main_javascript]
+        if use_vue_rendering():
+            javascript_files.append("vue")
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
             self.open_html()
-            self._head(
-                title,
-                [main_javascript],
-            )
+            self._head(title, javascript_files)
             self._header_sent = True
 
     def body_start(

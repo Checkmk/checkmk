@@ -11,7 +11,7 @@ CHECK_MK_ANNOUNCE_FOLDER := $(REPO_PATH)/announce
 CHECK_MK_ANNOUNCE_MD := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNCE_VERSION).md
 CHECK_MK_ANNOUNCE_TXT := $(CHECK_MK_ANNOUNCE_FOLDER)/announce-$(CHECK_MK_ANNOUNCE_VERSION).txt
 
-JAVASCRIPT_MINI    := $(foreach jmini,main mobile side zxcvbn,$(REPO_PATH)/web/htdocs/js/$(jmini)_min.js)
+JAVASCRIPT_MINI    := $(foreach jmini,main vue mobile side zxcvbn,$(REPO_PATH)/web/htdocs/js/$(jmini)_min.js)
 
 THEMES             := facelift modern-dark
 THEME_CSS_FILES    := $(addprefix $(REPO_PATH)/web/htdocs/themes/,$(addsuffix /theme.css,$(THEMES)))

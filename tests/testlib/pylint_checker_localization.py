@@ -10,7 +10,6 @@ from collections.abc import Sequence
 import astroid  # type: ignore[import-untyped]
 from astroid import nodes
 from pylint.checkers import BaseChecker, utils  # type: ignore[import-untyped]
-from pylint.interfaces import IAstroidChecker  # type: ignore[import-untyped]
 from pylint.lint.pylinter import PyLinter  # type: ignore[import-untyped]
 
 
@@ -67,7 +66,6 @@ class TranslationBaseChecker(BaseChecker):
     others) being called on something that isn't a string literal.
     """
 
-    __implements__ = (IAstroidChecker,)
     TRANSLATION_FUNCTIONS = {
         "_",
         "_l",

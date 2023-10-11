@@ -12,7 +12,6 @@ from typing import NewType
 
 from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import-untyped]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import-untyped]
-from pylint.interfaces import IAstroidChecker  # type: ignore[import-untyped]
 from pylint.lint.pylinter import PyLinter  # type: ignore[import-untyped]
 
 from tests.testlib import cmk_path
@@ -367,8 +366,6 @@ _EXPLICIT_FILE_TO_COMPONENT = {
 
 
 class CMKModuleLayerChecker(BaseChecker):
-    __implements__ = IAstroidChecker
-
     name = "cmk-module-layer-violation"
     msgs = {
         "C8410": ("Import of %r not allowed in module %r", "cmk-module-layer-violation", "whoop?"),

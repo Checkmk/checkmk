@@ -13,7 +13,7 @@ chardet = "==3.0.4"     # jolokia
 idna = "==2.9"          # jolokia
 requests = {extras = ["socks"], version = "2.23.0"}   # jolokia, cmk_update_agent
 urllib3 = "==1.25.9"    # jolokia
-pyopenssl = "19.1.0"    # cmk_update_agent
+pyopenssl = "~=22.0"    # cmk_update_agent
 pywin32 = "==303"       # logwatch
 
 [requires]

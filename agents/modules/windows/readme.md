@@ -1,23 +1,22 @@
 # Windows Modules to deploy wint Windows Agent 2.0 and later
 
-## Python 3.11.2 & Python 3.4.4
+## Python 3.11.5 & Python 3.4.4
 
 ### Source
 
-PYTHON 3.11.2, provided as source tarball by standard Checkmk development process
-PYTHON 3.4.4, downloaded as msi installer from the python.org
+PYTHON 3.11.5, provided as source tarball by standard Checkmk development process
+PYTHON 3.4.4, downloaded as MSI installer from the python.org
 
 ### Changing or Updating the Python
 
 1. _mandatory_   Add new file in omd/packages/Python with a name Python-Version.Subversion.tar.xz
-2. _mandatory_   Update build_the_module.cmd script to set new version
-3. _recommended_ Update documentation
-4. _optional_    Update root Makefile(for default parameters)
-5. _optional_    Add line 'del /Q python-<Version>.cab' to the clean_environment.cmd script
+2. _recommended_ Update documentation
+3. _optional_    Update root Makefile(for default parameters)
+4. _optional_    Add line 'del /Q python-<Version>.cab' to the clean_environment.cmd script
 
 ### Required Tools
 
-1. Visual Studio 2019 and v142 toolchain.
+1. Visual Studio 2022 and v143 toolchain for ARM, x86 and ARM64. This is IMPORTANT.
 2. Python 3.7 or newer on the path
 3. Normal make.
 4. 7zip.

@@ -1,7 +1,7 @@
 # TODO: Duplicated from defines.make:
 # we need to centralize this again as soon as the whole build process is migrated to bazel.
-PYTHON_VERSION = "3.11.2"
-PYTHON_SHA256 = "29e4b8f5f1658542a8c13e2dd277358c9c48f2b2f7318652ef1675e402b9d2af"
+PYTHON_VERSION = "3.11.5"
+PYTHON_SHA256 = "85cd12e9cf1d6d5a45f17f7afe1cebe7ee628d3282281c492e86adf636defa3f"
 
 PATCH_VERSION = "2.7.6"
 PATCH_SHA256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e"

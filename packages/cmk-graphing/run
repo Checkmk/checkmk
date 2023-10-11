@@ -15,6 +15,7 @@ usage() {
     echo "Run the CI pipeline or parts of it."
     echo
     echo "  -e, --setup-environment  setup environment"
+    echo "  -f, --format             format Python files with isort and black"
     echo "  -F, --check-format       check for correct formatting (isort, black)"
     echo "  -C, --py-import-cycles   run py-import-cycles"
     echo "  -B, --bandit             run bandit"
@@ -29,6 +30,7 @@ usage() {
 parse_options() {
     # Yes, all those option variables are global.
     RUN_SETUP_ENVIRONMENT=no
+    RUN_FORMAT=no
     RUN_CHECK_FORMAT=no
     RUN_PY_IMPORT_CYCLES=no
     RUN_BANDIT=no
@@ -37,7 +39,7 @@ parse_options() {
     RUN_UNIT_TESTS=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'eFCBmpuadh' --long 'setup-environment,check-format,py-import-cycles,bandit,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'efFCBmpuadh' --long 'setup-environment,format,check-format,py-import-cycles,bandit,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -48,6 +50,11 @@ parse_options() {
         case "$1" in
             '-e' | '--setup-environment')
                 RUN_SETUP_ENVIRONMENT=yes
+                shift
+                continue
+                ;;
+            '-f' | '--format')
+                RUN_FORMAT=yes
                 shift
                 continue
                 ;;
@@ -109,7 +116,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_FORMAT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
 REPO_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
@@ -142,6 +149,14 @@ run_pipenv() {
         PIPENV_PIPFILE="${REPO_PATH}"/Pipfile \
         PIPENV_IGNORE_VIRTUALENVS=1 \
         pipenv "$@"
+}
+
+run_format() {
+    # shellcheck disable=SC2086
+    run_pipenv run isort --settings-path "$REPO_PATH"/pyproject.toml $1
+
+    # shellcheck disable=SC2086
+    run_pipenv run black $1
 }
 
 run_check_format() {
@@ -220,6 +235,7 @@ main() {
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv sync --dev
 
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
+    test ${RUN_FORMAT} = yes && run_format "$python_files"
     test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"
     test ${RUN_PY_IMPORT_CYCLES} = yes && run_py_import_cycles
     test ${RUN_BANDIT} = yes && run_bandit "$python_files"

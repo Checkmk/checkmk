@@ -17,10 +17,11 @@ usage() {
     echo "  -e, --setup-environment  setup environment"
     echo "  -F, --check-format       check for correct formatting (isort, black)"
     echo "  -C, --py-import-cycles   run py-import-cycles"
+    echo "  -B, --bandit             run bandit"
     echo "  -m, --mypy               run mypy"
     echo "  -p, --pylint             run pylint"
     echo "  -u, --unit-tests         run unit tests"
-    echo "  -a, --all                shortcut for -F -C -m -p -u"
+    echo "  -a, --all                shortcut for -F -C -B -m -p -u"
     echo "  -d, --documentation      generate documentation"
     echo "  -h, --help               show this help"
 }
@@ -30,12 +31,13 @@ parse_options() {
     RUN_SETUP_ENVIRONMENT=no
     RUN_CHECK_FORMAT=no
     RUN_PY_IMPORT_CYCLES=no
+    RUN_BANDIT=no
     RUN_MYPY=no
     RUN_PYLINT=no
     RUN_UNIT_TESTS=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'eFCmpuadh' --long 'setup-environment,check-format,py-import-cycles,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'eFCBmpuadh' --long 'setup-environment,check-format,py-import-cycles,bandit,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -59,6 +61,11 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-B' | '--bandit')
+                RUN_BANDIT=yes
+                shift
+                continue
+                ;;
             '-m' | '--mypy')
                 RUN_MYPY=yes
                 shift
@@ -77,6 +84,7 @@ parse_options() {
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
                 RUN_PY_IMPORT_CYCLES=yes
+                RUN_BANDIT=yes
                 RUN_MYPY=yes
                 RUN_PYLINT=yes
                 RUN_UNIT_TESTS=yes
@@ -101,7 +109,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
 REPO_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
@@ -152,6 +160,11 @@ run_py_import_cycles() {
         --packages cmk_graphing \
         --strategy johnson \
         --verbose
+}
+
+run_bandit() {
+    # shellcheck disable=SC2086
+    run_pipenv run bandit -r -lll $1
 }
 
 run_mypy() {
@@ -209,6 +222,7 @@ main() {
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
     test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"
     test ${RUN_PY_IMPORT_CYCLES} = yes && run_py_import_cycles
+    test ${RUN_BANDIT} = yes && run_bandit "$python_files"
     test ${RUN_MYPY} = yes && run_mypy "$python_files"
     test ${RUN_PYLINT} = yes && run_pylint "$python_files"
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests

@@ -17,10 +17,10 @@ from io import BytesIO
 from pathlib import Path
 from typing import Literal
 
-import docker  # type: ignore[import]
-import dockerpty  # type: ignore[import]
+import docker  # type: ignore[import-untyped]
+import dockerpty  # type: ignore[import-untyped]
 import requests
-from docker.models.images import Image  # type: ignore[import]
+from docker.models.images import Image  # type: ignore[import-untyped]
 from typing_extensions import TypedDict
 
 import tests.testlib as testlib

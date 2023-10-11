@@ -298,10 +298,8 @@ class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
 
     type_ = Use(
-        next,
-        itertools.cycle(
-            node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES  # type: ignore [arg-type]
-        ),
+        next,  # type: ignore [arg-type]
+        itertools.cycle(node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES),
     )
 
 

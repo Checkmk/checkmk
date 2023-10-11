@@ -5,15 +5,19 @@
 
 import sys
 
-from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import]
-from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import]
+from opsgenie_sdk.api.alert import AlertApi  # type: ignore[import-untyped]
+from opsgenie_sdk.api.alert.acknowledge_alert_payload import (  # type: ignore[import-untyped]
     AcknowledgeAlertPayload,
 )
-from opsgenie_sdk.api.alert.close_alert_payload import CloseAlertPayload  # type: ignore[import]
-from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # type: ignore[import]
-from opsgenie_sdk.api_client import ApiClient  # type: ignore[import]
-from opsgenie_sdk.configuration import Configuration  # type: ignore[import]
-from opsgenie_sdk.rest import ApiException  # type: ignore[import]
+from opsgenie_sdk.api.alert.close_alert_payload import (  # type: ignore[import-untyped]
+    CloseAlertPayload,
+)
+from opsgenie_sdk.api.alert.create_alert_payload import (  # type: ignore[import-untyped]
+    CreateAlertPayload,
+)
+from opsgenie_sdk.api_client import ApiClient  # type: ignore[import-untyped]
+from opsgenie_sdk.configuration import Configuration  # type: ignore[import-untyped]
+from opsgenie_sdk.rest import ApiException  # type: ignore[import-untyped]
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore

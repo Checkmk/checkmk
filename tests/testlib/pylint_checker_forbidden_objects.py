@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import astroid  # type: ignore[import]
-from pylint.checkers import BaseChecker  # type: ignore[import]
-from pylint.lint import PyLinter  # type: ignore[import]
+import astroid  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker  # type: ignore[import-untyped]
+from pylint.lint import PyLinter  # type: ignore[import-untyped]
 
 
 def register(linter: PyLinter) -> None:

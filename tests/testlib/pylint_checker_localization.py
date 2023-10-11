@@ -7,11 +7,11 @@
 import re
 from collections.abc import Sequence
 
-import astroid  # type: ignore[import]
+import astroid  # type: ignore[import-untyped]
 from astroid import nodes
-from pylint.checkers import BaseChecker, utils  # type: ignore[import]
-from pylint.interfaces import IAstroidChecker  # type: ignore[import]
-from pylint.lint.pylinter import PyLinter  # type: ignore[import]
+from pylint.checkers import BaseChecker, utils  # type: ignore[import-untyped]
+from pylint.interfaces import IAstroidChecker  # type: ignore[import-untyped]
+from pylint.lint.pylinter import PyLinter  # type: ignore[import-untyped]
 
 
 def register(linter: PyLinter) -> None:

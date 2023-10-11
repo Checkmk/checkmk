@@ -16,7 +16,7 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from pprint import pformat
 
-import pexpect  # type: ignore[import]
+import pexpect  # type: ignore[import-untyped]
 
 from cmk.utils.version import Edition
 

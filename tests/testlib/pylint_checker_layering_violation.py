@@ -23,9 +23,9 @@ from typing import NewType, Protocol, TypeVar
 
 import jsonschema
 import yaml
-from astroid import nodes  # type: ignore[import]
-from pylint.checkers import BaseChecker  # type: ignore[import]
-from pylint.lint import PyLinter  # type: ignore[import]
+from astroid import nodes  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker  # type: ignore[import-untyped]
+from pylint.lint import PyLinter  # type: ignore[import-untyped]
 
 ####################################################################################################
 # our main "business logic", the heart of our import checking logic

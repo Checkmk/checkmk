@@ -37,11 +37,12 @@ IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
     repo_path() / "agent-receiver/build",
+    repo_path() / "bazel-check_mk",
+    repo_path() / "omd/build",
+    repo_path() / "packages/cmc/build",
+    repo_path() / "packages/cmc/test",
     repo_path() / "packages/livestatus/build",
     repo_path() / "packages/neb/build",
-    repo_path() / "packages/cmc/test",
-    repo_path() / "packages/cmc/build",
-    repo_path() / "omd" / "build",
 }
 
 PackageName = NewType("PackageName", str)  # Name in Pip(file)

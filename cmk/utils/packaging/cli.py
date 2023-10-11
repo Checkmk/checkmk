@@ -11,8 +11,6 @@ import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 
-from cmk.utils.version import edition, Edition
-
 from . import (
     disable,
     disable_outdated,
@@ -703,10 +701,6 @@ def main(
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> int:
-    if edition() is Edition.CSE:
-        sys.stderr.write(f"The mkp command is not available in the {Edition.CSE.title}.\n")
-        return 1
-
     args = _parse_arguments(argv)
     set_up_logging(args.verbose)
     try:

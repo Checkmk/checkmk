@@ -6,8 +6,6 @@ name = "pypi"
 [dev-packages]
 isort = "*"
 black = "*"
-flake8 = "*"
-autoflake = "*"
 mypy = "*"
 pylint = "*"
 pytest = "*"

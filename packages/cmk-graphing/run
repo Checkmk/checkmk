@@ -15,12 +15,12 @@ usage() {
     echo "Run the CI pipeline or parts of it."
     echo
     echo "  -e, --setup-environment  setup environment"
-    echo "  -f, --check-format       check for correct formatting (isort, black, flake8, autoflake)"
+    echo "  -F, --check-format       check for correct formatting (isort, black)"
     echo "  -C, --py-import-cycles   run py-import-cycles"
     echo "  -m, --mypy               run mypy"
     echo "  -p, --pylint             run pylint"
     echo "  -u, --unit-tests         run unit tests"
-    echo "  -a, --all                shortcut for -f -C -m -p -u"
+    echo "  -a, --all                shortcut for -F -C -m -p -u"
     echo "  -d, --documentation      generate documentation"
     echo "  -h, --help               show this help"
 }
@@ -35,7 +35,7 @@ parse_options() {
     RUN_UNIT_TESTS=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'efCmpuadh' --long 'setup-environment,check-format,py-import-cycles,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'eFCmpuadh' --long 'setup-environment,check-format,py-import-cycles,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -49,7 +49,7 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-f' | '--check-format')
+            '-F' | '--check-format')
                 RUN_CHECK_FORMAT=yes
                 shift
                 continue
@@ -138,16 +138,12 @@ run_pipenv() {
 
 run_check_format() {
     # shellcheck disable=SC2086
-    run_pipenv run isort --settings-path "$REPO_PATH"/pyproject.toml $1
+    run_pipenv run isort \
+        --settings-path "$REPO_PATH"/pyproject.toml \
+        --check-only --diff $1
 
     # shellcheck disable=SC2086
-    run_pipenv run black $1
-
-    # shellcheck disable=SC2086
-    run_pipenv run flake8 $1
-
-    # shellcheck disable=SC2086
-    run_pipenv run autoflake --remove-all-unused-imports -i $1
+    run_pipenv run black --check --diff $1
 }
 
 run_py_import_cycles() {

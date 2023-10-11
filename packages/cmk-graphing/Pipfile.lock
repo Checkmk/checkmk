@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1386fd1744dc03baada02dc822c7a902b54c97070fce60129f39cfb4694a53ce"
+            "sha256": "12b57f5d3a6ac354cc9457262053eb2d9d62da44f344c03c655a26362806b48e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -24,14 +24,6 @@
             ],
             "markers": "python_full_version >= '3.8.0'",
             "version": "==3.0.0"
-        },
-        "autoflake": {
-            "hashes": [
-                "sha256:265cde0a43c1f44ecfb4f30d95b0437796759d07be7706a2f70e4719234c0f79",
-                "sha256:62b7b6449a692c3c9b0c916919bbc21648da7281e8506bcf8d3f8280e431ebc1"
-            ],
-            "index": "pypi",
-            "version": "==2.2.1"
         },
         "black": {
             "hashes": [
@@ -76,14 +68,6 @@
             ],
             "markers": "python_version >= '3.11'",
             "version": "==0.3.7"
-        },
-        "flake8": {
-            "hashes": [
-                "sha256:d5b3857f07c030bdb5bf41c7f53799571d75c4491748a3adcd47de929e34cd23",
-                "sha256:ffdfce58ea94c6580c77888a86506937f9a1a227dfcd15f245d694ae20a6b6e5"
-            ],
-            "index": "pypi",
-            "version": "==6.1.0"
         },
         "graphviz": {
             "hashes": [
@@ -204,22 +188,6 @@
             ],
             "index": "pypi",
             "version": "==0.2.0"
-        },
-        "pycodestyle": {
-            "hashes": [
-                "sha256:259bcc17857d8a8b3b4a2327324b79e5f020a13c16074670f9c8c8f872ea76d0",
-                "sha256:5d1013ba8dc7895b548be5afb05740ca82454fd899971563d2ef625d090326f8"
-            ],
-            "markers": "python_version >= '3.8'",
-            "version": "==2.11.0"
-        },
-        "pyflakes": {
-            "hashes": [
-                "sha256:4132f6d49cb4dae6819e5379898f2b8cce3c5f23994194c24b77d5da2e36f774",
-                "sha256:a0aae034c444db0071aa077972ba4768d40c830d9539fd45bf4cd3f8f6992efc"
-            ],
-            "markers": "python_version >= '3.8'",
-            "version": "==3.1.0"
         },
         "pylint": {
             "hashes": [

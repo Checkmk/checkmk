@@ -14,14 +14,28 @@ def _table_entry(key: str, value: str) -> str:
     return f"{key} | {value}"
 
 
-def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
-    # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
-    parsed = parse_werk_v1(werkv1_content, werk_id)
-    metadata = parsed.metadata
-    metadata.pop("id", None)  # is the filename
+def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, str]:
+    metadata = metadata.copy()
     metadata.pop("knowledge", None)  # removed field
     metadata.pop("state", None)  # removed field
     metadata.pop("targetversion", None)  # removed field
+
+    if (compatible := metadata.get("compatible")) is not None:
+        metadata["compatible"] = "yes" if compatible == "compat" else "no"
+
+    if (date := metadata.get("date")) is not None:
+        metadata["date"] = datetime.datetime.fromtimestamp(
+            float(date), tz=datetime.timezone.utc
+        ).isoformat()
+
+    return metadata
+
+
+def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
+    # try to keep errors in place, so the validation of werkv2 will show errors in werkv1
+    parsed = parse_werk_v1(werkv1_content, werk_id)
+    metadata = werkv1_metadata_to_werkv2_metadata(parsed.metadata)
+    metadata.pop("id", None)  # is the filename
 
     def generator() -> Iterator[str]:
         yield "[//]: # (werk v2)"
@@ -33,14 +47,10 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
         yield _table_entry("key", "value")
         yield _table_entry("---", "---")
         if (compatible := metadata.pop("compatible", None)) is not None:
-            compatible = "yes" if compatible == "compat" else "no"
             yield _table_entry("compatible", compatible)
         if (version := metadata.pop("version", None)) is not None:
             yield _table_entry("version", version)
         if (date := metadata.pop("date", None)) is not None:
-            date = datetime.datetime.fromtimestamp(
-                float(date), tz=datetime.timezone.utc
-            ).isoformat()
             yield _table_entry("date", date)
         if (level := metadata.pop("level", None)) is not None:
             yield _table_entry("level", level)

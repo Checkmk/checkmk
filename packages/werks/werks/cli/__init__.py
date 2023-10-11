@@ -9,6 +9,7 @@
 
 import argparse
 import ast
+import datetime
 import fcntl
 import os
 import shlex
@@ -25,6 +26,9 @@ from typing import NamedTuple, NoReturn
 
 from pydantic import BaseModel
 
+from .. import parse_werk
+from ..convert import werkv1_metadata_to_werkv2_metadata
+from ..format import format_as_werk_v1, format_as_werk_v2
 from ..parse import WerkV2ParseResult
 
 
@@ -54,6 +58,10 @@ class Werk(NamedTuple):
     path: Path
     id: WerkId
     content: WerkV2ParseResult
+
+    @property
+    def date(self) -> datetime.datetime:
+        return datetime.datetime.fromisoformat(self.content.metadata["date"])
 
 
 class Config(BaseModel):
@@ -256,10 +264,11 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def werk_path_by_id(werk_id: WerkId) -> Path:
+    # NOTE: this only works for existing werks!
     path = Path(str(werk_id.id))
     if path.exists():
         return path
-    path = Path("{werk_id.id}.md")
+    path = Path(f"{werk_id.id}.md")
     if path.exists():
         return path
     raise RuntimeError(f"Can not find werk with id={werk_id.id}")
@@ -310,12 +319,13 @@ def get_last_werk() -> WerkId:
 @cache
 def get_valid_choices() -> dict[str, set[str]]:
     return {
-        "compatible": {e[0] for e in get_config().compatible},
-        "class": {e[0] for e in get_config().classes},
-        "edition": {e[0] for e in get_config().editions},
         "component": {e[0] for e in all_components()},
-        "level": {e[0] for e in get_config().levels},
     }
+    # the following are checked on pydantic model level:
+    # "level": {e[0] for e in get_config().levels},
+    # "compatible": {e[0] for e in get_config().compatible},
+    # "class": {e[0] for e in get_config().classes},
+    # "edition": {e[0] for e in get_config().editions},
 
 
 @cache
@@ -393,29 +403,15 @@ def werk_exists(werkid: WerkId) -> bool:
 
 
 def load_werk(werk_path: Path) -> Werk:
-    werkid = int(werk_path.name.removesuffix(".md"))
-    metadata: WerkMetadata = {
-        "id": str(werkid),
-        "state": "unknown",
-        "title": "unknown",
-        "component": "general",
-        "compatible": "compat",
-        "edition": "cre",
-    }
+    parsed = parse_werk(
+        file_content=werk_path.read_text(encoding="utf-8"), file_name=werk_path.name
+    )
 
-    with werk_path.open() as f:
-        for line in f:
-            line = line.strip()
-            if line == "":
-                break
-            header, value = line.split(":", 1)
-            metadata[header.strip().lower()] = value.strip()
-
-        werk = Werk(
-            path=werk_path,
-            id=WerkId(werkid),
-            content=WerkV2ParseResult(metadata=metadata, description=f.read()),
-        )
+    werk = Werk(
+        path=werk_path,
+        id=WerkId(int(werk_path.name.removesuffix(".md"))),
+        content=parsed,
+    )
 
     validate_werk(werk)
 
@@ -430,13 +426,11 @@ def validate_werk(werk: Werk) -> None:
 
 def save_werk(werk: Werk) -> None:
     with werk.path.open("w") as f:
-        f.write("Title: %s\n" % werk.content.metadata["title"])
-        for key, val in sorted(werk.content.metadata.items()):
-            if key not in ["title", "description", "id"]:
-                f.write(f"{key[0].upper()}{key[1:]}: {val}\n")
-        f.write("\n")
-        f.write(werk.content.description)
-        f.write("\n")
+        if use_markdown():
+            f.write(format_as_werk_v2(werk.content))
+        else:
+            f.write(format_as_werk_v1(werk.content))
+
     git_add(werk)
     save_last_werkid(werk.id)
 
@@ -449,7 +443,7 @@ def change_werk_version(werk_path: Path, new_version: str) -> None:
 
 
 def git_add(werk: Werk) -> None:
-    os.system("git add %s" % werk.content.metadata["id"])  # nosec
+    os.system("git add %s" % werk.path)  # nosec
 
 
 def git_commit(werk: Werk, custom_files: list[str]) -> None:
@@ -532,7 +526,7 @@ def list_werk(werk: Werk) -> None:
         "%s %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
         % (
             format_werk_id(werk.id),
-            time.strftime("%F", time.localtime(int(werk.content.metadata["date"]))),
+            str(werk.date.date()),
             colored_class(werk.content.metadata["class"], 8),
             werk.content.metadata["edition"],
             werk.content.metadata["component"],
@@ -613,7 +607,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
         if not skip:
             newwerks.append(werk)
 
-    werks = sorted(newwerks, key=lambda w: int(w.content.metadata["date"]), reverse=args.reverse)
+    werks = sorted(newwerks, key=lambda w: w.date, reverse=args.reverse)
 
     # Output
     if fmt == "console":
@@ -690,10 +684,7 @@ def main_show(args: argparse.Namespace) -> None:
             sys.stdout.write(
                 "-------------------------------------------------------------------------------\n"
             )
-        try:
-            show_werk(load_werk(werk_path_by_id(wid)))
-        except Exception:
-            sys.stderr.write("Skipping invalid werk id '%s'\n" % wid)
+        show_werk(load_werk(werk_path_by_id(wid)))
     save_last_werkid(ids[-1])
 
 
@@ -785,6 +776,7 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + werk_notes + TTY_NORMAL)
 
     metadata: WerkMetadata = {}
+    # this is the metadata format of werkv1
     metadata["date"] = str(int(time.time()))
     metadata["version"] = get_config().current_version
     metadata["title"] = get_input("Title")
@@ -800,15 +792,18 @@ def main_new(args: argparse.Namespace) -> None:
     werk_id = next_werk_id()
     metadata["id"] = str(werk_id)
 
+    werk_path = Path(f"{werk_id.id}.md" if use_markdown() else str(werk_id.id))
     werk = Werk(
         id=werk_id,
-        path=Path(str(werk_id.id)),
-        content=WerkV2ParseResult(metadata=metadata, description="\n"),
+        path=werk_path,
+        content=WerkV2ParseResult(
+            metadata=werkv1_metadata_to_werkv2_metadata(metadata), description="\n"
+        ),
     )
 
     save_werk(werk)
     invalidate_my_werkid(werk_id)
-    edit_werk(werk_path_by_id(werk_id), args.custom_files)
+    edit_werk(werk_path, args.custom_files)
 
     sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk_id))
 
@@ -923,7 +918,8 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    if os.system(f"bash -c '{editor} +11 {werk_path}'") == 0:  # nosec
+    number_of_lines_in_werk = werk_path.read_text(encoding="utf-8").count("\n")
+    if os.system(f"bash -c '{editor} +{number_of_lines_in_werk} {werk_path}'") == 0:  # nosec
         werk = load_werk(werk_path)
         git_add(werk)
         if commit:
@@ -989,7 +985,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
 def get_werk_ids() -> list[WerkId]:
     try:
-        return ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())  # type: ignore
+        return [WerkId(i) for i in ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())]
     except Exception:
         return []
 
@@ -1004,7 +1000,7 @@ def invalidate_my_werkid(wid: WerkId) -> None:
 
 def store_werk_ids(l: list[WerkId]) -> None:
     with open(RESERVED_IDS_FILE_PATH, "w") as f:
-        f.write(repr(l) + "\n")
+        f.write(repr([i.id for i in l]) + "\n")
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
 
 
@@ -1075,7 +1071,7 @@ def use_markdown() -> bool:
     we assume we should create and pick markdown werks.
     """
     for path in Path(".").iterdir():
-        if path.name.endswith(".md"):
+        if path.name.endswith(".md") and path.name.removesuffix(".md").isdigit():
             return True
     return False
 

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import abc
+import contextlib
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from typing import Callable, Final, Literal
@@ -492,15 +493,10 @@ def _parse_single_expression(
     enforced_consolidation_func_name: GraphConsoldiationFunction | None,
 ) -> MetricDeclaration:
     if expression not in translated_metrics:
-        try:
+        with contextlib.suppress(ValueError):
             return Constant(int(expression))
-        except ValueError:
-            pass
-
-        try:
+        with contextlib.suppress(ValueError):
             return Constant(float(expression))
-        except ValueError:
-            pass
 
     var_name, consolidation_func_name = _extract_consolidation_func_name(expression)
     if percent := var_name.endswith("(%)"):

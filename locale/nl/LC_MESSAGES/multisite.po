@@ -26352,6 +26352,11 @@ msgstr ""
 "Het effect van deze factoren zal van systeem tot systeem verschillen."
 "\" (https://www.kernel.org/doc/Documentation/filesystems/proc.txt)"
 
+msgid ""
+"If the maximum size is reached you will get a warning message in the details "
+"section of the related service that the long output is truncated."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the priority of the event lies within this range and either no text to "
@@ -33696,6 +33701,10 @@ msgstr "Maximum niveaus bij gebruik van magische factor"
 msgid "Maximum log age"
 msgstr "Maximale logleeftijd"
 
+#, fuzzy
+msgid "Maximum long output size"
+msgstr "Maximale spoelgrootte"
+
 msgid "Maximum messages per save interval"
 msgstr "Maximum berichten per bewaarinterval"
 
@@ -39912,9 +39921,6 @@ msgstr "Pad"
 msgid "Path ID"
 msgstr "Pad ID"
 
-msgid "Path to .env file"
-msgstr "Pad naar .env bestand"
-
 msgid "Path to .pgpass file"
 msgstr "Pad naar .pgpass bestand"
 
@@ -40351,13 +40357,6 @@ msgstr "Perfdata"
 
 msgid "Perfdata error state"
 msgstr "Perfdata fout status"
-
-#, python-format
-msgid ""
-"Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)"
-msgstr ""
-"Perfometers van het type \"stacked\" en \"dual\" hebben het element "
-"\"perfometers\" nodig (%r)"
 
 msgid "Perform a check of the URL or the certificate expiration."
 msgstr ""
@@ -47269,6 +47268,10 @@ msgid "Set maximum age"
 msgstr "Maximumleeftijd instellen"
 
 #, fuzzy
+msgid "Set maximum long output size"
+msgstr "Maximumleeftijd instellen"
+
+#, fuzzy
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "Bewakingstoestand voor elke andere eenheidstoestand"
 
@@ -54091,6 +54094,12 @@ msgid "The entry %s is missing"
 msgstr "Het item %s ontbreekt"
 
 msgid ""
+"The environment file of the PostgreSQL instance. This file contains "
+"variables of the form `PGPORT=\"5432\"`. Check the header of the agent "
+"plugin for a more detailed description."
+msgstr ""
+
+msgid ""
 "The event daemon keeps statistics about the rate of messages, events rule "
 "hits, and other stuff. These values are updated in the interval configured "
 "here and are available in the sidebar snapin <i>Event Console Performance</i>"
@@ -55140,8 +55149,12 @@ msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "De naam van de ingang, bijv. <tt>Fase 1</tt>"
 
 msgid ""
-"The name of the instance to be monitored. If not specified, then the plugin "
-"will attempt to determine the instance name based on the .env file."
+"The name of the instance to be monitored. If left empty, the instance name "
+"is determined based on the name of the environment file. For example, if you "
+"have specified the name `/home/postgres/db.env`, then the plugin will remove "
+"the directory and the trailing `.env`. This results in the instance name "
+"`db`. Using this mechanism is not recommended. It is kept around for "
+"backwards compability."
 msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
@@ -72800,6 +72813,17 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Path to .env file"
+#~ msgstr "Pad naar .env bestand"
+
+#, python-format
+#~ msgid ""
+#~ "Perfometers of type 'stacked' and 'dual' need the element "
+#~ "'perfometers' (%r)"
+#~ msgstr ""
+#~ "Perfometers van het type \"stacked\" en \"dual\" hebben het element "
+#~ "\"perfometers\" nodig (%r)"
 
 #~ msgid "Number of columns"
 #~ msgstr "Aantal kolommen"

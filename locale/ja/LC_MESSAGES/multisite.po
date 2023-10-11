@@ -25988,6 +25988,11 @@ msgstr ""
 "慮しています。これらの要因の影響は、システムによって異なります。\"(https://"
 "www.kernel.org/doc/Documentation/filesystems/proc.txt)"
 
+msgid ""
+"If the maximum size is reached you will get a warning message in the details "
+"section of the related service that the long output is truncated."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "If the priority of the event lies within this range and either no text to "
@@ -33217,6 +33222,10 @@ msgstr "マジックファクターを使用する場合の最大レベル"
 msgid "Maximum log age"
 msgstr "最大ログ経過時間"
 
+#, fuzzy
+msgid "Maximum long output size"
+msgstr "最大スプールサイズ"
+
 msgid "Maximum messages per save interval"
 msgstr "保存間隔あたりの最大メッセージ数"
 
@@ -39407,9 +39416,6 @@ msgstr "パス"
 msgid "Path ID"
 msgstr "パスID"
 
-msgid "Path to .env file"
-msgstr ".envファイルへのパス"
-
 msgid "Path to .pgpass file"
 msgstr ".pgpassファイルへのパス"
 
@@ -39850,12 +39856,6 @@ msgstr "性能データ"
 
 msgid "Perfdata error state"
 msgstr "性能データーのエラー状態"
-
-#, python-format
-msgid ""
-"Perfometers of type 'stacked' and 'dual' need the element 'perfometers' (%r)"
-msgstr ""
-"タイプ'stacked'および'dual'のPerfometersには、要素'Perfometers'(%r)が必要です"
 
 msgid "Perform a check of the URL or the certificate expiration."
 msgstr "URLまたは証明書の有効期限のチェックを実行します。"
@@ -46782,6 +46782,10 @@ msgid "Set maximum age"
 msgstr "最大経過日数を設定する"
 
 #, fuzzy
+msgid "Set maximum long output size"
+msgstr "最大経過日数を設定する"
+
+#, fuzzy
 msgid "Set monitoring states for no-smoke and smoke cases"
 msgstr "他のユニット状態の監視状態"
 
@@ -53373,6 +53377,12 @@ msgid "The entry %s is missing"
 msgstr "エントリ %s がありません"
 
 msgid ""
+"The environment file of the PostgreSQL instance. This file contains "
+"variables of the form `PGPORT=\"5432\"`. Check the header of the agent "
+"plugin for a more detailed description."
+msgstr ""
+
+msgid ""
 "The event daemon keeps statistics about the rate of messages, events rule "
 "hits, and other stuff. These values are updated in the interval configured "
 "here and are available in the sidebar snapin <i>Event Console Performance</i>"
@@ -54356,8 +54366,12 @@ msgid "The name of the input, e.g. <tt>Phase 1</tt>"
 msgstr "入力の名前(例:<tt>フェーズ1 </tt>)"
 
 msgid ""
-"The name of the instance to be monitored. If not specified, then the plugin "
-"will attempt to determine the instance name based on the .env file."
+"The name of the instance to be monitored. If left empty, the instance name "
+"is determined based on the name of the environment file. For example, if you "
+"have specified the name `/home/postgres/db.env`, then the plugin will remove "
+"the directory and the trailing `.env`. This results in the instance name "
+"`db`. Using this mechanism is not recommended. It is kept around for "
+"backwards compability."
 msgstr ""
 
 msgid "The name of the interface (Public/Private IPv4/IPv6 Network Interface)"
@@ -71348,6 +71362,17 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Path to .env file"
+#~ msgstr ".envファイルへのパス"
+
+#, python-format
+#~ msgid ""
+#~ "Perfometers of type 'stacked' and 'dual' need the element "
+#~ "'perfometers' (%r)"
+#~ msgstr ""
+#~ "タイプ'stacked'および'dual'のPerfometersには、要素'Perfometers'(%r)が必要"
+#~ "です"
 
 #~ msgid "Number of columns"
 #~ msgstr "列の数"

@@ -248,12 +248,8 @@ def _verify_check_result(
     if result_data and canon_data == result_data:
         return True, ""
 
-    if mode == CheckModes.UPDATE or (mode == CheckModes.ADD and not canon_data):
-        logger.info(
-            "[%s] Canon %s!",
-            check_id,
-            "updated" if mode == CheckModes.UPDATE else "added",
-        )
+    if mode == CheckModes.UPDATE:
+        logger.info("[%s] Canon updated!", check_id)
         return True, ""
 
     with open(
@@ -297,7 +293,6 @@ def process_check_output(
     output_dir: Path,
 ) -> bool:
     """Process the check output and either dump or compare it."""
-    passed = True if config.mode == CheckModes.UPDATE else None
     logger.info('> Processing agent host "%s"...', host_name)
     diffs = {}
 
@@ -310,19 +305,21 @@ def process_check_output(
     else:
         check_canons = {}
 
+    passed = None
     check_results = {
         _: item.get("extensions") for _, item in sorted(get_check_results(site, host_name).items())
     }
     for check_id in check_results:
         logger.debug('> Processing check id "%s"...', check_id)
-        check_canon = check_canons.get(check_id, {})
-        check_result = check_results.get(check_id, {})
+        if config.mode == CheckModes.ADD and not check_canons.get(check_id):
+            check_canons[check_id] = check_results[check_id]
+            logger.info("[%s] Canon added!", check_id)
 
         logger.debug('> Verifying check id "%s"...', check_id)
         check_success, diff = _verify_check_result(
             check_id,
-            check_canon,
-            check_result,
+            check_canons.get(check_id, {}),
+            check_results[check_id],
             output_dir,
             config.mode,
         )
@@ -330,8 +327,14 @@ def process_check_output(
             if passed is None:
                 passed = True
             continue
-        passed = False
+        if config.mode == CheckModes.UPDATE:
+            check_canons[check_id] = check_results[check_id]
+            logger.info("[%s] Canon updated!", check_id)
+            passed = True
+        else:
+            passed = False
         diffs[check_id] = diff
+
     if diffs:
         os.makedirs(config.diff_dir, exist_ok=True)  # type: ignore
         with open(
@@ -340,13 +343,14 @@ def process_check_output(
             encoding="utf-8",
         ) as json_file:
             json.dump(diffs, json_file, indent=4)
+
     if config.mode != CheckModes.DEFAULT:
         with open(
             f"{config.response_dir}/{host_name}.json",
             mode="w",
             encoding="utf-8",
         ) as json_file:
-            json.dump(check_results, json_file, indent=4)
+            json.dump(check_canons, json_file, indent=4)
 
     return passed is True
 

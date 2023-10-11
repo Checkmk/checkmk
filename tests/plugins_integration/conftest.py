@@ -21,13 +21,15 @@ def pytest_addoption(parser):
         "--update-checks",
         action="store_true",
         default=False,
-        help="Store updated check output as static references",
+        help="Store updated check output as static references: checks already stored as reference"
+        "are updated and new ones are added.",
     )
     parser.addoption(
         "--add-checks",
         action="store_true",
         default=False,
-        help="Store added check output as static references",
+        help="Store added check output as static references: checks already stored as reference are"
+        "not touched. Only new checks are added.",
     )
     parser.addoption(
         "--skip-cleanup",

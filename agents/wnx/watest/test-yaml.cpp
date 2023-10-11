@@ -1008,7 +1008,7 @@ TEST(AgentConfig, MergeSeqCombineValue) {
                              details::Combine::merge_value);
     YAML::Emitter emit;
     emit << target["logfile"];
-    const auto result = emit.c_str();
+    const std::string result = emit.c_str();
     const auto table = cma::tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_USER_APP);
@@ -1023,7 +1023,7 @@ TEST(AgentConfig, MergeSeqCombine) {
                              details::Combine::merge);
     YAML::Emitter emit;
     emit << target["logfile"];
-    const auto result = emit.c_str();
+    const std::string result = emit.c_str();
     const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 3);
     EXPECT_EQ(table[0], LW_ROOT_APP);
@@ -1038,7 +1038,7 @@ TEST(AgentConfig, MergeSeqOverride) {
                              details::Combine::overwrite);
     YAML::Emitter emit;
     emit << target["logfile"];
-    const auto result = emit.c_str();
+    const std::string result = emit.c_str();
     const auto table = tools::SplitString(result, "\n");
     EXPECT_EQ(table.size(), 2);
     EXPECT_EQ(table[0], LW_USER_APP);

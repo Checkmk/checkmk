@@ -374,6 +374,7 @@ def setup_host(site: Site, host_name: str) -> Iterator:
     site.activate_changes_and_wait_for_core_reload()
 
     logger.info("Scheduling checks & checking for pending services...")
+    pending_checks = []
     for idx in range(3):
         # we have to schedule the checks multiple times (twice at least):
         # => once to get baseline data

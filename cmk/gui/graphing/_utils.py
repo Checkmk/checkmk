@@ -140,10 +140,7 @@ class GraphTemplate:
             id=f"METRIC_{name}",
             title=None,
             metrics=[MetricDefinition(expression=name, line_type="area")],
-            scalars=[
-                f"{name}:warn",
-                f"{name}:crit",
-            ],
+            scalars=[f"{name}:warn", f"{name}:crit"],
             conflicting_metrics=[],
             optional_metrics=[],
             consolidation_function=None,

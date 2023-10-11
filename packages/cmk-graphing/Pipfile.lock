@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f148064ad9c7c1b09d28ae3c81522616620e19171c79619fe653be75bbf5dbc8"
+            "sha256": "1386fd1744dc03baada02dc822c7a902b54c97070fce60129f39cfb4694a53ce"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -85,6 +85,14 @@
             "index": "pypi",
             "version": "==6.1.0"
         },
+        "graphviz": {
+            "hashes": [
+                "sha256:587c58a223b51611c0cf461132da386edd896a029524ca61a1462b880bf97977",
+                "sha256:8c58f14adaa3b947daf26c19bc1e98c4e0702cdc31cf99153e6f06904d492bf8"
+            ],
+            "markers": "python_version >= '3.7'",
+            "version": "==0.20.1"
+        },
         "iniconfig": {
             "hashes": [
                 "sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3",
@@ -100,14 +108,6 @@
             ],
             "index": "pypi",
             "version": "==5.12.0"
-        },
-        "marshmallow": {
-            "hashes": [
-                "sha256:5d2371bbe42000f2b3fb5eaa065224df7d8f8597bc19a1bbfa5bfe7fba8da889",
-                "sha256:684939db93e80ad3561392f47be0230743131560a41c5110684c16e21ade0a5c"
-            ],
-            "index": "pypi",
-            "version": "==3.20.1"
         },
         "mccabe": {
             "hashes": [
@@ -158,6 +158,14 @@
             "markers": "python_version >= '3.5'",
             "version": "==1.0.0"
         },
+        "networkx": {
+            "hashes": [
+                "sha256:4f33f68cb2afcf86f28a45f43efc27a9386b535d567d2127f8f61d51dec58d36",
+                "sha256:de346335408f84de0eada6ff9fafafff9bcda11f0a0dfaa931133debb146ab61"
+            ],
+            "markers": "python_version >= '3.8'",
+            "version": "==3.1"
+        },
         "packaging": {
             "hashes": [
                 "sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5",
@@ -189,6 +197,13 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==1.3.0"
+        },
+        "py-import-cycles": {
+            "hashes": [
+                "sha256:1f29184b094b612f5eb61da368570dbe32aee41486d3a18ef98e3483594f2e29"
+            ],
+            "index": "pypi",
+            "version": "==0.2.0"
         },
         "pycodestyle": {
             "hashes": [

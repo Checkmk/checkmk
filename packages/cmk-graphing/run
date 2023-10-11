@@ -16,10 +16,11 @@ usage() {
     echo
     echo "  -e, --setup-environment  setup environment"
     echo "  -f, --check-format       check for correct formatting (isort, black, flake8, autoflake)"
+    echo "  -C, --py-import-cycles   run py-import-cycles"
     echo "  -m, --mypy               run mypy"
     echo "  -p, --pylint             run pylint"
     echo "  -u, --unit-tests         run unit tests"
-    echo "  -a, --all                shortcut for -f -m -p -u"
+    echo "  -a, --all                shortcut for -f -C -m -p -u"
     echo "  -d, --documentation      generate documentation"
     echo "  -h, --help               show this help"
 }
@@ -28,12 +29,13 @@ parse_options() {
     # Yes, all those option variables are global.
     RUN_SETUP_ENVIRONMENT=no
     RUN_CHECK_FORMAT=no
+    RUN_PY_IMPORT_CYCLES=no
     RUN_MYPY=no
     RUN_PYLINT=no
     RUN_UNIT_TESTS=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'efmpuadh' --long 'setup-environment,check-format,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'efCmpuadh' --long 'setup-environment,check-format,py-import-cycles,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -49,6 +51,11 @@ parse_options() {
                 ;;
             '-f' | '--check-format')
                 RUN_CHECK_FORMAT=yes
+                shift
+                continue
+                ;;
+            '-C' | '--py-import-cycles')
+                RUN_PY_IMPORT_CYCLES=yes
                 shift
                 continue
                 ;;
@@ -69,6 +76,7 @@ parse_options() {
                 ;;
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
+                RUN_PY_IMPORT_CYCLES=yes
                 RUN_MYPY=yes
                 RUN_PYLINT=yes
                 RUN_UNIT_TESTS=yes
@@ -93,7 +101,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
+    readonly RUN_SETUP_ENVIRONMENT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
 REPO_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
@@ -140,6 +148,14 @@ run_check_format() {
 
     # shellcheck disable=SC2086
     run_pipenv run autoflake --remove-all-unused-imports -i $1
+}
+
+run_py_import_cycles() {
+    run_pipenv run py_import_cycles \
+        --project-path "$REPO_PATH" \
+        --packages cmk_graphing \
+        --strategy johnson \
+        --verbose
 }
 
 run_mypy() {
@@ -196,6 +212,7 @@ main() {
 
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
     test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"
+    test ${RUN_PY_IMPORT_CYCLES} = yes && run_py_import_cycles
     test ${RUN_MYPY} = yes && run_mypy "$python_files"
     test ${RUN_PYLINT} = yes && run_pylint "$python_files"
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests

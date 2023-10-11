@@ -26,8 +26,31 @@ from typing import NamedTuple, NoReturn
 from ..parse import WerkV2ParseResult
 
 
+class WerkId:
+    __slots__ = "__id"
+
+    def __init__(self, id: int):
+        self.__id = id
+
+    def __str__(self) -> str:
+        return f"{self.__id:0>5}"
+
+    @property
+    def id(self) -> int:
+        return self.__id
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.id == other.id
+        return False
+
+    def __hash__(self) -> int:
+        return hash(self.__id)
+
+
 class Werk(NamedTuple):
     path: Path
+    id: WerkId
     content: WerkV2ParseResult
 
 
@@ -219,6 +242,16 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def werk_path_by_id(werk_id: WerkId) -> Path:
+    path = Path(str(werk_id.id))
+    if path.exists():
+        return path
+    path = Path("{werk_id.id}.md")
+    if path.exists():
+        return path
+    raise RuntimeError(f"Can not find werk with id={werk_id.id}")
+
+
 def get_tty_size() -> tuple[int, int]:
     try:
         ws = bytearray(8)
@@ -252,10 +285,10 @@ def goto_werksdir() -> None:
         sys.exit(1)
 
 
-g_last_werk: int | None = None
+g_last_werk: WerkId | None = None
 
 
-def get_last_werk() -> int:
+def get_last_werk() -> WerkId:
     if g_last_werk is None:
         bail_out("No last werk known. Please specify id.")
     return g_last_werk
@@ -267,7 +300,7 @@ def load_config() -> None:
         exec(f_config.read(), globals(), globals())  # nosec B102 # BNS:aee528
     try:
         with open(".last") as f_last:
-            g_last_werk = int(f_last.read())
+            g_last_werk = WerkId(int(f_last.read()))
     except Exception:
         g_last_werk = None
 
@@ -280,24 +313,21 @@ def load_config() -> None:
     }
 
 
-def load_werks() -> dict[int, Werk]:
+def load_werks() -> dict[WerkId, Werk]:
     werks = {}
-    for entry in os.listdir("."):
-        try:
-            werkid = int(entry)
+    for entry in Path(".").iterdir():
+        if (werk_id := entry.name.removesuffix(".md")).isdigit():
             try:
-                werks[werkid] = load_werk(werkid)
+                werks[WerkId(int(werk_id))] = load_werk(entry)
             except Exception as e:
-                sys.stderr.write("ERROR: Skipping invalid werk %d: %s\n" % (werkid, e))
-        except Exception:
-            continue
+                sys.stderr.write("ERROR: Skipping invalid werk %s: %s\n" % (werk_id, e))
     return werks
 
 
-def save_last_werkid(wid: int) -> None:
+def save_last_werkid(wid: WerkId) -> None:
     try:
         with open(".last", "w") as f:
-            f.write("%d\n" % int(wid))
+            f.write(f"{wid}\n")
     except OSError:
         pass
 
@@ -313,7 +343,7 @@ def load_current_version() -> str:
 
 
 @cache
-def git_modified_files() -> set[int]:
+def git_modified_files() -> set[WerkId]:
     # this is called from `werk list` via werk_is_modified
     # so we can assume, that this won't change during runtime of this script
     modified = set()
@@ -321,21 +351,22 @@ def git_modified_files() -> set[int]:
         if line[0] in "AM" and ".werks/" in line:
             try:
                 wid = line.rsplit("/", 1)[-1].strip()
-                modified.add(int(wid))
+                modified.add(WerkId(int(wid)))
             except Exception:
                 pass
     return modified
 
 
-def werk_is_modified(werkid: int) -> bool:
+def werk_is_modified(werkid: WerkId) -> bool:
     return werkid in git_modified_files()
 
 
-def werk_exists(werkid: int) -> bool:
+def werk_exists(werkid: WerkId) -> bool:
     return os.path.exists(str(werkid))
 
 
-def load_werk(werkid: int) -> Werk:
+def load_werk(werk_path: Path) -> Werk:
+    werkid = int(werk_path.name.removesuffix(".md"))
     metadata: WerkMetadata = {
         "id": str(werkid),
         "state": "unknown",
@@ -345,7 +376,6 @@ def load_werk(werkid: int) -> Werk:
         "edition": "cre",
     }
 
-    werk_path = Path(str(werkid))
     with werk_path.open() as f:
         for line in f:
             line = line.strip()
@@ -355,7 +385,9 @@ def load_werk(werkid: int) -> Werk:
             metadata[header.strip().lower()] = value.strip()
 
         werk = Werk(
-            path=werk_path, content=WerkV2ParseResult(metadata=metadata, description=f.read())
+            path=werk_path,
+            id=WerkId(werkid),
+            content=WerkV2ParseResult(metadata=metadata, description=f.read()),
         )
 
     validate_werk(werk)
@@ -379,11 +411,11 @@ def save_werk(werk: Werk) -> None:
         f.write(werk.content.description)
         f.write("\n")
     git_add(werk)
-    save_last_werkid(int(werk.content.metadata["id"]))
+    save_last_werkid(werk.id)
 
 
-def change_werk_version(werk_id: int, new_version: str) -> None:
-    werk = load_werk(werk_id)
+def change_werk_version(werk_path: Path, new_version: str) -> None:
+    werk = load_werk(werk_path)
     werk.content.metadata["version"] = new_version
     save_werk(werk)
     git_add(werk)
@@ -441,7 +473,7 @@ def something_in_git_index() -> bool:
     return False
 
 
-def next_werk_id() -> int:
+def next_werk_id() -> WerkId:
     my_werk_ids = get_werk_ids()
     if not my_werk_ids:
         bail_out(
@@ -463,7 +495,7 @@ def add_comment(werk: Werk, title: str, comment: str) -> None:
 
 
 def list_werk(werk: Werk) -> None:
-    if werk_is_modified(int(werk.content.metadata["id"])):
+    if werk_is_modified(werk.id):
         bold = TTY_BOLD + TTY_CYAN + "(*) "
     else:
         bold = ""
@@ -472,7 +504,7 @@ def list_werk(werk: Werk) -> None:
     sys.stdout.write(
         "%s %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
         % (
-            format_werk_id(werk.content.metadata["id"]),
+            format_werk_id(werk.id),
             time.strftime("%F", time.localtime(int(werk.content.metadata["date"]))),
             colored_class(werk.content.metadata["class"], 8),
             werk.content.metadata["edition"],
@@ -489,8 +521,8 @@ def list_werk(werk: Werk) -> None:
     )
 
 
-def format_werk_id(werk_id: int | str) -> str:
-    return TTY_BG_WHITE + TTY_BLUE + ("#%05d" % int(werk_id)) + TTY_NORMAL
+def format_werk_id(werk_id: WerkId) -> str:
+    return TTY_BG_WHITE + TTY_BLUE + f"{werk_id}" + TTY_NORMAL
 
 
 def colored_class(classname: str, digits: int) -> str:
@@ -624,7 +656,7 @@ def main_show(args: argparse.Namespace) -> None:
     if "all" in args.ids:
         ids = list(load_werks().keys())
     else:
-        ids = args.ids or [get_last_werk()]
+        ids = [WerkId(id) for id in args.ids] or [get_last_werk()]
 
     for wid in ids:
         if wid != ids[0]:
@@ -632,7 +664,7 @@ def main_show(args: argparse.Namespace) -> None:
                 "-------------------------------------------------------------------------------\n"
             )
         try:
-            show_werk(load_werk(int(wid)))
+            show_werk(load_werk(werk_path_by_id(wid)))
         except Exception:
             sys.stderr.write("Skipping invalid werk id '%s'\n" % wid)
     save_last_werkid(ids[-1])
@@ -743,21 +775,22 @@ def main_new(args: argparse.Namespace) -> None:
     metadata["id"] = str(werk_id)
 
     werk = Werk(
-        path=Path(str(werk_id)),
+        id=werk_id,
+        path=Path(str(werk_id.id)),
         content=WerkV2ParseResult(metadata=metadata, description="\n"),
     )
 
     save_werk(werk)
     invalidate_my_werkid(werk_id)
-    edit_werk(werk_id, args.custom_files)
+    edit_werk(werk_path_by_id(werk_id), args.custom_files)
 
     sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk_id))
 
 
-def get_werk_arg(arg: str | int | None) -> int:
-    wid = get_last_werk() if arg is None else int(arg)
+def get_werk_arg(arg: WerkId | None) -> WerkId:
+    wid = get_last_werk() if arg is None else arg
 
-    werk = load_werk(wid)
+    werk = load_werk(werk_path_by_id(wid))
     if not werk:
         bail_out("No such werk.\n")
     save_last_werkid(wid)
@@ -765,13 +798,13 @@ def get_werk_arg(arg: str | int | None) -> int:
 
 
 def main_blame(args: argparse.Namespace) -> None:
-    wid = get_werk_arg(args.id)
-    os.system("git blame %d" % wid)  # nosec
+    wid = get_werk_arg(WerkId(args.id))
+    os.system(f"git blame {werk_path_by_id(wid)}")  # nosec
 
 
 def main_url(args: argparse.Namespace) -> None:
-    wid = get_werk_arg(args.id)
-    sys.stdout.write(online_url % wid + "\n")
+    wid = get_werk_arg(WerkId(args.id))
+    sys.stdout.write(online_url % wid.id + "\n")
 
 
 def main_delete(args: argparse.Namespace) -> None:
@@ -781,7 +814,7 @@ def main_delete(args: argparse.Namespace) -> None:
         if not werk_exists(werk_id):
             bail_out("There is no werk %s." % format_werk_id(werk_id))
 
-        werk_to_be_removed_title = load_werk(int(werk_id)).content.metadata["title"]
+        werk_to_be_removed_title = load_werk(werk_id).content.metadata["title"]
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write(
                 "Deleted werk {} ({}).\n".format(format_werk_id(werk_id), werk_to_be_removed_title)
@@ -843,15 +876,17 @@ def main_grep(args: argparse.Namespace) -> None:
 
 
 def main_edit(args: argparse.Namespace) -> None:
-    werkid = args.id or get_last_werk()
-    edit_werk(werkid, None, commit=False)  # custom files are pointless if commit=False
+    werkid = WerkId(args.id) if args.id is not None else get_last_werk()
+    edit_werk(
+        werk_path_by_id(werkid), None, commit=False
+    )  # custom files are pointless if commit=False
     save_last_werkid(werkid)
 
 
-def edit_werk(werkid: int, custom_files: list[str] | None = None, commit: bool = True) -> None:
+def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bool = True) -> None:
     if custom_files is None:
         custom_files = []
-    if not os.path.exists(str(werkid)):
+    if not werk_path.exists():
         bail_out("No werk with this id.")
     editor = os.getenv("EDITOR")
     if not editor:
@@ -862,8 +897,8 @@ def edit_werk(werkid: int, custom_files: list[str] | None = None, commit: bool =
     if not editor:
         bail_out("No editor available (please set EDITOR).\n")
 
-    if os.system(f"bash -c '{editor} +11 {werkid}'") == 0:  # nosec
-        werk = load_werk(werkid)
+    if os.system(f"bash -c '{editor} +11 {werk_path}'") == 0:  # nosec
+        werk = load_werk(werk_path)
         git_add(werk)
         if commit:
             git_commit(werk, custom_files)
@@ -881,15 +916,16 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
         capture_output=True,
         check=True,
     )
-    werk_id = None
+    found_werk_path = None
     for line in result.stdout.splitlines():
-        filename = line.decode("utf-8")
-        if filename.startswith(".werks/") and filename[7:].isdigit():
-            werk_id = int(filename[7:])
+        filename = Path(line.decode("utf-8"))
+        if filename.parent.name == ".werks" and filename.name.removesuffix(".md").isdigit():
+            # we os.chdir into the werks folder, so now we can not use the git paths as is
+            found_werk_path = Path(filename.name)
 
-    if werk_id is not None:
-        if os.path.exists(str(werk_id)):
-            bail_out(f"Trying to pick werk {werk_id}, but werk already present. Aborted.")
+    if found_werk_path is not None:
+        if os.path.exists(str(found_werk_path.name)):
+            bail_out(f"Trying to pick werk {found_werk_path}, but werk already present. Aborted.")
 
     # Cherry-pick the commit in question from the other branch
     cmd = ["git", "cherry-pick"]
@@ -900,14 +936,12 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
     # Find werks that have been cherry-picked and change their version
     # to our current version
-    if werk_id is not None:
+    if found_werk_path is not None:
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
         assert g_current_version
-        change_werk_version(werk_id, g_current_version)
-        sys.stdout.write(
-            f"Changed version of werk {format_werk_id(werk_id)} to {g_current_version}.\n"
-        )
+        change_werk_version(found_werk_path, g_current_version)
+        sys.stdout.write(f"Changed version of werk {found_werk_path} to {g_current_version}.\n")
 
     if pick.returncode:
         # Exit with the result of the pick. This may be a merge conflict, so
@@ -915,10 +949,10 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
         sys.exit(pick.returncode)
 
     # Commit
-    if werk_id is not None:
+    if found_werk_path is not None:
         # This allows for picking regular commits as well
         if not no_commit:
-            subprocess.run(["git", "add", str(werk_id)], check=True)
+            subprocess.run(["git", "add", found_werk_path.name], check=True)
             subprocess.run(["git", "commit", "--no-edit", "--amend"], check=True)
         else:
             sys.stdout.write("We don't commit yet. Here is the status:\n")
@@ -926,14 +960,14 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
             subprocess.run(["git", "status"], check=True)
 
 
-def get_werk_ids() -> list[int]:
+def get_werk_ids() -> list[WerkId]:
     try:
         return ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())  # type: ignore
     except Exception:
         return []
 
 
-def invalidate_my_werkid(wid: int) -> None:
+def invalidate_my_werkid(wid: WerkId) -> None:
     ids = get_werk_ids()
     ids.remove(wid)
     store_werk_ids(ids)
@@ -941,7 +975,7 @@ def invalidate_my_werkid(wid: int) -> None:
         sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID.{TTY_NORMAL}\n\n")
 
 
-def store_werk_ids(l: list[int]) -> None:
+def store_werk_ids(l: list[WerkId]) -> None:
     with open(RESERVED_IDS_FILE_PATH, "w") as f:
         f.write(repr(l) + "\n")
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
@@ -990,7 +1024,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         new_first_free = first_free + args.count
 
     # Store the werk_ids to reserve
-    my_ids = get_werk_ids() + list(range(first_free, new_first_free))
+    my_ids = get_werk_ids() + list(WerkId(i) for i in range(first_free, new_first_free))
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids

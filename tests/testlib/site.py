@@ -45,6 +45,15 @@ logger = logging.getLogger(__name__)
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
 
 
+class SiteCalledProcessError(subprocess.CalledProcessError):
+    def __str__(self) -> str:
+        return (
+            super().__str__()
+            if self.stderr is None
+            else f"{super().__str__()[:-1]} ({self.stderr!r})."
+        )
+
+
 class Site:
     def __init__(
         self,
@@ -443,7 +452,7 @@ class Site:
         )
         stdout, stderr = p.communicate(input)
         if p.returncode != 0:
-            raise subprocess.CalledProcessError(p.returncode, p.args, stdout, stderr)
+            raise SiteCalledProcessError(p.returncode, p.args, stdout, stderr)
         assert isinstance(stdout, str)
         return stdout
 

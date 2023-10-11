@@ -5,8 +5,6 @@
 
 import cmk.utils.version as cmk_version
 
-# Following import is used to trigger plugin loading
-import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 import cmk.gui.watolib.config_domain_name as utils
 
 
@@ -21,7 +19,7 @@ def test_registered_generators() -> None:
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_generators += [
             "cee_agent_bakery",
-            "cee_basic_config",
+            "cee_rrd_config",
         ]
 
     assert sorted(utils.sample_config_generator_registry.keys()) == sorted(expected_generators)
@@ -34,7 +32,7 @@ def test_get_sorted_generators() -> None:
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
-            "cee_basic_config",
+            "cee_rrd_config",
             "cee_agent_bakery",
         ]
 

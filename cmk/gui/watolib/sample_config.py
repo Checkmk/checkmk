@@ -107,7 +107,6 @@ def get_default_notification_rule() -> EventRule:
     )
 
 
-@sample_config_generator_registry.register
 class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
     @classmethod
     def ident(cls) -> str:
@@ -407,7 +406,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         TagConfigFile().save(tag_config.get_dict_format())
 
 
-@sample_config_generator_registry.register
 class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
     """This is not really the correct place for such kind of action, but the best place we could
     find to execute it only for new created sites."""
@@ -427,7 +425,6 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
         werks.acknowledge_all_werks(check_permission=False)
 
 
-@sample_config_generator_registry.register
 class ConfigGeneratorAutomationUser(SampleConfigGenerator):
     """Create the default Checkmk "automation" user"""
 

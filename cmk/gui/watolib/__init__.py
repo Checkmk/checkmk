@@ -28,6 +28,7 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain as _ABCConfigDomain
 from cmk.gui.watolib.config_domain_name import config_domain_registry as _config_domain_registry
+from cmk.gui.watolib.config_domain_name import SampleConfigGeneratorRegistry
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
 from cmk.gui.watolib.host_rename import (
@@ -59,6 +60,11 @@ from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLa
 from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from .network_scan import AutomationNetworkScan
 from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
+from .sample_config import (
+    ConfigGeneratorAcknowledgeInitialWerks,
+    ConfigGeneratorAutomationUser,
+    ConfigGeneratorBasicWATOConfig,
+)
 from .search import SearchIndexBackgroundJob
 from .user_profile import PushUserProfilesToSite
 
@@ -71,6 +77,7 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
+    sample_config_generator_registry: SampleConfigGeneratorRegistry,
 ) -> None:
     _register_automation_commands()
     _register_gui_background_jobs(job_registry)
@@ -93,6 +100,9 @@ def register(
     automation_command_registry.register(AutomationNetworkScan)
     automation_command_registry.register(AutomationCheckmkAutomationStart)
     automation_command_registry.register(AutomationCheckmkAutomationGetStatus)
+    sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
+    sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
+    sample_config_generator_registry.register(ConfigGeneratorAutomationUser)
 
 
 def _register_automation_commands() -> None:

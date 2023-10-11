@@ -128,7 +128,12 @@ def register() -> None:
         config_variable_group_registry,
         config_variable_registry,
     )
-    watolib.register(rulespec_group_registry, automation_command_registry, job_registry)
+    watolib.register(
+        rulespec_group_registry,
+        automation_command_registry,
+        job_registry,
+        sample_config_generator_registry,
+    )
 
     if edition() is not Edition.CSE:  # disabled in CSE
         backup_register(

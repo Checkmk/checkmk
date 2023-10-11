@@ -1,0 +1,13 @@
+Title: mssql_backup: Fix for werk 15917
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1697015416
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p12
+
+While creating the werk 15917 for 2.2, not the whole change copied and that caused problems with mssql_backup.
+This has now been fixed and the behaviour in 2.2 matches 2.1.
+

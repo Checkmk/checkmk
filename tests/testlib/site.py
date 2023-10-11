@@ -1029,10 +1029,22 @@ class Site:
 
     def ensure_running(self) -> None:
         if not self.is_running():
-            stdout = subprocess.check_output(["ps", "-ef"], text=True)
+            omd_status_output = self.execute(
+                ["omd", "status"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            ).communicate()[0]
+            ps_output_file = os.path.join(self.result_dir(), "processes.out")
+            self.write_text_file(
+                ps_output_file,
+                self.execute(
+                    ["ps", "-ef"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+                ).communicate()[0],
+            )
+            self.save_results()
+
             pytest.exit(
-                "Site was not running completely while it should. Enforcing stop. "
-                f"Output of ps -ef:\n{stdout}"
+                "Site was not running completely while it should be! Enforcing stop.\n\n"
+                f"Output of omd status:\n{omd_status_output}\n\n"
+                f'See "{ps_output_file}" for full "ps -ef" output!',
             )
 
     def is_running(self) -> bool:
@@ -1198,8 +1210,7 @@ class Site:
             logger.info("Not containerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
-
-        os.makedirs(self.result_dir(), exist_ok=True)
+        self.makedirs(self.result_dir())
 
         with suppress(FileNotFoundError):
             shutil.copy(self.path("junit.xml"), self.result_dir())

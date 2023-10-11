@@ -118,7 +118,22 @@ PERMISSIONS = permissions.AllPerm(
 def with_access_check_permission(perm: permissions.BasePerm) -> permissions.BasePerm:
     """To check if a user can see a host, we currently need the 'wato.see_all_folders' permission.
     Since this use is done internally only, we want to add it without documenting it."""
-    return permissions.AllPerm([perm, permissions.Ignore(permissions.Perm("wato.see_all_folders"))])
+    return permissions.AllPerm(
+        [
+            perm,
+            permissions.Ignore(
+                permissions.AnyPerm(
+                    [
+                        permissions.Perm("bi.see_all"),
+                        permissions.Perm("general.see_all"),
+                        permissions.Perm("mkeventd.seeall"),
+                        # is only used to check if a user can see a host
+                        permissions.Perm("wato.see_all_folders"),
+                    ],
+                )
+            ),
+        ]
+    )
 
 
 @Endpoint(

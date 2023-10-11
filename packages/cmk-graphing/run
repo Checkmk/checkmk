@@ -166,7 +166,7 @@ run_documentation() {
 get_candidates_from_filesystem() {
     cd "$REPO_PATH" || exit $?
 
-    SEARCH="cmk_metrics tests"
+    SEARCH="cmk_graphing tests"
 
     # Resolve search paths to real paths before the search for performance reasons
     # shellcheck disable=SC2086

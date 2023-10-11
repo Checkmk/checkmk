@@ -5,7 +5,7 @@
 
 from typing import Final
 
-from cmk_metrics.v1 import Localizable
+from cmk_graphing.v1 import Localizable
 
 _TRANSLATABLE_STRINGS: Final = {
     "The ruleset '%s' has been replaced by '%s'": "%s heißt jetzt %s",

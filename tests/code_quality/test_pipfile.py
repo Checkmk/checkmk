@@ -30,7 +30,7 @@ IGNORED_LIBS = {
     "livestatus",
     "mk_jolokia",
     "omdlib",
-    "cmk_metrics",
+    "cmk_graphing",
 }  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff

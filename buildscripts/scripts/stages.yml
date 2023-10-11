@@ -41,8 +41,8 @@ VARIABLES:
     - NAME: CHANGED_CHECK_SQL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-sql/' || true"
 
-    - NAME: CHANGED_CMK_METRICS_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-metrics/' || true"
+    - NAME: CHANGED_CMK_GRAPHING_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-graphing/' || true"
 
     - NAME: CHANGED_PYLINT_RC_FILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.pylintrc' || true"
@@ -401,9 +401,9 @@ STAGES:
       TEXT_ON_SKIP: 'No werk package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/werk_package.txt"
 
-    - NAME: 'CMK metrics'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_METRICS_FILES
-      DIR: 'packages/cmk-metrics'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-metrics.txt"
-      TEXT_ON_SKIP: 'No CMK metrics files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-metrics.txt"
+    - NAME: 'CMK graphing'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_GRAPHING_FILES
+      DIR: 'packages/cmk-graphing'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-graphing.txt"
+      TEXT_ON_SKIP: 'No CMK graphing files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"

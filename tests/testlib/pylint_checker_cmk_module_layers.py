@@ -10,7 +10,7 @@ for further information.
 
 from typing import NewType
 
-from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import-untyped]
+from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
 from pylint.checkers import BaseChecker  # type: ignore[import-untyped]
 
 try:
@@ -404,7 +404,7 @@ class CMKModuleLayerChecker(BaseChecker):
                 ),
             )
 
-    def _check_import(self, node: Statement, imported: ModuleName) -> None:
+    def _check_import(self, node: Import | ImportFrom, imported: ModuleName) -> None:
         # We only care about imports of our own modules.
         if not imported.startswith("cmk"):
             return

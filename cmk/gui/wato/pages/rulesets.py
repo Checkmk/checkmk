@@ -38,7 +38,7 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, use_vue_rendering
 from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -62,6 +62,11 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri, makeuri_contextless
+from cmk.gui.validation.visitors.vue_repr import (
+    create_vue_visitor,
+    process_validation_errors,
+    render_vue,
+)
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -1899,6 +1904,15 @@ class ABCEditRuleMode(WatoMode):
 
         # VALUE
         value = self._ruleset.valuespec().from_html_vars("ve")
+
+        if use_vue_rendering() and request.has_var(self._vue_field_id()):
+            value_from_frontend = json.loads(request.get_str_input_mandatory(self._vue_field_id()))
+            vue_visitor = create_vue_visitor(
+                self._ruleset.valuespec(), value_from_frontend, do_validate=True
+            )
+            process_validation_errors(vue_visitor)
+            value = vue_visitor.raw_value
+
         self._ruleset.valuespec().validate_value(value, "ve")
         self._rule.value = value
 
@@ -1945,6 +1959,11 @@ class ABCEditRuleMode(WatoMode):
         vs.validate_value(conditions, "explicit_conditions")
         return conditions
 
+    def _vue_field_id(self) -> str:
+        # Note: this _underscore is critical because of the hidden vars special behaviour
+        # Non _ vars are always added as hidden vars into a form
+        return "_vue_edit_rule"
+
     def page(self) -> None:
         help_text = self._ruleset.help()
         if help_text:
@@ -1965,6 +1984,23 @@ class ABCEditRuleMode(WatoMode):
         html.prevent_password_auto_completion()
         try:
             valuespec.validate_datatype(self._rule.value, "ve")
+            if use_vue_rendering():
+                if request.has_var(self._vue_field_id()):
+                    visitor_value = json.loads(
+                        request.get_str_input_mandatory(self._vue_field_id())
+                    )
+                    do_validate = True
+                else:
+                    visitor_value = self._rule.value
+                    do_validate = False
+                forms.section(_("Current setting as VUE"))
+                render_vue(
+                    self._ruleset.valuespec(),
+                    self._vue_field_id(),
+                    visitor_value,
+                    do_validate=do_validate,
+                )
+
             valuespec.render_input("ve", self._rule.value)
         except Exception as e:
             if active_config.debug:

@@ -19,6 +19,8 @@ import dataclasses
 import typing
 from collections.abc import Container
 
+from cmk.gui.valuespec import ValueSpec
+
 T = typing.TypeVar("T")
 K = typing.TypeVar("K")
 V = typing.TypeVar("V")
@@ -33,7 +35,9 @@ class Details(typing.Generic[T]):
     default_value: typing.Callable[[], T] | None
 
 
-Validator = typing.Callable[[typing.Any, dict[str, typing.Any] | None], None]
+# TODO: improve typing
+Validator = typing.Callable[[typing.Any, typing.Any], None]
+ValidationError = str
 
 
 @dataclasses.dataclass
@@ -64,6 +68,16 @@ class FormElement:
             details=self.details,
         )
 
+    def validate(self, value: typing.Any, node_info: typing.Any) -> list:
+        if self.validators is None:
+            return []
+        # Note: since this code will be reworked soon -> don't care about typing
+        errors: list = []
+        for validator in self.validators:
+            if result := validator(value, node_info):
+                errors.append(result)
+        return errors
+
 
 @dataclasses.dataclass
 class NullElement(FormElement):
@@ -87,8 +101,14 @@ class SelectElement(FormElement):
 
 
 @dataclasses.dataclass
+class DictionaryKeySpec:
+    name: str
+    optional: bool = True
+
+
+@dataclasses.dataclass
 class TypedDictionaryDetails(Details):
-    fields: dict[str, FormElement]
+    elements: list[tuple[DictionaryKeySpec, FormElement]]
 
 
 @dataclasses.dataclass
@@ -179,6 +199,7 @@ class NumberDetails(Details[float]):
     gt: float | None
     multiple_of: float | None
     type: type
+    unit: str
 
 
 @dataclasses.dataclass
@@ -307,3 +328,13 @@ class TimerangeDetails(Details):
 @dataclasses.dataclass
 class TimerangeElement(FormElement):
     details: TimerangeDetails
+
+
+@dataclasses.dataclass
+class LegacyValueSpecDetails(Details):
+    valuespec: ValueSpec
+
+
+@dataclasses.dataclass
+class LegacyValueSpecElement(FormElement):
+    details: LegacyValueSpecDetails

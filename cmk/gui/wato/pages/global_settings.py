@@ -6,6 +6,7 @@
 settings"""
 
 import abc
+import json
 from collections.abc import Collection, Iterable, Iterator
 from typing import Any, Callable, Final
 
@@ -19,7 +20,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.global_config import get_global_config
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, use_vue_rendering
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -42,6 +43,11 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.validation.visitors.vue_repr import (
+    create_vue_visitor,
+    process_validation_errors,
+    render_vue,
+)
 from cmk.gui.valuespec import Checkbox, Transform
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -327,6 +333,17 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
         else:
             new_value = self._valuespec.from_html_vars("ve")
+            if use_vue_rendering() and request.has_var(self._vue_field_id()):
+                logger.warning("ACTION PHASE")
+                value_from_frontend = json.loads(
+                    request.get_str_input_mandatory(self._vue_field_id())
+                )
+                vue_visitor = create_vue_visitor(
+                    self._valuespec, value_from_frontend, do_validate=True
+                )
+                process_validation_errors(vue_visitor)
+                new_value = vue_visitor.raw_value
+
             self._valuespec.validate_value(new_value, "ve")
             self._current_settings[self._varname] = new_value
             msg = HTML(
@@ -362,6 +379,11 @@ class ABCEditGlobalSettingMode(WatoMode):
     def _is_configured(self) -> bool:
         return self._varname in self._current_settings
 
+    def _vue_field_id(self):
+        # Note: this _underscore is critical because of the hidden vars special behaviour
+        # Non _ vars are always added as hidden vars into a form
+        return "_vue_global_settings"
+
     def page(self) -> None:
         is_configured = self._is_configured()
         is_configured_globally = self._varname in self._global_settings
@@ -384,6 +406,18 @@ class ABCEditGlobalSettingMode(WatoMode):
         if not active_config.wato_hide_varnames:
             forms.section(_("Configuration variable:"))
             html.tt(self._varname)
+
+        if use_vue_rendering():
+            if request.has_var(self._vue_field_id()):
+                visitor_value = json.loads(request.get_str_input_mandatory(self._vue_field_id()))
+                do_validate = True
+            else:
+                visitor_value = value
+                do_validate = False
+            forms.section(_("Current setting as VUE"))
+            render_vue(
+                self._valuespec, self._vue_field_id(), visitor_value, do_validate=do_validate
+            )
 
         forms.section(_("Current setting"))
         self._valuespec.render_input("ve", value)

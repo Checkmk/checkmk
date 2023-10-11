@@ -9,7 +9,13 @@ from collections.abc import Sequence
 
 import astroid  # type: ignore[import-untyped]
 from astroid import nodes
-from pylint.checkers import BaseChecker, utils  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker  # type: ignore[import-untyped]
+
+try:
+    from pylint.checkers.utils import only_required_for_messages
+except ImportError:
+    from pylint.checkers.utils import check_messages as only_required_for_messages  # type: ignore[import-untyped]
+
 from pylint.lint.pylinter import PyLinter  # type: ignore[import-untyped]
 
 
@@ -100,7 +106,7 @@ class TranslationBaseChecker(BaseChecker):
         raise NotImplementedError()
 
     # pylint is mostly? untyped, therefore mypy warns about that decorator
-    @utils.check_messages(MESSAGE_ID)  # type: ignore[misc]
+    @only_required_for_messages(MESSAGE_ID)  # type: ignore[misc]
     def visit_call(self, node: nodes.Call) -> None:
         """Called for every function call in the source code."""
 

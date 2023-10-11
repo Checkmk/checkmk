@@ -11,7 +11,13 @@ for further information.
 from typing import NewType
 
 from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import-untyped]
-from pylint.checkers import BaseChecker, utils  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker  # type: ignore[import-untyped]
+
+try:
+    from pylint.checkers.utils import only_required_for_messages
+except ImportError:
+    from pylint.checkers.utils import check_messages as only_required_for_messages  # type: ignore[import-untyped]
+
 from pylint.lint.pylinter import PyLinter  # type: ignore[import-untyped]
 
 from tests.testlib import cmk_path
@@ -375,13 +381,13 @@ class CMKModuleLayerChecker(BaseChecker):
     cmk_path_cached = cmk_path() + "/"
 
     # NOTE: There are no type stubs for pylint itself, so the decorator effectively removes the types from the decorated function!
-    @utils.check_messages("cmk-module-layer-violation")  # type: ignore[misc]
+    @only_required_for_messages("cmk-module-layer-violation")  # type: ignore[misc]
     def visit_import(self, node: Import) -> None:
         for name, _ in node.names:
             self._check_import(node, ModuleName(name))
 
     # NOTE: There are no type stubs for pylint itself, so the decorator effectively removes the types from the decorated function!
-    @utils.check_messages("cmk-module-layer-violation")  # type: ignore[misc]
+    @only_required_for_messages("cmk-module-layer-violation")  # type: ignore[misc]
     def visit_importfrom(self, node: ImportFrom) -> None:
         # handle 'from . import foo, bar'
         imported = [node.modname] if node.modname else [n for n, _ in node.names]

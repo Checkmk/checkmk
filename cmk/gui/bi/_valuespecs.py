@@ -11,7 +11,6 @@ import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.userdb as userdb
-from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -44,6 +43,8 @@ from cmk.bi.aggregation_functions import (
 from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
 from cmk.bi.packs import BIAggregationPack
 from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
+
+from ._packs import get_cached_bi_packs
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |

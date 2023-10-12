@@ -18,7 +18,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.gui.type_defs import SingleInfos, TranslatedMetric, VisualContext
 
 from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType, Operators
 
@@ -59,6 +59,11 @@ class NeededElementForRRDDataKey:
     scale: float
 
 
+RetranslationMap = Mapping[
+    tuple[HostName, ServiceName], Mapping[MetricName, tuple[SiteId, TranslatedMetric]]
+]
+
+
 class MetricOpConstant(BaseModel, frozen=True):
     ident: Literal["constant"] = "constant"
     value: float
@@ -70,6 +75,9 @@ class MetricOpConstant(BaseModel, frozen=True):
         ],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield from ()
+
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        return self
 
 
 class MetricOpScalar(BaseModel, frozen=True):
@@ -87,6 +95,13 @@ class MetricOpScalar(BaseModel, frozen=True):
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForTranslation(self.host_name, self.service_name)
 
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        _site, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
+        if not isinstance(value := trans["scalar"].get(str(self.scalar_name)), float):
+            # TODO if scalar_name not in trans["scalar"] -> crash; No warning to the user :(
+            raise TypeError(value)
+        return MetricOpConstant(value=value)
+
 
 class MetricOpOperator(BaseModel, frozen=True):
     ident: Literal["operator"] = "operator"
@@ -103,6 +118,12 @@ class MetricOpOperator(BaseModel, frozen=True):
             ne
             for o in self.operands
             for ne in o.needed_elements(resolve_combined_single_metric_spec)
+        )
+
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        return MetricOpOperator(
+            operator_name=self.operator_name,
+            operands=[o.reverse_translate(retranslation_map) for o in self.operands],
         )
 
 
@@ -146,6 +167,12 @@ class MetricOpTransformation(BaseModel, frozen=True):
             for ne in o.needed_elements(resolve_combined_single_metric_spec)
         )
 
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        return MetricOpTransformation(
+            parameters=self.parameters,
+            operands=[o.reverse_translate(retranslation_map) for o in self.operands],
+        )
+
 
 # TODO Check: Similar to CombinedSingleMetricSpec
 class SingleMetricSpec(TypedDict):
@@ -182,6 +209,9 @@ class MetricOpCombined(BaseModel, frozen=True):
         ):
             yield from metric.expression.needed_elements(resolve_combined_single_metric_spec)
 
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        return self
+
 
 class MetricOpRRDSource(BaseModel, frozen=True):
     ident: Literal["rrd"] = "rrd"
@@ -207,6 +237,25 @@ class MetricOpRRDSource(BaseModel, frozen=True):
             self.scale,
         )
 
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
+        metrics: list[MetricOperation] = [
+            MetricOpRRDSource(
+                site_id=site_id,
+                host_name=self.host_name,
+                service_name=self.service_name,
+                metric_name=name,
+                consolidation_func_name=self.consolidation_func_name,
+                scale=scale,
+            )
+            for name, scale in zip(trans["orig_name"], trans["scale"])
+        ]
+
+        if len(metrics) > 1:
+            return MetricOpOperator(operator_name="MERGE", operands=metrics)
+
+        return metrics[0]
+
 
 class MetricOpRRDChoice(BaseModel, frozen=True):
     ident: Literal["rrd_choice"] = "rrd_choice"
@@ -222,6 +271,25 @@ class MetricOpRRDChoice(BaseModel, frozen=True):
         ],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForTranslation(self.host_name, self.service_name)
+
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        site_id, trans = retranslation_map[(self.host_name, self.service_name)][self.metric_name]
+        metrics: list[MetricOperation] = [
+            MetricOpRRDSource(
+                site_id=site_id,
+                host_name=self.host_name,
+                service_name=self.service_name,
+                metric_name=name,
+                consolidation_func_name=self.consolidation_func_name,
+                scale=scale,
+            )
+            for name, scale in zip(trans["orig_name"], trans["scale"])
+        ]
+
+        if len(metrics) > 1:
+            return MetricOpOperator(operator_name="MERGE", operands=metrics)
+
+        return metrics[0]
 
 
 MetricOperation = (

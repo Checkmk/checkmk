@@ -53,8 +53,30 @@ Set SHO = CreateObject("WScript.Shell")
 hostname = SHO.ExpandEnvironmentStrings("%COMPUTERNAME%")
 cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 
+Sub WriteToFile(ByVal FilePath, ByVal TxtToWrite)
+	'Write any line of text to the end of a file. If the file does not exist, try to create it
+	On Error Resume Next
+	Dim FileSysObj, FileHandle
+	Set FileSysObj = CreateObject("Scripting.FileSystemObject")
+	If FileSysObj.FileExists(FilePath) Then
+		Set FileHandle = FileSysObj.OpenTextFile(FilePath, 8, True)
+	Else
+		Set FileHandle = FileSysObj.CreateTextFile(FilePath, True)
+	End If
+	If Err <> 0 Then
+		Err.Clear
+		On Error Goto 0
+		Exit Sub
+	End If
+	FileHandle.WriteLine TxtToWrite
+	FileHandle.Close
+	Err.Clear
+	On Error Goto 0
+End Sub
+
 Sub addOutput(text)
     objStdout.WriteLine text
+    WriteToFile "mssql.log", text
 End Sub
 
 Function readIniFile(path)

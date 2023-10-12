@@ -9,12 +9,56 @@ import enum
 from base64 import b64decode
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Json, TypeAdapter
 
 
 class JSON(BaseModel, frozen=True):
     pass
+
+
+class EnvironmentBuildStatus(enum.Enum):
+    Success = "Success"
+    Failure = "Failure"
+    Timeout = "Timeout"
+    NotNeeded = "NotNeeded"
+    Pending = "Pending"
+    InProgress = "InProgress"
+
+
+class AttemptOutcome(enum.Enum):
+    AllTestsPassed = "AllTestsPassed"
+    TestFailures = "TestFailures"
+    RobotFrameworkFailure = "RobotFrameworkFailure"
+    EnvironmentFailure = "EnvironmentFailure"
+    TimedOut = "TimedOut"
+    OtherError = "OtherError"
+
+
+class RebotResult(JSON, frozen=True):
+    xml: str
+    html_base64: str
+
+
+class RebotOutcome(JSON, frozen=True):
+    Ok: RebotResult
+    Error: str | None = None
+
+
+class AttemptsOutcome(JSON, frozen=True):
+    attempts: list[AttemptOutcome]
+    rebot: RebotOutcome
+
+
+class ExecutionReport(JSON, frozen=True):
+    Executed: AttemptsOutcome
+    AlreadyRunning: Literal["AlreadyRunning"] | None = None
+
+
+class SuiteExecutionReport(JSON, frozen=True):
+    suite_name: str
+    outcome: ExecutionReport
 
 
 class Outcome(enum.Enum):
@@ -88,9 +132,9 @@ class ConfigFileContent(JSON, frozen=True):
     config_file_content: Json[ConfigFileValue]
 
 
-Section = list[Result | ConfigFileContent]
+Section = list[Result | ConfigFileContent | SuiteExecutionReport]
 
-SubSection = Result | ConfigReadingError | ConfigFileContent
+SubSection = Result | ConfigReadingError | ConfigFileContent | SuiteExecutionReport
 
 
 def _parse_line(line: str) -> SubSection:
@@ -100,5 +144,7 @@ def _parse_line(line: str) -> SubSection:
 
 def parse(string_table: Sequence[Sequence[str]]) -> Section:
     subsections = [_parse_line(line[0]) for line in string_table]
-    results = [s for s in subsections if isinstance(s, (Result, ConfigFileContent))]
+    results = [
+        s for s in subsections if isinstance(s, (Result, ConfigFileContent, SuiteExecutionReport))
+    ]
     return Section(results)

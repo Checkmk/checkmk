@@ -61,6 +61,14 @@ def _remap_state(status: robotmk_api.Outcome) -> State:
             assert_never(status)
 
 
+def _remap_attempt_state(status: robotmk_api.AttemptOutcome) -> State:
+    match status:
+        case robotmk_api.AttemptOutcome.AllTestsPassed:
+            return State.OK
+        case _:
+            return State.CRIT
+
+
 def parse(string_table: StringTable) -> robotmk_api.Section:
     return robotmk_api.parse(string_table)
 
@@ -91,6 +99,9 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
             for suite in result.config_file_content.suites:
                 yield Service(item=suite)
 
+        if isinstance(result, robotmk_api.SuiteExecutionReport):
+            yield Service(item=f"Suite {result.suite_name}")
+
 
 def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)
@@ -103,6 +114,21 @@ def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
         metric_name="test_runtime",
         render_func=render.timespan,
     )
+
+
+def _check_suite_execution_result(
+    result: robotmk_api.SuiteExecutionReport, item: str
+) -> CheckResult:
+    if f"Suite {result.suite_name}" != item:
+        return
+
+    if result.outcome.AlreadyRunning is not None:
+        yield Result(state=State.OK, summary="It is already running")
+    if isinstance(result.outcome.Executed, robotmk_api.AttemptsOutcome):
+        for attempt in result.outcome.Executed.attempts:
+            yield Result(
+                state=_remap_attempt_state(attempt), summary=f"Attempt state: {attempt.value}"
+            )
 
 
 def _check_config_file_content(result: robotmk_api.ConfigFileContent, item: str) -> CheckResult:
@@ -127,6 +153,8 @@ def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResul
             yield from _check_config_file_content(result, item)
         elif isinstance(result, robotmk_api.Result):
             yield from _check_result(params, result, item)
+        elif isinstance(result, robotmk_api.SuiteExecutionReport):
+            yield from _check_suite_execution_result(result, item)
 
 
 register.check_plugin(

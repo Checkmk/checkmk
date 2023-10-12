@@ -14,7 +14,6 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -e, --setup-environment  setup environment"
     echo "  -f, --format             format Python files with isort and black"
     echo "  -F, --check-format       check for correct formatting (isort, black)"
     echo "  -C, --py-import-cycles   run py-import-cycles"
@@ -29,7 +28,6 @@ usage() {
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_SETUP_ENVIRONMENT=no
     RUN_FORMAT=no
     RUN_CHECK_FORMAT=no
     RUN_PY_IMPORT_CYCLES=no
@@ -39,7 +37,7 @@ parse_options() {
     RUN_UNIT_TESTS=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'efFCBmpuadh' --long 'setup-environment,format,check-format,py-import-cycles,bandit,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'fFCBmpuadh' --long 'format,check-format,py-import-cycles,bandit,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -48,11 +46,6 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-e' | '--setup-environment')
-                RUN_SETUP_ENVIRONMENT=yes
-                shift
-                continue
-                ;;
             '-f' | '--format')
                 RUN_FORMAT=yes
                 shift
@@ -116,7 +109,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_SETUP_ENVIRONMENT RUN_FORMAT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
+    readonly RUN_FORMAT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
 run_pipenv() {
@@ -131,7 +124,6 @@ run_pipenv() {
 }
 
 setup_venv() {
-    test ${RUN_SETUP_ENVIRONMENT} != yes && return
     run_pipenv sync --dev
     run_pipenv clean
     # poor man's "activate", but without any danger of naming clashes

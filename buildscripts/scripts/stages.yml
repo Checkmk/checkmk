@@ -404,6 +404,6 @@ STAGES:
     - NAME: 'CMK graphing'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_GRAPHING_FILES
       DIR: 'packages/cmk-graphing'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-graphing.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-graphing.txt"
       TEXT_ON_SKIP: 'No CMK graphing files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-graphing.txt"

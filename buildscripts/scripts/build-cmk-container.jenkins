@@ -84,8 +84,16 @@ timeout(time: 12, unit: 'HOURS') {
                             withCredentials([
                                     usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
                                     usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                                sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SOURCE_DIR} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "build"
+                                sh("""
+                                    ./buildscripts/scripts/build-cmk-container.sh \
+                                    ${BRANCH} \
+                                    ${EDITION} \
+                                    ${CMK_VERS} \
+                                    ${SOURCE_DIR} \
+                                    ${SET_LATEST_TAG} \
+                                    ${SET_BRANCH_LATEST_TAG} \
+                                    ${BUILD_IMAGE_WITHOUT_CACHE} \
+                                    "build"
                             """
                             }
                         }

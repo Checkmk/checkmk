@@ -30,7 +30,7 @@ from ._performance import Performance
 from ._permission_section import PermissionSectionSidebarSnapins as PermissionSectionSidebarSnapins
 from ._registry import snapin_registry as snapin_registry
 from ._registry import SnapinRegistry as SnapinRegistry
-from ._search import QuicksearchSnapin
+from ._search import PageSearchMonitoring, PageSearchSetup, QuicksearchSnapin
 from ._server_time import CurrentTime
 from ._site_status import SiteStatus
 from ._speedometer import Speedometer
@@ -53,3 +53,5 @@ def register(snapin_registry_: SnapinRegistry, page_registry: PageRegistry) -> N
     snapin_registry_.register(TacticalOverviewSnapin)
     snapin_registry_.register(Views)
     page_registry.register_page_handler("export_views", ajax_export_views)
+    page_registry.register_page("ajax_search_monitoring")(PageSearchMonitoring)
+    page_registry.register_page("ajax_search_setup")(PageSearchSetup)

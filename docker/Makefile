@@ -56,7 +56,13 @@ image: needed-packages
   		echo "VERSION_TAG is not set, please pass this environment variable during make target call."; \
   		exit 1; \
   	fi; \
+	if [[ "${BUILD_IMAGE_WITHOUT_CACHE}" == "yes" ]]; then \
+		DOCKER_CACHE_OPTION="--no-cache" ; \
+	else \
+		DOCKER_CACHE_OPTION= ; \
+	fi; \
 	docker build \
+	    $$DOCKER_CACHE_OPTION \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \
 	    --build-arg IMAGE_CMK_BASE=$$($(RESOLVE_CMD) IMAGE_CMK_BASE) \

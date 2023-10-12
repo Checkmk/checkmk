@@ -1,0 +1,16 @@
+Title: check_mail and check_mail_loop: Enable EWS and OAuth2
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1697097112
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+
+In response to the <a href="https://learn.microsoft.com/en-us/exchange/clients-and-mobile-in-exchange-online/deprecation-of-basic-authentication-exchange-online">deprecation of basic authentication</a> for Microsoft mail services, EWS and OAuth2 are enabled for the active checks check_mail ("Check Email") and check_mail_loop ("Check Email Delivery"), as was done for check_mailboxes ("Check IMAP/EWS Mailboxes") already.
+Users can now configure their respective check rules to fetch (and in case of check_mail_loop send) mails via EWS and OAuth2.
+
+Note that some command line options for the underlying active check commands have changed. So for calling these checks directly from the command line, users will need to look into the command usage help to find the updated options. Check configurations set up in the UI, however, are migrated to the new structure and thus need no further action.

@@ -145,8 +145,6 @@ def get_needed_sources(
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
-    *,
-    condition: Callable[[GraphMetric], bool] = lambda x: True,
 ) -> set[NeededElementForTranslation | NeededElementForRRDDataKey]:
     """Extract all metric data sources definitions
 
@@ -158,7 +156,6 @@ def get_needed_sources(
         element
         for metric in metrics
         for element in metric.expression.needed_elements(resolve_combined_single_metric_spec)
-        if condition(metric)
     }
 
 

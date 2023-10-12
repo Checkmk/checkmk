@@ -46,14 +46,14 @@ def create_argument_parser() -> argparse.ArgumentParser:
         type=str,
         required=True,
         metavar="ADDRESS",
-        help="Host address of the SMTP server to send the mail to",
+        help="Host address of the SMTP/EWS server to send the mail to",
     )
     parser.add_argument("--send-tls", action="store_true", help="Use TLS over SMTP/EWS")
     parser.add_argument(
         "--send-port",
         type=int,
         metavar="PORT",
-        help="Port to use for SMTP (defaults to 25) or EWS (defaults to 80/443 without/with TLS)",
+        help="SMTP/EWS port (defaults to 25 for SMTP and to 80/443 (TLS) for EWS)",
     )
     parser.add_argument(
         "--send-username",
@@ -62,7 +62,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
         help="Username to use for SMTP communictation (leave empty for anonymous SMTP) or EWS connection",
     )
     parser.add_argument(
-        "--send-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP"
+        "--send-password", type=str, metavar="PASSWORD", help="Password to authenticate SMTP/EWS"
     )
 
     # SEND (EWS only)

@@ -122,32 +122,13 @@ parse_options() {
 PACKAGE_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
 
 run_pipenv() {
-    # make sure we don't use "$HOME/.cache" accidentally (expands to /.cache, if HOME is not set)
-    : "${PIPENV_CACHE_DIR:="${PACKAGE_PATH}/.cache"}"
-    export PIPENV_CACHE_DIR
-
-    # Enforce a non localized environment. The reason for this configuration is
-    # that the parameters and outputs of the monitoring plug-ins are localized. If
-    # they are called from the core, they are always language-neutral. During
-    # manual testing, the plugins may behave differently depending on the
-    # localization of the user's environment variables. This can lead to confusion
-    # during tests.
-    if [ -z "$LANG" ]; then
-        INSTALLED_LOCALES=$(locale -a)
-        for i in "C.UTF-8" "C.utf8" "en_US.utf8" "C"; do
-            if echo "$INSTALLED_LOCALES" | grep -q -w -F "$i"; then
-                export LANG="$i" LC_ALL="$i"
-                break
-            fi
-        done
-    fi
-
+    PIPENV_CACHE_DIR="$(pwd)/.cache" \
     PIPENV_VENV_IN_PROJECT=true \
-        PIPENV_NOSPIN=true \
-        PIPENV_HIDE_EMOJIS=true \
-        PIPENV_NO_INHERIT=true \
-        PIPENV_PIPFILE="${PACKAGE_PATH}"/Pipfile \
-        PIPENV_IGNORE_VIRTUALENVS=1 \
+    PIPENV_NOSPIN=true \
+    PIPENV_HIDE_EMOJIS=true \
+    PIPENV_NO_INHERIT=true \
+    PIPENV_PIPFILE="$(pwd)/Pipfile" \
+    PIPENV_IGNORE_VIRTUALENVS=1 \
         pipenv "$@"
 }
 

@@ -67,7 +67,7 @@ IGNORE_PERMISSIONS = permissions.Undocumented(
         [
             permissions.Perm("mkeventd.seeall"),
             permissions.Perm("general.see_all"),
-            permissions.Perm("bi.see_all"),
+            permissions.OkayToIgnorePerm("bi.see_all"),
         ]
     )
 )

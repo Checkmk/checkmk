@@ -92,7 +92,7 @@ RO_PERMISSIONS = permissions.AllPerm(
                 [
                     permissions.Perm("bi.see_all"),
                     permissions.Perm("general.see_all"),
-                    permissions.Perm("mkeventd.seeall"),
+                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
                 ]
             )
         ),

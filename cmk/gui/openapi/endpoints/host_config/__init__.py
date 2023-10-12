@@ -122,9 +122,9 @@ PERMISSIONS = permissions.AllPerm(
         permissions.Undocumented(
             permissions.AnyPerm(
                 [
-                    permissions.Perm("bi.see_all"),
+                    permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.Perm("general.see_all"),
-                    permissions.Perm("mkeventd.seeall"),
+                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
                 ]
             )
         ),
@@ -139,9 +139,9 @@ BULK_CREATE_PERMISSIONS = permissions.AllPerm(
         permissions.Undocumented(
             permissions.AnyPerm(
                 [
-                    permissions.Perm("bi.see_all"),
+                    permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.Perm("general.see_all"),
-                    permissions.Perm("mkeventd.seeall"),
+                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
                 ]
             )
         ),
@@ -156,9 +156,9 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
         permissions.Undocumented(
             permissions.AnyPerm(
                 [
-                    permissions.Perm("bi.see_all"),
+                    permissions.OkayToIgnorePerm("bi.see_all"),
                     permissions.Perm("general.see_all"),
-                    permissions.Perm("mkeventd.seeall"),
+                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
                     # only used to check if user can see a host
                     permissions.Perm("wato.see_all_folders"),
                 ]
@@ -177,9 +177,9 @@ def with_access_check_permission(perm: permissions.BasePerm) -> permissions.Base
             permissions.Undocumented(
                 permissions.AnyPerm(
                     [
-                        permissions.Perm("bi.see_all"),
+                        permissions.OkayToIgnorePerm("bi.see_all"),
                         permissions.Perm("general.see_all"),
-                        permissions.Perm("mkeventd.seeall"),
+                        permissions.OkayToIgnorePerm("mkeventd.seeall"),
                         # is only used to check if a user can see a host
                         permissions.Perm("wato.see_all_folders"),
                     ],

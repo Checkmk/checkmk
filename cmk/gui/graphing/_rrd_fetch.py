@@ -23,12 +23,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 
-from ._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphMetric,
-    NeededElementForRRDDataKey,
-    NeededElementForTranslation,
-)
+from ._graph_specification import CombinedSingleMetricSpec, GraphMetric, NeededElementForRRDDataKey
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction
 from ._unit_info import unit_info
@@ -57,15 +52,16 @@ def fetch_rrd_data_for_graph(
     )
     by_service = _group_needed_rrd_data_by_service(
         (
-            entry.site_id,
-            entry.host_name,
-            entry.service_name,
-            entry.metric_name,
-            entry.consolidation_func_name,
-            entry.scale,
+            element.site_id,
+            element.host_name,
+            element.service_name,
+            element.metric_name,
+            element.consolidation_func_name,
+            element.scale,
         )
-        for entry in get_needed_sources(graph_recipe.metrics, resolve_combined_single_metric_spec)
-        if isinstance(entry, NeededElementForRRDDataKey)
+        for metric in graph_recipe.metrics
+        for element in metric.expression.needed_elements(resolve_combined_single_metric_spec)
+        if isinstance(element, NeededElementForRRDDataKey)
     )
     rrd_data: RRDData = {}
     for (site, host_name, service_description), metrics in by_service.items():
@@ -138,25 +134,6 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
     for data in rrd_data.values():
         del data.values[-1]
         data.end -= step
-
-
-def get_needed_sources(
-    metrics: Sequence[GraphMetric],
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> set[NeededElementForTranslation | NeededElementForRRDDataKey]:
-    """Extract all metric data sources definitions
-
-    metrics: List
-        List of paint-able metrics, extract from defining expression needed metrics
-    condition: Callable
-        Filter function for metrics that are considered"""
-    return {
-        element
-        for metric in metrics
-        for element in metric.expression.needed_elements(resolve_combined_single_metric_spec)
-    }
 
 
 MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]

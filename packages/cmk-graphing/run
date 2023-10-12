@@ -119,8 +119,6 @@ parse_options() {
     readonly RUN_SETUP_ENVIRONMENT RUN_FORMAT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
-PACKAGE_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
-
 run_pipenv() {
     PIPENV_CACHE_DIR="$(pwd)/.cache" \
     PIPENV_VENV_IN_PROJECT=true \
@@ -134,7 +132,7 @@ run_pipenv() {
 
 run_format() {
     # shellcheck disable=SC2086
-    run_pipenv run isort --settings-path "$PACKAGE_PATH"/pyproject.toml $1
+    run_pipenv run isort --settings-path pyproject.toml $1
 
     # shellcheck disable=SC2086
     run_pipenv run black $1
@@ -143,7 +141,7 @@ run_format() {
 run_check_format() {
     # shellcheck disable=SC2086
     run_pipenv run isort \
-        --settings-path "$PACKAGE_PATH"/pyproject.toml \
+        --settings-path pyproject.toml \
         --check-only --diff $1
 
     # shellcheck disable=SC2086
@@ -152,7 +150,7 @@ run_check_format() {
 
 run_py_import_cycles() {
     run_pipenv run py_import_cycles \
-        --project-path "$PACKAGE_PATH" \
+        --project-path . \
         --packages cmk_graphing \
         --strategy johnson \
         --verbose
@@ -177,7 +175,7 @@ run_unit_tests() {
     run_pipenv run python -m pytest \
         --color=yes \
         --code-highlight=yes \
-        "$PACKAGE_PATH/tests/unit"
+        tests/unit
 }
 
 run_documentation() {
@@ -185,8 +183,6 @@ run_documentation() {
 }
 
 get_candidates_from_filesystem() {
-    cd "$PACKAGE_PATH" || exit $?
-
     SEARCH="cmk_graphing tests"
 
     # Resolve search paths to real paths before the search for performance reasons

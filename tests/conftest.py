@@ -35,8 +35,7 @@ pytest_plugins = ("tests.testlib.playwright.plugin",)
 
 import tests.testlib as testlib
 
-# Exclude schemathesis_openapi tests from global collection
-collect_ignore = ["schemathesis_openapi"]
+collect_ignore = []
 # TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
     collect_ignore_glob = ["*/cee/*"]
@@ -98,6 +97,11 @@ def pytest_configure(config):
         "non_resilient:"
         " Tests marked as non-resilient are allowed to fail when run in resilience test.",
     )
+
+    if not config.getoption("-T") == "schemathesis_openapi":
+        # Exclude schemathesis_openapi tests from global collection
+        global collect_ignore
+        collect_ignore = ["schemathesis_openapi"]
 
 
 def pytest_collection_modifyitems(items):

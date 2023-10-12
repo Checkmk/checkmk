@@ -60,6 +60,7 @@ from .groups import contact_group_usage_finder_registry as contact_group_usage_f
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
 from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
+from .hosts_and_folders import find_usages_of_contact_group_in_hosts_and_folders
 from .network_scan import AutomationNetworkScan
 from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
 from .sample_config import (
@@ -80,6 +81,7 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
+    contact_group_usage_finder_registry_: ContactGroupUsageFinderRegistry,
 ) -> None:
     _register_automation_commands()
     _register_gui_background_jobs(job_registry)
@@ -105,6 +107,7 @@ def register(
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
     sample_config_generator_registry.register(ConfigGeneratorAutomationUser)
+    contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
 
 
 def _register_automation_commands() -> None:

@@ -61,6 +61,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
+from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -70,7 +71,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import Choices, HTTPVariables, SetOnceDict
+from cmk.gui.type_defs import Choices, GlobalSettings, HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
@@ -3724,3 +3725,22 @@ def ajax_popup_host_action_menu() -> None:
         html.icon("delete")
         html.write_text(_("Delete host"))
         html.close_a()
+
+
+def find_usages_of_contact_group_in_hosts_and_folders(
+    name: GroupName, _settings: GlobalSettings, folder: Folder | None = None
+) -> list[tuple[str, str]]:
+    if folder is None:
+        folder = folder_tree().root_folder()
+    used_in = []
+    for subfolder in folder.subfolders():
+        used_in += find_usages_of_contact_group_in_hosts_and_folders(name, _settings, subfolder)
+
+    if name in folder.attributes.get("contactgroups", {}).get("groups", []):
+        used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
+
+    for host in folder.hosts().values():
+        if name in host.attributes.get("contactgroups", {}).get("groups", []):
+            used_in.append((_("Host: %s") % host.name(), host.edit_url()))
+
+    return used_in

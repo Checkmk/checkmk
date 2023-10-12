@@ -47,7 +47,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicBasicSettings,
     HostContactGroupSpec,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
@@ -243,7 +243,6 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
         used_in += finder(name, global_config)
 
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
-    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name)
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
 
@@ -270,25 +269,6 @@ def _find_usages_of_contact_group_in_default_user_profile(
                 ),
             )
         )
-    return used_in
-
-
-def _find_usages_of_contact_group_in_hosts_and_folders(
-    name: GroupName, folder: Folder | None = None
-) -> list[tuple[str, str]]:
-    if folder is None:
-        folder = folder_tree().root_folder()
-    used_in = []
-    for subfolder in folder.subfolders():
-        used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
-
-    if name in folder.attributes.get("contactgroups", {}).get("groups", []):
-        used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
-
-    for host in folder.hosts().values():
-        if name in host.attributes.get("contactgroups", {}).get("groups", []):
-            used_in.append((_("Host: %s") % host.name(), host.edit_url()))
-
     return used_in
 
 

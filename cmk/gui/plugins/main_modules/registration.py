@@ -134,6 +134,7 @@ def register() -> None:
         automation_command_registry,
         job_registry,
         sample_config_generator_registry,
+        contact_group_usage_finder_registry,
     )
 
     if edition() is not Edition.CSE:  # disabled in CSE

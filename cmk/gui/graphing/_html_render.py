@@ -45,8 +45,13 @@ from ._artwork import (
 )
 from ._color import render_color_icon
 from ._graph_recipe_builder import build_graph_recipes
-from ._graph_specification import GraphMetric, GraphSpecification, TemplateGraphSpecification
-from ._utils import CombinedSingleMetricSpec, GraphDataRange, GraphRecipe, SizeEx
+from ._graph_specification import (
+    CombinedSingleMetricSpec,
+    GraphMetric,
+    GraphSpecification,
+    TemplateGraphSpecification,
+)
+from ._utils import GraphDataRange, GraphRecipe, SizeEx
 from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str

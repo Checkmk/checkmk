@@ -28,12 +28,16 @@ from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing import parse_perfometers, perfometer_info
-from cmk.gui.graphing._graph_specification import GraphMetric, parse_raw_graph_specification
+from cmk.gui.graphing._graph_specification import (
+    CombinedSingleMetricSpec,
+    GraphMetric,
+    parse_raw_graph_specification,
+)
 from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
-from cmk.gui.graphing._utils import CombinedSingleMetricSpec, parse_perf_data, translate_metrics
+from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import TranslatedMetrics

@@ -41,17 +41,13 @@ from ._graph_pdf import (
 )
 from ._graph_recipe_builder import build_graph_recipes
 from ._graph_specification import (
+    CombinedSingleMetricSpec,
     GraphMetric,
     parse_raw_graph_specification,
     TemplateGraphSpecification,
 )
 from ._html_render import GraphDestinations
-from ._utils import (
-    CombinedSingleMetricSpec,
-    get_graph_data_from_livestatus,
-    GraphDataRange,
-    GraphRecipe,
-)
+from ._utils import get_graph_data_from_livestatus, GraphDataRange, GraphRecipe
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs

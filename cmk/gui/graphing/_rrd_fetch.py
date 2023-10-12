@@ -9,12 +9,10 @@ import collections
 import contextlib
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
 
 import livestatus
 from livestatus import livestatus_lql, SiteId
 
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
@@ -26,21 +24,16 @@ from cmk.gui.i18n import _
 from cmk.gui.type_defs import ColumnName
 
 from ._graph_specification import (
+    CombinedSingleMetricSpec,
     GraphMetric,
-    MetricOpCombined,
-    MetricOperation,
-    MetricOpOperator,
-    MetricOpRRDChoice,
-    MetricOpRRDSource,
-    MetricOpScalar,
-    MetricOpTransformation,
+    NeededElementForRRDDataKey,
+    NeededElementForTranslation,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction
 from ._unit_info import unit_info
 from ._utils import (
     CheckMetricEntry,
-    CombinedSingleMetricSpec,
     find_matching_translation,
     GraphDataRange,
     GraphRecipe,
@@ -147,74 +140,6 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
         data.end -= step
 
 
-@dataclass(frozen=True)
-class NeededElementForTranslation:
-    host_name: HostName
-    service_name: ServiceName
-
-
-@dataclass(frozen=True)
-class NeededElementForRRDDataKey:
-    # TODO Intermediate step, will be cleaned up:
-    # Relates to MetricOperation::rrd with SiteId, etc.
-    site_id: SiteId
-    host_name: HostName
-    service_name: ServiceName
-    metric_name: str
-    consolidation_func_name: GraphConsoldiationFunction | None
-    scale: float
-
-
-def _needed_elements_of_expression(
-    expression: MetricOperation,
-    resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[GraphMetric]
-    ],
-) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-    if isinstance(expression, (MetricOpScalar, MetricOpRRDChoice)):
-        yield NeededElementForTranslation(
-            expression.host_name,
-            expression.service_name,
-        )
-
-    elif isinstance(expression, (MetricOpOperator, MetricOpTransformation)):
-        for operand in expression.operands:
-            yield from _needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
-
-    elif isinstance(expression, MetricOpRRDSource):
-        yield NeededElementForRRDDataKey(
-            expression.site_id,
-            expression.host_name,
-            expression.service_name,
-            expression.metric_name,
-            expression.consolidation_func_name,
-            expression.scale,
-        )
-
-    elif (
-        isinstance(expression, MetricOpCombined)
-        and cmk_version.edition() is not cmk_version.Edition.CRE
-    ):
-        if (cf := expression.single_metric_spec["consolidation_function"]) is None:
-            raise TypeError(cf)
-
-        metrics = resolve_combined_single_metric_spec(
-            CombinedSingleMetricSpec(
-                datasource=expression.single_metric_spec["datasource"],
-                context=expression.single_metric_spec["context"],
-                selected_metric=expression.single_metric_spec["selected_metric"],
-                consolidation_function=cf,
-                presentation=expression.single_metric_spec["presentation"],
-            )
-        )
-
-        for out in (
-            _needed_elements_of_expression(m.expression, resolve_combined_single_metric_spec)
-            for m in metrics
-        ):
-            yield from out
-
-
 def get_needed_sources(
     metrics: Sequence[GraphMetric],
     resolve_combined_single_metric_spec: Callable[
@@ -232,10 +157,7 @@ def get_needed_sources(
     return {
         element
         for metric in metrics
-        for element in _needed_elements_of_expression(
-            metric.expression,
-            resolve_combined_single_metric_spec,
-        )
+        for element in metric.expression.needed_elements(resolve_combined_single_metric_spec)
         if condition(metric)
     }
 

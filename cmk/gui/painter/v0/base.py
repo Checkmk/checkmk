@@ -20,8 +20,7 @@ from cmk.utils.plugin_registry import Registry
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing._graph_specification import GraphMetric
-from cmk.gui.graphing._utils import CombinedSingleMetricSpec
+from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request

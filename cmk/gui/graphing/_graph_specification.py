@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Literal
+from typing import Annotated, Callable, Literal
 
 from pydantic import BaseModel, Field, parse_obj_as
 from typing_extensions import TypedDict
@@ -32,9 +32,44 @@ class MetricDefinition:
     title: str = ""
 
 
+@dataclass(frozen=True)
+class CombinedSingleMetricSpec:
+    datasource: str
+    context: VisualContext
+    selected_metric: MetricDefinition
+    consolidation_function: GraphConsoldiationFunction
+    presentation: GraphPresentation
+
+
+@dataclass(frozen=True)
+class NeededElementForTranslation:
+    host_name: HostName
+    service_name: ServiceName
+
+
+@dataclass(frozen=True)
+class NeededElementForRRDDataKey:
+    # TODO Intermediate step, will be cleaned up:
+    # Relates to MetricOperation::rrd with SiteId, etc.
+    site_id: SiteId
+    host_name: HostName
+    service_name: ServiceName
+    metric_name: str
+    consolidation_func_name: GraphConsoldiationFunction | None
+    scale: float
+
+
 class MetricOpConstant(BaseModel, frozen=True):
     ident: Literal["constant"] = "constant"
     value: float
+
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield from ()
 
 
 class MetricOpScalar(BaseModel, frozen=True):
@@ -44,11 +79,31 @@ class MetricOpScalar(BaseModel, frozen=True):
     metric_name: MetricName
     scalar_name: Literal["warn", "crit", "min", "max"] | None
 
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield NeededElementForTranslation(self.host_name, self.service_name)
+
 
 class MetricOpOperator(BaseModel, frozen=True):
     ident: Literal["operator"] = "operator"
     operator_name: Operators
     operands: Sequence[MetricOperation] = []
+
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield from (
+            ne
+            for o in self.operands
+            for ne in o.needed_elements(resolve_combined_single_metric_spec)
+        )
 
 
 class TransformationParametersPercentile(BaseModel, frozen=True):
@@ -79,6 +134,18 @@ class MetricOpTransformation(BaseModel, frozen=True):
     parameters: TransformationParametersPercentile | TransformationParametersForecast
     operands: Sequence[MetricOperation]
 
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield from (
+            ne
+            for o in self.operands
+            for ne in o.needed_elements(resolve_combined_single_metric_spec)
+        )
+
 
 # TODO Check: Similar to CombinedSingleMetricSpec
 class SingleMetricSpec(TypedDict):
@@ -95,6 +162,26 @@ class MetricOpCombined(BaseModel, frozen=True):
     ident: Literal["combined"] = "combined"
     single_metric_spec: SingleMetricSpec
 
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        if (consolidation_func_name := self.single_metric_spec["consolidation_function"]) is None:
+            raise TypeError(consolidation_func_name)
+
+        for metric in resolve_combined_single_metric_spec(
+            CombinedSingleMetricSpec(
+                datasource=self.single_metric_spec["datasource"],
+                context=self.single_metric_spec["context"],
+                selected_metric=self.single_metric_spec["selected_metric"],
+                consolidation_function=consolidation_func_name,
+                presentation=self.single_metric_spec["presentation"],
+            )
+        ):
+            yield from metric.expression.needed_elements(resolve_combined_single_metric_spec)
+
 
 class MetricOpRRDSource(BaseModel, frozen=True):
     ident: Literal["rrd"] = "rrd"
@@ -105,6 +192,21 @@ class MetricOpRRDSource(BaseModel, frozen=True):
     consolidation_func_name: GraphConsoldiationFunction | None
     scale: float
 
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield NeededElementForRRDDataKey(
+            self.site_id,
+            self.host_name,
+            self.service_name,
+            self.metric_name,
+            self.consolidation_func_name,
+            self.scale,
+        )
+
 
 class MetricOpRRDChoice(BaseModel, frozen=True):
     ident: Literal["rrd_choice"] = "rrd_choice"
@@ -112,6 +214,14 @@ class MetricOpRRDChoice(BaseModel, frozen=True):
     service_name: ServiceName
     metric_name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None
+
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        yield NeededElementForTranslation(self.host_name, self.service_name)
 
 
 MetricOperation = (

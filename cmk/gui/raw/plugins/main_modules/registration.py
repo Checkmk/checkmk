@@ -13,8 +13,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.graphing._graph_images as graph_images
 import cmk.gui.graphing._html_render as html_render
 import cmk.gui.pages
-from cmk.gui.graphing._graph_specification import GraphMetric
-from cmk.gui.graphing._utils import CombinedSingleMetricSpec
+from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.painter.v0 import painters

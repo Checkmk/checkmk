@@ -65,7 +65,7 @@ from ._graph_specification import (
     MetricOperation,
     MetricOpRRDChoice,
 )
-from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType
+from ._type_defs import GraphConsoldiationFunction, LineType
 from ._unit_info import unit_info
 
 ScalarDefinition = str | tuple[str, str | LazyString]
@@ -175,15 +175,6 @@ class GraphTemplate:
             # https://github.com/python/mypy/issues/1178
             metrics=[_parse_raw_metric(raw_metric) for raw_metric in template["metrics"]],
         )
-
-
-@dataclass(frozen=True)
-class CombinedSingleMetricSpec:
-    datasource: str
-    context: VisualContext
-    selected_metric: MetricDefinition
-    consolidation_function: GraphConsoldiationFunction
-    presentation: GraphPresentation
 
 
 class AdditionalGraphHTML(BaseModel, frozen=True):

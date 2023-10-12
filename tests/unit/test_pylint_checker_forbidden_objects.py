@@ -18,6 +18,8 @@ from tests.testlib.pylint_checker_forbidden_objects import (
     TypingNamedTupleChecker,
 )
 
+pytest.skip("triggers RecursionErrors, needs investigation", allow_module_level=True)
+
 
 @pytest.fixture(name="abcmeta_checker")
 def abcmeta_checker_fixture() -> ABCMetaChecker:

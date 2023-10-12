@@ -119,11 +119,11 @@ parse_options() {
     readonly RUN_SETUP_ENVIRONMENT RUN_FORMAT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
 }
 
-REPO_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
+PACKAGE_PATH="$(dirname -- "${BASH_SOURCE[0]}")"
 
 run_pipenv() {
     # make sure we don't use "$HOME/.cache" accidentally (expands to /.cache, if HOME is not set)
-    : "${PIPENV_CACHE_DIR:="${REPO_PATH}/.cache"}"
+    : "${PIPENV_CACHE_DIR:="${PACKAGE_PATH}/.cache"}"
     export PIPENV_CACHE_DIR
 
     # Enforce a non localized environment. The reason for this configuration is
@@ -146,14 +146,14 @@ run_pipenv() {
         PIPENV_NOSPIN=true \
         PIPENV_HIDE_EMOJIS=true \
         PIPENV_NO_INHERIT=true \
-        PIPENV_PIPFILE="${REPO_PATH}"/Pipfile \
+        PIPENV_PIPFILE="${PACKAGE_PATH}"/Pipfile \
         PIPENV_IGNORE_VIRTUALENVS=1 \
         pipenv "$@"
 }
 
 run_format() {
     # shellcheck disable=SC2086
-    run_pipenv run isort --settings-path "$REPO_PATH"/pyproject.toml $1
+    run_pipenv run isort --settings-path "$PACKAGE_PATH"/pyproject.toml $1
 
     # shellcheck disable=SC2086
     run_pipenv run black $1
@@ -162,7 +162,7 @@ run_format() {
 run_check_format() {
     # shellcheck disable=SC2086
     run_pipenv run isort \
-        --settings-path "$REPO_PATH"/pyproject.toml \
+        --settings-path "$PACKAGE_PATH"/pyproject.toml \
         --check-only --diff $1
 
     # shellcheck disable=SC2086
@@ -171,7 +171,7 @@ run_check_format() {
 
 run_py_import_cycles() {
     run_pipenv run py_import_cycles \
-        --project-path "$REPO_PATH" \
+        --project-path "$PACKAGE_PATH" \
         --packages cmk_graphing \
         --strategy johnson \
         --verbose
@@ -196,7 +196,7 @@ run_unit_tests() {
     run_pipenv run python -m pytest \
         --color=yes \
         --code-highlight=yes \
-        "$REPO_PATH/tests/unit"
+        "$PACKAGE_PATH/tests/unit"
 }
 
 run_documentation() {
@@ -204,7 +204,7 @@ run_documentation() {
 }
 
 get_candidates_from_filesystem() {
-    cd "$REPO_PATH" || exit $?
+    cd "$PACKAGE_PATH" || exit $?
 
     SEARCH="cmk_graphing tests"
 
@@ -213,8 +213,7 @@ get_candidates_from_filesystem() {
     REAL_SEARCH=$(realpath $SEARCH)
 
     # shellcheck disable=SC2086
-    find -L \
-        $REAL_SEARCH \
+    find -L $REAL_SEARCH \
         -name .mypy_cache -prune -o \
         -name .venv -prune -o \
         -type f -print0

@@ -7,9 +7,8 @@ settings"""
 
 import abc
 from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Final
+from typing import Any, Callable, Final
 
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.forms as forms
@@ -423,6 +422,8 @@ class ABCEditGlobalSettingMode(WatoMode):
 
 
 class ModeEditGlobals(ABCGlobalSettingsMode):
+    page_menu_dropdowns_hook: Callable[[], PageMenuDropdown] | None = None
+
     @classmethod
     def name(cls) -> str:
         return "globalvars"
@@ -443,10 +444,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
 
-        if cmk_version.edition() is cmk_version.Edition.CME:
-            import cmk.gui.cme.wato  # pylint: disable=no-name-in-module,import-outside-toplevel
-
-            dropdowns.append(cmk.gui.cme.wato.cme_global_settings_dropdown())
+        if self.page_menu_dropdowns_hook is not None:
+            dropdowns.append(self.page_menu_dropdowns_hook())
 
         dropdowns.append(
             PageMenuDropdown(

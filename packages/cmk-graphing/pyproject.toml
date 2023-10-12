@@ -24,3 +24,8 @@ strict = true
 
 [tool.pylint]
 disable = "missing-docstring,line-too-long"
+
+# We need this section, even if it is empty, without it pytest won't consider
+# our package directory as the root directory and climbs up further, see:
+# https://docs.pytest.org/en/stable/reference/customize.html#finding-the-rootdir
+[tool.pytest.ini_options]

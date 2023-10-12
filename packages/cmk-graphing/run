@@ -130,26 +130,35 @@ run_pipenv() {
         pipenv "$@"
 }
 
+setup_venv() {
+    test ${RUN_SETUP_ENVIRONMENT} != yes && return
+    run_pipenv sync --dev
+    run_pipenv clean
+    # poor man's "activate", but without any danger of naming clashes
+    PATH="$(pwd)/.venv/bin:$PATH"
+    hash -r
+}
+
 run_format() {
     # shellcheck disable=SC2086
-    run_pipenv run isort --settings-path pyproject.toml $1
+    isort --settings-path pyproject.toml $1
 
     # shellcheck disable=SC2086
-    run_pipenv run black $1
+    black $1
 }
 
 run_check_format() {
     # shellcheck disable=SC2086
-    run_pipenv run isort \
+    isort \
         --settings-path pyproject.toml \
         --check-only --diff $1
 
     # shellcheck disable=SC2086
-    run_pipenv run black --check --diff $1
+    black --check --diff $1
 }
 
 run_py_import_cycles() {
-    run_pipenv run py_import_cycles \
+    py_import_cycles \
         --project-path . \
         --packages cmk_graphing \
         --strategy johnson \
@@ -158,21 +167,21 @@ run_py_import_cycles() {
 
 run_bandit() {
     # shellcheck disable=SC2086
-    run_pipenv run bandit -r -lll $1
+    bandit -r -lll $1
 }
 
 run_mypy() {
     # shellcheck disable=SC2086
-    run_pipenv run mypy --scripts-are-modules --show-error-codes $1
+    mypy --scripts-are-modules --show-error-codes $1
 }
 
 run_pylint() {
     # shellcheck disable=SC2086
-    run_pipenv run pylint $1
+    pylint $1
 }
 
 run_unit_tests() {
-    run_pipenv run python -m pytest \
+    python -m pytest \
         --color=yes \
         --code-highlight=yes \
         tests/unit
@@ -207,9 +216,7 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv sync --dev
-    test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv clean
+    setup_venv
 
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
     test ${RUN_FORMAT} = yes && run_format "$python_files"

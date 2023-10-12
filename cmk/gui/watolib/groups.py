@@ -6,11 +6,12 @@
 import copy
 import re
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Callable, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.notify_types import EventRule
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
@@ -56,6 +57,16 @@ from cmk.gui.watolib.rulesets import AllRulesets
 if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
+
+
+class ContactGroupUsageFinderRegistry(Registry[ContactGroupUsageFinder]):
+    def plugin_name(self, instance: ContactGroupUsageFinder) -> str:
+        return instance.__name__
+
+
+contact_group_usage_finder_registry = ContactGroupUsageFinderRegistry()
 
 
 def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> None:
@@ -231,10 +242,13 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     global_config = load_configuration_settings()
 
     used_in = _find_usages_of_group_in_rules(name, ["host_contactgroups", "service_contactgroups"])
+    for finder in contact_group_usage_finder_registry.values():
+        used_in += finder(name, global_config)
+
     used_in += _find_usages_of_contact_group_in_users(name)
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
-    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, folder_tree().root_folder())
+    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name)
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
     used_in += _find_usages_of_contact_group_in_ec_rules(name)
@@ -304,8 +318,10 @@ def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
 
 
 def _find_usages_of_contact_group_in_hosts_and_folders(
-    name: GroupName, folder: Folder
+    name: GroupName, folder: Folder | None = None
 ) -> list[tuple[str, str]]:
+    if folder is None:
+        folder = folder_tree().root_folder()
     used_in = []
     for subfolder in folder.subfolders():
         used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)

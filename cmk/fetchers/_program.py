@@ -15,7 +15,7 @@ from typing import Any, Final
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError
 
-from cmk.fetchers import Fetcher, Mode
+from ._abstract import Fetcher, Mode
 
 
 class ProgramFetcher(Fetcher[AgentRawData]):

@@ -28,8 +28,7 @@ from cmk.snmplib import (
     SNMPRowInfo,
 )
 
-from cmk.fetchers import Fetcher, Mode
-
+from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names
 from .cache import SectionStore
 from .snmp import make_backend, SNMPPluginStore

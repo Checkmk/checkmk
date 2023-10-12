@@ -27,7 +27,7 @@ from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
 
-from cmk.fetchers import Fetcher, Mode
+from ._abstract import Fetcher, Mode
 
 __all__ = ["IPMICredentials", "IPMIFetcher"]
 

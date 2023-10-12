@@ -13,7 +13,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
 
-from cmk.fetchers import Fetcher, Mode
+from ._abstract import Fetcher, Mode
 
 
 class PiggybackFetcher(Fetcher[AgentRawData]):

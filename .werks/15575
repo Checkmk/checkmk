@@ -1,0 +1,25 @@
+Title: Migrating ruleset systemd_services when used as static check
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1697189153
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk affects you, in case you've been using the ruleset systemd_services in combination with an enforced service (aka static check).
+You may encounter the following error during updating to 2.2:
+C+:
+-| WARNING: Invalid rule configuration detected
+-| Ruleset: static_checks:systemd_services
+-| Title: Deprecated: Systemd single services
+-| Folder: foo/bar
+-| Rule nr: 1
+-| Exception: You cannot save this rule. There are no elements defined for this selection yet.
+C-:
+
+This is fixed now and the update process should work without issues.
+
+

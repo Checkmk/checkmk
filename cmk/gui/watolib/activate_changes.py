@@ -1630,31 +1630,24 @@ class ActivateChangesManager(ActivateChanges):
         return "site_%s.mk" % site_id
 
 
+def make_cre_snapshot_manager(
+    work_dir: str,
+    site_snapshot_settings: dict[SiteId, SnapshotSettings],
+    edition: version.Edition,
+) -> SnapshotManager:
+    return SnapshotManager(
+        work_dir,
+        site_snapshot_settings,
+        CRESnapshotDataCollector(site_snapshot_settings),
+        reuse_identical_snapshots=True,
+        generate_in_subprocess=False,
+    )
+
+
 class SnapshotManager:
-    @staticmethod
-    def factory(
-        work_dir: str,
-        site_snapshot_settings: dict[SiteId, SnapshotSettings],
-        edition: version.Edition,
-    ) -> SnapshotManager:
-        if edition is version.Edition.CME:
-            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
-
-            return SnapshotManager(
-                work_dir,
-                site_snapshot_settings,
-                managed_snapshots.CMESnapshotDataCollector(site_snapshot_settings),
-                reuse_identical_snapshots=False,
-                generate_in_subprocess=True,
-            )
-
-        return SnapshotManager(
-            work_dir,
-            site_snapshot_settings,
-            CRESnapshotDataCollector(site_snapshot_settings),
-            reuse_identical_snapshots=True,
-            generate_in_subprocess=False,
-        )
+    factory: Callable[
+        [str, dict[SiteId, SnapshotSettings], version.Edition], SnapshotManager
+    ] = make_cre_snapshot_manager
 
     def __init__(
         self,
@@ -2329,6 +2322,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 10
+    file_filter_func: Callable[[str], bool] | None = None
 
     @classmethod
     def gui_title(cls):
@@ -2356,12 +2350,6 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             _("Activate Changes Scheduler started"), with_timestamp=True
         )
 
-        file_filter_func = None
-        if version.edition() is version.Edition.CME:
-            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
-
-            file_filter_func = managed_snapshots.customer_user_files_filter()
-
         job_interface.send_progress_update(
             _("Going to update %d sites") % len(self._site_snapshot_settings), with_timestamp=True
         )
@@ -2369,7 +2357,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         sync_and_activate(
             self._activation_id,
             self._site_snapshot_settings,
-            file_filter_func,
+            self.file_filter_func,
             self._prevent_activate,
         )
         job_interface.send_result_message(_("Activate changes finished"))

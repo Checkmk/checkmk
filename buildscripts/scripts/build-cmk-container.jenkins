@@ -94,7 +94,7 @@ timeout(time: 12, unit: 'HOURS') {
                                     ${SET_BRANCH_LATEST_TAG} \
                                     ${BUILD_IMAGE_WITHOUT_CACHE} \
                                     "build"
-                            """
+                                """);
                             }
                         }
 

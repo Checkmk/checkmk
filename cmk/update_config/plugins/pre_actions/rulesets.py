@@ -12,7 +12,7 @@ from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.rulesets import RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.plugins.actions.rulesets import AllRulesets
+from cmk.update_config.plugins.actions.rulesets import AllRulesets, REPLACED_RULESETS
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -57,6 +57,14 @@ def _validate_rule_values(
         # the valid choices for this ruleset are user-dependent (SLAs) and not even an admin can
         # see all of them
         "extra_service_conf:_sla_config",
+        # validating a ruleset for static checks, where we want to replace the ruleset anyway,
+        # does not work:
+        # * the validation checks if there are checks which subscribe to that check group
+        # * when replacing a ruleset, we have no check anymore subscribing to the old name
+        # * in that case, the validation will always fail, so we skip it during update
+        # * the rule validation with the replaced ruleset will happen after the replacing anyway again
+        # see cmk.update_config.plugins.actions.rulesets._validate_rule_values
+        *{ruleset for ruleset in REPLACED_RULESETS if ruleset.startswith("static_checks:")},
     }
 
     for ruleset in all_rulesets.get_rulesets().values():

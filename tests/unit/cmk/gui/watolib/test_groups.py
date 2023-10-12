@@ -13,6 +13,7 @@ import cmk.utils.paths
 
 import cmk.gui.groups as gui_groups
 from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 
 
 @pytest.fixture(autouse=True)
@@ -112,3 +113,18 @@ multisite_contactgroups = {
                 "d1ng": "dong",
             }
         }
+
+
+def test_group_usage_finder_registry_entries() -> None:
+    expected = [
+        "find_usages_of_contact_group_in_dashboards",
+        "find_usages_of_contact_group_in_default_user_profile",
+        "find_usages_of_contact_group_in_ec_rules",
+        "find_usages_of_contact_group_in_hosts_and_folders",
+        "find_usages_of_contact_group_in_mkeventd_notify_contactgroup",
+        "find_usages_of_contact_group_in_notification_rules",
+        "find_usages_of_contact_group_in_users",
+    ]
+
+    registered = [f.__name__ for f in contact_group_usage_finder_registry.values()]
+    assert sorted(registered) == sorted(expected)

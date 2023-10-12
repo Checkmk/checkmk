@@ -68,6 +68,7 @@ from cmk.gui.rest_api_types.notifications_types import (
     get_plugin_from_mk_file,
     NotificationPlugin,
 )
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.utils import wato_root_dir
 
@@ -640,3 +641,28 @@ class NotificationRule:
 
         er = cast(EventRule, r)
         return er
+
+
+def find_usages_of_contact_group_in_notification_rules(
+    name: str, _settings: GlobalSettings
+) -> list[tuple[str, str]]:
+    used_in: list[tuple[str, str]] = []
+    for rule in load_notification_rules():
+        if _used_in_notification_rule(name, rule):
+            title = "{}: {}".format(_("Notification rule"), rule.get("description", ""))
+            used_in.append((title, "wato.py?mode=notifications"))
+
+    for user_id, user_rules in load_user_notification_rules().items():
+        for rule in user_rules:
+            if _used_in_notification_rule(name, rule):
+                title = "{}: {}".format(
+                    _("Notification rules of user %s") % user_id,
+                    rule.get("description", ""),
+                )
+                used_in.append((title, "wato.py?mode=user_notifications&user=%s" % user_id))
+
+    return used_in
+
+
+def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
+    return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])

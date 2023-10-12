@@ -21,6 +21,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
 )
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
@@ -77,6 +78,7 @@ def register(
     match_item_generator_registry: MatchItemGeneratorRegistry,
     mega_menu_registry: MegaMenuRegistry,
     ac_test_registry: ACTestRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -103,7 +105,11 @@ def register(
     _main_modules.register(main_module_registry)
     _rulespec_groups.register(rulespec_group_registry)
     _pre_21_plugin_api.register()
-    _check_mk_configuration.register(config_variable_registry, config_variable_group_registry)
+    _check_mk_configuration.register(
+        config_variable_registry,
+        config_variable_group_registry,
+        contact_group_usage_finder_registry,
+    )
     _ac_tests.register(ac_test_registry)
     _omd_configuration.register(config_domain_registry, config_variable_registry)
     _nagvis_auth.register(permission_section_registry, permission_registry)

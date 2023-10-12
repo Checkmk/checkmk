@@ -18,7 +18,9 @@ from cmk.gui.permissions import (
     PermissionSectionRegistry,
 )
 from cmk.gui.visuals.type import VisualTypeRegistry
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 
+from ._find_group_usage import find_usages_of_contact_group_in_dashboards
 from .builtin_dashboards import builtin_dashboards, GROW, MAX
 from .cre_dashboards import register_builtin_dashboards
 from .dashlet import (
@@ -83,6 +85,7 @@ def register(
     page_registry: PageRegistry,
     visual_type_registry: VisualTypeRegistry,
     dashlet_registry_: DashletRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
 ) -> None:
     visual_type_registry.register(VisualTypeDashboards)
     permission_section_registry.register(PermissionSectionDashboard)
@@ -105,6 +108,7 @@ def register(
 
     register_dashlets(dashlet_registry_)
     register_builtin_dashboards(builtin_dashboards)
+    contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_dashboards)
 
 
 class PermissionSectionDashboard(PermissionSection):

@@ -119,6 +119,7 @@ def register() -> None:
         page_registry,
         visual_type_registry,
         dashlet_registry,
+        contact_group_usage_finder_registry,
     )
     crash_reporting.register(
         page_registry,
@@ -199,6 +200,7 @@ def register() -> None:
         match_item_generator_registry,
         mega_menu_registry,
         ac_test_registry,
+        contact_group_usage_finder_registry,
     )
     bi_registration.register(
         data_source_registry,

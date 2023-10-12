@@ -18,11 +18,12 @@ from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-viol
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
-from cmk.gui.groups import load_contact_group_information
+from cmk.gui.groups import GroupName, load_contact_group_information
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_languages
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles, show_mode_choices, validate_start_url
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
@@ -87,6 +88,8 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupAgentSNMP,
     RulespecGroupHostsMonitoringRulesHostChecks,
@@ -121,6 +124,7 @@ from ._rulespec_groups import RulespecGroupDiscoveryCheckParameters
 def register(
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
 ) -> None:
     config_variable_registry.register(ConfigVariableUITheme)
     config_variable_registry.register(ConfigVariableEnableCommunityTranslations)
@@ -186,6 +190,9 @@ def register(
     config_variable_registry.register(ConfigVariableSessionManagement)
     config_variable_registry.register(ConfigVariableSingleUserSession)
     config_variable_registry.register(ConfigVariableDefaultUserProfile)
+    contact_group_usage_finder_registry.register(
+        find_usages_of_contact_group_in_default_user_profile
+    )
     config_variable_group_registry.register(ConfigVariableGroupCheckExecution)
     config_variable_registry.register(ConfigVariableUseNewDescriptionsFor)
     config_variable_registry.register(ConfigVariableTCPConnectTimeout)
@@ -2670,6 +2677,29 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
         contact_groups = load_contact_group_information()
         entries = [(c, g["alias"]) for c, g in contact_groups.items()]
         return sorted(entries)
+
+
+def find_usages_of_contact_group_in_default_user_profile(
+    name: GroupName, global_config: GlobalSettings
+) -> list[tuple[str, str]]:
+    """Used in default_user_profile?"""
+    used_in = []
+    config_variable = ConfigVariableDefaultUserProfile()
+    domain = config_variable.domain()
+    configured = global_config.get("default_user_profile", {})
+    default_value = domain().default_globals()["default_user_profile"]
+    if (configured and name in configured["contactgroups"]) or name in default_value[
+        "contactgroups"
+    ]:
+        used_in.append(
+            (
+                "%s" % (_("Default User Profile")),
+                folder_preserving_link(
+                    [("mode", "edit_configvar"), ("varname", "default_user_profile")]
+                ),
+            )
+        )
+    return used_in
 
 
 # .

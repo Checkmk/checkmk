@@ -5,7 +5,6 @@
 
 import copy
 import re
-from collections.abc import Sequence
 from typing import Any, Callable, Literal
 
 import cmk.utils.paths
@@ -38,7 +37,6 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.group_writer import save_group_information
 from cmk.gui.watolib.host_attributes import (
@@ -48,7 +46,6 @@ from cmk.gui.watolib.host_attributes import (
     HostContactGroupSpec,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
-from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
 if cmk_version.edition() is cmk_version.Edition.CME:
@@ -242,78 +239,6 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     for finder in contact_group_usage_finder_registry.values():
         used_in += finder(name, global_config)
 
-    used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
-    used_in += _find_usages_of_contact_group_in_notification_rules(name)
-    used_in += _find_usages_of_contact_group_in_dashboards(name)
-
-    return used_in
-
-
-def _find_usages_of_contact_group_in_default_user_profile(
-    name: GroupName, global_config: GlobalSettings
-) -> list[tuple[str, str]]:
-    """Used in default_user_profile?"""
-    used_in = []
-    config_variable = config_variable_registry["default_user_profile"]()
-    domain = config_variable.domain()
-    configured = global_config.get("default_user_profile", {})
-    default_value = domain().default_globals()["default_user_profile"]
-    if (configured and name in configured["contactgroups"]) or name in default_value[
-        "contactgroups"
-    ]:
-        used_in.append(
-            (
-                "%s" % (_("Default User Profile")),
-                folder_preserving_link(
-                    [("mode", "edit_configvar"), ("varname", "default_user_profile")]
-                ),
-            )
-        )
-    return used_in
-
-
-def _find_usages_of_contact_group_in_notification_rules(name: str) -> list[tuple[str, str]]:
-    used_in: list[tuple[str, str]] = []
-    for rule in load_notification_rules():
-        if _used_in_notification_rule(name, rule):
-            title = "{}: {}".format(_("Notification rule"), rule.get("description", ""))
-            used_in.append((title, "wato.py?mode=notifications"))
-
-    for user_id, user_rules in load_user_notification_rules().items():
-        for rule in user_rules:
-            if _used_in_notification_rule(name, rule):
-                title = "{}: {}".format(
-                    _("Notification rules of user %s") % user_id,
-                    rule.get("description", ""),
-                )
-                used_in.append((title, "wato.py?mode=user_notifications&user=%s" % user_id))
-
-    return used_in
-
-
-def _find_usages_of_contact_group_in_dashboards(name: str) -> list[tuple[str, str]]:
-    used_in: list[tuple[str, str]] = []
-    # FIXME: This leads to a circular import otherwise.
-    from cmk.gui.dashboard import get_all_dashboards
-
-    for (dashboard_owner, dashboard_name), board in get_all_dashboards().items():
-        public_value: bool | tuple[str, Sequence[str]] = board["public"]
-        if isinstance(public_value, tuple) and name in public_value[1]:
-            title = "{}: {}".format(_("Dashboard of user %s") % dashboard_owner, dashboard_name)
-            used_in.append(
-                (
-                    title,
-                    makeuri_contextless(
-                        request,
-                        [
-                            ("load_name", dashboard_name),
-                            ("mode", "edit"),
-                            ("owner", dashboard_owner),
-                        ],
-                        filename="edit_dashboard.py",
-                    ),
-                )
-            )
     return used_in
 
 

@@ -62,6 +62,7 @@ from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLa
 from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from .hosts_and_folders import find_usages_of_contact_group_in_hosts_and_folders
 from .network_scan import AutomationNetworkScan
+from .notifications import find_usages_of_contact_group_in_notification_rules
 from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
@@ -108,6 +109,9 @@ def register(
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
     sample_config_generator_registry.register(ConfigGeneratorAutomationUser)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
+    contact_group_usage_finder_registry_.register(
+        find_usages_of_contact_group_in_notification_rules
+    )
 
 
 def _register_automation_commands() -> None:

@@ -327,3 +327,37 @@ this is the `description` with some *italic* and __bold__ ***formatting***.
 def test_parse_werkv1_missing_class() -> None:
     with pytest.raises(WerkError, match="class\n  Field required"):
         assert load_werk(file_content=WERK_V1_MISSING_CLASS, file_name="1234")
+
+
+def test_loading_md_werk_without_body() -> None:
+    md = """[//]: # (werk v2)
+# test < werk
+
+key | value
+--- | ---
+class | fix
+component | core
+date | 2022-12-12T11:08:08+00:00
+level | 1
+version | 2.0.0p7
+compatible | yes
+edition | cre
+"""
+    expected = {
+        "__version__": "2",
+        "id": 1234,
+        "class": "fix",
+        "compatible": "yes",
+        "component": "core",
+        "date": "2022-12-12T11:08:08Z",
+        "edition": "cre",
+        "level": 1,
+        "title": "test < werk",
+        "version": "2.0.0p7",
+        "description": "",
+    }
+    assert _markdown_string_to_werk(md).to_json_dict() == expected
+    assert _markdown_string_to_werk(md + "\n").to_json_dict() == expected
+    assert _markdown_string_to_werk(md + "\n\n").to_json_dict() == expected
+    assert _markdown_string_to_werk(md + "\n\n\n").to_json_dict() == expected
+    assert _markdown_string_to_werk(md + "\n\n\n\n").to_json_dict() == expected

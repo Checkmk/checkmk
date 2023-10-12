@@ -31,13 +31,17 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
             "Markdown formatted werks need to start with header: '[//]: # (werk v2)\\n'"
         )
 
-    try:
-        md_title, md_table, md_description = content.split("\n\n", 2)
-    except ValueError as e:
+    sections = content.split("\n\n", 2)
+    if len(sections) == 2:
+        md_title, md_table = sections
+        md_description = ""
+    elif len(sections) == 3:
+        md_title, md_table, md_description = sections
+    else:
         raise WerkError(
             "Structure of markdown werk could not be detected. Format has to be:"
-            "header, headline, empty line, table, empty line, description"
-        ) from e
+            "header, headline, empty line, table and optionally empty line, description"
+        )
 
     title = md_title.removeprefix("[//]: # (werk v2)\n")
 

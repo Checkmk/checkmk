@@ -8,7 +8,7 @@ import time
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 
-from .. import SidebarSnapin
+from ._base import SidebarSnapin
 
 
 class CurrentTime(SidebarSnapin):

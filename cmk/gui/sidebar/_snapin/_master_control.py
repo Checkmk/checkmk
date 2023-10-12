@@ -21,7 +21,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.urls import makeuri_contextless
 
-from .. import PageHandlers, SidebarSnapin
+from ._base import PageHandlers, SidebarSnapin
 from ._helpers import write_snapin_exception
 
 

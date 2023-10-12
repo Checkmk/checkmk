@@ -22,7 +22,7 @@ from cmk.gui.node_visualization import ParentChildTopologyPage
 from cmk.gui.type_defs import ABCMegaMenuSearch, MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
-from .. import SidebarSnapin
+from ._base import SidebarSnapin
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
 
 

@@ -10,7 +10,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.utils.urls import urlencode
 
-from .. import SidebarSnapin
+from ._base import SidebarSnapin
 from ._helpers import bulletlink
 
 

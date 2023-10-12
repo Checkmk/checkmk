@@ -20,7 +20,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput
 
-from .. import CustomizableSidebarSnapin
+from ._base import CustomizableSidebarSnapin
 from ._helpers import link
 
 

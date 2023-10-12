@@ -20,7 +20,7 @@ from cmk.gui.pagetypes import (
     OverridableInstances,
     OverridableSpec,
 )
-from cmk.gui.sidebar._snapin.snapins.bookmarks import BookmarkList, BookmarkListSpec
+from cmk.gui.sidebar._snapin._bookmarks import BookmarkList, BookmarkListSpec
 from cmk.gui.userdb import load_users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction

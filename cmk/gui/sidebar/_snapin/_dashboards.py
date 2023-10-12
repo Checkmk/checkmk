@@ -9,7 +9,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import TopicMenuTopic
 
-from .. import SidebarSnapin
+from ._base import SidebarSnapin
 from ._helpers import footnotelinks, make_topic_menu, show_topic_menu
 
 

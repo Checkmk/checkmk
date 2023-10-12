@@ -8,7 +8,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 
-from .. import SidebarSnapin
+from ._base import SidebarSnapin
 from ._helpers import footnotelinks
 
 

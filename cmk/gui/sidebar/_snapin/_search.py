@@ -57,7 +57,7 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
-from .. import PageHandlers, SidebarSnapin
+from ._base import PageHandlers, SidebarSnapin
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |

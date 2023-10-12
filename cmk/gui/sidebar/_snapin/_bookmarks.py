@@ -33,7 +33,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-from .. import SidebarSnapin
+from ._base import SidebarSnapin
 from ._helpers import begin_footnote_links, end_footnote_links, iconlink, link
 
 

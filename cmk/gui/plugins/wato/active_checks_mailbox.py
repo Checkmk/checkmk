@@ -363,10 +363,10 @@ def _valuespec_active_checks_mail_loop():
         Dictionary(
             title=_("Check Email Delivery"),
             help=_(
-                "This active check sends out special E-Mails to a defined mail address using "
-                "the SMTP protocol and then tries to receive these mails back by querying the "
-                "inbox of an IMAP, POP3 or EWS mailbox. With this check you can verify that your whole "
-                "mail delivery progress is working."
+                "This active check sends out special emails to a defined mail address using either "
+                "the SMTP protocol or an EWS connection and then tries to receive these mails back "
+                "by querying the inbox of an IMAP, POP3 or EWS mailbox. With this check you can "
+                "verify that your whole mail delivery progress is working."
             ),
             optional_keys=[
                 "subject",

@@ -213,6 +213,7 @@ main() {
     parse_options "$@"
 
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv sync --dev
+    test ${RUN_SETUP_ENVIRONMENT} = yes && run_pipenv clean
 
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
     test ${RUN_FORMAT} = yes && run_format "$python_files"

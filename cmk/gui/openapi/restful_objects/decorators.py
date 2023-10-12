@@ -1597,6 +1597,10 @@ def _permission_descriptions(
         return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
     def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
+        if isinstance(permission, permissions.Undocumented):
+            # Don't render
+            return
+
         # We indent by two spaces, as is required by markdown.
         prefix = "  " * indent
         if isinstance(permission, permissions.Perm):
@@ -1622,9 +1626,6 @@ def _permission_descriptions(
         elif isinstance(permission, permissions.Optional):
             desc_list.append(f"{prefix} * Optionally:")
             _add_desc(permission.perm, indent + 1, desc_list)
-        elif isinstance(permission, permissions.Undocumented):
-            # Don't render
-            pass
         else:
             raise NotImplementedError(f"Printing of {permission!r} not yet implemented.")
 

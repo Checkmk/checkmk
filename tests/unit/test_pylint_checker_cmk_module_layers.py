@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from pylint.lint import PyLinter  # type: ignore[import]
+from pylint.lint import PyLinter
 
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,

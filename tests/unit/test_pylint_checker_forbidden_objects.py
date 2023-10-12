@@ -7,8 +7,8 @@ from collections.abc import Iterable
 
 import astroid  # type: ignore[import]
 import pytest
-from pylint.lint import PyLinter  # type: ignore[import]
-from pylint.testutils import CheckerTestCase, MessageTest  # type: ignore[import]
+from pylint.lint import PyLinter
+from pylint.testutils import CheckerTestCase, MessageTest
 
 from tests.testlib.pylint_checker_forbidden_objects import (
     ABCMetaChecker,

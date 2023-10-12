@@ -5,8 +5,8 @@
 
 
 import astroid  # type: ignore[import-untyped]
-from pylint.checkers import BaseChecker  # type: ignore[import-untyped]
-from pylint.lint import PyLinter  # type: ignore[import-untyped]
+from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter
 
 
 def register(linter: PyLinter) -> None:

@@ -15,9 +15,6 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.regex import GROUP_NAME_PATTERN
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
-# It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-
 import cmk.gui.hooks as hooks
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
@@ -35,7 +32,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.userdb import load_roles, load_users
+from cmk.gui.userdb import load_roles
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
@@ -245,30 +242,11 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     for finder in contact_group_usage_finder_registry.values():
         used_in += finder(name, global_config)
 
-    used_in += _find_usages_of_contact_group_in_users(name)
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
-    used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
     used_in += _find_usages_of_contact_group_in_hosts_and_folders(name)
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
-    used_in += _find_usages_of_contact_group_in_ec_rules(name)
 
-    return used_in
-
-
-def _find_usages_of_contact_group_in_users(name: GroupName) -> list[tuple[str, str]]:
-    """Is the contactgroup assigned to a user?"""
-    used_in = []
-    users = load_users()
-    for userid, user_spec in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
-        cgs = user_spec.get("contactgroups", [])
-        if name in cgs:
-            used_in.append(
-                (
-                    "{}: {}".format(_("User"), user_spec.get("alias", userid)),
-                    folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
-                )
-            )
     return used_in
 
 
@@ -292,28 +270,6 @@ def _find_usages_of_contact_group_in_default_user_profile(
                 ),
             )
         )
-    return used_in
-
-
-def _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(
-    name: GroupName, global_config: GlobalSettings
-) -> list[tuple[str, str]]:
-    """Is the contactgroup used in mkeventd notify (if available)?"""
-    used_in = []
-    if "mkeventd_notify_contactgroup" in config_variable_registry:
-        config_variable = config_variable_registry["mkeventd_notify_contactgroup"]()
-        domain = config_variable.domain()
-        configured = global_config.get("mkeventd_notify_contactgroup")
-        default_value = domain().default_globals()["mkeventd_notify_contactgroup"]
-        if (configured and name == configured) or name == default_value:
-            used_in.append(
-                (
-                    "%s" % (config_variable.valuespec().title()),
-                    folder_preserving_link(
-                        [("mode", "edit_configvar"), ("varname", "mkeventd_notify_contactgroup")]
-                    ),
-                )
-            )
     return used_in
 
 
@@ -383,28 +339,6 @@ def _find_usages_of_contact_group_in_dashboards(name: str) -> list[tuple[str, st
 
 def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
-
-
-def _find_usages_of_contact_group_in_ec_rules(name: str) -> list[tuple[str, str]]:
-    """Is the contactgroup used in an eventconsole rule?"""
-    used_in: list[tuple[str, str]] = []
-    rule_packs = ec.load_rule_packs()
-    for pack in rule_packs:
-        for nr, rule in enumerate(pack.get("rules", [])):
-            if name in rule.get("contact_groups", {}).get("groups", []):
-                used_in.append(
-                    (
-                        "{}: {}".format(_("Event console rule"), rule["id"]),
-                        folder_preserving_link(
-                            [
-                                ("mode", "mkeventd_edit_rule"),
-                                ("edit", nr),
-                                ("rule_pack", pack["id"]),
-                            ]
-                        ),
-                    )
-                )
-    return used_in
 
 
 def find_usages_of_host_group(name: GroupName) -> list[tuple[str, str]]:

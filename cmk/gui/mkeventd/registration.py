@@ -13,6 +13,7 @@ from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato import NotificationParameterRegistry
+from cmk.gui.watolib import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
@@ -25,6 +26,10 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
 
 from . import _filters, views, wato
+from ._find_group_usage import (
+    find_usages_of_contact_group_in_ec_rules,
+    find_usages_of_contact_group_in_mkeventd_notify_contactgroup,
+)
 from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .config_domain import ConfigDomainEventConsole
@@ -54,6 +59,7 @@ def register(
     filter_registry: FilterRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
     snapin_registry: SnapinRegistry,
+    contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
 ) -> None:
     views.register(
         data_source_registry,
@@ -81,3 +87,7 @@ def register(
     autocompleter_registry.register_expression("service_levels")(service_levels_autocompleter)
     _filters.register(filter_registry)
     snapin_registry.register(SidebarSnapinEventConsole)
+    contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_ec_rules)
+    contact_group_usage_finder_registry.register(
+        find_usages_of_contact_group_in_mkeventd_notify_contactgroup
+    )

@@ -56,6 +56,8 @@ from .automations import (
     CheckmkAutomationBackgroundJob,
 )
 from .bulk_discovery import BulkDiscoveryBackgroundJob
+from .groups import contact_group_usage_finder_registry as contact_group_usage_finder_registry
+from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
 from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from .network_scan import AutomationNetworkScan

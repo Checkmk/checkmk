@@ -11,11 +11,7 @@ import pytest
 
 import cmk.utils.paths
 
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
-from cmk.ec.export import ECRulePack
-
 import cmk.gui.groups as gui_groups
-import cmk.gui.watolib.groups as groups
 from cmk.gui.utils.script_helpers import application_and_request_context
 
 
@@ -116,87 +112,3 @@ multisite_contactgroups = {
                 "d1ng": "dong",
             }
         }
-
-
-def _rule_packs() -> list[ECRulePack]:
-    return [
-        {
-            "id": "default",
-            "title": "Default rule pack",
-            "disabled": False,
-            "rules": [
-                {
-                    "id": "test2",
-                    "contact_groups": {
-                        "groups": ["my_contact_group"],
-                        "notify": True,
-                        "precedence": "host",
-                    },
-                },
-                {
-                    "id": "test4",
-                    "contact_groups": {"groups": ["all"], "notify": True, "precedence": "host"},
-                },
-                {
-                    "id": "test1",
-                    "contact_groups": {
-                        "groups": ["my_contact_group"],
-                        "notify": True,
-                        "precedence": "host",
-                    },
-                },
-                {
-                    "id": "test",
-                    "contact_groups": {
-                        "groups": ["my_contact_group"],
-                        "notify": True,
-                        "precedence": "host",
-                    },
-                },
-            ],
-        }
-    ]
-
-
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    "contact_group, rule_packs, expected_result",
-    [
-        pytest.param(
-            "my_contact_group",
-            _rule_packs,
-            [
-                (
-                    "Event console rule: test2",
-                    "wato.py?edit=0&folder=&mode=mkeventd_edit_rule&rule_pack=default",
-                ),
-                (
-                    "Event console rule: test1",
-                    "wato.py?edit=2&folder=&mode=mkeventd_edit_rule&rule_pack=default",
-                ),
-                (
-                    "Event console rule: test",
-                    "wato.py?edit=3&folder=&mode=mkeventd_edit_rule&rule_pack=default",
-                ),
-            ],
-            id="existing contact group, should match",
-        ),
-        pytest.param(
-            "bielefeld",
-            _rule_packs,
-            [],
-            id="none existing contact group",
-        ),
-    ],
-)
-def test_find_usages_of_contact_group_in_ec_rules(
-    monkeypatch: pytest.MonkeyPatch,
-    contact_group: str,
-    rule_packs: list[ECRulePack],
-    expected_result: list[tuple[str, str]],
-) -> None:
-    monkeypatch.setattr(cmk.ec.export, "load_rule_packs", rule_packs)
-    assert (
-        groups._find_usages_of_contact_group_in_ec_rules(contact_group)
-        == expected_result  # pylint: disable=protected-access
-    )

@@ -78,6 +78,7 @@ from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     sample_config_generator_registry,
 )
+from cmk.gui.watolib.groups import contact_group_usage_finder_registry
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
@@ -161,6 +162,7 @@ def register() -> None:
             filter_registry,
             notification_parameter_registry,
             snapin_registry,
+            contact_group_usage_finder_registry,
         )
         custom_icons_register(
             mode_registry,
@@ -173,6 +175,7 @@ def register() -> None:
         user_attribute_registry,
         user_connector_registry,
         job_registry,
+        contact_group_usage_finder_registry,
     )
     wato_registration.register(
         page_registry,

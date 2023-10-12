@@ -16,7 +16,7 @@ properties([
     string(name: 'SET_BRANCH_LATEST_TAG', defaultValue: 'no', description: 'SET_BRANCH_LATEST_TAG: setting yes will push this docker image to the BRANCH-latest tag on docker hub.'),
     booleanParam(name: 'PUSH_TO_REGISTRY', defaultValue: true, description: 'Set to false if the built docker images should not be pushed to their registries.'),
     booleanParam(name: 'PUSH_TO_REGISTRY_ONLY', defaultValue: false, description: 'Set to true, if previously built docker images should only be pushed to their registries.'),
-    booleanParam(name: 'BUILD_IMAGE_WITHOUT_CACHE', defaultValue: false, description: 'If activated the CMK Docker base image of check_mk/docker/Dockerfile is build without cache'),
+    string(name: 'BUILD_IMAGE_WITHOUT_CACHE', defaultValue: 'no', description: 'If activated the CMK Docker base image of check_mk/docker/Dockerfile is build without cache'),
   ])
 ])
 

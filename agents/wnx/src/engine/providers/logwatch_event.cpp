@@ -340,6 +340,12 @@ StateVector LoadEventlogOffsets(const PathVector &state_files,
     return {};
 }
 
+auto x() {
+    std::string_view s1 = "a";
+    std::string_view s2 = "a";
+    return s1 < s2;
+}
+
 void SaveEventlogOffsets(const std::string &file_name,
                          const StateVector &states) {
     {

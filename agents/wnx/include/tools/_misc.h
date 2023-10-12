@@ -39,14 +39,14 @@ void sleep(std::chrono::duration<T, B> dur) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() + dur);
 }
 
-inline bool CompareIgnoreCase(char lhs, char rhs) noexcept {
+inline auto CompareIgnoreCase(char lhs, char rhs) noexcept {
     // TODO(sk): naive implementation
-    return std::tolower(lhs) == std::tolower(rhs);
+    return std::tolower(lhs) <=> std::tolower(rhs);
 }
 
-inline bool CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
+inline auto CompareIgnoreCase(wchar_t lhs, wchar_t rhs) noexcept {
     // TODO(sk): naive implementation
-    return std::towlower(lhs) == std::towlower(rhs);
+    return std::towlower(lhs) <=> std::towlower(rhs);
 }
 
 /// Checks basically whether we have vector(ContiguousContainer)
@@ -94,24 +94,21 @@ template <class T, class V>
     requires UniStringLike<T> && UniStringLike<V>
 [[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
-        return CompareIgnoreCase(l, r);
+        return CompareIgnoreCase(l, r) == std::strong_ordering::equal;
     });
+}
+
+template <class T, class V>
+    requires UniStringLike<T> && UniStringLike<V>
+auto ThreeWayCompare(const T &lhs, const V &rhs) {
+    return std::lexicographical_compare_three_way(
+        lhs.begin(), lhs.end(), std::ranges::begin(rhs), std::ranges::end(rhs),
+        [](auto l, auto r) { return CompareIgnoreCase(l, r); });
 }
 
 [[nodiscard]] inline bool IsLess(std::string_view lhs,
                                  std::string_view rhs) noexcept {
-    auto li = lhs.cbegin();
-    auto ri = rhs.cbegin();
-    for (; li != lhs.cend() && ri != rhs.cend(); ++ri, ++li) {
-        const auto right_char = std::tolower(*ri);
-        const auto left_char = std::tolower(*li);
-        if (left_char != right_char) {
-            return left_char < right_char;
-        }
-    }
-
-    // If equal until here, lhs < rhs iff lhs shorter than rhs.
-    return lhs.size() < rhs.size();
+    return ThreeWayCompare(lhs, rhs) == std::strong_ordering::less;
 }
 
 // Stupid Approach but C++ has no good methods to uppercase/lowercase string

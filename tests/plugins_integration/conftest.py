@@ -65,36 +65,43 @@ def pytest_addoption(parser):
         "--host-names",
         action="store",
         help="Host name allow list",
+        default=None,
     )
     parser.addoption(
         "--check-names",
         action="store",
         help="Check name allow list",
+        default=None,
     )
     parser.addoption(
         "--data-dir",
         action="store",
         help="Data dir path",
+        default=None,
     )
     parser.addoption(
         "--dump-dir",
         action="store",
         help="Dump dir path",
+        default=None,
     )
     parser.addoption(
         "--response-dir",
         action="store",
         help="Response dir path",
+        default=None,
     )
     parser.addoption(
         "--diff-dir",
         action="store",
         help="Diff dir path",
+        default=None,
     )
     parser.addoption(
         "--dump-types",
         action="store",
         help='Selected dump types to process (default: "agent,snmp")',
+        default=None,
     )
 
 

@@ -15,6 +15,7 @@ from enum import IntEnum
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 
 from tests.testlib.site import Site
@@ -167,6 +168,9 @@ def get_host_names(site: Site | None = None) -> list[str]:
     else:
         agent_host_names = []
         snmp_host_names = []
+        if not (config.dump_dir and os.path.exists(config.dump_dir)):
+            # need to skip here to abort the collection and return RC=5: "no tests collected"
+            pytest.skip(f'Folder "{config.dump_dir}" not found; exiting!', allow_module_level=True)
         for dump_file_name in [_ for _ in os.listdir(config.dump_dir) if not _.startswith(".")]:
             try:
                 dump_file_path = f"{config.dump_dir}/{dump_file_name}"

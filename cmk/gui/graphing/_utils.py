@@ -150,12 +150,12 @@ class GraphTemplate:
 
     @classmethod
     def from_template(cls, ident: str, template: GraphTemplateRegistration) -> Self:
-        def _parse_raw_metric(
-            raw_metric: (
+        def _parse_raw_metric_definition(
+            raw_metric_definition: (
                 tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
             )
         ) -> MetricDefinition:
-            expression, line_type, *title = raw_metric
+            expression, line_type, *title = raw_metric_definition
             return MetricDefinition(
                 expression=expression,
                 line_type=line_type,
@@ -173,7 +173,7 @@ class GraphTemplate:
             omit_zero_metrics=template.get("omit_zero_metrics", False),
             # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
             # https://github.com/python/mypy/issues/1178
-            metrics=[_parse_raw_metric(raw_metric) for raw_metric in template["metrics"]],
+            metrics=[_parse_raw_metric_definition(r) for r in template["metrics"]],
         )
 
 

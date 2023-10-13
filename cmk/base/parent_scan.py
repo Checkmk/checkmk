@@ -33,7 +33,12 @@ def do_scan_parents(
 ) -> None:
     # pylint: disable=too-many-branches
     if not hosts:
-        hosts = list(sorted(config_cache.all_active_realhosts()))
+        hosts_config = config_cache.hosts_config
+        hosts = sorted(
+            hn
+            for hn in hosts_config.hosts
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        )
 
     parent_hosts = []
     parent_ips: dict[HostName, HostAddress] = {}
@@ -347,7 +352,10 @@ def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostNa
 def _fill_ip_to_hostname_cache(cache: DictCache, config_cache: ConfigCache) -> None:
     """We must not use reverse DNS but the Checkmk mechanisms, since we do not
     want to find the DNS name but the name of a matching host from all_hosts"""
-    for host in config_cache.all_active_realhosts():
+    hosts_config = config_cache.hosts_config
+    for host in (
+        hn for hn in hosts_config.hosts if config_cache.is_active(hn) and config_cache.is_online(hn)
+    ):
         try:
             cache[config.lookup_ip_address(config_cache, host, family=socket.AF_INET)] = host
         except Exception:

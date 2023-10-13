@@ -1979,9 +1979,6 @@ class ConfigCache:
             for hn in self.hosts_config.clusters
             if self.is_active(hn) and not self.is_offline(hn)
         )
-        self._all_active_realhosts = set(
-            hn for hn in self.hosts_config.hosts if self.is_active(hn) and not self.is_offline(hn)
-        )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             set(
@@ -2002,7 +1999,6 @@ class ConfigCache:
         # Host lookup
         self._all_configured_hosts = set()
         self._all_active_clusters = set()
-        self._all_active_realhosts = set()
 
         # Reference hostname -> dirname including /
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
@@ -2480,7 +2476,11 @@ class ConfigCache:
         for parent_names in self.ruleset_matcher.get_host_values(host_name, parents):
             parent_candidates.update(parent_names.split(","))
 
-        return list(parent_candidates.intersection(self.all_active_realhosts()))
+        return list(
+            parent_candidates.intersection(
+                hn for hn in self.hosts_config.hosts if self.is_active(hn) and self.is_online(hn)
+            )
+        )
 
     def agent_connection_mode(self, host_name: HostName) -> HostAgentConnectionMode:
         return connection_mode_from_host_config(self.explicit_host_attributes(host_name))
@@ -3560,8 +3560,11 @@ class ConfigCache:
         self._verify_cluster_address_family(host_name, nodes)
         self._verify_cluster_datasource(host_name, nodes)
         nodes = list(nodes[:])
+        active_hosts = {
+            hn for hn in self.hosts_config.hosts if self.is_active(hn) and self.is_online(hn)
+        }
         for node in nodes:
-            if node not in self.all_active_realhosts():
+            if node not in active_hosts:
                 config_warnings.warn(
                     f"Node '{node}' of cluster '{host_name}' is not a monitored host in this site."
                 )
@@ -3717,10 +3720,6 @@ class ConfigCache:
         check_plugin_name_str = str(check_plugin_name)
 
         return _checktype_ignored_for_host(check_plugin_name_str)
-
-    def all_active_realhosts(self) -> set[HostName]:
-        """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
-        return self._all_active_realhosts
 
     def all_configured_hosts(self) -> set[HostName]:
         return self._all_configured_hosts

@@ -1202,8 +1202,13 @@ def mode_snmpget(args: list[str]) -> None:
     oid, *hostnames = args
 
     if not hostnames:
+        hosts_config = config_cache.hosts_config
         hostnames.extend(
-            host for host in config_cache.all_active_realhosts() if config_cache.is_snmp_host(host)
+            host
+            for host in hosts_config.hosts
+            if config_cache.is_active(host)
+            and config_cache.is_online(host)
+            and config_cache.is_snmp_host(host)
         )
 
     assert hostnames
@@ -1961,7 +1966,12 @@ def _preprocess_hostnames(
             "Discovering %shost labels on all hosts\n"
             % ("services and " if not only_host_labels else "")
         )
-        return set(config_cache.all_active_realhosts())
+        hosts_config = config_cache.hosts_config
+        return set(
+            hn
+            for hn in hosts_config.hosts
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        )
 
     node_names = {
         node_name

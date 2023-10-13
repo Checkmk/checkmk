@@ -136,10 +136,15 @@ class Modes:
         with_clusters: bool = True,
         with_foreign_hosts: bool = False,
     ) -> Sequence[HostName]:
+        hosts_config = config_cache.hosts_config
         if with_foreign_hosts:
-            valid_hosts = set(config_cache.hosts_config.hosts)
+            valid_hosts = set(hosts_config.hosts)
         else:
-            valid_hosts = config_cache.all_active_realhosts()
+            valid_hosts = {
+                hn
+                for hn in hosts_config.hosts
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
 
         if with_clusters:
             valid_hosts = valid_hosts.union(config_cache.all_active_clusters())

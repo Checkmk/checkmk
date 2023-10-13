@@ -228,7 +228,7 @@ def commandline_arguments(
     )
 
 
-class ActiveCheckConfig:
+class ActiveCheck:
     def __init__(
         self,
         host_name: HostName,

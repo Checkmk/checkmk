@@ -474,7 +474,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     # legacy checks via active_checks
     active_services = []
 
-    active_check_config = config_generation.ActiveCheckConfig(
+    active_check_config = config_generation.ActiveCheck(
         hostname,
         host_attrs,
         stored_passwords=stored_passwords,

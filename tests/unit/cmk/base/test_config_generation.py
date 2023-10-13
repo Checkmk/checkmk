@@ -18,7 +18,7 @@ import cmk.base.config as base_config
 import cmk.base.config_generation as config_generation
 from cmk.base.config_generation import (
     _get_host_address_config,
-    ActiveCheckConfig,
+    ActiveCheck,
     ActiveServiceData,
     ActiveServiceDescription,
     commandline_arguments,
@@ -439,7 +439,7 @@ def test_get_active_service_data(
     monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(
+    active_check_config = ActiveCheck(
         hostname, host_attrs, translations={}, macros=macros, stored_passwords=stored_passwords
     )
 
@@ -558,7 +558,7 @@ def test_get_active_service_data_warnings(
     monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
+    active_check_config = ActiveCheck(hostname, host_attrs, translations={})
 
     services = list(active_check_config.get_active_service_data(active_checks))
     assert services == expected_result
@@ -742,7 +742,7 @@ def test_get_active_service_descriptions(
     monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
+    active_check_config = ActiveCheck(hostname, host_attrs, translations={})
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
     assert descriptions == expected_result
@@ -788,7 +788,7 @@ def test_get_active_service_descriptions_warnings(
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
+    active_check_config = ActiveCheck(hostname, host_attrs, translations={})
 
     descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
     assert descriptions == expected_result

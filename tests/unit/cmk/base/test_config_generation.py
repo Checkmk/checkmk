@@ -9,13 +9,12 @@ from typing import NamedTuple, Type
 
 import pytest
 
-import cmk.utils.debug
+import cmk.utils.paths
 from cmk.utils import password_store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
-import cmk.base.config_generation as config_generation
 from cmk.base.config_generation import (
     _get_host_address_config,
     ActiveCheck,
@@ -27,7 +26,6 @@ from cmk.base.config_generation import (
     SpecialAgentInfoFunctionResult,
 )
 
-import cmk
 from cmk.config_generation.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
@@ -42,7 +40,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, active_check_command, hostname, host_attrs, macros, stored_passwords, expected_result",
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, macros, stored_passwords, expected_result",
     [
         pytest.param(
             [
@@ -55,7 +53,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -90,7 +88,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -125,7 +123,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -160,7 +158,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     "service_description": lambda _: "Active check of $HOSTALIAS$",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -199,7 +197,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     ),
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -247,7 +245,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     ),
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -276,16 +274,18 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckConfig(
-                name="my_active_check",
-                parameter_parser=lambda p: p,
-                service_function=lambda *_: (
-                    [
-                        ActiveCheckCommand("First service", ["--arg1", "argument1"]),
-                        ActiveCheckCommand("Second service", ["--arg2", "argument2"]),
-                    ]
-                ),
-            ),
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    service_function=lambda *_: (
+                        [
+                            ActiveCheckCommand("First service", ["--arg1", "argument1"]),
+                            ActiveCheckCommand("Second service", ["--arg2", "argument2"]),
+                        ]
+                    ),
+                )
+            },
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -325,7 +325,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -346,17 +346,20 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckConfig(
-                name="my_active_check",
-                parameter_parser=lambda p: p,
-                service_function=lambda *_: (
-                    [
-                        ActiveCheckCommand(
-                            "My service", ["--password", PlainTextSecret("mypassword")]
-                        ),
-                    ]
-                ),
-            ),
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    service_function=lambda *_: (
+                        [
+                            ActiveCheckCommand(
+                                "My service",
+                                ["--password", PlainTextSecret("mypassword")],
+                            ),
+                        ]
+                    ),
+                )
+            },
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -387,18 +390,20 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckConfig(
-                name="my_active_check",
-                parameter_parser=lambda p: p,
-                service_function=lambda *_: (
-                    [
-                        ActiveCheckCommand(
-                            "My service",
-                            ["--password", StoredSecret("stored_password")],
-                        ),
-                    ]
-                ),
-            ),
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    service_function=lambda *_: (
+                        [
+                            ActiveCheckCommand(
+                                "My service",
+                                ["--password", StoredSecret("stored_password")],
+                            ),
+                        ]
+                    ),
+                )
+            },
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -427,9 +432,9 @@ class TestSpecialAgentConfiguration(NamedTuple):
     ],
 )
 def test_get_active_service_data(
-    active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
-    active_check_command: ActiveCheckConfig,
+    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
+    active_check_plugins: Mapping[str, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     macros: Mapping[str, str],
@@ -437,20 +442,24 @@ def test_get_active_service_data(
     expected_result: Sequence[ActiveServiceData],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(base_config, "active_check_info", active_check_info)
-    monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheck(
-        hostname, host_attrs, translations={}, macros=macros, stored_passwords=stored_passwords
+    active_check = ActiveCheck(
+        active_check_plugins,
+        legacy_active_check_plugins,
+        hostname,
+        host_attrs,
+        translations={},
+        macros=macros,
+        stored_passwords=stored_passwords,
     )
 
-    services = list(active_check_config.get_active_service_data(active_checks))
+    services = list(active_check.get_active_service_data(active_check_rules))
     assert services == expected_result
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, active_check_command, hostname, host_attrs, expected_result, expected_warning",
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, expected_result, expected_warning",
     [
         pytest.param(
             [
@@ -463,7 +472,7 @@ def test_get_active_service_data(
                     "service_description": lambda _: "",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -486,7 +495,7 @@ def test_get_active_service_data(
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -504,18 +513,20 @@ def test_get_active_service_data(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckConfig(
-                name="my_active_check",
-                parameter_parser=lambda p: p,
-                service_function=lambda *_: (
-                    [
-                        ActiveCheckCommand(
-                            "My service",
-                            ["--password", StoredSecret("stored_password")],
-                        ),
-                    ]
-                ),
-            ),
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    service_function=lambda *_: (
+                        [
+                            ActiveCheckCommand(
+                                "My service",
+                                ["--password", StoredSecret("stored_password")],
+                            ),
+                        ]
+                    ),
+                )
+            },
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -546,9 +557,9 @@ def test_get_active_service_data(
     ],
 )
 def test_get_active_service_data_warnings(
-    active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
-    active_check_command: ActiveCheckConfig,
+    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
+    active_check_plugins: Mapping[str, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
@@ -556,13 +567,13 @@ def test_get_active_service_data_warnings(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(base_config, "active_check_info", active_check_info)
-    monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheck(hostname, host_attrs, translations={})
+    active_check_config = ActiveCheck(
+        active_check_plugins, legacy_active_check_plugins, hostname, host_attrs, translations={}
+    )
 
-    services = list(active_check_config.get_active_service_data(active_checks))
+    services = list(active_check_config.get_active_service_data(active_check_rules))
     assert services == expected_result
 
     captured = capsys.readouterr()
@@ -570,7 +581,7 @@ def test_get_active_service_data_warnings(
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, active_check_command, hostname, host_attrs, expected_result",
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins, hostname, host_attrs, expected_result",
     [
         pytest.param(
             [
@@ -583,7 +594,7 @@ def test_get_active_service_data_warnings(
                     "service_description": lambda _: "Active check of $HOSTNAME$",
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -616,7 +627,7 @@ def test_get_active_service_data_warnings(
                     ),
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -654,7 +665,7 @@ def test_get_active_service_data_warnings(
                     ),
                 }
             },
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -682,17 +693,20 @@ def test_get_active_service_data_warnings(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckConfig(
-                name="my_active_check",
-                parameter_parser=lambda p: p,
-                service_function=lambda *_: (
-                    [
-                        ActiveCheckCommand(
-                            "My service", ["--password", PlainTextSecret("mypassword")]
-                        ),
-                    ]
-                ),
-            ),
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    service_function=lambda *_: (
+                        [
+                            ActiveCheckCommand(
+                                "My service",
+                                ["--password", StoredSecret("mypassword")],
+                            ),
+                        ]
+                    ),
+                )
+            },
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -717,7 +731,7 @@ def test_get_active_service_data_warnings(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            None,
+            {},
             HostName("myhost"),
             {
                 "alias": "my_host_alias",
@@ -734,26 +748,26 @@ def test_get_active_service_data_warnings(
     ],
 )
 def test_get_active_service_descriptions(
-    active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
-    active_check_command: ActiveCheckConfig,
+    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
+    active_check_plugins: Mapping[str, ActiveCheckConfig],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(base_config, "active_check_info", active_check_info)
-    monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheck(hostname, host_attrs, translations={})
+    active_check_config = ActiveCheck(
+        active_check_plugins, legacy_active_check_plugins, hostname, host_attrs, translations={}
+    )
 
-    descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
+    descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
     assert descriptions == expected_result
 
 
 @pytest.mark.parametrize(
-    "active_checks, active_check_info, hostname, host_attrs, expected_result, expected_warning",
+    "active_check_rules, legacy_active_check_plugins, hostname, host_attrs, expected_result, expected_warning",
     [
         pytest.param(
             [
@@ -780,8 +794,8 @@ def test_get_active_service_descriptions(
     ],
 )
 def test_get_active_service_descriptions_warnings(
-    active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
-    active_check_info: Mapping[str, Mapping[str, str]],
+    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],
@@ -789,12 +803,13 @@ def test_get_active_service_descriptions_warnings(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(base_config, "active_check_info", active_check_info)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
-    active_check_config = ActiveCheck(hostname, host_attrs, translations={})
+    active_check_config = ActiveCheck(
+        {}, legacy_active_check_plugins, hostname, host_attrs, translations={}
+    )
 
-    descriptions = list(active_check_config.get_active_service_descriptions(active_checks))
+    descriptions = list(active_check_config.get_active_service_descriptions(active_check_rules))
     assert descriptions == expected_result
 
     captured = capsys.readouterr()

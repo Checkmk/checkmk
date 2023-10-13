@@ -7,7 +7,7 @@ import shlex
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterable, Literal, Protocol
+from typing import Any, Callable, Iterable, Literal, Protocol
 
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
@@ -20,7 +20,6 @@ from cmk.utils.translations import TranslationOptions
 import cmk.base.config as base_config
 import cmk.base.core_config as core_config
 from cmk.base.api.agent_based import plugin_contexts
-from cmk.base.plugins.config_generation.utils import get_active_check
 
 from cmk.config_generation.v1 import (
     ActiveCheckConfig,
@@ -224,6 +223,8 @@ def commandline_arguments(
 class ActiveCheck:
     def __init__(
         self,
+        plugins: Mapping[str, ActiveCheckConfig],
+        legacy_plugins: Mapping[str, Mapping[str, Any]],
         host_name: HostName,
         host_attrs: Mapping[str, str],
         translations: TranslationOptions,
@@ -231,6 +232,8 @@ class ActiveCheck:
         stored_passwords: Mapping[str, str] | None = None,
         escape_func: Callable[[str], str] = lambda a: a.replace("!", "\\!"),
     ):
+        self._plugins = plugins
+        self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_alias = host_attrs["alias"]
         self.host_attrs = host_attrs
@@ -240,12 +243,12 @@ class ActiveCheck:
         self.escape_func = escape_func
 
     def get_active_service_data(
-        self, active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
+        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
     ) -> Iterator[ActiveServiceData]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
         with plugin_contexts.current_host(self.host_name):
-            for plugin_name, plugin_params in active_checks:
+            for plugin_name, plugin_params in active_checks_rules:
                 service_iterator = self._get_service_iterator(plugin_name, plugin_params)
 
                 if not service_iterator:
@@ -265,7 +268,7 @@ class ActiveCheck:
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]] | None:
-        if (plugin_info_dict := base_config.active_check_info.get(plugin_name)) is not None:
+        if (plugin_info_dict := self._legacy_plugins.get(plugin_name)) is not None:
             plugin_info = PluginInfo(
                 command_line=plugin_info_dict["command_line"],
                 argument_function=plugin_info_dict.get("argument_function"),
@@ -274,7 +277,7 @@ class ActiveCheck:
             )
             return self._iterate_legacy_services(plugin_name, plugin_info, plugin_params)
 
-        if (active_check := get_active_check(plugin_name.replace("check_", ""))) is not None:
+        if (active_check := self._plugins.get(plugin_name.replace("check_", ""))) is not None:
             return self._iterate_services(active_check, plugin_params)
 
         return None
@@ -446,13 +449,12 @@ class ActiveCheck:
         yield description, arguments
 
     def get_active_service_descriptions(
-        self,
-        active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+        self, active_checks_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]]
     ) -> Iterator[ActiveServiceDescription]:
         # remove setting the host context when deleting the old API
         # the host name is passed as an argument in the new API
         with plugin_contexts.current_host(self.host_name):
-            for plugin_name, plugin_params in active_checks:
+            for plugin_name, plugin_params in active_checks_rules:
                 service_iterator = self._get_service_description_iterator(
                     plugin_name, plugin_params
                 )
@@ -474,7 +476,7 @@ class ActiveCheck:
         plugin_name: str,
         plugin_params: Sequence[Mapping[str, object]],
     ) -> Iterator[ActiveServiceDescription] | None:
-        if (plugin_info_dict := base_config.active_check_info.get(plugin_name)) is not None:
+        if (plugin_info_dict := self._legacy_plugins.get(plugin_name)) is not None:
             plugin_info = PluginInfo(
                 command_line=plugin_info_dict["command_line"],
                 argument_function=plugin_info_dict.get("argument_function"),
@@ -485,7 +487,7 @@ class ActiveCheck:
                 plugin_name, plugin_info, plugin_params
             )
 
-        if (active_check := get_active_check(plugin_name.replace("check_", ""))) is not None:
+        if (active_check := self._plugins.get(plugin_name.replace("check_", ""))) is not None:
             return self._iterate_service_descriptions(active_check, plugin_params)
 
         return None

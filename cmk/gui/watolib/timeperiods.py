@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable
+
 import cmk.utils.store as store
 from cmk.utils import version
 from cmk.utils.notify_types import EventRule
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
 from cmk.utils.user import UserId
 
@@ -29,6 +32,16 @@ except ImportError:
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
+
+TimeperiodUsageFinder = Callable[[str], list[TimeperiodUsage]]
+
+
+class TimeperiodUsageFinderRegistry(Registry[TimeperiodUsageFinder]):
+    def plugin_name(self, instance: TimeperiodUsageFinder) -> str:
+        return instance.__name__
+
+
+timeperiod_usage_finder_registry = TimeperiodUsageFinderRegistry()
 
 
 class TimePeriodNotFoundError(KeyError):
@@ -85,7 +98,7 @@ def delete_timeperiod(name: str) -> None:
     time_periods = load_timeperiods()
     if name not in time_periods:
         raise TimePeriodNotFoundError
-    if usages := find_usages_of_timeperiod(name):
+    if usages := list(find_usages_of_timeperiod(name)):
         raise TimePeriodInUseError(usages=usages)
     del time_periods[name]
     save_timeperiods(time_periods)
@@ -164,6 +177,8 @@ def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
      - 7. rules: time specific parameters
     """
     used_in: list[TimeperiodUsage] = []
+    for finder in timeperiod_usage_finder_registry.values():
+        used_in += finder(time_period_name)
     used_in += _find_usages_in_host_and_service_rules(time_period_name)
     used_in += _find_usages_in_users(time_period_name)
     used_in += _find_usages_in_other_timeperiods(time_period_name)

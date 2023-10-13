@@ -6,7 +6,6 @@
 from typing import Callable
 
 import cmk.utils.store as store
-from cmk.utils import version
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
 
@@ -17,11 +16,6 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.utils import wato_root_dir
-
-try:
-    import cmk.gui.cee.alert_handling as alert_handling
-except ImportError:
-    alert_handling = None  # type: ignore[assignment]
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
@@ -173,7 +167,6 @@ def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
     for finder in timeperiod_usage_finder_registry.values():
         used_in += finder(time_period_name)
     used_in += _find_usages_in_other_timeperiods(time_period_name)
-    used_in += _find_usages_in_alert_handler_rules(time_period_name)
     return used_in
 
 
@@ -189,20 +182,4 @@ def _find_usages_in_other_timeperiods(time_period_name: str) -> list[TimeperiodU
                     folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
                 )
             )
-    return used_in
-
-
-def _find_usages_in_alert_handler_rules(time_period_name: str) -> list[TimeperiodUsage]:
-    used_in: list[TimeperiodUsage] = []
-    if version.edition() is version.Edition.CRE:
-        return used_in
-    for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
-        if rule.get("match_timeperiod") == time_period_name:
-            url = folder_preserving_link(
-                [
-                    ("mode", "alert_handler_rule"),
-                    ("edit", index),
-                ]
-            )
-            used_in.append((_("Alert handler rule"), url))
     return used_in

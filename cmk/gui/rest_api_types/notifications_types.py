@@ -174,7 +174,7 @@ class AsciiMailPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_AsciiMailData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "from_details": self.from_details.api_response(),
@@ -192,7 +192,7 @@ class AsciiMailPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "from": self.from_details.to_mk_file_format(),
@@ -346,7 +346,7 @@ class HTMLMailPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_HTMLMailData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "from_details": self.from_details.api_response(),
@@ -368,7 +368,7 @@ class HTMLMailPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "from": self.from_details.to_mk_file_format(),
@@ -439,7 +439,7 @@ class CiscoWebexPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_CiscoData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "webhook_url": self.webhook_url.api_response(),
@@ -452,7 +452,7 @@ class CiscoWebexPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "webhook_url": self.webhook_url.to_mk_file_format(),
@@ -504,7 +504,7 @@ class MkEventDPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_MKEventData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "syslog_facility_to_use": self.syslog_facility_to_use.api_response(),
@@ -515,7 +515,7 @@ class MkEventDPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
 
         r = {
@@ -583,7 +583,7 @@ class IlertPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_IlertData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "api_key": self.ilert_key.api_response(),
@@ -599,7 +599,7 @@ class IlertPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "ilert_api_key": self.ilert_key.to_mk_file_format(),
@@ -711,7 +711,7 @@ class JiraIssuePlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_JiraData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "jira_url": "" if self.url is None else self.url,
@@ -738,7 +738,7 @@ class JiraIssuePlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "url": self.url,
@@ -868,7 +868,7 @@ class OpsGenieIssuePlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_OpsGenieIssueData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "api_key": self.api_key.api_response(),
@@ -893,7 +893,7 @@ class OpsGenieIssuePlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "password": self.api_key.to_mk_file_format(),
@@ -971,7 +971,7 @@ class PagerDutyPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_PagerDutyData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "integration_key": self.integration_key.api_response(),
@@ -985,7 +985,7 @@ class PagerDutyPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "ignore_ssl": self.disable_ssl_cert_verification.to_mk_file_format(),
@@ -1054,7 +1054,7 @@ class PushOverPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_PushOverData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "api_key": "" if self.api_key is None else self.api_key,
@@ -1069,7 +1069,7 @@ class PushOverPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "api_key": self.api_key,
@@ -1136,7 +1136,7 @@ class ServiceNowPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_ServiceNowData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "servicenow_url": "" if self.url is None else self.url,
@@ -1152,7 +1152,7 @@ class ServiceNowPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "url": self.url,
@@ -1220,7 +1220,7 @@ class SignL4Plugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_SignL4Data = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "team_secret": self.team_secret.api_response(),
@@ -1233,7 +1233,7 @@ class SignL4Plugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "password": self.team_secret.to_mk_file_format(),
@@ -1297,7 +1297,7 @@ class SlackPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_SlackData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "webhook_url": self.webhook_url.api_response(),
@@ -1310,7 +1310,7 @@ class SlackPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "webhook_url": self.webhook_url.to_mk_file_format(),
@@ -1375,7 +1375,7 @@ class SMSAPIPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_SmsAPIData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "modem_type": self.modem_type,
@@ -1391,7 +1391,7 @@ class SMSAPIPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "modem_type": self.modem_type,
@@ -1434,7 +1434,7 @@ class SMSPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_SmsData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update({"params": [] if self.params is None else self.params})
 
         r: APINotifyPlugin = {"option": self.option, "plugin_params": params}
@@ -1443,7 +1443,7 @@ class SMSPlugin:
     def to_mk_file_format(
         self,
     ) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         return (self.__class__.plugin_name, self.params)
 
@@ -1484,7 +1484,7 @@ class SpectrumPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_SpectrumData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "base_oid": self.baseoid,
@@ -1496,7 +1496,7 @@ class SpectrumPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "baseoid": self.baseoid,
@@ -1561,7 +1561,7 @@ class VictoropsPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_VictorOpsData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "disable_ssl_cert_verification": self.disable_ssl_cert_verification.api_response(),
@@ -1575,7 +1575,7 @@ class VictoropsPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "ignore_ssl": self.disable_ssl_cert_verification.to_mk_file_format(),
@@ -1683,7 +1683,7 @@ class MsTeamsPlugin:
 
     def api_response(self) -> APINotifyPlugin:
         params: API_MSTeamsData = {"plugin_name": self.__class__.plugin_name}
-        if self.option == "create_notification_with_the_following_parameters":
+        if self.option == PluginOptions.WITH_PARAMS:
             params.update(
                 {
                     "webhook_url": self.webhook_url.api_response(),
@@ -1703,7 +1703,7 @@ class MsTeamsPlugin:
         return r
 
     def to_mk_file_format(self) -> PluginMkFormatType:
-        if self.option == "cancel_previous_notifications":
+        if self.option == PluginOptions.CANCEL:
             return (self.__class__.plugin_name, None)
         r = {
             "affected_host_groups": self.show_affected_host_groups.to_mk_file_format(),

@@ -289,26 +289,29 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 def _list_all_hosts(
     config_cache: ConfigCache, ruleset_matcher: RulesetMatcher, hostgroups: list[str], options: dict
 ) -> list[HostName]:
+    # TODO(ml):  Once all the funky `all_*_hosts`.
+    #            Simplify the hostnames computation! 🙀
     hostnames = set()
+    hosts_config = config_cache.hosts_config
 
     if options.get("all-sites"):
         hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
         if "include-offline" not in options:
             hostnames -= {
                 hn
-                for hn in set(config_cache.hosts_config.hosts).union(
-                    config_cache.hosts_config.clusters
-                )
+                for hn in set(hosts_config.hosts).union(hosts_config.clusters)
                 if config_cache.is_offline(hn)
             }
     else:
-        hostnames.update(config_cache.all_active_hosts())
+        hostnames.update(
+            hn
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        )
         if "include-offline" in options:
             hostnames.update(
                 hn
-                for hn in set(config_cache.hosts_config.hosts).union(
-                    config_cache.hosts_config.clusters
-                )
+                for hn in set(hosts_config.hosts).union(hosts_config.clusters)
                 if config_cache.is_offline(hn) and config_cache.is_active(hn)
             )
 
@@ -372,16 +375,21 @@ def mode_list_tag(args: list[str]) -> None:
 
 def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
     config_cache = config.get_config_cache()
+    hosts_config = config_cache.hosts_config
     hosts = []
 
     if "offline" in tags:
         hostlist = {
             hn
-            for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
             if config_cache.is_active(hn) and config_cache.is_offline(hn)
         }
     else:
-        hostlist = config_cache.all_active_hosts()
+        hostlist = {
+            hn
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        }
 
     config_cache = config.get_config_cache()
     for h in hostlist:
@@ -604,7 +612,12 @@ modes.register(
 
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     config_cache = config.get_config_cache()
-    all_hosts = frozenset(config_cache.all_active_hosts())
+    hosts_config = config_cache.hosts_config
+    all_hosts = frozenset(
+        hn
+        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+        if config_cache.is_active(hn) and config_cache.is_online(hn)
+    )
     hosts = frozenset(hostlist)
     if not hosts:
         hosts = all_hosts
@@ -875,9 +888,12 @@ modes.register(
 
 def mode_update_dns_cache() -> None:
     config_cache = config.get_config_cache()
+    hosts_config = config_cache.hosts_config
     ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
+            config_cache.ip_lookup_config(hn)
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
@@ -1230,10 +1246,15 @@ modes.register(
 
 def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
+    hosts_config = config_cache.hosts_config
     ruleset_matcher = config_cache.ruleset_matcher
 
     if not hosts:
-        hosts = sorted(config_cache.all_active_hosts())
+        hosts = sorted(
+            hn
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        )
 
     for host in hosts:
         out.output("%-20s: " % host)
@@ -2335,7 +2356,12 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:
         # No hosts specified: do all hosts and force caching
-        hostnames = sorted(config_cache.all_active_hosts())
+        hosts_config = config_cache.hosts_config
+        hostnames = sorted(
+            hn
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        )
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:

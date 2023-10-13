@@ -173,14 +173,14 @@ def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
     ts.add_cluster(HostName("cluster3"), nodes=[HostName("node3")])
 
     config_cache = ts.apply(monkeypatch)
+    hosts_config = config_cache.hosts_config
     assert config_cache.all_active_clusters() == {HostName("cluster1"), HostName("cluster3")}
     assert config_cache.all_active_realhosts() == {HostName("real1"), HostName("real3")}
-    assert config_cache.all_active_hosts() == {
-        HostName("cluster1"),
-        HostName("cluster3"),
-        HostName("real1"),
-        HostName("real3"),
-    }
+    assert {
+        hn
+        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+        if config_cache.is_active(hn) and config_cache.is_online(hn)
+    } == {HostName("cluster1"), HostName("cluster3"), HostName("real1"), HostName("real3")}
 
 
 def test_config_cache_tag_to_group_map(monkeypatch: MonkeyPatch) -> None:

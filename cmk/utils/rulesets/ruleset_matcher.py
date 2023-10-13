@@ -458,10 +458,9 @@ class RulesetOptimizer:
 
         self._all_configured_hosts = all_configured_hosts
 
-        # Contains all hostnames which are currently relevant for this cache
-        # Most of the time all_processed hosts is similar to all_active_hosts
-        # Howewer, in a multiprocessing environment all_processed_hosts only
-        # may contain a reduced set of hosts, since each process handles a subset
+        # Contains all hostnames which are currently relevant for this cache.
+        # Every active host or a subset of the active hosts when multiprocessing
+        # is enabled.
         self._all_processed_hosts = self._all_configured_hosts
 
         # A factor which indicates how much hosts share the same host tag configuration (excluding folders).

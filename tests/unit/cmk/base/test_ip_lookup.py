@@ -392,13 +392,16 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
     ts.add_host(HostName("dual"), tags={TagGroupID("address_family"): TagID("ip-v4v6")})
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
+    hosts_config = config_cache.hosts_config
 
     assert not ip_lookup_cache()
 
     result = ip_lookup.update_dns_cache(
         ip_lookup_configs=(
-            ts.config_cache.ip_lookup_config(hn) for hn in ts.config_cache.all_active_hosts()
+            ts.config_cache.ip_lookup_config(hn)
+            for hn in hosts_config.hosts
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
         ),
         configured_ipv4_addresses={},
         configured_ipv6_addresses={},

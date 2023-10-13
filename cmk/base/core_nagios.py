@@ -181,7 +181,12 @@ def create_config(
     config_cache = config.get_config_cache()
 
     if hostnames is None:
-        hostnames = list(config_cache.all_active_hosts())
+        hosts_config = config_cache.hosts_config
+        hostnames = [
+            hn
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        ]
 
     cfg = NagiosConfig(outfile, hostnames)
 
@@ -1111,13 +1116,18 @@ class HostCheckStore:
 def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
     console.verbose("Creating precompiled host check config...\n")
     config_cache = config.get_config_cache()
+    hosts_config = config_cache.hosts_config
 
     config.save_packed_config(config_path, config_cache)
 
     console.verbose("Precompiling host checks...\n")
 
     host_check_store = HostCheckStore()
-    for hostname in config_cache.all_active_hosts():
+    for hostname in (
+        hn
+        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+        if config_cache.is_active(hn) and config_cache.is_online(hn)
+    ):
         try:
             console.verbose(
                 "%s%s%-16s%s:",

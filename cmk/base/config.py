@@ -762,7 +762,12 @@ class PackedConfigGenerator:
         helper_config: MutableMapping[str, Any] = {}
 
         # These functions purpose is to filter out hosts which are monitored on different sites
-        active_hosts = self._config_cache.all_active_hosts()
+        hosts_config = self._config_cache.hosts_config
+        active_hosts = frozenset(
+            hn
+            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            if self._config_cache.is_active(hn) and self._config_cache.is_online(hn)
+        )
         # Include inactive cluster hosts.
         # Otherwise services clustered to those hosts will wrongly be checked by the nodes.
         sites_clusters = frozenset(
@@ -930,11 +935,10 @@ def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
     return sorted(
         hostname
         for hostname, count in Counter(
-            # This function should only be used during duplicate host check! It has to work like
-            # all_active_hosts() but with the difference that duplicates are not removed.
+            # Duplicates are not removed.
             hn
             for hn in strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts()))
-            if config_cache.is_active(hn) and not config_cache.is_offline(hn)
+            if config_cache.is_active(hn) and config_cache.is_online(hn)
         ).items()
         if count > 1
     )
@@ -1978,9 +1982,14 @@ class ConfigCache:
         self._all_active_realhosts = set(
             hn for hn in self.hosts_config.hosts if self.is_active(hn) and not self.is_offline(hn)
         )
-        self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
-        self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
+        self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
+            set(
+                hn
+                for hn in set(self.hosts_config.hosts).union(self.hosts_config.clusters)
+                if self.is_active(hn) and self.is_online(hn)
+            )
+        )
 
         return self
 
@@ -2550,7 +2559,10 @@ class ConfigCache:
         # Returns True if host_name is associated with this site,
         # but has been removed by the "only_hosts" rule. Normally these
         # are the hosts which have the tag "offline".
-        return not self._is_only_host(host_name)
+        return not self.is_online(host_name)
+
+    def is_online(self, host_name: HostName) -> bool:
+        return self._is_only_host(host_name)
 
     def is_active(self, host_name: HostName) -> bool:
         """Return True if host is active, else False."""
@@ -3705,10 +3717,6 @@ class ConfigCache:
         check_plugin_name_str = str(check_plugin_name)
 
         return _checktype_ignored_for_host(check_plugin_name_str)
-
-    def all_active_hosts(self) -> set[HostName]:
-        """Returns a set of all active hosts"""
-        return self._all_active_hosts
 
     def all_active_realhosts(self) -> set[HostName]:
         """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""

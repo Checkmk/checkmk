@@ -277,11 +277,16 @@ class AutomationDiscovery(DiscoveryAutomation):
                 )
 
             with plugin_contexts.current_host(hostname):
+                hosts_config = config_cache.hosts_config
                 results[hostname] = automation_discovery(
                     hostname,
                     is_cluster=hostname in config_cache.hosts_config.clusters,
                     cluster_nodes=config_cache.nodes_of(hostname) or (),
-                    active_hosts=config_cache.all_active_hosts(),
+                    active_hosts=[
+                        hn
+                        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+                        if config_cache.is_active(hn) and config_cache.is_online(hn)
+                    ],
                     ruleset_matcher=ruleset_matcher,
                     parser=parser,
                     fetcher=fetcher,
@@ -656,11 +661,16 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     discovery_result, activate_host = None, False
                 else:
                     with plugin_contexts.current_host(host_name):
+                        hosts_config = config_cache.hosts_config
                         discovery_result, activate_host = autodiscovery(
                             host_name,
                             is_cluster=host_name in config_cache.hosts_config.clusters,
                             cluster_nodes=config_cache.nodes_of(host_name) or (),
-                            active_hosts=config_cache.all_active_hosts(),
+                            active_hosts=[
+                                hn
+                                for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+                                if config_cache.is_active(hn) and config_cache.is_online(hn)
+                            ],
                             ruleset_matcher=ruleset_matcher,
                             parser=parser,
                             fetcher=fetcher,
@@ -2208,10 +2218,13 @@ class AutomationUpdateDNSCache(Automation):
 
     def execute(self, args: list[str]) -> UpdateDNSCacheResult:
         config_cache = config.get_config_cache()
+        hosts_config = config_cache.hosts_config
         return UpdateDNSCacheResult(
             *ip_lookup.update_dns_cache(
                 ip_lookup_configs=(
-                    config_cache.ip_lookup_config(hn) for hn in config_cache.all_active_hosts()
+                    config_cache.ip_lookup_config(hn)
+                    for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+                    if config_cache.is_active(hn) and config_cache.is_online(hn)
                 ),
                 configured_ipv4_addresses=config.ipaddresses,
                 configured_ipv6_addresses=config.ipv6addresses,

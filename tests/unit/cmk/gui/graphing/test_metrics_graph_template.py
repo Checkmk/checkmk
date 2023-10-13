@@ -127,7 +127,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#00ffc6",
                 title="Used space",
                 line_type="area",
-                expression=MetricOpRRDSource(
+                operation=MetricOpRRDSource(
                     site_id=SiteId(""),
                     host_name=HostName(""),
                     service_name="",
@@ -142,7 +142,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#e3fff9",
                 title="Free space",
                 line_type="stack",
-                expression=MetricOpOperator(
+                operation=MetricOpOperator(
                     operator_name="-",
                     operands=[
                         MetricOpRRDSource(
@@ -170,7 +170,7 @@ def test_create_graph_recipe_from_template() -> None:
                 color="#006040",
                 title="Total size",
                 line_type="line",
-                expression=MetricOpRRDSource(
+                operation=MetricOpRRDSource(
                     site_id=SiteId(""),
                     host_name=HostName(""),
                     service_name="",

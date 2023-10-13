@@ -170,7 +170,7 @@ def matching_graph_templates(
 def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipeBase:
-    def _metric(metric_definition: MetricDefinition) -> GraphMetric:
+    def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
         metric_expression = parse_expression(
             metric_definition.expression,
             translated_metrics,
@@ -180,7 +180,7 @@ def create_graph_recipe_from_template(
         return GraphMetric(
             title=metric_line_title(metric_definition, metric_expression, translated_metrics),
             line_type=metric_definition.line_type,
-            expression=metric_expression_to_graph_recipe_expression(
+            operation=metric_expression_to_graph_recipe_expression(
                 metric_expression,
                 translated_metrics,
                 row,
@@ -191,7 +191,7 @@ def create_graph_recipe_from_template(
             visible=True,
         )
 
-    metrics = list(map(_metric, graph_template.metrics))
+    metrics = list(map(_graph_metric, graph_template.metrics))
     units = {m.unit for m in metrics}
     if len(units) > 1:
         raise MKGeneralException(

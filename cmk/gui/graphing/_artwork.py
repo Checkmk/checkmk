@@ -420,7 +420,7 @@ def _compute_graph_curves(
         assert_never((mirror_prefix, ts_line_type))
 
     for metric in metrics:
-        time_series = evaluate_time_series_expression(metric.expression, rrd_data)
+        time_series = evaluate_time_series_expression(metric.operation, rrd_data)
         if not time_series:
             continue
 
@@ -433,8 +433,8 @@ def _compute_graph_curves(
 
             color = ts.metadata.color or metric.color
             if i % 2 == 1 and not (
-                isinstance(metric.expression, MetricOpTransformation)
-                and isinstance(metric.expression.parameters, TransformationParametersForecast)
+                isinstance(metric.operation, MetricOpTransformation)
+                and isinstance(metric.operation.parameters, TransformationParametersForecast)
             ):
                 color = render_color(fade_color(parse_color(color), 0.3))
 

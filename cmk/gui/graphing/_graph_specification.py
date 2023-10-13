@@ -207,7 +207,7 @@ class MetricOpCombined(BaseModel, frozen=True):
                 presentation=self.single_metric_spec["presentation"],
             )
         ):
-            yield from metric.expression.needed_elements(resolve_combined_single_metric_spec)
+            yield from metric.operation.needed_elements(resolve_combined_single_metric_spec)
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         return self
@@ -310,7 +310,7 @@ MetricOpTransformation.model_rebuild()
 class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
-    expression: MetricOperation
+    operation: MetricOperation
     unit: str
     color: str
     visible: bool

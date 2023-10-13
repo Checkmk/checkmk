@@ -78,7 +78,7 @@ _GRAPH_RECIPE = GraphRecipe(
         GraphMetric(
             title="Temperature",
             line_type="area",
-            expression=MetricOpRRDSource(
+            operation=MetricOpRRDSource(
                 site_id=SiteId("NO_SITE"),
                 host_name=HostName("my-host"),
                 service_name="Temperature Zone 6",

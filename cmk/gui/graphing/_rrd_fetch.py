@@ -60,7 +60,7 @@ def fetch_rrd_data_for_graph(
             element.scale,
         )
         for metric in graph_recipe.metrics
-        for element in metric.expression.needed_elements(resolve_combined_single_metric_spec)
+        for element in metric.operation.needed_elements(resolve_combined_single_metric_spec)
         if isinstance(element, NeededElementForRRDDataKey)
     )
     rrd_data: RRDData = {}

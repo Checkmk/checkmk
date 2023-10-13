@@ -905,7 +905,7 @@ def set_use_core_config(
 #   '----------------------------------------------------------------------'
 
 
-def strip_tags(tagged_hostlist: Iterable[str]) -> list[HostName]:
+def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
     cache = cache_manager.obtain_cache("strip_tags")
 
     cache_id = tuple(tagged_hostlist)
@@ -983,7 +983,7 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
     hostlist = set(
         _filter_active_hosts(
             matcher,
-            config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters()),
+            set(config_cache.hosts_config.hosts).union(config_cache.all_configured_clusters()),
             keep_offline_hosts=True,
         )
     )
@@ -999,7 +999,7 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
 def all_configured_offline_hosts(
     config_cache: ConfigCache, matcher: RulesetMatcher
 ) -> set[HostName]:
-    hostlist = config_cache.all_configured_realhosts().union(config_cache.all_configured_clusters())
+    hostlist = set(config_cache.hosts_config.hosts).union(config_cache.all_configured_clusters())
 
     if only_hosts is None:
         return set()
@@ -1959,9 +1959,19 @@ def lookup_ip_address(
 #   +----------------------------------------------------------------------+
 
 
+class HostsConfig:
+    def __init__(self, *, hosts: Sequence[HostName]) -> None:
+        self.hosts: Final = hosts
+
+    @classmethod
+    def from_config(cls) -> HostsConfig:
+        return cls(hosts=list(set(strip_tags(all_hosts))))
+
+
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
+        self.hosts_config = HostsConfig(hosts=())
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1991,12 +2001,12 @@ class ConfigCache:
 
     def initialize(self) -> ConfigCache:
         self._initialize_caches()
+        self.hosts_config = HostsConfig.from_config()
         self._setup_clusters_nodes_cache()
 
         self._all_configured_clusters = set(strip_tags(clusters))
-        self._all_configured_realhosts = set(strip_tags(all_hosts))
         self._all_configured_hosts = (
-            self._all_configured_realhosts | self._all_configured_clusters | set(get_shadow_hosts())
+            set(self.hosts_config.hosts) | self._all_configured_clusters | set(get_shadow_hosts())
         )
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
@@ -2020,7 +2030,7 @@ class ConfigCache:
             _filter_active_hosts(self.ruleset_matcher, self._all_configured_clusters)
         )
         self._all_active_realhosts = set(
-            _filter_active_hosts(self.ruleset_matcher, self._all_configured_realhosts)
+            _filter_active_hosts(self.ruleset_matcher, self.hosts_config.hosts)
         )
         self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
@@ -2037,7 +2047,6 @@ class ConfigCache:
         # Host lookup
         self._all_configured_hosts = set()
         self._all_configured_clusters = set()
-        self._all_configured_realhosts = set()
         self._all_active_clusters = set()
         self._all_active_realhosts = set()
 
@@ -3737,9 +3746,6 @@ class ConfigCache:
     def all_active_realhosts(self) -> set[HostName]:
         """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_realhosts
-
-    def all_configured_realhosts(self) -> set[HostName]:
-        return self._all_configured_realhosts
 
     def all_configured_hosts(self) -> set[HostName]:
         return self._all_configured_hosts

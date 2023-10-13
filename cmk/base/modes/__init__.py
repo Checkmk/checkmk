@@ -137,7 +137,7 @@ class Modes:
         with_foreign_hosts: bool = False,
     ) -> Sequence[HostName]:
         if with_foreign_hosts:
-            valid_hosts = config_cache.all_configured_realhosts()
+            valid_hosts = set(config_cache.hosts_config.hosts)
         else:
             valid_hosts = config_cache.all_active_realhosts()
 

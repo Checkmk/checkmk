@@ -136,7 +136,7 @@ def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
         HostName("cluster2"),
         HostName("cluster3"),
     }
-    assert config_cache.all_configured_realhosts() == {
+    assert set(config_cache.hosts_config.hosts) == {
         HostName("real1"),
         HostName("real2"),
         HostName("real3"),

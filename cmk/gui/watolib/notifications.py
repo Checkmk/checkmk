@@ -666,3 +666,10 @@ def find_usages_of_contact_group_in_notification_rules(
 
 def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
     return name in rule.get("contact_groups", []) or name in rule.get("match_contactgroups", [])
+
+
+def find_timeperiod_usage_in_notification_rules(time_period_name: str) -> list[tuple[str, str]]:
+    used_in: list[tuple[str, str]] = []
+    for index, rule in enumerate(load_notification_rules()):
+        used_in += userdb.find_timeperiod_usage_in_notification_rule(time_period_name, index, rule)
+    return used_in

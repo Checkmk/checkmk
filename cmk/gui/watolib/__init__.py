@@ -62,7 +62,10 @@ from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLa
 from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from .hosts_and_folders import find_usages_of_contact_group_in_hosts_and_folders
 from .network_scan import AutomationNetworkScan
-from .notifications import find_usages_of_contact_group_in_notification_rules
+from .notifications import (
+    find_timeperiod_usage_in_notification_rules,
+    find_usages_of_contact_group_in_notification_rules,
+)
 from .rulesets import (
     find_timeperiod_usage_in_host_and_service_rules,
     find_timeperiod_usage_in_time_specific_parameters,
@@ -120,6 +123,7 @@ def register(
     )
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_host_and_service_rules)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_time_specific_parameters)
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
 
 
 def _register_automation_commands() -> None:

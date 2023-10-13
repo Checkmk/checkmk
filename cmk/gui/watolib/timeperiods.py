@@ -7,21 +7,17 @@ from typing import Callable
 
 import cmk.utils.store as store
 from cmk.utils import version
-from cmk.utils.notify_types import EventRule
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
-from cmk.utils.user import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.watolib.changes as _changes
-from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
-from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.utils import wato_root_dir
 
 try:
@@ -178,30 +174,9 @@ def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
     for finder in timeperiod_usage_finder_registry.values():
         used_in += finder(time_period_name)
-    used_in += _find_usages_in_users(time_period_name)
     used_in += _find_usages_in_other_timeperiods(time_period_name)
-    used_in += _find_usages_in_notification_rules(time_period_name)
     used_in += _find_usages_in_alert_handler_rules(time_period_name)
     used_in += _find_usages_in_ec_rules(time_period_name)
-    return used_in
-
-
-def _find_usages_in_users(time_period_name: str) -> list[TimeperiodUsage]:
-    used_in: list[TimeperiodUsage] = []
-    for userid, user in userdb.load_users().items():
-        tp = user.get("notification_period")
-        if tp == time_period_name:
-            used_in.append(
-                (
-                    "{}: {}".format(_("User"), userid),
-                    folder_preserving_link([("mode", "edit_user"), ("edit", userid)]),
-                )
-            )
-
-        for index, rule in enumerate(user.get("notification_rules", [])):
-            used_in += _find_usages_in_notification_rule(
-                time_period_name, index, rule, user_id=userid
-            )
     return used_in
 
 
@@ -217,44 +192,6 @@ def _find_usages_in_other_timeperiods(time_period_name: str) -> list[TimeperiodU
                     folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
                 )
             )
-    return used_in
-
-
-def _find_usages_in_notification_rules(time_period_name: str) -> list[TimeperiodUsage]:
-    used_in: list[TimeperiodUsage] = []
-    for index, rule in enumerate(load_notification_rules()):
-        used_in += _find_usages_in_notification_rule(time_period_name, index, rule)
-    return used_in
-
-
-def _find_usages_in_notification_rule(
-    time_period_name: str, index: int, rule: EventRule, user_id: UserId | None = None
-) -> list[TimeperiodUsage]:
-    def _used_in_tp_condition(rule, time_period_name):
-        return rule.get("match_timeperiod") == time_period_name
-
-    def _used_in_bulking(rule, time_period_name):
-        bulk = rule.get("bulk")
-        if isinstance(bulk, tuple):
-            method, params = bulk
-            return method == "timeperiod" and params["timeperiod"] == time_period_name
-        return False
-
-    used_in: list[TimeperiodUsage] = []
-    if _used_in_tp_condition(rule, time_period_name) or _used_in_bulking(rule, time_period_name):
-        url = folder_preserving_link(
-            [
-                ("mode", "notification_rule"),
-                ("edit", index),
-                ("user", user_id),
-            ]
-        )
-        if user_id:
-            title = _("Notification rule of user '%s'") % user_id
-        else:
-            title = _("Notification rule")
-
-        used_in.append((title, url))
     return used_in
 
 

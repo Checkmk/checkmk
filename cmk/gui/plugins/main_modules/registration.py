@@ -180,6 +180,7 @@ def register() -> None:
         user_connector_registry,
         job_registry,
         contact_group_usage_finder_registry,
+        timeperiod_usage_finder_registry,
     )
     wato_registration.register(
         page_registry,

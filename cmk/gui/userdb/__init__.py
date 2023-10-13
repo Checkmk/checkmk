@@ -32,6 +32,9 @@ from ._connector import ConnectorType as ConnectorType
 from ._connector import user_connector_registry as user_connector_registry
 from ._connector import UserConnector as UserConnector
 from ._connector import UserConnectorRegistry as UserConnectorRegistry
+from ._find_usage import (
+    find_timeperiod_usage_in_notification_rule as find_timeperiod_usage_in_notification_rule,
+)
 from ._need_to_change_pw import is_automation_user as is_automation_user
 from ._need_to_change_pw import need_to_change_pw as need_to_change_pw
 from ._on_access import on_access as on_access

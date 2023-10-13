@@ -1,0 +1,18 @@
+Title: db2_backup: Correct timezone difference for last backup date
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1697190433
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p37
+
+This werk is relevant for users monitoring the age of the last backup time of db2 databases in different timezones.
+
+The date/time of the last backup of a db2 database is currently stored in local host time without the information about the host timezone. When this time is used to check the age of the last backup, it is interpreted in the Checkmk server timezone.
+When using different timezones, this leads to incorrect values for "Time since last backup".
+
+The db2 agent plugin will now store the time in UTC and the db2_backup check will interpret the time accordingly.
+
+You will need to update the agent mk_db2.linux or mk_db2.aix to receive the corrected times.

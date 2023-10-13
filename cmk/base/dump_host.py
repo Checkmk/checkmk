@@ -101,7 +101,7 @@ def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
 def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     # pylint: disable=too-many-branches
     out.output("\n")
-    if hostname in config_cache.all_configured_clusters():
+    if hostname in config_cache.hosts_config.clusters:
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise RuntimeError()
@@ -152,7 +152,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
-    if hostname in config_cache.all_configured_clusters():
+    if hostname in config_cache.hosts_config.clusters:
         parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:
             raise RuntimeError()
@@ -246,6 +246,6 @@ def _ip_address_for_dump_host(
     except Exception:
         return (
             HostAddress("")
-            if host_name in config_cache.all_configured_clusters()
+            if host_name in config_cache.hosts_config.clusters
             else ip_lookup.fallback_ip_for(family)
         )

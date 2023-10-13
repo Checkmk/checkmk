@@ -194,7 +194,7 @@ class DiscoveryAutomation(Automation):
         if config_cache.discovery_check_parameters(host_name).commandline_only:
             return
 
-        if host_name in config_cache.all_configured_clusters():
+        if host_name in config_cache.hosts_config.clusters:
             return
 
         _schedule_discovery_check(host_name)
@@ -278,7 +278,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             with plugin_contexts.current_host(hostname):
                 results[hostname] = automation_discovery(
                     hostname,
-                    is_cluster=hostname in config_cache.all_configured_clusters(),
+                    is_cluster=hostname in config_cache.hosts_config.clusters,
                     cluster_nodes=config_cache.nodes_of(hostname) or (),
                     active_hosts=config_cache.all_active_hosts(),
                     ruleset_matcher=ruleset_matcher,
@@ -481,7 +481,7 @@ def _execute_discovery(
     )
     ip_address = (
         None
-        if host_name in config_cache.all_configured_clusters()
+        if host_name in config_cache.hosts_config.clusters
         # We *must* do the lookup *before* calling `get_host_attributes()`
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
@@ -490,7 +490,7 @@ def _execute_discovery(
     with plugin_contexts.current_host(host_name), load_host_value_store(
         host_name, store_changes=False
     ) as value_store_manager:
-        is_cluster = host_name in config_cache.all_configured_clusters()
+        is_cluster = host_name in config_cache.hosts_config.clusters
         check_plugins = CheckPluginMapper(
             config_cache,
             value_store_manager,
@@ -653,7 +653,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     with plugin_contexts.current_host(host_name):
                         discovery_result, activate_host = autodiscovery(
                             host_name,
-                            is_cluster=host_name in config_cache.all_configured_clusters(),
+                            is_cluster=host_name in config_cache.hosts_config.clusters,
                             cluster_nodes=config_cache.nodes_of(host_name) or (),
                             active_hosts=config_cache.all_active_hosts(),
                             ruleset_matcher=ruleset_matcher,
@@ -743,7 +743,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # checks for config_cache.set_autochecks, because it needs to calculate the
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())
-        if hostname in config_cache.all_configured_clusters():
+        if hostname in config_cache.hosts_config.clusters:
             config.load_all_plugins(
                 check_api.get_check_api_context,
                 local_checks_dir=local_checks_dir,
@@ -767,7 +767,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 )
             )
 
-        if hostname in config_cache.all_configured_clusters():
+        if hostname in config_cache.hosts_config.clusters:
             set_autochecks_of_cluster(
                 config_cache.nodes_of(hostname) or (),
                 hostname,
@@ -1306,7 +1306,7 @@ class AutomationAnalyseServices(Automation):
                 for service in config_cache.get_autochecks_of(node)
                 if host_name == config_cache.effective_host(node, service.description)
             ]
-            if host_name in config_cache.all_configured_clusters()
+            if host_name in config_cache.hosts_config.clusters
             else config_cache.get_autochecks_of(host_name)
         )
 

@@ -233,7 +233,7 @@ def _aggregate_check_table_services(
         yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
-    if host_name in config_cache.all_configured_clusters():
+    if host_name in config_cache.hosts_config.clusters:
         yield from (s for s in _get_clustered_services(config_cache, host_name) if sfilter.keep(s))
 
     yield from (s for s in _get_enforced_services(config_cache, host_name) if sfilter.keep(s))
@@ -406,7 +406,7 @@ def ip_address_of(
     try:
         return lookup_ip_address(config_cache, host_name, family=family)
     except Exception as e:
-        if host_name in config_cache.all_configured_clusters():
+        if host_name in config_cache.hosts_config.clusters:
             return HostAddress("")
 
         _failed_ip_lookups.append(host_name)
@@ -983,7 +983,7 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
     hostlist = set(
         _filter_active_hosts(
             matcher,
-            set(config_cache.hosts_config.hosts).union(config_cache.all_configured_clusters()),
+            set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters),
             keep_offline_hosts=True,
         )
     )
@@ -999,7 +999,7 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
 def all_configured_offline_hosts(
     config_cache: ConfigCache, matcher: RulesetMatcher
 ) -> set[HostName]:
-    hostlist = set(config_cache.hosts_config.hosts).union(config_cache.all_configured_clusters())
+    hostlist = set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
 
     if only_hosts is None:
         return set()
@@ -1960,18 +1960,27 @@ def lookup_ip_address(
 
 
 class HostsConfig:
-    def __init__(self, *, hosts: Sequence[HostName]) -> None:
+    def __init__(
+        self,
+        *,
+        hosts: Sequence[HostName],
+        clusters: Sequence[HostName],  # pylint: disable=redefined-outer-name
+    ) -> None:
         self.hosts: Final = hosts
+        self.clusters: Final = clusters
 
     @classmethod
     def from_config(cls) -> HostsConfig:
-        return cls(hosts=list(set(strip_tags(all_hosts))))
+        return cls(
+            hosts=list(set(strip_tags(all_hosts))),
+            clusters=list(set(strip_tags(clusters))),
+        )
 
 
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
-        self.hosts_config = HostsConfig(hosts=())
+        self.hosts_config = HostsConfig(hosts=(), clusters=())
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -2004,9 +2013,8 @@ class ConfigCache:
         self.hosts_config = HostsConfig.from_config()
         self._setup_clusters_nodes_cache()
 
-        self._all_configured_clusters = set(strip_tags(clusters))
         self._all_configured_hosts = (
-            set(self.hosts_config.hosts) | self._all_configured_clusters | set(get_shadow_hosts())
+            set(self.hosts_config.hosts) | set(self.hosts_config.clusters) | set(get_shadow_hosts())
         )
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
@@ -2027,7 +2035,7 @@ class ConfigCache:
         )
 
         self._all_active_clusters = set(
-            _filter_active_hosts(self.ruleset_matcher, self._all_configured_clusters)
+            _filter_active_hosts(self.ruleset_matcher, self.hosts_config.clusters)
         )
         self._all_active_realhosts = set(
             _filter_active_hosts(self.ruleset_matcher, self.hosts_config.hosts)
@@ -2046,7 +2054,6 @@ class ConfigCache:
 
         # Host lookup
         self._all_configured_hosts = set()
-        self._all_configured_clusters = set()
         self._all_active_clusters = set()
         self._all_active_realhosts = set()
 
@@ -2405,7 +2412,7 @@ class ConfigCache:
 
     def hwsw_inventory_parameters(self, host_name: HostName) -> HWSWInventoryParameters:
         def get_hwsw_inventory_parameters() -> HWSWInventoryParameters:
-            if host_name in self.all_configured_clusters():
+            if host_name in self.hosts_config.clusters:
                 return HWSWInventoryParameters.from_raw({})
 
             # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
@@ -2575,7 +2582,7 @@ class ConfigCache:
 
             # for clusters with an auto-piggyback tag check if nodes have piggyback data
             if (
-                host_name in self.all_configured_clusters()
+                host_name in self.hosts_config.clusters
                 and (nodes := self.nodes_of(host_name)) is not None
             ):
                 return any(self._has_piggyback_data(node) for node in nodes)
@@ -3694,7 +3701,7 @@ class ConfigCache:
     ) -> str:
         def _translate_host_macros(cmd: str) -> str:
             attrs = self.get_host_attributes(host_name)
-            if host_name in self.all_configured_clusters():
+            if host_name in self.hosts_config.clusters:
                 # TODO(ml): What is the difference between this and `self.parents()`?
                 parents_list = self.get_cluster_nodes_for_config(host_name)
                 attrs.setdefault("alias", f'cluster of {", ".join(parents_list)}')
@@ -3773,16 +3780,10 @@ class ConfigCache:
         """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_clusters
 
-    def all_configured_clusters(self) -> set[HostName]:
-        """Returns a set of all cluster names
-        Regardless if currently disabled or monitored on a remote site. Does not return normal hosts.
-        """
-        return self._all_configured_clusters
-
     def all_sites_clusters(self) -> set[HostName]:
         return {
             c
-            for c in self._all_configured_clusters
+            for c in self.hosts_config.clusters
             if distributed_wato_site is None or _host_is_member_of_site(c, distributed_wato_site)
         }
 

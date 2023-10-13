@@ -378,7 +378,7 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
             )
             return get_aggregated_result(
                 host_name,
-                host_name in self.config_cache.all_configured_clusters(),
+                host_name in self.config_cache.hosts_config.clusters,
                 cluster_nodes=self.config_cache.nodes_of(host_name) or (),
                 providers=providers,
                 service=service,
@@ -418,7 +418,7 @@ def _get_check_function(
             service_id=service.id(),
             value_store_manager=value_store_manager,
         )
-        if host_name in config_cache.all_configured_clusters()
+        if host_name in config_cache.hosts_config.clusters
         else plugin.check_function
     )
 

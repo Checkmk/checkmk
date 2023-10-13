@@ -242,7 +242,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 ) -> ObjectSpec:
     ip = attrs["address"]
 
-    if hostname in config_cache.all_configured_clusters():
+    if hostname in config_cache.hosts_config.clusters:
         nodes = config_cache.get_cluster_nodes_for_config(hostname)
         attrs.update(config_cache.get_cluster_attributes(hostname, nodes))
 
@@ -256,7 +256,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         "host_name": hostname,
         "use": (
             config.cluster_template
-            if hostname in config_cache.all_configured_clusters()
+            if hostname in config_cache.hosts_config.clusters
             else config.host_template
         ),
         "address": (
@@ -301,7 +301,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         config_cache,
         hostname,
         ip,
-        hostname in config_cache.all_configured_clusters(),
+        hostname in config_cache.hosts_config.clusters,
         "ping",
         host_check_via_service_status,
         host_check_via_custom_check,
@@ -320,7 +320,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         host_spec["contact_groups"] = ",".join(contactgroups)
         cfg.contactgroups_to_define.update(contactgroups)
 
-    if hostname not in config_cache.all_configured_clusters():
+    if hostname not in config_cache.hosts_config.clusters:
         # Parents for non-clusters
 
         # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
@@ -330,7 +330,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 
-    elif hostname in config_cache.all_configured_clusters():
+    elif hostname in config_cache.hosts_config.clusters:
         # Special handling of clusters
         host_spec["parents"] = ",".join(nodes)
 
@@ -339,7 +339,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     for key, value in config_cache.extra_host_attributes(hostname).items():
         if key == "cmk_agent_connection":
             continue
-        if hostname in config_cache.all_configured_clusters() and key == "parents":
+        if hostname in config_cache.hosts_config.clusters and key == "parents":
             continue
         host_spec[key] = value
 
@@ -703,7 +703,7 @@ def _add_ping_service(
     arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
     ping_command = "check-mk-ping"
-    if host_name in config_cache.all_configured_clusters():
+    if host_name in config_cache.hosts_config.clusters:
         assert node_ips is not None
         arguments += " -m 1 " + node_ips
     else:
@@ -1146,7 +1146,7 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_agent_based_inventory_plugin_names,
     ) = _get_needed_plugin_names(config_cache, hostname)
 
-    if hostname in config_cache.all_configured_clusters():
+    if hostname in config_cache.hosts_config.clusters:
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise TypeError()
@@ -1277,7 +1277,7 @@ if '-d' in sys.argv:
         {},
         {},
     )
-    if hostname in config_cache.all_configured_clusters():
+    if hostname in config_cache.hosts_config.clusters:
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise TypeError()

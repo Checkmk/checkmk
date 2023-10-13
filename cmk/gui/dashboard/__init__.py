@@ -49,6 +49,7 @@ __all__ = [
     "get_permitted_dashboards",
     "render_title_with_macros_string",
     "ABCFigureDashlet",
+    "IFrameDashlet",
 ]
 
 

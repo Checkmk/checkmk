@@ -24,6 +24,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.dashboard import DashletRegistry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -66,6 +67,7 @@ from ._snapin import snapin_site_choice as snapin_site_choice
 from ._snapin import snapin_width as snapin_width
 from ._snapin import SnapinRegistry as SnapinRegistry
 from ._snapin import write_snapin_exception as write_snapin_exception
+from ._snapin_dashlet import SnapinDashlet
 from .main_menu import (
     ajax_message_read,
     MainMenuRenderer,
@@ -81,6 +83,7 @@ def register(
     page_registry: PageRegistry,
     permission_section_registry: PermissionSectionRegistry,
     snapin_registry_: SnapinRegistry,
+    dashlet_registry: DashletRegistry,
 ) -> None:
     page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
     page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
@@ -97,6 +100,7 @@ def register(
     )
     permission_section_registry.register(PermissionSectionSidebarSnapins)
     _snapin.register(snapin_registry_)
+    dashlet_registry.register(SnapinDashlet)
 
 
 def load_plugins() -> None:

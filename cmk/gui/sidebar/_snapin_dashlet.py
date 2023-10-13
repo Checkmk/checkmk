@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.dashboard.dashlet.base import IFrameDashlet
-from cmk.gui.dashboard.type_defs import DashletConfig
+from cmk.gui.dashboard import DashletConfig, IFrameDashlet
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import DropdownChoice
+
+from ._snapin import snapin_registry
 
 
 class SnapinDashletConfig(DashletConfig):
@@ -58,22 +59,14 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
 
     @classmethod
     def _snapin_choices(cls):
-        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
-
-        return sorted(
-            [(k, v.title()) for k, v in sidebar.snapin_registry.items()], key=lambda x: x[1]
-        )
+        return sorted([(k, v.title()) for k, v in snapin_registry.items()], key=lambda x: x[1])
 
     def default_display_title(self) -> str:
-        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
-
-        return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
+        return snapin_registry[self._dashlet_spec["snapin"]].title()
 
     def update(self):
-        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
-
         dashlet = self._dashlet_spec
-        snapin = sidebar.snapin_registry.get(self._dashlet_spec["snapin"])
+        snapin = snapin_registry.get(self._dashlet_spec["snapin"])
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         snapin_instance = snapin()

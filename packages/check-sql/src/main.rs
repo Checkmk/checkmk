@@ -8,8 +8,8 @@ use log::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    setup::init(std::env::args_os())?;
     info!("Starting");
+    let _config = setup::init(std::env::args_os())?;
     let _local_client = api::create_client_for_logged_user("localhost", 1433).await?;
     println!("Integrated Success");
     let _remote_client = api::create_client(

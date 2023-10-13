@@ -17,24 +17,30 @@ pub enum SendTo {
     Stdout,
 }
 
-pub fn init(args: ArgsOs) -> Result<()> {
+pub fn init(args: ArgsOs) -> Result<CheckConfig> {
     let args = Args::parse_from(args);
+    init_logging_from_args(&args)?;
+    get_check_config(&args)
+}
 
-    init_logging(
-        &args.logging_level(),
-        args.log_dir.as_deref(),
-        if args.display_log {
-            SendTo::Stderr
-        } else {
-            SendTo::Null
-        },
-    )?;
+fn init_logging_from_args(args: &Args) -> Result<()> {
+    let level = &args.logging_level();
+    let log_dir = args.log_dir.as_deref();
+    let send_to = if args.display_log {
+        SendTo::Stderr
+    } else {
+        SendTo::Null
+    };
 
-    if let Some(config_file) = args.config_file {
-        let _ = CheckConfig::load_file(&config_file)?;
-    }
-
+    init_logging(level, log_dir, send_to)?;
     Ok(())
+}
+
+fn get_check_config(args: &Args) -> Result<CheckConfig> {
+    match args.config_file {
+        Some(ref config_file) => Ok(CheckConfig::load_file(config_file)?),
+        None => Ok(CheckConfig::default()),
+    }
 }
 
 fn init_logging(

@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::config::CheckConfig;
 use anyhow::{bail, Result};
 use tiberius::{AuthMethod, Client, Config};
 use tokio::net::TcpStream;
@@ -17,6 +18,12 @@ pub enum Credentials<'a> {
         user: &'a str,
         password: &'a str,
     },
+}
+
+impl CheckConfig {
+    pub fn exec(&self) -> Result<()> {
+        Ok(())
+    }
 }
 
 /// Check SQL connection to MS SQL

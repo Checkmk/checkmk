@@ -9,7 +9,7 @@ from typing import Generic, TypeVar
 
 from ._utils import EnvironmentConfig, HostConfig, Secret
 
-_T = TypeVar("_T")
+_ParsedParameters = TypeVar("_ParsedParameters")
 
 
 @dataclass(frozen=True)
@@ -19,7 +19,9 @@ class SpecialAgentConfig:
 
 
 @dataclass(frozen=True)
-class SpecialAgentCommand(Generic[_T]):
+class SpecialAgentCommand(Generic[_ParsedParameters]):
     name: str
-    parameter_parser: Callable[[Mapping[str, object]], _T]
-    config_function: Callable[[_T, HostConfig, EnvironmentConfig], Iterable[SpecialAgentConfig]]
+    parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
+    config_function: Callable[
+        [_ParsedParameters, HostConfig, EnvironmentConfig], Iterable[SpecialAgentConfig]
+    ]

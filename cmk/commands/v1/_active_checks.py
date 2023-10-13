@@ -9,7 +9,7 @@ from typing import Generic, TypeVar
 
 from ._utils import EnvironmentConfig, HostConfig, Secret
 
-_T = TypeVar("_T")
+_ParsedParameters = TypeVar("_ParsedParameters")
 
 
 @dataclass(frozen=True)
@@ -19,7 +19,9 @@ class ActiveService:
 
 
 @dataclass(frozen=True)
-class ActiveCheckCommand(Generic[_T]):
+class ActiveCheckCommand(Generic[_ParsedParameters]):
     name: str
-    parameter_parser: Callable[[Mapping[str, object]], _T]
-    service_function: Callable[[_T, HostConfig, EnvironmentConfig], Iterable[ActiveService]]
+    parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
+    service_function: Callable[
+        [_ParsedParameters, HostConfig, EnvironmentConfig], Iterable[ActiveService]
+    ]

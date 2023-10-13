@@ -9,8 +9,8 @@ from typing import Iterator
 from pydantic import BaseModel
 
 from cmk.config_generation.v1 import (
+    ActiveCheckCommand,
     ActiveCheckConfig,
-    ActiveService,
     get_secret_from_params,
     HostConfig,
     HTTPProxy,
@@ -58,7 +58,7 @@ def parse_bi_aggr_params(raw_params: Mapping[str, object]) -> BiAggrParams:
 
 def check_bi_aggr_services(
     params: BiAggrParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[ActiveService]:
+) -> Iterator[ActiveCheckCommand]:
     args: list[str | Secret] = ["-b", params.base_url, "-a", params.aggregation_name]
     if params.credentials.automation:
         args.append("--use-automation-user")
@@ -82,7 +82,7 @@ def check_bi_aggr_services(
     if opt_params and opt_params.track_downtimes:
         args += ["-r", "-n", host_config.name]
     description = f"Aggr {params.aggregation_name}"
-    yield ActiveService(service_description=description, command_arguments=args)
+    yield ActiveCheckCommand(service_description=description, command_arguments=args)
 
 
 active_check_bi_aggr = ActiveCheckConfig(

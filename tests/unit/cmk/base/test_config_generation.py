@@ -28,7 +28,12 @@ from cmk.base.config_generation import (
 )
 
 import cmk
-from cmk.config_generation.v1 import ActiveCheckConfig, ActiveService, PlainTextSecret, StoredSecret
+from cmk.config_generation.v1 import (
+    ActiveCheckCommand,
+    ActiveCheckConfig,
+    PlainTextSecret,
+    StoredSecret,
+)
 
 
 class TestSpecialAgentConfiguration(NamedTuple):
@@ -276,8 +281,8 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService("First service", ["--arg1", "argument1"]),
-                        ActiveService("Second service", ["--arg2", "argument2"]),
+                        ActiveCheckCommand("First service", ["--arg1", "argument1"]),
+                        ActiveCheckCommand("Second service", ["--arg2", "argument2"]),
                     ]
                 ),
             ),
@@ -346,7 +351,9 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService("My service", ["--password", PlainTextSecret("mypassword")]),
+                        ActiveCheckCommand(
+                            "My service", ["--password", PlainTextSecret("mypassword")]
+                        ),
                     ]
                 ),
             ),
@@ -385,7 +392,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService(
+                        ActiveCheckCommand(
                             "My service",
                             ["--password", StoredSecret("stored_password")],
                         ),
@@ -502,7 +509,7 @@ def test_get_active_service_data(
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService(
+                        ActiveCheckCommand(
                             "My service",
                             ["--password", StoredSecret("stored_password")],
                         ),
@@ -680,7 +687,9 @@ def test_get_active_service_data_warnings(
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService("My service", ["--password", PlainTextSecret("mypassword")]),
+                        ActiveCheckCommand(
+                            "My service", ["--password", PlainTextSecret("mypassword")]
+                        ),
                     ]
                 ),
             ),

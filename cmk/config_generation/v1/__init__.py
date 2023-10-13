@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._active_checks import ActiveCheckConfig, ActiveService
+from ._active_checks import ActiveCheckCommand, ActiveCheckConfig
 from ._special_agents import SpecialAgentCommand, SpecialAgentConfig
 from ._utils import (
     get_secret_from_params,
@@ -17,7 +17,7 @@ from ._utils import (
 
 __all__ = [
     "ActiveCheckConfig",
-    "ActiveService",
+    "ActiveCheckCommand",
     "get_secret_from_params",
     "HostConfig",
     "HTTPProxy",

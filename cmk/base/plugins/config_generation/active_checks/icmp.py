@@ -9,8 +9,8 @@ from typing import Iterator, Mapping, NamedTuple, Sequence, Tuple
 from pydantic import BaseModel
 
 from cmk.config_generation.v1 import (
+    ActiveCheckCommand,
     ActiveCheckConfig,
-    ActiveService,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
@@ -134,19 +134,19 @@ def generate_single_address_services(
 
 def generate_icmp_services(
     params: ICMPParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
-) -> Iterator[ActiveService]:
+) -> Iterator[ActiveCheckCommand]:
     multiple_services = params.multiple_services
     common_args = get_common_arguments(params)
     address_args = get_address_arguments(params, host_config)
     if not multiple_services:
         description = get_icmp_description_all_ips(params)
         arguments = common_args + address_args.to_list()
-        yield ActiveService(service_description=description, command_arguments=arguments)
+        yield ActiveCheckCommand(service_description=description, command_arguments=arguments)
     else:
         desc_template = params.description or "PING"
         for ip_address, single_address_args in generate_single_address_services(address_args):
             arguments = common_args + single_address_args.to_list()
-            yield ActiveService(
+            yield ActiveCheckCommand(
                 service_description=f"{desc_template} {ip_address}", command_arguments=arguments
             )
 

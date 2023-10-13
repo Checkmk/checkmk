@@ -13,7 +13,7 @@ _ParsedParameters = TypeVar("_ParsedParameters")
 
 
 @dataclass(frozen=True)
-class ActiveService:
+class ActiveCheckCommand:
     service_description: str
     command_arguments: Sequence[str | Secret]
 
@@ -23,5 +23,5 @@ class ActiveCheckConfig(Generic[_ParsedParameters]):
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
     service_function: Callable[
-        [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[ActiveService]
+        [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[ActiveCheckCommand]
     ]

@@ -944,26 +944,6 @@ def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
     )
 
 
-# Returns a list of all hosts which are associated with this site,
-# but have been removed by the "only_hosts" rule. Normally these
-# are the hosts which have the tag "offline".
-#
-# This is not optimized for performance, so use in specific situations.
-def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set[HostName]:
-    hostlist = set(
-        hn
-        for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
-        if config_cache.is_active(hn, keep_offline_hosts=True)
-    )
-
-    if only_hosts is None:
-        return set()
-
-    return {
-        hostname for hostname in hostlist if not matcher.get_host_bool_value(hostname, only_hosts)
-    }
-
-
 # .
 #   .--Services------------------------------------------------------------.
 #   |                ____                  _                               |
@@ -2567,6 +2547,9 @@ class ConfigCache:
         return self.ruleset_matcher.get_host_bool_value(host_name, only_hosts)
 
     def is_offline(self, host_name: HostName) -> bool:
+        # Returns True if host_name is associated with this site,
+        # but has been removed by the "only_hosts" rule. Normally these
+        # are the hosts which have the tag "offline".
         return not self._is_only_host(host_name)
 
     def is_active(self, host_name: HostName, *, keep_offline_hosts: bool = False) -> bool:

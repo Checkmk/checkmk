@@ -66,7 +66,11 @@ def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:
     ts.add_host(HostName("blub"), tags={TagGroupID("criticality"): TagID("offline")})
     ts.add_host(HostName("bla"))
     config_cache = ts.apply(monkeypatch)
-    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == set()
+    assert not [
+        hn
+        for hn in config_cache.hosts_config.hosts
+        if config_cache.is_active(hn, keep_offline_hosts=True) and config_cache.is_offline(hn)
+    ]
 
 
 def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) -> None:
@@ -87,7 +91,11 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
     )
     ts.add_host(HostName("bla"))
     config_cache = ts.apply(monkeypatch)
-    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == {"blub1"}
+    assert [
+        hn
+        for hn in config_cache.hosts_config.hosts
+        if config_cache.is_active(hn, keep_offline_hosts=True) and config_cache.is_offline(hn)
+    ] == ["blub1"]
 
 
 def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
@@ -110,7 +118,11 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
         tags={TagGroupID("criticality"): TagID("offline"), TagGroupID("site"): TagID("site2")},
     )
     config_cache = ts.apply(monkeypatch)
-    assert config.all_offline_hosts(config_cache, config_cache.ruleset_matcher) == {"blub1"}
+    assert [
+        hn
+        for hn in config_cache.hosts_config.hosts
+        if config_cache.is_active(hn, keep_offline_hosts=True) and config_cache.is_offline(hn)
+    ] == ["blub1"]
 
 
 def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:

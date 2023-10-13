@@ -152,9 +152,7 @@ fn tls_config(handshake_credentials: HandshakeCredentials) -> AnyhowResult<rustl
             root_cert_store([handshake_credentials.server_root_cert].into_iter())?,
         ));
     Ok(match handshake_credentials.client_identity {
-        // TODO(sk): remove this after updating controller rusttls
-        #[allow(deprecated)]
-        Some(identity) => builder.with_single_cert(identity.cert_chain, identity.key_der)?,
+        Some(identity) => builder.with_client_auth_cert(identity.cert_chain, identity.key_der)?,
         None => builder.with_no_client_auth(),
     })
 }

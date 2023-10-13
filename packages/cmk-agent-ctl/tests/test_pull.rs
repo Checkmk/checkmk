@@ -99,7 +99,7 @@ fn tls_client_connection(certs: X509Certs, address: &str) -> rustls::ClientConne
         rustls::ClientConfig::builder()
             .with_safe_defaults()
             .with_root_certificates(root_cert_store)
-            .with_single_cert(client_chain, private_key)
+            .with_client_auth_cert(client_chain, private_key)
             .unwrap(),
     );
     let server_name = rustls::client::ServerName::try_from(address).unwrap();

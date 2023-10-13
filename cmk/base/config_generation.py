@@ -281,8 +281,8 @@ class ActiveCheck:
             )
             return self._iterate_legacy_services(plugin_name, plugin_info, plugin_params)
 
-        if (command := get_active_check(plugin_name.replace("check_", ""))) is not None:
-            return self._iterate_services(command, plugin_params)
+        if (active_check := get_active_check(plugin_name.replace("check_", ""))) is not None:
+            return self._iterate_services(active_check, plugin_params)
 
         return None
 
@@ -322,7 +322,7 @@ class ActiveCheck:
         return " ".join(formatted)
 
     def _iterate_services(
-        self, command: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
+        self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         host_config = _get_host_config(self.host_name, self.host_attrs)
         http_proxies = {
@@ -331,12 +331,12 @@ class ActiveCheck:
         }
 
         for param_dict in plugin_params:
-            params = command.parameter_parser(param_dict)
-            for service in command.service_function(params, host_config, http_proxies):
+            params = active_check.parameter_parser(param_dict)
+            for service in active_check.service_function(params, host_config, http_proxies):
                 arguments = self._replace_passwords(
                     service.command_arguments,
                 )
-                command_line = f"check_{command.name} {arguments}"
+                command_line = f"check_{active_check.name} {arguments}"
                 yield service.service_description, arguments, command_line, param_dict
 
     def _iterate_legacy_services(
@@ -492,8 +492,8 @@ class ActiveCheck:
                 plugin_name, plugin_info, plugin_params
             )
 
-        if (command := get_active_check(plugin_name.replace("check_", ""))) is not None:
-            return self._iterate_service_descriptions(command, plugin_params)
+        if (active_check := get_active_check(plugin_name.replace("check_", ""))) is not None:
+            return self._iterate_service_descriptions(active_check, plugin_params)
 
         return None
 
@@ -515,10 +515,12 @@ class ActiveCheck:
             yield ActiveServiceDescription(plugin_name, str(description), params)
 
     def _iterate_service_descriptions(
-        self, command: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
+        self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[ActiveServiceDescription]:
-        for desc, _args, _command_line, params in self._iterate_services(command, plugin_params):
-            yield ActiveServiceDescription(f"check_{command.name}", desc, params)
+        for desc, _args, _command_line, params in self._iterate_services(
+            active_check, plugin_params
+        ):
+            yield ActiveServiceDescription(f"check_{active_check.name}", desc, params)
 
 
 class SpecialAgent:

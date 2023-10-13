@@ -9,7 +9,7 @@ from typing import Iterator, Mapping, NamedTuple, Sequence, Tuple
 from pydantic import BaseModel
 
 from cmk.config_generation.v1 import (
-    ActiveCheckCommand,
+    ActiveCheckConfig,
     ActiveService,
     HostConfig,
     HTTPProxy,
@@ -151,6 +151,6 @@ def generate_icmp_services(
             )
 
 
-active_check_icmp = ActiveCheckCommand(
+active_check_icmp = ActiveCheckConfig(
     name="icmp", parameter_parser=parse_icmp_params, service_function=generate_icmp_services
 )

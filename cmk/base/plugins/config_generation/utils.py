@@ -7,10 +7,10 @@ from collections.abc import Sequence
 
 from cmk.base.plugins.config_generation.register import registered_active_checks
 
-from cmk.config_generation.v1 import ActiveCheckCommand
+from cmk.config_generation.v1 import ActiveCheckConfig
 
 
-def get_active_check(plugin_name: str) -> ActiveCheckCommand | None:
+def get_active_check(plugin_name: str) -> ActiveCheckConfig | None:
     return registered_active_checks.get(plugin_name)
 
 

@@ -24,7 +24,7 @@ from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.plugins.config_generation.utils import get_active_check
 
 from cmk.config_generation.v1 import (
-    ActiveCheckCommand,
+    ActiveCheckConfig,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
@@ -322,7 +322,7 @@ class ActiveCheck:
         return " ".join(formatted)
 
     def _iterate_services(
-        self, command: ActiveCheckCommand, plugin_params: Sequence[Mapping[str, object]]
+        self, command: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         host_config = _get_host_config(self.host_name, self.host_attrs)
         http_proxies = {
@@ -515,7 +515,7 @@ class ActiveCheck:
             yield ActiveServiceDescription(plugin_name, str(description), params)
 
     def _iterate_service_descriptions(
-        self, command: ActiveCheckCommand, plugin_params: Sequence[Mapping[str, object]]
+        self, command: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[ActiveServiceDescription]:
         for desc, _args, _command_line, params in self._iterate_services(command, plugin_params):
             yield ActiveServiceDescription(f"check_{command.name}", desc, params)

@@ -28,12 +28,7 @@ from cmk.base.config_generation import (
 )
 
 import cmk
-from cmk.config_generation.v1 import (
-    ActiveCheckCommand,
-    ActiveService,
-    PlainTextSecret,
-    StoredSecret,
-)
+from cmk.config_generation.v1 import ActiveCheckConfig, ActiveService, PlainTextSecret, StoredSecret
 
 
 class TestSpecialAgentConfiguration(NamedTuple):
@@ -276,7 +271,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckCommand(
+            ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
@@ -346,7 +341,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckCommand(
+            ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
@@ -385,7 +380,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckCommand(
+            ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
@@ -427,7 +422,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
 def test_get_active_service_data(
     active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    active_check_command: ActiveCheckCommand,
+    active_check_command: ActiveCheckConfig,
     hostname: HostName,
     host_attrs: Mapping[str, str],
     macros: Mapping[str, str],
@@ -502,7 +497,7 @@ def test_get_active_service_data(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckCommand(
+            ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
@@ -546,7 +541,7 @@ def test_get_active_service_data(
 def test_get_active_service_data_warnings(
     active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    active_check_command: ActiveCheckCommand,
+    active_check_command: ActiveCheckConfig,
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceData],
@@ -680,7 +675,7 @@ def test_get_active_service_data_warnings(
                 ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
             ],
             {},
-            ActiveCheckCommand(
+            ActiveCheckConfig(
                 name="my_active_check",
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
@@ -732,7 +727,7 @@ def test_get_active_service_data_warnings(
 def test_get_active_service_descriptions(
     active_checks: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
     active_check_info: Mapping[str, Mapping[str, str]],
-    active_check_command: ActiveCheckCommand,
+    active_check_command: ActiveCheckConfig,
     hostname: HostName,
     host_attrs: Mapping[str, str],
     expected_result: Sequence[ActiveServiceDescription],

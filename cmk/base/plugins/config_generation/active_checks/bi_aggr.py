@@ -9,7 +9,7 @@ from typing import Iterator
 from pydantic import BaseModel
 
 from cmk.config_generation.v1 import (
-    ActiveCheckCommand,
+    ActiveCheckConfig,
     ActiveService,
     get_secret_from_params,
     HostConfig,
@@ -85,6 +85,6 @@ def check_bi_aggr_services(
     yield ActiveService(service_description=description, command_arguments=args)
 
 
-active_check_bi_aggr = ActiveCheckCommand(
+active_check_bi_aggr = ActiveCheckConfig(
     name="bi_aggr", parameter_parser=parse_bi_aggr_params, service_function=check_bi_aggr_services
 )

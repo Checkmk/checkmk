@@ -6,12 +6,12 @@
 import cmk.utils.debug
 from cmk.utils.plugin_loader import load_plugins
 
-from cmk.config_generation.v1 import ActiveCheckCommand
+from cmk.config_generation.v1 import ActiveCheckConfig
 
-registered_active_checks: dict[str, ActiveCheckCommand] = {}
+registered_active_checks: dict[str, ActiveCheckConfig] = {}
 
 
-def add_active_check_plugin(check_plugin: ActiveCheckCommand) -> None:
+def add_active_check_plugin(check_plugin: ActiveCheckConfig) -> None:
     # TODO: validate active check command
     registered_active_checks[check_plugin.name] = check_plugin
 
@@ -28,6 +28,6 @@ def load_active_checks() -> list[str]:
                 errors.append(f"Error in active check plugin {plugin}: {exc}\n")
             case module:
                 for name, value in vars(module).items():
-                    if name.startswith("active_check") and isinstance(value, ActiveCheckCommand):
+                    if name.startswith("active_check") and isinstance(value, ActiveCheckConfig):
                         add_active_check_plugin(value)
     return errors

@@ -14,9 +14,9 @@ from cmk.utils import password_store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
-import cmk.base.command_config as command_config
 import cmk.base.config as base_config
-from cmk.base.command_config import (
+import cmk.base.config_generation as config_generation
+from cmk.base.config_generation import (
     _get_host_address_config,
     ActiveCheckConfig,
     ActiveServiceData,
@@ -436,7 +436,7 @@ def test_get_active_service_data(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
-    monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
+    monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     active_check_config = ActiveCheckConfig(
@@ -555,7 +555,7 @@ def test_get_active_service_data_warnings(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
-    monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
+    monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})
@@ -739,7 +739,7 @@ def test_get_active_service_descriptions(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(base_config, "active_check_info", active_check_info)
-    monkeypatch.setattr(command_config, "get_active_check", lambda p: active_check_command)
+    monkeypatch.setattr(config_generation, "get_active_check", lambda p: active_check_command)
     monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
 
     active_check_config = ActiveCheckConfig(hostname, host_attrs, translations={})

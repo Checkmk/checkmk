@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib import SpecialAgent
 
-from cmk.base.command_config import SpecialAgentInfoFunctionResult
+from cmk.base.config_generation import SpecialAgentInfoFunctionResult
 
 pytestmark = pytest.mark.checks
 

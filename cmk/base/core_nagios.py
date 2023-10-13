@@ -37,8 +37,8 @@ from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.command_config as command_config
 import cmk.base.config as config
+import cmk.base.config_generation as config_generation
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
@@ -355,7 +355,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
 
 def transform_active_service_command(
-    cfg: NagiosConfig, service_data: command_config.ActiveServiceData
+    cfg: NagiosConfig, service_data: config_generation.ActiveServiceData
 ) -> str:
     if config.simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
@@ -474,7 +474,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     # legacy checks via active_checks
     active_services = []
 
-    active_check_config = command_config.ActiveCheckConfig(
+    active_check_config = config_generation.ActiveCheckConfig(
         hostname,
         host_attrs,
         stored_passwords=stored_passwords,

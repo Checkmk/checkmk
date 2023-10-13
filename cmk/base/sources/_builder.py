@@ -36,8 +36,8 @@ from cmk.checkengine.parser import (
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
-from cmk.base.command_config import SpecialAgent
 from cmk.base.config import ConfigCache
+from cmk.base.config_generation import SpecialAgent
 from cmk.base.ip_lookup import AddressFamily
 
 from ._api import Source

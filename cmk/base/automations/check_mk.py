@@ -133,8 +133,8 @@ from cmk.checkengine.summarize import summarize
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
-import cmk.base.command_config as command_config
 import cmk.base.config as config
+import cmk.base.config_generation as config_generation
 import cmk.base.core
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
@@ -426,7 +426,7 @@ def active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
-    active_check_config = command_config.ActiveCheckConfig(
+    active_check_config = config_generation.ActiveCheckConfig(
         host_name, host_attrs, config.get_service_translations(ruleset_matcher, host_name)
     )
 
@@ -1275,7 +1275,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         host_attrs = config_cache.get_host_attributes(host_name)
-        active_check_config = command_config.ActiveCheckConfig(
+        active_check_config = config_generation.ActiveCheckConfig(
             host_name,
             host_attrs,
             translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),
@@ -2105,7 +2105,7 @@ class AutomationActiveCheck(Automation):
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = self._get_resouce_macros()
-        active_check_config = command_config.ActiveCheckConfig(
+        active_check_config = config_generation.ActiveCheckConfig(
             host_name,
             host_attrs,
             translations=config.get_service_translations(config_cache.ruleset_matcher, host_name),

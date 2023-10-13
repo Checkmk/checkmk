@@ -43,18 +43,18 @@ Seconds = int
 Label = tuple[float, str | None, int]
 
 
-class _LayoutedCurveMandatory(TypedDict):
+class _LayoutedCurveBase(TypedDict):
     color: str
     title: str
     scalars: dict[str, tuple[TimeSeriesValue, str]]
 
 
-class LayoutedCurveLine(_LayoutedCurveMandatory):
+class LayoutedCurveLine(_LayoutedCurveBase):
     type: Literal["line"]
     points: Sequence[TimeSeriesValue]
 
 
-class LayoutedCurveArea(_LayoutedCurveMandatory):
+class LayoutedCurveArea(_LayoutedCurveBase):
     # Handle area and stack.
     type: Literal["area"]
     points: Sequence[tuple[TimeSeriesValue, TimeSeriesValue]]
@@ -131,28 +131,28 @@ class GraphArtwork(BaseModel):
 
 
 def get_default_graph_render_options() -> GraphRenderOptions:
-    return {
-        "font_size": 8.0,  # pt
-        "resizable": True,
-        "show_controls": True,
-        "show_pin": True,
-        "show_legend": True,
-        "show_graph_time": True,
-        "show_vertical_axis": True,
-        "vertical_axis_width": "fixed",
-        "show_time_axis": True,
-        "show_title": True,
-        "title_format": "plain",
-        "show_margin": True,
-        "preview": False,
-        "interaction": True,
-        "editing": False,
-        "fixed_timerange": False,
-        "show_time_range_previews": True,
-        "background_color": "default",
-        "foreground_color": "default",
-        "canvas_color": "default",
-    }
+    return GraphRenderOptions(
+        font_size=8.0,  # pt
+        resizable=True,
+        show_controls=True,
+        show_pin=True,
+        show_legend=True,
+        show_graph_time=True,
+        show_vertical_axis=True,
+        vertical_axis_width="fixed",
+        show_time_axis=True,
+        show_title=True,
+        title_format="plain",
+        show_margin=True,
+        preview=False,
+        interaction=True,
+        editing=False,
+        fixed_timerange=False,
+        show_time_range_previews=True,
+        background_color="default",
+        foreground_color="default",
+        canvas_color="default",
+    )
 
 
 class GraphColors(TypedDict):
@@ -164,27 +164,21 @@ class GraphColors(TypedDict):
 def _graph_colors(theme_id: str) -> GraphColors:
     return {
         "modern-dark": GraphColors(
-            {
-                "background_color": None,
-                "foreground_color": "#ffffff",
-                "canvas_color": None,
-            }
+            background_color=None,
+            foreground_color="#ffffff",
+            canvas_color=None,
         ),
         "pdf": GraphColors(
-            {
-                "background_color": "#f8f4f0",
-                "foreground_color": "#000000",
-                "canvas_color": "#ffffff",
-            }
+            background_color="#f8f4f0",
+            foreground_color="#000000",
+            canvas_color="#ffffff",
         ),
     }.get(
         theme_id,
         GraphColors(
-            {
-                "background_color": None,
-                "foreground_color": "#000000",
-                "canvas_color": None,
-            }
+            background_color=None,
+            foreground_color="#000000",
+            canvas_color=None,
         ),
     )
 
@@ -342,13 +336,11 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
         if line_type == "line":
             # Handles lines, they cannot stack
             layouted_curve: LayoutedCurve = LayoutedCurveLine(
-                {
-                    "type": "line",
-                    "points": raw_points,
-                    "color": curve["color"],
-                    "title": curve["title"],
-                    "scalars": curve["scalars"],
-                }
+                type="line",
+                points=raw_points,
+                color=curve["color"],
+                title=curve["title"],
+                scalars=curve["scalars"],
             )
 
         else:
@@ -357,13 +349,11 @@ def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], 
             base = [] if this_stack is None or line_type == "area" else this_stack
 
             layouted_curve = LayoutedCurveArea(
-                {
-                    "type": "area",
-                    "points": _areastack(raw_points, base),
-                    "color": curve["color"],
-                    "title": curve["title"],
-                    "scalars": curve["scalars"],
-                }
+                type="area",
+                points=_areastack(raw_points, base),
+                color=curve["color"],
+                title=curve["title"],
+                scalars=curve["scalars"],
             )
             stacks[stack_nr] = [x[stack_nr] for x in layouted_curve["points"]]
 
@@ -439,16 +429,14 @@ def _compute_graph_curves(
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(
-                {
-                    "line_type": (
-                        _parse_line_type(mirror_prefix, ts.metadata.line_type)
-                        if multi and ts.metadata.line_type
-                        else metric.line_type
-                    ),
-                    "color": color,
-                    "title": title,
-                    "rrddata": ts.data,
-                }
+                line_type=(
+                    _parse_line_type(mirror_prefix, ts.metadata.line_type)
+                    if multi and ts.metadata.line_type
+                    else metric.line_type
+                ),
+                color=color,
+                title=title,
+                rrddata=ts.data,
             )
 
 
@@ -557,13 +545,11 @@ def compute_curve_values_at_timestamp(
     unit = unit_info[unit_id]
     yield from (
         CurveValue(
-            {
-                "title": curve["title"],
-                "color": curve["color"],
-                "rendered_value": _render_scalar_value(
-                    _get_value_at_timestamp(hover_time, curve["rrddata"]), unit
-                ),
-            }
+            title=curve["title"],
+            color=curve["color"],
+            rendered_value=_render_scalar_value(
+                _get_value_at_timestamp(hover_time, curve["rrddata"]), unit
+            ),
         )
         for curve in curves
     )
@@ -697,15 +683,13 @@ def _compute_graph_v_axis(
     )
 
     v_axis = VerticalAxis(
-        {
-            "range": (min_value, max_value),
-            "real_range": real_range,
-            "label_distance": label_distance,
-            "sub_distance": sub_distance,
-            "axis_label": None,
-            "labels": rendered_labels,
-            "max_label_length": max_label_length,
-        }
+        range=(min_value, max_value),
+        real_range=real_range,
+        label_distance=label_distance,
+        sub_distance=sub_distance,
+        axis_label=None,
+        labels=rendered_labels,
+        max_label_length=max_label_length,
     )
 
     if graph_unit is not None:
@@ -1060,11 +1044,11 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
             label = None
         labels.append((pos, label, line_width))
 
-    return {
-        "labels": labels,
-        "range": (int(start_time - step), int(end_time + step)),
-        "title": _add_step_to_title(title_label, step),
-    }
+    return TimeAxis(
+        labels=labels,
+        range=(int(start_time - step), int(end_time + step)),
+        title=_add_step_to_title(title_label, step),
+    )
 
 
 def _select_t_axis_label_producer(

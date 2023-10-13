@@ -641,9 +641,10 @@ def _render_ajax_graph(
 def load_user_graph_data_range() -> GraphDataRange:
     return user.load_file(
         "graph_range",
-        {
-            "time_range": (time.time() - 86400, time.time()),
-        },
+        GraphDataRange(
+            time_range=(int(time.time() - 86400), int(time.time())),
+            step="86400:80000",
+        ),
     )
 
 
@@ -898,10 +899,8 @@ def _render_time_range_selection(
 
         timerange = now - duration, now
         graph_data_range = GraphDataRange(
-            {
-                "time_range": timerange,
-                "step": 2 * estimate_graph_step_for_html(timerange, graph_render_options),
-            }
+            time_range=timerange,
+            step=2 * estimate_graph_step_for_html(timerange, graph_render_options),
         )
 
         graph_artwork = compute_graph_artwork(
@@ -926,10 +925,8 @@ def make_graph_data_range(
     time_range: tuple[int, int], graph_render_options: GraphRenderOptions
 ) -> GraphDataRange:
     return GraphDataRange(
-        {
-            "time_range": time_range,
-            "step": estimate_graph_step_for_html(time_range, graph_render_options),
-        }
+        time_range=time_range,
+        step=estimate_graph_step_for_html(time_range, graph_render_options),
     )
 
 

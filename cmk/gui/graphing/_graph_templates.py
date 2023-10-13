@@ -451,4 +451,4 @@ def metric_unit_color(
                 ", ".join(sorted(translated_metrics.keys())) or "None",
             )
         )
-    return {"unit": result.unit_info["id"], "color": result.color}
+    return MetricUnitColor(unit=result.unit_info["id"], color=result.color)

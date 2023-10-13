@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Any, Literal, NamedTuple, NewType, Self
+from typing import Any, Literal, NamedTuple, NewType, NotRequired, Self
 
 from pydantic import BaseModel
 from typing_extensions import TypedDict
@@ -75,27 +75,21 @@ class MKCombinedGraphLimitExceededError(MKHTTPException):
     status = http.HTTPStatus.BAD_REQUEST
 
 
-class _CurveMandatory(TypedDict):
+class Curve(TypedDict):
     line_type: LineType | Literal["ref"]
     color: str
     title: str
     rrddata: TimeSeries
-
-
-class Curve(_CurveMandatory, total=False):
     # Added during runtime by _compute_scalars
-    scalars: dict[str, tuple[TimeSeriesValue, str]]
+    scalars: NotRequired[dict[str, tuple[TimeSeriesValue, str]]]
 
 
-class _GraphDataRangeMandatory(TypedDict):
+class GraphDataRange(TypedDict):
     time_range: tuple[int, int]
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
     # colon separated [step length]:[rrd point count]
     step: int | str
-
-
-class GraphDataRange(_GraphDataRangeMandatory, total=False):
-    vertical_range: tuple[float, float]
+    vertical_range: NotRequired[tuple[float, float]]
 
 
 GraphRangeSpec = tuple[int | str, int | str]
@@ -103,21 +97,17 @@ GraphRange = tuple[float | None, float | None]
 SizeEx = NewType("SizeEx", int)
 
 
-class _GraphTemplateRegistrationMandatory(TypedDict):
+class GraphTemplateRegistration(TypedDict):
     metrics: Sequence[
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
     ]
-
-
-class GraphTemplateRegistration(_GraphTemplateRegistrationMandatory, total=False):
-    # All attributes here are optional
-    title: str | LazyString
-    scalars: Sequence[ScalarDefinition]
-    conflicting_metrics: Sequence[str]
-    optional_metrics: Sequence[str]
-    consolidation_function: GraphConsoldiationFunction
-    range: GraphRangeSpec
-    omit_zero_metrics: bool
+    title: NotRequired[str | LazyString]
+    scalars: NotRequired[Sequence[ScalarDefinition]]
+    conflicting_metrics: NotRequired[Sequence[str]]
+    optional_metrics: NotRequired[Sequence[str]]
+    consolidation_function: NotRequired[GraphConsoldiationFunction]
+    range: NotRequired[GraphRangeSpec]
+    omit_zero_metrics: NotRequired[bool]
 
 
 @dataclass(frozen=True)
@@ -236,7 +226,7 @@ class MetricInfoExtended(TypedDict, total=False):
     render: Callable[[float | int], str]
 
 
-class NormalizedPerfData(TypedDict):
+class _NormalizedPerfData(TypedDict):
     orig_name: list[str]
     value: float
     scalar: ScalarBounds
@@ -445,11 +435,11 @@ def perfvar_translation(
         MetricName_(perfvar_name),
         lookup_metric_translations_for_check_command(check_metrics, check_command) or {},
     )
-    return {
-        "name": translation_entry.get("name", perfvar_name),
-        "scale": translation_entry.get("scale", 1.0),
-        "auto_graph": translation_entry.get("auto_graph", True),
-    }
+    return TranslationInfo(
+        name=translation_entry.get("name", perfvar_name),
+        scale=translation_entry.get("scale", 1.0),
+        auto_graph=translation_entry.get("auto_graph", True),
+    )
 
 
 def lookup_metric_translations_for_check_command(
@@ -505,17 +495,17 @@ def _scalar_bounds(perf_data_tuple: PerfDataTuple, scale: float) -> ScalarBounds
 
 def _normalize_perf_data(
     perf_data_tuple: PerfDataTuple, check_command: str
-) -> tuple[str, NormalizedPerfData]:
+) -> tuple[str, _NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data_tuple.metric_name, check_command)
 
-    new_entry: NormalizedPerfData = {
-        "orig_name": [perf_data_tuple.metric_name],
-        "value": perf_data_tuple.value * translation_entry["scale"],
-        "scalar": _scalar_bounds(perf_data_tuple, translation_entry["scale"]),
-        "scale": [translation_entry["scale"]],  # needed for graph recipes
+    new_entry = _NormalizedPerfData(
+        orig_name=[perf_data_tuple.metric_name],
+        value=perf_data_tuple.value * translation_entry["scale"],
+        scalar=_scalar_bounds(perf_data_tuple, translation_entry["scale"]),
+        scale=[translation_entry["scale"]],  # needed for graph recipes
         # Do not create graphs for ungraphed metrics if listed here
-        "auto_graph": translation_entry["auto_graph"],
-    }
+        auto_graph=translation_entry["auto_graph"],
+    )
 
     return translation_entry["name"], new_entry
 
@@ -578,16 +568,16 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
 
         # https://github.com/python/mypy/issues/6462
         # new_entry = normalized
-        new_entry: TranslatedMetric = {
-            "orig_name": normalized["orig_name"],
-            "value": unit_conversion(normalized["value"]),
-            "scalar": _translated_metric_scalar(unit_conversion, normalized["scalar"]),
-            "scale": normalized["scale"],
-            "auto_graph": normalized["auto_graph"],
-            "title": str(mi["title"]),
-            "unit": mi["unit"],
-            "color": mi["color"],
-        }
+        new_entry = TranslatedMetric(
+            orig_name=normalized["orig_name"],
+            value=unit_conversion(normalized["value"]),
+            scalar=_translated_metric_scalar(unit_conversion, normalized["scalar"]),
+            scale=normalized["scale"],
+            auto_graph=normalized["auto_graph"],
+            title=str(mi["title"]),
+            unit=mi["unit"],
+            color=mi["color"],
+        )
 
         if metric_name in translated_metrics:
             translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])

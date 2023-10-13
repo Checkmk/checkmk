@@ -419,10 +419,8 @@ def compute_pdf_graph_data_range(width: SizeMM, start_time: int, end_time: int) 
     number_of_steps = int(available_width / mm_per_step)  # fixed: true-division
     step = int((end_time - start_time) / number_of_steps / 2)
     return GraphDataRange(
-        {
-            "time_range": (start_time, end_time),
-            "step": step,
-        }
+        time_range=(start_time, end_time),
+        step=step,
     )
 
 

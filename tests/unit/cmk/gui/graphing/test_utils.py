@@ -13,7 +13,7 @@ from cmk.utils.metrics import MetricName
 
 import cmk.gui.graphing._utils as utils
 from cmk.gui.config import active_config
-from cmk.gui.graphing._utils import AutomaticDict, NormalizedPerfData, TranslationInfo
+from cmk.gui.graphing._utils import _NormalizedPerfData, AutomaticDict, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -179,7 +179,7 @@ def test_find_matching_translation(
     ],
 )
 def test__normalize_perf_data(
-    perf_data: PerfDataTuple, check_command: str, result: tuple[str, NormalizedPerfData]
+    perf_data: PerfDataTuple, check_command: str, result: tuple[str, _NormalizedPerfData]
 ) -> None:
     assert utils._normalize_perf_data(perf_data, check_command) == result
 

@@ -309,8 +309,7 @@ def _list_all_hosts(
                 for hn in set(config_cache.hosts_config.hosts).union(
                     config_cache.hosts_config.clusters
                 )
-                if config_cache.is_offline(hn)
-                and config_cache.is_active(hn, keep_offline_hosts=True)
+                if config_cache.is_offline(hn) and config_cache.is_active(hn)
             )
 
     if not hostgroups:
@@ -379,7 +378,7 @@ def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
         hostlist = {
             hn
             for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
-            if config_cache.is_active(hn, keep_offline_hosts=True) and config_cache.is_offline(hn)
+            if config_cache.is_active(hn) and config_cache.is_offline(hn)
         }
     else:
         hostlist = config_cache.all_active_hosts()

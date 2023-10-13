@@ -23,7 +23,7 @@ from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.userdb._user_attribute._custom_attributes
+import cmk.gui.userdb._custom_attributes
 import cmk.gui.userdb._user_attribute._registry
 import cmk.gui.userdb.session  # NOQA # pylint: disable-unused-import
 from cmk.gui import http, userdb
@@ -524,7 +524,7 @@ def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetCo
         userdb.user_attribute_registry,
     )
     monkeypatch.setattr(
-        cmk.gui.userdb._user_attribute._custom_attributes,
+        cmk.gui.userdb._custom_attributes,
         "user_attribute_registry",
         userdb.user_attribute_registry,
     )

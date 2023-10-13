@@ -4,10 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._base import UserAttribute as UserAttribute
-from ._custom_attributes import register_custom_user_attributes as register_custom_user_attributes
-from ._custom_attributes import (
-    update_config_based_user_attributes as update_config_based_user_attributes,
-)
 from ._registry import get_user_attributes as get_user_attributes
 from ._registry import get_user_attributes_by_topic as get_user_attributes_by_topic
 from ._registry import user_attribute_registry as user_attribute_registry

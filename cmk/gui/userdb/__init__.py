@@ -32,6 +32,9 @@ from ._connector import ConnectorType as ConnectorType
 from ._connector import user_connector_registry as user_connector_registry
 from ._connector import UserConnector as UserConnector
 from ._connector import UserConnectorRegistry as UserConnectorRegistry
+from ._custom_attributes import (
+    update_config_based_user_attributes as update_config_based_user_attributes,
+)
 from ._find_usage import (
     find_timeperiod_usage_in_notification_rule as find_timeperiod_usage_in_notification_rule,
 )
@@ -47,10 +50,6 @@ from ._two_factor import load_two_factor_credentials as load_two_factor_credenti
 from ._two_factor import make_two_factor_backup_codes as make_two_factor_backup_codes
 from ._user_attribute import get_user_attributes as get_user_attributes
 from ._user_attribute import get_user_attributes_by_topic as get_user_attributes_by_topic
-from ._user_attribute import register_custom_user_attributes as register_custom_user_attributes
-from ._user_attribute import (
-    update_config_based_user_attributes as update_config_based_user_attributes,
-)
 from ._user_attribute import user_attribute_registry as user_attribute_registry
 from ._user_attribute import UserAttribute as UserAttribute
 from ._user_attribute import UserAttributeRegistry as UserAttributeRegistry

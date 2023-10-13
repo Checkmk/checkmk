@@ -8,9 +8,8 @@ from typing import Any
 from cmk.gui.config import active_config
 from cmk.gui.valuespec import TextInput, ValueSpec
 
-from .. import ldap_connector
-from ._base import UserAttribute
-from ._registry import get_user_attributes, user_attribute_registry
+from . import ldap_connector
+from ._user_attribute import get_user_attributes, user_attribute_registry, UserAttribute
 
 
 class GenericUserAttribute(UserAttribute):

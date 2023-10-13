@@ -19,7 +19,7 @@ def run_make_targets(Map args) {
         """.stripMargin());
 
     def DOCKER_BUILDS = [:]
-
+    def download_dir = "downloaded_packages_for_integration_tests"
     // TODO: this should be done by the top level scripts
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         docker_image_from_alias("IMAGE_TESTING").inside(
@@ -40,13 +40,13 @@ def run_make_targets(Map args) {
                     def artifacts_helper = load "${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy"
 
                     // TODO make independent from WORKSPACE
-                    sh("rm -rf \"${WORKSPACE}/packages\"")
+                    sh("rm -rf \"${WORKSPACE}/${download_dir}\"")
                     if (args.DISTRO_LIST == ["ubuntu-20.04"]) {
                         artifacts_helper.download_deb(
                             INTERNAL_DEPLOY_DEST,
                             INTERNAL_DEPLOY_PORT,
                             args.cmk_version,
-                            "${WORKSPACE}/packages/${args.cmk_version}",
+                            "${WORKSPACE}/${download_dir}/${args.cmk_version}",
                             args.EDITION,
                             "focal",
                         );
@@ -56,7 +56,7 @@ def run_make_targets(Map args) {
                             INTERNAL_DEPLOY_DEST,
                             INTERNAL_DEPLOY_PORT,
                             args.cmk_version,
-                            "${WORKSPACE}/packages/${args.cmk_version}",
+                            "${WORKSPACE}/${download_dir}/${args.cmk_version}",
                             args.EDITION,
                             "jammy",
                         );
@@ -69,7 +69,7 @@ def run_make_targets(Map args) {
                             INTERNAL_DEPLOY_DEST,
                             INTERNAL_DEPLOY_PORT,
                             args.cmk_version,
-                            "${WORKSPACE}/packages/${args.cmk_version}",
+                            "${WORKSPACE}/${download_dir}/${args.cmk_version}",
                         );
                     }
 

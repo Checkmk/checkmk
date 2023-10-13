@@ -273,7 +273,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="systemd_units_services",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the service")),
+        item_spec=lambda: TextInput(title=_("Name of the service"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_systemd_units,
         title=lambda: _("Systemd single service"),
@@ -283,7 +283,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="systemd_units_sockets",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the socket")),
+        item_spec=lambda: TextInput(title=_("Name of the socket"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_systemd_units,
         title=lambda: _("Systemd single socket"),

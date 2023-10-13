@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 use anyhow::Result;
+use check_sql::ms_sql::api;
 use check_sql::setup;
 use log::info;
 
@@ -9,8 +10,18 @@ use log::info;
 async fn main() -> Result<()> {
     setup::init(std::env::args_os())?;
     info!("Starting");
-    check_sql::ms_sql::api::check_connect("agentbuild3.lan.tribe29.com", 1433, "u", "u").await?;
-    println!("Success");
+    let _local_client = api::create_client_for_logged_user("localhost", 1433).await?;
+    println!("Integrated Success");
+    let _remote_client = api::create_client(
+        "agentbuild3.lan.tribe29.com",
+        1433,
+        api::Credentials::SqlServer {
+            user: "u",
+            password: "u",
+        },
+    )
+    .await?;
+    println!("Remote Success");
 
     Ok(())
 }

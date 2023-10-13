@@ -6,6 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+tiberius = { version = "0.12.2", features = [
+    "winauth",
+    # "integrated-auth-gssapi",
+] } # MS SQL
+
 # need to compile OpenSSL. See:
 # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation
 # https://github.com/rust-cross/rust-musl-cross/issues/44
@@ -16,7 +21,6 @@ tokio = { version = "1.32.0", features = [
     "rt-multi-thread",
     "macros",
 ] }
-tiberius = "0.12.2" # MS SQL
 # tokio-rustls = "0.24.1"
 tokio-util = { version = "0.7.8", features = ["compat"] }
 anyhow = "1.0.75"

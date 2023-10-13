@@ -24,7 +24,7 @@ __all__ = [
     "IPAddressFamily",
     "PlainTextSecret",
     "Secret",
-    "SpecialAgentConfig",
     "SpecialAgentCommand",
+    "SpecialAgentConfig",
     "StoredSecret",
 ]

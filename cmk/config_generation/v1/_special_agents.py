@@ -13,15 +13,15 @@ _ParsedParameters = TypeVar("_ParsedParameters")
 
 
 @dataclass(frozen=True)
-class SpecialAgentConfig:
+class SpecialAgentCommand:
     command_arguments: Sequence[str | Secret]
     stdin: str | None = None
 
 
 @dataclass(frozen=True)
-class SpecialAgentCommand(Generic[_ParsedParameters]):
+class SpecialAgentConfig(Generic[_ParsedParameters]):
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
     config_function: Callable[
-        [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentConfig]
+        [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentCommand]
     ]

@@ -9,7 +9,7 @@ of the dashboard to render is given in the HTML variable 'name'.
 
 import copy
 import json
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Literal
@@ -19,7 +19,6 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.user import UserId
 
 import cmk.gui.crash_handler as crash_handler
-import cmk.gui.pages
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKMissingDataError, MKUserError
@@ -47,13 +46,11 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
-from cmk.gui.view import View
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
-from cmk.gui.views.store import get_permitted_views
-from cmk.gui.visuals.filter import Filter
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
+from ._network_topology import get_topology_context_and_filters
 from .breadcrumb import dashboard_breadcrumb
 from .builtin_dashboards import GROW, MAX
 from .dashlet import (
@@ -708,20 +705,6 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
             }
 
         return _minimal_context(_get_mandatory_filters(board, set()), board["context"])
-
-
-def get_topology_context_and_filters() -> tuple[Mapping[str, Mapping[str, str]], list[Filter]]:
-    view_name = "topology_filters"
-    view_spec = get_permitted_views()[view_name]
-    view = View(view_name, view_spec, view_spec.get("context", {}))
-    context = cmk.gui.visuals.active_context_from_request(
-        view.datasource.infos, view.spec["context"]
-    )
-    filters = cmk.gui.visuals.filters_of_visual(
-        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
-    )
-    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-    return context, show_filters
 
 
 @dataclass

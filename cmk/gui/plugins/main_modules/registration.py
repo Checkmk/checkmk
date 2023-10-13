@@ -17,7 +17,6 @@ from cmk.gui import (
     autocompleters,
     crash_reporting,
     cron,
-    dashboard,
     default_permissions,
     graphing,
     gui_background_job,
@@ -44,6 +43,7 @@ from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.custom_icons.registration import custom_icons_register
 from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
@@ -116,7 +116,7 @@ def register() -> None:
         rulespec_registry,
         icon_and_action_registry,
     )
-    dashboard.register(
+    dashboard_registration.register(
         permission_section_registry,
         page_registry,
         visual_type_registry,

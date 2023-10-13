@@ -45,9 +45,10 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.check_mk_automations import get_services_labels
-from cmk.gui.watolib.hosts_and_folders import (
+
+from .changes import add_change
+from .check_mk_automations import get_services_labels
+from .hosts_and_folders import (
     Folder,
     folder_from_request,
     folder_preserving_link,
@@ -56,16 +57,16 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     may_use_redis,
 )
-from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.rulespecs import (
+from .objref import ObjectRef, ObjectRefType
+from .rulespecs import (
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
     RulespecAllowList,
     TimeperiodValuespec,
 )
-from cmk.gui.watolib.timeperiods import TimeperiodSelection, TimeperiodUsage
-from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
+from .timeperiods import TimeperiodSelection, TimeperiodUsage
+from .utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)

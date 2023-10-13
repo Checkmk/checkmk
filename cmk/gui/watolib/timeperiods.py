@@ -9,13 +9,15 @@ import cmk.utils.store as store
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
 
-import cmk.gui.watolib.changes as _changes
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
-from cmk.gui.watolib.utils import wato_root_dir
+
+from . import changes as _changes
+from .utils import wato_root_dir
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
@@ -179,7 +181,9 @@ def _find_usages_in_other_timeperiods(time_period_name: str) -> list[TimeperiodU
                     "{}: {} ({})".format(
                         _("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")
                     ),
-                    folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
+                    makeuri_contextless(
+                        request, [("mode", "edit_timeperiod"), ("edit", tpn)], filename="wato.py"
+                    ),
                 )
             )
     return used_in

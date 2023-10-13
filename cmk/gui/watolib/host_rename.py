@@ -33,15 +33,16 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.urls import makeuri
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.check_mk_automations import rename_hosts
-from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
-from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
-from cmk.gui.watolib.rulesets import FolderRulesets
-from cmk.gui.watolib.utils import rename_host_in_list
+
+from .audit_log import log_audit
+from .automation_commands import AutomationCommand
+from .automations import do_remote_automation
+from .changes import add_change
+from .check_mk_automations import rename_hosts
+from .hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
+from .notifications import load_notification_rules, save_notification_rules
+from .rulesets import FolderRulesets
+from .utils import rename_host_in_list
 
 
 class RenamePhase(StrEnum):

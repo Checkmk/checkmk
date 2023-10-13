@@ -19,22 +19,18 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.translations import translate_hostname, TranslationOptions
 from cmk.utils.user import UserId
 
-import cmk.gui.watolib.bakery as bakery
 from cmk.gui import userdb
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
-from cmk.gui.watolib.automation_commands import AutomationCommand
-from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.host_attributes import (
-    ExcludeIPRange,
-    HostAttributes,
-    IPRange,
-    NetworkScanResult,
-)
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host, update_metadata
+
+from . import bakery
+from .automation_commands import AutomationCommand
+from .automations import do_remote_automation
+from .host_attributes import ExcludeIPRange, HostAttributes, IPRange, NetworkScanResult
+from .hosts_and_folders import Folder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 

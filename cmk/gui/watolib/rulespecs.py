@@ -45,15 +45,11 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.check_mk_automations import get_check_information_cached
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    match_item_generator_registry,
-    MatchItem,
-    MatchItems,
-)
-from cmk.gui.watolib.timeperiods import TimeperiodSelection
+
+from .check_mk_automations import get_check_information_cached
+from .main_menu import ABCMainModule, MainModuleRegistry
+from .search import ABCMatchItemGenerator, match_item_generator_registry, MatchItem, MatchItems
+from .timeperiods import TimeperiodSelection
 
 
 class AllowAll:

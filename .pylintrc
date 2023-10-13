@@ -26,6 +26,10 @@ signature-mutators=cmk.utils.store.with_lock_dict
 [MESSAGES CONTROL]
 disable=
     #---------------------------------------------------------------------------
+    # This checker is flaky. Recheck later.
+    # Might be related to https://github.com/pylint-dev/pylint/issues/9101
+    too-many-ancestors,
+    #---------------------------------------------------------------------------
     # We really need to fix all findings here!
     cyclic-import,
     #---------------------------------------------------------------------------

@@ -295,6 +295,7 @@ def update_fetch_params(fetch_params):
 
 def migrate_check_mail_loop_params(params):
     """Migrates rule sets from 2.1 and below format to current (2.2 and up)"""
+    params = params.copy()
     fetch_protocol, fetch_params = params["fetch"]
     send_protocol, send_params = params.get("send", (None, {}))
 

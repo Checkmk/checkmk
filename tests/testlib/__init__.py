@@ -53,7 +53,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.plugins.commands import get_active_check
 
-from cmk.commands.v1 import ActiveService, EnvironmentConfig, HostConfig
+from cmk.commands.v1 import ActiveService, HostConfig, HTTPProxy
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -397,7 +397,10 @@ class ActiveCheck(BaseCheck):
         yield from self.info["service_generator"](host_config, params)
 
     def run_service_function(
-        self, host_config: HostConfig, env_config: EnvironmentConfig, params: Mapping[str, object]
+        self,
+        host_config: HostConfig,
+        env_config: Mapping[str, HTTPProxy],
+        params: Mapping[str, object],
     ) -> Iterator[ActiveService]:
         assert self.command, "Active check has to be implemented in the new API"
         parsed_params = self.command.parameter_parser(params)

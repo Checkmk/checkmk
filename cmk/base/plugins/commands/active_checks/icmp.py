@@ -11,8 +11,8 @@ from pydantic import BaseModel
 from cmk.commands.v1 import (
     ActiveCheckCommand,
     ActiveService,
-    EnvironmentConfig,
     HostConfig,
+    HTTPProxy,
     IPAddressFamily,
 )
 
@@ -133,7 +133,7 @@ def generate_single_address_services(
 
 
 def generate_icmp_services(
-    params: ICMPParams, host_config: HostConfig, _environment_config: EnvironmentConfig
+    params: ICMPParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveService]:
     multiple_services = params.multiple_services
     common_args = get_common_arguments(params)

@@ -12,7 +12,7 @@ from tests.testlib import ActiveCheck
 
 from tests.unit.conftest import FixRegister
 
-from cmk.commands.v1 import ActiveService, EnvironmentConfig, HostConfig, IPAddressFamily
+from cmk.commands.v1 import ActiveService, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(
     name="hostname",
@@ -28,8 +28,6 @@ HOST_CONFIG = HostConfig(
         IPv6Address("fe80::243"),
     ],
 )
-
-ENV_CONFIG = EnvironmentConfig({})
 
 
 @pytest.mark.parametrize(
@@ -239,5 +237,5 @@ def test_generate_icmp_services(
     fix_register: FixRegister,
 ) -> None:
     active_check = ActiveCheck("icmp")
-    services = list(active_check.run_service_function(HOST_CONFIG, ENV_CONFIG, params))
+    services = list(active_check.run_service_function(HOST_CONFIG, {}, params))
     assert services == expected_result

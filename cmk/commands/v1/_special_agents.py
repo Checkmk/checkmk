@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from ._utils import EnvironmentConfig, HostConfig, Secret
+from ._utils import HostConfig, HTTPProxy, Secret
 
 _ParsedParameters = TypeVar("_ParsedParameters")
 
@@ -23,5 +23,5 @@ class SpecialAgentCommand(Generic[_ParsedParameters]):
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
     config_function: Callable[
-        [_ParsedParameters, HostConfig, EnvironmentConfig], Iterable[SpecialAgentConfig]
+        [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentConfig]
     ]

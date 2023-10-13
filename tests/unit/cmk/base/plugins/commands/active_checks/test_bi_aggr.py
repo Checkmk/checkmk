@@ -11,7 +11,7 @@ from tests.testlib import ActiveCheck
 
 from tests.unit.conftest import FixRegister
 
-from cmk.commands.v1 import ActiveService, EnvironmentConfig, HostConfig, IPAddressFamily
+from cmk.commands.v1 import ActiveService, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(
     name="hostname",
@@ -23,8 +23,6 @@ HOST_CONFIG = HostConfig(
     additional_ipv4addresses=[],
     additional_ipv6addresses=[],
 )
-
-ENV_CONFIG = EnvironmentConfig({})
 
 
 @pytest.mark.parametrize(
@@ -49,6 +47,6 @@ def test_check_bi_aggr_argument_parsing(
 ) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("bi_aggr")
-    services = list(active_check.run_service_function(HOST_CONFIG, ENV_CONFIG, params))
+    services = list(active_check.run_service_function(HOST_CONFIG, {}, params))
     assert len(services) == 1
     assert services[0] == expected_service

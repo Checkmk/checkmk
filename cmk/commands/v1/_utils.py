@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from ipaddress import IPv4Address, IPv6Address
@@ -41,13 +41,9 @@ class HostConfig:
 
 @dataclass(frozen=True)
 class HTTPProxy:
+    id: str
     name: str
     url: str
-
-
-@dataclass(frozen=True)
-class EnvironmentConfig:
-    http_proxies: Mapping[str, HTTPProxy]
 
 
 class SecretType(StrEnum):

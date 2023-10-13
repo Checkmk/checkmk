@@ -25,7 +25,6 @@ from cmk.base.plugins.commands.utils import get_active_check
 
 from cmk.commands.v1 import (
     ActiveCheckCommand,
-    EnvironmentConfig,
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
@@ -326,14 +325,13 @@ class ActiveCheckConfig:
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
         host_config = _get_host_config(self.host_name, self.host_attrs)
         http_proxies = {
-            id: HTTPProxy(proxy["title"], proxy["proxy_url"])
+            id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
             for id, proxy in base_config.http_proxies.items()
         }
-        env_config = EnvironmentConfig(http_proxies)
 
         for param_dict in plugin_params:
             params = command.parameter_parser(param_dict)
-            for service in command.service_function(params, host_config, env_config):
+            for service in command.service_function(params, host_config, http_proxies):
                 arguments = self._replace_passwords(
                     service.command_arguments,
                 )

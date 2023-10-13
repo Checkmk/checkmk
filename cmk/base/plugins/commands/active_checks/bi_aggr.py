@@ -8,7 +8,7 @@ from typing import Iterator
 
 from pydantic import BaseModel
 
-from cmk.commands.v1 import ActiveCheckCommand, ActiveService, EnvironmentConfig, HostConfig, Secret
+from cmk.commands.v1 import ActiveCheckCommand, ActiveService, HostConfig, HTTPProxy, Secret
 
 
 class Credentials(BaseModel):
@@ -50,7 +50,7 @@ def parse_bi_aggr_params(raw_params: Mapping[str, object]) -> BiAggrParams:
 
 
 def check_bi_aggr_services(
-    params: BiAggrParams, host_config: HostConfig, _environment_config: EnvironmentConfig
+    params: BiAggrParams, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveService]:
     args: list[str | Secret] = ["-b", params.base_url, "-a", params.aggregation_name]
     if params.credentials.automation:

@@ -5,14 +5,13 @@
 
 from ._active_checks import ActiveCheckCommand, ActiveService
 from ._special_agents import SpecialAgentCommand, SpecialAgentConfig
-from ._utils import EnvironmentConfig, HostConfig, HTTPProxy, IPAddressFamily, Secret, SecretType
+from ._utils import HostConfig, HTTPProxy, IPAddressFamily, Secret, SecretType
 
 __all__ = [
     "ActiveCheckCommand",
     "ActiveService",
     "SpecialAgentConfig",
     "SpecialAgentCommand",
-    "EnvironmentConfig",
     "HostConfig",
     "HTTPProxy",
     "IPAddressFamily",

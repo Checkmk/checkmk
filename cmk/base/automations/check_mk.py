@@ -706,14 +706,14 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     config_cache,
                     core,
                     locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(ruleset_matcher),
+                    duplicates=config.duplicate_hosts(config_cache),
                 )
             else:
                 cmk.base.core.do_restart(
                     config_cache,
                     core,
                     locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(ruleset_matcher),
+                    duplicates=config.duplicate_hosts(config_cache),
                 )
         finally:
             cache_manager.clear_all()
@@ -1565,7 +1565,7 @@ def _execute_silently(
                 action,
                 hosts_to_update=hosts_to_update,
                 locking_mode=config.restart_locking,
-                duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
+                duplicates=config.duplicate_hosts(config_cache),
                 skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
         except (MKBailOut, MKGeneralException) as e:

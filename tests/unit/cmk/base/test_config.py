@@ -58,11 +58,7 @@ def test_duplicate_hosts(monkeypatch: MonkeyPatch) -> None:
     for hostname in hostnames:
         ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
-
-    # Routine uses global variables `cmk.base.config.all_hosts`
-    # and `cmk.base.config.clusters` so we have to obtain the
-    # `RulesetMatcher` from the `ConfigCache`.
-    assert config.duplicate_hosts(config_cache.ruleset_matcher) == ["deux", "trois"]
+    assert config.duplicate_hosts(config_cache) == ["deux", "trois"]
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:

@@ -1380,7 +1380,7 @@ def mode_update() -> None:
             do_create_config(
                 core=create_core(config.monitoring_core),
                 config_cache=config_cache,
-                duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
+                duplicates=config.duplicate_hosts(config_cache),
             )
     except Exception as e:
         console.error("Configuration Error: %s\n" % e)
@@ -1424,7 +1424,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
-        duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
+        duplicates=config.duplicate_hosts(config_cache),
     )
 
 
@@ -1463,7 +1463,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
-        duplicates=config.duplicate_hosts(config_cache.ruleset_matcher),
+        duplicates=config.duplicate_hosts(config_cache),
     )
 
 

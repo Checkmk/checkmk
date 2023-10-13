@@ -485,7 +485,7 @@ def load(
     _perform_post_config_loading_actions()
 
     if validate_hosts:
-        _verify_non_duplicate_hosts(get_config_cache().ruleset_matcher)
+        _verify_non_duplicate_hosts(get_config_cache())
 
 
 def load_packed_config(config_path: ConfigPath) -> None:
@@ -715,8 +715,8 @@ def get_derived_config_variable_names() -> set[str]:
     return {"service_service_levels", "host_service_levels"}
 
 
-def _verify_non_duplicate_hosts(matcher: RulesetMatcher) -> None:
-    if duplicates := duplicate_hosts(matcher):
+def _verify_non_duplicate_hosts(config_cache: ConfigCache) -> None:
+    if duplicates := duplicate_hosts(config_cache):
         # TODO: Raise an exception
         console.error("Error in configuration: duplicate hosts: %s\n", ", ".join(duplicates))
         sys.exit(3)
@@ -922,26 +922,6 @@ def _get_shadow_hosts() -> ShadowHosts:
         return {}
 
 
-def _filter_active_hosts(
-    matcher: RulesetMatcher, hostname: HostName, keep_offline_hosts: bool = False
-) -> bool:
-    """Return True if host is active, else False."""
-    if only_hosts is None:
-        if distributed_wato_site is None:
-            return True
-
-        return _host_is_member_of_site(hostname, distributed_wato_site)
-
-    if distributed_wato_site is None:
-        if keep_offline_hosts:
-            return True
-        return matcher.get_host_bool_value(hostname, only_hosts)
-
-    return _host_is_member_of_site(hostname, distributed_wato_site) and (
-        keep_offline_hosts or matcher.get_host_bool_value(hostname, only_hosts)
-    )
-
-
 def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
     return (
@@ -950,7 +930,7 @@ def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     )
 
 
-def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
+def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
     return sorted(
         hostname
         for hostname, count in Counter(
@@ -958,7 +938,7 @@ def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
             # all_active_hosts() but with the difference that duplicates are not removed.
             hn
             for hn in strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts()))
-            if _filter_active_hosts(matcher, hn)
+            if config_cache.is_active(hn)
         ).items()
         if count > 1
     )
@@ -973,7 +953,7 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
     hostlist = set(
         hn
         for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
-        if _filter_active_hosts(matcher, hn, keep_offline_hosts=True)
+        if config_cache.is_active(hn, keep_offline_hosts=True)
     )
 
     if only_hosts is None:
@@ -2015,13 +1995,9 @@ class ConfigCache:
         )
 
         self._all_active_clusters = set(
-            hn
-            for hn in self.hosts_config.clusters
-            if _filter_active_hosts(self.ruleset_matcher, hn)
+            hn for hn in self.hosts_config.clusters if self.is_active(hn)
         )
-        self._all_active_realhosts = set(
-            hn for hn in self.hosts_config.hosts if _filter_active_hosts(self.ruleset_matcher, hn)
-        )
+        self._all_active_realhosts = set(hn for hn in self.hosts_config.hosts if self.is_active(hn))
         self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
@@ -2592,6 +2568,23 @@ class ConfigCache:
 
     def is_offline(self, host_name: HostName) -> bool:
         return not self._is_only_host(host_name)
+
+    def is_active(self, host_name: HostName, *, keep_offline_hosts: bool = False) -> bool:
+        """Return True if host is active, else False."""
+        if only_hosts is None:
+            if distributed_wato_site is None:
+                return True
+
+            return _host_is_member_of_site(host_name, distributed_wato_site)
+
+        if distributed_wato_site is None:
+            if keep_offline_hosts:
+                return True
+            return self.ruleset_matcher.get_host_bool_value(host_name, only_hosts)
+
+        return _host_is_member_of_site(host_name, distributed_wato_site) and (
+            keep_offline_hosts or self.ruleset_matcher.get_host_bool_value(host_name, only_hosts)
+        )
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, dyndns_hosts)

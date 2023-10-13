@@ -9,6 +9,6 @@ Level: 1
 Version: 2.3.0b1
 
 This werk addresses an issue when creating pdf reports from host when the host
-name is too long to fit on the page. We now shorten the text and also end the
-text with an ellipsis to indicate that we've shortened it.
+name is too long to fit on the page. We now wrap the text over more than one
+line when required.
 

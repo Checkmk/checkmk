@@ -938,7 +938,7 @@ def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
             # all_active_hosts() but with the difference that duplicates are not removed.
             hn
             for hn in strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts()))
-            if config_cache.is_active(hn)
+            if config_cache.is_active(hn, keep_offline_hosts=False)
         ).items()
         if count > 1
     )
@@ -1975,9 +1975,11 @@ class ConfigCache:
         )
 
         self._all_active_clusters = set(
-            hn for hn in self.hosts_config.clusters if self.is_active(hn)
+            hn for hn in self.hosts_config.clusters if self.is_active(hn, keep_offline_hosts=False)
         )
-        self._all_active_realhosts = set(hn for hn in self.hosts_config.hosts if self.is_active(hn))
+        self._all_active_realhosts = set(
+            hn for hn in self.hosts_config.hosts if self.is_active(hn, keep_offline_hosts=False)
+        )
         self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
@@ -2552,7 +2554,7 @@ class ConfigCache:
         # are the hosts which have the tag "offline".
         return not self._is_only_host(host_name)
 
-    def is_active(self, host_name: HostName, *, keep_offline_hosts: bool = False) -> bool:
+    def is_active(self, host_name: HostName, *, keep_offline_hosts: bool) -> bool:
         """Return True if host is active, else False."""
         if only_hosts is None:
             if distributed_wato_site is None:

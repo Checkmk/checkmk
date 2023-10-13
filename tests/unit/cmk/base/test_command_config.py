@@ -28,7 +28,12 @@ from cmk.base.command_config import (
 )
 
 import cmk
-from cmk.commands.v1 import ActiveCheckCommand, ActiveService, PlainTextSecret, StoredSecret
+from cmk.config_generation.v1 import (
+    ActiveCheckCommand,
+    ActiveService,
+    PlainTextSecret,
+    StoredSecret,
+)
 
 
 class TestSpecialAgentConfiguration(NamedTuple):

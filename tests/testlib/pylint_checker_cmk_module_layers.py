@@ -70,7 +70,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported, Component("cmk.fields")),
             _in_component(imported, Component("cmk.automations")),
             _in_component(imported, Component("cmk.bi")),
-            _in_component(imported, Component("cmk.commands")),
+            _in_component(imported, Component("cmk.config_generation")),
         )
     )
 

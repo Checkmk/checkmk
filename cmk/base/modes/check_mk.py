@@ -113,7 +113,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.plugins.commands.utils import get_all_active_check_names
+from cmk.base.plugins.config_generation.utils import get_all_active_check_names
 from cmk.base.sources import make_parser
 
 from ._localize import do_localize

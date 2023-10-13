@@ -51,9 +51,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-from cmk.base.plugins.commands import get_active_check
+from cmk.base.plugins.config_generation import get_active_check
 
-from cmk.commands.v1 import ActiveService, HostConfig, HTTPProxy
+from cmk.config_generation.v1 import ActiveService, HostConfig, HTTPProxy
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

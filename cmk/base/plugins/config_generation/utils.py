@@ -5,9 +5,9 @@
 
 from collections.abc import Sequence
 
-from cmk.base.plugins.commands.register import registered_active_checks
+from cmk.base.plugins.config_generation.register import registered_active_checks
 
-from cmk.commands.v1 import ActiveCheckCommand
+from cmk.config_generation.v1 import ActiveCheckCommand
 
 
 def get_active_check(plugin_name: str) -> ActiveCheckCommand | None:

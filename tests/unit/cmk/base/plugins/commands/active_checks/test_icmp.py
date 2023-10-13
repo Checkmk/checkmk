@@ -12,7 +12,7 @@ from tests.testlib import ActiveCheck
 
 from tests.unit.conftest import FixRegister
 
-from cmk.commands.v1 import ActiveService, HostConfig, IPAddressFamily
+from cmk.config_generation.v1 import ActiveService, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(
     name="hostname",

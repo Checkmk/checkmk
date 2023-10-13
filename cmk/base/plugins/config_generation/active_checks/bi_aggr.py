@@ -8,7 +8,7 @@ from typing import Iterator
 
 from pydantic import BaseModel
 
-from cmk.commands.v1 import (
+from cmk.config_generation.v1 import (
     ActiveCheckCommand,
     ActiveService,
     get_secret_from_params,

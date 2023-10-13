@@ -8,7 +8,7 @@ from typing import Iterator, Mapping, NamedTuple, Sequence, Tuple
 
 from pydantic import BaseModel
 
-from cmk.commands.v1 import (
+from cmk.config_generation.v1 import (
     ActiveCheckCommand,
     ActiveService,
     HostConfig,

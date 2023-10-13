@@ -21,9 +21,9 @@ from cmk.utils.translations import TranslationOptions
 import cmk.base.config as base_config
 import cmk.base.core_config as core_config
 from cmk.base.api.agent_based import plugin_contexts
-from cmk.base.plugins.commands.utils import get_active_check
+from cmk.base.plugins.config_generation.utils import get_active_check
 
-from cmk.commands.v1 import (
+from cmk.config_generation.v1 import (
     ActiveCheckCommand,
     HostConfig,
     HTTPProxy,

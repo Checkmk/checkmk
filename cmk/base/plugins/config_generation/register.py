@@ -6,7 +6,7 @@
 import cmk.utils.debug
 from cmk.utils.plugin_loader import load_plugins
 
-from cmk.commands.v1 import ActiveCheckCommand
+from cmk.config_generation.v1 import ActiveCheckCommand
 
 registered_active_checks: dict[str, ActiveCheckCommand] = {}
 
@@ -18,7 +18,9 @@ def add_active_check_plugin(check_plugin: ActiveCheckCommand) -> None:
 
 def load_active_checks() -> list[str]:
     errors = []
-    for plugin, exception_or_module in load_plugins("cmk.base.plugins.commands.active_checks"):
+    for plugin, exception_or_module in load_plugins(
+        "cmk.base.plugins.config_generation.active_checks"
+    ):
         match exception_or_module:
             case BaseException() as exc:
                 if cmk.utils.debug.enabled():

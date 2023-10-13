@@ -147,7 +147,7 @@ from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.commands import load_active_checks
+from cmk.base.plugins.config_generation import load_active_checks
 
 # TODO: Prefix helper functions with "_".
 

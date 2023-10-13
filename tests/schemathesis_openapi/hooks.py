@@ -484,23 +484,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
         ticket_id="CMK-13216",
     )
 
-    # invalid status: 500 instead of 401
-    fix_response(
-        case,
-        response,
-        method="POST",
-        path="/objects/folder_config/{folder}/actions/move/invoke",
-        body={"detail": "AssertionError: . Crash report generated. Please submit."},
-        status_code=500,
-        set_status_code=400,
-        set_body={
-            "title": "Bad Request",
-            "status": 400,
-            "detail": "Can not delete the root folder.",
-        },
-        ticket_id="CMK-14256",
-    )
-
     # invalid status: 500 instead of 404
 
     # invalid status: 500 instead of 409

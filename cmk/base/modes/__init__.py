@@ -147,7 +147,11 @@ class Modes:
             }
 
         if with_clusters:
-            valid_hosts = valid_hosts.union(config_cache.all_active_clusters())
+            valid_hosts = valid_hosts.union(
+                hn
+                for hn in hosts_config.clusters
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            )
 
         hostlist: list[HostName] = []
         for arg in args:

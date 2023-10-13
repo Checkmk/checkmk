@@ -174,7 +174,11 @@ def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
 
     config_cache = ts.apply(monkeypatch)
     hosts_config = config_cache.hosts_config
-    assert config_cache.all_active_clusters() == {HostName("cluster1"), HostName("cluster3")}
+    assert {
+        hn
+        for hn in hosts_config.clusters
+        if config_cache.is_active(hn) and config_cache.is_online(hn)
+    } == {HostName("cluster1"), HostName("cluster3")}
     assert {
         hn for hn in hosts_config.hosts if config_cache.is_active(hn) and config_cache.is_online(hn)
     } == {HostName("real1"), HostName("real3")}

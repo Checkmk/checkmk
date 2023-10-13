@@ -1974,12 +1974,6 @@ class ConfigCache:
             all_configured_hosts=self._all_configured_hosts,
         )
 
-        self._all_active_clusters = set(
-            hn
-            for hn in self.hosts_config.clusters
-            if self.is_active(hn) and not self.is_offline(hn)
-        )
-
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
             set(
                 hn
@@ -1998,7 +1992,6 @@ class ConfigCache:
 
         # Host lookup
         self._all_configured_hosts = set()
-        self._all_active_clusters = set()
 
         # Reference hostname -> dirname including /
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
@@ -3742,10 +3735,6 @@ class ConfigCache:
     def nodes_of(self, hostname: HostName) -> Sequence[HostName] | None:
         """Returns the nodes of a cluster. Returns None if no match."""
         return self._nodes_of_cache.get(hostname)
-
-    def all_active_clusters(self) -> set[HostName]:
-        """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
-        return self._all_active_clusters
 
     def effective_host(
         self,

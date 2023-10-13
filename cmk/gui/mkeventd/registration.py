@@ -24,9 +24,11 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 from . import _filters, views, wato
-from ._find_group_usage import (
+from ._find_usage import (
+    find_timeperiod_usage_in_ec_rules,
     find_usages_of_contact_group_in_ec_rules,
     find_usages_of_contact_group_in_mkeventd_notify_contactgroup,
 )
@@ -60,6 +62,7 @@ def register(
     notification_parameter_registry: NotificationParameterRegistry,
     snapin_registry: SnapinRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
+    timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
 ) -> None:
     views.register(
         data_source_registry,
@@ -91,3 +94,4 @@ def register(
     contact_group_usage_finder_registry.register(
         find_usages_of_contact_group_in_mkeventd_notify_contactgroup
     )
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)

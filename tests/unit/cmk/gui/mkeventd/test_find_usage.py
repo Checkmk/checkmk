@@ -7,7 +7,7 @@ import pytest
 
 from cmk.ec.export import ECRulePack  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.mkeventd import _find_group_usage
+from cmk.gui.mkeventd import _find_usage
 
 
 def _rule_packs() -> list[ECRulePack]:
@@ -87,8 +87,7 @@ def test_find_usages_of_contact_group_in_ec_rules(
     rule_packs: list[ECRulePack],
     expected_result: list[tuple[str, str]],
 ) -> None:
-    monkeypatch.setattr(_find_group_usage, "load_rule_packs", rule_packs)
+    monkeypatch.setattr(_find_usage, "load_rule_packs", rule_packs)
     assert (
-        _find_group_usage.find_usages_of_contact_group_in_ec_rules(contact_group, {})
-        == expected_result
+        _find_usage.find_usages_of_contact_group_in_ec_rules(contact_group, {}) == expected_result
     )

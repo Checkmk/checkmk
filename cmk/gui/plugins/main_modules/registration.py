@@ -167,6 +167,7 @@ def register() -> None:
             notification_parameter_registry,
             snapin_registry,
             contact_group_usage_finder_registry,
+            timeperiod_usage_finder_registry,
         )
         custom_icons_register(
             mode_registry,

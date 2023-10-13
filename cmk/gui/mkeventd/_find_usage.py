@@ -57,3 +57,20 @@ def find_usages_of_contact_group_in_ec_rules(
                     )
                 )
     return used_in
+
+
+def find_timeperiod_usage_in_ec_rules(time_period_name: str) -> list[tuple[str, str]]:
+    used_in: list[tuple[str, str]] = []
+    rule_packs = load_rule_packs()
+    for rule_pack in rule_packs:
+        for rule_index, rule in enumerate(rule_pack["rules"]):
+            if rule.get("match_timeperiod") == time_period_name:
+                url = folder_preserving_link(
+                    [
+                        ("mode", "mkeventd_edit_rule"),
+                        ("edit", rule_index),
+                        ("rule_pack", rule_pack["id"]),
+                    ]
+                )
+                used_in.append((_("Event console rule"), url))
+    return used_in

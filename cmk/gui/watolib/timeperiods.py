@@ -10,8 +10,6 @@ from cmk.utils import version
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.timeperiod import timeperiod_spec_alias, TimeperiodSpec, TimeperiodSpecs
 
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
-
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
@@ -176,7 +174,6 @@ def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
         used_in += finder(time_period_name)
     used_in += _find_usages_in_other_timeperiods(time_period_name)
     used_in += _find_usages_in_alert_handler_rules(time_period_name)
-    used_in += _find_usages_in_ec_rules(time_period_name)
     return used_in
 
 
@@ -208,21 +205,4 @@ def _find_usages_in_alert_handler_rules(time_period_name: str) -> list[Timeperio
                 ]
             )
             used_in.append((_("Alert handler rule"), url))
-    return used_in
-
-
-def _find_usages_in_ec_rules(time_period_name: str) -> list[TimeperiodUsage]:
-    used_in: list[TimeperiodUsage] = []
-    rule_packs = ec.load_rule_packs()
-    for rule_pack in rule_packs:
-        for rule_index, rule in enumerate(rule_pack["rules"]):
-            if rule.get("match_timeperiod") == time_period_name:
-                url = folder_preserving_link(
-                    [
-                        ("mode", "mkeventd_edit_rule"),
-                        ("edit", rule_index),
-                        ("rule_pack", rule_pack["id"]),
-                    ]
-                )
-                used_in.append((_("Event console rule"), url))
     return used_in

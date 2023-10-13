@@ -914,7 +914,7 @@ def strip_tags(tagged_hostlist: Iterable[str]) -> Sequence[HostName]:
     return cache.setdefault(cache_id, [HostName(h.split("|", 1)[0]) for h in tagged_hostlist])
 
 
-def get_shadow_hosts() -> ShadowHosts:
+def _get_shadow_hosts() -> ShadowHosts:
     try:
         # Only available with CEE
         return shadow_hosts  # type: ignore[name-defined]
@@ -967,7 +967,7 @@ def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
             # all_active_hosts() but with the difference that duplicates are not removed.
             _filter_active_hosts(
                 matcher,
-                strip_tags(list(all_hosts) + list(clusters) + list(get_shadow_hosts())),
+                strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts())),
             )
         ).items()
         if count > 1
@@ -1965,22 +1965,25 @@ class HostsConfig:
         *,
         hosts: Sequence[HostName],
         clusters: Sequence[HostName],  # pylint: disable=redefined-outer-name
+        shadow_hosts: Sequence[HostName],  # pylint: disable=redefined-outer-name
     ) -> None:
         self.hosts: Final = hosts
         self.clusters: Final = clusters
+        self.shadow_hosts: Final = shadow_hosts
 
     @classmethod
     def from_config(cls) -> HostsConfig:
         return cls(
             hosts=list(set(strip_tags(all_hosts))),
             clusters=list(set(strip_tags(clusters))),
+            shadow_hosts=list(_get_shadow_hosts()),
         )
 
 
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
-        self.hosts_config = HostsConfig(hosts=(), clusters=())
+        self.hosts_config = HostsConfig(hosts=(), clusters=(), shadow_hosts=())
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -2014,7 +2017,9 @@ class ConfigCache:
         self._setup_clusters_nodes_cache()
 
         self._all_configured_hosts = (
-            set(self.hosts_config.hosts) | set(self.hosts_config.clusters) | set(get_shadow_hosts())
+            set(self.hosts_config.hosts)
+            | set(self.hosts_config.clusters)
+            | set(self.hosts_config.shadow_hosts)
         )
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
@@ -2926,7 +2931,7 @@ class ConfigCache:
                     tag_to_group_map, self._hosttags[hostname]
                 )
 
-        for shadow_host_name, shadow_host_spec in list(get_shadow_hosts().items()):
+        for shadow_host_name, shadow_host_spec in list(_get_shadow_hosts().items()):
             self._hosttags[shadow_host_name] = tuple(
                 set(shadow_host_spec.get("custom_variables", {}).get("TAGS", TagID("")).split())
             )

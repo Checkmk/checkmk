@@ -43,7 +43,13 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
+from cmk.base.config import (
+    ConfigCache,
+    HostgroupName,
+    HostsConfig,
+    ObjectAttributes,
+    ServicegroupName,
+)
 from cmk.base.core_config import (
     AbstractServiceID,
     CollectedHostLabels,
@@ -137,9 +143,11 @@ class NagiosConfig:
         self._outfile.write(x)
 
 
-def _validate_licensing(licensing_handler: LicensingHandler, licensing_counter: Counter) -> None:
+def _validate_licensing(
+    hosts_config: HostsConfig, licensing_handler: LicensingHandler, licensing_counter: Counter
+) -> None:
     if block_effect := licensing_handler.effect_core(
-        licensing_counter["services"], len(config.get_shadow_hosts())
+        licensing_counter["services"], len(hosts_config.shadow_hosts)
     ).block:
         raise MKGeneralException(block_effect.message_raw)
 
@@ -187,7 +195,7 @@ def create_config(
             cfg, config_cache, hostname, stored_passwords, licensing_counter
         )
 
-    _validate_licensing(licensing_handler, licensing_counter)
+    _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
 
     write_notify_host_file(config_path, all_host_labels)
 

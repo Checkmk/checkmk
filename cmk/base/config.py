@@ -996,19 +996,6 @@ def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set
     }
 
 
-def all_configured_offline_hosts(
-    config_cache: ConfigCache, matcher: RulesetMatcher
-) -> set[HostName]:
-    hostlist = set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
-
-    if only_hosts is None:
-        return set()
-
-    return {
-        hostname for hostname in hostlist if not matcher.get_host_bool_value(hostname, only_hosts)
-    }
-
-
 # .
 #   .--Services------------------------------------------------------------.
 #   |                ____                  _                               |
@@ -2607,6 +2594,14 @@ class ConfigCache:
             or self.is_piggyback_host(host_name)
             or self.has_management_board(host_name)
         )
+
+    def _is_only_host(self, host_name: HostName) -> bool:
+        if only_hosts is None:
+            return True
+        return self.ruleset_matcher.get_host_bool_value(host_name, only_hosts)
+
+    def is_offline(self, host_name: HostName) -> bool:
+        return not self._is_only_host(host_name)
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, dyndns_hosts)

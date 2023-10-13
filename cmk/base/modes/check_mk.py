@@ -294,7 +294,13 @@ def _list_all_hosts(
     if options.get("all-sites"):
         hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
         if "include-offline" not in options:
-            hostnames -= config.all_configured_offline_hosts(config_cache, ruleset_matcher)
+            hostnames -= {
+                hn
+                for hn in set(config_cache.hosts_config.hosts).union(
+                    config_cache.hosts_config.clusters
+                )
+                if config_cache.is_offline(hn)
+            }
     else:
         hostnames.update(config_cache.all_active_hosts())
         if "include-offline" in options:

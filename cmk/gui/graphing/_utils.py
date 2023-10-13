@@ -748,22 +748,6 @@ def get_graph_range(
     return from_, to
 
 
-def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
-    """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
-
-    def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
-        try:
-            result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
-                translated_metrics
-            )
-        except ValueError:
-            return _("n/a")
-        return result.unit_info["render"](result.value)
-
-    r = cmk.utils.regex.regex(r"%\([^)]*\)")
-    return r.sub(eval_to_string, text)
-
-
 def get_graph_template_choices() -> list[tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
@@ -932,45 +916,6 @@ def metric_recipe_and_unit(
         ),
         mi.get("unit", ""),
     )
-
-
-def horizontal_rules_from_thresholds(
-    thresholds: Iterable[ScalarDefinition],
-    translated_metrics: TranslatedMetrics,
-) -> list[HorizontalRule]:
-    horizontal_rules = []
-    for entry in thresholds:
-        if isinstance(entry, tuple):
-            expression, title = entry
-        else:
-            expression = entry
-            if expression.endswith(":warn"):
-                title = _("Warning")
-            elif expression.endswith(":crit"):
-                title = _("Critical")
-            else:
-                title = expression
-
-        try:
-            if (
-                result := parse_expression(expression, translated_metrics).evaluate(
-                    translated_metrics
-                )
-            ).value:
-                horizontal_rules.append(
-                    (
-                        result.value,
-                        result.unit_info["render"](result.value),
-                        result.color,
-                        str(title),
-                    )
-                )
-        # Scalar value like min and max are always optional. This makes configuration
-        # of graphs easier.
-        except Exception:
-            pass
-
-    return horizontal_rules
 
 
 # .

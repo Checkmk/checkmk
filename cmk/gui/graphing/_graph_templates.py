@@ -8,7 +8,7 @@ from typing import Final
 
 from livestatus import SiteId
 
-from cmk.utils import pnp_cleanup
+from cmk.utils import pnp_cleanup, regex
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
@@ -34,6 +34,7 @@ from ._expression import (
 )
 from ._graph_specification import (
     GraphMetric,
+    HorizontalRule,
     MetricDefinition,
     MetricOpConstant,
     MetricOpOperator,
@@ -48,9 +49,8 @@ from ._utils import (
     GraphRecipe,
     GraphRecipeBase,
     GraphTemplate,
-    horizontal_rules_from_thresholds,
     MetricUnitColor,
-    replace_expressions,
+    ScalarDefinition,
     translated_metrics_from_row,
 )
 
@@ -166,6 +166,60 @@ def matching_graph_templates(
     )
 
 
+def _replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
+    """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
+
+    def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
+        try:
+            result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
+                translated_metrics
+            )
+        except ValueError:
+            return _("n/a")
+        return result.unit_info["render"](result.value)
+
+    return regex.regex(r"%\([^)]*\)").sub(eval_to_string, text)
+
+
+def _horizontal_rules_from_thresholds(
+    thresholds: Iterable[ScalarDefinition],
+    translated_metrics: TranslatedMetrics,
+) -> list[HorizontalRule]:
+    horizontal_rules = []
+    for entry in thresholds:
+        if isinstance(entry, tuple):
+            expression, title = entry
+        else:
+            expression = entry
+            if expression.endswith(":warn"):
+                title = _("Warning")
+            elif expression.endswith(":crit"):
+                title = _("Critical")
+            else:
+                title = expression
+
+        try:
+            if (
+                result := parse_expression(expression, translated_metrics).evaluate(
+                    translated_metrics
+                )
+            ).value:
+                horizontal_rules.append(
+                    (
+                        result.value,
+                        result.unit_info["render"](result.value),
+                        result.color,
+                        str(title),
+                    )
+                )
+        # Scalar value like min and max are always optional. This makes configuration
+        # of graphs easier.
+        except Exception:
+            pass
+
+    return horizontal_rules
+
+
 def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipeBase:
@@ -197,7 +251,7 @@ def create_graph_recipe_from_template(
             _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
         )
 
-    title = replace_expressions(graph_template.title or "", translated_metrics)
+    title = _replace_expressions(graph_template.title or "", translated_metrics)
     if not title:
         title = next((m.title for m in metrics), "")
 
@@ -210,7 +264,7 @@ def create_graph_recipe_from_template(
         metrics=metrics,
         unit=units.pop(),
         explicit_vertical_range=get_graph_range(graph_template, translated_metrics),
-        horizontal_rules=horizontal_rules_from_thresholds(
+        horizontal_rules=_horizontal_rules_from_thresholds(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
         omit_zero_metrics=graph_template.omit_zero_metrics,

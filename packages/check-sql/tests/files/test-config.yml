@@ -4,7 +4,7 @@ mssql:
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
-      type: "system" # optional(default: "system")
+      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user) 
       access_token: "baz" # optional, no default
     connection: # optional
       hostname: "localhost" # optional, default: "localhost"

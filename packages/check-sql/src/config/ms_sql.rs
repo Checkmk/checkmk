@@ -49,9 +49,13 @@ mod keys {
 
 mod values {
     /// AuthType::System
-    pub const SYSTEM: &str = "system";
+    pub const SQL_SERVER: &str = "sql_server";
     /// AuthType::Windows
     pub const WINDOWS: &str = "windows";
+    /// AuthType::Integrated
+    pub const INTEGRATED: &str = "integrated";
+    /// AuthType::Token
+    pub const TOKEN: &str = "token";
     /// Mode::Port
     pub const PORT: &str = "port";
     /// Mode::Socket
@@ -61,6 +65,9 @@ mod values {
 }
 
 mod defaults {
+    use crate::config::ms_sql::values;
+    pub const AUTH_TYPE: &str = values::INTEGRATED;
+    pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
     pub const CONNECTION_PORT: u16 = 1433;
     pub const CONNECTION_TIMEOUT: u32 = 5;
@@ -167,7 +174,7 @@ impl Default for Authentication {
         Self {
             username: "".to_owned(),
             password: None,
-            auth_type: AuthType::System,
+            auth_type: AuthType::Integrated,
             access_token: None,
         }
     }
@@ -180,7 +187,11 @@ impl Authentication {
                 .get_string(keys::USERNAME)
                 .context("bad/absent username")?,
             password: auth.get_string(keys::PASSWORD),
-            auth_type: AuthType::try_from(auth.get_string(keys::TYPE).as_deref())?,
+            auth_type: AuthType::try_from(
+                auth.get_string(keys::TYPE)
+                    .as_deref()
+                    .unwrap_or(defaults::AUTH_TYPE),
+            )?,
             access_token: auth.get_string(keys::ACCESS_TOKEN),
         })
     }
@@ -200,17 +211,21 @@ impl Authentication {
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum AuthType {
-    System,
+    SqlServer,
     Windows,
+    Integrated,
+    Token,
 }
 
-impl TryFrom<Option<&str>> for AuthType {
+impl TryFrom<&str> for AuthType {
     type Error = anyhow::Error;
 
-    fn try_from(str: Option<&str>) -> Result<Self> {
-        match str.map(str::to_ascii_lowercase).as_deref() {
-            Some(values::SYSTEM) | None => Ok(AuthType::System),
-            Some(values::WINDOWS) => Ok(AuthType::Windows),
+    fn try_from(val: &str) -> Result<Self> {
+        match str::to_ascii_lowercase(val).as_ref() {
+            values::SQL_SERVER => Ok(AuthType::SqlServer),
+            values::WINDOWS => Ok(AuthType::Windows),
+            values::INTEGRATED => Ok(AuthType::Integrated),
+            values::TOKEN => Ok(AuthType::Token),
             _ => Err(anyhow!("unsupported auth type")),
         }
     }
@@ -410,18 +425,22 @@ pub enum Mode {
 
 impl Mode {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
-        Mode::try_from(yaml.get_string(keys::MODE).as_deref())
+        Mode::try_from(
+            yaml.get_string(keys::MODE)
+                .as_deref()
+                .unwrap_or(defaults::MODE),
+        )
     }
 }
 
-impl TryFrom<Option<&str>> for Mode {
+impl TryFrom<&str> for Mode {
     type Error = anyhow::Error;
 
-    fn try_from(str: Option<&str>) -> Result<Self> {
-        match str.map(str::to_ascii_lowercase).as_deref() {
-            Some(values::PORT) | None => Ok(Mode::Port),
-            Some(values::SOCKET) => Ok(Mode::Socket),
-            Some(values::SPECIAL) => Ok(Mode::Special),
+    fn try_from(str: &str) -> Result<Self> {
+        match str::to_ascii_lowercase(str).as_ref() {
+            values::PORT => Ok(Mode::Port),
+            values::SOCKET => Ok(Mode::Socket),
+            values::SPECIAL => Ok(Mode::Special),
             _ => Err(anyhow!("unsupported mode")),
         }
     }
@@ -512,7 +531,7 @@ mssql:
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
-      type: "system" # optional(default: "system")
+      type: "sql_server" # optional, default: "integrated", values: sql_server, windows, token and integrated (current windows user) 
       access_token: "baz" # optional
     connection: # optional
       hostname: "localhost" # optional(default: "localhost")
@@ -692,7 +711,7 @@ authentication:
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
-        assert_eq!(a.auth_type(), &AuthType::System);
+        assert_eq!(a.auth_type(), &AuthType::Integrated);
         assert_eq!(a.access_token(), None);
     }
 
@@ -794,11 +813,10 @@ discovery:
 
     #[test]
     fn test_mode_try_from() {
-        assert!(Mode::try_from(Some("a")).is_err());
-        assert_eq!(Mode::try_from(None).unwrap(), Mode::Port);
-        assert_eq!(Mode::try_from(Some("poRt")).unwrap(), Mode::Port);
-        assert_eq!(Mode::try_from(Some("soCKET")).unwrap(), Mode::Socket);
-        assert_eq!(Mode::try_from(Some("SPecial")).unwrap(), Mode::Special);
+        assert!(Mode::try_from("a").is_err());
+        assert_eq!(Mode::try_from("poRt").unwrap(), Mode::Port);
+        assert_eq!(Mode::try_from("soCKET").unwrap(), Mode::Socket);
+        assert_eq!(Mode::try_from("SPecial").unwrap(), Mode::Special);
     }
 
     #[test]
@@ -891,7 +909,7 @@ discovery:
         assert!(c.discovery().detect());
         assert_eq!(c.auth().username(), "foo");
         assert_eq!(c.auth().password().unwrap(), "bar");
-        assert_eq!(c.auth().auth_type(), &AuthType::System);
+        assert_eq!(c.auth().auth_type(), &AuthType::SqlServer);
         assert_eq!(c.auth().access_token().unwrap(), "baz");
         assert_eq!(c.conn().hostname(), "localhost");
         assert_eq!(c.conn().fail_over_partner().unwrap(), "localhost2");

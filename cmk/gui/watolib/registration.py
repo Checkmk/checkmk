@@ -18,6 +18,7 @@ from . import (
     automation_commands,
     builtin_attributes,
     config_domains,
+    config_variable_groups,
     groups,
     rulespec_groups,
 )
@@ -37,7 +38,12 @@ from .automations import (
     CheckmkAutomationBackgroundJob,
 )
 from .bulk_discovery import BulkDiscoveryBackgroundJob
-from .config_domain_name import ABCConfigDomain, ConfigDomainRegistry, SampleConfigGeneratorRegistry
+from .config_domain_name import (
+    ABCConfigDomain,
+    ConfigDomainRegistry,
+    ConfigVariableGroupRegistry,
+    SampleConfigGeneratorRegistry,
+)
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
@@ -80,6 +86,7 @@ def register(
     host_attribute_registry: HostAttributeRegistry,
     contact_group_usage_finder_registry_: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
+    config_variable_group_registry: ConfigVariableGroupRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
@@ -111,6 +118,7 @@ def register(
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_host_and_service_rules)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_time_specific_parameters)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
+    config_variable_groups.register(config_variable_group_registry)
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:

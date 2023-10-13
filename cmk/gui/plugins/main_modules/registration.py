@@ -142,6 +142,7 @@ def register() -> None:
         host_attribute_registry,
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
+        config_variable_group_registry,
     )
 
     if edition() is not Edition.CSE:  # disabled in CSE

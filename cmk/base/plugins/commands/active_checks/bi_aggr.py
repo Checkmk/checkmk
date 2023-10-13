@@ -8,7 +8,14 @@ from typing import Iterator
 
 from pydantic import BaseModel
 
-from cmk.commands.v1 import ActiveCheckCommand, ActiveService, HostConfig, HTTPProxy, Secret
+from cmk.commands.v1 import (
+    ActiveCheckCommand,
+    ActiveService,
+    get_secret_from_params,
+    HostConfig,
+    HTTPProxy,
+    Secret,
+)
 
 
 class Credentials(BaseModel):
@@ -61,7 +68,7 @@ def check_bi_aggr_services(
             "-u",
             params.credentials.user,
             "-s",
-            Secret.from_config(params.credentials.password),
+            get_secret_from_params(*params.credentials.password),
         ]
     opt_params = params.optional
     if opt_params and opt_params.auth_mode:

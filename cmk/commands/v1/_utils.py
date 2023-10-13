@@ -7,7 +7,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from ipaddress import IPv4Address, IPv6Address
-from typing import Self
+
+
+class InvalidSecretType(Exception):
+    pass
 
 
 class IPAddressFamily(StrEnum):
@@ -53,10 +56,25 @@ class SecretType(StrEnum):
 
 @dataclass(frozen=True)
 class Secret:
-    type: SecretType
     value: str
     format: str = "%s"
 
-    @classmethod
-    def from_config(cls, secret: tuple[str, str], secret_format: str = "%s") -> Self:
-        return cls(type=SecretType(secret[0]), value=secret[1], format=secret_format)
+
+@dataclass(frozen=True)
+class StoredSecret(Secret):
+    pass
+
+
+@dataclass(frozen=True)
+class PlainTextSecret(Secret):
+    pass
+
+
+def get_secret_from_params(secret_type: str, secret_value: str) -> Secret:
+    if secret_type == SecretType.STORE:
+        return StoredSecret(secret_value)
+
+    if secret_type == SecretType.PASSWORD:
+        return PlainTextSecret(secret_value)
+
+    raise InvalidSecretType(f"{secret_type} is not a valid secret type")

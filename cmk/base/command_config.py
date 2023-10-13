@@ -28,8 +28,9 @@ from cmk.commands.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
+    PlainTextSecret,
     Secret,
-    SecretType,
+    StoredSecret,
 )
 
 CheckCommandArguments = Iterable[int | float | str | tuple[str, str, str]]
@@ -296,10 +297,10 @@ class ActiveCheckConfig:
             if isinstance(arg, str):
                 formatted.append(shlex.quote(arg))
 
-            elif isinstance(arg, Secret) and arg.type == SecretType.PASSWORD:
+            elif isinstance(arg, PlainTextSecret):
                 formatted.append(shlex.quote(arg.format % arg.value))
 
-            elif isinstance(arg, Secret) and arg.type == SecretType.STORE:
+            elif isinstance(arg, StoredSecret):
                 try:
                     password = self.stored_passwords[arg.value]
                 except KeyError:

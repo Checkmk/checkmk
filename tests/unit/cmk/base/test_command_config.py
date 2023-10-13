@@ -28,7 +28,7 @@ from cmk.base.command_config import (
 )
 
 import cmk
-from cmk.commands.v1 import ActiveCheckCommand, ActiveService, Secret, SecretType
+from cmk.commands.v1 import ActiveCheckCommand, ActiveService, PlainTextSecret, StoredSecret
 
 
 class TestSpecialAgentConfiguration(NamedTuple):
@@ -346,9 +346,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService(
-                            "My service", ["--password", Secret(SecretType.PASSWORD, "mypassword")]
-                        ),
+                        ActiveService("My service", ["--password", PlainTextSecret("mypassword")]),
                     ]
                 ),
             ),
@@ -389,7 +387,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                     [
                         ActiveService(
                             "My service",
-                            ["--password", Secret(SecretType.STORE, "stored_password")],
+                            ["--password", StoredSecret("stored_password")],
                         ),
                     ]
                 ),
@@ -506,7 +504,7 @@ def test_get_active_service_data(
                     [
                         ActiveService(
                             "My service",
-                            ["--password", Secret(SecretType.STORE, "stored_password")],
+                            ["--password", StoredSecret("stored_password")],
                         ),
                     ]
                 ),
@@ -682,9 +680,7 @@ def test_get_active_service_data_warnings(
                 parameter_parser=lambda p: p,
                 service_function=lambda *_: (
                     [
-                        ActiveService(
-                            "My service", ["--password", Secret(SecretType.PASSWORD, "mypassword")]
-                        ),
+                        ActiveService("My service", ["--password", PlainTextSecret("mypassword")]),
                     ]
                 ),
             ),

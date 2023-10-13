@@ -5,16 +5,26 @@
 
 from ._active_checks import ActiveCheckCommand, ActiveService
 from ._special_agents import SpecialAgentCommand, SpecialAgentConfig
-from ._utils import HostConfig, HTTPProxy, IPAddressFamily, Secret, SecretType
+from ._utils import (
+    get_secret_from_params,
+    HostConfig,
+    HTTPProxy,
+    IPAddressFamily,
+    PlainTextSecret,
+    Secret,
+    StoredSecret,
+)
 
 __all__ = [
     "ActiveCheckCommand",
     "ActiveService",
-    "SpecialAgentConfig",
-    "SpecialAgentCommand",
+    "get_secret_from_params",
     "HostConfig",
     "HTTPProxy",
     "IPAddressFamily",
+    "PlainTextSecret",
     "Secret",
-    "SecretType",
+    "SpecialAgentConfig",
+    "SpecialAgentCommand",
+    "StoredSecret",
 ]

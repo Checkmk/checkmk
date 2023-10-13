@@ -30,9 +30,6 @@ disable=
     # Might be related to https://github.com/pylint-dev/pylint/issues/9101
     too-many-ancestors,
     #---------------------------------------------------------------------------
-    # We really need to fix all findings here!
-    cyclic-import,
-    #---------------------------------------------------------------------------
     # Not useless if that's exporting a type as done often enough in the
     # standard library.
     useless-import-alias,

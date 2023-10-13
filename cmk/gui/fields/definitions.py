@@ -1107,6 +1107,7 @@ class GroupField(base.String):
         "Activate the configuration?",
         "should_not_be_monitored": "Group {host_name!r} exists, but should not be monitored. "
         "Activate the configuration?",
+        "invalid_name": "The provided name {name!r} is invalid",
     }
 
     def __init__(  # type: ignore[no-untyped-def]

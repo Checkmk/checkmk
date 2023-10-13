@@ -35,12 +35,15 @@ class UpdateGroup(BaseSchema):
 class InputContactGroup(InputGroup):
     """Creating a contact group"""
 
-    name = fields.String(
-        required=True,
+    name = gui_fields.GroupField(
+        group_type="contact",
         example="OnCall",
+        required=True,
+        should_exist=False,
         description="The name of the contact group.",
         pattern=GROUP_NAME_PATTERN,
     )
+
     alias = fields.String(
         required=True,
         description="The name used for displaying in the GUI.",

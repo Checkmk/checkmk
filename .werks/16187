@@ -1,0 +1,11 @@
+Title: Restrict the group name pattern to disallow incompatible names
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1697196846
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Before this werk it was possible to create groups with names that could not be accessed from the REST API. This werk restricts the group name pattern and prevents the creation of incompatible groups names like '.' and '..' from both WATO and the REST API.
+

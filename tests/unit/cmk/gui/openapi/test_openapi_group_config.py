@@ -25,6 +25,8 @@ from cmk.utils.user import UserId
 
 managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
+ESCAPED_GROUP_NAME_PATTERN = "^(?!\\\\.\\\\.$|\\\\.$)[-a-zA-Z0-9_\\\\.]*\\\\Z"
+
 
 @pytest.fixture
 def host(clients: ClientRegistry) -> HostGroupClient:
@@ -458,6 +460,12 @@ invalid_group_ids = (
     "test_group_id\n",
     "test_gr\noup_id",
     "\test_group_id",
+    "..",
+    ".",
+    "./.",
+    "./..",
+    "../.",
+    "../..",
 )
 
 
@@ -471,7 +479,7 @@ def test_host_group_id_with_newline(
     resp.assert_status_code(400)
     assert (
         resp.json["fields"]["name"][0]
-        == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
+        == f"{group_id!r} does not match pattern '{ESCAPED_GROUP_NAME_PATTERN}'."
     )
 
 
@@ -485,7 +493,7 @@ def test_contact_group_id_with_newline(
     resp.assert_status_code(400)
     assert (
         resp.json["fields"]["name"][0]
-        == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
+        == f"{group_id!r} does not match pattern '{ESCAPED_GROUP_NAME_PATTERN}'."
     )
 
 
@@ -499,7 +507,7 @@ def test_service_group_id_with_newline(
     resp.assert_status_code(400)
     assert (
         resp.json["fields"]["name"][0]
-        == f"{group_id!r} does not match pattern '^[-a-z0-9A-Z_\\\\.]*\\\\Z'."
+        == f"{group_id!r} does not match pattern '{ESCAPED_GROUP_NAME_PATTERN}'."
     )
 
 
@@ -520,3 +528,53 @@ def test_group_attributes_required(
     assert resp.json["fields"]["entries"]["0"] == {
         "attributes": ["Missing data for required field."]
     }
+
+
+@managedtest
+def test_contact_group_dot_names(
+    clients: ClientRegistry,
+) -> None:
+    contact_group_dot_response = clients.ContactGroup.create(
+        name=".", alias="not_important", expect_ok=False
+    )
+    contact_group_double_dot_response = clients.ContactGroup.create(
+        name="..", alias="not_important", expect_ok=False
+    )
+
+    host_group_dot_response = clients.HostGroup.create(
+        name=".", alias="not_important", expect_ok=False
+    )
+    host_group_double_dot_response = clients.HostGroup.create(
+        name="..", alias="not_important", expect_ok=False
+    )
+
+    service_group_dot_response = clients.ServiceGroup.create(
+        name=".", alias="not_important", expect_ok=False
+    )
+    service_group_double_dot_response = clients.ServiceGroup.create(
+        name="..", alias="not_important", expect_ok=False
+    )
+
+    assert contact_group_dot_response.status_code == 400
+    assert "name" in contact_group_dot_response.json["fields"]
+    assert "name" in contact_group_dot_response.json["detail"]
+
+    assert contact_group_double_dot_response.status_code == 400
+    assert "name" in contact_group_double_dot_response.json["fields"]
+    assert "name" in contact_group_double_dot_response.json["detail"]
+
+    assert host_group_dot_response.status_code == 400
+    assert "name" in host_group_dot_response.json["fields"]
+    assert "name" in host_group_dot_response.json["detail"]
+
+    assert host_group_double_dot_response.status_code == 400
+    assert "name" in host_group_double_dot_response.json["fields"]
+    assert "name" in host_group_double_dot_response.json["detail"]
+
+    assert service_group_dot_response.status_code == 400
+    assert "name" in service_group_dot_response.json["fields"]
+    assert "name" in service_group_dot_response.json["detail"]
+
+    assert service_group_double_dot_response.status_code == 400
+    assert "name" in service_group_double_dot_response.json["fields"]
+    assert "name" in service_group_double_dot_response.json["detail"]

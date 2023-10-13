@@ -923,32 +923,23 @@ def _get_shadow_hosts() -> ShadowHosts:
 
 
 def _filter_active_hosts(
-    matcher: RulesetMatcher, hostlist: Iterable[HostName], keep_offline_hosts: bool = False
-) -> list[HostName]:
-    """Returns a set of active hosts for this site"""
+    matcher: RulesetMatcher, hostname: HostName, keep_offline_hosts: bool = False
+) -> bool:
+    """Return True if host is active, else False."""
     if only_hosts is None:
         if distributed_wato_site is None:
-            return list(hostlist)
+            return True
 
-        return [
-            hostname
-            for hostname in hostlist
-            if _host_is_member_of_site(hostname, distributed_wato_site)
-        ]
+        return _host_is_member_of_site(hostname, distributed_wato_site)
 
     if distributed_wato_site is None:
         if keep_offline_hosts:
-            return list(hostlist)
-        return [
-            hostname for hostname in hostlist if matcher.get_host_bool_value(hostname, only_hosts)
-        ]
+            return True
+        return matcher.get_host_bool_value(hostname, only_hosts)
 
-    return [
-        hostname
-        for hostname in hostlist
-        if _host_is_member_of_site(hostname, distributed_wato_site)
-        and (keep_offline_hosts or matcher.get_host_bool_value(hostname, only_hosts))
-    ]
+    return _host_is_member_of_site(hostname, distributed_wato_site) and (
+        keep_offline_hosts or matcher.get_host_bool_value(hostname, only_hosts)
+    )
 
 
 def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
@@ -965,10 +956,9 @@ def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
         for hostname, count in Counter(
             # This function should only be used during duplicate host check! It has to work like
             # all_active_hosts() but with the difference that duplicates are not removed.
-            _filter_active_hosts(
-                matcher,
-                strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts())),
-            )
+            hn
+            for hn in strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts()))
+            if _filter_active_hosts(matcher, hn)
         ).items()
         if count > 1
     )
@@ -981,11 +971,9 @@ def duplicate_hosts(matcher: RulesetMatcher) -> Sequence[HostName]:
 # This is not optimized for performance, so use in specific situations.
 def all_offline_hosts(config_cache: ConfigCache, matcher: RulesetMatcher) -> set[HostName]:
     hostlist = set(
-        _filter_active_hosts(
-            matcher,
-            set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters),
-            keep_offline_hosts=True,
-        )
+        hn
+        for hn in set(config_cache.hosts_config.hosts).union(config_cache.hosts_config.clusters)
+        if _filter_active_hosts(matcher, hn, keep_offline_hosts=True)
     )
 
     if only_hosts is None:
@@ -2027,10 +2015,12 @@ class ConfigCache:
         )
 
         self._all_active_clusters = set(
-            _filter_active_hosts(self.ruleset_matcher, self.hosts_config.clusters)
+            hn
+            for hn in self.hosts_config.clusters
+            if _filter_active_hosts(self.ruleset_matcher, hn)
         )
         self._all_active_realhosts = set(
-            _filter_active_hosts(self.ruleset_matcher, self.hosts_config.hosts)
+            hn for hn in self.hosts_config.hosts if _filter_active_hosts(self.ruleset_matcher, hn)
         )
         self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 

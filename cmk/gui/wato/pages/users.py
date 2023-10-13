@@ -19,7 +19,6 @@ import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -72,6 +71,7 @@ from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedVa
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.timeperiods import load_timeperiods
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import (
     delete_users,
@@ -631,7 +631,7 @@ class ModeEditUser(WatoMode):
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.
         self._contact_groups = load_contact_group_information()
-        self._timeperiods = watolib.timeperiods.load_timeperiods()
+        self._timeperiods = load_timeperiods()
         self._roles = load_roles()
         self._user_id: UserId | None
 

@@ -35,7 +35,6 @@ from cmk.gui import (
     user_message,
     valuespec,
     visuals,
-    watolib,
     werks,
 )
 from cmk.gui.background_job import job_registry
@@ -70,6 +69,7 @@ from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.wato import notification_parameter_registry
 from cmk.gui.wato import registration as wato_registration
+from cmk.gui.watolib import registration as watolib_registration
 from cmk.gui.watolib.analyze_configuration import ac_test_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
@@ -79,6 +79,7 @@ from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
 )
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
@@ -131,11 +132,13 @@ def register() -> None:
         config_variable_group_registry,
         config_variable_registry,
     )
-    watolib.register(
+    watolib_registration.register(
         rulespec_group_registry,
         automation_command_registry,
         job_registry,
         sample_config_generator_registry,
+        config_domain_registry,
+        host_attribute_registry,
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
     )

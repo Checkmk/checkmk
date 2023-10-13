@@ -7,7 +7,7 @@ from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.cron import register_job
 from cmk.gui.pages import PageRegistry
-from cmk.gui.watolib import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 from . import ldap_connector, user_attributes

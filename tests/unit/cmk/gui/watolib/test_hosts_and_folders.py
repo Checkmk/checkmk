@@ -36,7 +36,6 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
-from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
@@ -71,10 +70,10 @@ def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
 
 @pytest.fixture(autouse=True)
 def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
-    if not has_agent_bakery():
-        return
-
-    import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
+    try:
+        import cmk.gui.cee.agent_bakery._misc as agent_bakery  # pylint: disable=no-name-in-module
+    except ImportError:
+        return  # Don't do anything in case the bakery is not available
 
     def _fake_start_bake_agents(host_names, signing_credentials):
         pass

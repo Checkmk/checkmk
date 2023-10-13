@@ -9,6 +9,11 @@
 set -e -o pipefail
 
 TARGET_DIR="/opt"
+if [ "$DISTRO" = "cma-3" ]; then
+    # as there are no system tests with CMA-3, an installation of CMK
+    # dependencies is not required
+    exit
+fi
 FILE_NAME=$(echo "${DISTRO^^}.mk" | tr '-' '_')
 
 extract_needed_packages() {

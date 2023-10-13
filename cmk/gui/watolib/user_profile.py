@@ -10,9 +10,6 @@ from multiprocessing import TimeoutError as mp_TimeoutError
 from multiprocessing.pool import ThreadPool
 from typing import Any, NamedTuple
 
-from flask import current_app
-from flask.ctx import RequestContext
-
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
@@ -21,12 +18,12 @@ from cmk.utils.user import UserId
 import cmk.gui.hooks as hooks
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
-from cmk.gui.config import active_config, load_config
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
-from cmk.gui.utils.script_helpers import make_request_context
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
@@ -71,18 +68,13 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
     states = sites.states()
 
-    with (
-        request_context := make_request_context(current_app)
-    ):  # pylint: disable=superfluous-parens
-        load_config()
-
     pool = ThreadPool()
     jobs = []
     for site_id, site in remote_sites:
         jobs.append(
             pool.apply_async(
-                _sychronize_profile_worker,
-                (request_context, states, site_id, site, profiles_to_synchronize),
+                copy_request_context(_sychronize_profile_worker),
+                (states, site_id, site, profiles_to_synchronize),
             )
         )
 
@@ -131,7 +123,6 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
 
 def _sychronize_profile_worker(
-    request_context: RequestContext,
     states: sites.SiteStates,
     site_id: SiteId,
     site: SiteConfiguration,
@@ -150,8 +141,7 @@ def _sychronize_profile_worker(
         )
 
     try:
-        with request_context:
-            result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
+        result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
         if result is not True:
             return SynchronizationResult(site_id, error_text=result, failed=True)
         return SynchronizationResult(site_id, succeeded=True)

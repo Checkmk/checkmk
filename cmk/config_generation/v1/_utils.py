@@ -6,7 +6,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-from ipaddress import IPv4Address, IPv6Address
 
 
 class InvalidSecretType(Exception):
@@ -24,10 +23,10 @@ class HostConfig:
     address: str
     alias: str
     ip_family: IPAddressFamily
-    ipv4address: IPv4Address | None
-    ipv6address: IPv6Address | None
-    additional_ipv4addresses: Sequence[IPv4Address]
-    additional_ipv6addresses: Sequence[IPv6Address]
+    ipv4address: str | None
+    ipv6address: str | None
+    additional_ipv4addresses: Sequence[str]
+    additional_ipv6addresses: Sequence[str]
 
     @property
     def all_ipv4addresses(self):

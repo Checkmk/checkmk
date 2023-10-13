@@ -6,7 +6,6 @@
 import shlex
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from ipaddress import IPv4Address, IPv6Address
 from pathlib import Path
 from typing import Callable, Iterable, Literal, Protocol
 
@@ -127,22 +126,16 @@ def _get_host_config(host_name: str, host_attrs: Mapping[str, str]) -> HostConfi
     ip_family = (
         IPAddressFamily.IPv4 if host_attrs["_ADDRESS_FAMILY"] == "4" else IPAddressFamily.IPv6
     )
-    ipv4address = host_attrs.get("_ADDRESS_4")
-    ipv6address = host_attrs.get("_ADDRESS_6")
 
     return HostConfig(
         name=host_name,
         address=host_attrs["address"],
         alias=host_attrs["alias"],
         ip_family=ip_family,
-        ipv4address=IPv4Address(ipv4address) if ipv4address else None,
-        ipv6address=IPv6Address(ipv6address) if ipv6address else None,
-        additional_ipv4addresses=[
-            IPv4Address(a) for a in host_attrs["_ADDRESSES_4"].split(" ") if a
-        ],
-        additional_ipv6addresses=[
-            IPv6Address(a) for a in host_attrs["_ADDRESSES_6"].split(" ") if a
-        ],
+        ipv4address=host_attrs.get("_ADDRESS_4"),
+        ipv6address=host_attrs.get("_ADDRESS_6"),
+        additional_ipv4addresses=[a for a in host_attrs["_ADDRESSES_4"].split(" ") if a],
+        additional_ipv6addresses=[a for a in host_attrs["_ADDRESSES_6"].split(" ") if a],
     )
 
 

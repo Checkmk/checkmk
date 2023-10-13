@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from ipaddress import IPv4Address, IPv6Address
 
 import pytest
 
@@ -19,13 +18,13 @@ HOST_CONFIG = HostConfig(
     address="0.0.0.1",
     alias="host_alias",
     ip_family=IPAddressFamily.IPv4,
-    ipv4address=IPv4Address("0.0.0.2"),
-    ipv6address=IPv6Address("FE80::240"),
-    additional_ipv4addresses=[IPv4Address("0.0.0.4"), IPv4Address("0.0.0.5")],
+    ipv4address="0.0.0.2",
+    ipv6address="fe80::240",
+    additional_ipv4addresses=["0.0.0.4", "0.0.0.5"],
     additional_ipv6addresses=[
-        IPv6Address("fe80::241"),
-        IPv6Address("fe80::242"),
-        IPv6Address("fe80::243"),
+        "fe80::241",
+        "fe80::242",
+        "fe80::243",
     ],
 )
 

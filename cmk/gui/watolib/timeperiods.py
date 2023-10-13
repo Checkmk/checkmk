@@ -14,7 +14,6 @@ from cmk.utils.user import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui import userdb
 from cmk.gui.config import active_config
@@ -179,32 +178,11 @@ def find_usages_of_timeperiod(time_period_name: str) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
     for finder in timeperiod_usage_finder_registry.values():
         used_in += finder(time_period_name)
-    used_in += _find_usages_in_host_and_service_rules(time_period_name)
     used_in += _find_usages_in_users(time_period_name)
     used_in += _find_usages_in_other_timeperiods(time_period_name)
     used_in += _find_usages_in_notification_rules(time_period_name)
     used_in += _find_usages_in_alert_handler_rules(time_period_name)
     used_in += _find_usages_in_ec_rules(time_period_name)
-    used_in += _find_usages_in_time_specific_parameters(time_period_name)
-    return used_in
-
-
-def _find_usages_in_host_and_service_rules(time_period_name: str) -> list[TimeperiodUsage]:
-    used_in: list[TimeperiodUsage] = []
-    rulesets = watolib.rulesets.AllRulesets.load_all_rulesets()
-    for varname, ruleset in rulesets.get_rulesets().items():
-        if not isinstance(ruleset.valuespec(), TimeperiodSelection):
-            continue
-
-        for _folder, _rulenr, rule in ruleset.get_rules():
-            if rule.value == time_period_name:
-                used_in.append(
-                    (
-                        "{}: {}".format(_("Ruleset"), ruleset.title()),
-                        folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]),
-                    )
-                )
-                break
     return used_in
 
 
@@ -310,30 +288,4 @@ def _find_usages_in_ec_rules(time_period_name: str) -> list[TimeperiodUsage]:
                     ]
                 )
                 used_in.append((_("Event console rule"), url))
-    return used_in
-
-
-def _find_usages_in_time_specific_parameters(time_period_name: str) -> list[TimeperiodUsage]:
-    used_in: list[TimeperiodUsage] = []
-    rulesets = watolib.rulesets.AllRulesets.load_all_rulesets()
-    for ruleset in rulesets.get_rulesets().values():
-        vs = ruleset.valuespec()
-        if not isinstance(vs, watolib.rulespecs.TimeperiodValuespec):
-            continue
-        for rule_folder, rule_index, rule in ruleset.get_rules():
-            if not vs.is_active(rule.value):
-                continue
-            for index, (rule_tp_name, _value) in enumerate(rule.value["tp_values"]):
-                if rule_tp_name != time_period_name:
-                    continue
-                edit_url = folder_preserving_link(
-                    [
-                        ("mode", "edit_rule"),
-                        ("back_mode", "timeperiods"),
-                        ("varname", ruleset.name),
-                        ("rulenr", rule_index),
-                        ("rule_folder", rule_folder.path()),
-                    ]
-                )
-                used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
     return used_in

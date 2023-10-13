@@ -84,6 +84,7 @@ from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_re
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 from cmk.gui.watolib.search import match_item_generator_registry
+from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 
 
 def register_sites_options() -> None:
@@ -136,6 +137,7 @@ def register() -> None:
         job_registry,
         sample_config_generator_registry,
         contact_group_usage_finder_registry,
+        timeperiod_usage_finder_registry,
     )
 
     if edition() is not Edition.CSE:  # disabled in CSE

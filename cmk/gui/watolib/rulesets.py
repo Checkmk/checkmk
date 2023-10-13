@@ -50,6 +50,7 @@ from cmk.gui.watolib.check_mk_automations import get_services_labels
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
+    folder_preserving_link,
     folder_tree,
     get_wato_redis_client,
     Host,
@@ -61,7 +62,9 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
     RulespecAllowList,
+    TimeperiodValuespec,
 )
+from cmk.gui.watolib.timeperiods import TimeperiodSelection, TimeperiodUsage
 from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, NEGATE, wato_root_dir
 
 # Make the GUI config module reset the base config to always get the latest state of the config
@@ -1624,3 +1627,50 @@ class EnabledDisabledServicesEditor:
             if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None
+
+
+def find_timeperiod_usage_in_host_and_service_rules(time_period_name: str) -> list[TimeperiodUsage]:
+    used_in: list[TimeperiodUsage] = []
+    rulesets = AllRulesets.load_all_rulesets()
+    for varname, ruleset in rulesets.get_rulesets().items():
+        if not isinstance(ruleset.valuespec(), TimeperiodSelection):
+            continue
+
+        for _folder, _rulenr, rule in ruleset.get_rules():
+            if rule.value == time_period_name:
+                used_in.append(
+                    (
+                        "{}: {}".format(_("Ruleset"), ruleset.title()),
+                        folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]),
+                    )
+                )
+                break
+    return used_in
+
+
+def find_timeperiod_usage_in_time_specific_parameters(
+    time_period_name: str,
+) -> list[TimeperiodUsage]:
+    used_in: list[TimeperiodUsage] = []
+    rulesets = AllRulesets.load_all_rulesets()
+    for ruleset in rulesets.get_rulesets().values():
+        vs = ruleset.valuespec()
+        if not isinstance(vs, TimeperiodValuespec):
+            continue
+        for rule_folder, rule_index, rule in ruleset.get_rules():
+            if not vs.is_active(rule.value):
+                continue
+            for index, (rule_tp_name, _value) in enumerate(rule.value["tp_values"]):
+                if rule_tp_name != time_period_name:
+                    continue
+                edit_url = folder_preserving_link(
+                    [
+                        ("mode", "edit_rule"),
+                        ("back_mode", "timeperiods"),
+                        ("varname", ruleset.name),
+                        ("rulenr", rule_index),
+                        ("rule_folder", rule_folder.path()),
+                    ]
+                )
+                used_in.append((_("Time specific check parameter #%d") % (index + 1), edit_url))
+    return used_in

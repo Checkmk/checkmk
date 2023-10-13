@@ -63,6 +63,10 @@ from .host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
 from .hosts_and_folders import find_usages_of_contact_group_in_hosts_and_folders
 from .network_scan import AutomationNetworkScan
 from .notifications import find_usages_of_contact_group_in_notification_rules
+from .rulesets import (
+    find_timeperiod_usage_in_host_and_service_rules,
+    find_timeperiod_usage_in_time_specific_parameters,
+)
 from .rulespecs import RulespecGroupEnforcedServices, RulespecGroupRegistry
 from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
@@ -70,6 +74,7 @@ from .sample_config import (
     ConfigGeneratorBasicWATOConfig,
 )
 from .search import SearchIndexBackgroundJob
+from .timeperiods import TimeperiodUsageFinderRegistry
 from .user_profile import PushUserProfilesToSite
 
 # Disable python warnings in background job output or logs like "Unverified
@@ -83,6 +88,7 @@ def register(
     job_registry: BackgroundJobRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     contact_group_usage_finder_registry_: ContactGroupUsageFinderRegistry,
+    timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
 ) -> None:
     _register_automation_commands()
     _register_gui_background_jobs(job_registry)
@@ -112,6 +118,8 @@ def register(
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules
     )
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_host_and_service_rules)
+    timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_time_specific_parameters)
 
 
 def _register_automation_commands() -> None:

@@ -44,7 +44,6 @@ from ._type_defs import GraphConsoldiationFunction
 from ._utils import (
     get_graph_data_from_livestatus,
     get_graph_range,
-    get_graph_template,
     get_graph_templates,
     GraphRecipe,
     GraphRecipeBase,
@@ -156,7 +155,7 @@ def matching_graph_templates(
         and graph_id.startswith("METRIC_")
         and graph_id[7:] in translated_metrics
     ):
-        yield (0, get_graph_template(graph_id))
+        yield (0, GraphTemplate.from_name(graph_id))
         return
 
     yield from (

@@ -765,7 +765,11 @@ class PackedConfigGenerator:
         active_hosts = self._config_cache.all_active_hosts()
         # Include inactive cluster hosts.
         # Otherwise services clustered to those hosts will wrongly be checked by the nodes.
-        sites_clusters = self._config_cache.all_sites_clusters()
+        sites_clusters = frozenset(
+            hn
+            for hn in self._config_cache.hosts_config.clusters
+            if self._config_cache.is_active(hn)
+        )
 
         def filter_all_hosts(all_hosts_orig: AllHosts) -> list[HostName]:
             all_hosts_red = []
@@ -920,14 +924,6 @@ def _get_shadow_hosts() -> ShadowHosts:
         return shadow_hosts  # type: ignore[name-defined]
     except NameError:
         return {}
-
-
-def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
-    # hosts without a site: tag belong to all sites
-    return (
-        ConfigCache.tags(hostname).get(TagGroupID("site"), distributed_wato_site)
-        == distributed_wato_site
-    )
 
 
 def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
@@ -2561,7 +2557,11 @@ class ConfigCache:
         if distributed_wato_site is None:
             return True
 
-        return _host_is_member_of_site(host_name, distributed_wato_site)
+        # hosts without a site: tag belong to all sites
+        return (
+            ConfigCache.tags(host_name).get(TagGroupID("site"), distributed_wato_site)
+            == distributed_wato_site
+        )
 
     def is_dyndns_host(self, host_name: HostName | HostAddress) -> bool:
         return self.ruleset_matcher.get_host_bool_value(host_name, dyndns_hosts)
@@ -3739,13 +3739,6 @@ class ConfigCache:
     def all_active_clusters(self) -> set[HostName]:
         """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_clusters
-
-    def all_sites_clusters(self) -> set[HostName]:
-        return {
-            c
-            for c in self.hosts_config.clusters
-            if distributed_wato_site is None or _host_is_member_of_site(c, distributed_wato_site)
-        }
 
     def effective_host(
         self,

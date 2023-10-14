@@ -59,7 +59,7 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.config_generation.register import registered_active_checks
+from cmk.base.plugins.config_generation import load_active_checks
 
 ObjectSpec = dict[str, Any]
 
@@ -481,7 +481,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
     active_services = []
 
     active_check_config = config_generation.ActiveCheck(
-        registered_active_checks,
+        load_active_checks()[1],
         config.active_check_info,
         hostname,
         host_attrs,

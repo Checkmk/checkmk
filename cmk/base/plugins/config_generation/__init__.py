@@ -4,6 +4,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.config_generation.register import load_active_checks
-from cmk.base.plugins.config_generation.utils import get_active_check
 
-__all__ = ["get_active_check", "load_active_checks"]
+__all__ = ["load_active_checks"]

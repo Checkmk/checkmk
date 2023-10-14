@@ -159,7 +159,7 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
-from cmk.base.plugins.config_generation.register import registered_active_checks
+from cmk.base.plugins.config_generation import load_active_checks
 from cmk.base.sources import make_parser
 
 HistoryFile = str
@@ -433,7 +433,7 @@ def active_check_preview_rows(
         return f"WAITING - {pretty} check, cannot be done offline"
 
     active_check_config = config_generation.ActiveCheck(
-        registered_active_checks,
+        load_active_checks()[1],
         config.active_check_info,
         host_name,
         host_attrs,
@@ -1291,7 +1291,7 @@ class AutomationAnalyseServices(Automation):
         # 4. Active checks
         host_attrs = config_cache.get_host_attributes(host_name)
         active_check_config = config_generation.ActiveCheck(
-            registered_active_checks,
+            load_active_checks()[1],
             config.active_check_info,
             host_name,
             host_attrs,
@@ -2124,7 +2124,7 @@ class AutomationActiveCheck(Automation):
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = self._get_resouce_macros()
         active_check_config = config_generation.ActiveCheck(
-            registered_active_checks,
+            load_active_checks()[1],
             config.active_check_info,
             host_name,
             host_attrs,

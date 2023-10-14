@@ -51,7 +51,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-from cmk.base.plugins.config_generation import get_active_check
 
 from cmk.config_generation.v1 import ActiveCheckCommand, HostConfig, HTTPProxy
 
@@ -382,7 +381,6 @@ class ActiveCheck(BaseCheck):
 
         super().__init__(name)
         self.info = config.active_check_info.get(self.name[len("check_") :])
-        self.command = get_active_check(self.name)
 
     def run_argument_function(self, params):  # type: ignore[no-untyped-def]
         assert self.info, "Active check has to be implemented in the legacy API"
@@ -395,16 +393,6 @@ class ActiveCheck(BaseCheck):
     def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
         assert self.info, "Active check has to be implemented in the legacy API"
         yield from self.info["service_generator"](host_config, params)
-
-    def run_service_function(
-        self,
-        host_config: HostConfig,
-        env_config: Mapping[str, HTTPProxy],
-        params: Mapping[str, object],
-    ) -> Iterator[ActiveCheckCommand]:
-        assert self.command, "Active check has to be implemented in the new API"
-        parsed_params = self.command.parameter_parser(params)
-        yield from self.command.service_function(parsed_params, host_config, env_config)
 
 
 class SpecialAgent:

@@ -7,9 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
-
-from tests.unit.conftest import FixRegister
+from cmk.base.plugins.config_generation.active_checks.icmp import active_check_icmp
 
 from cmk.config_generation.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
 
@@ -249,8 +247,12 @@ HOST_CONFIG = HostConfig(
 def test_generate_icmp_services(
     params: Mapping[str, object],
     expected_result: Sequence[ActiveCheckCommand],
-    fix_register: FixRegister,
 ) -> None:
-    active_check = ActiveCheck("icmp")
-    services = list(active_check.run_service_function(HOST_CONFIG, {}, params))
+    services = list(
+        active_check_icmp.service_function(
+            active_check_icmp.parameter_parser(params),
+            HOST_CONFIG,
+            {},
+        )
+    )
     assert services == expected_result

@@ -113,7 +113,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.plugins.config_generation.utils import get_all_active_check_names
+from cmk.base.plugins.config_generation import load_active_checks
 from cmk.base.sources import make_parser
 
 from ._localize import do_localize
@@ -432,8 +432,8 @@ def mode_list_checks() -> None:
 
     # active checks using both new and old API have to be collected
     all_checks += [
-        "check_%s" % name
-        for name in itertools.chain(config.active_check_info, get_all_active_check_names())
+        "check_" + name
+        for name in itertools.chain(config.active_check_info, load_active_checks()[1])
     ]
 
     for plugin_name in sorted(all_checks, key=str):

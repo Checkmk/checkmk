@@ -7,9 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.testlib import ActiveCheck
-
-from tests.unit.conftest import FixRegister
+from cmk.base.plugins.config_generation.active_checks.bi_aggr import active_check_bi_aggr
 
 from cmk.config_generation.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
 
@@ -45,10 +43,11 @@ HOST_CONFIG = HostConfig(
 def test_check_bi_aggr_argument_parsing(
     params: Mapping[str, object],
     expected_service: ActiveCheckCommand,
-    fix_register: FixRegister,
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("bi_aggr")
-    services = list(active_check.run_service_function(HOST_CONFIG, {}, params))
-    assert len(services) == 1
-    assert services[0] == expected_service
+    services = list(
+        active_check_bi_aggr.service_function(
+            active_check_bi_aggr.parameter_parser(params), HOST_CONFIG, {}
+        )
+    )
+    assert services == [expected_service]

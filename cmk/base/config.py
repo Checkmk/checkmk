@@ -1412,9 +1412,12 @@ def load_all_plugins(
 
     errors.extend(load_checks(get_check_api_context, filelist))
 
-    errors.extend(load_active_checks())
+    # Load new active checks.
+    # These are just loaded here, because there currently is no other place
+    # that will report the errors. Maybe a `cmk --validate-plugins` would be nice.
+    more_errors, _plugins = load_active_checks()
 
-    return errors
+    return [*errors, *more_errors]
 
 
 def _initialize_data_structures() -> None:

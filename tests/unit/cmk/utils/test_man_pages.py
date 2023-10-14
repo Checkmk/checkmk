@@ -16,6 +16,8 @@ import cmk.utils.man_pages as man_pages
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.base.plugins.config_generation import load_active_checks
+
 ManPages = Mapping[str, man_pages.ManPage | None]
 
 
@@ -155,7 +157,7 @@ def test_find_missing_plugins(
         set(all_pages)
         - {str(plugin_name) for plugin_name in fix_register.check_plugins}
         - {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        - {f"check_{name}" for name in fix_register._active_checks}
+        - {f"check_{name}" for name in load_active_checks()[1]}
         - {
             "check-mk",
             "check-mk-inventory",

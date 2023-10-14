@@ -82,7 +82,9 @@ genrule(
     cmd = """
         mkdir -p $(RULEDIR)/python3-modules
         for MODULE in $(SRCS); do
-            rsync -a $$MODULE/* $(RULEDIR)/python3-modules/
+            if [ -d "$$MODULE" ]; then
+                rsync -a $$MODULE/* $(RULEDIR)/python3-modules/
+            fi
         done
 
         # For some highly obscure unknown reason some files end up world-writable. Fix that!

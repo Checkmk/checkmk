@@ -82,7 +82,7 @@ genrule(
     cmd = """
         mkdir -p $(RULEDIR)/python3-modules
         for MODULE in $(SRCS); do
-            if [ -d "$$MODULE" ]; then
+            if ls $$MODULE/* >/dev/null 2>&1; then
                 rsync -a $$MODULE/* $(RULEDIR)/python3-modules/
             fi
         done

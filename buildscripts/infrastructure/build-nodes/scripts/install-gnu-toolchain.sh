@@ -123,7 +123,7 @@ set_symlinks() {
     # Right now it seems binutils is installed by install-cmk-dependencies.sh which then overwrites
     # our /usr/bin/as symlink. As an intermediate fix, we additionally install the link to /opt/bin.
     # As a follow-up, we should move everything to /opt/bin - but that needs separate testing.
-    [ ! -d "${TARGET_DIR}/bin" ] && mkdir -p "${TARGET_DIR}/bin" || true
+    [ -d "${TARGET_DIR}/bin" ] || mkdir -p "${TARGET_DIR}/bin"
     ln -sf "${PREFIX}/bin/"* ${TARGET_DIR}/bin
     ln -sf "${PREFIX}/bin/gcc-${GCC_MAJOR}" ${TARGET_DIR}/bin/gcc
     ln -sf "${PREFIX}/bin/g++-${GCC_MAJOR}" ${TARGET_DIR}/bin/g++

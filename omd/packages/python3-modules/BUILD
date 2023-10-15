@@ -108,7 +108,7 @@ genrule(
         # containers, the shebang exceeds the max_shebang_length of 127 bytes. For this
         # case, it adds a #!/bin/sh wrapper in front of the python code o_O to make it
         # fit into the shebang. Let's also cleanup this case.
-        sed -i -z "s|^#\\!/bin/sh\\n.*exec.*python3.*\\n.*|#\\!/usr/bin/env python3|" $(RULEDIR)/python3-modules/bin/[!_]*
+        sed -i -z "s|^#\\!/bin/sh\\n.*exec.*python3[^\\n]*\\n[^\\n]*|#\\!/usr/bin/env python3|" $(RULEDIR)/python3-modules/bin/[!_]*
 
         # Fix rpath for all .so libs
         cd $(RULEDIR)/python3-modules/lib/

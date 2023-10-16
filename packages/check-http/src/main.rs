@@ -1,6 +1,7 @@
+use anyhow::Result as AnyhowResult;
 use clap::Parser;
 use http::{HeaderMap, HeaderValue};
-use reqwest::header::USER_AGENT;
+use reqwest::{header::USER_AGENT, RequestBuilder};
 use std::time::{Duration, Instant};
 
 mod cli;
@@ -10,25 +11,16 @@ mod pwstore;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = cli::Cli::parse();
 
-    let mut cli_headers = HeaderMap::new();
-    if let Some(ua) = args.user_agent {
-        cli_headers.insert(USER_AGENT, HeaderValue::from_str(&ua)?);
-    }
-
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(args.timeout))
-        .default_headers(cli_headers)
-        .build()?;
+    let req = prepare_request(
+        args.url,
+        args.user_agent,
+        Duration::from_secs(args.timeout),
+        args.auth_user,
+        args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
+    )?;
 
     let now = Instant::now();
 
-    let mut req = client.get(args.url);
-    if let Some(user) = args.auth_user {
-        req = req.basic_auth(
-            user,
-            args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
-        );
-    }
     let resp = req.send().await?;
 
     let headers = resp.headers();
@@ -48,4 +40,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         elapsed.subsec_millis()
     );
     Ok(())
+}
+
+fn prepare_request(
+    url: String,
+    user_agent: Option<String>,
+    timeout: Duration,
+    auth_user: Option<String>,
+    auth_pw: Option<String>,
+) -> AnyhowResult<RequestBuilder> {
+    let mut cli_headers = HeaderMap::new();
+    if let Some(ua) = user_agent {
+        cli_headers.insert(USER_AGENT, HeaderValue::from_str(&ua)?);
+    }
+
+    let client = reqwest::Client::builder()
+        .timeout(timeout)
+        .default_headers(cli_headers)
+        .build()?;
+
+    let req = client.get(url);
+    if let Some(user) = auth_user {
+        Ok(req.basic_auth(user, auth_pw))
+    } else {
+        Ok(req)
+    }
 }

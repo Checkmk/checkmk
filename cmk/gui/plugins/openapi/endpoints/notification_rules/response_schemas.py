@@ -5,10 +5,10 @@
 
 
 from collections.abc import Mapping
-from typing import Any, get_args
+from typing import Any, cast, Type
 
-from cmk.utils.type_defs import BuiltInPluginNames, PluginOptions
-from cmk.utils.type_defs.rest_api_types.notifications_rule_types import PluginType
+from cmk.utils.type_defs import NotificationPluginNameStr
+from cmk.utils.type_defs.rest_api_types.notifications_rule_types import APINotifyPlugin
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas import (
@@ -77,38 +77,43 @@ class RulePropertiesAttributes(BaseSchema):
 
 class PluginBase(BaseSchema):
     option = fields.String(
-        enum=[PluginOptions.CANCEL, PluginOptions.WITH_PARAMS, PluginOptions.WITH_CUSTOM_PARAMS],
+        enum=[
+            "cancel_previous_notifications",
+            "create_notification_with_the_following_parameters",
+        ],
         required=True,
     )
 
-    def dump(self, obj: dict[str, Any], *args: Any, **kwargs: Any) -> Mapping:
-        if obj["plugin_params"]["plugin_name"] not in list(get_args(BuiltInPluginNames)):
-            return obj
+    def dump(self, obj: APINotifyPlugin, *args: Any, **kwargs: Any) -> Mapping:
+        schema_mapper = cast(
+            Mapping[NotificationPluginNameStr, Type[BaseSchema]],
+            {
+                "mail": HTMLEmailParamsResponse,
+                "cisco_webex_teams": CiscoWebexPluginResponse,
+                "mkeventd": MkEventParamsResponse,
+                "asciimail": AsciiEmailParamsResponse,
+                "ilert": IlertPluginResponse,
+                "jira_issues": JiraPluginResponse,
+                "opsgenie_issues": OpenGeniePluginResponse,
+                "pagerduty": PagerDutyPluginResponse,
+                "pushover": PushOverPluginResponse,
+                "servicenow": ServiceNowPluginResponse,
+                "signl4": Signl4PluginResponse,
+                "slack": SlackPluginResponse,
+                "sms_api": SMSAPIPluginResponse,
+                "sms": SMSPluginBase,
+                "spectrum": SpectrumPluginBase,
+                "victorops": VictoropsPluginResponse,
+                "msteams": MSTeamsPluginResponse,
+            },
+        )
 
-        schema_mapper: Mapping[BuiltInPluginNames, type[BaseSchema]] = {
-            "mail": HTMLEmailParamsResponse,
-            "cisco_webex_teams": CiscoWebexPluginResponse,
-            "mkeventd": MkEventParamsResponse,
-            "asciimail": AsciiEmailParamsResponse,
-            "ilert": IlertPluginResponse,
-            "jira_issues": JiraPluginResponse,
-            "opsgenie_issues": OpenGeniePluginResponse,
-            "pagerduty": PagerDutyPluginResponse,
-            "pushover": PushOverPluginResponse,
-            "servicenow": ServiceNowPluginResponse,
-            "signl4": Signl4PluginResponse,
-            "slack": SlackPluginResponse,
-            "sms_api": SMSAPIPluginResponse,
-            "sms": SMSPluginBase,
-            "spectrum": SpectrumPluginBase,
-            "victorops": VictoropsPluginResponse,
-            "msteams": MSTeamsPluginResponse,
-        }
+        plugin_params = obj["plugin_params"]
+        plugin_name = plugin_params["plugin_name"]
+        if schema_to_use := schema_mapper.get(plugin_name):
+            result = schema_to_use().dump(plugin_params)
+            obj.update({"plugin_params": result})
 
-        plugin_params: PluginType = obj["plugin_params"]
-        plugin_name: BuiltInPluginNames = plugin_params["plugin_name"]
-        schema_to_use = schema_mapper[plugin_name]
-        obj.update({"plugin_params": schema_to_use().dump(plugin_params)})
         return obj
 
 

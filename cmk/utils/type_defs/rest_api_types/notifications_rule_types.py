@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 from typing import Any, cast, Iterator, Literal, Mapping, Optional, Sequence, TypedDict
 
 from cmk.utils.type_defs import (
-    BuiltInPluginNames,
     BulkOutsideTimePeriodType,
     ConditionEventConsoleAlertsType,
     EmailBodyElementsType,
@@ -33,11 +32,11 @@ from cmk.utils.type_defs import (
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
+    NotificationPluginNameStr,
     NotifyBulkType,
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PasswordType,
-    PluginOptions,
     ProxyUrl,
     PushOverPriorityNumType,
     PushOverPriorityStringType,
@@ -56,6 +55,7 @@ from cmk.utils.type_defs import (
     URLPrefix,
     WebHookUrl,
 )
+from cmk.utils.type_defs.notify import PluginOption
 
 from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
     SyslogFacility,
@@ -2482,7 +2482,7 @@ class WebhookURLOption:
 
 
 class APINotifyPluginParams(TypedDict):
-    plugin_name: BuiltInPluginNames
+    plugin_name: NotificationPluginNameStr
 
 
 class API_AsciiMailData(APINotifyPluginParams, total=False):
@@ -2653,6 +2653,12 @@ class API_MSTeamsData(APINotifyPluginParams, total=False):
     affected_host_groups: CheckboxStateType
 
 
+class API_CustomPlugin(APINotifyPluginParams, total=False):
+    attr1: str
+    attr2: str
+    attr3: str
+
+
 PluginType = (
     API_AsciiMailData
     | API_HTMLMailData
@@ -2671,7 +2677,10 @@ PluginType = (
     | API_VictorOpsData
     | API_MSTeamsData
     | API_SmsData
+    | API_CustomPlugin
 )
+
+# ----------------------------------------------------------------
 
 
 class APIRuleProperties(TypedDict, total=False):
@@ -2685,8 +2694,8 @@ class APIRuleProperties(TypedDict, total=False):
 
 
 class APINotifyPlugin(TypedDict, total=False):
-    option: PluginOptions
-    plugin_params: PluginType | dict[str, Any]
+    option: PluginOption
+    plugin_params: PluginType
 
 
 class APINotificationMethod(TypedDict, total=False):

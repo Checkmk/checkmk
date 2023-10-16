@@ -250,14 +250,11 @@ class SyncRemoteSitesBackgroundJob(BackgroundJob):
 
     def _store_audit_logs(self, last_audit_logs: LastAuditLogs) -> set[SiteId]:
         counter: Counter = Counter()
-        with self._audit_log_store.mutable_view() as central_site_entries:
-            for site_id, entries in last_audit_logs.items():
-                for entry in entries:
-                    if entry not in central_site_entries:
-                        central_site_entries.append(entry)
-                        counter.update({site_id: 1})
+        for site_id, entries in last_audit_logs.items():
+            for entry in entries:
+                counter.update({site_id: 1})
+                self._audit_log_store.append(entry)
 
-        self._write_log(counter, "audit log")
         return set(counter.keys())
 
     def _store_site_changes(self, last_site_changes: LastSiteChanges) -> set[SiteId]:

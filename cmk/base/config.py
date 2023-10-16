@@ -765,15 +765,8 @@ class PackedConfigGenerator:
         hosts_config = self._config_cache.hosts_config
         active_hosts = frozenset(
             hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+            for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
             if self._config_cache.is_active(hn) and self._config_cache.is_online(hn)
-        )
-        # Include inactive cluster hosts.
-        # Otherwise services clustered to those hosts will wrongly be checked by the nodes.
-        sites_clusters = frozenset(
-            hn
-            for hn in self._config_cache.hosts_config.clusters
-            if self._config_cache.is_active(hn)
         )
 
         def filter_all_hosts(all_hosts_orig: AllHosts) -> list[HostName]:
@@ -787,8 +780,12 @@ class PackedConfigGenerator:
         def filter_clusters(clusters_orig: AllClusters) -> dict[HostName, list[HostName]]:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
-                clustername = cluster_entry.split("|", 1)[0]
-                if clustername in sites_clusters:
+                clustername = HostName(cluster_entry.split("|", 1)[0])
+                # Include offline cluster hosts.
+                # Otherwise services clustered to those hosts will wrongly be checked by the nodes.
+                if clustername in hosts_config.clusters and self._config_cache.is_active(
+                    clustername
+                ):
                     clusters_red[cluster_entry] = cluster_nodes
             return clusters_red
 
@@ -932,12 +929,14 @@ def _get_shadow_hosts() -> ShadowHosts:
 
 
 def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
+    hosts_config = config_cache.hosts_config
     return sorted(
         hostname
         for hostname, count in Counter(
-            # Duplicates are not removed.
             hn
-            for hn in strip_tags(list(all_hosts) + list(clusters) + list(_get_shadow_hosts()))
+            for hn in itertools.chain(
+                hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts
+            )
             if config_cache.is_active(hn) and config_cache.is_online(hn)
         ).items()
         if count > 1
@@ -1912,8 +1911,8 @@ class HostsConfig:
     @classmethod
     def from_config(cls) -> HostsConfig:
         return cls(
-            hosts=list(set(strip_tags(all_hosts))),
-            clusters=list(set(strip_tags(clusters))),
+            hosts=strip_tags(all_hosts),
+            clusters=strip_tags(clusters),
             shadow_hosts=list(_get_shadow_hosts()),
         )
 

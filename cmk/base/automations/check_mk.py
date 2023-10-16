@@ -283,11 +283,11 @@ class AutomationDiscovery(DiscoveryAutomation):
                     hostname,
                     is_cluster=hostname in config_cache.hosts_config.clusters,
                     cluster_nodes=config_cache.nodes_of(hostname) or (),
-                    active_hosts=[
+                    active_hosts={
                         hn
-                        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+                        for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
                         if config_cache.is_active(hn) and config_cache.is_online(hn)
-                    ],
+                    },
                     ruleset_matcher=ruleset_matcher,
                     parser=parser,
                     fetcher=fetcher,
@@ -671,11 +671,11 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                             host_name,
                             is_cluster=host_name in config_cache.hosts_config.clusters,
                             cluster_nodes=config_cache.nodes_of(host_name) or (),
-                            active_hosts=[
+                            active_hosts={
                                 hn
-                                for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+                                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
                                 if config_cache.is_active(hn) and config_cache.is_online(hn)
-                            ],
+                            },
                             ruleset_matcher=ruleset_matcher,
                             parser=parser,
                             fetcher=fetcher,
@@ -2229,7 +2229,7 @@ class AutomationUpdateDNSCache(Automation):
             *ip_lookup.update_dns_cache(
                 ip_lookup_configs=(
                     config_cache.ip_lookup_config(hn)
-                    for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+                    for hn in frozenset(itertools.chain(hosts_config.hosts, hosts_config.clusters))
                     if config_cache.is_active(hn) and config_cache.is_online(hn)
                 ),
                 configured_ipv4_addresses=config.ipaddresses,

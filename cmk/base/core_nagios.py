@@ -5,6 +5,7 @@
 """Code for support of Nagios (and compatible) cores"""
 
 import base64
+import itertools
 import os
 import py_compile
 import socket
@@ -182,11 +183,15 @@ def create_config(
 
     if hostnames is None:
         hosts_config = config_cache.hosts_config
-        hostnames = [
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        ]
+        hostnames = sorted(
+            {
+                hn
+                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
+        )
+    else:
+        hostnames = sorted(hostnames)
 
     cfg = NagiosConfig(outfile, hostnames)
 
@@ -196,7 +201,7 @@ def create_config(
 
     licensing_counter = Counter("services")
     all_host_labels: dict[HostName, CollectedHostLabels] = {}
-    for hostname in sorted(hostnames):
+    for hostname in hostnames:
         all_host_labels[hostname] = _create_nagios_config_host(
             cfg, config_cache, hostname, stored_passwords, licensing_counter
         )
@@ -1123,11 +1128,12 @@ def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
     console.verbose("Precompiling host checks...\n")
 
     host_check_store = HostCheckStore()
-    for hostname in (
+    for hostname in {
+        # Inconsistent with `create_config` above.
         hn
-        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+        for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
         if config_cache.is_active(hn) and config_cache.is_online(hn)
-    ):
+    }:
         try:
             console.verbose(
                 "%s%s%-16s%s:",

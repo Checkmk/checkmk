@@ -289,36 +289,26 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 def _list_all_hosts(
     config_cache: ConfigCache, ruleset_matcher: RulesetMatcher, hostgroups: list[str], options: dict
 ) -> list[HostName]:
-    # TODO(ml):  Once all the funky `all_*_hosts`.
-    #            Simplify the hostnames computation! 🙀
-    hostnames: set[HostName] = set()
     hosts_config = config_cache.hosts_config
+    hostnames: Iterable[HostName]
 
-    if options.get("all-sites"):
-        hostnames.update(
-            itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts)
+    all_sites = options.get("all-sites")
+    offline = "include-offline" in options
+
+    if all_sites:
+        hostnames = filter(
+            lambda hn: offline or config_cache.is_online(hn),
+            itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts),
         )
-        if "include-offline" not in options:
-            hostnames -= {
-                hn
-                for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-                if config_cache.is_offline(hn)
-            }
     else:
-        hostnames.update(
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
+        hostnames = filter(
+            lambda hn: config_cache.is_active(hn) and (offline or config_cache.is_online(hn)),
+            itertools.chain(hosts_config.hosts, hosts_config.clusters),
         )
-        if "include-offline" in options:
-            hostnames.update(
-                hn
-                for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-                if config_cache.is_offline(hn) and config_cache.is_active(hn)
-            )
 
+    hostnames = sorted(set(hostnames))
     if not hostgroups:
-        return sorted(hostnames)
+        return hostnames
 
     hostlist = []
     for hn in hostnames:
@@ -327,7 +317,7 @@ def _list_all_hosts(
                 hostlist.append(hn)
                 break
 
-    return sorted(hostlist)
+    return hostlist
 
 
 modes.register(
@@ -378,23 +368,20 @@ def mode_list_tag(args: list[str]) -> None:
 def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    hosts = []
 
     if "offline" in tags:
-        hostlist = {
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_offline(hn)
-        }
+        hostnames = filter(
+            lambda hn: config_cache.is_active(hn) and config_cache.is_offline(hn),
+            itertools.chain(hosts_config.hosts, hosts_config.clusters),
+        )
     else:
-        hostlist = {
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        }
+        hostnames = filter(
+            lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn),
+            itertools.chain(hosts_config.hosts, hosts_config.clusters),
+        )
 
-    config_cache = config.get_config_cache()
-    for h in hostlist:
+    hosts = []
+    for h in set(hostnames):
         if config.hosttags_match_taglist(config_cache.tag_list(h), tags):
             hosts.append(h)
     return hosts
@@ -615,12 +602,12 @@ modes.register(
 def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     config_cache = config.get_config_cache()
     hosts_config = config_cache.hosts_config
-    all_hosts = frozenset(
+    all_hosts = {
         hn
-        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+        for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
         if config_cache.is_active(hn) and config_cache.is_online(hn)
-    )
-    hosts = frozenset(hostlist)
+    }
+    hosts = set(hostlist)
     if not hosts:
         hosts = all_hosts
 
@@ -1207,7 +1194,7 @@ def mode_snmpget(args: list[str]) -> None:
         hosts_config = config_cache.hosts_config
         hostnames.extend(
             host
-            for host in hosts_config.hosts
+            for host in frozenset(hosts_config.hosts)
             if config_cache.is_active(host)
             and config_cache.is_online(host)
             and config_cache.is_snmp_host(host)
@@ -1258,9 +1245,11 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
 
     if not hosts:
         hosts = sorted(
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
+            {
+                hn
+                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
         )
 
     for host in hosts:
@@ -1969,11 +1958,11 @@ def _preprocess_hostnames(
             % ("services and " if not only_host_labels else "")
         )
         hosts_config = config_cache.hosts_config
-        return set(
+        return {
             hn
             for hn in hosts_config.hosts
             if config_cache.is_active(hn) and config_cache.is_online(hn)
-        )
+        }
 
     node_names = {
         node_name
@@ -2370,9 +2359,11 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         # No hosts specified: do all hosts and force caching
         hosts_config = config_cache.hosts_config
         hostnames = sorted(
-            hn
-            for hn in set(hosts_config.hosts).union(hosts_config.clusters)
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
+            {
+                hn
+                for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
+                if config_cache.is_active(hn) and config_cache.is_online(hn)
+            }
         )
         console.verbose("Doing HW/SW inventory on all hosts\n")
 

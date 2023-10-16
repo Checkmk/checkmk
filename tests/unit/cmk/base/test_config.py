@@ -188,7 +188,7 @@ def test_all_active_hosts(monkeypatch: MonkeyPatch) -> None:
     } == {HostName("real1"), HostName("real3")}
     assert {
         hn
-        for hn in set(hosts_config.hosts).union(hosts_config.clusters)
+        for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
         if config_cache.is_active(hn) and config_cache.is_online(hn)
     } == {HostName("cluster1"), HostName("cluster3"), HostName("real1"), HostName("real3")}
 

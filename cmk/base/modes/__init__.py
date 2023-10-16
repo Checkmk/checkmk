@@ -150,6 +150,7 @@ class Modes:
             valid_hosts = valid_hosts.union(
                 hn
                 for hn in hosts_config.clusters
+                # Inconsistent with `with_foreign_hosts` above.
                 if config_cache.is_active(hn) and config_cache.is_online(hn)
             )
 

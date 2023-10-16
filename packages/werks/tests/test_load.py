@@ -110,7 +110,10 @@ body
 
 
 def test_loading_md_werk_missing_table() -> None:
-    with pytest.raises(WerkError, match="Expected a table after the title, found 'p'"):
+    with pytest.raises(
+        WerkError,
+        match="Table should have exactly two columns, found 'table' instead",
+    ):
         md = """[//]: # (werk v2)
 # title
 

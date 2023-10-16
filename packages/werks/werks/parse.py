@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from typing import NamedTuple
-
-import lxml.html
-import markdown
 
 from .error import WerkError
 
@@ -14,6 +12,36 @@ from .error import WerkError
 class WerkV2ParseResult(NamedTuple):
     metadata: dict[str, str]
     description: str
+
+
+def markdown_table_to_dict(markdown_table: str) -> dict[str, str]:
+    """
+    Convert a Markdown table to dictionary.
+    """
+
+    elements = []
+    for line in markdown_table.strip().split("\n"):
+        columns = tuple(c.strip() for c in line.split("|"))
+        if len(columns) not in {2, 4}:
+            raise WerkError(f"Table should have exactly two columns, found {line!r} instead")
+        if len(columns) == 4:
+            columns = columns[1:-1]
+        elements.append((columns[0], columns[1]))
+
+    if len(elements) < 2:
+        raise WerkError("Table needs to contain at least header and separator")
+
+    header = elements.pop(0)
+    if header != ("key", "value"):
+        raise WerkError(
+            f"Table should have a header with columns 'key' and 'value', found {header}"
+        )
+
+    separator = elements.pop(0)
+    if not all(re.match(":?[-]{3,}:?", s) for s in separator):
+        raise WerkError("Second row in markdown table should be a separator line")
+
+    return dict(elements)
 
 
 def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
@@ -53,23 +81,8 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
         )
     metadata["title"] = title.removeprefix("#").strip()
 
-    metadata_html = markdown.markdown(
-        md_table,
-        extensions=["tables"],
-        output_format="html",
-    )
-
-    parser = lxml.html.HTMLParser(recover=False)
-    table_element = lxml.html.fromstring(metadata_html, parser=parser)
-    # TODO: maybe assert len of table_element?!
-    if table_element.tag != "table":
-        raise WerkError(f"Expected a table after the title, found '{table_element.tag}'")
-    tbody = table_element.findall("./tbody/")
-    for table_tr in tbody:
-        key, value = table_tr.findall("./td")
-        if key.text is None or value.text is None:
-            continue
-        metadata[key.text] = value.text
+    # we parse the table on our own, converting it to html and parsing the html is quite slow
+    metadata.update(markdown_table_to_dict(md_table))
 
     return WerkV2ParseResult(metadata, md_description)
 

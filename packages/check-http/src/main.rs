@@ -35,8 +35,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{:#?}", headers);
 
     let body = match args.without_body {
-        true => resp.text().await?,
-        false => "".to_string(),
+        false => resp.text().await?,
+        true => "".to_string(),
     };
 
     let elapsed = now.elapsed();

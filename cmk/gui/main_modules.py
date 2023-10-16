@@ -22,14 +22,21 @@ from cmk.gui.log import logger
 # possibly a third time over the plugin discovery mechanism.
 with suppress(ModuleNotFoundError):
     import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+
 with suppress(ModuleNotFoundError):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
+
 with suppress(ModuleNotFoundError):
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+
 with suppress(ModuleNotFoundError):
-    import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.cme.registration  # pylint: disable=no-name-in-module
+
+    cmk.gui.cme.registration.register()
+
 with suppress(ModuleNotFoundError):
     import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+
 with suppress(ModuleNotFoundError):
     import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 
@@ -57,7 +64,7 @@ def _import_local_main_modules() -> list[ModuleType]:
     which are expected to contain the actual imports of the main modules.
 
     Please note that the built-in main modules are already loaded by the imports of
-    `cmk.gui.{cee.,cme.,cce.}plugins.main_modules` above.
+    `cmk.gui.{cee.,cce.}plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.
@@ -97,15 +104,12 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 
 
 # Note: One day, when we have migrated all main module plugins to PEP 420 namespaces, we
-# have no cmk.gui.cee and cmk.gui.cme namespaces anymore and can remove them.
+# have no cmk.gui.cee namespaces anymore and can remove them.
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         yield f"cmk.gui.cee.plugins.{main_module_name}"
-
-    if cmk_version.edition() is cmk_version.Edition.CME:
-        yield f"cmk.gui.cme.plugins.{main_module_name}"
 
     if (
         cmk_version.edition() is cmk_version.Edition.CCE
@@ -172,8 +176,6 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             name.startswith("cmk.gui.")
             and len(name.split(".")) == 3
             or name.startswith("cmk.gui.cee.")
-            and len(name.split(".")) == 4
-            or name.startswith("cmk.gui.cme.")
             and len(name.split(".")) == 4
             or name.startswith("cmk.gui.cce.")
             and len(name.split(".")) == 4

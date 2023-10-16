@@ -36,7 +36,7 @@ else:
 
 
 if cmk_version.edition() is cmk_version.Edition.CME:
-    from cmk.gui.cme.plugins.config.cme import CMEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.config import CMEConfig  # pylint: disable=no-name-in-module
 else:
     # Stub needed for non managed services edition
     class CMEConfig:  # type: ignore[no-redef]

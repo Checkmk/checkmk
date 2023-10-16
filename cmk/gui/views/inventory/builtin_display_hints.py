@@ -1594,6 +1594,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "kernel_version",
                 "arch",
                 "service_pack",
+                "build",
             ],
         },
         ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
@@ -1604,6 +1605,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.os.kernel_version": {"title": _l("Kernel Version")},
         ".software.os.arch": {"title": _l("Kernel Architecture")},
         ".software.os.service_pack": {"title": _l("Latest Service Pack")},
+        ".software.os.build": {"title": _l("Build")},
         ".software.os.service_packs:": {"title": _l("Service Packs"), "keyorder": ["name"]},
         ".software.os.service_packs:*.name": {"title": _l("Name")},
         ".software.packages:": {

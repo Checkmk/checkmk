@@ -7,7 +7,7 @@
 from collections.abc import Mapping
 from typing import Any, get_args
 
-from cmk.utils.notify_types import BuiltInPluginNames, PluginOptions
+from cmk.utils.notify_types import BuiltInPluginNames
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas import (
@@ -77,7 +77,11 @@ class RulePropertiesAttributes(BaseSchema):
 
 class PluginBase(BaseSchema):
     option = fields.String(
-        enum=[PluginOptions.CANCEL, PluginOptions.WITH_PARAMS, PluginOptions.WITH_CUSTOM_PARAMS],
+        enum=[
+            "cancel_previous_notifications",
+            "create_notification_with_the_following_parameters",
+            "create_notification_with_custom_parameters",
+        ],
         required=True,
     )
 

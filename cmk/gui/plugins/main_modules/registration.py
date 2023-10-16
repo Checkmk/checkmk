@@ -66,6 +66,7 @@ from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
@@ -109,6 +110,7 @@ def register() -> None:
         page_registry,
         visual_type_registry,
         register_post_config_load_hook,
+        multisite_builtin_views,
     )
     inventory.register(
         page_registry,

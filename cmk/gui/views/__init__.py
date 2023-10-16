@@ -26,7 +26,6 @@ from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import icon, inventory
-from .builtin_views import builtin_views
 from .command import register_legacy_command
 from .icon import Icon, icon_and_action_registry
 from .inventory import register_table_views_and_columns, update_paint_functions
@@ -56,8 +55,6 @@ def load_plugins() -> None:
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:
         register_legacy_command(cmd_spec)
-
-    multisite_builtin_views.update(builtin_views)
 
     # Needs to be executed after all plugins (built-in and local) are loaded
     register_table_views_and_columns()

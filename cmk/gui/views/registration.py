@@ -11,10 +11,12 @@ from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import command, icon, inventory, perfometer
 from ._permissions import PermissionSectionViews
+from .builtin_views import builtin_views
 from .command import command_group_registry, command_registry
 from .datasource_selection import page_select_datasource
 from .host_tag_plugins import register_tag_plugins
@@ -36,8 +38,11 @@ def register(
     page_registry: PageRegistry,
     visual_type_registry: VisualTypeRegistry,
     register_post_config_load_hook: Callable[[Callable[[], None]], None],
+    multisite_builtin_views: dict[ViewName, ViewSpec],
 ) -> None:
     register_post_config_load_hook(register_tag_plugins)
+
+    multisite_builtin_views.update(builtin_views)
 
     permission_section_registry.register(PermissionSectionViews)
 

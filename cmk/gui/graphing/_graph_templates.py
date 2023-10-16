@@ -187,20 +187,9 @@ def _horizontal_rules_from_thresholds(
 ) -> list[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
-        if isinstance(entry, tuple):
-            expression, title = entry
-        else:
-            expression = entry
-            if expression.endswith(":warn"):
-                title = _("Warning")
-            elif expression.endswith(":crit"):
-                title = _("Critical")
-            else:
-                title = expression
-
         try:
             if (
-                result := parse_expression(expression, translated_metrics).evaluate(
+                result := parse_expression(entry.expression, translated_metrics).evaluate(
                     translated_metrics
                 )
             ).value:
@@ -209,7 +198,7 @@ def _horizontal_rules_from_thresholds(
                         result.value,
                         result.unit_info["render"](result.value),
                         result.color,
-                        str(title),
+                        entry.title,
                     )
                 )
         # Scalar value like min and max are always optional. This makes configuration

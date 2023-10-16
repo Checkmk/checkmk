@@ -13,6 +13,7 @@ from cmk.utils.metrics import MetricName
 
 import cmk.gui.graphing._utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.graphing._graph_specification import MetricDefinition
 from cmk.gui.graphing._utils import _NormalizedPerfData, AutomaticDict, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -840,3 +841,96 @@ def test_automatic_dict_append() -> None:
             "metrics": [("something", "line")],
         },
     }
+
+
+@pytest.mark.parametrize(
+    "graph_template_registation, expected_graph_template",
+    [
+        pytest.param(
+            utils.GraphTemplateRegistration(
+                metrics=[],
+                scalars=["metric", "metric:warn", "metric:crit"],
+            ),
+            utils.GraphTemplate(
+                id="ident",
+                title=None,
+                scalars=[
+                    utils.ScalarDefinition(expression="metric", title="metric"),
+                    utils.ScalarDefinition(expression="metric:warn", title="Warning"),
+                    utils.ScalarDefinition(expression="metric:crit", title="Critical"),
+                ],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[],
+            ),
+            id="scalar str",
+        ),
+        pytest.param(
+            utils.GraphTemplateRegistration(
+                metrics=[],
+                scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
+            ),
+            utils.GraphTemplate(
+                id="ident",
+                title=None,
+                scalars=[
+                    utils.ScalarDefinition(expression="metric", title="Title"),
+                    utils.ScalarDefinition(expression="metric:warn", title="Warn"),
+                    utils.ScalarDefinition(expression="metric:crit", title="Crit"),
+                ],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[],
+            ),
+            id="scalar tuple",
+        ),
+        pytest.param(
+            utils.GraphTemplateRegistration(
+                metrics=[("metric", "line")],
+            ),
+            utils.GraphTemplate(
+                id="ident",
+                title=None,
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[MetricDefinition(expression="metric", line_type="line")],
+            ),
+            id="metrics 2-er tuple",
+        ),
+        pytest.param(
+            utils.GraphTemplateRegistration(
+                metrics=[("metric", "line", "Title")],
+            ),
+            utils.GraphTemplate(
+                id="ident",
+                title=None,
+                scalars=[],
+                conflicting_metrics=[],
+                optional_metrics=[],
+                consolidation_function=None,
+                range=None,
+                omit_zero_metrics=False,
+                metrics=[MetricDefinition(expression="metric", line_type="line", title="Title")],
+            ),
+            id="metrics 3-er tuple",
+        ),
+    ],
+)
+def test_graph_template_from_template(
+    graph_template_registation: utils.GraphTemplateRegistration,
+    expected_graph_template: utils.GraphTemplate,
+) -> None:
+    assert (
+        utils.GraphTemplate.from_template("ident", graph_template_registation)
+        == expected_graph_template
+    )

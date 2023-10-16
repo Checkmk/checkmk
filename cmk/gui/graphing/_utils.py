@@ -68,7 +68,10 @@ from ._graph_specification import (
 from ._type_defs import GraphConsoldiationFunction, LineType
 from ._unit_info import unit_info
 
-ScalarDefinition = str | tuple[str, str | LazyString]
+
+class ScalarDefinition(NamedTuple):
+    expression: str
+    title: str
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -102,12 +105,43 @@ class GraphTemplateRegistration(TypedDict):
         tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
     ]
     title: NotRequired[str | LazyString]
-    scalars: NotRequired[Sequence[ScalarDefinition]]
+    scalars: NotRequired[Sequence[str | tuple[str, str | LazyString]]]
     conflicting_metrics: NotRequired[Sequence[str]]
     optional_metrics: NotRequired[Sequence[str]]
     consolidation_function: NotRequired[GraphConsoldiationFunction]
     range: NotRequired[GraphRangeSpec]
     omit_zero_metrics: NotRequired[bool]
+
+
+def _parse_raw_scalar_definition(
+    raw_scalar_definition: str | tuple[str, str | LazyString]
+) -> ScalarDefinition:
+    if isinstance(raw_scalar_definition, tuple):
+        return ScalarDefinition(
+            expression=raw_scalar_definition[0],
+            title=str(raw_scalar_definition[1]),
+        )
+
+    if raw_scalar_definition.endswith(":warn"):
+        title = _("Warning")
+    elif raw_scalar_definition.endswith(":crit"):
+        title = _("Critical")
+    else:
+        title = raw_scalar_definition
+    return ScalarDefinition(expression=raw_scalar_definition, title=str(title))
+
+
+def _parse_raw_metric_definition(
+    raw_metric_definition: (
+        tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
+    )
+) -> MetricDefinition:
+    expression, line_type, *title = raw_metric_definition
+    return MetricDefinition(
+        expression=expression,
+        line_type=line_type,
+        title=str(title[0]) if title else "",
+    )
 
 
 @dataclass(frozen=True)
@@ -130,7 +164,10 @@ class GraphTemplate:
             id=f"METRIC_{name}",
             title=None,
             metrics=[MetricDefinition(expression=name, line_type="area")],
-            scalars=[f"{name}:warn", f"{name}:crit"],
+            scalars=[
+                ScalarDefinition(expression=f"{name}:warn", title=str(_("Warning"))),
+                ScalarDefinition(expression=f"{name}:crit", title=str(_("Critical"))),
+            ],
             conflicting_metrics=[],
             optional_metrics=[],
             consolidation_function=None,
@@ -140,22 +177,10 @@ class GraphTemplate:
 
     @classmethod
     def from_template(cls, ident: str, template: GraphTemplateRegistration) -> Self:
-        def _parse_raw_metric_definition(
-            raw_metric_definition: (
-                tuple[str, LineType] | tuple[str, LineType, str] | tuple[str, LineType, LazyString]
-            )
-        ) -> MetricDefinition:
-            expression, line_type, *title = raw_metric_definition
-            return MetricDefinition(
-                expression=expression,
-                line_type=line_type,
-                title=str(title[0]) if title else "",
-            )
-
         return cls(
             id=ident,
             title=str(template["title"]) if "title" in template else None,
-            scalars=template.get("scalars", []),
+            scalars=[_parse_raw_scalar_definition(r) for r in template.get("scalars", [])],
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),
             consolidation_function=template.get("consolidation_function"),

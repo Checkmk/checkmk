@@ -20,7 +20,7 @@ from cmk.gui.graphing._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate
+from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate, ScalarDefinition
 from cmk.gui.metrics import translate_perf_data
 
 
@@ -103,8 +103,8 @@ def test_create_graph_recipe_from_template() -> None:
             MetricDefinition(expression="fs_size", line_type="line"),
         ],
         scalars=[
-            "fs_used:warn",
-            "fs_used:crit",
+            ScalarDefinition(expression="fs_used:warn", title="Warning"),
+            ScalarDefinition(expression="fs_used:crit", title="Critical"),
         ],
         conflicting_metrics=["fs_free"],
         optional_metrics=[],

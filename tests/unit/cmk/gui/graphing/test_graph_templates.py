@@ -12,7 +12,7 @@ import cmk.gui.metrics as metrics
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing._graph_specification import HorizontalRule
 from cmk.gui.graphing._graph_templates import matching_graph_templates
-from cmk.gui.graphing._utils import GraphTemplate, translate_metrics
+from cmk.gui.graphing._utils import GraphTemplate, ScalarDefinition, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 
 _GRAPH_TEMPLATES = [
@@ -145,9 +145,9 @@ def test_horizontal_rules_from_thresholds(
     assert (
         gt._horizontal_rules_from_thresholds(
             [
-                "one:warn",
-                ("power:crit", "Critical power"),
-                ("output:warn,-1,*", "Warning output"),
+                ScalarDefinition(expression="one:warn", title="Warning"),
+                ScalarDefinition(expression="power:crit", title="Critical power"),
+                ScalarDefinition(expression="output:warn,-1,*", title="Warning output"),
             ],
             metrics.translate_perf_data(perf_string),
         )

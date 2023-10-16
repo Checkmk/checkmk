@@ -1,6 +1,6 @@
 use anyhow::Result as AnyhowResult;
 use clap::Parser;
-use http::{HeaderMap, HeaderName, HeaderValue};
+use http::{HeaderMap, HeaderName, HeaderValue, Method};
 use reqwest::{header::USER_AGENT, RequestBuilder};
 use std::time::{Duration, Instant};
 
@@ -13,6 +13,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let req = prepare_request(
         args.url,
+        args.method,
         args.user_agent,
         args.headers,
         Duration::from_secs(args.timeout),
@@ -45,6 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn prepare_request(
     url: String,
+    method: Method,
     user_agent: Option<HeaderValue>,
     headers: Option<Vec<(HeaderName, HeaderValue)>>,
     timeout: Duration,
@@ -66,7 +68,7 @@ fn prepare_request(
         .default_headers(cli_headers)
         .build()?;
 
-    let req = client.get(url);
+    let req = client.request(method, url);
     if let Some(user) = auth_user {
         Ok(req.basic_auth(user, auth_pw))
     } else {

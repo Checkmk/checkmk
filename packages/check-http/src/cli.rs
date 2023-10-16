@@ -1,7 +1,7 @@
 use crate::pwstore;
 use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
-use http::{HeaderName, HeaderValue};
+use http::{HeaderName, HeaderValue, Method};
 
 #[derive(Parser, Debug)]
 #[command(about = "check_http")]
@@ -32,6 +32,10 @@ pub struct Cli {
     /// Set user-agent
     #[arg(long)]
     pub user_agent: Option<HeaderValue>,
+
+    /// Set HTTP method. Default: GET
+    #[arg(short='j', long, default_value_t=Method::GET)]
+    pub method: Method,
 }
 
 #[derive(Args, Debug)]

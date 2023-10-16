@@ -249,11 +249,11 @@ def notification_script_title(name):
     return user_script_title("notifications", name)
 
 
-def notification_script_choices() -> list[tuple[str | None, str]]:
+def notification_script_choices():
     # Ensure the required dynamic permissions are registered
     declare_notification_plugin_permissions()
 
-    choices: list[tuple[str | None, str]] = []
+    choices = []
     for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)"))]:
         notificaton_plugin_name, _notification_plugin_title = choice
         if user.may("notification_plugin.%s" % notificaton_plugin_name):

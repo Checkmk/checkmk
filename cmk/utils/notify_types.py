@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from enum import StrEnum
 from typing import Any, Literal, NewType
 
 from typing_extensions import TypedDict
@@ -50,11 +49,11 @@ NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
 NotifyBulkParameters = dict[str, Any]  # TODO: Improve this
 NotifyBulkType = tuple[Literal["always", "timeperiod"], NotifyBulkParameters]
 
-
-class PluginOptions(StrEnum):
-    CANCEL = "cancel_previous_notifications"
-    WITH_PARAMS = "create_notification_with_the_following_parameters"
-    WITH_CUSTOM_PARAMS = "create_notification_with_custom_parameters"
+PluginOption = Literal[
+    "cancel_previous_notifications",
+    "create_notification_with_the_following_parameters",
+    "create_notification_with_the_following_custom_parameters",
+]
 
 
 NotificationType = Literal[
@@ -91,7 +90,7 @@ BuiltInPluginNames = Literal[
 ]
 CustomPluginName = NewType("CustomPluginName", str)
 
-NotificationPluginNameStr = BuiltInPluginNames
+NotificationPluginNameStr = BuiltInPluginNames | CustomPluginName
 
 MgmntPriorityType = Literal[
     "low",

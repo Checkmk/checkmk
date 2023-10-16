@@ -3,10 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from typing import Any, get_args
 
-from marshmallow import post_dump, post_load, pre_load, ValidationError
+from marshmallow import post_dump
 from marshmallow.schema import Schema
 from marshmallow_oneofschema import OneOfSchema
 
@@ -30,7 +29,6 @@ from cmk.utils.notify_types import (
     MgmntPriorityType,
     MgmntUrgencyType,
     OpsGeniePriorityStrType,
-    PluginOptions,
     PushOverPriorityStringType,
     RegexModes,
     ServiceLevelsStr,
@@ -39,7 +37,6 @@ from cmk.utils.notify_types import (
     SysLogPriorityStrType,
 )
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields import (
     ContactGroupField,
     FolderIDField,
@@ -53,8 +50,6 @@ from cmk.gui.fields import (
 )
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.rest_api_types.notifications_rule_types import CASE_STATE_TYPE, INCIDENT_STATE_TYPE
-from cmk.gui.wato import notification_parameter_registry
-from cmk.gui.watolib.user_scripts import user_script_choices
 
 from cmk import fields
 
@@ -1451,7 +1446,7 @@ class PluginName(BaseSchema):
     plugin_name = fields.String(
         enum=list(get_args(BuiltInPluginNames)),
         required=True,
-        description="The plugin name.",
+        description="The plugin name. Built-in plugins only.",
         example="mail",
     )
 
@@ -2275,92 +2270,28 @@ class PluginSelector(OneOfSchema):
     }
 
 
-class PluginOptionSchema(BaseSchema):
+class PluginOption(BaseSchema):
     option = fields.String(
-        enum=[PluginOptions.CANCEL, PluginOptions.WITH_PARAMS, PluginOptions.WITH_CUSTOM_PARAMS],
+        enum=[
+            "cancel_previous_notifications",
+            "create_notification_with_the_following_parameters",
+        ],
         required=False,
         description="Create notifications with parameters or cancel previous notifications",
         example="cancel_previous_notifications",
     )
 
 
-class PluginBase(PluginOptionSchema):
+class PluginBase(PluginOption):
     plugin_params = fields.Nested(
         PluginName,
         required=True,
     )
 
 
-class PluginWithParams(PluginOptionSchema):
+class PluginWithParams(PluginOption):
     plugin_params = fields.Nested(
         PluginSelector,
-        required=True,
-    )
-
-
-class NonRegisteredCustomPlugin(BaseSchema):
-    params = fields.List(
-        fields.String,
-        required=True,
-        example=["param1", "param2", "param2"],
-    )
-
-
-class CustomPlugin(BaseSchema):
-    plugin_name = fields.String(
-        required=True,
-        description="The custom plugin name",
-        example="mail",
-    )
-
-    @pre_load
-    def _pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        return {k: v for k, v in data.items() if k in self.fields}
-
-    @post_load(pass_original=True)
-    def _post_load(
-        self,
-        data: dict[str, Any],
-        original_data: dict[str, Any],
-        **_unused_args: Any,
-    ) -> dict[str, Any]:
-        dif: dict[str, Any] = {k: v for k, v in original_data.items() if k not in data}
-        plugin_name = data["plugin_name"]
-
-        if plugin_name not in [n for (n, _) in user_script_choices("notifications")]:
-            raise ValidationError(f"{plugin_name} does not exist")
-
-        if plugin_name in notification_parameter_registry:
-            vs = notification_parameter_registry[data["plugin_name"]]().spec
-            try:
-                vs.validate_datatype(dif, "plugin_params")
-            except MKUserError as exc:
-                message = exc.message if not ": " in exc.message else exc.message.split(": ")[-1]
-                if re.search("The entry (.*)", exc.message) is not None:
-                    message = "A required (sub-)field is missing."
-
-                raise ValidationError(
-                    message=message,
-                    field_name="_schema" if exc.varname is None else exc.varname.split("_p_")[-1],
-                )
-
-            try:
-                vs.validate_value(dif, "plugin_params")
-            except MKUserError as exc:
-                raise ValidationError(
-                    message=exc.message,
-                    field_name="_schema" if exc.varname is None else exc.varname.split("_p_")[-1],
-                )
-
-        else:
-            NonRegisteredCustomPlugin().load(dif)
-
-        return original_data
-
-
-class CustomPluginWithParams(PluginOptionSchema):
-    plugin_params = fields.Nested(
-        CustomPlugin,
         required=True,
     )
 
@@ -2472,9 +2403,8 @@ class PluginOptionsSelector(OneOfSchema):
     type_field = "option"
     type_field_remove = False
     type_schemas = {
-        PluginOptions.CANCEL: PluginBase,
-        PluginOptions.WITH_PARAMS: PluginWithParams,
-        PluginOptions.WITH_CUSTOM_PARAMS: CustomPluginWithParams,
+        "cancel_previous_notifications": PluginBase,
+        "create_notification_with_the_following_parameters": PluginWithParams,
     }
 
 

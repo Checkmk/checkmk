@@ -1,0 +1,15 @@
+Title: rule_notifications: allow 3rd party plugins via the REST-API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1696857473
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk introduces a fix that allows rule notifications to use
+3rd party / custom plugins.
+
+

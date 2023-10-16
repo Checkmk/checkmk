@@ -11,6 +11,7 @@ from typing import Any, cast, Literal
 from typing_extensions import TypedDict
 
 from cmk.utils.notify_types import (
+    BuiltInPluginNames,
     BulkOutsideTimePeriodType,
     ConditionEventConsoleAlertsType,
     EmailBodyElementsType,
@@ -35,12 +36,11 @@ from cmk.utils.notify_types import (
     MatchRegex,
     MgmntPriorityType,
     MgmntUrgencyType,
-    NotificationPluginNameStr,
     NotifyBulkType,
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PasswordType,
-    PluginOption,
+    PluginOptions,
     ProxyUrl,
     PushOverPriorityNumType,
     PushOverPriorityStringType,
@@ -2485,7 +2485,7 @@ class WebhookURLOption:
 
 
 class APINotifyPluginParams(TypedDict):
-    plugin_name: NotificationPluginNameStr
+    plugin_name: BuiltInPluginNames
 
 
 class API_AsciiMailData(APINotifyPluginParams, total=False):
@@ -2656,12 +2656,6 @@ class API_MSTeamsData(APINotifyPluginParams, total=False):
     affected_host_groups: CheckboxStateType
 
 
-class API_CustomPlugin(APINotifyPluginParams, total=False):
-    attr1: str
-    attr2: str
-    attr3: str
-
-
 PluginType = (
     API_AsciiMailData
     | API_HTMLMailData
@@ -2680,10 +2674,7 @@ PluginType = (
     | API_VictorOpsData
     | API_MSTeamsData
     | API_SmsData
-    | API_CustomPlugin
 )
-
-# ----------------------------------------------------------------
 
 
 class APIRuleProperties(TypedDict, total=False):
@@ -2697,8 +2688,8 @@ class APIRuleProperties(TypedDict, total=False):
 
 
 class APINotifyPlugin(TypedDict, total=False):
-    option: PluginOption
-    plugin_params: PluginType
+    option: PluginOptions | str
+    plugin_params: PluginType | dict[str, Any]
 
 
 class APINotificationMethod(TypedDict, total=False):

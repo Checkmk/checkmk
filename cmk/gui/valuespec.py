@@ -880,7 +880,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
                 varprefix,
                 _(
                     "An identifier must only consist of letters, digits, dollar, underscore, dash, "
-                    "dot, and at. It must start with a letter, digit, dollar, or underscore."
+                    "dot, plus, and at. It must start with a letter, digit, dollar, or underscore."
                 ),
             ) from exception
 

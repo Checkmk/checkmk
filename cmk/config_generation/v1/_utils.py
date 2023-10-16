@@ -8,10 +8,6 @@ from dataclasses import dataclass
 from enum import StrEnum
 
 
-class InvalidSecretType(Exception):
-    pass
-
-
 class IPAddressFamily(StrEnum):
     IPv4 = "ipv4"
     IPv6 = "ipv6"
@@ -76,4 +72,4 @@ def get_secret_from_params(secret_type: str, secret_value: str) -> Secret:
     if secret_type == SecretType.PASSWORD:
         return PlainTextSecret(secret_value)
 
-    raise InvalidSecretType(f"{secret_type} is not a valid secret type")
+    raise ValueError(f"{secret_type} is not a valid secret type")

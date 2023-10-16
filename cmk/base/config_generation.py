@@ -290,10 +290,7 @@ class ActiveCheck:
         formatted: list[str] = []
 
         for arg in arguments:
-            if isinstance(arg, str):
-                formatted.append(shlex.quote(arg))
-
-            elif isinstance(arg, PlainTextSecret):
+            if isinstance(arg, PlainTextSecret):
                 formatted.append(shlex.quote(arg.format % arg.value))
 
             elif isinstance(arg, StoredSecret):
@@ -309,6 +306,8 @@ class ActiveCheck:
                 pw_start_index = str(arg.format.index("%s"))
                 formatted.append(shlex.quote(arg.format % ("*" * len(password))))
                 passwords.append((str(len(formatted)), pw_start_index, arg.value))
+            else:
+                formatted.append(shlex.quote(str(arg)))
 
         if passwords:
             pw = ",".join(["@".join(p) for p in passwords])

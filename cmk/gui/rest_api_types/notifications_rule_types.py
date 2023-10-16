@@ -2688,7 +2688,7 @@ class APIRuleProperties(TypedDict, total=False):
 
 
 class APINotifyPlugin(TypedDict, total=False):
-    option: PluginOptions | str
+    option: PluginOptions
     plugin_params: PluginType | dict[str, Any]
 
 

@@ -21,7 +21,7 @@ def notification_rule_request_example() -> APINotificationRule:
         },
         "notification_method": {
             "notify_plugin": {
-                "option": PluginOptions.WITH_PARAMS.value,
+                "option": PluginOptions.WITH_PARAMS,
                 "plugin_params": {
                     "plugin_name": "mail",
                     "from_details": {"state": "disabled"},

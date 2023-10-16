@@ -69,7 +69,7 @@ def _prepare_package(version: CMKVersion) -> None:
         return
 
     source_package_path = Path(
-        os.environ["WORKSPACE"], "packages", version.version, _package_name(version)
+        os.environ["WORKSPACE"], "downloaded_packages_for_docker_tests", version.version, _package_name(version)
     )
     test_package_path = Path(build_path, _package_name(version))
 

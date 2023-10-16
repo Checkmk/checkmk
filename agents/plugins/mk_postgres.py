@@ -18,7 +18,7 @@ INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass:
 ----------------------------------------------------------
 """
 
-__version__ = "2.2.0p12"
+__version__ = "2.2.0p13"
 
 import abc
 import io

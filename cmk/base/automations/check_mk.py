@@ -719,6 +719,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         try:
             cache_manager.clear_all()
             config_cache.initialize()
+            hosts_config = config_cache.hosts_config
 
             # reset these to their original value to create a correct config
             if config.monitoring_core == "cmc":
@@ -726,14 +727,22 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     config_cache,
                     core,
                     locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(config_cache),
+                    duplicates=sorted(
+                        hosts_config.duplicates(
+                            lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                        ),
+                    ),
                 )
             else:
                 cmk.base.core.do_restart(
                     config_cache,
                     core,
                     locking_mode=config.restart_locking,
-                    duplicates=config.duplicate_hosts(config_cache),
+                    duplicates=sorted(
+                        hosts_config.duplicates(
+                            lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                        ),
+                    ),
                 )
         finally:
             cache_manager.clear_all()
@@ -1578,6 +1587,7 @@ def _execute_silently(
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
+    hosts_config = config_cache.hosts_config
     with redirect_stdout(open(os.devnull, "w")):
         log.setup_console_logging()
         try:
@@ -1587,7 +1597,11 @@ def _execute_silently(
                 action,
                 hosts_to_update=hosts_to_update,
                 locking_mode=config.restart_locking,
-                duplicates=config.duplicate_hosts(config_cache),
+                duplicates=sorted(
+                    hosts_config.duplicates(
+                        lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+                    )
+                ),
                 skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
         except (MKBailOut, MKGeneralException) as e:

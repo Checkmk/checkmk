@@ -485,7 +485,16 @@ def load(
     _perform_post_config_loading_actions()
 
     if validate_hosts:
-        _verify_non_duplicate_hosts(get_config_cache())
+        config_cache = get_config_cache()
+        hosts_config = config_cache.hosts_config
+        if duplicates := sorted(
+            hosts_config.duplicates(
+                lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
+            )
+        ):
+            # TODO: Raise an exception
+            console.error("Error in configuration: duplicate hosts: %s\n", ", ".join(duplicates))
+            sys.exit(3)
 
 
 def load_packed_config(config_path: ConfigPath) -> None:
@@ -715,13 +724,6 @@ def get_derived_config_variable_names() -> set[str]:
     return {"service_service_levels", "host_service_levels"}
 
 
-def _verify_non_duplicate_hosts(config_cache: ConfigCache) -> None:
-    if duplicates := duplicate_hosts(config_cache):
-        # TODO: Raise an exception
-        console.error("Error in configuration: duplicate hosts: %s\n", ", ".join(duplicates))
-        sys.exit(3)
-
-
 def save_packed_config(config_path: ConfigPath, config_cache: ConfigCache) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
     PackedConfigStore.from_serial(config_path).write(PackedConfigGenerator(config_cache).generate())
@@ -926,21 +928,6 @@ def _get_shadow_hosts() -> ShadowHosts:
         return shadow_hosts  # type: ignore[name-defined]
     except NameError:
         return {}
-
-
-def duplicate_hosts(config_cache: ConfigCache) -> Sequence[HostName]:
-    hosts_config = config_cache.hosts_config
-    return sorted(
-        hostname
-        for hostname, count in Counter(
-            hn
-            for hn in itertools.chain(
-                hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts
-            )
-            if config_cache.is_active(hn) and config_cache.is_online(hn)
-        ).items()
-        if count > 1
-    )
 
 
 # .
@@ -1907,6 +1894,17 @@ class HostsConfig:
         self.hosts: Final = hosts
         self.clusters: Final = clusters
         self.shadow_hosts: Final = shadow_hosts
+
+    def duplicates(self, /, pred: Callable[[HostName], bool]) -> Iterable[HostName]:
+        return (
+            hn
+            for hn, count in Counter(
+                hn
+                for hn in itertools.chain(self.hosts, self.clusters, self.shadow_hosts)
+                if pred(hn)
+            ).items()
+            if count > 1
+        )
 
     @classmethod
     def from_config(cls) -> HostsConfig:

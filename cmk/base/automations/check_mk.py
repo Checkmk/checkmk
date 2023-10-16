@@ -8,6 +8,7 @@ import ast
 import functools
 import glob
 import io
+import itertools
 import logging
 import operator
 import os
@@ -603,8 +604,12 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
     get_service_description = functools.partial(config.service_description, ruleset_matcher)
     on_error = OnError.IGNORE
 
+    hosts_config = config_cache.hosts_config
+    all_hosts = frozenset(
+        itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts)
+    )
     for host_name in autodiscovery_queue:
-        if host_name not in config_cache.all_configured_hosts():
+        if host_name not in all_hosts:
             console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
             (autodiscovery_queue.path / str(host_name)).unlink(missing_ok=True)
 

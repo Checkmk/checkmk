@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import re
 import shutil
 import socket
@@ -139,17 +140,20 @@ def test_all_configured_hosts(monkeypatch: MonkeyPatch) -> None:
     ts.add_cluster(HostName("cluster3"), nodes=[HostName("node3")])
 
     config_cache = ts.apply(monkeypatch)
-    assert set(config_cache.hosts_config.clusters) == {
+    hosts_config = config_cache.hosts_config
+    assert set(hosts_config.clusters) == {
         HostName("cluster1"),
         HostName("cluster2"),
         HostName("cluster3"),
     }
-    assert set(config_cache.hosts_config.hosts) == {
+    assert set(hosts_config.hosts) == {
         HostName("real1"),
         HostName("real2"),
         HostName("real3"),
     }
-    assert config_cache.all_configured_hosts() == {
+    assert set(
+        itertools.chain(hosts_config.clusters, hosts_config.hosts, hosts_config.shadow_hosts)
+    ) == {
         HostName("cluster1"),
         HostName("cluster2"),
         HostName("cluster3"),

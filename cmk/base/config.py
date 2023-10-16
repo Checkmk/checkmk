@@ -1954,12 +1954,6 @@ class ConfigCache:
         self.hosts_config = HostsConfig.from_config()
         self._setup_clusters_nodes_cache()
 
-        self._all_configured_hosts = (
-            set(self.hosts_config.hosts)
-            | set(self.hosts_config.clusters)
-            | set(self.hosts_config.shadow_hosts)
-        )
-
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
 
@@ -1974,7 +1968,13 @@ class ConfigCache:
             ),
             clusters_of=self._clusters_of_cache,
             nodes_of=self._nodes_of_cache,
-            all_configured_hosts=self._all_configured_hosts,
+            all_configured_hosts=set(
+                itertools.chain(
+                    self.hosts_config.hosts,
+                    self.hosts_config.clusters,
+                    self.hosts_config.shadow_hosts,
+                )
+            ),
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(
@@ -1992,9 +1992,6 @@ class ConfigCache:
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
 
         self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
-
-        # Host lookup
-        self._all_configured_hosts = set()
 
         # Reference hostname -> dirname including /
         self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
@@ -2878,8 +2875,6 @@ class ConfigCache:
         by the etc/check_mk/conf.d directory that are not managed by WATO. They may use the old style pipe separated
         all_hosts configuration. Detect it and try to be compatible.
         """
-        # Would be better to use self._all_configured_hosts, but that is not possible as long as we need the tags
-        # from the old all_hosts / clusters.keys().
         for tagged_host in all_hosts + list(clusters):
             parts = tagged_host.split("|")
             hostname = parts[0]
@@ -3718,9 +3713,6 @@ class ConfigCache:
         check_plugin_name_str = str(check_plugin_name)
 
         return _checktype_ignored_for_host(check_plugin_name_str)
-
-    def all_configured_hosts(self) -> set[HostName]:
-        return self._all_configured_hosts
 
     def _setup_clusters_nodes_cache(self) -> None:
         for cluster, hosts in clusters.items():

@@ -291,11 +291,13 @@ def _list_all_hosts(
 ) -> list[HostName]:
     # TODO(ml):  Once all the funky `all_*_hosts`.
     #            Simplify the hostnames computation! 🙀
-    hostnames = set()
+    hostnames: set[HostName] = set()
     hosts_config = config_cache.hosts_config
 
     if options.get("all-sites"):
-        hostnames.update(config_cache.all_configured_hosts())  # Return all hosts, including offline
+        hostnames.update(
+            itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts)
+        )
         if "include-offline" not in options:
             hostnames -= {
                 hn
@@ -2772,8 +2774,12 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 
+    hosts_config = config_cache.hosts_config
+    all_hosts = frozenset(
+        itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts)
+    )
     for host_name in queue:
-        if host_name not in config_cache.all_configured_hosts():
+        if host_name not in all_hosts:
             console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
             (queue.path / str(host_name)).unlink(missing_ok=True)
 

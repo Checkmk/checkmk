@@ -272,7 +272,7 @@ test-update:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)
 
 test-schemathesis-openapi:
-	$(PYTEST) -T openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath openapi)
+	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)

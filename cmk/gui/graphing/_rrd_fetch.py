@@ -67,7 +67,12 @@ def fetch_rrd_data_for_graph(
     for (site, host_name, service_description), metrics in by_service.items():
         with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
             for (perfvar, cf, scale), data in fetch_rrd_data(
-                site, host_name, service_description, metrics, graph_recipe, graph_data_range
+                site,
+                host_name,
+                service_description,
+                metrics,
+                graph_recipe.consolidation_function,
+                graph_data_range,
             ):
                 rrd_data[(site, host_name, service_description, perfvar, cf, scale)] = TimeSeries(
                     data,
@@ -156,7 +161,7 @@ def fetch_rrd_data(
     host_name: HostName,
     service_description: ServiceName,
     metrics: set[MetricProperties],
-    graph_recipe: GraphRecipe,
+    consolidation_func_name: GraphConsoldiationFunction | None,
     graph_data_range: GraphDataRange,
 ) -> list[tuple[MetricProperties, TimeSeriesValues]]:
     start_time, end_time = graph_data_range["time_range"]
@@ -167,7 +172,7 @@ def fetch_rrd_data(
         step = max(1, step)
 
     point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(rrd_columns(metrics, graph_recipe.consolidation_function, point_range))
+    lql_columns = list(rrd_columns(metrics, consolidation_func_name, point_range))
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
@@ -176,7 +181,7 @@ def fetch_rrd_data(
 
 def rrd_columns(
     metrics: Iterable[MetricProperties],
-    rrd_consolidation: GraphConsoldiationFunction | None,
+    consolidation_func_name: GraphConsoldiationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
     """RRD data columns for each metric
@@ -184,7 +189,7 @@ def rrd_columns(
     Include scaling of metric directly in query"""
 
     for perfvar, cf, scale in metrics:
-        cf = rrd_consolidation or cf or "max"
+        cf = consolidation_func_name or cf or "max"
         rpn = f"{perfvar}.{cf}"
         if scale != 1.0:
             rpn += ",%f,*" % scale
@@ -193,7 +198,7 @@ def rrd_columns(
 
 def all_rrd_columns_potentially_relevant_for_metric(
     metric_name: MetricName,
-    rrd_consolidation: GraphConsoldiationFunction,
+    consolidation_func_name: GraphConsoldiationFunction,
     from_time: int,
     until_time: int,
 ) -> Iterator[ColumnName]:
@@ -210,7 +215,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
                 metric_name
             )
         ),
-        rrd_consolidation,
+        consolidation_func_name,
         f"{from_time}:{until_time}:60",
     )
 

@@ -176,7 +176,7 @@ run_unit_tests() {
     python -m pytest \
         --color=yes \
         --code-highlight=yes \
-        tests/unit
+        tests
 }
 
 run_documentation() {

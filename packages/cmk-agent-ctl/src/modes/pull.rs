@@ -481,7 +481,8 @@ async fn handle_request(
         async move {
             tls_stream.write_all(&mon_data).await?;
             debug!("handle_request: had been send {:?}", remote_ip);
-            tls_stream.flush().await
+            tls_stream.flush().await?;
+            tls_stream.shutdown().await
         },
         connection_timeout,
     )

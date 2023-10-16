@@ -1,6 +1,6 @@
 use anyhow::Result as AnyhowResult;
 use clap::Parser;
-use http::{HeaderMap, HeaderValue};
+use http::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{header::USER_AGENT, RequestBuilder};
 use std::time::{Duration, Instant};
 
@@ -14,6 +14,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let req = prepare_request(
         args.url,
         args.user_agent,
+        args.headers,
         Duration::from_secs(args.timeout),
         args.auth_user,
         args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
@@ -44,14 +45,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn prepare_request(
     url: String,
-    user_agent: Option<String>,
+    user_agent: Option<HeaderValue>,
+    headers: Option<Vec<(HeaderName, HeaderValue)>>,
     timeout: Duration,
     auth_user: Option<String>,
     auth_pw: Option<String>,
 ) -> AnyhowResult<RequestBuilder> {
     let mut cli_headers = HeaderMap::new();
     if let Some(ua) = user_agent {
-        cli_headers.insert(USER_AGENT, HeaderValue::from_str(&ua)?);
+        cli_headers.insert(USER_AGENT, ua);
+    }
+    if let Some(hds) = headers {
+        for (name, value) in hds.into_iter() {
+            cli_headers.insert(name, value);
+        }
     }
 
     let client = reqwest::Client::builder()

@@ -1,5 +1,7 @@
 use crate::pwstore;
+use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
+use http::{HeaderName, HeaderValue};
 
 #[derive(Parser, Debug)]
 #[command(about = "check_http")]
@@ -10,6 +12,10 @@ pub struct Cli {
 
     #[command(flatten)]
     pub auth_pw: AuthPw,
+
+    /// Additional header in the form NAME:VALUE. Use multiple times for additional headers.
+    #[arg(short = 'k', long="header", value_parser=split_header)]
+    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
 
     /// URL to check
     #[arg(short, long)]
@@ -25,7 +31,7 @@ pub struct Cli {
 
     /// Set user-agent
     #[arg(long)]
-    pub user_agent: Option<String>,
+    pub user_agent: Option<HeaderValue>,
 }
 
 #[derive(Args, Debug)]
@@ -38,6 +44,13 @@ pub struct AuthPw {
     /// Password for HTTP Basic Auth, provided as ID for password store lookup
     #[arg(long, requires = "authuser", value_parser=pwstore::password_from_store)]
     pub auth_pwstore: Option<String>,
+}
+
+fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
+    let Some((name, value)) = header.split_once(':') else {
+        return Err(anyhow!("Invalid HTTP header: {} (missing ':')", header));
+    };
+    Ok((name.trim().parse()?, value.trim().parse()?))
 }
 
 #[test]

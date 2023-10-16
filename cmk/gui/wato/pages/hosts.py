@@ -13,8 +13,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.forms as forms
-import cmk.gui.watolib as watolib
 import cmk.gui.watolib.bakery as bakery
+import cmk.gui.watolib.sites as watolib_sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -413,7 +413,7 @@ class ModeEditHost(ABCHostMode):
 
     def _should_use_dns_cache(self) -> bool:
         site = self._host.effective_attributes()["site"]
-        return watolib.sites.get_effective_global_setting(
+        return watolib_sites.get_effective_global_setting(
             site,
             is_wato_slave_site(),
             "use_dns_cache",

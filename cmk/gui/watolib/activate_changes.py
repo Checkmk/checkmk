@@ -1101,7 +1101,7 @@ class ActivateChanges:
 
     def _site_has_foreign_changes(self, site_id):
         changes = self._changes_of_site(site_id)
-        return bool([c for c in changes if is_foreign_change(c)])
+        return bool([c for c in changes if is_foreign_change(c) and not has_been_activated(c)])
 
     def _is_sync_needed_specific_changes(
         self, site_id: SiteId, changes_to_check: Sequence[ChangeSpec]
@@ -1143,14 +1143,18 @@ class ActivateChanges:
 
     def has_foreign_changes(self) -> bool:
         return any(
-            change for _change_id, change in self._pending_changes if is_foreign_change(change)
+            change
+            for _change_id, change in self._pending_changes
+            if is_foreign_change(change) and not has_been_activated(change)
         )
 
     def _has_foreign_changes_on_any_site(self) -> bool:
         return any(
             change
             for _change_id, change in self._pending_changes
-            if is_foreign_change(change) and affects_all_sites(change)
+            if is_foreign_change(change)
+            and not has_been_activated(change)
+            and affects_all_sites(change)
         )
 
     def get_activation_time(self, site_id, ty, deflt=None):

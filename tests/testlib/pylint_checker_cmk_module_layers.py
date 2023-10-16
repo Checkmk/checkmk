@@ -62,7 +62,7 @@ def _in_component(
 
 
 def _is_allowed_import(imported: ModuleName) -> bool:
-    """cmk, cmk.utils, cmk.fields, and cmk.automations are allowed to be imported from all over the place"""
+    """these are allowed to be imported from all over the place"""
     return any(
         (
             imported == "cmk",
@@ -71,6 +71,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported, Component("cmk.automations")),
             _in_component(imported, Component("cmk.bi")),
             _in_component(imported, Component("cmk.config_generation")),
+            _in_component(imported, Component("cmk.discover_plugins")),
         )
     )
 

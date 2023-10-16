@@ -7,9 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.plugins.config_generation.active_checks.bi_aggr import active_check_bi_aggr
-
 from cmk.config_generation.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
+from cmk.plugins.collection.config_generation.bi_aggr import active_check_bi_aggr
 
 HOST_CONFIG = HostConfig(
     name="hostname",

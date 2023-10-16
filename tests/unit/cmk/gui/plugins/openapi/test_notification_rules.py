@@ -5,7 +5,7 @@
 
 
 from itertools import permutations
-from typing import Any, get_args, Iterator, Literal
+from typing import Any, Generator, get_args, Iterator, Literal
 
 import pytest
 
@@ -25,6 +25,7 @@ from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
     MgmtTypeParamsAPI,
     NotificationBulkingAPIAttrs,
     NotificationBulkingAPIValueType,
+    PluginOptions,
     PluginType,
 )
 
@@ -34,6 +35,9 @@ from cmk.gui.plugins.openapi.endpoints.notification_rules.request_example import
 from cmk.gui.plugins.openapi.endpoints.site_management.common import (
     default_config_example as _default_config,
 )
+from cmk.gui.plugins.wato.utils import notification_parameter_registry
+from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
+from cmk.gui.wato import register_notification_parameters
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
@@ -1284,7 +1288,7 @@ def test_update_notification_method_cancel_previous(
     r1 = clients.RuleNotification.create(rule_config=config)
 
     config["notification_method"]["notify_plugin"] = {
-        "option": "cancel_previous_notifications",
+        "option": PluginOptions.CANCEL,
         "plugin_params": {"plugin_name": plugin_data["plugin_name"]},
     }
     r2 = clients.RuleNotification.edit(
@@ -1304,7 +1308,7 @@ def test_create_notification_method(
 
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
-        "option": "create_notification_with_the_following_parameters",
+        "option": PluginOptions.WITH_PARAMS,
         "plugin_params": plugin_data,
     }
 
@@ -1323,7 +1327,7 @@ def test_update_notification_method(
     config = notification_rule_request_example()
     r1 = clients.RuleNotification.create(rule_config=config)
     config["notification_method"]["notify_plugin"] = {
-        "option": "create_notification_with_the_following_parameters",
+        "option": PluginOptions.WITH_PARAMS,
         "plugin_params": plugin_data,
     }
     r2 = clients.RuleNotification.edit(
@@ -1370,7 +1374,7 @@ def test_pushover_key_regex(
 
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
-        "option": "create_notification_with_the_following_parameters",
+        "option": PluginOptions.WITH_PARAMS,
         "plugin_params": push_over_plugin,
     }
 
@@ -1502,7 +1506,7 @@ def test_service_now_management_incident_types_200(
     service_now["management_type"]["params"].update(mgmt_type_data)
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
-        "option": "create_notification_with_the_following_parameters",
+        "option": PluginOptions.WITH_PARAMS,
         "plugin_params": service_now,
     }
     r1 = clients.RuleNotification.create(rule_config=config)
@@ -1563,7 +1567,7 @@ def test_service_now_management_case_types_200(
     service_now["management_type"]["params"].update(mgmt_type_data)
     config = notification_rule_request_example()
     config["notification_method"]["notify_plugin"] = {
-        "option": "create_notification_with_the_following_parameters",
+        "option": PluginOptions.WITH_PARAMS,
         "plugin_params": service_now,
     }
     r1 = clients.RuleNotification.create(rule_config=config)
@@ -1579,7 +1583,7 @@ def config_with_bulk(plugin: PluginType) -> APINotificationRule:
     config["notification_method"]["notification_bulking"] = notification_bulking
 
     config["notification_method"]["notify_plugin"] = {
-        "option": "create_notification_with_the_following_parameters",
+        "option": PluginOptions.WITH_PARAMS,
         "plugin_params": plugin,
     }
     return config
@@ -1631,3 +1635,298 @@ def test_bulking_400(
     plugin_name = config["notification_method"]["notify_plugin"]["plugin_params"]["plugin_name"]
     assert resp.json["title"] == "Bulking not allowed"
     assert resp.json["detail"] == "The notification script %s does not allow bulking." % plugin_name
+
+
+def test_create_notification_with_invalid_custom_plugin(
+    clients: ClientRegistry,
+) -> None:
+    config = notification_rule_request_example()
+    plugin_params: dict[str, Any] = {"plugin_name": "my_cool_plugin"}
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_CUSTOM_PARAMS,
+        "plugin_params": plugin_params,
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+    resp.assert_status_code(400)
+
+    assert resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"] == {
+        "plugin_params": {"_schema": ["my_cool_plugin does not exist"]}
+    }
+
+
+invalid_list_configs = [
+    (
+        {
+            "params": ["param1", "param2", "param3"],
+        },
+        {
+            "plugin_name": ["Missing data for required field."],
+        },
+    ),
+    (
+        {
+            "plugin_name": "my_cool_plugin",
+        },
+        {
+            "params": ["Missing data for required field."],
+        },
+    ),
+    (
+        {
+            "plugin_name": "my_cool_plugin",
+            "params": ["param1", "param2", "param3"],
+            "extra_field": "extra",
+        },
+        {
+            "extra_field": ["Unknown field."],
+        },
+    ),
+]
+
+
+@managedtest
+@pytest.mark.parametrize("plugin_params, expected_error", invalid_list_configs)
+def test_create_notification_custom_plugin_invalid_list_config(
+    clients: ClientRegistry,
+    plugin_params: dict[str, Any],
+    expected_error: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        lambda what: [("my_cool_plugin", "info")],
+    )
+
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_CUSTOM_PARAMS,
+        "plugin_params": plugin_params,
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+    resp.assert_status_code(400)
+
+    assert (
+        resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"]["plugin_params"]
+        == expected_error
+    )
+
+
+def test_create_notification_custom_plugin_valid_list_config(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        lambda what: [("my_cool_plugin", "info")],
+    )
+
+    plugin_params: dict[str, Any] = {
+        "plugin_name": "my_cool_plugin",
+        "params": ["param1", "param2", "param3"],
+    }
+
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_CUSTOM_PARAMS,
+        "plugin_params": plugin_params,
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config)
+    clients.RuleNotification.get(rule_id=resp.json["id"])
+
+
+@pytest.fixture
+def register_custom_plugin() -> Generator:
+    register_notification_parameters(
+        "my_cool_plugin",
+        Dictionary(
+            optional_keys=["originator", "list_of_strings", "test_dict", "test_int", "test_bool"],
+            elements=[
+                (
+                    "user_key",
+                    TextInput(
+                        title="User Key",
+                        size=40,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "api_password",
+                    TextInput(
+                        title="API Password",
+                        size=40,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "originator",
+                    TextInput(
+                        title="Originator",
+                        size=40,
+                    ),
+                ),
+                ("list_of_strings", ListOfStrings(TextInput())),
+                (
+                    "test_dict",
+                    Dictionary(
+                        elements=[
+                            (
+                                "key1",
+                                TextInput(),
+                            ),
+                            (
+                                "key2",
+                                TextInput(),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "test_int",
+                    Integer(),
+                ),
+                ("test_bool", Checkbox()),
+            ],
+        ),
+    )
+    yield
+    notification_parameter_registry.unregister("my_cool_plugin")
+
+
+valid_dict_configs = [
+    {
+        "plugin_name": "my_cool_plugin",
+        "user_key": "some_user_key",
+        "api_password": "some_api_password",
+    },
+    {
+        "plugin_name": "my_cool_plugin",
+        "user_key": "some_user_key",
+        "api_password": "some_api_password",
+        "originator": "me",
+    },
+    {
+        "plugin_name": "my_cool_plugin",
+        "user_key": "some_user_key",
+        "api_password": "some_api_password",
+        "originator": "me",
+        "list_of_strings": ["str1", "str2", "str3", "str4"],
+    },
+    {
+        "plugin_name": "my_cool_plugin",
+        "user_key": "some_user_key",
+        "api_password": "some_api_password",
+        "originator": "me",
+        "list_of_strings": ["str1", "str2", "str3", "str4"],
+        "test_dict": {"key1": "sometext", "key2": "somemoretext"},
+    },
+    {
+        "plugin_name": "my_cool_plugin",
+        "user_key": "some_user_key",
+        "api_password": "some_api_password",
+        "originator": "me",
+        "list_of_strings": ["str1", "str2", "str3", "str4"],
+        "test_dict": {"key1": "sometext", "key2": "somemoretext"},
+        "test_int": 3,
+    },
+    {
+        "plugin_name": "my_cool_plugin",
+        "user_key": "some_user_key",
+        "api_password": "some_api_password",
+        "originator": "me",
+        "list_of_strings": ["str1", "str2", "str3", "str4"],
+        "test_dict": {"key1": "sometext", "key2": "somemoretext"},
+        "test_bool": True,
+    },
+]
+
+
+@managedtest
+@pytest.mark.parametrize("plugin_params", valid_dict_configs)
+@pytest.mark.usefixtures("register_custom_plugin")
+def test_create_notification_custom_plugin_valid_dict_config(
+    clients: ClientRegistry,
+    plugin_params: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        lambda what: [("my_cool_plugin", "info")],
+    )
+
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_CUSTOM_PARAMS,
+        "plugin_params": plugin_params,
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config)
+    clients.RuleNotification.get(rule_id=resp.json["id"])
+
+
+invalid_dict_configs = [
+    (
+        {
+            "user_key": "some_user_key",
+            "api_password": "some_api_password",
+        },
+        {"plugin_name": ["Missing data for required field."]},
+    ),
+    (
+        {
+            "plugin_name": "my_cool_plugin",
+            "api_password": "some_api_password",
+        },
+        {"plugin_params": ["A required (sub-)field is missing."]},
+    ),
+    (
+        {
+            "plugin_name": "my_cool_plugin",
+            "non_valid_key": "some_invalid_key",
+            "user_key": "some_user_key",
+            "api_password": "some_api_password",
+        },
+        {
+            "plugin_params": [
+                "Undefined key 'non_valid_key' in the dictionary. Allowed are user_key, api_password, originator, list_of_strings, test_dict, test_int, test_bool."
+            ]
+        },
+    ),
+    (
+        {
+            "plugin_name": "my_cool_plugin",
+            "user_key": "some_user_key",
+            "api_password": {"some_api_password": "pass", "non_valid_key": "some_invalid_key"},
+        },
+        {"api_password": ["The value must be of type str, but it has type dict"]},
+    ),
+]
+
+
+@pytest.mark.parametrize("plugin_params, expected_error", invalid_dict_configs)
+@pytest.mark.usefixtures("register_custom_plugin")
+def test_create_notification_custom_plugin_invalid_dict_config(
+    clients: ClientRegistry,
+    plugin_params: dict[str, Any],
+    expected_error: dict[str, Any],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.plugins.openapi.endpoints.notification_rules.common_schemas.user_script_choices",
+        lambda what: [("my_cool_plugin", "info")],
+    )
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_CUSTOM_PARAMS,
+        "plugin_params": plugin_params,
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+    resp.assert_status_code(400)
+
+    assert (
+        resp.json["fields"]["rule_config"]["notification_method"]["notify_plugin"]["plugin_params"]
+        == expected_error
+    )

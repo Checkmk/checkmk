@@ -5,6 +5,7 @@
 
 """ Event notification rule api request/response example """
 
+from cmk.utils.type_defs import PluginOptions
 from cmk.utils.type_defs.rest_api_types.notifications_rule_types import APINotificationRule
 
 
@@ -19,7 +20,7 @@ def notification_rule_request_example() -> APINotificationRule:
         },
         "notification_method": {
             "notify_plugin": {
-                "option": "create_notification_with_the_following_parameters",
+                "option": PluginOptions.WITH_PARAMS.value,
                 "plugin_params": {
                     "plugin_name": "mail",
                     "from_details": {"state": "disabled"},

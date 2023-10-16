@@ -30,11 +30,6 @@ from typing import Any, cast
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
-from cmk.utils.type_defs.notification_plugin_api_types import (
-    get_plugin_from_api_request,
-    get_plugin_from_mk_file,
-    NotificationPlugin,
-)
 from cmk.utils.type_defs.notify import (
     BuiltInPluginNames,
     EventRule,
@@ -62,6 +57,12 @@ from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
     MatchServiceGroupsRegex,
     MatchServiceLevels,
     RestrictToNotificationNumbers,
+)
+from cmk.utils.type_defs.rest_api_types.notifications_types import (
+    CustomPlugin,
+    get_plugin_from_api_request,
+    get_plugin_from_mk_file,
+    NotificationPlugin,
 )
 
 import cmk.gui.userdb as userdb
@@ -189,7 +190,7 @@ class BulkNotAllowedException(Exception):
 @dataclass
 class NotificationMethod:
     notification_bulking: CheckboxNotificationBulking
-    notify_plugin: NotificationPlugin
+    notify_plugin: NotificationPlugin | CustomPlugin
 
     @classmethod
     def from_mk_file_format(

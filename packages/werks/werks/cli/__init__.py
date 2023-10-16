@@ -22,7 +22,7 @@ import tty
 from collections.abc import Sequence
 from functools import cache
 from pathlib import Path
-from typing import NamedTuple, NoReturn
+from typing import Literal, NamedTuple, NoReturn
 
 from pydantic import BaseModel
 
@@ -74,6 +74,8 @@ class Config(BaseModel):
     online_url: str
     current_version: str
 
+
+WerkVersion = Literal["v1", "v2"]
 
 WerkMetadata = dict[str, str]
 
@@ -424,26 +426,31 @@ def validate_werk(werk: Werk) -> None:
             raise ValueError(f"Invalid value {value!r} for '{key}'")
 
 
-def save_werk(werk: Werk) -> None:
-    with werk.path.open("w") as f:
-        if use_markdown():
+def save_werk(werk: Werk, werk_version: WerkVersion, destination: Path | None = None) -> None:
+    if destination is None:
+        destination = werk.path
+    with destination.open("w") as f:
+        if werk_version == "v2":
             f.write(format_as_werk_v2(werk.content))
         else:
             f.write(format_as_werk_v1(werk.content))
 
-    git_add(werk)
     save_last_werkid(werk.id)
 
 
-def change_werk_version(werk_path: Path, new_version: str) -> None:
+def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVersion) -> None:
     werk = load_werk(werk_path)
     werk.content.metadata["version"] = new_version
-    save_werk(werk)
+    save_werk(werk, werk_version)
     git_add(werk)
 
 
 def git_add(werk: Werk) -> None:
     os.system("git add %s" % werk.path)  # nosec
+
+
+def git_move(source: Path, destination: Path) -> None:
+    subprocess.check_call(["git", "mv", str(source), str(destination)])
 
 
 def git_commit(werk: Werk, custom_files: list[str]) -> None:
@@ -792,7 +799,7 @@ def main_new(args: argparse.Namespace) -> None:
     werk_id = next_werk_id()
     metadata["id"] = str(werk_id)
 
-    werk_path = Path(f"{werk_id.id}.md" if use_markdown() else str(werk_id.id))
+    werk_path = get_werk_filename(werk_id, get_werk_file_version())
     werk = Werk(
         id=werk_id,
         path=werk_path,
@@ -801,7 +808,8 @@ def main_new(args: argparse.Namespace) -> None:
         ),
     )
 
-    save_werk(werk)
+    save_werk(werk, get_werk_file_version())
+    git_add(werk)
     invalidate_my_werkid(werk_id)
     edit_werk(werk_path, args.custom_files)
 
@@ -928,26 +936,38 @@ def edit_werk(werk_path: Path, custom_files: list[str] | None = None, commit: bo
 
 def main_pick(args: argparse.Namespace) -> None:
     for commit_id in args.commit:
-        werk_cherry_pick(commit_id, args.no_commit)
+        werk_cherry_pick(commit_id, args.no_commit, get_werk_file_version())
 
 
-def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
+class WerkToPick(NamedTuple):
+    source: Path
+    destination: Path
+
+
+def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion) -> None:
     # First get the werk_id
     result = subprocess.run(
         ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", commit_id],
         capture_output=True,
         check=True,
     )
-    found_werk_path = None
+    found_werk_path: WerkToPick | None = None
     for line in result.stdout.splitlines():
         filename = Path(line.decode("utf-8"))
         if filename.parent.name == ".werks" and filename.name.removesuffix(".md").isdigit():
             # we os.chdir into the werks folder, so now we can not use the git paths as is
-            found_werk_path = Path(filename.name)
+            found_werk_path = WerkToPick(
+                source=Path(filename.name),
+                destination=get_werk_filename(
+                    WerkId(int(filename.name.removesuffix(".md"))), werk_version
+                ),
+            )
 
     if found_werk_path is not None:
-        if os.path.exists(str(found_werk_path.name)):
-            bail_out(f"Trying to pick werk {found_werk_path}, but werk already present. Aborted.")
+        if found_werk_path.source.exists() or found_werk_path.destination.exists():
+            bail_out(
+                f"Trying to pick werk {found_werk_path.source} to {found_werk_path.destination}, but werk already present. Aborted."
+            )
 
     # Cherry-pick the commit in question from the other branch
     cmd = ["git", "cherry-pick"]
@@ -956,14 +976,23 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
     cmd.append(commit_id)
     pick = subprocess.run(cmd, check=False)
 
-    # Find werks that have been cherry-picked and change their version
-    # to our current version
     if found_werk_path is not None:
+        # Find werks that have been cherry-picked and change their version
+        # to our current checkmk version.
+
+        # maybe we need to adapt the filename:
+        if found_werk_path.source.suffix != found_werk_path.destination.suffix:
+            # but this also means we need to change the content
+            werk = load_werk(found_werk_path.source)
+            git_move(found_werk_path.source, found_werk_path.destination)
+            save_werk(werk, werk_version, found_werk_path.destination)
+            # git add will be executed by change_werk_version
+
         # Change the werk's version before checking the pick return code.
         # Otherwise the dev may forget to change the version
-        change_werk_version(found_werk_path, get_config().current_version)
+        change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
         sys.stdout.write(
-            f"Changed version of werk {found_werk_path} to {get_config().current_version}.\n"
+            f"Changed version of werk {found_werk_path.destination} to {get_config().current_version}.\n"
         )
 
     if pick.returncode:
@@ -975,7 +1004,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
     if found_werk_path is not None:
         # This allows for picking regular commits as well
         if not no_commit:
-            subprocess.run(["git", "add", found_werk_path.name], check=True)
+            subprocess.run(["git", "add", found_werk_path.destination.name], check=True)
             subprocess.run(["git", "commit", "--no-edit", "--amend"], check=True)
         else:
             sys.stdout.write("We don't commit yet. Here is the status:\n")
@@ -1065,15 +1094,19 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         bail_out("Cannot commit.")
 
 
-def use_markdown() -> bool:
+def get_werk_file_version() -> WerkVersion:
     """
     as long as there is a single markdown file,
     we assume we should create and pick markdown werks.
     """
     for path in Path(".").iterdir():
         if path.name.endswith(".md") and path.name.removesuffix(".md").isdigit():
-            return True
-    return False
+            return "v2"
+    return "v1"
+
+
+def get_werk_filename(werk_id: WerkId, werk_version: WerkVersion) -> Path:
+    return Path(f"{werk_id.id}.md" if werk_version == "v2" else str(werk_id.id))
 
 
 #                    _

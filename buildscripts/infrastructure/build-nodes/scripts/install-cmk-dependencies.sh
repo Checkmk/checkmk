@@ -37,7 +37,7 @@ cleanup() {
 extract_needed_packages
 
 case "$DISTRO" in
-    centos-* | almalinux-*)
+    centos-*)
         add_gpg_key
         # shellcheck disable=SC2046  # we want word splitting here
         yum install -y $(cat "$TARGET_DIR"/needed-packages)
@@ -51,10 +51,6 @@ case "$DISTRO" in
         apt-get update
         # shellcheck disable=SC2046  # we want word splitting here
         apt-get install -y $(cat "$TARGET_DIR"/needed-packages)
-        ;;
-    *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO"
-        exit 1
         ;;
 esac
 

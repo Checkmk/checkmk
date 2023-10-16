@@ -528,15 +528,15 @@ def _save_auth_serials(updated_profiles: Users) -> None:
     save_text_to_file("%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file), serials)
 
 
-def create_cmk_automation_user(now: datetime) -> None:
+def create_cmk_automation_user(now: datetime, name: str, alias: str, role: str) -> None:
     secret = Password.random(24)
     users = load_users(lock=True)
-    users[UserId("automation")] = {
-        "alias": "Check_MK Automation - used for calling web services",
+    users[UserId(name)] = {
+        "alias": alias,
         "contactgroups": [],
         "automation_secret": secret.raw,
         "password": password_hashing.hash_password(secret),
-        "roles": ["admin"],
+        "roles": [role],
         "locked": False,
         "serial": 0,
         "email": "",

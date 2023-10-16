@@ -71,6 +71,7 @@ from .sample_config import (
     ConfigGeneratorAcknowledgeInitialWerks,
     ConfigGeneratorAutomationUser,
     ConfigGeneratorBasicWATOConfig,
+    ConfigGeneratorRegistrationUser,
 )
 from .search import SearchIndexBackgroundJob
 from .timeperiods import TimeperiodUsageFinderRegistry
@@ -111,6 +112,7 @@ def register(
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
     sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
     sample_config_generator_registry.register(ConfigGeneratorAutomationUser)
+    sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules

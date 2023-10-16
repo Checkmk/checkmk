@@ -13,6 +13,7 @@ def test_registered_generators() -> None:
         "acknowledge_initial_werks",
         "basic_wato_config",
         "create_automation_user",
+        "create_registration_automation_user",
         "ec_sample_rule_pack",
     ]
 
@@ -40,6 +41,7 @@ def test_get_sorted_generators() -> None:
         "acknowledge_initial_werks",
         "ec_sample_rule_pack",
         "create_automation_user",
+        "create_registration_automation_user",
     ]
 
     assert [g.ident() for g in utils.sample_config_generator_registry.get_generators()] == expected

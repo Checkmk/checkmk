@@ -17,3 +17,5 @@ def test_init_wato_data_structures() -> None:
     assert Path(omd_root, "etc/check_mk/conf.d/wato/global.mk").exists()
     assert Path(omd_root, "var/check_mk/web/automation").exists()
     assert Path(omd_root, "var/check_mk/web/automation/automation.secret").exists()
+    assert Path(omd_root, "var/check_mk/web/agent_registration").exists()
+    assert Path(omd_root, "var/check_mk/web/agent_registration/automation.secret").exists()

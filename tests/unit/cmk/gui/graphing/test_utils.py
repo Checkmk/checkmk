@@ -847,7 +847,7 @@ def test_automatic_dict_append() -> None:
     "graph_template_registation, expected_graph_template",
     [
         pytest.param(
-            utils.GraphTemplateRegistration(
+            utils.RawGraphTemplate(
                 metrics=[],
                 scalars=["metric", "metric:warn", "metric:crit"],
             ),
@@ -869,7 +869,7 @@ def test_automatic_dict_append() -> None:
             id="scalar str",
         ),
         pytest.param(
-            utils.GraphTemplateRegistration(
+            utils.RawGraphTemplate(
                 metrics=[],
                 scalars=[("metric", "Title"), ("metric:warn", "Warn"), ("metric:crit", "Crit")],
             ),
@@ -891,7 +891,7 @@ def test_automatic_dict_append() -> None:
             id="scalar tuple",
         ),
         pytest.param(
-            utils.GraphTemplateRegistration(
+            utils.RawGraphTemplate(
                 metrics=[("metric", "line")],
             ),
             utils.GraphTemplate(
@@ -908,7 +908,7 @@ def test_automatic_dict_append() -> None:
             id="metrics 2-er tuple",
         ),
         pytest.param(
-            utils.GraphTemplateRegistration(
+            utils.RawGraphTemplate(
                 metrics=[("metric", "line", "Title")],
             ),
             utils.GraphTemplate(
@@ -927,7 +927,7 @@ def test_automatic_dict_append() -> None:
     ],
 )
 def test_graph_template_from_template(
-    graph_template_registation: utils.GraphTemplateRegistration,
+    graph_template_registation: utils.RawGraphTemplate,
     expected_graph_template: utils.GraphTemplate,
 ) -> None:
     assert (

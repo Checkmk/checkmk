@@ -188,7 +188,7 @@ class ModeUsers(WatoMode):
                 is_suggested=True,
             )
 
-        if user.may("wato.user_migrate"):
+        if user.may("wato.user_migrate") and self._can_create_and_delete_users:
             yield PageMenuEntry(
                 title=_("Migrate users"),
                 shortcut_title=_("Migrate selected users"),

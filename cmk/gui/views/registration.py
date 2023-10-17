@@ -14,7 +14,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.type_defs import ViewName, ViewSpec
 from cmk.gui.visuals.type import VisualTypeRegistry
 
-from . import command, icon, inventory, perfometer
+from . import command, graph, icon, inventory, perfometer
 from ._permissions import PermissionSectionViews
 from .builtin_views import builtin_views
 from .command import command_group_registry, command_registry
@@ -81,3 +81,4 @@ def register(
         painter_option_registry,
         multisite_builtin_views,
     )
+    graph.register(painter_option_registry, multisite_builtin_views)

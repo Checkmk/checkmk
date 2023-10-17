@@ -27,8 +27,8 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.painter.v0.base import Cell, Painter2
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
-    painter_option_registry,
     PainterOption,
+    PainterOptionRegistry,
     PainterOptions,
 )
 from cmk.gui.type_defs import (
@@ -37,6 +37,8 @@ from cmk.gui.type_defs import (
     GraphRenderOptions,
     PainterParameters,
     Row,
+    ViewName,
+    ViewSpec,
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
@@ -52,11 +54,20 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
-from .store import multisite_builtin_views
 
-multisite_builtin_views.update(
-    {
-        "service_graphs": {
+def register(
+    painter_option_registry: PainterOptionRegistry,
+    multisite_builtin_views: dict[ViewName, ViewSpec],
+) -> None:
+    painter_option_registry.register(PainterOptionGraphRenderOptions)
+    painter_option_registry.register(PainterOptionPNPTimerange)
+
+    multisite_builtin_views.update(_GRAPH_VIEWS)
+
+
+_GRAPH_VIEWS = {
+    "service_graphs": ViewSpec(
+        {
             "browser_reload": 30,
             "column_headers": "off",
             "datasource": "services",
@@ -100,8 +111,10 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-        },
-        "host_graphs": {
+        }
+    ),
+    "host_graphs": ViewSpec(
+        {
             "browser_reload": 30,
             "column_headers": "off",
             "datasource": "hosts",
@@ -139,9 +152,9 @@ multisite_builtin_views.update(
             "sort_index": 99,
             "is_show_more": False,
             "packaged": False,
-        },
-    }
-)
+        }
+    ),
+}
 
 
 def paint_time_graph_cmk(
@@ -376,7 +389,6 @@ class PainterHostGraphs(Painter2):
         raise JSONExportError()
 
 
-@painter_option_registry.register
 class PainterOptionGraphRenderOptions(PainterOption):
     @property
     def ident(self) -> str:
@@ -387,7 +399,6 @@ class PainterOptionGraphRenderOptions(PainterOption):
         return vs_graph_render_options()
 
 
-@painter_option_registry.register
 class PainterOptionPNPTimerange(PainterOption):
     @property
     def ident(self) -> str:

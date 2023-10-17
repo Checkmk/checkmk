@@ -112,5 +112,5 @@ def test_check_hr_fs(mocker: MockerFixture, section: Section) -> None:
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 91.95345052083334)),
+        Metric("trend", 0.0),
     ]

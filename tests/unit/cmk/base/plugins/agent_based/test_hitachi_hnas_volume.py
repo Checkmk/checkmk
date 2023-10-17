@@ -127,7 +127,7 @@ def value_store_fixture(monkeypatch):
                 Metric("growth", -1495.9370633802703),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -1.46 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.06%"),
-                Metric("trend", -1495.9370633802703, boundaries=(0.0, 110532.0)),
+                Metric("trend", -1495.9370633802703),
                 Result(state=State.OK, summary="Status: mounted"),
                 Result(state=State.OK, summary="assigned to EVS 9"),
             ),

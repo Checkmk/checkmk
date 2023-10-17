@@ -70,7 +70,7 @@ def test_size_trend(args: ArgsDict) -> None:
         Metric(name="growth", value=4800.0),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +200 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +10.00%"),
-        Metric("trend", 4800.0, boundaries=(0.0, 2000.0)),
+        Metric("trend", 4800.0),
         Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
     ]
 
@@ -96,7 +96,7 @@ def test_size_trend_growing(args: ArgsDict) -> None:
             state=State.WARN,
             summary="trend per 1 hour 0 minutes: +10.00% (warn/crit at +5.00%/+15.00%)",
         ),
-        Metric("trend", 4800.0, levels=(100.0, 250.0), boundaries=(0.0, 2000.0)),
+        Metric("trend", 4800.0, levels=(100.0, 250.0)),
         Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
     ]
 
@@ -122,7 +122,7 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
         Metric(name="growth", value=-480.0),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -20.0 MiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -1.00%"),
-        Metric("trend", -480.0, boundaries=(0.0, 2000.0)),
+        Metric("trend", -480.0),
     ]
 
 
@@ -153,7 +153,7 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
             state=State.WARN,
             summary="trend per 1 hour 0 minutes: -10.00% (warn/crit below -5.00%/-10.00%)",
         ),
-        Metric("trend", -4800.0, boundaries=(0.0, 2000.0)),
+        Metric("trend", -4800.0),
     ]
 
 
@@ -178,7 +178,7 @@ def test_size_trend_negative_free_space() -> None:
         Metric("growth", 50112.0),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +2.04 GiB"),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: +1697.56%"),
-        Metric("trend", 50112.0, boundaries=(0.0, 122.99999999999999)),
+        Metric("trend", 50112.0),
         Result(
             state=State.CRIT,
             summary="Time left until something full: 0 seconds (warn/crit below 12 hours 0 minutes/6 hours 0 minutes)",

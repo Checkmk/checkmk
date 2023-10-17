@@ -336,8 +336,6 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
                 Metric(
                     "trend",
                     -4423.433540694911,
-                    levels=(None, None),
-                    boundaries=(0.0, 109226.66666666667),
                 ),
                 Result(
                     state=State.OK,
@@ -371,7 +369,7 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
                 Metric("growth", -4451.90076172092),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.72%"),
-                Metric("trend", -4451.90076172092, boundaries=(0.0, 25600.0)),
+                Metric("trend", -4451.90076172092),
                 Result(state=State.OK, summary="extern redundancy, 1 disks"),
             ],
         ),
@@ -406,11 +404,7 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
                 Metric("growth", -4451.90076172092),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.72%"),
-                Metric(
-                    "trend",
-                    -4451.90076172092,
-                    boundaries=(0.0, 25600.0),
-                ),
+                Metric("trend", -4451.90076172092),
                 Result(
                     state=State.OK,
                     summary="extern redundancy, 1 disks, required mirror free space used",
@@ -441,7 +435,7 @@ def test_discovery(section: asm.Section, expected: Sequence[Service]) -> None:
                 Metric("growth", -4451.90076172092),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.72%"),
-                Metric("trend", -4451.90076172092, boundaries=(0.0, 25600.0)),
+                Metric("trend", -4451.90076172092),
                 Result(
                     state=State.OK,
                     summary="flex redundancy, 1 disks in 1 failgroups, required mirror free space used",
@@ -485,12 +479,7 @@ def test_check(section: asm.Section, params: Mapping[str, object], expected: Che
                 Metric("growth", -4423.433540694911),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -4.32 GiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: -0.17%"),
-                Metric(
-                    "trend",
-                    -4423.433540694911,
-                    levels=(None, None),
-                    boundaries=(0.0, 109226.66666666667),
-                ),
+                Metric("trend", -4423.433540694911, levels=(None, None)),
                 Result(
                     state=State.OK,
                     summary="normal redundancy, old plugin data, possible wrong used and free space",

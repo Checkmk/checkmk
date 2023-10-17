@@ -107,7 +107,7 @@ def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -
             Metric("growth", 432000.0),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +422 GiB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +0.60%"),
-            Metric("trend", 432000.0, boundaries=(0.0, 3018093.4514062805)),
+            Metric("trend", 432000.0),
             Result(state=State.OK, summary="Time left until disk full: 118 days 19 hours"),
             Result(
                 state=State.OK,
@@ -213,7 +213,7 @@ def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -
             Metric("growth", 8640000.0),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +8.24 TiB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +11.93%"),
-            Metric("trend", 8640000.0, boundaries=(0.0, 3018093.4514062805)),
+            Metric("trend", 8640000.0),
             Result(state=State.OK, summary="Time left until disk full: 2 days 9 hours"),
             Result(state=State.OK, summary="Total local: 69.1 TiB"),
             Result(state=State.OK, summary="Free local: 19.7 TiB"),

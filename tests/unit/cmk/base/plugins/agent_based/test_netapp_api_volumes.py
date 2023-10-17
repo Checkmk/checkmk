@@ -618,7 +618,7 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
             Metric("growth", 210695.9049353863),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +206 GiB"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +96.83%"),
-            Metric("trend", 210695.9049353863, boundaries=(0.0, 9066.666666666666)),
+            Metric("trend", 210695.9049353863),
             Result(state=State.OK, summary="Time left until disk full: 22 hours 45 minutes"),
             Metric(
                 "inodes_used",
@@ -696,7 +696,7 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
                 state=State.CRIT,
                 summary="trend per 1 day 0 hours: +713.20% (warn/crit at +5.00%/+10.00%)",
             ),
-            Metric("trend", 2190950.615204839, levels=(100.0, 200.0), boundaries=(0.0, 12800.0)),
+            Metric("trend", 2190950.615204839, levels=(100.0, 200.0)),
             Result(
                 state=State.CRIT,
                 summary="Time left until disk full: 1 hour 20 minutes (warn/crit below 12 hours 0 minutes/6 hours 0 minutes)",

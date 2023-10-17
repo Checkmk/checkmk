@@ -79,7 +79,7 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
             Metric("growth", 0.0),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
             Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-            Metric("trend", 0.0, boundaries=(0.0, 14286293.75)),
+            Metric("trend", 0.0),
             Result(state=State.OK, summary="Total local: 327 TiB"),
             Result(state=State.OK, summary="Free local: 235 TiB"),
             Result(state=State.OK, summary="Dedup ratio: 10.06"),

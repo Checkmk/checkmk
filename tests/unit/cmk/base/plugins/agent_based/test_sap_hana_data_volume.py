@@ -172,11 +172,7 @@ def value_store_fixture(monkeypatch):
                 Metric("growth", -4470.553049074118),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +621 TiB"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
-                Metric(
-                    "trend",
-                    650743966.868858,
-                    boundaries=(0.0, 13.333333333333334),
-                ),
+                Metric("trend", 650743966.868858),
                 Result(state=State.OK, summary="Time left until disk full: 31 milliseconds"),
                 Result(state=State.OK, summary="Service: scriptserver"),
                 Result(
@@ -217,12 +213,7 @@ def value_store_fixture(monkeypatch):
                     summary="trend per 1 day 0 hours: +621 TiB (warn/crit at +10.0 MiB/+20.0 MiB)",
                 ),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +203357489.65%"),
-                Metric(
-                    "trend",
-                    650743966.868858,
-                    levels=(10.0, 20.0),
-                    boundaries=(0.0, 13.333333333333334),
-                ),
+                Metric("trend", 650743966.868858, levels=(10.0, 20.0)),
                 Result(state=State.OK, summary="Time left until disk full: 31 milliseconds"),
                 Result(state=State.OK, summary="Service: scriptserver"),
                 Result(

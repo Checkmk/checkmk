@@ -106,7 +106,7 @@ def size_trend(
     Metric('growth', 1200.0)
     Result(state=<State.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +10.0 MiB/+20.0 MiB)')
     Result(state=<State.WARN: 1>, summary='trend per 1 day 0 hours: +60.00% (warn/crit at +50.00%/+70.00%)')
-    Metric('trend', 1200.0, levels=(10.0, 20.0), boundaries=(0.0, 83.33333333333333))
+    Metric('trend', 1200.0, levels=(10.0, 20.0))
     Result(state=<State.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
     Metric('trend_hoursleft', 37.0)
     """
@@ -167,7 +167,6 @@ def size_trend(
                 _level_bytes_to_mb(levels.get("trend_bytes")),
                 to_abs(levels.get("trend_perc")),
             ),
-            boundaries=(0, size_mb / range_sec * SEC_PER_H),
         )
 
     if mb_in_range > 0:

@@ -94,6 +94,6 @@ def test_checks(section: SectionSingleInstance) -> None:
         Metric("growth", 740100065.625),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +706 TiB"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +120451.31%"),
-        Metric("trend", 740100065.625, boundaries=(0.0, 25601.632690429688)),
+        Metric("trend", 740100065.625),
         Result(state=State.OK, summary="Time left until disk full: 12 seconds"),
     ]

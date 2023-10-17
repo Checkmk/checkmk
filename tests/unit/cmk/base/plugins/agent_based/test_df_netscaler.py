@@ -57,7 +57,7 @@ def test_check_grouped(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -> No
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 4337.875)),
+        Metric("trend", 0.0),
         Result(state=State.OK, summary="2 filesystems"),
     ]
 
@@ -80,5 +80,5 @@ def test_check_single_item(section: FSBlocks, monkeypatch: pytest.MonkeyPatch) -
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 332.3333333333333)),
+        Metric("trend", 0.0),
     ]

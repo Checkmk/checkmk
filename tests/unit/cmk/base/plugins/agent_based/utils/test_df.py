@@ -128,7 +128,6 @@ def test_df_discovery(
                 Metric(
                     "trend",
                     161105947.82608697,
-                    boundaries=(0.0, 4277.291666666667),
                 ),
                 Result(
                     state=State.OK,
@@ -183,7 +182,6 @@ def test_df_discovery(
                 Metric(
                     "trend",
                     161105947.82608697,
-                    boundaries=(0.0, 4277.291666666667),
                 ),
                 Result(
                     state=State.OK,
@@ -248,7 +246,6 @@ def test_df_discovery(
                 Metric(
                     "trend",
                     161105947.82608697,
-                    boundaries=(0.0, 4277.291666666667),
                 ),
                 Result(
                     state=State.OK,

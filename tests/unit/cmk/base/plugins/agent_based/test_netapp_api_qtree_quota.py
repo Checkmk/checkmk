@@ -283,7 +283,7 @@ def test_get_item_names(qtree: Qtree, expected_result: tuple[str, str]) -> None:
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-                Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
+                Metric("trend", 0.0),
             ],
             id="qtree_without_inodes",
         ),
@@ -329,7 +329,7 @@ def test_get_item_names(qtree: Qtree, expected_result: tuple[str, str]) -> None:
                 Metric("growth", 0.0),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
                 Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-                Metric("trend", 0.0, boundaries=(0.0, 0.000244140625)),
+                Metric("trend", 0.0),
                 Metric("inodes_used", 99.0, levels=(90.0, 95.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.CRIT,

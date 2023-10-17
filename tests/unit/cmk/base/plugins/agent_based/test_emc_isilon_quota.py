@@ -49,5 +49,5 @@ def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
         Metric("growth", 0.0),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0 B"),
         Result(state=State.OK, summary="trend per 1 day 0 hours: +0%"),
-        Metric("trend", 0.0, boundaries=(0.0, 8738133.333333332)),
+        Metric("trend", 0.0),
     ]

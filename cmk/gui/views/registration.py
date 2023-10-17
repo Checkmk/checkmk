@@ -74,4 +74,10 @@ def register(
         permission_section_registry,
         register_post_config_load_hook,
     )
-    inventory.register(page_registry)
+    inventory.register(
+        page_registry,
+        data_source_registry,
+        painter_registry,
+        painter_option_registry,
+        multisite_builtin_views,
+    )

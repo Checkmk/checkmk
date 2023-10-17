@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import mssql_backup as msb
@@ -24,13 +22,12 @@ STRING_TABLE = [
 ]
 
 
-@pytest.fixture(name="section", scope="module")
 def _get_section() -> msb.Section:
     return msb.parse_mssql_backup(STRING_TABLE)
 
 
-def test_discovery_default(section: msb.Section) -> None:
-    assert sorted(msb.discover_mssql_backup({"mode": "summary"}, section)) == sorted(
+def test_discovery_default() -> None:
+    assert sorted(msb.discover_mssql_backup({"mode": "summary"}, _get_section())) == sorted(
         [
             Service(item="MSSQL_SQL0x4 master"),
             Service(item="MSSQL_SQL0x4 model"),
@@ -39,12 +36,14 @@ def test_discovery_default(section: msb.Section) -> None:
             Service(item="MSSQL_Parrot Polly"),
         ]
     )
-    assert not list(msb.discover_mssql_backup_per_type({"mode": "summary"}, section))
+    assert not list(msb.discover_mssql_backup_per_type({"mode": "summary"}, _get_section()))
 
 
-def test_discovery_single(section: msb.Section) -> None:
-    assert not list(msb.discover_mssql_backup({"mode": "per_type"}, section))
-    assert sorted(msb.discover_mssql_backup_per_type({"mode": "per_type"}, section)) == sorted(
+def test_discovery_single() -> None:
+    assert not list(msb.discover_mssql_backup({"mode": "per_type"}, _get_section()))
+    assert sorted(
+        msb.discover_mssql_backup_per_type({"mode": "per_type"}, _get_section())
+    ) == sorted(
         [
             Service(item="MSSQL_SQL0x4 master Database"),
             Service(item="MSSQL_SQL0x4 model Database"),
@@ -58,35 +57,25 @@ def test_discovery_single(section: msb.Section) -> None:
     )
 
 
-# FIXME: Something is wrong regarding timezones(?), the test fails if run separately:
-#
-# AssertionError: assert [Result(state...e', 538773.0)] == [Result(state...e', 531573.0)]
-#   At index 0 diff: Result(state=<State.OK: 0>, summary='[database] Last backup: Jul 08 2016 18:20:27') != Result(state=<State.OK: 0>, summary='[database] Last backup: Jul 08 2016 20:20#   Full diff:
-#     [
-#   -  Result(state=<State.OK: 0>, summary='[database] Last backup: Jul 08 2016 20:20:27'),
-#   ?                                                                           ^^
-#   +  Result(state=<State.OK: 0>, summary='[database] Last backup: Jul 08 2016 18:20:27'),
-#   ?                                                                           ^^...
-@pytest.mark.skip("needs to be analyzed later...")
-def test_check(section: msb.Section) -> None:
+def test_check() -> None:
     with on_time("2016-07-15", "UTC"):
-        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 master", {}, section)) == [
+        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 master", {}, _get_section())) == [
             Result(state=State.OK, summary="[database] Last backup: Jul 08 2016 20:20:27"),
             Result(state=State.OK, summary="Time since last backup: 6 days 3 hours"),
             Metric("backup_age_database", 531573.0),
         ]
 
 
-def test_check_with_seconds_metric(section: msb.Section) -> None:
+def test_check_with_seconds_metric() -> None:
     with on_time("2016-07-15", "UTC"):
-        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 bar", {}, section)) == [
+        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 bar", {}, _get_section())) == [
             Result(state=State.OK, summary="[database] Last backup: May 23 1970 21:21:18"),
             Result(state=State.OK, summary="Time since last backup: 46 years 64 days"),
             Metric("seconds", 1456195122.0),
         ]
 
 
-def test_check_error(section: msb.Section) -> None:
-    assert list(msb.check_mssql_backup("MSSQL_Parrot Polly", {}, section)) == [
+def test_check_error() -> None:
+    assert list(msb.check_mssql_backup("MSSQL_Parrot Polly", {}, _get_section())) == [
         Result(state=State.CRIT, summary="Polly has no crackers"),
     ]

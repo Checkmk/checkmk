@@ -56,9 +56,43 @@ fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
     };
     Ok((name.trim().parse()?, value.trim().parse()?))
 }
-
-#[test]
-fn verify_cli() {
+#[cfg(test)]
+mod tests {
+    use super::*;
     use clap::CommandFactory;
-    Cli::command().debug_assert()
+    use http::{HeaderName, HeaderValue};
+    use std::str::FromStr;
+
+    #[test]
+    fn verify_cli() {
+        Cli::command().debug_assert()
+    }
+
+    #[test]
+    fn test_split_header() {
+        assert!(split_header(":value").is_err());
+        assert!(split_header("name value").is_err());
+        assert!(split_header("name:some\r\nvalue").is_err());
+        assert_eq!(
+            split_header("name:value").unwrap(),
+            (
+                HeaderName::from_str("name").unwrap(),
+                HeaderValue::from_str("value").unwrap()
+            )
+        );
+        assert_eq!(
+            split_header("name:").unwrap(),
+            (
+                HeaderName::from_str("name").unwrap(),
+                HeaderValue::from_str("").unwrap()
+            )
+        );
+        assert_eq!(
+            split_header("name  :  value  ").unwrap(),
+            (
+                HeaderName::from_str("name").unwrap(),
+                HeaderValue::from_str("value").unwrap()
+            )
+        );
+    }
 }

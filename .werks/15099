@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p12
+Version: 2.2.0p13
 
 Previously, when doing a bulk_delete operation via the REST API,
 an exception could occur under certain conditions, most notably

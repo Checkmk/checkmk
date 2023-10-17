@@ -20,7 +20,7 @@ def main() {
             branch_name,
             "",
             ""),   // FIXME was DOCKER_TAG_DEFAULT before
-        MAKE_TARGET: "test-schemathesis-openapi",
+        MAKE_TARGET: "test-schemathesis-openapi-docker",
         BRANCH: branch_name,
         cmk_version: versioning.get_cmk_version(branch_name, "daily"),
     );

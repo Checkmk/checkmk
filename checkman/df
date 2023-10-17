@@ -29,16 +29,16 @@ description:
  the filesystem will be full.
 
  In the default configuration the check will compute the trend based on the
- data of the last 24 hours using a logarithmic average that gives more recent
+ data of the last 24 hours using an exponential moving average that gives more recent
  data a higher weight. Also data beyond the 24 hours will to some small degree be
- reflected in the computation. The advantage of this algorithm is a more
- precise prediction and a simpler implementation, which does not need any
+ reflected in the computation. The advantage of this algorithm is
+ an implementation, which does not need any
  access to any RRDs or similar storage.
 
  Please note that when a filesystem is started to be monitored,
- the trend of the past is unknown and is assumed to be {zero}.
+ the trend of the past is unknown.
  It will take at least one trend range of time until the trend
- approximately reflects the reality.
+ stabilises and approximately reflects the reality.
 
  {Grouping:} In some situations you do not want to monitor a single
  filesystem but a group of filesystems forming a pool.

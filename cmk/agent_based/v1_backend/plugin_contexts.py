@@ -2,30 +2,33 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""
+Implents the magical host_name, check_type and service_description functions.
+
+This is aweful, but we can not get rid of it, as this is currently needed by
+(at least)
+ * predictive levels
+ * logwatch
+ * robotmk
+ * legacy check_* agent_* files ("argument thingys")
+"""
 
 from collections.abc import Iterator
-
-# NOTE: This module is for dependency-breaking purposes only, and its contents
-# should probably moved somewhere else when there are no import cycles anymore.
-# But at the current state of affairs we have no choice, otherwise an
-# incremental cleanup is impossible.
 from contextlib import contextmanager
-
-from cmk.utils.hostaddress import HostName
-from cmk.utils.servicename import ServiceName
-
-from cmk.checkengine.checking import CheckPluginName
 
 # Is set before check/discovery function execution
 # Host currently being checked
-# Types must remain string, they're passed to API clients!
-_hostname: HostName | None = None
+
+# **Types must remain string, they're passed to API clients!**
+_hostname: str | None = None
 _check_type: str | None = None
 _service_description: str | None = None
 
 
 @contextmanager
-def current_host(host_name_: HostName) -> Iterator[None]:
+def current_host(
+    host_name_: str,  # do not make this `HostName`.
+) -> Iterator[None]:
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -45,7 +48,10 @@ def current_host(host_name_: HostName) -> Iterator[None]:
 
 
 @contextmanager
-def current_service(plugin_name: CheckPluginName, description: ServiceName) -> Iterator[None]:
+def current_service(
+    plugin_name: str,  # do not make this `CheckPluginName`
+    description: str,  # do not make this `ServiceDescription`
+) -> Iterator[None]:  # do bot
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -65,7 +71,7 @@ def current_service(plugin_name: CheckPluginName, description: ServiceName) -> I
         _service_description = previous_service_description
 
 
-def host_name() -> HostName:
+def host_name() -> str:
     """Returns the name of the host currently being checked or discovered."""
     if _hostname is None:
         raise RuntimeError("host name has not been set")

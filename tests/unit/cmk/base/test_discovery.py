@@ -68,7 +68,6 @@ from cmk.checkengine.sectionparser import (
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.api.agent_based.plugin_contexts import current_host
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,
@@ -78,6 +77,8 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache
+
+from cmk.agent_based.v1_backend.plugin_contexts import current_host
 
 
 def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:

@@ -18,13 +18,16 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple, TypedDict
 
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
+
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import regex, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+
+from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 
 
 class ItemData(TypedDict):
@@ -39,7 +42,7 @@ class Section(NamedTuple):
 
 def service_extra_conf(service: str) -> list:
     return cmk.base.config.get_config_cache().ruleset_matcher.service_extra_conf(
-        host_name(), service, cmk.base.config.logwatch_rules
+        HostName(host_name()), service, cmk.base.config.logwatch_rules
     )
 
 
@@ -62,7 +65,7 @@ def extract_unseen_lines(
 def get_ec_rule_params() -> Sequence[Any]:
     """Isolate the remaining API violation w.r.t. parameters"""
     return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
-        host_name(),
+        HostName(host_name()),
         cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),
     )
 

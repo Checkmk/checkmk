@@ -30,9 +30,6 @@ from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-modu
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -47,6 +44,10 @@ from cmk.base.plugins.agent_based.utils import logwatch
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
+)
+
+from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
 )
 
 ClusterSection = dict[str | None, logwatch.Section]
@@ -74,8 +75,8 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
         {None: section},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
         value_store=get_value_store(),
-        hostname=host_name(),
-        message_forwarder=MessageForwarder(None, host_name()),
+        hostname=HostName(host_name()),
+        message_forwarder=MessageForwarder(None, HostName(host_name())),
     )
 
 
@@ -90,7 +91,7 @@ def cluster_check_logwatch_ec(
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec"), None),
         value_store=get_value_store(),
         hostname=host_name(),
-        message_forwarder=MessageForwarder(None, host_name()),
+        message_forwarder=MessageForwarder(None, HostName(host_name())),
     )
 
 
@@ -124,8 +125,8 @@ def check_logwatch_ec_single(
         {None: section},
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
         value_store=get_value_store(),
-        hostname=host_name(),
-        message_forwarder=MessageForwarder(item, host_name()),
+        hostname=HostName(host_name()),
+        message_forwarder=MessageForwarder(item, HostName(host_name())),
     )
 
 
@@ -142,7 +143,7 @@ def cluster_check_logwatch_ec_single(
         service_level=_get_effective_service_level(CheckPluginName("logwatch_ec_single"), item),
         value_store=get_value_store(),
         hostname=host_name(),
-        message_forwarder=MessageForwarder(item, host_name()),
+        message_forwarder=MessageForwarder(item, HostName(host_name())),
     )
 
 
@@ -301,7 +302,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     *,
     service_level: int,
     value_store: MutableMapping[str, Any],
-    hostname: HostName,
+    hostname: str,
     message_forwarder: MessageForwaderProto,
 ) -> CheckResult:
     yield from logwatch.check_errors(parsed)

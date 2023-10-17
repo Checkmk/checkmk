@@ -63,7 +63,7 @@ def _get_prediction(
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
 def get_predictive_levels(
-    host_name: HostName,
+    host_name: str,
     service_description: ServiceName,
     dsname: str,
     params: PredictionParameters,
@@ -79,7 +79,7 @@ def get_predictive_levels(
 
     prediction_store = PredictionStore(
         PREDICTION_DIR,
-        host_name,
+        HostName(host_name),
         service_description,
         dsname,
     )

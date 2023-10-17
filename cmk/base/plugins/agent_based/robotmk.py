@@ -8,10 +8,6 @@ from typing import assert_never, Literal, TypedDict
 
 from cmk.utils.paths import robotmk_html_log_dir  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-    service_description,
-)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
     register,
@@ -27,6 +23,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils import robotmk_api  # Should be replaced by external package
+
+from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+    service_description,
+)
 
 
 class Params(TypedDict):

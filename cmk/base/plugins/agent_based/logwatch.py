@@ -26,7 +26,7 @@ from typing import Any, IO, Literal
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-from cmk.base.api.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
     host_name,
 )
 

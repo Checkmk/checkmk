@@ -11,13 +11,12 @@ from pytest_mock import MockerFixture
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.hostaddress import HostName
-
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.api.agent_based.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+
+from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
 
 _SECTION = {
     "MemTotal": 137438347264,
@@ -276,9 +275,7 @@ def test_mem_win(
         "cmk.base.check_api._get_predictive_levels",
         return_value=(100000, (90000, 110000, None, None)),
     )
-    with current_host(HostName("unittest-hn")), current_service(
-        CheckPluginName("unittest_sd"), "unittest_sd_description"
-    ):
+    with current_host("unittest-hn"), current_service("unittest_sd", "unittest_sd_description"):
         assert (
             list(
                 fix_register.check_plugins[CheckPluginName("mem_win")].check_function(

@@ -12,9 +12,7 @@ from tests.testlib import Check, MissingCheckInfoError
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_contexts import current_host, current_service
+from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
 
 from ..checktestlib import (
     assertCheckResultsEqual,
@@ -187,7 +185,7 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, "checks", {}).get(subcheck, [])
     check_func = check.info.get("check_function")
-    check_plugin_name = CheckPluginName(maincheckify(check.name))
+    check_plugin_name = maincheckify(check.name)
 
     for item, params, results_expected_raw in test_cases:
         print(f"Dataset item {item!r} in check {check.name!r}")

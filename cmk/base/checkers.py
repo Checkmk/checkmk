@@ -65,7 +65,7 @@ from cmk.checkengine.summarize import summarize
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
-from cmk.base.api.agent_based import cluster_mode, plugin_contexts, value_store
+from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
@@ -74,6 +74,8 @@ from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
+
+from cmk.agent_based.v1_backend import plugin_contexts
 
 __all__ = [
     "CheckPluginMapper",
@@ -440,7 +442,7 @@ def _get_check_function(
     @functools.wraps(check_function)
     def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
         with plugin_contexts.current_service(
-            service.check_plugin_name, service.description
+            str(service.check_plugin_name), service.description
         ), value_store_manager.namespace(service.id()):
             return _aggregate_results(consume_check_results(check_function(*args, **kw)))
 

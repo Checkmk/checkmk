@@ -13,7 +13,7 @@ CHECK_IDENT = "check_mail_loop"
 
 def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     """
-    >>> from cmk.base.api.agent_based.plugin_contexts import current_host
+    >>> from cmk.agent_based.v1_backend.plugin_contexts import current_host
     >>> with current_host("hurz"):
     ...     for a in check_mail_loop_arguments(
     ...         {

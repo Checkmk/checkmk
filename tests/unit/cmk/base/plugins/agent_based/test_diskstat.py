@@ -7,11 +7,6 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.hostaddress import HostName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -21,6 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.utils.multipath import Group
+
+from cmk.agent_based.v1_backend import plugin_contexts
 
 
 def test_parse_diskstat_minimum() -> None:
@@ -154,8 +151,8 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         "cmk.base.api.agent_based.utils.get_predictive_levels",
         return_value=(None, (2.1, 4.1, None, None)),
     )
-    with plugin_contexts.current_host(HostName("unittest-hn")), plugin_contexts.current_service(
-        CheckPluginName("unittest_sd"),
+    with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
+        "unittest_sd",
         "unittest_sd_description",
     ):
         with pytest.raises(IgnoreResultsError):

@@ -40,12 +40,17 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
 from cmk.base.api.agent_based import render as _render
-from cmk.base.api.agent_based.plugin_contexts import host_name as _internal_host_name
-from cmk.base.api.agent_based.plugin_contexts import service_description
 
 # pylint: disable=unused-import
 from cmk.base.api.agent_based.register.utils_legacy import (
     LegacyCheckDefinition as LegacyCheckDefinition,
+)
+
+from cmk.agent_based.v1_backend.plugin_contexts import (
+    host_name as host_name,  # pylint: disable=unused-import
+)
+from cmk.agent_based.v1_backend.plugin_contexts import (
+    service_description,  # pylint: disable=unused-import
 )
 
 # pylint: enable=unused-import
@@ -65,12 +70,6 @@ _MetricTuple = tuple[
 ]
 
 ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
-
-
-def host_name() -> str:
-    """compatibility for making HostName a own class
-    if somebody make type comparision to str or some other weird stuff we want to be compatible"""
-    return str(_internal_host_name())
 
 
 def get_check_api_context() -> _config.CheckContext:
@@ -307,7 +306,7 @@ def check_levels(  # pylint: disable=too-many-branches
 
         try:
             ref_value, levels = _get_predictive_levels(
-                _internal_host_name(),
+                host_name(),
                 service_description(),
                 dsname,
                 params,

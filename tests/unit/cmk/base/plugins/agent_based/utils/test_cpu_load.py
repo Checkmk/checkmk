@@ -5,14 +5,11 @@
 
 from unittest.mock import Mock
 
-from cmk.utils.hostaddress import HostName
-
-from cmk.checkengine.checking import CheckPluginName
-
-from cmk.base.api.agent_based.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads
 from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
+
+from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
 
 
 def test_cpu_loads_fixed_levels() -> None:
@@ -49,7 +46,7 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
         "cmk.base.api.agent_based.utils.get_predictive_levels",
         return_value=(None, (2.2, 4.2, None, None)),
     )
-    with current_host(HostName("unittest")), current_service(CheckPluginName("cpu_loads"), "item"):
+    with current_host("unittest"), current_service("cpu_loads", "item"):
         assert list(
             check_cpu_load(
                 {

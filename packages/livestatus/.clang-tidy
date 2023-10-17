@@ -98,4 +98,7 @@ CheckOptions:
     value:           '188'
   - key:             readability-function-cognitive-complexity.IgnoreMacros
     value:           'true'
+# https://github.com/llvm/llvm-project/issues/56709, re-enable with clang-tidy-18
+ExtraArgs:
+- -Wno-unknown-pragmas  # TODO: remove this after switch to clang-tidy-18
 ...

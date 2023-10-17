@@ -18,6 +18,7 @@ from ._find_usage import find_timeperiod_usage_in_users, find_usages_of_contact_
 from ._user_attribute import UserAttributeRegistry
 from ._user_profile_cleanup import execute_user_profile_cleanup_job, UserProfileCleanupBackgroundJob
 from ._user_sync import ajax_sync, execute_userdb_job, UserSyncBackgroundJob
+from .htpasswd import HtpasswdUserConnector
 
 __all__ = ["register"]
 
@@ -45,3 +46,4 @@ def register(
     ldap_connector.register(user_connector_registry)
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_users)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_users)
+    user_connector_registry.register(HtpasswdUserConnector)

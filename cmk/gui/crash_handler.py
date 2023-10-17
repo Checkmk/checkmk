@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.crash_reporting
+from cmk.utils.crash_reporting import ABCCrashReport, CrashReportRegistry, CrashReportStore
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
@@ -11,17 +11,18 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, get_current_language
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, requested_file_name
 
-CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
+
+def register(crash_report_registry: CrashReportRegistry) -> None:
+    crash_report_registry.register(GUICrashReport)
 
 
-@cmk.utils.crash_reporting.crash_report_registry.register
-class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
+class GUICrashReport(ABCCrashReport):
     @classmethod
     def type(cls):
         return "gui"
@@ -40,7 +41,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
                 "referer": request.referer,
                 "is_mobile": is_mobile(request, response),
                 "is_ssl_request": request.is_ssl_request,
-                "language": cmk.gui.i18n.get_current_language(),
+                "language": get_current_language(),
                 "request_method": request.request_method,
             },
         )

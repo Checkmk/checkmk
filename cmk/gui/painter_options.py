@@ -27,6 +27,11 @@ from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_utils import CellSpec
 
 
+def register(painter_option_registry_: PainterOptionRegistry) -> None:
+    painter_option_registry.register(PainterOptionRefresh)
+    painter_option_registry.register(PainterOptionNumColumns)
+
+
 class PainterOption(abc.ABC):
     @property
     @abc.abstractmethod
@@ -207,7 +212,6 @@ class PainterOptionRegistry(Registry[type[PainterOption]]):
 painter_option_registry = PainterOptionRegistry()
 
 
-@painter_option_registry.register
 class PainterOptionRefresh(PainterOption):
     @property
     def ident(self) -> str:
@@ -224,7 +228,6 @@ class PainterOptionRefresh(PainterOption):
         )
 
 
-@painter_option_registry.register
 class PainterOptionNumColumns(PainterOption):
     @property
     def ident(self) -> str:

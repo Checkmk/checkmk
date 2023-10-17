@@ -8,6 +8,7 @@
 
 from functools import partial
 
+from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 from cmk.utils.version import edition, Edition
 
@@ -15,6 +16,7 @@ import cmk.gui.help
 from cmk.gui import (
     agent_registration,
     autocompleters,
+    crash_handler,
     crash_reporting,
     cron,
     default_permissions,
@@ -28,6 +30,7 @@ from cmk.gui import (
     mobile,
     node_visualization,
     notifications,
+    painter_options,
     prediction,
     robotmk,
     sidebar,
@@ -101,9 +104,11 @@ def register_sites_options() -> None:
 
 
 def register() -> None:
+    crash_handler.register(crash_report_registry)
     default_permissions.register(permission_section_registry, permission_registry)
     register_cre_licensing_handler()
     visuals.register(page_registry, visual_info_registry, filter_registry)
+    painter_options.register(painter_option_registry)
     views_registration.register(
         permission_section_registry,
         permission_registry,

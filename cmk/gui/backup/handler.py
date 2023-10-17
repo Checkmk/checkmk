@@ -102,6 +102,13 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.wato import IndividualOrStoredPassword
 
+
+def register() -> None:
+    target_type_registry.register(BackupTargetLocal)
+    target_type_registry.register(BackupTargetAWSS3Bucket)
+    target_type_registry.register(BackupTargetAzureBlobStorage)
+
+
 # .
 #   .--Config--------------------------------------------------------------.
 #   |                     ____             __ _                            |
@@ -1082,7 +1089,6 @@ class TargetTypeRegistry(Registry[type[ABCBackupTargetType]]):
 target_type_registry = TargetTypeRegistry()
 
 
-@target_type_registry.register
 class BackupTargetLocal(ABCBackupTargetType):
     def __init__(self, params: LocalTargetParams) -> None:
         self._params = params
@@ -1191,7 +1197,6 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
         ...
 
 
-@target_type_registry.register
 class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
     @staticmethod
     def ident() -> str:
@@ -1235,7 +1240,6 @@ class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
         )
 
 
-@target_type_registry.register
 class BackupTargetAzureBlobStorage(ABCBackupTargetRemote[BlobStorageParams, BlobStorage]):
     @staticmethod
     def ident() -> str:

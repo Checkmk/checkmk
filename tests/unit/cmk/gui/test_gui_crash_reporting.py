@@ -9,24 +9,24 @@ from pathlib import Path
 
 import pytest
 
-import cmk.utils.crash_reporting
+from cmk.utils.crash_reporting import crash_report_registry, CrashReportStore
 
-import cmk.gui.crash_handler as crash_handler
 import cmk.gui.crash_reporting.pages as pages
+from cmk.gui.crash_handler import GUICrashReport
 
 
 def test_gui_crash_report_registry() -> None:
-    assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_handler.GUICrashReport
+    assert crash_report_registry["gui"] == GUICrashReport
 
 
 @pytest.mark.usefixtures("request_context")
 def test_gui_crash_report_get_packed() -> None:
-    store = crash_handler.CrashReportStore()
+    store = CrashReportStore()
     try:
         crash_dir = Path()
         raise ValueError("DINGELING")
     except Exception:
-        crash = crash_handler.GUICrashReport.from_exception()
+        crash = GUICrashReport.from_exception()
         store.save(crash)
         crash_dir = crash.crash_dir()
 

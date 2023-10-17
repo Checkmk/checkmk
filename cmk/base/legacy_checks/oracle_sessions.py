@@ -62,7 +62,7 @@ def check_oracle_sessions(item, params, parsed):
 
         state = 0
         warn, crit = None, None
-        if "sessions_abs" in params and not params["sessions_abs"] is None:
+        if "sessions_abs" in params and params["sessions_abs"] is not None:
             warn, crit = params["sessions_abs"]
             if sessions >= crit:
                 state = 2

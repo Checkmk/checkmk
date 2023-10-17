@@ -281,7 +281,7 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
         )
         params = params_conv
 
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         if not parsed["cs"] in drbd_cs_map:
@@ -375,7 +375,7 @@ def drbd_get_rates(list_):
 
 def check_drbd_net(item, params, info):
     parsed = drbd_get_block(item, info, "drbd.net")
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         output, perfdata = drbd_get_rates(
@@ -401,7 +401,7 @@ check_info["drbd.net"] = LegacyCheckDefinition(
 
 def check_drbd_disk(item, params, info):
     parsed = drbd_get_block(item, info, "drbd.disk")
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         output, perfdata = drbd_get_rates(
@@ -427,7 +427,7 @@ check_info["drbd.disk"] = LegacyCheckDefinition(
 
 def check_drbd_stats(item, params, info):
     parsed = drbd_get_block(item, info, "drbd.stats")
-    if not parsed is None:
+    if parsed is not None:
         if parsed["cs"] == "Unconfigured":
             return (2, 'The device is "Unconfigured"')
         output = ""

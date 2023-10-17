@@ -42,6 +42,11 @@ case "$DISTRO" in
         # shellcheck disable=SC2046  # we want word splitting here
         yum install -y $(cat "$TARGET_DIR"/needed-packages)
         ;;
+    almalinux-*)
+        gpg --import "$TARGET_DIR"/Check_MK-pubkey.gpg
+        # shellcheck disable=SC2046  # we want word splitting here
+        yum install -y --allowerasing $(cat "$TARGET_DIR"/needed-packages)
+        ;;
     sles-*)
         add_gpg_key
         # shellcheck disable=SC2046  # we want word splitting here
@@ -51,6 +56,10 @@ case "$DISTRO" in
         apt-get update
         # shellcheck disable=SC2046  # we want word splitting here
         apt-get install -y $(cat "$TARGET_DIR"/needed-packages)
+        ;;
+    *)
+        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        exit 1
         ;;
 esac
 

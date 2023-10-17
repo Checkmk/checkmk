@@ -39,7 +39,7 @@ from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParame
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -474,6 +474,7 @@ def _execute_discovery(
     )
 
     config_cache = config.get_config_cache()
+    hosts_config = config.make_hosts_config()
     ruleset_matcher = config_cache.ruleset_matcher
     parser = CMKParser(
         config_cache,
@@ -492,7 +493,7 @@ def _execute_discovery(
     )
     ip_address = (
         None
-        if host_name in config_cache.hosts_config.clusters
+        if host_name in hosts_config.clusters
         # We *must* do the lookup *before* calling `get_host_attributes()`
         # because...  I don't know... global variables I guess.  In any case,
         # doing it the other way around breaks one integration test.
@@ -501,10 +502,11 @@ def _execute_discovery(
     with plugin_contexts.current_host(host_name), load_host_value_store(
         host_name, store_changes=False
     ) as value_store_manager:
-        is_cluster = host_name in config_cache.hosts_config.clusters
+        is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckPluginMapper(
             config_cache,
             value_store_manager,
+            clusters=hosts_config.clusters,
             rtc_package=None,
         )
         passive_check_preview = get_check_preview(
@@ -719,7 +721,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         try:
             cache_manager.clear_all()
             config_cache.initialize()
-            hosts_config = config_cache.hosts_config
+            hosts_config = config.make_hosts_config()
 
             # reset these to their original value to create a correct config
             if config.monitoring_core == "cmc":
@@ -727,6 +729,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     config_cache,
                     core,
                     locking_mode=config.restart_locking,
+                    all_hosts=hosts_config.hosts,
                     duplicates=sorted(
                         hosts_config.duplicates(
                             lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
@@ -737,6 +740,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                 cmk.base.core.do_restart(
                     config_cache,
                     core,
+                    all_hosts=hosts_config.hosts,
                     locking_mode=config.restart_locking,
                     duplicates=sorted(
                         hosts_config.duplicates(
@@ -920,8 +924,12 @@ class AutomationRenameHosts(Automation):
                 # If that is on the local site, we can not lock the configuration again during baking!
                 # (If we are on a remote site now, locking *would* work, but we will not bake agents anyway.)
                 config_cache = config.get_config_cache()
+                hosts_config = config.make_hosts_config()
                 _execute_silently(
-                    config_cache, CoreAction.START, skip_config_locking_for_bakery=True
+                    config_cache,
+                    CoreAction.START,
+                    hosts_config,
+                    skip_config_locking_for_bakery=True,
                 )
 
                 for hostname in config.failed_ip_lookups():
@@ -1530,7 +1538,8 @@ class AutomationRestart(Automation):
         else:
             nodes = None
         config_cache = config.get_config_cache()
-        return _execute_silently(config_cache, self._mode(), nodes)
+        hosts_config = config.make_hosts_config()
+        return _execute_silently(config_cache, self._mode(), hosts_config, hosts_to_update=nodes)
 
     def _check_plugins_have_changed(self) -> bool:
         last_time = self._time_of_last_core_restart()
@@ -1584,17 +1593,18 @@ automations.register(AutomationReload())
 def _execute_silently(
     config_cache: ConfigCache,
     action: CoreAction,
+    hosts_config: Hosts,
     hosts_to_update: set[HostName] | None = None,
     skip_config_locking_for_bakery: bool = False,
 ) -> RestartResult:
-    hosts_config = config_cache.hosts_config
     with redirect_stdout(open(os.devnull, "w")):
         log.setup_console_logging()
         try:
             do_restart(
                 config_cache,
                 create_core(config.monitoring_core),
-                action,
+                action=action,
+                all_hosts=hosts_config.hosts,
                 hosts_to_update=hosts_to_update,
                 locking_mode=config.restart_locking,
                 duplicates=sorted(

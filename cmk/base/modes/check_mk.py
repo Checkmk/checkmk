@@ -42,7 +42,7 @@ from cmk.utils.diagnostics import (
 )
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console, section
 from cmk.utils.resulttype import Result
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
@@ -1408,6 +1408,7 @@ def mode_update() -> None:
             do_create_config(
                 core=create_core(config.monitoring_core),
                 config_cache=config_cache,
+                all_hosts=hosts_config.hosts,
                 duplicates=sorted(
                     hosts_config.duplicates(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
@@ -1457,6 +1458,7 @@ def mode_restart(args: Sequence[HostName]) -> None:
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
+        all_hosts=hosts_config.hosts,
         duplicates=sorted(
             hosts_config.duplicates(
                 lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
@@ -1501,6 +1503,7 @@ def mode_reload(args: Sequence[HostName]) -> None:
         create_core(config.monitoring_core),
         hosts_to_update=set(args) if args else None,
         locking_mode=config.restart_locking,
+        all_hosts=hosts_config.hosts,
         duplicates=sorted(
             hosts_config.duplicates(
                 lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
@@ -2175,6 +2178,7 @@ def mode_check(
         ipaddress = HostAddress(args[1])
 
     config_cache = config.get_config_cache()
+    hosts_config = config.make_hosts_config()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     fetcher = CMKFetcher(
@@ -2203,7 +2207,7 @@ def mode_check(
         host_name=hostname,
         service_name="Check_MK",
         plugin_name="mk",
-        is_cluster=hostname in config_cache.hosts_config.clusters,
+        is_cluster=hostname in hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
@@ -2223,6 +2227,7 @@ def mode_check(
         check_plugins = CheckPluginMapper(
             config_cache,
             value_store_manager,
+            clusters=hosts_config.clusters,
             rtc_package=None,
         )
         with CPUTracker() as tracker:
@@ -2365,6 +2370,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     file_cache_options = _handle_fetcher_options(options)
 
     config_cache = config.get_config_cache()
+    hosts_config = config.make_hosts_config()
 
     if args:
         hostnames = modes.parse_hostname_list(config_cache, args, with_clusters=True)
@@ -2372,7 +2378,6 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:
         # No hosts specified: do all hosts and force caching
-        hosts_config = config_cache.hosts_config
         hostnames = sorted(
             {
                 hn
@@ -2435,7 +2440,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         section.section_step("Inventorizing")
         try:
             previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
-            if hostname in config_cache.hosts_config.clusters:
+            if hostname in hosts_config.clusters:
                 check_result = inventory.inventorize_cluster(
                     config_cache.nodes_of(hostname) or (),
                     parameters=parameters,
@@ -2512,6 +2517,7 @@ def _execute_active_check_inventory(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
@@ -2527,7 +2533,7 @@ def _execute_active_check_inventory(
     )
     previous_tree = tree_or_archive_store.load_previous(host_name=host_name)
 
-    if host_name in config_cache.hosts_config.clusters:
+    if host_name in hosts_config.clusters:
         result = inventory.inventorize_cluster(
             config_cache.nodes_of(host_name) or (),
             parameters=parameters,
@@ -2614,6 +2620,7 @@ def mode_inventory_as_check(
 ) -> ServiceState:
     config_cache = config.get_config_cache()
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    hosts_config = config.make_hosts_config()
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
 
@@ -2642,7 +2649,7 @@ def mode_inventory_as_check(
         host_name=hostname,
         service_name="Check_MK HW/SW Inventory",
         plugin_name="check_mk_active-cmk_inv",
-        is_cluster=hostname in config_cache.hosts_config.clusters,
+        is_cluster=hostname in hosts_config.clusters,
         snmp_backend=config_cache.get_snmp_backend(hostname),
         keepalive=keepalive,
     )
@@ -2651,6 +2658,7 @@ def mode_inventory_as_check(
         check_result = _execute_active_check_inventory(
             hostname,
             config_cache=config_cache,
+            hosts_config=hosts_config,
             fetcher=fetcher,
             parser=parser,
             summarizer=summarizer,
@@ -2821,6 +2829,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
                 _execute_active_check_inventory(
                     host_name,
                     config_cache=config_cache,
+                    hosts_config=hosts_config,
                     parser=parser,
                     fetcher=fetcher,
                     summarizer=summarizer(host_name),

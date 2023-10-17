@@ -248,6 +248,7 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
+    all_hosts: Iterable[HostName],
     hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
@@ -270,10 +271,12 @@ def do_create_config(
         raise MKGeneralException("Error creating configuration: %s" % e)
 
     if config.bake_agents_on_restart and not config.is_wato_slave_site:
-        _bake_on_restart(config_cache, skip_config_locking_for_bakery)
+        _bake_on_restart(config_cache, all_hosts, skip_config_locking_for_bakery)
 
 
-def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> None:
+def _bake_on_restart(
+    config_cache: config.ConfigCache, all_hosts: Iterable[HostName], skip_locking: bool
+) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
@@ -289,7 +292,7 @@ def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> No
 
     with nullcontext() if skip_locking else lock_checkmk_configuration():
         target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
-            config_cache, selected_hosts=None
+            config_cache, all_hosts=all_hosts, selected_hosts=None
         )
 
     agent_bakery.bake_agents(

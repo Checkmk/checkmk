@@ -10,7 +10,7 @@ from __future__ import annotations
 import functools
 import itertools
 import logging
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from typing import Final
 
@@ -356,10 +356,12 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
         config_cache: ConfigCache,
         value_store_manager: ValueStoreManager,
         *,
+        clusters: Container[HostName],
         rtc_package: AgentRawData | None,
     ):
         self.config_cache: Final = config_cache
         self.value_store_manager: Final = value_store_manager
+        self.clusters: Final = clusters
         self.rtc_package: Final = rtc_package
 
     def __getitem__(self, __key: CheckPluginName) -> CheckPlugin:
@@ -374,11 +376,16 @@ class CheckPluginMapper(Mapping[CheckPluginName, CheckPlugin]):
             providers: Mapping[HostKey, Provider],
         ) -> AggregatedResult:
             check_function = _get_check_function(
-                plugin, self.config_cache, host_name, service, self.value_store_manager
+                plugin,
+                self.config_cache,
+                host_name,
+                service,
+                self.value_store_manager,
+                clusters=self.clusters,
             )
             return get_aggregated_result(
                 host_name,
-                host_name in self.config_cache.hosts_config.clusters,
+                host_name in self.clusters,
                 cluster_nodes=self.config_cache.nodes_of(host_name) or (),
                 providers=providers,
                 service=service,
@@ -409,6 +416,8 @@ def _get_check_function(
     host_name: HostName,
     service: ConfiguredService,
     value_store_manager: value_store.ValueStoreManager,
+    *,
+    clusters: Container[HostName],
 ) -> Callable[..., ServiceCheckResult]:
     assert plugin.name == service.check_plugin_name
     check_function = (
@@ -418,7 +427,7 @@ def _get_check_function(
             service_id=service.id(),
             value_store_manager=value_store_manager,
         )
-        if host_name in config_cache.hosts_config.clusters
+        if host_name in clusters
         else plugin.check_function
     )
 

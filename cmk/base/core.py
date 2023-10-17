@@ -7,7 +7,7 @@
 import enum
 import os
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 from typing import Literal
 
@@ -53,8 +53,9 @@ class CoreAction(enum.Enum):
 def do_reload(
     config_cache: ConfigCache,
     core: MonitoringCore,
-    hosts_to_update: set[HostName] | None = None,
     *,
+    all_hosts: Iterable[HostName],
+    hosts_to_update: set[HostName] | None = None,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
 ) -> None:
@@ -62,6 +63,7 @@ def do_reload(
         config_cache,
         core,
         action=CoreAction.RELOAD,
+        all_hosts=all_hosts,
         hosts_to_update=hosts_to_update,
         locking_mode=locking_mode,
         duplicates=duplicates,
@@ -71,9 +73,10 @@ def do_reload(
 def do_restart(
     config_cache: ConfigCache,
     core: MonitoringCore,
+    *,
+    all_hosts: Iterable[HostName],
     action: CoreAction = CoreAction.RESTART,
     hosts_to_update: set[HostName] | None = None,
-    *,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
     skip_config_locking_for_bakery: bool = False,
@@ -83,6 +86,7 @@ def do_restart(
             core_config.do_create_config(
                 core=core,
                 config_cache=config_cache,
+                all_hosts=all_hosts,
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
                 skip_config_locking_for_bakery=skip_config_locking_for_bakery,

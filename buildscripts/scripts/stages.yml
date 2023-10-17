@@ -399,6 +399,8 @@ STAGES:
 
     - NAME: 'Check SQL'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_SQL_FILES
+      ENV_VARS:
+        CI_TEST_SQL_DB_ENDPOINT: "agentbuild3.lan.tribe29.com:user:user123"
       DIR: 'packages/check-sql'
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-sql.txt"
       TEXT_ON_SKIP: 'No check SQL files changed'

@@ -95,6 +95,7 @@ docker run -a stdout -a stderr \
     -e PYTEST_ADDOPTS \
     -e DOCKER_ADDOPTS \
     -e MYPY_ADDOPTS \
+    -e CI_TEST_SQL_DB_ENDPOINT \
     -e PYTHON_FILES \
     -e CHANGED_FILES \
     -e RESULTS \

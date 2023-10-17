@@ -14,6 +14,14 @@ _ParsedParameters = TypeVar("_ParsedParameters")
 
 @dataclass(frozen=True)
 class ActiveCheckCommand:
+    """
+    Definition to create an active service
+
+    Args:
+        service_description: Description with which the active service is created
+        command_arguments: Arguments to run the active check with
+    """
+
     service_description: str
     command_arguments: Sequence[str | Secret]
 

@@ -9,7 +9,7 @@ import textwrap
 from collections.abc import Callable, Sequence
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostName, Hosts
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.tags import TagID
@@ -132,11 +132,11 @@ class Modes:
     def parse_hostname_list(
         self,
         config_cache: ConfigCache,
+        hosts_config: Hosts,
         args: list[str],
         with_clusters: bool = True,
         with_foreign_hosts: bool = False,
     ) -> Sequence[HostName]:
-        hosts_config = config_cache.hosts_config
         if with_foreign_hosts:
             valid_hosts = set(hosts_config.hosts)
         else:

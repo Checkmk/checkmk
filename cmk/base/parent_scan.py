@@ -16,7 +16,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import cache_manager, DictCache
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.log import console
 
 from cmk.automations.results import Gateway
@@ -28,12 +28,12 @@ from cmk.base.config import ConfigCache
 
 def do_scan_parents(
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: list[HostName],
 ) -> None:
     # pylint: disable=too-many-branches
     if not hosts:
-        hosts_config = config_cache.hosts_config
         hosts = sorted(
             {
                 hn
@@ -83,7 +83,7 @@ def do_scan_parents(
                 continue
             chunk.append(host)
 
-        gws = scan_parents_of(config_cache, monitoring_host, chunk)
+        gws = scan_parents_of(config_cache, hosts_config, monitoring_host, chunk)
 
         for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
             if gw:
@@ -131,13 +131,15 @@ def traceroute_available() -> str | None:
     return None
 
 
-def scan_parents_of(  # pylint: disable=too-many-branches
+def scan_parents_of(
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     monitoring_host: HostName | None,
     hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
 ) -> Sequence[Gateway]:
+    # pylint: disable=too-many-branches
     if settings is None:
         settings = {}
 
@@ -316,7 +318,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
 
         # TTLs already have been filtered out)
         gateway_ip = this_route
-        gateway = _ip_to_hostname(config_cache, this_route)
+        gateway = _ip_to_hostname(config_cache, hosts_config, this_route)
         if gateway:
             console.verbose("%s(%s) ", gateway, gateway_ip)
         else:
@@ -341,20 +343,23 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
     )
 
 
-def _ip_to_hostname(config_cache: ConfigCache, ip: HostAddress | None) -> HostName | None:
+def _ip_to_hostname(
+    config_cache: ConfigCache, hosts_config: Hosts, ip: HostAddress | None
+) -> HostName | None:
     """Find hostname belonging to an ip address."""
     absent = "ip_to_hostname" not in cache_manager
     cache = cache_manager.obtain_cache("ip_to_hostname")
     if absent:
-        _fill_ip_to_hostname_cache(cache, config_cache)
+        _fill_ip_to_hostname_cache(cache, config_cache, hosts_config)
 
     return cache.get(ip)
 
 
-def _fill_ip_to_hostname_cache(cache: DictCache, config_cache: ConfigCache) -> None:
+def _fill_ip_to_hostname_cache(
+    cache: DictCache, config_cache: ConfigCache, hosts_config: Hosts
+) -> None:
     """We must not use reverse DNS but the Checkmk mechanisms, since we do not
     want to find the DNS name but the name of a matching host from all_hosts"""
-    hosts_config = config_cache.hosts_config
     for host in {
         # inconsistent with do_scan_parents where a list of hosts could be passed as an argument
         hn

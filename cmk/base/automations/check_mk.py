@@ -1760,13 +1760,19 @@ class AutomationScanParents(Automation):
         if not cmk.base.parent_scan.traceroute_available():
             raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
         config_cache = config.get_config_cache()
+        hosts_config = config.make_hosts_config()
         monitoring_host = (
             HostName(config.monitoring_host) if config.monitoring_host is not None else None
         )
 
         try:
             gateways = cmk.base.parent_scan.scan_parents_of(
-                config_cache, monitoring_host, hostnames, silent=True, settings=settings
+                config_cache,
+                hosts_config,
+                monitoring_host,
+                hostnames,
+                silent=True,
+                settings=settings,
             )
             return ScanParentsResult(gateways)
         except Exception as e:

@@ -973,12 +973,14 @@ modes.register(
 def mode_scan_parents(options: dict, args: list[str]) -> None:
     config.load(exclude_parents_mk=True)
     config_cache = config.get_config_cache()
+    hosts_config = config.make_hosts_config()
 
     if "procs" in options:
         config.max_num_processes = options["procs"]
 
     cmk.base.parent_scan.do_scan_parents(
         config_cache,
+        hosts_config,
         HostName(config.monitoring_host) if config.monitoring_host is not None else None,
         [HostName(hn) for hn in args],
     )
@@ -2057,7 +2059,8 @@ def _preprocess_hostnames(
 
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     config_cache = config.get_config_cache()
-    hostnames = modes.parse_hostname_list(config_cache, args)
+    hosts_config = config.make_hosts_config()
+    hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     if hostnames:
         # In case of discovery with host restriction, do not use the cache
         # file by default as -I and -II are used for debugging.
@@ -2073,7 +2076,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    hostnames = modes.parse_hostname_list(config_cache, args)
+    hostnames = modes.parse_hostname_list(config_cache, hosts_config, args)
     config_cache = config.get_config_cache()
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
@@ -2448,7 +2451,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     hosts_config = config.make_hosts_config()
 
     if args:
-        hostnames = modes.parse_hostname_list(config_cache, args, with_clusters=True)
+        hostnames = modes.parse_hostname_list(config_cache, hosts_config, args, with_clusters=True)
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:

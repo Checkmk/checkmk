@@ -220,6 +220,42 @@ def commandline_arguments(
     )
 
 
+def _replace_passwords(
+    host_name: str,
+    stored_passwords: Mapping[str, str],
+    arguments: Sequence[str | Secret],
+) -> str:
+    passwords: list[tuple[str, str, str]] = []
+    formatted: list[str] = []
+
+    for arg in arguments:
+        if isinstance(arg, PlainTextSecret):
+            formatted.append(shlex.quote(arg.format % arg.value))
+
+        elif isinstance(arg, StoredSecret):
+            try:
+                password = stored_passwords[arg.value]
+            except KeyError:
+                config_warnings.warn(
+                    f'The stored password "{arg.value}" used by host "{host_name}"'
+                    " does not exist."
+                )
+                password = "%%%"
+
+            pw_start_index = str(arg.format.index("%s"))
+            formatted.append(shlex.quote(arg.format % ("*" * len(password))))
+            passwords.append((str(len(formatted)), pw_start_index, arg.value))
+        else:
+            formatted.append(shlex.quote(str(arg)))
+
+    if passwords:
+        pw = ",".join(["@".join(p) for p in passwords])
+        pw_store_arg = f"--pwstore={pw}"
+        formatted = [shlex.quote(pw_store_arg)] + formatted
+
+    return " ".join(formatted)
+
+
 class ActiveCheck:
     def __init__(
         self,
@@ -282,40 +318,6 @@ class ActiveCheck:
 
         return None
 
-    def _replace_passwords(
-        self,
-        arguments: Sequence[str | Secret],
-    ) -> str:
-        passwords: list[tuple[str, str, str]] = []
-        formatted: list[str] = []
-
-        for arg in arguments:
-            if isinstance(arg, PlainTextSecret):
-                formatted.append(shlex.quote(arg.format % arg.value))
-
-            elif isinstance(arg, StoredSecret):
-                try:
-                    password = self.stored_passwords[arg.value]
-                except KeyError:
-                    config_warnings.warn(
-                        f'The stored password "{arg.value}" used by host "{self.host_name}"'
-                        " does not exist."
-                    )
-                    password = "%%%"
-
-                pw_start_index = str(arg.format.index("%s"))
-                formatted.append(shlex.quote(arg.format % ("*" * len(password))))
-                passwords.append((str(len(formatted)), pw_start_index, arg.value))
-            else:
-                formatted.append(shlex.quote(str(arg)))
-
-        if passwords:
-            pw = ",".join(["@".join(p) for p in passwords])
-            pw_store_arg = f"--pwstore={pw}"
-            formatted = [shlex.quote(pw_store_arg)] + formatted
-
-        return " ".join(formatted)
-
     def _iterate_services(
         self, active_check: ActiveCheckConfig, plugin_params: Sequence[Mapping[str, object]]
     ) -> Iterator[tuple[str, str, str, Mapping[str, object]]]:
@@ -328,7 +330,9 @@ class ActiveCheck:
         for param_dict in plugin_params:
             params = active_check.parameter_parser(param_dict)
             for service in active_check.service_function(params, host_config, http_proxies):
-                arguments = self._replace_passwords(
+                arguments = _replace_passwords(
+                    self.host_name,
+                    self.stored_passwords,
                     service.command_arguments,
                 )
                 command_line = f"check_{active_check.name} {arguments}"

@@ -308,6 +308,100 @@ def test_graph_template_with_layered_areas() -> None:
     )
 
 
+def _conditional_perfometer(
+    perfometer: (
+        _LinearPerfometerSpec
+        | LogarithmicPerfometerSpec
+        | _DualPerfometerSpec
+        | _StackedPerfometerSpec
+    ),
+) -> Iterator[_LinearPerfometerSpec]:
+    if perfometer["type"] == "linear":
+        if "condition" in perfometer:
+            yield perfometer
+    elif perfometer["type"] == "logarithmic":
+        pass
+    elif perfometer["type"] in ("dual", "stacked"):
+        for p in perfometer["perfometers"]:
+            yield from _conditional_perfometer(p)
+
+
+def test_conditional_perfometer() -> None:
+    conditional_perfometers: list[_LinearPerfometerSpec] = []
+    for perfometer in perfometer_info:
+        if not isinstance(perfometer, dict):
+            continue
+        conditional_perfometers.extend(_conditional_perfometer(perfometer))
+
+    assert conditional_perfometers == [
+        {
+            "condition": "fs_provisioning(%),100,>",
+            "label": ("fs_used(%)", "%"),
+            "segments": [
+                "fs_used(%)",
+                "100,fs_used(%),-#e3fff9",
+                "fs_provisioning(%),100.0,-#ffc030",
+            ],
+            "total": "fs_provisioning(%)",
+            "type": "linear",
+        },
+        {
+            "condition": "fs_provisioning(%),100,<=",
+            "label": ("fs_used(%)", "%"),
+            "segments": [
+                "fs_used(%)",
+                "fs_provisioning(%),fs_used(%),-#ffc030",
+                "100,fs_provisioning(%),fs_used(%),-,-#e3fff9",
+            ],
+            "total": 100,
+            "type": "linear",
+        },
+        {
+            "condition": "fs_used,uncommitted,+,fs_size,<",
+            "label": ("fs_used(%)", "%"),
+            "segments": [
+                "fs_used",
+                "uncommitted",
+                "fs_size,fs_used,-,uncommitted,-#e3fff9",
+                "0.1#559090",
+            ],
+            "total": "fs_size",
+            "type": "linear",
+        },
+        {
+            "condition": "fs_used,uncommitted,+,fs_size,>=",
+            "label": ("fs_used,fs_used,uncommitted,+,/,100,*", "%"),
+            "segments": [
+                "fs_used",
+                "fs_size,fs_used,-#e3fff9",
+                "0.1#559090",
+                "overprovisioned,fs_size,-#ffa000",
+            ],
+            "total": "overprovisioned",
+            "type": "linear",
+        },
+        {
+            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,>=",
+            "label": ("delivered_notifications,failed_notifications,+,100,+", "%"),
+            "segments": ["delivered_notifications,failed_notifications,+,100,+"],
+            "total": 100.0,
+            "type": "linear",
+        },
+        {
+            "condition": "delivered_notifications,failed_notifications,+,delivered_notifications,failed_notifications,+,2,*,<",
+            "label": (
+                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*",
+                "%",
+            ),
+            "segments": [
+                "delivered_notifications,failed_notifications,delivered_notifications,+,/,100,*"
+            ],
+            "total": 100.0,
+            "type": "linear",
+        },
+    ]
+
+
 def _is_non_trivial(expressions: Sequence[MetricExpression]) -> bool:
     return any(
         not isinstance(
@@ -332,7 +426,7 @@ def _perfometer_with_non_trivial_declarations(
             expressions.append(parse_expression(total, {}))
         if (label := perfometer.get("label")) is not None:
             expressions.append(parse_expression(label[0], {}))
-        if "condition" in perfometer or _is_non_trivial(expressions):
+        if _is_non_trivial(expressions):
             yield perfometer
 
     elif perfometer["type"] == "logarithmic":

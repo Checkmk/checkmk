@@ -8,7 +8,6 @@ from collections.abc import Sequence
 
 from cmk.utils.user import UserId
 
-import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.dashboard import get_permitted_dashboards
@@ -50,7 +49,6 @@ class Views(SidebarSnapin):
             footnotelinks(links)
 
 
-@cmk.gui.pages.register("export_views")
 def ajax_export_views() -> None:
     for view in get_permitted_views().values():
         view["owner"] = UserId.builtin()

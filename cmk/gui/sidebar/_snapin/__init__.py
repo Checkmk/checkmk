@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.pages import PageRegistry
+
 from ._base import CustomizableSidebarSnapin as CustomizableSidebarSnapin
 from ._base import PageHandlers as PageHandlers
 from ._base import SidebarSnapin as SidebarSnapin
@@ -33,10 +35,10 @@ from ._server_time import CurrentTime
 from ._site_status import SiteStatus
 from ._speedometer import Speedometer
 from ._tactical_overview import TacticalOverviewSnapin
-from ._views import Views
+from ._views import ajax_export_views, Views
 
 
-def register(snapin_registry_: SnapinRegistry) -> None:
+def register(snapin_registry_: SnapinRegistry, page_registry: PageRegistry) -> None:
     snapin_registry_.register(Bookmarks)
     snapin_registry_.register(Dashboards)
     snapin_registry_.register(HostGroups)
@@ -50,3 +52,4 @@ def register(snapin_registry_: SnapinRegistry) -> None:
     snapin_registry_.register(Speedometer)
     snapin_registry_.register(TacticalOverviewSnapin)
     snapin_registry_.register(Views)
+    page_registry.register_page_handler("export_views", ajax_export_views)

@@ -99,7 +99,7 @@ def register(
         PageAjaxSidebarGetUnackIncompWerks
     )
     permission_section_registry.register(PermissionSectionSidebarSnapins)
-    _snapin.register(snapin_registry_)
+    _snapin.register(snapin_registry_, page_registry)
     dashlet_registry.register(SnapinDashlet)
 
 

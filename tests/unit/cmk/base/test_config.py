@@ -42,21 +42,8 @@ import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.config import ConfigCache, HostsConfig, ip_address_of
+from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
-
-
-def test_duplicate_hosts() -> None:
-    hostnames = (
-        HostName("un"),
-        HostName("deux"),
-        HostName("deux"),
-        HostName("trois"),
-        HostName("trois"),
-        HostName("trois"),
-    )
-    hosts_config = HostsConfig(hosts=hostnames, clusters=(), shadow_hosts=())
-    assert list(hosts_config.duplicates(lambda *args, **kw: True)) == ["deux", "trois"]
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:

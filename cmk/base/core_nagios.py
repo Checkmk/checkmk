@@ -25,7 +25,7 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
@@ -44,13 +44,7 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.config import (
-    ConfigCache,
-    HostgroupName,
-    HostsConfig,
-    ObjectAttributes,
-    ServicegroupName,
-)
+from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
     CollectedHostLabels,
@@ -146,10 +140,10 @@ class NagiosConfig:
 
 
 def _validate_licensing(
-    hosts_config: HostsConfig, licensing_handler: LicensingHandler, licensing_counter: Counter
+    hosts: Hosts, licensing_handler: LicensingHandler, licensing_counter: Counter
 ) -> None:
     if block_effect := licensing_handler.effect_core(
-        licensing_counter["services"], len(hosts_config.shadow_hosts)
+        licensing_counter["services"], len(hosts.shadow_hosts)
     ).block:
         raise MKGeneralException(block_effect.message_raw)
 

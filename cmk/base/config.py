@@ -21,7 +21,6 @@ import py_compile
 import socket
 import struct
 import sys
-from collections import Counter
 from collections.abc import (
     Callable,
     Container,
@@ -62,7 +61,7 @@ from cmk.utils.check_utils import (
 )
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
@@ -1883,42 +1882,18 @@ def lookup_ip_address(
 #   +----------------------------------------------------------------------+
 
 
-class HostsConfig:
-    def __init__(
-        self,
-        *,
-        hosts: Sequence[HostName],
-        clusters: Sequence[HostName],  # pylint: disable=redefined-outer-name
-        shadow_hosts: Sequence[HostName],  # pylint: disable=redefined-outer-name
-    ) -> None:
-        self.hosts: Final = hosts
-        self.clusters: Final = clusters
-        self.shadow_hosts: Final = shadow_hosts
-
-    def duplicates(self, /, pred: Callable[[HostName], bool]) -> Iterable[HostName]:
-        return (
-            hn
-            for hn, count in Counter(
-                hn
-                for hn in itertools.chain(self.hosts, self.clusters, self.shadow_hosts)
-                if pred(hn)
-            ).items()
-            if count > 1
-        )
-
-    @classmethod
-    def from_config(cls) -> HostsConfig:
-        return cls(
-            hosts=strip_tags(all_hosts),
-            clusters=strip_tags(clusters),
-            shadow_hosts=list(_get_shadow_hosts()),
-        )
+def make_hosts_config() -> Hosts:
+    return Hosts(
+        hosts=strip_tags(all_hosts),
+        clusters=strip_tags(clusters),
+        shadow_hosts=list(_get_shadow_hosts()),
+    )
 
 
 class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
-        self.hosts_config = HostsConfig(hosts=(), clusters=(), shadow_hosts=())
+        self.hosts_config = Hosts(hosts=(), clusters=(), shadow_hosts=())
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1948,7 +1923,7 @@ class ConfigCache:
 
     def initialize(self) -> ConfigCache:
         self._initialize_caches()
-        self.hosts_config = HostsConfig.from_config()
+        self.hosts_config = make_hosts_config()
         self._setup_clusters_nodes_cache()
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()

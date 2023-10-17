@@ -38,6 +38,9 @@ VARIABLES:
     - NAME: CHANGED_CHECK_CERT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-cert/' || true"
 
+    - NAME: CHANGED_CHECK_HTTP_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-http/' || true"
+
     - NAME: CHANGED_CHECK_SQL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/check-sql/' || true"
 
@@ -386,6 +389,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-cert.txt"
       TEXT_ON_SKIP: 'No check-cert files changes'
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
+
+    - NAME: 'check-http'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_CHECK_HTTP_FILES
+      DIR: 'packages/check-http'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-http.txt"
+      TEXT_ON_SKIP: 'No check-http files changes'
+      RESULT_CHECK_FILE_PATTERN: "results/check-http.txt"
 
     - NAME: 'Check SQL'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_SQL_FILES

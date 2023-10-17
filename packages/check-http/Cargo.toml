@@ -8,8 +8,9 @@ edition = "2021"
 [dependencies]
 aes-gcm = { version = "*", features = ["aes", "std"] }
 anyhow = { version = "*" }
-clap = { version = "4.3.19", features = ["derive"] }
-http = "0.2.9"
-reqwest = { version = "0.11.18", features = ["json"] }
+clap = { version = "*", features = ["derive"] }
+http = { version = "*" }
+reqwest = { version = "*", features = ["json"] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
-tokio = { version = "1.29.1", features = ["full"] }
+tokio = { version = "*", features = ["full"] }
+openssl = { version = "*", features = ["vendored"] }

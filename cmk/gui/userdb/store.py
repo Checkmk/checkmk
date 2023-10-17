@@ -529,13 +529,13 @@ def _save_auth_serials(updated_profiles: Users) -> None:
 
 
 def create_cmk_automation_user(now: datetime) -> None:
-    secret = utils.gen_id()
+    secret = Password.random(24)
     users = load_users(lock=True)
     users[UserId("automation")] = {
         "alias": "Check_MK Automation - used for calling web services",
         "contactgroups": [],
-        "automation_secret": secret,
-        "password": password_hashing.hash_password(Password(secret)),
+        "automation_secret": secret.raw,
+        "password": password_hashing.hash_password(secret),
         "roles": ["admin"],
         "locked": False,
         "serial": 0,

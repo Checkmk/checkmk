@@ -49,11 +49,11 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     if cmk_version.edition() is not cmk_version.Edition.CSE:  # disabled in CSE
         main_module_registry.register(MainModuleRoles)
         main_module_registry.register(MainModuleLDAP)
+        main_module_registry.register(MainModuleSites)
     main_module_registry.register(MainModuleUserCustomAttributes)
     main_module_registry.register(MainModuleContactGroups)
     main_module_registry.register(MainModuleNotifications)
     main_module_registry.register(MainModuleTimeperiods)
-    main_module_registry.register(MainModuleSites)
     main_module_registry.register(MainModulePasswords)
     main_module_registry.register(MainModuleAuditLog)
     main_module_registry.register(MainModuleAnalyzeConfig)

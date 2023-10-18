@@ -347,6 +347,7 @@ def transform_check_mail_loop_params(params):
     # old format (2.0 and below)
     if params.get("imap_tls"):
         fetch_params["ssl"] = (True, fetch_params["ssl"][1])
+        del params["imap_tls"]
 
     return {
         **apply_fetch(

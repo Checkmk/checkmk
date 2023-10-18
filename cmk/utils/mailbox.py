@@ -602,16 +602,16 @@ class Mailbox:
         try:
             # Create maybe missing folder hierarchy and copy the mails
             if protocol == "IMAP":
-                for mail_index in mails:
-                    target = ""
-                    for level in folder.split("/"):
-                        target += f"{level}/"
-                        self._connection.create(target)
-                    verified_result(self._connection.copy(str(mail_index), folder))
+                target = ""
+                for level in folder.split("/"):
+                    target += f"{level}/"
+                    self._connection.create(target)
+                verified_result(
+                    self._connection.copy(",".join(str(index) for index in mails), folder)
+                )
             elif protocol == "EWS":
                 folder_obj = self._connection.add_folder(folder)
                 self._connection._account.bulk_copy(mails.values(), folder_obj)
-
         except Exception as exc:
             raise CleanupMailboxError("Failed to copy mail: %r" % exc) from exc
 

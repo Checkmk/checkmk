@@ -116,10 +116,14 @@ trap cleanup EXIT
 
 # build/install ################################################################
 
+BRANCH_NAME=clang_${TAG_NAME}
+# TODO: No branch for Clang 17 yet, remove the hack below when there is one.
+test $BRANCH_NAME == clang_17 && BRANCH_NAME=master
+
 cd "${WORK_DIR}"
 git clone \
     --depth 1 \
-    --branch clang_${TAG_NAME} \
+    --branch ${BRANCH_NAME} \
     https://github.com/include-what-you-use/include-what-you-use
 
 IWYU_VERSION=$(grep --word-regexp IWYU_VERSION_STRING include-what-you-use/iwyu_version.h | sed 's/^.*"\(.*\)"$/\1/')

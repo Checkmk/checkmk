@@ -6,6 +6,7 @@
 #include "livestatus/TableColumns.h"
 
 #include <memory>
+#include <utility>
 
 #include "livestatus/Column.h"
 #include "livestatus/Query.h"

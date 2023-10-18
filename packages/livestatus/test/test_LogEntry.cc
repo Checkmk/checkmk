@@ -9,7 +9,6 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <variant>
 #include <vector>
 
 #include "gtest/gtest.h"

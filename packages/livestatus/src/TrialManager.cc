@@ -9,8 +9,7 @@
 
 #include <compare>
 #include <cstdint>
-#include <istream>
-#include <ratio>
+#include <fstream>
 #include <stdexcept>
 #include <system_error>
 

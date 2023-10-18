@@ -11,6 +11,7 @@
 #include <sstream>
 #include <utility>
 
+#include "livestatus/Aggregator.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"

@@ -6,7 +6,7 @@
 set -e
 
 JOBS=6
-readonly CLANG_VERSION=${CLANG_VERSION:-16}
+readonly CLANG_VERSION=${CLANG_VERSION:-17}
 COMPILED_SOURCES=()
 
 failure() {

@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::CheckConfig;
-use anyhow::{bail, Result};
+use anyhow::Result;
 use tiberius::{AuthMethod, Client, Config};
 use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
@@ -90,5 +90,5 @@ pub async fn create_client_for_logged_user(
     _host: &str,
     _port: u16,
 ) -> Result<Client<Compat<TcpStream>>> {
-    bail!("not supported");
+    anyhow::bail!("not supported");
 }

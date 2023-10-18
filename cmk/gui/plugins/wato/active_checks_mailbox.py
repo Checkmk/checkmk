@@ -31,63 +31,6 @@ from cmk.gui.valuespec import (
 )
 
 
-def _smtp_email_parameters() -> Dictionary:
-    return Dictionary(
-        title="SMTP",
-        optional_keys=["server", "auth"],
-        elements=[
-            (
-                "server",
-                TextInput(
-                    title=_("SMTP server"),
-                    allow_empty=False,
-                    help=_(
-                        "You can specify a hostname or IP address different from the IP address "
-                        "of the host this check will be assigned to."
-                    ),
-                ),
-            ),
-            (
-                "connection",
-                Dictionary(
-                    required_keys=[],
-                    title=_("Connection settings"),
-                    elements=[
-                        (
-                            "tls",
-                            FixedValue(
-                                value=True,
-                                title=_("Use TLS over SMTP"),
-                                totext=_("Encrypt SMTP communication using TLS"),
-                            ),
-                        ),
-                        (
-                            "port",
-                            Integer(
-                                title=_("SMTP TCP Port to connect to"),
-                                help=_(
-                                    "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
-                                ),
-                                default_value=25,
-                            ),
-                        ),
-                    ],
-                ),
-            ),
-            (
-                "auth",
-                Tuple(
-                    title=_("SMTP Authentication"),
-                    elements=[
-                        TextInput(title=_("Username"), allow_empty=False, size=24),
-                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False, size=12),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
 def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
     credentials_basic: tuple[str, str, Tuple] = (
         "basic",
@@ -216,19 +159,6 @@ def validate_common_email_parameters(params: Mapping[str, tuple], varprefix: str
         )
 
 
-def _mail_sending_params() -> DictionaryEntry:
-    return (
-        "send",
-        CascadingDropdown(
-            title=_("Mail sending"),
-            choices=[
-                ("SMTP", _("SMTP"), _smtp_email_parameters()),
-                ("EWS", _("EWS"), _common_email_parameters("EWS", "80/443")),
-            ],
-        ),
-    )
-
-
 def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntry:
     return (
         "fetch",
@@ -305,9 +235,12 @@ def transform_check_mail_loop_params(params):
     allowed_keys = {
         "item",  # instead of "service_description"
         "fetch",  # can be asserted - since v2.0.0
-        "send",
         "connect_timeout",
         "subject",
+        "send_server",
+        "send_tls",
+        "send_port",
+        "send_auth",
         "mail_from",
         "mail_to",
         "duration",
@@ -315,47 +248,28 @@ def transform_check_mail_loop_params(params):
     }
     params = params.copy()
     fetch_protocol, fetch_params = params["fetch"]
-    send_protocol, send_params = params.get("send", (None, {}))
 
-    # Migrate old SMTP-only sending config to new EWS-enabled config
-    if send_protocol is None:
-        send_protocol = "SMTP"
-        if (server := params.get("smtp_server")) is not None:
-            send_params["server"] = server
-            del params["smtp_server"]
-
-        if (auth := params.get("smtp_auth")) is not None:
-            send_params["auth"] = auth
-            del params["smtp_auth"]
-
-        send_params["connection"] = {}
-        if (port := params.get("smtp_port")) is not None:
-            send_params["connection"]["port"] = port
-            del params["smtp_port"]
-        if (tls := params.get("smtp_tls")) is not None:
-            send_params["connection"]["tls"] = tls
-            del params["smtp_tls"]
+    for key in ["server", "auth", "port", "tls"]:
+        if (param := params.get(f"smtp_{key}")) is not None:
+            params[f"send_{key}"] = param
+            del params[f"smtp_{key}"]
 
     # `connection` is part of `fetch_params` since v2.1.0
     if "connection" in fetch_params:
         return {
             **params,
             "fetch": (fetch_protocol, update_fetch_params(fetch_params)),
-            "send": (send_protocol, send_params),
         }
 
     # old format (2.0 and below)
     if params.get("imap_tls"):
         fetch_params["ssl"] = (True, fetch_params["ssl"][1])
 
-    return {
-        **apply_fetch(
-            params,
-            (fetch_protocol, update_fetch_params(fetch_params)),
-            allowed_keys,
-        ),
-        "send": (send_protocol, send_params),
-    }
+    return apply_fetch(
+        params,
+        (fetch_protocol, update_fetch_params(fetch_params)),
+        allowed_keys,
+    )
 
 
 def _valuespec_active_checks_mail_loop():
@@ -370,6 +284,10 @@ def _valuespec_active_checks_mail_loop():
             ),
             optional_keys=[
                 "subject",
+                "send_server",
+                "send_tls",
+                "send_port",
+                "send_auth",
                 "connect_timeout",
                 "delete_messages",
                 "duration",
@@ -394,7 +312,47 @@ def _valuespec_active_checks_mail_loop():
                         ),
                     ),
                 ),
-                _mail_sending_params(),
+                (
+                    "send_server",
+                    TextInput(
+                        title=_("SMTP server"),
+                        allow_empty=False,
+                        help=_(
+                            "You can specify a hostname or IP address different from the IP address "
+                            "of the host this check will be assigned to."
+                        ),
+                    ),
+                ),
+                (
+                    "send_tls",
+                    FixedValue(
+                        value=True,
+                        title=_("Use TLS over SMTP"),
+                        totext=_("Encrypt SMTP communication using TLS"),
+                    ),
+                ),
+                (
+                    "send_port",
+                    Integer(
+                        title=_("SMTP TCP Port to connect to"),
+                        help=_(
+                            "The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>."
+                        ),
+                        default_value=25,
+                    ),
+                ),
+                (
+                    "send_auth",
+                    Tuple(
+                        title=_("SMTP Authentication"),
+                        elements=[
+                            TextInput(title=_("Username"), allow_empty=False, size=24),
+                            IndividualOrStoredPassword(
+                                title=_("Password"), allow_empty=False, size=12
+                            ),
+                        ],
+                    ),
+                ),
                 _mail_receiving_params({"IMAP", "POP3", "EWS"}),
                 (
                     "mail_from",

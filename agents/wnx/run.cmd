@@ -319,6 +319,7 @@ powershell Write-Host "Signing Executables" -Foreground White
 @call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
 @call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
 @call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe %hash_file%
+@call scripts\sign_code.cmd %arte%\check-sql.exe %hash_file%
 @call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
 @call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
 goto :eof

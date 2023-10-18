@@ -24,7 +24,7 @@ def check_mailboxes_arguments(params):
     ...       'server': 'srv', 'connection': {},
     ...       'auth': ('basic', ('usr', 'pw')),
     ...       'email_address': 'usr@srv.com',
-    ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'port': 123}}),
+    ...       'connection': {'disable_tls': True, 'disable_cert_validation': False, 'tcp_port': 123}}),
     ...     'age': (1, 2), 'age_newest': (3, 4), 'count': (5, 6),
     ...     'mailboxes': ['abc', 'def']}):
     ...   print(l)

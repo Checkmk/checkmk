@@ -22,7 +22,7 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop):
         check_mail_loop.create_argument_parser(),
         check_mail_loop.check_mail_roundtrip,
         [
-            "--send-server",
+            "--smtp-server",
             "foo",
             "--fetch-server",
             "bar",

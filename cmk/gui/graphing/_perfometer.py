@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
 import math
 from collections.abc import Sequence
@@ -26,6 +28,13 @@ from ._expression import (
 from ._unit_info import unit_info
 
 LegacyPerfometer = tuple[str, Any]
+
+
+def register() -> None:
+    renderer_registry.register(MetricometerRendererLogarithmic)
+    renderer_registry.register(MetricometerRendererLinear)
+    renderer_registry.register(MetricometerRendererStacked)
+    renderer_registry.register(MetricometerRendererDual)
 
 
 class _LinearPerfometerSpec(TypedDict):
@@ -222,7 +231,6 @@ class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRen
 renderer_registry = MetricometerRendererRegistry()
 
 
-@renderer_registry.register
 class MetricometerRendererLogarithmic(MetricometerRenderer):
     def __init__(
         self,
@@ -324,7 +332,6 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         )
 
 
-@renderer_registry.register
 class MetricometerRendererLinear(MetricometerRenderer):
     def __init__(
         self,
@@ -397,7 +404,6 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return sum(segment.evaluate(self._translated_metrics).value for segment in self._segments)
 
 
-@renderer_registry.register
 class MetricometerRendererStacked(MetricometerRenderer):
     def __init__(
         self,
@@ -447,7 +453,6 @@ class MetricometerRendererStacked(MetricometerRenderer):
         return renderer.get_sort_value()
 
 
-@renderer_registry.register
 class MetricometerRendererDual(MetricometerRenderer):
     def __init__(
         self,

@@ -6,6 +6,7 @@
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
+from . import _perfometer
 from ._explicit_graphs import ExplicitGraphRecipeBuilder
 from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_templates import TemplateGraphRecipeBuilder
@@ -30,6 +31,7 @@ def register(page_registry: PageRegistry, config_variable_registry: ConfigVariab
     graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
     register_time_series_expressions(time_series_expression_registry)
     config_variable_registry.register(ConfigVariableGraphTimeranges)
+    _perfometer.register()
 
 
 __all__ = [

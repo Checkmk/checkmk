@@ -1499,7 +1499,7 @@ perfometer_info.append(
     {
         "type": "linear",
         "segments": ["oracle_db_cpu", "oracle_db_wait_time"],
-        "total": "20,oracle_db_time,oracle_db_time,30,/,/,+",
+        "total": "50",
     }
 )
 

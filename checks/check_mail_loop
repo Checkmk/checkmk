@@ -11,27 +11,19 @@ from cmk.base.check_legacy_includes.check_mail import general_check_mail_args_fr
 CHECK_IDENT = "check_mail_loop"
 
 
-def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
+def check_mail_loop_arguments(params):
     """
     >>> for a in check_mail_loop_arguments({
     ...     'item': 'MailLoop_imap',
     ...     'subject': 'Some subject',
-    ...     "send": (
-    ...         "SMTP",
-    ...         {
-    ...             "server": "smtp.gmx.de",
-    ...             "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
-    ...             "connection": {"tls": True, "port": 42},
-    ...         },
-    ...     ),
-    ...     "fetch": (
-    ...         "IMAP",
-    ...         {
-    ...             "server": "imap.gmx.de",
-    ...             "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
-    ...             "connection": {"disable_tls": False, "port": 123},
-    ...         },
-    ...     ),
+    ...     'send_server': 'smtp.gmx.de',
+    ...     'send_tls': True,
+    ...     'send_port': 42,
+    ...     'send_auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
+    ...     'fetch': ('IMAP', {
+    ...       'server': 'imap.gmx.de',
+    ...       'auth': ("basic", ('me@gmx.de', ('password', 'p4ssw0rd'))),
+    ...       'connection': {'disable_tls': False, 'port': 123}}),
     ...     'mail_from': 'me_from@gmx.de',
     ...     'mail_to': 'me_to@gmx.de',
     ...     'connect_timeout': 23,
@@ -45,10 +37,9 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
     --fetch-username=me@gmx.de
     --fetch-password=p4ssw0rd
     --connect-timeout=23
-    --send-protocol=SMTP
     --send-server=smtp.gmx.de
-    --send-port=42
     --send-tls
+    --send-port=42
     --send-username=me@gmx.de
     --send-password=p4ssw0rd
     --mail-from=me_from@gmx.de
@@ -62,52 +53,18 @@ def check_mail_loop_arguments(params):  # pylint: disable=too-many-branches
         CHECK_IDENT, params
     )
 
-    try:
-        send_protocol, send_params = params["send"]
-        connection_params = send_params["connection"]
-    except KeyError as exc:
-        raise ValueError(
-            f"{params['item']} --- Params for check_mail_loop are faulty (missing {exc}), did you update the config?"
-        )
+    args.append(f"--send-server={params.get('send_server', '$HOSTADDRESS$')}")
 
-    args.append(f"--send-protocol={send_protocol}")
-    args.append(f"--send-server={send_params.get('server', '$HOSTADDRESS$')}")
-    if (port := connection_params.get("port")) is not None:
-        args.append(f"--send-port={port}")
+    if "send_tls" in params:
+        args.append("--send-tls")
 
-    if send_protocol == "SMTP":
-        if connection_params.get("tls"):
-            args.append("--send-tls")
+    if "send_port" in params:
+        args.append(f"--send-port={params['send_port']}")
 
-        if auth_params := send_params.get("auth"):
-            username, password = auth_params
-            args.append(f"--send-username={username}")
-            args.append(passwordstore_get_cmdline("--send-password=%s", password))
-    elif send_protocol == "EWS":
-        if not connection_params.get("disable_tls"):
-            args.append("--send-tls")
-
-        if connection_params.get("disable_cert_validation"):
-            args.append("--send-disable-cert-validation")
-
-        auth_type, auth_data = send_params.get("auth")
-        if auth_type == "basic":
-            username, password = auth_data
-            args += [
-                f"--send-username={username}",
-                passwordstore_get_cmdline("--send-password=%s", password),
-            ]
-        else:
-            client_id, client_secret, tenant_id = auth_data
-            args += [
-                f"--send-client-id={client_id}",
-                passwordstore_get_cmdline("--send-client-secret=%s", client_secret),
-                f"--send-tenant-id={tenant_id}",
-            ]
-
-        args.append(f"--send-email-address={send_params.get('email_address')}")
-    else:
-        raise NotImplementedError(f"Sending mails is not implemented for {send_protocol}")
+    if "send_auth" in params:
+        username, password = params["send_auth"]
+        args.append(f"--send-username={username}")
+        args.append(passwordstore_get_cmdline("--send-password=%s", password))
 
     args.append(f"--mail-from={params['mail_from']}")
     args.append(f"--mail-to={params['mail_to']}")

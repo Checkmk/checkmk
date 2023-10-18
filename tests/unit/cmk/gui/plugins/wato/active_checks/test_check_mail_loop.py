@@ -22,7 +22,6 @@ from cmk.gui.plugins.wato.active_checks_mailbox import transform_check_mail_loop
                         "connection": {},
                     },
                 ),
-                "send": ("SMTP", {"connection": {}}),
             },
             {
                 "item": "service_name",
@@ -33,7 +32,6 @@ from cmk.gui.plugins.wato.active_checks_mailbox import transform_check_mail_loop
                         "connection": {},
                     },
                 ),
-                "send": ("SMTP", {"connection": {}}),
             },
             id="old `auth` element",
         ),
@@ -47,7 +45,6 @@ from cmk.gui.plugins.wato.active_checks_mailbox import transform_check_mail_loop
                         "connection": {"disable_tls": False, "tcp_port": 143},
                     },
                 ),
-                "send": ("SMTP", {"connection": {}}),
             },
             {
                 "item": "service_name",
@@ -58,7 +55,6 @@ from cmk.gui.plugins.wato.active_checks_mailbox import transform_check_mail_loop
                         "connection": {"disable_tls": False, "port": 143},  # new param name "port"
                     },
                 ),
-                "send": ("SMTP", {"connection": {}}),
             },
             id="old param name 'tcp_port'",
         ),
@@ -86,14 +82,10 @@ from cmk.gui.plugins.wato.active_checks_mailbox import transform_check_mail_loop
                         "connection": {},
                     },
                 ),
-                "send": (
-                    "SMTP",
-                    {
-                        "server": "smtp.gmx.de",
-                        "auth": ("usr_smtp", ("password", "pw_smtp")),
-                        "connection": {"tls": True, "port": 25},
-                    },
-                ),
+                "send_auth": ("usr_smtp", ("password", "pw_smtp")),
+                "send_port": 25,
+                "send_server": "smtp.gmx.de",
+                "send_tls": True,
             },
             id="old SMTP sending config",
         ),

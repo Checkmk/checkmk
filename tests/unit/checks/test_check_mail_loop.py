@@ -16,7 +16,6 @@ pytestmark = pytest.mark.checks
         (
             {
                 "item": "foo",
-                "send": ("SMTP", {"connection": {}}),
                 "fetch": (
                     "IMAP",
                     {
@@ -34,7 +33,6 @@ pytestmark = pytest.mark.checks
                 "--fetch-port=143",
                 "--fetch-username=hans",
                 "--fetch-password=wurst",
-                "--send-protocol=SMTP",
                 "--send-server=$HOSTADDRESS$",
                 "--mail-from=None",
                 "--mail-to=None",
@@ -45,14 +43,10 @@ pytestmark = pytest.mark.checks
             {
                 "item": "MailLoop_imap",
                 "subject": "Some subject",
-                "send": (
-                    "SMTP",
-                    {
-                        "server": "smtp.gmx.de",
-                        "connection": {"tls": True, "port": 42},
-                        "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
-                    },
-                ),
+                "send_server": "smtp.gmx.de",
+                "send_tls": True,
+                "send_port": 42,
+                "send_auth": ("me@gmx.de", ("password", "p4ssw0rd")),
                 "fetch": (
                     "IMAP",
                     {
@@ -73,10 +67,9 @@ pytestmark = pytest.mark.checks
                 "--fetch-username=me@gmx.de",
                 "--fetch-password=p4ssw0rd",
                 "--connect-timeout=23",
-                "--send-protocol=SMTP",
                 "--send-server=smtp.gmx.de",
-                "--send-port=42",
                 "--send-tls",
+                "--send-port=42",
                 "--send-username=me@gmx.de",
                 "--send-password=p4ssw0rd",
                 "--mail-from=me_from@gmx.de",

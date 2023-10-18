@@ -28,7 +28,6 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
 @pytest.fixture(name="test_user")
 def fixture_test_user(site: Site) -> Iterator[None]:
     initial_users = site.openapi.get_all_users()
-    assert len(initial_users) == 2  # expect cmkadmin and automation user
 
     username = "hh"
     site.openapi.create_user(

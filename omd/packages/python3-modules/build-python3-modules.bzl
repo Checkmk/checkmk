@@ -39,8 +39,6 @@ build_cmd = """
     # Python binary supplied by bazel build process
     export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/python/python/bin/python3
 
-    INTERNAL_PYPI_MIRROR=https://devpi.lan.tribe29.com/root/pypi
-
     # Workaround for git execution issue
     mkdir -p $$TMPDIR/workdir/$(OUTS)
     install -m 755 "$(execpath @omd_packages//omd/packages/omd:use_system_openssl)" "$$TMPDIR/workdir/$(OUTS)/git"
@@ -84,6 +82,6 @@ build_cmd = """
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$(OUTS)" \\
-      -i $$INTERNAL_PYPI_MIRROR \\
+      -i {pypi_mirror} \\
       {requirements}
 """

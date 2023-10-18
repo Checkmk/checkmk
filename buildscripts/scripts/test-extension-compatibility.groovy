@@ -22,7 +22,15 @@ def main() {
                             > /tmp/extension_compatibility.txt
                         diff -u --color \
                             tests/extension_compatibility/current_extensions_under_test.txt \
-                            /tmp/extension_compatibility.txt
+                            /tmp/extension_compatibility.txt \
+                        || { cat <<HERE && false
+
+                        You can fix the above by running:
+                        pipenv run ./tests/extension_compatibility/output_extensions_sorted_by_downloads.py | head -n 10 > tests/extension_compatibility/current_extensions_under_test.txt
+
+
+HERE
+}
                     """);
                 }
             }

@@ -756,8 +756,8 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-port",
         type=int,
         metavar="PORT",
-        help="{'/'.join(protocols)} port (defaults to 110/995 (TLS) for POP3, to 143/993 (TLS) for "
-        "IMAP and to 80/443 (TLS) for EWS)",
+        help="IMAP or POP3 port (defaults to 110/995 (TLS) for POP3"
+        " 143/993 (TLS) for IMAP and 80/443 (TLS) otherwise)",
     )
     parser.add_argument(
         "--fetch-tls",

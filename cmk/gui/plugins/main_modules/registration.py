@@ -98,8 +98,8 @@ def register_sites_options() -> None:
     visuals.MultipleSitesFilter.sites_options = cre_sites_options
     visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 
-    autocompleter_registry.register_expression("sites")(
-        partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
+    autocompleter_registry.register_autocompleter(
+        "sites", partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
     )
 
 
@@ -152,6 +152,7 @@ def register() -> None:
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,
         config_variable_group_registry,
+        autocompleter_registry,
     )
 
     if edition() is not Edition.CSE:  # disabled in CSE
@@ -241,7 +242,7 @@ def register() -> None:
     notifications.register(page_registry, permission_section_registry)
     user_message.register(page_registry)
     valuespec.register(page_registry)
-    autocompleters.register(page_registry)
+    autocompleters.register(page_registry, autocompleter_registry)
     werks.register(page_registry)
     login.register(page_registry)
     sidebar.register(page_registry, permission_section_registry, snapin_registry, dashlet_registry)

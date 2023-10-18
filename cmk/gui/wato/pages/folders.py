@@ -61,7 +61,13 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     YouTubeReference,
 )
-from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
+from cmk.gui.valuespec import (
+    AjaxDropdownChoice,
+    autocompleter_registry,
+    DropdownChoice,
+    TextInput,
+    ValueSpec,
+)
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
@@ -99,6 +105,24 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeFolder)
     mode_registry.register(ModeEditFolder)
     mode_registry.register(ModeCreateFolder)
+    autocompleter_registry.register_autocompleter(
+        "wato_folder_choices", wato_folder_choices_autocompleter
+    )
+
+
+def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
+    match_pattern = re.compile(value, re.IGNORECASE)
+    matching_folders: Choices = []
+    for path, name in folder_tree().folder_choices_fulltitle():
+        if match_pattern.search(name) is not None:
+            # select2 omits empty strings ("") as option therefore the path of the Main folder is
+            # replaced by a placeholder
+            matching_folders.append((path, name) if path != "" else ("@main", name))
+    return matching_folders
+
+
+class WatoFolderChoices(AjaxDropdownChoice):
+    ident = "wato_folder_choices"
 
 
 def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:

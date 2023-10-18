@@ -86,8 +86,10 @@ def register(
     )
     permission_section_registry.register(PermissionSectionEventConsole)
     config_domain_registry.register(ConfigDomainEventConsole)
-    autocompleter_registry.register_expression("syslog_facilities")(syslog_facilities_autocompleter)
-    autocompleter_registry.register_expression("service_levels")(service_levels_autocompleter)
+    autocompleter_registry.register_autocompleter(
+        "syslog_facilities", syslog_facilities_autocompleter
+    )
+    autocompleter_registry.register_autocompleter("service_levels", service_levels_autocompleter)
     _filters.register(filter_registry)
     snapin_registry.register(SidebarSnapinEventConsole)
     contact_group_usage_finder_registry.register(find_usages_of_contact_group_in_ec_rules)

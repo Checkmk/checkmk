@@ -8,6 +8,7 @@ from collections.abc import Callable, Sequence
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import register_job
+from cmk.gui.valuespec import AutocompleterRegistry
 
 from . import (
     _host_attributes,
@@ -45,6 +46,7 @@ from .config_domain_name import (
     ConfigVariableGroupRegistry,
     SampleConfigGeneratorRegistry,
 )
+from .config_hostname import config_hostname_autocompleter
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
 from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
@@ -90,6 +92,7 @@ def register(
     contact_group_usage_finder_registry_: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
+    autocompleter_registry: AutocompleterRegistry,
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
@@ -124,6 +127,7 @@ def register(
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_time_specific_parameters)
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
+    autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:

@@ -3021,18 +3021,14 @@ class AutocompleterRegistry(Registry[AutocompleterFunc]):
     def plugin_name(self, instance):
         return instance._ident
 
-    def register_expression(self, ident: str) -> Callable[[AutocompleterFunc], AutocompleterFunc]:
-        def wrap(plugin_func: AutocompleterFunc) -> AutocompleterFunc:
-            if not callable(plugin_func):
-                raise TypeError()
+    def register_autocompleter(self, ident: str, func: AutocompleterFunc) -> None:
+        if not callable(func):
+            raise TypeError()
 
-            # We define the attribute here. for the `plugin_name` method.
-            plugin_func._ident = ident  # type: ignore[attr-defined]
+        # We define the attribute here. for the `plugin_name` method.
+        func._ident = ident  # type: ignore[attr-defined]
 
-            self.register(plugin_func)
-            return plugin_func
-
-        return wrap
+        self.register(func)
 
 
 autocompleter_registry = AutocompleterRegistry()
@@ -3093,10 +3089,6 @@ class MonitoredServiceDescription(AjaxDropdownChoice):
     Fetching the choices from the current live config via livestatus"""
 
     ident = "monitored_service_description"
-
-
-class WatoFolderChoices(AjaxDropdownChoice):
-    ident = "wato_folder_choices"
 
 
 class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):

@@ -85,7 +85,7 @@ from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
 )
 from cmk.gui.watolib.groups import contact_group_usage_finder_registry
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import host_attribute_registry, host_attribute_topic_registry
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
@@ -147,6 +147,7 @@ def register() -> None:
         job_registry,
         sample_config_generator_registry,
         config_domain_registry,
+        host_attribute_topic_registry,
         host_attribute_registry,
         contact_group_usage_finder_registry,
         timeperiod_usage_finder_registry,

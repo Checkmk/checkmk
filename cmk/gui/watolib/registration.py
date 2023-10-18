@@ -20,6 +20,7 @@ from . import (
     config_domains,
     config_variable_groups,
     groups,
+    host_attributes,
     rulespec_groups,
 )
 from .activate_changes import (
@@ -45,7 +46,7 @@ from .config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
-from .host_attributes import ABCHostAttribute, HostAttributeRegistry
+from .host_attributes import ABCHostAttribute, HostAttributeRegistry, HostAttributeTopicRegistry
 from .host_label_sync import AutomationDiscoveredHostLabelSync, DiscoveredHostLabelSyncJob
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
@@ -84,6 +85,7 @@ def register(
     job_registry: BackgroundJobRegistry,
     sample_config_generator_registry: SampleConfigGeneratorRegistry,
     config_domain_registry: ConfigDomainRegistry,
+    host_attribute_topic_registry: HostAttributeTopicRegistry,
     host_attribute_registry: HostAttributeRegistry,
     contact_group_usage_finder_registry_: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
@@ -93,6 +95,7 @@ def register(
     _register_gui_background_jobs(job_registry)
     _register_hooks()
     _register_config_domains(config_domain_registry)
+    host_attributes.register(host_attribute_topic_registry)
     _host_attributes.register()
     _register_host_attribute(host_attribute_registry)
     _register_cronjobs()

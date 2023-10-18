@@ -44,6 +44,17 @@ from cmk.gui.watolib.utils import host_attribute_matches
 from cmk.fields import String
 
 
+def register(host_attribute_topic_registry_: HostAttributeTopicRegistry) -> None:
+    host_attribute_topic_registry_.register(HostAttributeTopicBasicSettings)
+    host_attribute_topic_registry_.register(HostAttributeTopicAddress)
+    host_attribute_topic_registry_.register(HostAttributeTopicDataSources)
+    host_attribute_topic_registry_.register(HostAttributeTopicHostTags)
+    host_attribute_topic_registry_.register(HostAttributeTopicNetworkScan)
+    host_attribute_topic_registry_.register(HostAttributeTopicManagementBoard)
+    host_attribute_topic_registry_.register(HostAttributeTopicCustomAttributes)
+    host_attribute_topic_registry_.register(HostAttributeTopicMetaData)
+
+
 class HostContactGroupSpec(TypedDict):
     groups: list[ContactgroupName]
     recurse_perms: bool
@@ -172,7 +183,6 @@ host_attribute_topic_registry = HostAttributeTopicRegistry()
 
 
 # TODO: Move these plugins?
-@host_attribute_topic_registry.register
 class HostAttributeTopicBasicSettings(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -187,7 +197,6 @@ class HostAttributeTopicBasicSettings(HostAttributeTopic):
         return 0
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicAddress(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -202,7 +211,6 @@ class HostAttributeTopicAddress(HostAttributeTopic):
         return 10
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicDataSources(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -217,7 +225,6 @@ class HostAttributeTopicDataSources(HostAttributeTopic):
         return 20
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicHostTags(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -232,7 +239,6 @@ class HostAttributeTopicHostTags(HostAttributeTopic):
         return 30
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicNetworkScan(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -247,7 +253,6 @@ class HostAttributeTopicNetworkScan(HostAttributeTopic):
         return 40
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicManagementBoard(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -262,7 +267,6 @@ class HostAttributeTopicManagementBoard(HostAttributeTopic):
         return 50
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicCustomAttributes(HostAttributeTopic):
     @property
     def ident(self) -> str:
@@ -277,7 +281,6 @@ class HostAttributeTopicCustomAttributes(HostAttributeTopic):
         return 35
 
 
-@host_attribute_topic_registry.register
 class HostAttributeTopicMetaData(HostAttributeTopic):
     @property
     def ident(self) -> str:

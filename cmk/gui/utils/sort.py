@@ -14,9 +14,9 @@ def _make_key(key: str) -> tuple[int | str, ...]:
     split = key_num_split(key.casefold())
 
     order = (
-        (is_number and not is_symbol) * 1
-        + (not is_number and not is_symbol) * 2
-        + (not is_number and is_symbol) * 3
+        (not is_number and is_symbol) * 1
+        + (is_number and not is_symbol) * 2
+        + (not is_number and not is_symbol) * 3
     )
     return (order, *split)
 

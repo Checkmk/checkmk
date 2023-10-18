@@ -9,9 +9,8 @@ Level: 1
 Version: 2.3.0b1
 
 This werk introduces natural sorting order on folders and hosts in host setup page. The elements will be sorted acording to this criteria:
-* Numbers are first
+* Special characters come first
+* Numbers are second
 * Multiple digits next to each other count as one number
-* No case sensivity
-* Special characters come last
-
+* Strings come last, no case sensivity
 

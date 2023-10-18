@@ -3,6 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.config_generation.register import load_active_checks
+from cmk.base.plugins.config_generation.register import load_active_checks, load_special_agents
 
-__all__ = ["load_active_checks"]
+__all__ = ["load_active_checks", "load_special_agents"]

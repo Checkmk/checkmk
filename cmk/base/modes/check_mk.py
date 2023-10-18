@@ -58,7 +58,15 @@ from cmk.utils.structured_data import (
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
 
-from cmk.snmplib import get_single_oid, OID, oids_to_walk, SNMPBackend, SNMPRawData, walk_for_export
+from cmk.snmplib import (
+    get_single_oid,
+    OID,
+    oids_to_walk,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPRawData,
+    walk_for_export,
+)
 
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import FetcherType, get_raw_data
@@ -137,6 +145,20 @@ from ._localize import do_localize
 #   '----------------------------------------------------------------------'
 
 _verbosity = 0
+
+
+def parse_snmp_backend(backend: object) -> SNMPBackendEnum | None:
+    match backend:
+        case None:
+            return None
+        case "inline":
+            return SNMPBackendEnum.INLINE
+        case "classic":
+            return SNMPBackendEnum.CLASSIC
+        case "stored-walk":
+            return SNMPBackendEnum.STORED_WALK
+        case _:
+            raise ValueError(backend)
 
 
 def option_verbosity() -> None:
@@ -260,6 +282,13 @@ _FETCHER_OPTIONS: Final = [
         short_help="Use snmpwalk stored with --snmpwalk",
     ),
 ]
+
+_SNMP_BACKEND_OPTION: Final = Option(
+    long_option="snmp-backend",
+    short_help="Override default SNMP backend",
+    argument=True,
+    argument_descr="inline|classic|stored-walk",
+)
 
 # .
 #   .--list-hosts----------------------------------------------------------.
@@ -488,8 +517,14 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) -> None:
+def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     file_cache_options = _handle_fetcher_options(options)
+
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
+
     try:
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
@@ -514,6 +549,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 discovery=1.5 * check_interval,
                 inventory=1.5 * check_interval,
             ),
+            snmp_backend_override=snmp_backend_override,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -584,7 +620,7 @@ modes.register(
             "hosts it shows the agent output plus possible piggyback information. "
             "Does not work on clusters but only on real hosts. "
         ],
-        sub_options=_FETCHER_OPTIONS[:3],
+        sub_options=[*_FETCHER_OPTIONS[:3], _SNMP_BACKEND_OPTION],
     )
 )
 
@@ -1119,6 +1155,11 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     if "oids" in options and "extraoids" in options:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
 
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
+
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
@@ -1130,6 +1171,8 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
+        if snmp_backend_override is not None:
+            snmp_config = snmp_config._replace(snmp_backend=snmp_backend_override)
         _do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 
@@ -1151,6 +1194,7 @@ modes.register(
             "additional OIDs to walk." % cmk.utils.paths.snmpwalks_dir,
         ],
         sub_options=[
+            _SNMP_BACKEND_OPTION,
             Option(
                 long_option="extraoid",
                 argument=True,
@@ -1183,9 +1227,13 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmpget(args: list[str]) -> None:
+def mode_snmpget(options: Mapping[str, object], args: Sequence[str]) -> None:
     if not args:
         raise MKBailOut("You need to specify an OID.")
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
 
     config_cache = config.get_config_cache()
     oid, *hostnames = args
@@ -1207,6 +1255,9 @@ def mode_snmpget(args: list[str]) -> None:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
+        if snmp_backend_override is not None:
+            snmp_config = snmp_config._replace(snmp_backend=snmp_backend_override)
+
         backend = snmp_factory.make_backend(snmp_config, log.logger)
         value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
@@ -1224,6 +1275,7 @@ modes.register(
             "Does a snmpget on the given OID on one or multiple hosts. In case "
             "no host is given, all known SNMP hosts are queried."
         ],
+        sub_options=[_SNMP_BACKEND_OPTION],
     )
 )
 
@@ -1695,13 +1747,18 @@ modes.register(
 
 
 def mode_check_discovery(
-    options: Mapping[str, Literal[True]],
+    options: Mapping[str, object],
     hostname: HostName,
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> int:
     file_cache_options = _handle_fetcher_options(options)
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
+
     config_cache = config.get_config_cache()
     ruleset_matcher = config_cache.ruleset_matcher
     ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
@@ -1720,6 +1777,7 @@ def mode_check_discovery(
             discovery=discovery_file_cache_max_age,
             inventory=1.5 * check_interval,
         ),
+        snmp_backend_override=snmp_backend_override,
     )
     parser = CMKParser(
         config_cache,
@@ -1801,7 +1859,7 @@ def register_mode_check_discovery(
                 "If configured to do so, this will queue those hosts for automatic "
                 "autodiscovery"
             ],
-            sub_options=_FETCHER_OPTIONS,
+            sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
         )
     )
 
@@ -2010,6 +2068,11 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)
 
     file_cache_options = _handle_fetcher_options(options, defaults=file_cache_options)
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
+
     hostnames = modes.parse_hostname_list(config_cache, args)
     config_cache = config.get_config_cache()
     if not hostnames:
@@ -2036,6 +2099,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         on_error=on_error,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=snmp_backend_override,
     )
     for hostname in sorted(
         _preprocess_hostnames(
@@ -2102,6 +2166,7 @@ modes.register(
         ],
         sub_options=[
             *_FETCHER_OPTIONS,
+            _SNMP_BACKEND_OPTION,
             Option(
                 long_option="discover",
                 short_option="I",
@@ -2170,6 +2235,10 @@ def mode_check(
     keepalive: bool,
 ) -> ServiceState:
     file_cache_options = _handle_fetcher_options(options)
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
 
     # handle adhoc-check
     hostname = HostName(args[0])
@@ -2189,6 +2258,7 @@ def mode_check(
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=snmp_backend_override,
     )
     parser = CMKParser(
         config_cache,
@@ -2319,6 +2389,7 @@ def register_mode_check(
             ],
             sub_options=[
                 *_FETCHER_OPTIONS,
+                _SNMP_BACKEND_OPTION,
                 Option(
                     long_option="no-submit",
                     short_option="n",
@@ -2368,6 +2439,10 @@ _InventoryOptions = TypedDict(
 
 def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     file_cache_options = _handle_fetcher_options(options)
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
 
     config_cache = config.get_config_cache()
     hosts_config = config.make_hosts_config()
@@ -2399,6 +2474,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         on_error=OnError.RAISE,
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=snmp_backend_override,
     )
     parser = CMKParser(
         config_cache,
@@ -2490,6 +2566,7 @@ modes.register(
         ],
         sub_options=[
             *_FETCHER_OPTIONS,
+            _SNMP_BACKEND_OPTION,
             Option(
                 long_option="force",
                 short_option="f",
@@ -2612,7 +2689,7 @@ def _get_save_tree_actions(
 
 
 def mode_inventory_as_check(
-    options: dict,
+    options: Mapping[str, object],
     hostname: HostName,
     *,
     active_check_handler: Callable[[HostName, str], object],
@@ -2622,6 +2699,11 @@ def mode_inventory_as_check(
     config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     hosts_config = config.make_hosts_config()
     file_cache_options = _handle_fetcher_options(options)
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
+
     parameters = HWSWInventoryParameters.from_raw(options)
 
     fetcher = CMKFetcher(
@@ -2632,6 +2714,7 @@ def mode_inventory_as_check(
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=snmp_backend_override,
     )
     parser = CMKParser(
         config_cache,
@@ -2700,6 +2783,7 @@ def register_mode_inventory_as_check(
             short_help="Do HW/SW-Inventory, behave like check plugin",
             sub_options=[
                 *_FETCHER_OPTIONS,
+                _SNMP_BACKEND_OPTION,
                 Option(
                     long_option="hw-changes",
                     argument=True,
@@ -2756,8 +2840,12 @@ if cmk_version.edition() is cmk_version.Edition.CRE:
 #   '----------------------------------------------------------------------'
 
 
-def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
+def mode_inventorize_marked_hosts(options: Mapping[str, object]) -> None:
     file_cache_options = _handle_fetcher_options(options)
+    try:
+        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
+    except ValueError as exc:
+        raise MKBailOut("Unknown SNMP backend") from exc
 
     if not (queue := AutoQueue(cmk.utils.paths.autoinventory_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check\n")
@@ -2779,6 +2867,7 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         on_error=OnError.RAISE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=snmp_backend_override,
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:
@@ -2852,7 +2941,7 @@ modes.register(
             "Run actual service HW/SW Inventory on all hosts that had no tree data",
             "in the previous run",
         ],
-        sub_options=_FETCHER_OPTIONS,
+        sub_options=[*_FETCHER_OPTIONS, _SNMP_BACKEND_OPTION],
         needs_config=False,
     )
 )

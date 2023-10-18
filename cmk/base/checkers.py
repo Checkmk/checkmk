@@ -240,6 +240,7 @@ class CMKFetcher:
         selected_sections: SectionNameCollection,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
+        snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         self.config_cache: Final = config_cache
         self.file_cache_options: Final = file_cache_options
@@ -249,6 +250,7 @@ class CMKFetcher:
         self.selected_sections: Final = selected_sections
         self.simulation_mode: Final = simulation_mode
         self.max_cachefile_age: Final = max_cachefile_age
+        self.snmp_backend_override: Final = snmp_backend_override
 
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
@@ -284,8 +286,10 @@ class CMKFetcher:
                     on_scan_error=self.on_error if nodes is None else OnError.RAISE,
                     simulation_mode=self.simulation_mode,
                     file_cache_options=self.file_cache_options,
-                    file_cache_max_age=self.max_cachefile_age
-                    or self.config_cache.max_cachefile_age(host_name),
+                    file_cache_max_age=(
+                        self.max_cachefile_age or self.config_cache.max_cachefile_age(host_name)
+                    ),
+                    snmp_backend_override=self.snmp_backend_override,
                 )
                 for host_name_, ip_address_ in hosts
             ),

@@ -990,6 +990,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
             on_error=OnError.RAISE,
             selected_sections=NO_SELECTION,
             simulation_mode=True,
+            snmp_backend_override=None,
         )
         commandline_discovery(
             host_name=testhost,

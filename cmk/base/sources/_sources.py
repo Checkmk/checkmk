@@ -11,7 +11,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib import SNMPRawData
+from cmk.snmplib import SNMPBackendEnum, SNMPRawData
 
 from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template
@@ -60,6 +60,7 @@ class SNMPSource(Source[SNMPRawData]):
         max_age: MaxAge,
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
+        backend_override: SNMPBackendEnum | None,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -68,6 +69,7 @@ class SNMPSource(Source[SNMPRawData]):
         self._max_age: Final = max_age
         self._on_scan_error: Final = on_scan_error
         self._selected_sections: Final = selected_sections
+        self._backend_override: Final = backend_override
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -79,12 +81,16 @@ class SNMPSource(Source[SNMPRawData]):
         )
 
     def fetcher(self) -> Fetcher[SNMPRawData]:
+        snmp_config = self.config_cache.make_snmp_config(
+            self.host_name, self.ipaddress, SourceType.HOST
+        )
+        if self._backend_override is not None:
+            snmp_config = snmp_config._replace(snmp_backend=self._backend_override)
+
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            snmp_config=self.config_cache.make_snmp_config(
-                self.host_name, self.ipaddress, SourceType.HOST
-            ),
+            snmp_config=snmp_config,
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
         )
@@ -118,6 +124,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         max_age: MaxAge,
         on_scan_error: OnError,
         selected_sections: SectionNameCollection,
+        backend_override: SNMPBackendEnum | None,
     ) -> None:
         super().__init__()
         self.config_cache: Final = config_cache
@@ -126,6 +133,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         self._max_age: Final = max_age
         self._on_scan_error: Final = on_scan_error
         self._selected_sections: Final = selected_sections
+        self._backend_override: Final = backend_override
 
     def source_info(self) -> SourceInfo:
         return SourceInfo(
@@ -137,12 +145,15 @@ class MgmtSNMPSource(Source[SNMPRawData]):
         )
 
     def fetcher(self) -> Fetcher[SNMPRawData]:
+        snmp_config = self.config_cache.make_snmp_config(
+            self.host_name, self.ipaddress, SourceType.MANAGEMENT
+        )
+        if self._backend_override is not None:
+            snmp_config = snmp_config._replace(snmp_backend=self._backend_override)
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
-            snmp_config=self.config_cache.make_snmp_config(
-                self.host_name, self.ipaddress, SourceType.MANAGEMENT
-            ),
+            snmp_config=snmp_config,
             on_scan_error=self._on_scan_error,
             selected_sections=self._selected_sections,
         )

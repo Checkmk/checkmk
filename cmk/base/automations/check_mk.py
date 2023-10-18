@@ -261,6 +261,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             on_error=on_error,
             selected_sections=NO_SELECTION,
             simulation_mode=config.simulation_mode,
+            snmp_backend_override=None,
         )
         for hostname in hostnames:
 
@@ -490,6 +491,7 @@ def _execute_discovery(
         on_error=on_error,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=None,
     )
     ip_address = (
         None
@@ -599,6 +601,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
         on_error=OnError.IGNORE,
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
+        snmp_backend_override=None,
     )
     section_plugins = SectionPluginMapper()
     host_label_plugins = HostLabelPluginMapper(ruleset_matcher=ruleset_matcher)
@@ -1926,6 +1929,7 @@ class AutomationDiagHost(Automation):
                 discovery=1.5 * check_interval,
                 inventory=1.5 * check_interval,
             ),
+            snmp_backend_override=None,
         ):
             source_info = source.source_info()
             if source_info.fetcher_type is FetcherType.SNMP:
@@ -2300,6 +2304,7 @@ class AutomationGetAgentOutput(Automation):
                         discovery=1.5 * check_interval,
                         inventory=1.5 * check_interval,
                     ),
+                    snmp_backend_override=None,
                 ):
                     source_info = source.source_info()
                     if source_info.fetcher_type is FetcherType.SNMP:

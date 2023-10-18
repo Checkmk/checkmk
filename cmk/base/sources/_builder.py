@@ -112,6 +112,7 @@ class _Builder:
         on_scan_error: OnError,
         max_age_agent: MaxAge,
         max_age_snmp: MaxAge,
+        snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         super().__init__()
         self.host_name: Final = host_name
@@ -123,6 +124,7 @@ class _Builder:
         self.on_scan_error: Final = on_scan_error
         self.max_age_agent: Final = max_age_agent
         self.max_age_snmp: Final = max_age_snmp
+        self.snmp_backend_override: Final = snmp_backend_override
 
         assert host_name not in self.config_cache.hosts_config.clusters
         self._elems: dict[str, Source] = {}
@@ -233,6 +235,7 @@ class _Builder:
                     max_age=self.max_age_snmp,
                     on_scan_error=self.on_scan_error,
                     selected_sections=self.selected_sections,
+                    backend_override=self.snmp_backend_override,
                 )
             )
             return
@@ -252,6 +255,7 @@ class _Builder:
                 max_age=self.max_age_snmp,
                 on_scan_error=self.on_scan_error,
                 selected_sections=self.selected_sections,
+                backend_override=self.snmp_backend_override,
             )
         )
 
@@ -279,6 +283,7 @@ class _Builder:
                         max_age=self.max_age_snmp,
                         on_scan_error=self.on_scan_error,
                         selected_sections=self.selected_sections,
+                        backend_override=self.snmp_backend_override,
                     )
                 )
             case "ipmi":
@@ -347,6 +352,7 @@ def make_sources(
     simulation_mode: bool,
     file_cache_options: FileCacheOptions,
     file_cache_max_age: MaxAge,
+    snmp_backend_override: SNMPBackendEnum | None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     if host_name in config_cache.hosts_config.clusters:
@@ -380,4 +386,5 @@ def make_sources(
         on_scan_error=on_scan_error,
         max_age_agent=max_age_agent(),
         max_age_snmp=max_age_snmp(),
+        snmp_backend_override=snmp_backend_override,
     ).sources

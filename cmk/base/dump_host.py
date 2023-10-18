@@ -187,6 +187,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_max_age=MaxAge.zero(),
+            snmp_backend_override=None,
         )
     ]
 

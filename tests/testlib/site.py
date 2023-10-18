@@ -38,7 +38,7 @@ from tests.testlib.web_session import CMKWebSession
 
 import livestatus
 
-from cmk.utils.paths import piggyback_dir, piggyback_source_dir
+from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
 from cmk.utils.version import Edition
 
 logger = logging.getLogger(__name__)
@@ -1506,7 +1506,7 @@ class SiteFactory:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
         # tmpfs should have been restored:
-        # TODO: assert os.path.exists(site.path(counters_dir))
+        assert os.path.exists(site.path(counters_dir))
         assert os.path.exists(site.path(str(piggyback_dir)))
         assert os.path.exists(site.path(str(piggyback_source_dir)))
 

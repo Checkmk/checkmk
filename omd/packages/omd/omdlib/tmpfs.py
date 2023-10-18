@@ -263,6 +263,7 @@ def save_tmpfs_dump(site: SiteContext) -> None:
     save_paths = [
         Path(site.tmp_dir) / "check_mk" / "piggyback",
         Path(site.tmp_dir) / "check_mk" / "piggyback_sources",
+        Path(site.tmp_dir) / "check_mk" / "counters",
     ]
 
     dump_path = _tmpfs_dump_path(site)

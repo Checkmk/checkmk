@@ -2,6 +2,7 @@ use crate::pwstore;
 use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser};
 use http::{HeaderName, HeaderValue, Method};
+use std::time::Duration;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_http")]
@@ -22,8 +23,8 @@ pub struct Cli {
     pub url: String,
 
     /// Set timeout in seconds
-    #[arg(long, default_value_t = 10)]
-    pub timeout: u64,
+    #[arg(short, long, default_value = "10", value_parser=parse_seconds)]
+    pub timeout: Duration,
 
     /// Wait for document body
     #[arg(long, default_value_t = false)]
@@ -56,6 +57,11 @@ fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
     };
     Ok((name.trim().parse()?, value.trim().parse()?))
 }
+
+fn parse_seconds(secs: &str) -> AnyhowResult<Duration> {
+    Ok(Duration::from_secs(secs.parse()?))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

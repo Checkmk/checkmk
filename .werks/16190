@@ -1,0 +1,11 @@
+Title: service details view: Fix date display on 'The last time service was OK' row
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1697642748
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Before this Werk, '1970-01-01 01:00:00' was displayed as the value of 'The last time the service was OK' for a service that was never OK. From now on, 'Never' is displayed.
+

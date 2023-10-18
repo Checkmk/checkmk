@@ -27,7 +27,13 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
+from cmk.gui.painter_options import (
+    paint_age,
+    paint_age_or_never,
+    PainterOption,
+    PainterOptionRegistry,
+    PainterOptions,
+)
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import (
     ColumnName,
@@ -1094,7 +1100,9 @@ class PainterSvcLastTimeOk(Painter):
         return ["service_last_time_ok", "service_has_been_checked"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10)
+        return paint_age_or_never(
+            row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10
+        )
 
 
 class PainterSvcNextNotification(Painter):

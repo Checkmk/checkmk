@@ -251,6 +251,23 @@ def get_graph_timerange_from_painter_options() -> tuple[int, int]:
     return int(start_time), int(end_time)
 
 
+def paint_age_or_never(
+    timestamp: int,
+    has_been_checked: bool,
+    bold_if_younger_than: int,
+    mode: str | None = None,
+    what: str = "past",
+) -> CellSpec:
+    if mode is None:
+        painter_options = PainterOptions.get_instance()
+        mode = request.var("po_ts_format", painter_options.get("ts_format"))
+
+    if timestamp == 0 and has_been_checked and (mode in {"abs", "mixed"}):
+        return "age", _("Never")
+
+    return paint_age(timestamp, has_been_checked, bold_if_younger_than, mode, what)
+
+
 def paint_age(
     timestamp: int,
     has_been_checked: bool,

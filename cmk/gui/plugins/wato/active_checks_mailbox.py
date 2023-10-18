@@ -63,7 +63,7 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
             (
                 "server",
                 Alternative(
-                    title=f"{protocol} server",
+                    title=f"{protocol} Server",
                     elements=[
                         FixedValue(
                             value="$HOSTADDRESS$",
@@ -78,7 +78,7 @@ def _common_email_parameters(protocol: str, port_defaults: str) -> Dictionary:
                             totext="",
                         ),
                         HostAddress(
-                            title=f"{protocol} server",
+                            title=f"{protocol} Server",
                             allow_empty=False,
                             help=_(
                                 "You can specify a hostname or IP address different from the IP "
@@ -163,7 +163,7 @@ def _mail_receiving_params(supported_protocols: Iterable[str]) -> DictionaryEntr
     return (
         "fetch",
         CascadingDropdown(
-            title=_("Mail receiving"),
+            title=_("Mail Receiving"),
             choices=[
                 e
                 for e in [

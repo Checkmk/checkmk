@@ -328,6 +328,7 @@ class RegisterTotpSecret(ABCUserProfilePage):
                 "alias": "",
             }
             save_two_factor_credentials(user.id, credentials)
+            session.session_info.two_factor_completed = True
             flash(_("Registration successful"))
             origtarget = "user_two_factor_overview.py"
             raise redirect(origtarget)
@@ -604,7 +605,7 @@ class UserWebAuthnRegisterComplete(JsonPage):
             }
         )
         save_two_factor_credentials(user.id, credentials)
-
+        session.session_info.two_factor_completed = True
         flash(_("Registration successful"))
         return {"status": "OK"}
 

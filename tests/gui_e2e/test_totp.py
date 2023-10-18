@@ -34,12 +34,6 @@ def test_totp(
     otp_value = authenticator.generate_totp(current_time)
     logged_in_page.main_area.get_input("profile_p_ValidateOTP").fill(otp_value)
     logged_in_page.main_area.get_suggestion("Save").click()
-    # Successfully added TOTP but now need to validate 2FA
-    current_time = authenticator.calculate_generation(datetime.now())
-    otp_value = authenticator.generate_totp(current_time)
-    logged_in_page.main_area.locator("text=Use Authenticator App").click()
-    logged_in_page.main_area.get_input("_totp_code").fill(otp_value)
-    logged_in_page.main_area.locator("text=Use authenticator code").click()
     # Removing the two factor mechanism
     logged_in_page.main_area.locator("a[title='Delete two-factor credential']").click()
     logged_in_page.main_area.locator("button:has-text('Delete')").click()

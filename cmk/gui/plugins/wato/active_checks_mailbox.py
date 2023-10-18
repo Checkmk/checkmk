@@ -279,7 +279,7 @@ def _valuespec_active_checks_mail_loop():
             help=_(
                 "This active check sends out special E-Mails to a defined mail address using "
                 "the SMTP protocol and then tries to receive these mails back by querying the "
-                "inbox of an IMAP, POP3 or EWS mailbox. With this check you can verify that your whole "
+                "inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole "
                 "mail delivery progress is working."
             ),
             optional_keys=[
@@ -353,7 +353,7 @@ def _valuespec_active_checks_mail_loop():
                         ],
                     ),
                 ),
-                _mail_receiving_params({"IMAP", "POP3", "EWS"}),
+                _mail_receiving_params({"IMAP", "POP3"}),
                 (
                     "mail_from",
                     EmailAddress(

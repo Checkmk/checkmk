@@ -107,7 +107,7 @@ Args = argparse.Namespace
 )
 def test_parse_arguments(argv: Sequence[str], expected_result: Args) -> None:
     parser = argparse.ArgumentParser(description="parser")
-    result = parse_arguments(parser, argv)
+    result = parse_arguments(parser, argv, True)
     assert result == expected_result
 
 
@@ -125,7 +125,7 @@ def test_parse_arguments_error(capsys) -> None:
     ]
 
     with pytest.raises(SystemExit) as err:
-        parse_arguments(parser, argv)
+        parse_arguments(parser, argv, True)
 
     assert err.value.code == 3
 

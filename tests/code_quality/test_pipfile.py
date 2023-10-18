@@ -139,13 +139,13 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
         basepath / "tests",
         basepath / "agents",  # There are so many optional imports...
         basepath / "agent-receiver",  # uses setup.py
-        basepath / "packages/werks",  # uses setup.cfg
+        basepath / "packages",  # ignore all packages
         basepath / "enterprise/core/src/test",  # test files
         basepath / "omd/license_sources",  # update_licenses.py contains imports
     )
 
     for source_file_path in iter_sourcefiles(basepath):
-        if any(source_file_path.is_relative_to(e) for e in exclusions):
+        if any(source_file_path.resolve().is_relative_to(e.resolve()) for e in exclusions):
             continue
 
         yield source_file_path

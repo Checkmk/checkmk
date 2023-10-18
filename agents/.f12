@@ -17,6 +17,7 @@ sudo rsync -varx --delete \
     --exclude=.f12* \
     --exclude=__init__.py* \
     --exclude cmk-agent-ctl \
+    --exclude check-sql \
     --exclude windows \
     --exclude linux \
     --exclude=.gitignore \

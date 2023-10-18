@@ -31,4 +31,8 @@ clap = { version = "4.1.*", features = [
     "derive",
 ] } # replace with 4.4.2 if rutsc >= 1.70
 yaml-rust = "0.4.5"
-lazy_static = "1.4.0"
+
+[dev-dependencies]
+lazy_static = { version = "*" }
+tempfile = { version = "*" }
+assert_cmd = { version = "*" }

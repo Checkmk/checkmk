@@ -22,7 +22,7 @@ pub enum Credentials<'a> {
 }
 
 impl CheckConfig {
-    pub fn exec(&self) -> Result<()> {
+    pub async fn exec(&self) -> Result<()> {
         Ok(())
     }
 }

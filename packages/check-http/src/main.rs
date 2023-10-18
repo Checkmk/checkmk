@@ -58,9 +58,7 @@ fn prepare_request(
         cli_headers.insert(USER_AGENT, ua);
     }
     if let Some(hds) = headers {
-        for (name, value) in hds.into_iter() {
-            cli_headers.insert(name, value);
-        }
+        cli_headers.extend(hds);
     }
 
     let client = reqwest::Client::builder()

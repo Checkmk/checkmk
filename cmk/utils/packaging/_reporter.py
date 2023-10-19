@@ -32,26 +32,30 @@ def all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[
         if not (f.startswith(".") or f.endswith(("~", ".pyc")))
     }
 
-    resolved_symlinks = {
-        resolved for p in local_files_including_symlinks if (resolved := p.resolve()) != p
-    }
+    resolved_to_abstracted: dict[Path, Path] = {}
+    for path in local_files_including_symlinks:
+        resolved = path.resolve()
+        if resolved not in resolved_to_abstracted or resolved_to_abstracted[resolved] == resolved:
+            resolved_to_abstracted[resolved] = path
 
     categorized_files: dict[PackagePart | None, set[Path]] = {}
-    for full_path in sorted(local_files_including_symlinks - resolved_symlinks):
-        if (package_part := path_config.get_part(full_path)) is not None:
+    for resolved_full_path, user_full_path in resolved_to_abstracted.items():
+        if (package_part := path_config.get_part(resolved_full_path)) is not None:
             categorized_files.setdefault(package_part, set()).add(
-                _relative_path(package_part, full_path, path_config)
+                _relative_path(package_part, resolved_full_path, path_config)
             )
         else:
             # These are rogue files that do not belong to a PackagePart.
             # Worth reporting nevertheless:
             # They *are* being used, and relevant for diagnostics.
-            categorized_files.setdefault(None, set()).add(full_path)
+            categorized_files.setdefault(None, set()).add(user_full_path)
     return categorized_files
 
 
-def _relative_path(package_part: PackagePart, full_path: Path, path_config: PathConfig) -> Path:
-    return full_path.resolve().relative_to(path_config.get_path(package_part).resolve())
+def _relative_path(
+    package_part: PackagePart, resolved_full_path: Path, path_config: PathConfig
+) -> Path:
+    return resolved_full_path.relative_to(path_config.resolved_paths[package_part])
 
 
 def all_rule_pack_files(ec_path: Path) -> set[Path]:

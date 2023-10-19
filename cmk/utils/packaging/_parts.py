@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import cached_property
 from pathlib import Path
 from typing import assert_never, Final
 
@@ -72,21 +73,30 @@ class PathConfig:
                 return self.alert_handlers_dir
         return assert_never(part)
 
+    @cached_property
+    def resolved_paths(self) -> Mapping[PackagePart, Path]:
+        return {part: self.get_path(part).resolve() for part in PackagePart}
+
     def get_part(self, full_file_path: Path) -> PackagePart | None:
         """Determine the part for a given file (or return None if there is none)"""
 
         # deal with parts containing each other by checking more specific ones first!
-        def _part_depth(part: PackagePart) -> int:
-            return len(Path(self.get_path(part)).resolve().parts)
-
+        ffpr = full_file_path.resolve()
         return next(
             (
                 part
-                for part in sorted(PackagePart, key=_part_depth, reverse=True)
-                if full_file_path.resolve().is_relative_to(self.get_path(part).resolve())
+                for part in self._parts_by_depth
+                if ffpr.is_relative_to(self.resolved_paths[part])
             ),
             None,
         )
+
+    @cached_property
+    def _parts_by_depth(self) -> Sequence[PackagePart]:
+        def _depth(part: PackagePart) -> int:
+            return len(self.resolved_paths[part].parts)
+
+        return sorted(PackagePart, key=_depth, reverse=True)
 
 
 def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:

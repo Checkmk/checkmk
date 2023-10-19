@@ -1,0 +1,11 @@
+Title: Speed up "Extension packages" pages
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1697744735
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The pages of the "Extension packages" manager where loading
+slowly for sites with many local files.

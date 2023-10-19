@@ -14,7 +14,6 @@ async fn test_local_connection() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         assert!(api::create_client(
@@ -36,7 +35,6 @@ async fn test_remote_connection() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-#[ignore]
 async fn test_check_config_exec_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());
     let check_config = CheckConfig::load_file(file.path()).unwrap();
@@ -63,7 +61,6 @@ fn test_run_local() {
 }
 
 #[test]
-#[ignore]
 fn test_run_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());
     assert!(tools::run_bin()

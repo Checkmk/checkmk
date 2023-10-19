@@ -172,7 +172,7 @@ tr.even3 { background-color: #ffefaf; }
     background-color: #00aaff; color: #ffffff;
 }
 
-b.stmark.state0 {
+b.stmarkstate0 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -184,7 +184,7 @@ b.stmark.state0 {
     background-color: #0b3; color: #ffffff;
 }
 
-b.stmark.state1 {
+b.stmarkstate1 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -196,7 +196,7 @@ b.stmark.state1 {
     background-color: #ffff00; color: #000000;
 }
 
-b.stmark.state2 {
+b.stmarkstate2 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -208,7 +208,7 @@ b.stmark.state2 {
     background-color: #ff0000; color: #ffffff;
 }
 
-b.stmark.state3 {
+b.stmarkstate3 {
     margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
@@ -623,6 +623,18 @@ def _ensure_str_error_message(message: bytes | str) -> str:
     return message.decode("utf-8") if isinstance(message, bytes) else message
 
 
+# We can not use cmk.utils.html.replace_state_markers here because of a bug in outlook
+# that results in missing state markers
+# https://github.com/hteumeuleu/email-bugs/issues/75
+def _replace_state_markers(output: str) -> str:
+    return (
+        output.replace("(!)", '<b class="stmarkstate1">WARN</b>')
+        .replace("(!!)", '<b class="stmarkstate2">CRIT</b>')
+        .replace("(?)", '<b class="stmarkstate3">UNKN</b>')
+        .replace("(.)", '<b class="stmarkstate0">OK</b>')
+    )
+
+
 def send_mail_smtp_impl(
     message: Message, target: str, smarthost: str, from_address: str, context: dict[str, str]
 ) -> None:
@@ -837,14 +849,14 @@ def extend_context(context: dict[str, str]) -> None:
     )
 
     if "HOSTOUTPUT" in context:
-        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+        context["HOSTOUTPUT_HTML"] = _replace_state_markers(context["HOSTOUTPUT"])
     if context["WHAT"] == "SERVICE":
-        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+        context["SERVICEOUTPUT_HTML"] = _replace_state_markers(context["SERVICEOUTPUT"])
 
         long_serviceoutput = (
             context["LONGSERVICEOUTPUT"].replace("\\n", "<br>").replace("\n", "<br>")
         )
-        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
+        context["LONGSERVICEOUTPUT_HTML"] = _replace_state_markers(long_serviceoutput)
 
     # Compute the subject of the mail
     if context["WHAT"] == "HOST":

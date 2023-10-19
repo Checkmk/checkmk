@@ -134,7 +134,7 @@ def unmount_tmpfs(  # pylint: disable=too-many-branches
 
     # For some files in tmpfs we want the IO performance of the tmpfs and
     # want to keep the files between unmount / mount operations (if possible).
-    if os.path.exists(site.tmp_dir):
+    if tmpfs_mounted(site.name):
         if output:
             sys.stdout.write("Saving temporary filesystem contents...")
         save_tmpfs_dump(site)

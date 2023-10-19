@@ -111,7 +111,7 @@ rem Validate elevation, because full testing is possible only in elevated mode!
         )
     )
     powershell Write-Host "Testing Rust executables" -Foreground White
-    cargo test --lib --release --target %worker_target% -- --test-threads=4 2>&1
+    cargo test --release --target %worker_target% -- --test-threads=4 2>&1
     if ERRORLEVEL 1  (
         powershell Write-Host "Failed cargo test" -Foreground Red
         exit /b 19

@@ -202,7 +202,7 @@ def test_horizontal_rules_from_thresholds(
 def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for ident, template in graph_templates_internal().items():
-        expressions = [parse_expression(m.expression, {}) for m in template.metrics] + [
+        expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]
         if template.range:
@@ -602,7 +602,7 @@ def test_non_trivial_perfometer_declarations() -> None:
 def test_non_trivial_graph_declarations() -> None:
     non_trivial_graphs = []
     for ident, template in graph_templates_internal().items():
-        expressions = [parse_expression(m.expression, {}) for m in template.metrics] + [
+        expressions = [m.expression for m in template.metrics] + [
             s.expression for s in template.scalars
         ]
         if template.range:

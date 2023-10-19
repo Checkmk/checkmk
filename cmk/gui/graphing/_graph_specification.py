@@ -26,17 +26,16 @@ HorizontalRule = tuple[float, str, str, str]
 
 
 @dataclass(frozen=True, kw_only=True)
-class MetricDefinition:
+class SelectedMetric:
     expression: str
     line_type: LineType
-    title: str = ""
 
 
 @dataclass(frozen=True)
 class CombinedSingleMetricSpec:
     datasource: str
     context: VisualContext
-    selected_metric: MetricDefinition
+    selected_metric: SelectedMetric
     consolidation_function: GraphConsoldiationFunction
     presentation: GraphPresentation
 
@@ -178,7 +177,7 @@ class MetricOpTransformation(BaseModel, frozen=True):
 class SingleMetricSpec(TypedDict):
     datasource: str
     context: VisualContext
-    selected_metric: MetricDefinition
+    selected_metric: SelectedMetric
     consolidation_function: GraphConsoldiationFunction | None
     presentation: GraphPresentation
     single_infos: list[str]
@@ -333,7 +332,7 @@ class CombinedGraphSpecification(BaseModel, frozen=True):
     presentation: GraphPresentation
     context: VisualContext
     graph_template: str
-    selected_metric: MetricDefinition | None = None
+    selected_metric: SelectedMetric | None = None
     consolidation_function: GraphConsoldiationFunction | None = None
     destination: str | None = None
 

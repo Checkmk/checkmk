@@ -35,7 +35,6 @@ from ._expression import (
 from ._graph_specification import (
     GraphMetric,
     HorizontalRule,
-    MetricDefinition,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
@@ -49,6 +48,7 @@ from ._utils import (
     GraphRecipe,
     GraphRecipeBase,
     GraphTemplate,
+    MetricDefinition,
     MetricUnitColor,
     ScalarDefinition,
     translated_metrics_from_row,
@@ -209,17 +209,16 @@ def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipeBase:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
-        metric_expression = parse_expression(
-            metric_definition.expression,
-            translated_metrics,
-            graph_template.consolidation_function or "max",
-        )
-        unit_color = metric_unit_color(metric_expression, translated_metrics)
+        unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
         return GraphMetric(
-            title=metric_line_title(metric_definition, metric_expression, translated_metrics),
+            title=metric_line_title(
+                metric_definition,
+                metric_definition.expression,
+                translated_metrics,
+            ),
             line_type=metric_definition.line_type,
             operation=metric_expression_to_graph_recipe_expression(
-                metric_expression,
+                metric_definition.expression,
                 translated_metrics,
                 row,
                 graph_template.consolidation_function or "max",

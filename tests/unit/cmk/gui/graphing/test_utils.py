@@ -14,8 +14,12 @@ from cmk.utils.metrics import MetricName
 import cmk.gui.graphing._utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
-from cmk.gui.graphing._graph_specification import MetricDefinition
-from cmk.gui.graphing._utils import _NormalizedPerfData, AutomaticDict, TranslationInfo
+from cmk.gui.graphing._utils import (
+    _NormalizedPerfData,
+    AutomaticDict,
+    MetricDefinition,
+    TranslationInfo,
+)
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
@@ -922,7 +926,12 @@ def test_automatic_dict_append() -> None:
                 consolidation_function=None,
                 range=None,
                 omit_zero_metrics=False,
-                metrics=[MetricDefinition(expression="metric", line_type="line")],
+                metrics=[
+                    MetricDefinition(
+                        expression=MetricExpression(Metric("metric")),
+                        line_type="line",
+                    ),
+                ],
             ),
             id="metrics 2-er tuple",
         ),
@@ -939,7 +948,13 @@ def test_automatic_dict_append() -> None:
                 consolidation_function=None,
                 range=None,
                 omit_zero_metrics=False,
-                metrics=[MetricDefinition(expression="metric", line_type="line", title="Title")],
+                metrics=[
+                    MetricDefinition(
+                        expression=MetricExpression(Metric("metric")),
+                        line_type="line",
+                        title="Title",
+                    ),
+                ],
             ),
             id="metrics 3-er tuple",
         ),

@@ -14,6 +14,7 @@ import cmk.gui.graphing._graph_templates as gt
 from cmk.gui.graphing._expression import (
     Constant,
     CriticalOf,
+    Difference,
     MaximumOf,
     Metric,
     MetricExpression,
@@ -22,13 +23,17 @@ from cmk.gui.graphing._expression import (
 )
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
-    MetricDefinition,
     MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from cmk.gui.graphing._utils import GraphRecipeBase, GraphTemplate, ScalarDefinition
+from cmk.gui.graphing._utils import (
+    GraphRecipeBase,
+    GraphTemplate,
+    MetricDefinition,
+    ScalarDefinition,
+)
 from cmk.gui.metrics import translate_perf_data
 
 
@@ -102,13 +107,25 @@ def test_create_graph_recipe_from_template() -> None:
         id="my_id",
         title=None,
         metrics=[
-            MetricDefinition(expression="fs_used", line_type="area"),
             MetricDefinition(
-                expression="fs_size,fs_used,-#e3fff9",
+                expression=MetricExpression(Metric("fs_used")),
+                line_type="area",
+            ),
+            MetricDefinition(
+                expression=MetricExpression(
+                    declaration=Difference(
+                        minuend=Metric("fs_size"),
+                        subtrahend=Metric("fs_used"),
+                    ),
+                    explicit_color="e3fff9",
+                ),
                 line_type="stack",
                 title="Free space",
             ),
-            MetricDefinition(expression="fs_size", line_type="line"),
+            MetricDefinition(
+                expression=MetricExpression(Metric("fs_size")),
+                line_type="line",
+            ),
         ],
         scalars=[
             ScalarDefinition(

@@ -61,7 +61,6 @@ from ._graph_specification import (
     GraphMetric,
     GraphSpecification,
     HorizontalRule,
-    MetricDefinition,
     MetricOperation,
     MetricOpRRDChoice,
 )
@@ -72,6 +71,12 @@ from ._unit_info import unit_info
 class ScalarDefinition(NamedTuple):
     expression: MetricExpression
     title: str
+
+
+class MetricDefinition(NamedTuple):
+    expression: MetricExpression
+    line_type: LineType
+    title: str = ""
 
 
 class MKCombinedGraphLimitExceededError(MKHTTPException):
@@ -140,7 +145,7 @@ def _parse_raw_metric_definition(
 ) -> MetricDefinition:
     expression, line_type, *title = raw_metric_definition
     return MetricDefinition(
-        expression=expression,
+        expression=parse_expression(expression, {}),
         line_type=line_type,
         title=str(title[0]) if title else "",
     )
@@ -173,7 +178,12 @@ class GraphTemplate:
         return cls(
             id=f"METRIC_{name}",
             title=None,
-            metrics=[MetricDefinition(expression=name, line_type="area")],
+            metrics=[
+                MetricDefinition(
+                    expression=MetricExpression(Metric(name)),
+                    line_type="area",
+                ),
+            ],
             scalars=[
                 ScalarDefinition(
                     expression=MetricExpression(WarningOf(Metric(name))),
@@ -801,7 +811,7 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
             m.name
             for gt in explicit_templates
             for md in gt.metrics
-            for m in parse_expression(md.expression, translated_metrics).metrics()
+            for m in md.expression.metrics()
         ),
     )
 
@@ -867,9 +877,7 @@ def _filter_renderable_graph_metrics(
 ) -> Iterator[MetricDefinition]:
     for metric_definition in metric_definitions:
         try:
-            parse_expression(metric_definition.expression, translated_metrics).evaluate(
-                translated_metrics
-            )
+            metric_definition.expression.evaluate(translated_metrics)
             yield metric_definition
         except KeyError as err:  # because can't find necessary metric_name in translated_metrics
             metric_name = err.args[0]

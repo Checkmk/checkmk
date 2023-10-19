@@ -19,7 +19,5 @@ if [ -z "$ONLY_COPY" ]; then
 fi
 
 if [ -z "$ONLY_COPY" ]; then
-    if [ "$SITE" != - ]; then
-        sudo omd restart "$SITE" apache
-    fi
+    sudo omd restart "$SITE" apache
 fi

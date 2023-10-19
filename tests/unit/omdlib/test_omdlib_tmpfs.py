@@ -103,7 +103,8 @@ def _prepare_tmpfs(site_context):
 
 def test_tmpfs_restore_no_tmpfs(site_context, monkeypatch, not_restored_file):
     # Use rm logic in unmount_tmpfs instead of unmount
-    monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: False)
+    is_mounted_returns = iter((True, False))
+    monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: next(is_mounted_returns))
 
     tmp_files = _prepare_tmpfs(site_context)
 

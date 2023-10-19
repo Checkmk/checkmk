@@ -49,6 +49,24 @@ from cmk.gui.wato import (
 from cmk.gui.watolib.password_store import passwordstore_choices
 
 
+def register():
+    notification_parameter_registry.register(NotificationParameterMail)
+    notification_parameter_registry.register(NotificationParameterSlack)
+    notification_parameter_registry.register(NotificationParameterCiscoWebexTeams)
+    notification_parameter_registry.register(NotificationParameterVictorOPS)
+    notification_parameter_registry.register(NotificationParameterPagerDuty)
+    notification_parameter_registry.register(NotificationParameterSIGNL4)
+    notification_parameter_registry.register(NotificationParameterASCIIMail)
+    notification_parameter_registry.register(NotificationILert)
+    notification_parameter_registry.register(NotificationParameterJIRA_ISSUES)
+    notification_parameter_registry.register(NotificationParameterServiceNow)
+    notification_parameter_registry.register(NotificationParameterOpsgenie)
+    notification_parameter_registry.register(NotificationParameterSpectrum)
+    notification_parameter_registry.register(NotificationParameterPushover)
+    notification_parameter_registry.register(NotificationParameterSMSviaIP)
+    notification_parameter_registry.register(NotificationParameterMsTeams)
+
+
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
 def transform_from_valuespec_html_mail_url_prefix(p):
@@ -239,7 +257,6 @@ def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
     )
 
 
-@notification_parameter_registry.register
 class NotificationParameterMail(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -352,7 +369,6 @@ class NotificationParameterMail(NotificationParameter):
         return elements
 
 
-@notification_parameter_registry.register
 class NotificationParameterSlack(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -407,7 +423,6 @@ class NotificationParameterSlack(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterCiscoWebexTeams(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -456,7 +471,6 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterVictorOPS(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -516,7 +530,6 @@ class NotificationParameterVictorOPS(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterPagerDuty(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -569,7 +582,6 @@ class NotificationParameterPagerDuty(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterSIGNL4(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -607,7 +619,6 @@ class NotificationParameterSIGNL4(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterASCIIMail(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -666,7 +677,6 @@ $LONGSERVICEOUTPUT$
         )
 
 
-@notification_parameter_registry.register
 class NotificationILert(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -745,7 +755,6 @@ class NotificationILert(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterJIRA_ISSUES(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -935,7 +944,6 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterServiceNow(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -1375,7 +1383,6 @@ $LONGSERVICEOUTPUT$
         ]
 
 
-@notification_parameter_registry.register
 class NotificationParameterOpsgenie(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -1567,7 +1574,6 @@ $LONGSERVICEOUTPUT$
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterSpectrum(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -1605,7 +1611,6 @@ class NotificationParameterSpectrum(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterPushover(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -1767,7 +1772,6 @@ class NotificationParameterPushover(NotificationParameter):
         return params
 
 
-@notification_parameter_registry.register
 class NotificationParameterSMSviaIP(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -1840,7 +1844,6 @@ class NotificationParameterSMSviaIP(NotificationParameter):
         )
 
 
-@notification_parameter_registry.register
 class NotificationParameterMsTeams(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -1948,3 +1951,6 @@ class NotificationParameterMsTeams(NotificationParameter):
                 ),
             ],
         )
+
+
+register()

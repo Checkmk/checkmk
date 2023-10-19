@@ -15,6 +15,7 @@ def main() {
         "SYNC_WITH_IMAGES_WITH_UPSTREAM",
         "PUBLISH_IMAGES",
         "OVERRIDE_DISTROS",
+        "BUILD_IMAGE_WITHOUT_CACHE",
     ]);
 
     check_environment_variables([
@@ -92,6 +93,10 @@ def main() {
                                 " --build-arg VERS_TAG='$vers_tag'" +
                                 " --build-arg BRANCH_VERSION='$branch_version'" +
                                 " -f ${dockerfiles[distro]} .");
+
+                            if (params.BUILD_IMAGE_WITHOUT_CACHE) {
+                                DOCKER_ARGS = "--no-cache " + DOCKER_ARGS;
+                            }
                             docker.build("${distro}:${vers_tag}", DOCKER_ARGS);
                         }}
                 ]

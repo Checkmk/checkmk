@@ -11,11 +11,9 @@ SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
 else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
-#REPO_PATH=$(dirname "$(dirname "$(realpath "$0")")")
 pipenv run pip wheel --no-deps --wheel-dir build .
 
-sudo "/omd/sites/$SITE/bin/python3" -m pip uninstall -y werks
-sudo "/omd/sites/$SITE/bin/python3" -m pip install "$(echo "$PWD/build/werks-"*"-py3-none-any.whl")"
+sudo "/omd/sites/$SITE/bin/python3" -m pip install --no-deps --upgrade --force-reinstall ./build/werks-*-py3-none-any.whl
 
 if [ -z "$ONLY_COPY" ]; then
     sudo omd reload "$SITE" apache

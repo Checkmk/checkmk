@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple, Type
+from typing import Any, NamedTuple, Type
 
 import pytest
 
@@ -22,7 +22,9 @@ from cmk.base.config_generation import (
     ActiveServiceDescription,
     commandline_arguments,
     HostAddressConfiguration,
+    InfoFunc,
     SpecialAgent,
+    SpecialAgentCommandLine,
     SpecialAgentInfoFunctionResult,
 )
 
@@ -30,11 +32,23 @@ from cmk.config_generation.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     PlainTextSecret,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
     StoredSecret,
 )
 
+HOST_ATTRS = {
+    "alias": "my_host_alias",
+    "_ADDRESS_4": "127.0.0.1",
+    "address": "127.0.0.1",
+    "_ADDRESS_FAMILY": "4",
+    "_ADDRESSES_4": "127.0.0.1",
+    "_ADDRESSES_6": "",
+    "display_name": "my_host",
+}
 
-class TestSpecialAgentConfiguration(NamedTuple):
+
+class TestSpecialAgentLegacyConfiguration(NamedTuple):
     args: Sequence[str]
     stdin: str | None
 
@@ -55,13 +69,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {},
             [
@@ -125,13 +133,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {"$HOSTALIAS$": "myalias"},
             {},
             [
@@ -199,13 +201,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {},
             [
@@ -247,13 +243,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {},
             [
@@ -287,15 +277,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 )
             },
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.1",
-                "_ADDRESSES_6": "",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {},
             [
@@ -327,15 +309,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
             {},
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.1",
-                "_ADDRESSES_6": "",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {},
             [],
@@ -361,15 +335,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 )
             },
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.1",
-                "_ADDRESSES_6": "",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {},
             [
@@ -405,15 +371,7 @@ class TestSpecialAgentConfiguration(NamedTuple):
                 )
             },
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "_ADDRESSES_4": "127.0.0.1",
-                "_ADDRESSES_6": "",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             {},
             {"stored_password": "mypassword"},
             [
@@ -474,13 +432,7 @@ def test_get_active_service_data(
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             [],
             "\nWARNING: Skipping invalid service with empty description (active check: my_active_check) on host myhost\n",
             id="empty_description",
@@ -497,13 +449,7 @@ def test_get_active_service_data(
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             [],
             "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plugin is missing an argument function or a service description\n",
             id="invalid_plugin_info",
@@ -596,13 +542,7 @@ def test_get_active_service_data_warnings(
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             [
                 ActiveServiceDescription(
                     plugin_name="my_active_check",
@@ -629,13 +569,7 @@ def test_get_active_service_data_warnings(
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             [
                 ActiveServiceDescription(
                     plugin_name="my_active_check",
@@ -667,13 +601,7 @@ def test_get_active_service_data_warnings(
             },
             {},
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             [
                 ActiveServiceDescription(
                     plugin_name="my_active_check",
@@ -780,13 +708,7 @@ def test_get_active_service_descriptions(
                 }
             },
             HostName("myhost"),
-            {
-                "alias": "my_host_alias",
-                "_ADDRESS_4": "127.0.0.1",
-                "address": "127.0.0.1",
-                "_ADDRESS_FAMILY": "4",
-                "display_name": "my_host",
-            },
+            HOST_ATTRS,
             [],
             "\nWARNING: Invalid configuration (active check: my_active_check) on host myhost: active check plugin is missing an argument function or a service description\n",
             id="invalid_plugin_info",
@@ -854,46 +776,188 @@ def test_get_host_address_config(
 
 
 @pytest.mark.parametrize(
-    ("info_func_result", "expected_cmdline", "expected_stdin"),
+    ("plugins", "legacy_plugins", "host_attrs", "stored_passwords", "expected_result"),
     [
-        ("arg0 arg;1", "arg0 arg;1", None),
-        (["arg0", "arg;1"], "arg0 'arg;1'", None),
-        (TestSpecialAgentConfiguration(["arg0"], None), "arg0", None),
-        (TestSpecialAgentConfiguration(["arg0", "arg;1"], None), "arg0 'arg;1'", None),
-        (TestSpecialAgentConfiguration(["list0", "list1"], None), "list0 list1", None),
-        (
-            TestSpecialAgentConfiguration(["arg0", "arg;1"], "stdin_blob"),
-            "arg0 'arg;1'",
-            "stdin_blob",
+        pytest.param(
+            {},
+            {"test_agent": lambda a, b, c: "arg0 arg;1"},
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path arg0 arg;1", None)],
+            id="legacy plugin string args",
         ),
-        (
-            TestSpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
-            "list0 list1",
-            "stdin_blob",
+        pytest.param(
+            {},
+            {"test_agent": lambda a, b, c: ["arg0", "arg;1"]},
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
+            id="legacy plugin list args",
+        ),
+        pytest.param(
+            {},
+            {"test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(["arg0"], None)},
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path arg0", None)],
+            id="legacy plugin TestSpecialAgentConfiguration",
+        ),
+        pytest.param(
+            {},
+            {
+                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                    ["arg0", "arg;1"], None
+                )
+            },
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path arg0 'arg;1'", None)],
+            id="legacy plugin TestSpecialAgentConfiguration, escaped arg",
+        ),
+        pytest.param(
+            {},
+            {
+                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                    ["list0", "list1"], None
+                )
+            },
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path list0 list1", None)],
+            id="legacy plugin TestSpecialAgentConfiguration, arg list",
+        ),
+        pytest.param(
+            {},
+            {
+                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                    ["arg0", "arg;1"], "stdin_blob"
+                )
+            },
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path arg0 'arg;1'", "stdin_blob")],
+            id="legacy plugin with stdin, escaped arg",
+        ),
+        pytest.param(
+            {},
+            {
+                "test_agent": lambda a, b, c: TestSpecialAgentLegacyConfiguration(
+                    ["list0", "list1"], "stdin_blob"
+                )
+            },
+            {},
+            {},
+            [SpecialAgentCommandLine("agent_path list0 list1", "stdin_blob")],
+            id="legacy plugin with stdin",
+        ),
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    config_function=lambda *_: (
+                        [
+                            SpecialAgentCommand(
+                                command_arguments=["arg1", "arg2;1"],
+                            ),
+                        ]
+                    ),
+                )
+            },
+            {},
+            HOST_ATTRS,
+            {},
+            [SpecialAgentCommandLine("agent_path arg1 'arg2;1'", None)],
+            id="one command, escaped arg",
+        ),
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    config_function=lambda *_: (
+                        [
+                            SpecialAgentCommand(command_arguments=["arg1", "arg2;1"]),
+                            SpecialAgentCommand(command_arguments=["arg3", "arg4"]),
+                        ]
+                    ),
+                )
+            },
+            {},
+            HOST_ATTRS,
+            {},
+            [
+                SpecialAgentCommandLine("agent_path arg1 'arg2;1'", None),
+                SpecialAgentCommandLine("agent_path arg3 arg4", None),
+            ],
+            id="multiple commands",
+        ),
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    config_function=lambda *_: (
+                        [
+                            SpecialAgentCommand(
+                                command_arguments=["--password", StoredSecret("mypassword")],
+                            ),
+                        ]
+                    ),
+                )
+            },
+            {},
+            HOST_ATTRS,
+            {},
+            [SpecialAgentCommandLine("agent_path --pwstore=2@0@mypassword --password '***'", None)],
+            id="missing stored password",
+        ),
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    config_function=lambda *_: (
+                        [
+                            SpecialAgentCommand(
+                                command_arguments=["--password", StoredSecret("mypassword")],
+                            ),
+                        ]
+                    ),
+                )
+            },
+            {},
+            HOST_ATTRS,
+            {"mypassword": "123456"},
+            [
+                SpecialAgentCommandLine(
+                    "agent_path --pwstore=2@0@mypassword --password '******'", None
+                )
+            ],
+            id="stored password",
         ),
     ],
 )
 def test_iter_special_agent_commands(
-    info_func_result: object,
-    expected_cmdline: str,
-    expected_stdin: str,
-    tmp_path: Path,
+    plugins: Mapping[str, SpecialAgentConfig],
+    legacy_plugins: Mapping[str, InfoFunc],
+    host_attrs: Mapping[str, str],
+    stored_passwords: Mapping[str, str],
+    expected_result: Sequence[SpecialAgentCommandLine],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
-    monkeypatch.setitem(
-        base_config.special_agent_info,
-        "test_agent",
-        lambda a, b, c: info_func_result,
+    monkeypatch.setattr(SpecialAgent, "_make_source_path", lambda *_: "agent_path")
+
+    special_agent = SpecialAgent(
+        plugins,
+        legacy_plugins,
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        host_attrs,
+        stored_passwords,
     )
-
-    special_agent = SpecialAgent(HostName("test_host"), HostAddress("127.0.0.1"))
     commands = list(special_agent.iter_special_agent_commands("test_agent", {}))
-
-    assert len(commands) == 1
-    agent_path = tmp_path / "special" / "agent_test_agent"
-    assert commands[0].cmdline == f"{agent_path} {expected_cmdline}"
-    assert commands[0].stdin == expected_stdin
+    assert commands == expected_result
 
 
 @pytest.mark.parametrize(
@@ -916,24 +980,32 @@ def test_iter_special_agent_commands_info_func_crash(
     def argument_function_with_exception(_a, _b, _c):
         raise Exception("Can't create argument list")
 
-    monkeypatch.setitem(
-        base_config.special_agent_info,
-        "test_agent",
-        argument_function_with_exception,
-    )
     monkeypatch.setattr(
         cmk.utils.debug,
         "enabled",
         lambda: debug_enabled,
     )
 
-    special_agent = SpecialAgent(HostName("test_host"), HostAddress("127.0.0.1"))
+    legacy_plugins: Mapping[str, Any] = {"test_agent": argument_function_with_exception}
+
+    special_agent = SpecialAgent(
+        {}, legacy_plugins, HostName("test_host"), HostAddress("127.0.0.1"), {}, {}
+    )
 
     with pytest.raises(
         exception_type,
         match=exception_message,
     ):
         list(special_agent.iter_special_agent_commands("test_agent", {}))
+
+
+def test_make_source_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(cmk.utils.paths, "agents_dir", tmp_path)
+
+    special_agent = SpecialAgent({}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {})
+    agent_path = special_agent._make_source_path("test_agent")
+
+    assert agent_path == tmp_path / "special" / "agent_test_agent"
 
 
 def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -943,7 +1015,7 @@ def test_make_source_path_local_agent(tmp_path: Path, monkeypatch: pytest.Monkey
     local_agent_path = tmp_path / "special" / "agent_test_agent"
     local_agent_path.touch()
 
-    special_agent = SpecialAgent(HostName("test_host"), HostAddress("127.0.0.1"))
+    special_agent = SpecialAgent({}, {}, HostName("test_host"), HostAddress("127.0.0.1"), {}, {})
     agent_path = special_agent._make_source_path("test_agent")
 
     assert agent_path == local_agent_path

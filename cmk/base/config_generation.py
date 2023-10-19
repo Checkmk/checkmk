@@ -28,6 +28,7 @@ from cmk.config_generation.v1 import (
     IPAddressFamily,
     PlainTextSecret,
     Secret,
+    SpecialAgentConfig,
     StoredSecret,
 )
 
@@ -82,20 +83,23 @@ class PluginInfo:
 
 
 @dataclass(frozen=True)
-class SpecialAgentCommand:
+class SpecialAgentCommandLine:
     cmdline: str
     stdin: str | None = None
 
 
-class SpecialAgentConfiguration(Protocol):
+class SpecialAgentLegacyConfiguration(Protocol):
     args: Sequence[str]
     # None makes the stdin of subprocess /dev/null
     stdin: str | None
 
 
 SpecialAgentInfoFunctionResult = (
-    str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentConfiguration
+    str | Sequence[str | int | float | tuple[str, str, str]] | SpecialAgentLegacyConfiguration
 )
+InfoFunc = Callable[
+    [Mapping[str, object], HostName, HostAddress | None], SpecialAgentInfoFunctionResult
+]
 
 
 def _get_host_address_config(
@@ -522,9 +526,21 @@ class ActiveCheck:
 
 
 class SpecialAgent:
-    def __init__(self, host_name: HostName, host_address: HostAddress | None):
+    def __init__(
+        self,
+        plugins: Mapping[str, SpecialAgentConfig],
+        legacy_plugins: Mapping[str, InfoFunc],
+        host_name: HostName,
+        host_address: HostAddress | None,
+        host_attrs: Mapping[str, str],
+        stored_passwords: Mapping[str, str],
+    ):
+        self._plugins = plugins
+        self._legacy_plugins = legacy_plugins
         self.host_name = host_name
         self.host_address = host_address
+        self.host_attrs = host_attrs
+        self.stored_passwords = stored_passwords
 
     def _make_source_path(self, agent_name: str) -> Path:
         file_name = f"agent_{agent_name}"
@@ -533,7 +549,7 @@ class SpecialAgent:
             return local_path
         return Path(cmk.utils.paths.agents_dir) / "special" / file_name
 
-    def make_special_agent_cmdline(
+    def _make_special_agent_cmdline(
         self,
         agent_name: str,
         agent_configuration: SpecialAgentInfoFunctionResult,
@@ -542,12 +558,9 @@ class SpecialAgent:
         args = commandline_arguments(self.host_name, None, agent_configuration)
         return f"{path} {args}"
 
-    def iter_special_agent_commands(
-        self, agent_name: str, params: Mapping[str, object]
-    ) -> Iterator[SpecialAgentCommand]:
-        if (info_func := base_config.special_agent_info.get(agent_name)) is None:
-            return
-
+    def _iter_legacy_commands(
+        self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]
+    ) -> Iterator[SpecialAgentCommandLine]:
         try:
             agent_configuration = info_func(params, self.host_name, self.host_address)
         except RuntimeError as e:
@@ -557,10 +570,36 @@ class SpecialAgent:
                 f"Config creation for special agent {agent_name} failed on {self.host_name}: {e}"
             ) from e
 
-        cmdline = self.make_special_agent_cmdline(
+        cmdline = self._make_special_agent_cmdline(
             agent_name,
             agent_configuration,
         )
         stdin = getattr(agent_configuration, "stdin", None)
 
-        yield SpecialAgentCommand(cmdline, stdin)
+        yield SpecialAgentCommandLine(cmdline, stdin)
+
+    def _iter_commands(
+        self, special_agent: SpecialAgentConfig, params: Mapping[str, object]
+    ) -> Iterator[SpecialAgentCommandLine]:
+        host_config = _get_host_config(self.host_name, self.host_attrs)
+        http_proxies = {
+            id: HTTPProxy(id, proxy["title"], proxy["proxy_url"])
+            for id, proxy in base_config.http_proxies.items()
+        }
+
+        parsed_params = special_agent.parameter_parser(params)
+        for command in special_agent.config_function(parsed_params, host_config, http_proxies):
+            path = self._make_source_path(special_agent.name)
+            args = _replace_passwords(
+                self.host_name, self.stored_passwords, command.command_arguments
+            )
+            yield SpecialAgentCommandLine(f"{path} {args}", command.stdin)
+
+    def iter_special_agent_commands(
+        self, agent_name: str, params: Mapping[str, object]
+    ) -> Iterator[SpecialAgentCommandLine]:
+        if (info_func := self._legacy_plugins.get(agent_name)) is not None:
+            yield from self._iter_legacy_commands(agent_name, info_func, params)
+
+        if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
+            yield from self._iter_commands(special_agent, params)

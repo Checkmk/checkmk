@@ -12,6 +12,7 @@ from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from typing import assert_never, Final
 
+import cmk.utils.password_store
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -39,6 +40,7 @@ from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_stor
 from cmk.base.config import ConfigCache
 from cmk.base.config_generation import SpecialAgent
 from cmk.base.ip_lookup import AddressFamily
+from cmk.base.plugins.config_generation import load_special_agents
 
 from ._api import Source
 from ._sources import (
@@ -161,7 +163,15 @@ class _Builder:
     def _initialize_agent_based(self) -> None:
         def make_special_agents() -> Iterable[Source]:
             for agentname, params in self.config_cache.special_agents(self.host_name):
-                special_agent = SpecialAgent(self.host_name, self.ipaddress)
+                host_attrs = self.config_cache.get_host_attributes(self.host_name)
+                special_agent = SpecialAgent(
+                    load_special_agents()[1],
+                    config.special_agent_info,
+                    self.host_name,
+                    self.ipaddress,
+                    host_attrs,
+                    cmk.utils.password_store.load(),
+                )
                 for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                     yield SpecialAgentSource(
                         self.config_cache,

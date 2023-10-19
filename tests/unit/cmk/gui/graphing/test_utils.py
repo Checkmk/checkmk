@@ -13,6 +13,7 @@ from cmk.utils.metrics import MetricName
 
 import cmk.gui.graphing._utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
 from cmk.gui.graphing._graph_specification import MetricDefinition
 from cmk.gui.graphing._utils import _NormalizedPerfData, AutomaticDict, TranslationInfo
 from cmk.gui.type_defs import Perfdata, PerfDataTuple
@@ -855,9 +856,18 @@ def test_automatic_dict_append() -> None:
                 id="ident",
                 title=None,
                 scalars=[
-                    utils.ScalarDefinition(expression="metric", title="metric"),
-                    utils.ScalarDefinition(expression="metric:warn", title="Warning"),
-                    utils.ScalarDefinition(expression="metric:crit", title="Critical"),
+                    utils.ScalarDefinition(
+                        expression=MetricExpression(Metric("metric")),
+                        title="metric",
+                    ),
+                    utils.ScalarDefinition(
+                        expression=MetricExpression(WarningOf(Metric("metric"))),
+                        title="Warning",
+                    ),
+                    utils.ScalarDefinition(
+                        expression=MetricExpression(CriticalOf(Metric("metric"))),
+                        title="Critical",
+                    ),
                 ],
                 conflicting_metrics=[],
                 optional_metrics=[],
@@ -877,9 +887,18 @@ def test_automatic_dict_append() -> None:
                 id="ident",
                 title=None,
                 scalars=[
-                    utils.ScalarDefinition(expression="metric", title="Title"),
-                    utils.ScalarDefinition(expression="metric:warn", title="Warn"),
-                    utils.ScalarDefinition(expression="metric:crit", title="Crit"),
+                    utils.ScalarDefinition(
+                        expression=MetricExpression(Metric("metric")),
+                        title="Title",
+                    ),
+                    utils.ScalarDefinition(
+                        expression=MetricExpression(WarningOf(Metric("metric"))),
+                        title="Warn",
+                    ),
+                    utils.ScalarDefinition(
+                        expression=MetricExpression(CriticalOf(Metric("metric"))),
+                        title="Crit",
+                    ),
                 ],
                 conflicting_metrics=[],
                 optional_metrics=[],

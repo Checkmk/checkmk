@@ -25,6 +25,7 @@ from cmk.gui.graphing._expression import (
     MetricExpression,
     MinimumOf,
     parse_expression,
+    Product,
     WarningOf,
 )
 from cmk.gui.graphing._graph_specification import (
@@ -177,9 +178,20 @@ def test_horizontal_rules_from_thresholds(
     assert (
         gt._horizontal_rules_from_thresholds(
             [
-                ScalarDefinition(expression="one:warn", title="Warning"),
-                ScalarDefinition(expression="power:crit", title="Critical power"),
-                ScalarDefinition(expression="output:warn,-1,*", title="Warning output"),
+                ScalarDefinition(
+                    expression=MetricExpression(WarningOf(Metric("one"))),
+                    title="Warning",
+                ),
+                ScalarDefinition(
+                    expression=MetricExpression(CriticalOf(Metric("power"))),
+                    title="Critical power",
+                ),
+                ScalarDefinition(
+                    expression=MetricExpression(
+                        Product([WarningOf(Metric("output")), Constant(-1)])
+                    ),
+                    title="Warning output",
+                ),
             ],
             metrics.translate_perf_data(perf_string),
         )
@@ -191,10 +203,10 @@ def test_duplicate_graph_templates() -> None:
     idents_by_metrics: dict[tuple[str, ...], list[str]] = {}
     for ident, template in graph_templates_internal().items():
         expressions = [parse_expression(m.expression, {}) for m in template.metrics] + [
-            parse_expression(s.expression, {}) for s in template.scalars
+            s.expression for s in template.scalars
         ]
         if template.range:
-            expressions.extend([parse_expression(e, {}) for e in template.range])
+            expressions.extend(template.range)
 
         idents_by_metrics.setdefault(
             tuple(sorted(m.name for e in expressions for m in e.declaration.metrics())), []
@@ -591,10 +603,10 @@ def test_non_trivial_graph_declarations() -> None:
     non_trivial_graphs = []
     for ident, template in graph_templates_internal().items():
         expressions = [parse_expression(m.expression, {}) for m in template.metrics] + [
-            parse_expression(s.expression, {}) for s in template.scalars
+            s.expression for s in template.scalars
         ]
         if template.range:
-            expressions.extend([parse_expression(e, {}) for e in template.range])
+            expressions.extend(template.range)
         if _is_non_trivial(expressions):
             non_trivial_graphs.append(ident)
 

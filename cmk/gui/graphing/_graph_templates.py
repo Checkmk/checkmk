@@ -188,11 +188,7 @@ def _horizontal_rules_from_thresholds(
     horizontal_rules = []
     for entry in thresholds:
         try:
-            if (
-                result := parse_expression(entry.expression, translated_metrics).evaluate(
-                    translated_metrics
-                )
-            ).value:
+            if (result := entry.expression.evaluate(translated_metrics)).value:
                 horizontal_rules.append(
                     (
                         result.value,

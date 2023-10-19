@@ -56,7 +56,7 @@ from ._color import (
     get_palette_color_by_index,
     parse_color_into_hexrgb,
 )
-from ._expression import parse_expression
+from ._expression import CriticalOf, Metric, MetricExpression, parse_expression, WarningOf
 from ._graph_specification import (
     GraphMetric,
     GraphSpecification,
@@ -70,7 +70,7 @@ from ._unit_info import unit_info
 
 
 class ScalarDefinition(NamedTuple):
-    expression: str
+    expression: MetricExpression
     title: str
 
 
@@ -95,7 +95,6 @@ class GraphDataRange(TypedDict):
     vertical_range: NotRequired[tuple[float, float]]
 
 
-GraphRangeSpec = tuple[int | str, int | str]
 GraphRange = tuple[float | None, float | None]
 SizeEx = NewType("SizeEx", int)
 
@@ -109,7 +108,7 @@ class RawGraphTemplate(TypedDict):
     conflicting_metrics: NotRequired[Sequence[str]]
     optional_metrics: NotRequired[Sequence[str]]
     consolidation_function: NotRequired[GraphConsoldiationFunction]
-    range: NotRequired[GraphRangeSpec]
+    range: NotRequired[tuple[int | str, int | str]]
     omit_zero_metrics: NotRequired[bool]
 
 
@@ -118,7 +117,7 @@ def _parse_raw_scalar_definition(
 ) -> ScalarDefinition:
     if isinstance(raw_scalar_definition, tuple):
         return ScalarDefinition(
-            expression=raw_scalar_definition[0],
+            expression=parse_expression(raw_scalar_definition[0], {}),
             title=str(raw_scalar_definition[1]),
         )
 
@@ -128,7 +127,10 @@ def _parse_raw_scalar_definition(
         title = _("Critical")
     else:
         title = raw_scalar_definition
-    return ScalarDefinition(expression=raw_scalar_definition, title=str(title))
+    return ScalarDefinition(
+        expression=parse_expression(raw_scalar_definition, {}),
+        title=str(title),
+    )
 
 
 def _parse_raw_metric_definition(
@@ -144,6 +146,14 @@ def _parse_raw_metric_definition(
     )
 
 
+def _parse_graph_range(
+    raw_graph_range: tuple[int | str, int | str] | None
+) -> tuple[MetricExpression, MetricExpression] | None:
+    if raw_graph_range is None:
+        return None
+    return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
+
+
 @dataclass(frozen=True)
 class GraphTemplate:
     id: str
@@ -152,7 +162,7 @@ class GraphTemplate:
     conflicting_metrics: Sequence[str]
     optional_metrics: Sequence[str]
     consolidation_function: GraphConsoldiationFunction | None
-    range: GraphRangeSpec | None
+    range: tuple[MetricExpression, MetricExpression] | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]
 
@@ -165,8 +175,14 @@ class GraphTemplate:
             title=None,
             metrics=[MetricDefinition(expression=name, line_type="area")],
             scalars=[
-                ScalarDefinition(expression=f"{name}:warn", title=str(_("Warning"))),
-                ScalarDefinition(expression=f"{name}:crit", title=str(_("Critical"))),
+                ScalarDefinition(
+                    expression=MetricExpression(WarningOf(Metric(name))),
+                    title=str(_("Warning")),
+                ),
+                ScalarDefinition(
+                    expression=MetricExpression(CriticalOf(Metric(name))),
+                    title=str(_("Critical")),
+                ),
             ],
             conflicting_metrics=[],
             optional_metrics=[],
@@ -184,7 +200,7 @@ class GraphTemplate:
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),
             consolidation_function=template.get("consolidation_function"),
-            range=template.get("range"),
+            range=_parse_graph_range(template.get("range")),
             omit_zero_metrics=template.get("omit_zero_metrics", False),
             # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
             # https://github.com/python/mypy/issues/1178
@@ -739,27 +755,19 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
 def get_graph_range(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics
 ) -> GraphRange:
-    if not graph_template.range:
-        return None, None  # Compute range of displayed data points
+    if graph_template.range is None:
+        return None, None
 
-    # TODO really? see test_create_graph_recipe_from_template
     try:
-        from_ = (
-            parse_expression(graph_template.range[0], translated_metrics)
-            .evaluate(translated_metrics)
-            .value
-        )
+        from_ = graph_template.range[0].evaluate(translated_metrics).value
     except Exception:
         from_ = None
 
     try:
-        to = (
-            parse_expression(graph_template.range[1], translated_metrics)
-            .evaluate(translated_metrics)
-            .value
-        )
+        to = graph_template.range[1].evaluate(translated_metrics).value
     except Exception:
         to = None
+
     return from_, to
 
 

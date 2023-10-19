@@ -11,7 +11,15 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.graphing._graph_templates as gt
-from cmk.gui.graphing._expression import parse_expression
+from cmk.gui.graphing._expression import (
+    Constant,
+    CriticalOf,
+    MaximumOf,
+    Metric,
+    MetricExpression,
+    parse_expression,
+    WarningOf,
+)
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
     MetricDefinition,
@@ -103,13 +111,22 @@ def test_create_graph_recipe_from_template() -> None:
             MetricDefinition(expression="fs_size", line_type="line"),
         ],
         scalars=[
-            ScalarDefinition(expression="fs_used:warn", title="Warning"),
-            ScalarDefinition(expression="fs_used:crit", title="Critical"),
+            ScalarDefinition(
+                expression=MetricExpression(WarningOf(Metric(("fs_used")))),
+                title="Warning",
+            ),
+            ScalarDefinition(
+                expression=MetricExpression(CriticalOf(Metric(("fs_used")))),
+                title="Critical",
+            ),
         ],
         conflicting_metrics=["fs_free"],
         optional_metrics=[],
         consolidation_function=None,
-        range=(0, "fs_used:max"),
+        range=(
+            MetricExpression(Constant(0)),
+            MetricExpression(MaximumOf(Metric("fs_used"))),
+        ),
         omit_zero_metrics=False,
     )
     translated_metrics = translate_perf_data(

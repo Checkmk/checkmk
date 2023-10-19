@@ -158,8 +158,10 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     if [ -z ${CI_TEST_SQL_DB_ENDPOINT+x} ]; then
-        echo "NOT DEFINED, skipping integration tests"
-        TESTS_SKIP="--lib"
+        echo "CI_TEST_SQL_DB_ENDPOINT is NOT DEFINED, tests are limited"
+        TARGETS_TO_TEST="--lib"
+    else
+        TARGETS_TO_TEST="--all-targets"
     fi
     test ${RUN_SETUP_ENVIRONMENT} = yes && run_setup_environment
     test ${RUN_CLEAN} = yes && cargo clean
@@ -167,7 +169,7 @@ main() {
     # TODO: Re-evaluate usage of --all-targets below
     test ${RUN_BUILD} = yes && cargo build --release --all-targets
     test ${RUN_BUILD_UNIT_TESTS} = yes && cargo test --release --all-targets --no-run
-    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=1 cargo test --release --all-targets "${TESTS_SKIP}"
+    test ${RUN_UNIT_TESTS} = yes && RUST_BACKTRACE=1 cargo test "${TARGETS_TO_TEST}" --release
     test ${RUN_CLIPPY} = yes && cargo clippy --release --all-targets -- --deny warnings
     test ${RUN_FORMAT} = yes && cargo fmt
     test ${RUN_DOCUMENTATION} = yes && cargo doc --release --lib --bin --examples

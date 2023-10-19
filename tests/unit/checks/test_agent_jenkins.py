@@ -3,23 +3,62 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
+import pytest
+
 from tests.testlib import SpecialAgent
 
 
-def test_agent_jenkins_arguments_password_store() -> None:
-    params = {
-        "user": "username",
-        "password": ("password", "passwd"),
-        "instance": "test",
-        "protocol": "https",
-    }
+@pytest.mark.parametrize(
+    "params, expected_result",
+    [
+        pytest.param(
+            {
+                "user": "username",
+                "password": ("password", "passwd"),
+                "instance": "test",
+                "protocol": "https",
+            },
+            [
+                "-P",
+                "https",
+                "-u",
+                "username",
+                "-s",
+                "passwd",
+                "test",
+            ],
+            id="only required params",
+        ),
+        pytest.param(
+            {
+                "user": "username",
+                "password": ("password", "passwd"),
+                "instance": "test",
+                "protocol": "https",
+                "port": 442,
+                "sections": ["instance", "jobs", "nodes", "queue"],
+            },
+            [
+                "-P",
+                "https",
+                "-u",
+                "username",
+                "-s",
+                "passwd",
+                "-m",
+                "instance jobs nodes queue",
+                "-p",
+                442,
+                "test",
+            ],
+            id="all params",
+        ),
+    ],
+)
+def test_agent_jenkins_arguments_password_store(
+    params: Mapping[str, object], expected_result: Sequence[str]
+) -> None:
     agent = SpecialAgent("agent_jenkins")
-    assert agent.argument_func(params, "testhost", "1.2.3.4") == [
-        "-P",
-        "https",
-        "-u",
-        "username",
-        "-s",
-        "passwd",
-        "test",
-    ]
+    assert agent.argument_func(params, "testhost", "1.2.3.4") == expected_result

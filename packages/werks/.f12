@@ -18,6 +18,5 @@ sudo "/omd/sites/$SITE/bin/python3" -m pip uninstall -y werks
 sudo "/omd/sites/$SITE/bin/python3" -m pip install "$(echo "$PWD/build/werks-"*"-py3-none-any.whl")"
 
 if [ -z "$ONLY_COPY" ]; then
-    sudo killall -9 -u "$SITE" apache2
     sudo omd reload "$SITE" apache
 fi

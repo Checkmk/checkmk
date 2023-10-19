@@ -58,6 +58,7 @@ def main():
 
     if not version.is_installed():
         logger.error("Failed not install version")
+        raise Exception(f"Failed to install {version.edition} {version.version}")
 
     return 0
 

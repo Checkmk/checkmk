@@ -32,9 +32,6 @@ def agent_jenkins_arguments(
 
     if "sections" in params:
         args += ["-m", " ".join(params["sections"])]
-    # compatibility with extension package format 1.6
-    elif "infos" in params:
-        args += ["-m", " ".join(params["infos"])]
 
     if "port" in params:
         args += ["-p", params["port"]]

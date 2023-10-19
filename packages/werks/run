@@ -26,7 +26,7 @@ echo "run: pylint"
 pipenv run pylint werks tests
 
 echo "run: bandit"
-pipenv run bandit -c ../../bandit.yaml -ll -r .
+pipenv run bandit --configfile=pyproject.toml --severity-level=high --recursive werks tests
 
 echo "run: license-header"
 mapfile -t FILES <<<"$(find . -path "./run" -o -name '*.py' -type f -not -path "./build/*")"

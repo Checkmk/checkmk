@@ -153,7 +153,7 @@ def _verify_certificate_chain(
         try:
             crypto.X509StoreContext(x509_store, cert).verify_certificate()
         except crypto.X509StoreContextError as e:
-            error_number, error_depth, error_message = e.args[0]
+            error_number, error_depth, error_message = e.errors
 
         verify_chain_results.append(
             ChainVerifyResult(

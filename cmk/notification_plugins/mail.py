@@ -618,7 +618,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
     return 2
 
 
-def send_mail_amazonses(message, target, from_address, context):
+def send_mail_amazonses(  # pylint: disable=too-many-branches
     message: Message, target: MailString, from_address: MailString, context: dict[str, str]
 ) -> int:
     import botocore

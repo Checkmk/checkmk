@@ -246,7 +246,7 @@ def compute_graph_artwork(
     return GraphArtwork(
         # Labelling, size, layout
         title=graph_recipe.title,
-        width=width,  # in widths of lower case 'x'
+        width=int(width),  # in widths of lower case 'x'
         height=height,
         mirrored=mirrored,
         # Actual data and axes

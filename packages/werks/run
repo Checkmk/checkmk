@@ -11,19 +11,19 @@ echo "run: install dependencies from Pipfile.lock"
 pipenv sync --dev
 
 echo "run: black"
-pipenv run black --check --diff werks test
+pipenv run black --check --diff werks tests
 
 echo "run: isort"
-pipenv run isort --check --diff werks test
+pipenv run isort --check --diff werks tests
 
 echo "run: tests"
-pipenv run pytest test
+pipenv run pytest tests
 
 echo "run: mypy"
-pipenv run mypy werks test
+pipenv run mypy werks tests
 
 echo "run: pylint"
-pipenv run pylint werks test
+pipenv run pylint werks tests
 
 echo "run: bandit"
 pipenv run bandit -c ../../bandit.yaml -ll -r .

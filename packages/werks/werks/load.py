@@ -19,8 +19,8 @@ def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
 
     # see CMK-14546
     # try:
-    #     # the treeprocessor that extracted the title runs before the inline processor, so no inline
-    #     # markdown (links, bold, italic,..) has been replaced. this is
+    #     # the treeprocessor that extracted the title runs before the inline processor, so no
+    #     # inline markdown (links, bold, italic,..) has been replaced. this is
     #     # basically okay, because we don't want any formatting in the
     #     # headline. but we want to give some hint to the user that no
     #     # formatting is allowed.
@@ -48,13 +48,16 @@ def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
 #     except Exception as e:
 #         if '<<<' in string and '>>>' in string:
 #             # this is a hack, ignore if someone describes an agent section
-#             # title needs to be rendered without html interpretation anyway, we just want to give a
-#             # hint to the developer writing the werk, if they use formatting in the title.
+#             # title needs to be rendered without html interpretation anyway, we just want to give
+#             # a hint to the developer writing the werk, if they use formatting in the title.
 #             return
 #         raise WerkError(f"Can not parse title '{string}' to check if it contains html") from e
 #     if number_of_tags:
+#     if number_of_tags:
 #         raise WerkError(
-#             f"string contained markdown formatting:\nstring: {string}\nformatted string: {markdown_converted}"
+#             "string contained markdown formatting:\n"
+#             f"string: {string}\n"
+#             f"formatted string: {markdown_converted}"
 #         )
 
 

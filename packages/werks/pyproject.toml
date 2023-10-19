@@ -31,12 +31,11 @@ warn_required_dynamic_aliases = true
 [tool.pylint]
 jobs = 0
 
-[tool.pylint.'MESSAGES CONTROL']
-disable = """
-missing-docstring,
-line-too-long,
-fixme
-"""
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = "missing-docstring,fixme"
 
 # We need this section, even if it is empty, without it pytest won't consider
 # our package directory as the root directory and climbs up further, see:

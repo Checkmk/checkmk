@@ -48,7 +48,8 @@ def parse_werk_v2(content: str, werk_id: str) -> WerkV2ParseResult:
     # TODO: check if it really is a h1 headline?!
     if not title.startswith("#"):
         raise WerkError(
-            "First element after the header needs to be the title as a h1 headline. The line has to start with '#'."
+            "First element after the header needs to be the title as a h1 headline. "
+            "The line has to start with '#'."
         )
     metadata["title"] = title.removeprefix("#").strip()
 

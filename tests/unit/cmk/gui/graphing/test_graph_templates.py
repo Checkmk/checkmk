@@ -10,6 +10,10 @@ from typing import Literal
 import pytest
 from pytest import MonkeyPatch
 
+from livestatus import SiteId
+
+from cmk.utils.hostaddress import HostName
+
 import cmk.gui.metrics as metrics
 from cmk.gui.graphing import _graph_templates as gt
 from cmk.gui.graphing import perfometer_info
@@ -23,7 +27,11 @@ from cmk.gui.graphing._expression import (
     parse_expression,
     WarningOf,
 )
-from cmk.gui.graphing._graph_specification import HorizontalRule
+from cmk.gui.graphing._graph_specification import (
+    HorizontalRule,
+    MetricOpOperator,
+    MetricOpRRDSource,
+)
 from cmk.gui.graphing._graph_templates import matching_graph_templates
 from cmk.gui.graphing._perfometer import (
     _DualPerfometerSpec,
@@ -641,3 +649,87 @@ def test_graph_templates_with_consolidation_function() -> None:
             if template.consolidation_function
         ]
     ) == sorted(["mem_shrinking", "shrinking"])
+
+
+@pytest.mark.parametrize(
+    "orig_names, scales, expected_operation",
+    [
+        pytest.param(
+            ["metric-name"],
+            [1.0],
+            MetricOpRRDSource(
+                ident="rrd",
+                site_id=SiteId("Site-ID"),
+                host_name=HostName("HostName"),
+                service_name="Service Description",
+                metric_name="metric-name",
+                consolidation_func_name=None,
+                scale=1.0,
+            ),
+            id="no translation",
+        ),
+        pytest.param(
+            ["metric-name", "old-metric-name"],
+            [1.0, 2.0],
+            MetricOpOperator(
+                ident="operator",
+                operator_name="MERGE",
+                operands=[
+                    MetricOpRRDSource(
+                        ident="rrd",
+                        site_id=SiteId("Site-ID"),
+                        host_name=HostName("HostName"),
+                        service_name="Service Description",
+                        metric_name="metric-name",
+                        consolidation_func_name=None,
+                        scale=1.0,
+                    ),
+                    MetricOpRRDSource(
+                        ident="rrd",
+                        site_id=SiteId("Site-ID"),
+                        host_name=HostName("HostName"),
+                        service_name="Service Description",
+                        metric_name="old-metric-name",
+                        consolidation_func_name=None,
+                        scale=2.0,
+                    ),
+                ],
+            ),
+            id="translation",
+        ),
+    ],
+)
+def test__to_metric_operation(
+    orig_names: Sequence[str],
+    scales: Sequence[int | float],
+    expected_operation: MetricOpOperator | MetricOpRRDSource,
+) -> None:
+    assert (
+        gt._to_metric_operation(
+            Metric("metric-name"),
+            {
+                "metric-name": {
+                    "orig_name": list(orig_names),
+                    "value": 23.5,
+                    "scalar": {},
+                    "scale": list(scales),
+                    "auto_graph": False,
+                    "title": "Title",
+                    "unit": {
+                        "title": "Unit Title",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "js-render",
+                    },
+                    "color": "#111111",
+                },
+            },
+            {
+                "site": "Site-ID",
+                "host_name": "HostName",
+                "service_description": "Service Description",
+            },
+            None,
+        )
+        == expected_operation
+    )

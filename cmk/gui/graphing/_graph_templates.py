@@ -270,16 +270,28 @@ def _to_metric_operation(
     if isinstance(declaration, Constant):
         return MetricOpConstant(value=float(declaration.value))
     if isinstance(declaration, Metric):
-        return MetricOpRRDSource(
-            site_id=lq_row["site"],
-            host_name=lq_row["host_name"],
-            service_name=lq_row.get("service_description", "_HOST_"),
-            metric_name=pnp_cleanup(translated_metrics[declaration.name]["orig_name"][0]),
-            consolidation_func_name=(
-                declaration.consolidation_func_name or enforced_consolidation_function
-            ),
-            scale=translated_metrics[declaration.name]["scale"][0],
-        )
+        sources = [
+            MetricOpRRDSource(
+                site_id=lq_row["site"],
+                host_name=lq_row["host_name"],
+                service_name=lq_row.get("service_description", "_HOST_"),
+                metric_name=pnp_cleanup(orig_name),
+                consolidation_func_name=(
+                    declaration.consolidation_func_name or enforced_consolidation_function
+                ),
+                scale=scale,
+            )
+            for orig_name, scale in zip(
+                translated_metrics[declaration.name]["orig_name"],
+                translated_metrics[declaration.name]["scale"],
+            )
+        ]
+        if len(sources) > 1:
+            return MetricOpOperator(
+                operator_name="MERGE",
+                operands=sources,
+            )
+        return sources[0]
     if isinstance(declaration, Sum):
         return MetricOpOperator(
             operator_name="+",

@@ -6,7 +6,6 @@ use std::time::{Duration, Instant};
 pub mod cli;
 mod pwstore;
 
-#[tokio::main]
 pub async fn check_http(args: cli::Cli) -> AnyhowResult<()> {
     let request = prepare_request(
         args.url,

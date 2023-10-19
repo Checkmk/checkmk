@@ -1,0 +1,18 @@
+Title: re-use of context in multiple threads in activate changes
+Class: fix
+Compatible: compat
+Component: core
+Date: 1697705777
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p13
+
+When running "activate changes", a "context" object is created and
+passed to multiple threads. The concurrent use of this context is
+not supported and can lead to crashes.
+
+As a fix, now every thread receives their own copy of the context
+leading to complete isolation of the threads.
+
+No further action is required to activate the fix.

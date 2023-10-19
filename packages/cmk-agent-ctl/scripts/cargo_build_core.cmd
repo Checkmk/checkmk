@@ -72,8 +72,9 @@ if "%worker_arg_clippy%" == "1" (
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed cargo clippy" -Foreground Red
         exit /b 17
+    ) else (
+        powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
     )
-    powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust clippy" -Foreground Yellow
 )
@@ -91,8 +92,9 @@ if "%worker_arg_build%" == "1" (
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed cargo build" -Foreground Red
         exit /b 18
+    ) else (
+        powershell Write-Host "Building Rust SUCCESS" -Foreground Green
     )
-    powershell Write-Host "Building Rust SUCCESS" -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust build" -Foreground Yellow
 )
@@ -113,8 +115,9 @@ rem Validate elevation, because full testing is possible only in elevated mode!
     if ERRORLEVEL 1  (
         powershell Write-Host "Failed cargo test" -Foreground Red
         exit /b 19
+    ) else (
+        powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
     )
-    rem powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust test" -Foreground Yellow
 )
@@ -138,8 +141,9 @@ if "%worker_arg_build%" == "1" (
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed to copy %exe%" -Foreground Red
         exit /b 22
+    ) else (
+        powershell Write-Host "Done." -Foreground Green
     )
-    powershell Write-Host "Done." -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust upload" -Foreground Yellow
 )

@@ -1,22 +1,19 @@
 @echo off
 :: Script to Build Rust executable and sign it
-:: 
+::
 :: Sign mode:
-:: cargo_build file password
+:: cargo_build_core file password
 :: file is located in c:\common\store and must be well protected from access
 :: The password is delivered by jenkins(in a turn from our password store)
 :: In future we could download file too(from the password store), but this will 
 :: not change the requirement to protect the file from free access.
 ::
 :: Standard Mode:
-:: cargo_build
+:: cargo_build_core
 ::
 
 SETLOCAL EnableDelayedExpansion
 
-echo --- info ---
-echo PATH=%path%
-echo ------------
 set RUST_BACKTRACE=1
 
 :: Jenkins calls windows scripts in a quite strange manner, better to check is cargo available
@@ -36,7 +33,6 @@ rustup default 1.72.0
 rustup target add %target%
 rustup update 1.72.0
 @echo RUST versions:
-cd
 cargo -V
 rustc -V
 echo keep_arg_build=%keep_arg_build%
@@ -73,8 +69,9 @@ if "%keep_arg_clippy%" == "1" (
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed cargo clippy" -Foreground Red 
         exit /b 17
+    ) else (
+        powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
     )
-    powershell Write-Host "Checking Rust SUCCESS" -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust clippy" -Foreground Yellow
 )
@@ -92,8 +89,9 @@ if "%keep_arg_build%" == "1" (
     if ERRORLEVEL 1 (
         powershell Write-Host "Failed cargo build" -Foreground Red 
         exit /b 18
+    ) else (
+        powershell Write-Host "Building Rust SUCCESS" -Foreground Green
     )
-    powershell Write-Host "Building Rust SUCCESS" -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust build" -Foreground Yellow
 )
@@ -105,14 +103,15 @@ rem Validate elevation, because full testing is possible only in elevated mode!
     IF ERRORLEVEL 1 (
         echo You must be elevated. Exiting...
         exit /B 21
+    ) else (
+        powershell Write-Host "Testing Rust executables" -Foreground White
+        cargo test --release --target %target% -- --test-threads=4 2>&1
+        if ERRORLEVEL 1  (
+            powershell Write-Host "Failed cargo test" -Foreground Red 
+            exit /b 19
+        ) else (
+            powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
     )
-    powershell Write-Host "Testing Rust executables" -Foreground White
-    cargo test --release --target %target% -- --test-threads=4 2>&1
-    if ERRORLEVEL 1  (
-        powershell Write-Host "Failed cargo test" -Foreground Red 
-        exit /b 19
-    )
-    rem powershell Write-Host "Testing Rust SUCCESS" -Foreground Green
 ) else (
     powershell Write-Host "Skip Rust test" -Foreground Yellow
 )

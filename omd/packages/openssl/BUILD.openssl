@@ -20,6 +20,7 @@ configure_make(
          "--libdir=lib",
          # Do not build shared legacy module
          "no-module",
+         "-O2",
     ],
     args=["-j6"],
 

@@ -632,10 +632,11 @@ def output_csv(werks: list[Werk]) -> None:
 
     nr = 1
     for entry in get_config().components:
+        # TODO: Our config has been validate, so we should be able to nuke the isinstance horror below.
         if isinstance(entry, tuple) and len(entry) == 2:
             name, alias = entry
         elif isinstance(entry, str):  # TODO: Hmmm...
-            name, alias = entry, entry
+            name, alias = entry, entry  # type: ignore[unreachable]
         else:
             bail_out(f"invalid component {entry!r}")
 

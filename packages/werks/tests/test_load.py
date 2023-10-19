@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator, Mapping
-from typing import Any
 
 import pytest
 
@@ -51,7 +50,7 @@ Date: 1569225628
 """
 
 
-def get_werk_v1(werk_dict: Mapping[str, Any]) -> str:
+def get_werk_v1(werk_dict: Mapping[str, object]) -> str:
     def generate() -> Iterator[str]:
         for key, value in werk_dict.items():
             if key == "description":

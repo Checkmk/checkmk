@@ -7,21 +7,27 @@ known_first_party = "werks"
 order_by_type = "False"
 
 [tool.mypy]
-strict="True"
-disallow_untyped_defs = "True"
-disallow_any_unimported = "True"
-no_implicit_optional = "True"
-check_untyped_defs = "True"
-warn_return_any = "True"
-warn_unused_ignores = "True"
-show_error_codes = "True"
 plugins = "pydantic.mypy"
-incremental = "False"
+strict = true
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = true
+disallow_any_explicit = true
+disallow_any_expr = false  # lots of Anys in APIs like pydantic, argparse, lxml, ...
+disallow_any_unimported = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
 
 [tool.pylint]
 jobs = 0
-
-[tool.pytest.ini_options]
 
 [tool.pylint.'MESSAGES CONTROL']
 disable = """
@@ -29,3 +35,8 @@ missing-docstring,
 line-too-long,
 fixme
 """
+
+# We need this section, even if it is empty, without it pytest won't consider
+# our package directory as the root directory and climbs up further, see:
+# https://docs.pytest.org/en/stable/reference/customize.html#finding-the-rootdir
+[tool.pytest.ini_options]

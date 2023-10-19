@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import datetime
 from enum import Enum
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -92,7 +94,7 @@ class Werk(WerkV2Base):
     #     return v
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]) -> "Werk":
+    def from_json(cls, data: dict[str, object]) -> Werk:
         return cls.model_validate(data)
 
 

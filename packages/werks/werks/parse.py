@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import lxml.html
 import markdown
@@ -82,10 +82,10 @@ def parse_werk_v1(content: str, werk_id: int) -> WerkV1ParseResult:
     """
     parse werk v1 but do not validate, or transform description
     """
-    werk: dict[str, Any] = {  # TODO: this Any is a problem!
+    werk: dict[str, str] = {
         "compatible": "compat",
         "edition": "cre",
-        "id": werk_id,
+        "id": str(werk_id),
     }
     description = []
     in_header = True
@@ -95,7 +95,7 @@ def parse_werk_v1(content: str, werk_id: int) -> WerkV1ParseResult:
         elif in_header:
             key, text = line.split(":", 1)
             try:
-                value: int | str = int(text.strip())
+                value = str(int(text.strip()))
             except ValueError:
                 value = text.strip()
             field = key.lower()

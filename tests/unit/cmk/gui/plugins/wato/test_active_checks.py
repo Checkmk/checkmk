@@ -130,10 +130,10 @@ def test_transform_form_submit(
                 "item": "service_name",
                 "mail_from": "me_from@gmx.de",
                 "mail_to": "me_to@gmx.de",
-                "send_server": "smtp.gmx.de",
-                "send_tls": True,
+                "smtp_server": "smtp.gmx.de",
+                "smtp_tls": True,
             },
-            id="v2.0.0 rule with basic auth only, ssl as tuple and smtp keys",
+            id="v2.0.0 rule with basic auth only and ssl as tuple",
         ),
         pytest.param(
             {
@@ -163,21 +163,21 @@ def test_transform_form_submit(
                 "mail_from": "me_from@gmx.de",
                 "mail_to": "me_to@gmx.de",
                 "connect_timeout": 23,
+                "smtp_auth": ("usr_smtp", ("password", "pw_smtp")),
                 "duration": (93780, 183840),
                 "fetch": (
                     "IMAP",
                     {
                         "auth": ("basic", ("usr_imap", ("password", "pw_imap"))),
-                        "connection": {"disable_tls": False, "port": 143},
+                        "connection": {"disable_tls": False, "tcp_port": 143},
                         "server": "imap.gmx.net",
                     },
                 ),
-                "send_auth": ("usr_smtp", ("password", "pw_smtp")),
-                "send_port": 25,
-                "send_server": "smtp.gmx.de",
-                "send_tls": True,
+                "smtp_port": 25,
+                "smtp_server": "smtp.gmx.de",
+                "smtp_tls": True,
             },
-            id="v2.0.0 with basic auth only, ssl as tuple and smtp keys",
+            id="v2.0.0 with basic auth only and ssl as tuple",
         ),
         pytest.param(
             {

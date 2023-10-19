@@ -44,8 +44,9 @@ if "%~1"=="--sign"          (set keep_arg_sign_file=%1) & (set keep_arg_sign_sec
 )
 if "%keep_arg_all%"=="1" (set keep_arg_clippy=1) & (set keep_arg_build=1) & (set keep_arg_test=1) & (set keep_arg_check_format=1)
 
-set ci_root_dir=workdir\workspace
-set ci_junction_to_root_dir=x
+:: Setup shortcut call for CI(to make names shorter than 255 chars)
+set ci_root_dir=workdir\workspace\checkmk\master
+set ci_junction_to_root_dir=y
 set script_to_run=.\scripts\cargo_build_core.cmd
 powershell -ExecutionPolicy ByPass -File scripts/shorten_dir_and_call.ps1 %ci_root_dir% %ci_junction_to_root_dir% %script_to_run%
 GOTO :EOF

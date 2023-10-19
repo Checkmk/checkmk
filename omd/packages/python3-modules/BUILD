@@ -66,7 +66,6 @@ config_setting(
         ),
     }),
 ) for module, dep in [
-    ("cython3", "git+https://github.com/JonasScharpf/pymssql.git@cython3_fix_v227"),
     ("agent-receiver", "$(execpath @omd_packages//:agent-receiver)"),
     ("werks", "$(execpath @omd_packages//packages:werks)"),
 ]]
@@ -76,7 +75,6 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
-            "cython3",
             "agent-receiver",
             "werks",
         ]

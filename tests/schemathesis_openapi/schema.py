@@ -183,7 +183,7 @@ def get_schema() -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
     class _Auth(schemathesis.auths.AuthProvider):
         """Default authentication provider."""
 
-        def get(self, context):
+        def get(self, case, context):
             return token
 
         def set(self, case, data, context):

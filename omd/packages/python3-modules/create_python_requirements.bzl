@@ -28,7 +28,7 @@ def _create_python_requirements_impl(rctx):
     packages = {
         name: requirement
         for name, requirement in parsed_requirements_txt.requirements
-        if name not in ["protobuf", "rrdtool", "agent-receiver", "pymssql", "werks"]
+        if name not in ["protobuf", "rrdtool", "agent-receiver", "werks"]
     }
 
     bzl_packages = sorted(packages.keys())

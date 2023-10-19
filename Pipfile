@@ -154,7 +154,7 @@ botocore = "==1.29.105"  # needed by boto3 (aws), keep version in sync with boto
 s3transfer = "==0.6.0"  # needed by boto3 (aws)
 boto3 = "==1.26.105"  # needed by boto3 (aws), keep version in sync with boto3-stubs
 python-snap7 = "==1.3"  # needed by Siemens PLC special agent
-pymssql = "==2.2.7"  # needed by check_sql active check
+pymssql = "==2.2.8"  # needed by check_sql active check
 pymysql = "==1.0.3"  # needed by check_sql active check
 psycopg2-binary = "==2.9.6"  # needed by check_sql active check
 apispec = "==5.2.2"  # direct dependency

@@ -49,8 +49,6 @@ build_cmd = """
     # Build directory
     mkdir -p $$HOME//$(OUTS)
 
-    echo -e "cython==0.29.34" > $$TMPDIR/constraints.txt
-
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
     # Set up rust toolchain (probably better done bazel wide?)
@@ -86,7 +84,6 @@ build_cmd = """
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$(OUTS)" \\
-      --constraint $$TMPDIR/constraints.txt \\
       -i $$INTERNAL_PYPI_MIRROR \\
       {requirements}
 """

@@ -71,7 +71,7 @@ EOF
 # Since escaping of field seperators is not relevant when reading into one variable, we probably
 # would have wanted "read -r".
 # shellcheck disable=SC2162
-ps xewwg | sed -n '/ dsmserv .* DSMSERV_CONFIG=/s/^.* dsmserv //p' |
+ps xewwg | sed -n '/[\s\/]dsmserv .* DSMSERV_CONFIG=/s/^.*dsmserv //p' |
     while read line; do
         # Take over all relevant environment into our own
         eval "$(echo "$line" | tr ' ' '\n' | sed -n '/^DSMSERV_/s/^/export /p')"

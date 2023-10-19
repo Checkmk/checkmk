@@ -3,8 +3,10 @@ line-length = 100
 
 [tool.isort]
 profile = "black"
+order_by_type = false
+line_length = 100
+py_version = 311
 known_first_party = "werks"
-order_by_type = "False"
 
 [tool.mypy]
 plugins = "pydantic.mypy"

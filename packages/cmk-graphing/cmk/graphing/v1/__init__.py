@@ -5,9 +5,11 @@
 
 from ._color import Color, RGB
 from ._localize import Localizable
+from ._unit import Unit
 
 __all__ = [
     "Color",
     "RGB",
     "Localizable",
+    "Unit",
 ]

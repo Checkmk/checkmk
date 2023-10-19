@@ -618,6 +618,63 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
     return 2
 
 
+def send_mail_amazonses(message, target, from_address, context):
+    message: Message, target: MailString, from_address: MailString, context: dict[str, str]
+) -> int:
+    import botocore
+    import boto3
+
+    retry_possible = False
+    success = False
+
+    while not success:
+
+        SENDER = context["PARAMETER_FROM_ADDRESS"]
+        targetses = target.split(",")
+
+        if not "PARAMETER_AMAZONSES_SESREGION" in context:
+            context["PARAMETER_AMAZONSES_SESREGION"] = "eu-central-1"
+            
+        if not "PARAMETER_AMAZONSES_SESCONFIG" in context:
+            context["PARAMETER_AMAZONSES_SESCONFIG"] = ""
+            configsettext = "Not defined"
+        else:
+            configsettext = context["PARAMETER_AMAZONSES_SESCONFIG"]
+
+        if not "PARAMETER_AMAZONSES_SESAPIKEY" in context:
+            sys.stderr.write("Error: Amazon API Key missing in configuration")
+            break
+        if not "PARAMETER_AMAZONSES_SESAPIPASSWORD" in context:
+            sys.stderr.write("Error: Amazon API Password missing in configuration")
+
+          
+            
+        # Connect to Amazon SES API       
+        client = boto3.client('ses',region_name=context["PARAMETER_AMAZONSES_SESREGION"],aws_access_key_id=context["PARAMETER_AMAZONSES_SESAPIKEY"],aws_secret_access_key=context["PARAMETER_AMAZONSES_SESAPIPASSWORD"])
+
+        try:    
+            response = client.send_raw_email(
+                Source=SENDER,
+                Destinations=targetses,
+                RawMessage={'Data': message.as_string()},
+                ConfigurationSetName=context["PARAMETER_AMAZONSES_SESCONFIG"]
+            )
+            success = True 
+            print("Email sent! Message ID: " + response['MessageId'] + " | Used Configuration Set: " + configsettext + " | Used AWS Region: " + context["PARAMETER_AMAZONSES_SESREGION"]),
+        except botocore.exceptions.ClientError as error:
+            if error.response['Error']['Code'] == 'LimitExceededException':
+                sys.stderr.write("API call limit exceeded; backing off and retrying...")
+                break
+            else:
+                raise error
+            
+    if success:
+        return 0
+    if retry_possible:
+        return 1
+    return 2
+
+
 def _ensure_str_error_message(message: bytes | str) -> str:
     return message.decode("utf-8") if isinstance(message, bytes) else message
 
@@ -678,6 +735,8 @@ def send_mail_smtp_impl(
 def send_mail(message: Message, target: str, from_address: str, context: dict[str, str]) -> int:
     if "PARAMETER_SMTP_PORT" in context:
         return send_mail_smtp(message, MailString(target), MailString(from_address), context)
+    if "PARAMETER_AMAZONSES_SESAPIKEY" in context or "PARAMETER_AMAZONSES_SESAPIPASSWORD" in context or "PARAMETER_AMAZONSES_SESREGION" in context:
+        return send_mail_amazonses(message, MailString(target), MailString(from_address), context)
     send_mail_sendmail(message, MailString(target), MailString(from_address))
     sys.stdout.write("Spooled mail to local mail transmission agent\n")
     return 0

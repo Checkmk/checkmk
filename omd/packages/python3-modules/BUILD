@@ -117,15 +117,5 @@ genrule(
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
-
-        # Fix gunicorn permissios
-        chmod +x $(RULEDIR)/python3-modules/bin/gunicorn
-
-        # Temporary check: we saw non-executable gunicorn in cloud edition only
-        # it may be a caching issue but we don't understand it yet...
-        if [ ! -x $(RULEDIR)/python3-modules/bin/gunicorn ]; then
-            echo "Couldn't make gunicorn executable, giving up"
-            exit 1;
-        fi
     """,
 )

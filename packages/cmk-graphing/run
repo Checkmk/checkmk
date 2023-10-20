@@ -124,7 +124,9 @@ run_pipenv() {
 }
 
 setup_venv() {
-    run_pipenv sync --dev
+    # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
+    # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
+    run_pipenv sync --dev >/dev/null
     run_pipenv clean
     # poor man's "activate", but without any danger of naming clashes
     PATH="$(pwd)/.venv/bin:$PATH"
@@ -133,20 +135,18 @@ setup_venv() {
 
 run_format() {
     # shellcheck disable=SC2086
-    isort --settings-path pyproject.toml $1
+    isort $1
 
     # shellcheck disable=SC2086
-    black $1
+    black --quiet $1
 }
 
 run_check_format() {
     # shellcheck disable=SC2086
-    isort \
-        --settings-path pyproject.toml \
-        --check-only --diff $1
+    isort --check-only --diff $1
 
     # shellcheck disable=SC2086
-    black --check --diff $1
+    black --quiet --check --diff $1
 }
 
 run_py_import_cycles() {
@@ -159,7 +159,7 @@ run_py_import_cycles() {
 
 run_bandit() {
     # shellcheck disable=SC2086
-    bandit --configfile=pyproject.toml --recursive --severity-level=high $1
+    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high $1
 }
 
 run_mypy() {

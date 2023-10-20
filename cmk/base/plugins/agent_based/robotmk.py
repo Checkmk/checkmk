@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.utils import robotmk_api  # Should be replaced by external package
+from cmk.base.plugins.agent_based.utils.robotmk_parse_xml import extract_tests_from_suites
 
 from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
     host_name,
@@ -102,6 +103,10 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
 
         if isinstance(result, robotmk_api.SuiteExecutionReport):
             yield Service(item=f"Suite {result.suite_name}")
+            for test_name in extract_tests_from_suites(
+                result.outcome.Executed.rebot.Ok.xml.robot.suite
+            ):
+                yield Service(item=test_name)
 
 
 def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:

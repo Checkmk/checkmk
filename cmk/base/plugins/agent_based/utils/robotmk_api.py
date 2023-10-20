@@ -11,7 +11,11 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Json, TypeAdapter
+import xmltodict
+from pydantic import BaseModel, BeforeValidator, Json, TypeAdapter
+from typing_extensions import Annotated
+
+from .robotmk_parse_xml import Rebot
 
 
 class JSON(BaseModel, frozen=True):
@@ -36,8 +40,12 @@ class AttemptOutcome(enum.Enum):
     OtherError = "OtherError"
 
 
+def _parse_xml(xml_value: str) -> Rebot:
+    return Rebot.model_validate(xmltodict.parse(xml_value))
+
+
 class RebotResult(JSON, frozen=True):
-    xml: str
+    xml: Annotated[Rebot, BeforeValidator(_parse_xml)]
     html_base64: str
 
 

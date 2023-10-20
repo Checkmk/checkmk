@@ -7,12 +7,9 @@
 from cmk.base.config import active_check_info
 
 
-def check_ftp_arguments(params):  # pylint: disable=too-many-branches
-    if isinstance(params, tuple):
-        host, settings = params
-    else:
-        host = "$HOSTADDRESS$"
-        settings = params
+def check_ftp_arguments(params):
+    host = "$HOSTADDRESS$"
+    settings = params
 
     args = ["-H", host]
 
@@ -30,9 +27,6 @@ def check_ftp_arguments(params):  # pylint: disable=too-many-branches
     if "refuse_state" in settings:
         args += ["-r", settings["refuse_state"]]
 
-    if settings.get("escape_send_string"):
-        args.append("--escape")
-
     if "send_string" in settings:
         args += ["-s", settings["send_string"]]
 
@@ -44,20 +38,13 @@ def check_ftp_arguments(params):  # pylint: disable=too-many-branches
         args.append("--ssl")
 
     if "cert_days" in settings:
-        # legacy behavior
-        if isinstance(settings["cert_days"], int):
-            args += ["-D", settings["cert_days"]]
-        else:
-            warn, crit = settings["cert_days"]
-            args += ["-D", warn, crit]
+        warn, crit = settings["cert_days"]
+        args += ["-D", warn, crit]
 
     return args
 
 
 def check_ftp_get_item(params):
-    if isinstance(params, tuple):
-        return "FTP " + params[0]
-
     if "port" in params and params["port"] != 21:
         return "FTP Port " + str(params["port"])
     return "FTP"

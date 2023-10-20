@@ -263,7 +263,7 @@ class Discovery:
                     DiscoveryState.CLUSTERED_NEW,
                     DiscoveryState.CLUSTERED_OLD,
                 ]:
-                    user.need_permission("wato.service_discovery_to_undecided")
+                    user.need_permission("wato.service_discovery_to_monitored")
                 elif table_target == DiscoveryState.IGNORED:
                     user.need_permission("wato.service_discovery_to_ignored")
                 elif table_target == DiscoveryState.REMOVED:

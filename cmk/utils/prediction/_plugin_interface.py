@@ -13,7 +13,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.servicename import ServiceName
 
-from ._grouping import get_timegroup_relative_time, PREDICTION_PERIODS, Timegroup
+from ._grouping import PREDICTION_PERIODS, Slice, Timegroup
 from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
@@ -73,9 +73,7 @@ def get_predictive_levels(
     now = int(time.time())
     period_info = PREDICTION_PERIODS[params.period]
 
-    timegroup, current_slice_start, current_slice_end, _rel_time = get_timegroup_relative_time(
-        now, period_info
-    )
+    current_slice = Slice.from_timestamp(now, period_info)
 
     prediction_store = PredictionStore(
         PREDICTION_DIR,
@@ -87,14 +85,14 @@ def get_predictive_levels(
     if (
         data_for_pred := _get_prediction(
             store=prediction_store,
-            timegroup=timegroup,
+            timegroup=current_slice.group,
             params=params,
         )
     ) is None:
         info = PredictionInfo(
-            name=timegroup,
+            name=current_slice.group,
             time=now,
-            range=(current_slice_start, current_slice_end),
+            range=current_slice.interval,
             dsname=dsname,
             params=params,
         )

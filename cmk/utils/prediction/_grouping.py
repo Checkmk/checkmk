@@ -5,7 +5,8 @@
 
 import time
 from collections.abc import Callable, Mapping, Sequence
-from typing import Final, Literal, NamedTuple, NewType
+from dataclasses import dataclass
+from typing import Final, Literal, NamedTuple, NewType, Self
 
 Timegroup = NewType("Timegroup", str)
 
@@ -99,7 +100,6 @@ def time_slices(
     "Collect all slices back into the past until time horizon is reached"
     timestamp = int(timestamp)
     abs_begin = timestamp - horizon_seconds
-    slices = []
 
     # Note: due to the f**king DST, we can have several shifts between DST
     # and non-DST during a computation. Treatment is unfair on those longer
@@ -110,27 +110,24 @@ def time_slices(
     # midnight) and most likely before DST swap is applied.
 
     # Have fun understanding the tests for this function.
-    for begin in range(timestamp, abs_begin, -period_info.slice):
-        tg, start, end = get_timegroup_relative_time(begin, period_info)[:3]
-        if tg == timegroup:
-            slices.append((start, end))
-    return slices
+    return [
+        slice_.interval
+        for begin in range(timestamp, abs_begin, -period_info.slice)
+        if (slice_ := Slice.from_timestamp(begin, period_info)).group == timegroup
+    ]
 
 
-def get_timegroup_relative_time(
-    timestamp: int,
-    period_info: PeriodInfo,
-) -> tuple[Timegroup, int, int, int]:
-    """
-    Return:
-    timegroup: name of the group, like 'monday' or '12'
-    from_time: absolute epoch time of the first second of the
-    current slice.
-    until_time: absolute epoch time of the first second *not* in the slice
-    rel_time: seconds offset of now in the current slice
-    """
-    # Convert to local timezone
-    timegroup, rel_time = period_info.groupby(timestamp)
-    from_time = timestamp - rel_time
-    until_time = from_time + period_info.slice
-    return timegroup, from_time, until_time, rel_time
+@dataclass
+class Slice:
+    group: Timegroup
+    """Name of the group, like 'monday' or '12'"""
+    interval: tuple[int, int]
+    """Absolute epoch times of the first second of the slice
+    and the first second *not* in the slice."""
+
+    @classmethod
+    def from_timestamp(cls, timestamp: int, period_info: PeriodInfo) -> Self:
+        timegroup, rel_time = period_info.groupby(timestamp)
+        from_time = timestamp - rel_time
+        until_time = from_time + period_info.slice
+        return cls(group=timegroup, interval=(from_time, until_time))

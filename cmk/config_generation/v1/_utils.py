@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Literal
 
 
 class IPAddressFamily(StrEnum):
@@ -73,3 +74,21 @@ def get_secret_from_params(secret_type: str, secret_value: str) -> Secret:
         return PlainTextSecret(secret_value)
 
     raise ValueError(f"{secret_type} is not a valid secret type")
+
+
+def get_http_proxy(
+    proxy_type: Literal["global", "environment", "url", "no_proxy"],
+    proxy_value: str | None,
+    http_proxies: Mapping[str, HTTPProxy],
+) -> str:
+    if proxy_type == "url":
+        return str(proxy_value)
+
+    if proxy_type == "no_proxy":
+        return "NO_PROXY"
+
+    if proxy_type == "global":
+        if (global_proxy := http_proxies.get(str(proxy_value))) is not None:
+            return str(global_proxy.url)
+
+    return "FROM_ENVIRONMENT"

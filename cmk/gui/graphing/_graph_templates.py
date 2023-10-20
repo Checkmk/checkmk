@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, Final, Literal
+from typing import ClassVar, Literal
 
 from livestatus import SiteId
 
@@ -38,13 +38,11 @@ from ._graph_specification import (
     GraphMetric,
     GraphRecipe,
     GraphRecipeBase,
-    GraphRecipeNew,
-    GraphSpecificationNew,
+    GraphSpecification,
     HorizontalRule,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDSource,
-    TemplateGraphSpecification,
 )
 from ._type_defs import GraphConsoldiationFunction
 from ._utils import (
@@ -59,10 +57,10 @@ from ._utils import (
 )
 
 
-class TemplateGraphSpecificationNew(GraphSpecificationNew, frozen=True):
+class TemplateGraphSpecification(GraphSpecification, frozen=True):
     # Overwritten in cmk/gui/graphing/cee/__init__.py
     TUNE_GRAPH_TEMPLATE: ClassVar[
-        Callable[[GraphTemplate, TemplateGraphSpecificationNew], GraphTemplate | None]
+        Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
     ] = lambda graph_template, _spec: graph_template
 
     graph_type: Literal["template"] = "template"
@@ -77,7 +75,7 @@ class TemplateGraphSpecificationNew(GraphSpecificationNew, frozen=True):
     def name() -> str:
         return "template_graph_specification"
 
-    def recipes(self) -> list[GraphRecipeNew]:
+    def recipes(self) -> list[GraphRecipe]:
         row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
         translated_metrics = translated_metrics_from_row(row)
         return [
@@ -104,86 +102,11 @@ class TemplateGraphSpecificationNew(GraphSpecificationNew, frozen=True):
         row: Row,
         translated_metrics: TranslatedMetrics,
         index: int,
-    ) -> GraphRecipeNew | None:
-        if not (
-            graph_template_tuned := TemplateGraphSpecificationNew.TUNE_GRAPH_TEMPLATE(
-                graph_template,
-                self,
-            )
-        ):
-            return None
-
-        graph_recipe = create_graph_recipe_from_template(
-            graph_template_tuned,
-            translated_metrics,
-            row,
-        )
-
-        return GraphRecipeNew(
-            title=graph_recipe.title,
-            metrics=graph_recipe.metrics,
-            unit=graph_recipe.unit,
-            explicit_vertical_range=graph_recipe.explicit_vertical_range,
-            horizontal_rules=graph_recipe.horizontal_rules,
-            omit_zero_metrics=graph_recipe.omit_zero_metrics,
-            consolidation_function=graph_recipe.consolidation_function,
-            specification=TemplateGraphSpecificationNew(
-                site=self.site,
-                host_name=self.host_name,
-                service_description=self.service_description,
-                destination=self.destination,
-                # Performance graph dashlets already use graph_id, but for example in reports, we still
-                # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
-                # done, we can remove the line below.
-                graph_index=index,
-                graph_id=graph_template_tuned.id,
-            ),
-        )
-
-
-class TemplateGraphRecipeBuilder:
-    # Overwritten in cmk/gui/graphing/cee/__init__.py
-    TUNE_GRAPH_TEMPLATE: ClassVar[
-        Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
-    ] = lambda graph_template, _spec: graph_template
-
-    def __init__(self) -> None:
-        self.graph_type: Final = "template"
-
-    def __call__(self, spec: TemplateGraphSpecification) -> list[GraphRecipe]:
-        row = get_graph_data_from_livestatus(spec.site, spec.host_name, spec.service_description)
-        translated_metrics = translated_metrics_from_row(row)
-        return [
-            recipe
-            for index, graph_template in matching_graph_templates(
-                graph_id=spec.graph_id,
-                graph_index=spec.graph_index,
-                translated_metrics=translated_metrics,
-            )
-            if (
-                recipe := self._build_recipe_from_template(
-                    spec=spec,
-                    graph_template=graph_template,
-                    row=row,
-                    translated_metrics=translated_metrics,
-                    index=index,
-                )
-            )
-        ]
-
-    def _build_recipe_from_template(
-        self,
-        *,
-        spec: TemplateGraphSpecification,
-        graph_template: GraphTemplate,
-        row: Row,
-        translated_metrics: TranslatedMetrics,
-        index: int,
     ) -> GraphRecipe | None:
         if not (
-            graph_template_tuned := TemplateGraphRecipeBuilder.TUNE_GRAPH_TEMPLATE(
+            graph_template_tuned := TemplateGraphSpecification.TUNE_GRAPH_TEMPLATE(
                 graph_template,
-                spec,
+                self,
             )
         ):
             return None
@@ -203,10 +126,10 @@ class TemplateGraphRecipeBuilder:
             omit_zero_metrics=graph_recipe.omit_zero_metrics,
             consolidation_function=graph_recipe.consolidation_function,
             specification=TemplateGraphSpecification(
-                site=spec.site,
-                host_name=spec.host_name,
-                service_description=spec.service_description,
-                destination=spec.destination,
+                site=self.site,
+                host_name=self.host_name,
+                service_description=self.service_description,
+                destination=self.destination,
                 # Performance graph dashlets already use graph_id, but for example in reports, we still
                 # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
                 # done, we can remove the line below.

@@ -18,8 +18,8 @@ from cmk.utils.metrics import MetricName
 import cmk.gui.sites as sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._graph_recipe_builder import build_graph_recipes
-from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
+from cmk.gui.graphing._graph_specification import GraphSpecification
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._utils import (
     graph_templates_internal,
@@ -256,7 +256,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         graph_specification = self.graph_specification(self.context if self.has_context() else {})
 
         try:
-            graph_recipes = build_graph_recipes(graph_specification)
+            graph_recipes = graph_specification.recipes()
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:

@@ -20,6 +20,7 @@ from cmk.utils.hostaddress import HostName
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -34,7 +35,6 @@ from ._graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from ._graph_recipe_builder import build_graph_recipes
 from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import (
     CombinedSingleMetricSpec,
@@ -42,7 +42,6 @@ from ._graph_specification import (
     GraphMetric,
     GraphRecipe,
     parse_raw_graph_specification,
-    TemplateGraphSpecification,
 )
 from ._html_render import GraphDestinations
 from ._utils import get_graph_data_from_livestatus
@@ -105,15 +104,13 @@ def _answer_graph_image_request(
         )
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
-        graph_recipes = build_graph_recipes(
-            TemplateGraphSpecification(
-                site=livestatus.SiteId(site) if site else None,
-                host_name=host_name,
-                service_description=service_description,
-                graph_index=None,  # all graphs
-                destination=GraphDestinations.notification,
-            ),
-        )
+        graph_recipes = TemplateGraphSpecification(
+            site=livestatus.SiteId(site) if site else None,
+            host_name=host_name,
+            service_description=service_description,
+            graph_index=None,  # all graphs
+            destination=GraphDestinations.notification,
+        ).recipes()
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
         graphs = []
@@ -243,7 +240,7 @@ def graph_recipes_for_api_request(
     raw_graph_data_range["step"] = 60
 
     try:
-        graph_recipes = build_graph_recipes(graph_specification)
+        graph_recipes = graph_specification.recipes()
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 

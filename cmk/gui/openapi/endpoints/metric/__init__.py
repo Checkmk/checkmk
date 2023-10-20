@@ -9,7 +9,6 @@ REST-API.
 """
 
 from cmk.gui.graphing._graph_images import graph_spec_from_request
-from cmk.gui.graphing._graph_specification import TemplateGraphSpecification
 from cmk.gui.openapi.endpoints.metric import request_schemas, response_schemas
 from cmk.gui.openapi.endpoints.metric.common import (
     graph_id_from_request,

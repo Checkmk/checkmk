@@ -13,11 +13,8 @@ from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_render_config import GraphRenderConfig
-from cmk.gui.graphing._graph_specification import (
-    CombinedSingleMetricSpec,
-    GraphMetric,
-    TemplateGraphSpecification,
-)
+from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import (
     make_graph_data_range,
     render_graphs_from_specification_html,

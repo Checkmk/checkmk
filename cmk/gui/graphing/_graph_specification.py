@@ -8,9 +8,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Callable, Literal, Self
+from typing import Annotated, Callable, Literal, Self, Union
 
-from pydantic import BaseModel, Field, parse_obj_as
+from pydantic import BaseModel, Field, SerializeAsAny, TypeAdapter, validator
 from typing_extensions import TypedDict
 
 from livestatus import SiteId
@@ -20,15 +20,14 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import GraphRenderOptions, SingleInfos, TranslatedMetric, VisualContext
+from cmk.gui.type_defs import GraphRenderOptions, TranslatedMetric, VisualContext
 
 from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType, Operators
 
 HorizontalRule = tuple[float, str, str, str]
 
 
-@dataclass(frozen=True, kw_only=True)
-class SelectedMetric:
+class SelectedMetric(BaseModel, frozen=True):
     expression: str
     line_type: LineType
 
@@ -390,75 +389,7 @@ class GraphMetric(BaseModel, frozen=True):
     visible: bool
 
 
-class TemplateGraphSpecification(BaseModel, frozen=True):
-    graph_type: Literal["template"] = "template"
-    site: SiteId | None
-    host_name: HostName
-    service_description: ServiceName
-    graph_index: int | None = None
-    graph_id: str | None = None
-    destination: str | None = None
-
-
-class CombinedGraphSpecification(BaseModel, frozen=True):
-    graph_type: Literal["combined"] = "combined"
-    datasource: str
-    single_infos: SingleInfos
-    presentation: GraphPresentation
-    context: VisualContext
-    graph_template: str
-    selected_metric: SelectedMetric | None = None
-    consolidation_function: GraphConsoldiationFunction | None = None
-    destination: str | None = None
-
-
-class CustomGraphSpecification(BaseModel, frozen=True):
-    graph_type: Literal["custom"] = "custom"
-    id: str
-
-
-class ExplicitGraphSpecification(BaseModel, frozen=True):
-    graph_type: Literal["explicit"] = "explicit"
-    title: str
-    unit: str
-    consolidation_function: GraphConsoldiationFunction | None
-    explicit_vertical_range: tuple[float | None, float | None]
-    omit_zero_metrics: bool
-    horizontal_rules: Sequence[HorizontalRule]
-    metrics: Sequence[GraphMetric]
-    mark_requested_end_time: bool = False
-
-
-class SingleTimeseriesGraphSpecification(BaseModel, frozen=True):
-    graph_type: Literal["single_timeseries"] = "single_timeseries"
-    site: SiteId
-    metric: MetricName
-    host: HostName | None = None
-    service: ServiceName | None = None
-    service_description: ServiceName | None = None
-    color: str | None = None
-
-
-class ForecastGraphSpecification(BaseModel, frozen=True):
-    graph_type: Literal["forecast"] = "forecast"
-    id: str
-    destination: str | None = None
-
-
-GraphSpecification = Annotated[
-    (
-        TemplateGraphSpecification
-        | CombinedGraphSpecification
-        | CustomGraphSpecification
-        | ExplicitGraphSpecification
-        | SingleTimeseriesGraphSpecification
-        | ForecastGraphSpecification
-    ),
-    Field(discriminator="graph_type"),
-]
-
-
-class GraphSpecificationNew(BaseModel, ABC, frozen=True):
+class GraphSpecification(BaseModel, ABC, frozen=True):
     graph_type: str
 
     @staticmethod
@@ -467,12 +398,12 @@ class GraphSpecificationNew(BaseModel, ABC, frozen=True):
         ...
 
     @abstractmethod
-    def recipes(self) -> Sequence[GraphRecipeNew]:
+    def recipes(self) -> Sequence[GraphRecipe]:
         ...
 
 
-class GraphSpecificationRegistry(Registry[type[GraphSpecificationNew]]):
-    def plugin_name(self, instance: type[GraphSpecificationNew]) -> str:
+class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
+    def plugin_name(self, instance: type[GraphSpecification]) -> str:
         return instance.name()
 
 
@@ -480,9 +411,15 @@ graph_specification_registry = GraphSpecificationRegistry()
 
 
 def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecification:
-    # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
-    # suppressions below
-    return parse_obj_as(GraphSpecification, raw)  # type: ignore[arg-type]
+    parsed = TypeAdapter(
+        Annotated[
+            Union[*graph_specification_registry.values()],
+            Field(discriminator="graph_type"),
+        ],
+    ).validate_python(raw)
+    # mypy apparently doesn't understand TypeAdapter.validate_python
+    assert isinstance(parsed, GraphSpecification)
+    return parsed
 
 
 class GraphDataRange(BaseModel, frozen=True):
@@ -513,8 +450,11 @@ class GraphRecipeBase(BaseModel, frozen=True):
 
 
 class GraphRecipe(GraphRecipeBase, frozen=True):
-    specification: GraphSpecification
+    # https://docs.pydantic.dev/2.4/concepts/serialization/#subclass-instances-for-fields-of-basemodel-dataclasses-typeddict
+    # https://docs.pydantic.dev/2.4/concepts/serialization/#serializing-with-duck-typing
+    specification: SerializeAsAny[GraphSpecification]
 
-
-class GraphRecipeNew(GraphRecipeBase, frozen=True):
-    specification: GraphSpecificationNew
+    @validator("specification", pre=True)
+    @classmethod
+    def parse_specification(cls, value: Mapping[str, object]) -> GraphSpecification:
+        return parse_raw_graph_specification(value)

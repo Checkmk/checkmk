@@ -4,40 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Final, Literal
+from typing import Literal
 
-from ._graph_specification import (
-    ExplicitGraphSpecification,
-    GraphMetric,
-    GraphRecipe,
-    GraphRecipeNew,
-    GraphSpecificationNew,
-    HorizontalRule,
-)
+from ._graph_specification import GraphMetric, GraphRecipe, GraphSpecification, HorizontalRule
 from ._type_defs import GraphConsoldiationFunction
 
 
-class ExplicitGraphRecipeBuilder:
-    def __init__(self) -> None:
-        self.graph_type: Final = "explicit"
-
-    def __call__(self, spec: ExplicitGraphSpecification) -> list[GraphRecipe]:
-        return [
-            GraphRecipe(
-                title=spec.title,
-                unit=spec.unit,
-                consolidation_function=spec.consolidation_function,
-                explicit_vertical_range=spec.explicit_vertical_range,
-                omit_zero_metrics=spec.omit_zero_metrics,
-                horizontal_rules=spec.horizontal_rules,
-                metrics=spec.metrics,
-                specification=spec,
-                mark_requested_end_time=spec.mark_requested_end_time,
-            )
-        ]
-
-
-class ExplicitGraphSpecificationNew(GraphSpecificationNew, frozen=True):
+class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     graph_type: Literal["explicit"] = "explicit"
     title: str
     unit: str
@@ -52,9 +25,9 @@ class ExplicitGraphSpecificationNew(GraphSpecificationNew, frozen=True):
     def name() -> str:
         return "explicit_graph_specification"
 
-    def recipes(self) -> list[GraphRecipeNew]:
+    def recipes(self) -> list[GraphRecipe]:
         return [
-            GraphRecipeNew(
+            GraphRecipe(
                 title=self.title,
                 unit=self.unit,
                 consolidation_function=self.consolidation_function,

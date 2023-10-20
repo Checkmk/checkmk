@@ -17,6 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -43,7 +44,6 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_recipe_builder import build_graph_recipes
 from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase
 from ._graph_specification import (
     CombinedSingleMetricSpec,
@@ -51,7 +51,6 @@ from ._graph_specification import (
     GraphMetric,
     GraphRecipe,
     GraphSpecification,
-    TemplateGraphSpecification,
 )
 from ._utils import SizeEx
 from ._valuespecs import migrate_graph_render_options_title_format
@@ -684,7 +683,7 @@ def _resolve_graph_recipe_with_error_handling(
     graph_specification: GraphSpecification,
 ) -> Sequence[GraphRecipe] | HTML:
     try:
-        return build_graph_recipes(graph_specification)
+        return graph_specification.recipes()
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r"

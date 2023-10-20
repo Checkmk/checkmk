@@ -7,10 +7,9 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from . import _perfometer
-from ._explicit_graphs import ExplicitGraphRecipeBuilder, ExplicitGraphSpecificationNew
-from ._graph_recipe_builder import graph_recipe_builder_registry
+from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_specification import graph_specification_registry
-from ._graph_templates import TemplateGraphRecipeBuilder, TemplateGraphSpecificationNew
+from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
     get_first_matching_perfometer,
     LogarithmicPerfometerSpec,
@@ -28,10 +27,8 @@ from ._valuespecs import PageVsAutocomplete
 
 def register(page_registry: PageRegistry, config_variable_registry: ConfigVariableRegistry) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
-    graph_specification_registry.register(ExplicitGraphSpecificationNew)
-    graph_specification_registry.register(TemplateGraphSpecificationNew)
-    graph_recipe_builder_registry.register(ExplicitGraphRecipeBuilder())
-    graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
+    graph_specification_registry.register(ExplicitGraphSpecification)
+    graph_specification_registry.register(TemplateGraphSpecification)
     register_time_series_expressions(time_series_expression_registry)
     config_variable_registry.register(ConfigVariableGraphTimeranges)
     _perfometer.register()

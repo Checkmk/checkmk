@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from collections.abc import Callable, Iterable, Sequence
-from typing import ClassVar, Final
+from typing import ClassVar, Final, Literal
+
+from livestatus import SiteId
 
 from cmk.utils import pnp_cleanup, regex
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
@@ -32,6 +38,8 @@ from ._graph_specification import (
     GraphMetric,
     GraphRecipe,
     GraphRecipeBase,
+    GraphRecipeNew,
+    GraphSpecificationNew,
     HorizontalRule,
     MetricOpConstant,
     MetricOpOperator,
@@ -49,6 +57,88 @@ from ._utils import (
     ScalarDefinition,
     translated_metrics_from_row,
 )
+
+
+class TemplateGraphSpecificationNew(GraphSpecificationNew, frozen=True):
+    # Overwritten in cmk/gui/graphing/cee/__init__.py
+    TUNE_GRAPH_TEMPLATE: ClassVar[
+        Callable[[GraphTemplate, TemplateGraphSpecificationNew], GraphTemplate | None]
+    ] = lambda graph_template, _spec: graph_template
+
+    graph_type: Literal["template"] = "template"
+    site: SiteId | None
+    host_name: HostName
+    service_description: ServiceName
+    graph_index: int | None = None
+    graph_id: str | None = None
+    destination: str | None = None
+
+    @staticmethod
+    def name() -> str:
+        return "template_graph_specification"
+
+    def recipes(self) -> list[GraphRecipeNew]:
+        row = get_graph_data_from_livestatus(self.site, self.host_name, self.service_description)
+        translated_metrics = translated_metrics_from_row(row)
+        return [
+            recipe
+            for index, graph_template in matching_graph_templates(
+                graph_id=self.graph_id,
+                graph_index=self.graph_index,
+                translated_metrics=translated_metrics,
+            )
+            if (
+                recipe := self._build_recipe_from_template(
+                    graph_template=graph_template,
+                    row=row,
+                    translated_metrics=translated_metrics,
+                    index=index,
+                )
+            )
+        ]
+
+    def _build_recipe_from_template(
+        self,
+        *,
+        graph_template: GraphTemplate,
+        row: Row,
+        translated_metrics: TranslatedMetrics,
+        index: int,
+    ) -> GraphRecipeNew | None:
+        if not (
+            graph_template_tuned := TemplateGraphSpecificationNew.TUNE_GRAPH_TEMPLATE(
+                graph_template,
+                self,
+            )
+        ):
+            return None
+
+        graph_recipe = create_graph_recipe_from_template(
+            graph_template_tuned,
+            translated_metrics,
+            row,
+        )
+
+        return GraphRecipeNew(
+            title=graph_recipe.title,
+            metrics=graph_recipe.metrics,
+            unit=graph_recipe.unit,
+            explicit_vertical_range=graph_recipe.explicit_vertical_range,
+            horizontal_rules=graph_recipe.horizontal_rules,
+            omit_zero_metrics=graph_recipe.omit_zero_metrics,
+            consolidation_function=graph_recipe.consolidation_function,
+            specification=TemplateGraphSpecificationNew(
+                site=self.site,
+                host_name=self.host_name,
+                service_description=self.service_description,
+                destination=self.destination,
+                # Performance graph dashlets already use graph_id, but for example in reports, we still
+                # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
+                # done, we can remove the line below.
+                graph_index=index,
+                graph_id=graph_template_tuned.id,
+            ),
+        )
 
 
 class TemplateGraphRecipeBuilder:

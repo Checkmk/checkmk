@@ -583,8 +583,11 @@ def test_openapi_delete_downtime_with_query(
     )
 
     mock_livestatus.expect_query(
-        ["GET downtimes", "Columns: id is_service", "Filter: host_name ~ heute"],
-        sites=["NO_SITE"],
+        [
+            "GET downtimes",
+            "Columns: id is_service",
+            "Filter: host_name ~ heute",
+        ],
     )
     mock_livestatus.expect_query(
         "COMMAND [...] DEL_SVC_DOWNTIME;123",
@@ -593,7 +596,6 @@ def test_openapi_delete_downtime_with_query(
 
     with mock_livestatus:
         clients.Downtime.delete(
-            site_id="NO_SITE",
             delete_type="query",
             query='{"op": "~", "left": "downtimes.host_name", "right": "heute"}',
         )
@@ -693,14 +695,12 @@ def test_openapi_delete_downtime_with_params(
             "Or: 2",
             "And: 2",
         ],
-        sites=["NO_SITE"],
     )
     mock_livestatus.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;123", match_type="ellipsis")
     mock_livestatus.expect_query("COMMAND [...] DEL_SVC_DOWNTIME;124", match_type="ellipsis")
 
     with mock_livestatus:
         clients.Downtime.delete(
-            site_id="NO_SITE",
             delete_type="params",
             host_name="heute",
             service_descriptions=["CPU load", "Memory"],
@@ -725,12 +725,10 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
             "Filter: service_description = CPU load",
             "And: 2",
         ],
-        sites=["NO_SITE"],
     )
 
     with mock_livestatus:
         clients.Downtime.delete(
-            site_id="NO_SITE",
             delete_type="params",
             host_name="heute",
             service_descriptions=["CPU load"],

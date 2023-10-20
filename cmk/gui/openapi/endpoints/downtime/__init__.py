@@ -460,12 +460,13 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
 
     query_expr: QueryExpression
 
+    site_id: SiteId | None = None
     if delete_type == "query":
         query_expr = body["query"]
 
     elif delete_type == "by_id":
         query_expr = Downtimes.id == body["downtime_id"]
-
+        site_id = SiteId(body["site_id"])
     else:
         hostname = body["host_name"]
         if "service_descriptions" not in body:
@@ -481,7 +482,7 @@ def delete_downtime(params: Mapping[str, Any]) -> Response:
                 ),
             )
 
-    downtime_commands.delete_downtime(sites.live(), query_expr, SiteId(body["site_id"]))
+    downtime_commands.delete_downtime(sites.live(), query_expr, site_id)
     return Response(status=204)
 
 

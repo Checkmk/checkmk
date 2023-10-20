@@ -41,11 +41,11 @@ class QueryException(Exception):
     pass
 
 
-def _del_host_downtime(  # type: ignore[no-untyped-def]
-    connection,
+def _del_host_downtime(
+    connection: MultiSiteConnection,
     downtime_id: int,
-    site_id: SiteId,
-):
+    site_id: SiteId | None,
+) -> None:
     """Delete a host downtime.
 
     Args:
@@ -74,11 +74,11 @@ def _del_host_downtime(  # type: ignore[no-untyped-def]
     return send_command(connection, "DEL_HOST_DOWNTIME", [downtime_id], site_id)
 
 
-def _del_service_downtime(  # type: ignore[no-untyped-def]
-    connection,
+def _del_service_downtime(
+    connection: MultiSiteConnection,
     downtime_id: int,
-    site_id: SiteId,
-):
+    site_id: SiteId | None,
+) -> None:
     """Delete a service downtime.
 
     Args:
@@ -110,21 +110,22 @@ def _del_service_downtime(  # type: ignore[no-untyped-def]
 def delete_downtime(
     connection: MultiSiteConnection,
     query: QueryExpression,
-    site_id: SiteId,
+    site_id: SiteId | None,
 ) -> None:
     """Delete a scheduled downtime"""
     _user.need_permission("action.downtimes")
 
+    only_sites = None if site_id is None else [site_id]
     downtimes = Query(
         [Downtimes.id, Downtimes.is_service],
         query,
-    ).fetchall(connection, True, [site_id])
+    ).fetchall(connection, bool(only_sites), only_sites)
 
     for downtime in downtimes:
         if downtime["is_service"]:
-            _del_service_downtime(connection, downtime["id"], downtime["site"])
+            _del_service_downtime(connection, downtime["id"], downtime.get("site"))
         else:
-            _del_host_downtime(connection, downtime["id"], downtime["site"])
+            _del_host_downtime(connection, downtime["id"], downtime.get("site"))
 
 
 def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]

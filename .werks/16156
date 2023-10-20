@@ -1,0 +1,18 @@
+Title: downtimes: site_id only required when deleting downtimes by_id
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1697811956
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+
+We recently introduced a change with werk 15966 which means that the site_id
+is now required when deleting downtimes via the REST API.  However, only the
+'by_id' option leaves the downtime selection ambigious, while the options
+'params' or 'query' already have the ability to pinpoint the downtimes
+requested, therefore, the site_id should not be required in these cases.
+
+This werk addresses this oversight and introduces a change where the site_id
+is only required when deleteing by_id.

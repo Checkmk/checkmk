@@ -1922,7 +1922,20 @@ class ConfigCache:
         self.initialize()
 
     def initialize(self) -> ConfigCache:
-        self._initialize_caches()
+        self.invalidate_host_config()
+
+        self._check_table_cache = cache_manager.obtain_cache("check_tables")
+        self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
+        self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
+        self._hosttags: dict[HostName, Sequence[TagID]] = {}
+
+        self._autochecks_manager = AutochecksManager()
+
+        self._clusters_of_cache: dict[HostName, list[HostName]] = {}
+        self._nodes_of_cache: dict[HostName, list[HostName]] = {}
+        self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
+        self._check_mk_check_interval: dict[HostName, float] = {}
+
         self.hosts_config = make_hosts_config()
         self._setup_clusters_nodes_cache()
 
@@ -1958,27 +1971,6 @@ class ConfigCache:
         )
 
         return self
-
-    def _initialize_caches(self) -> None:
-        self.invalidate_host_config()
-        self._check_table_cache = cache_manager.obtain_cache("check_tables")
-
-        self._cache_section_name_of: dict[CheckPluginNameStr, str] = {}
-
-        # Reference hostname -> dirname including /
-        self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
-
-        # Host tags
-        self._hosttags: dict[HostName, Sequence[TagID]] = {}
-
-        # Autochecks cache
-        self._autochecks_manager = AutochecksManager()
-
-        # Caches for nodes and clusters
-        self._clusters_of_cache: dict[HostName, list[HostName]] = {}
-        self._nodes_of_cache: dict[HostName, list[HostName]] = {}
-        self._effective_host_cache: dict[tuple[HostName, ServiceName, tuple | None], HostName] = {}
-        self._check_mk_check_interval: dict[HostName, float] = {}
 
     def make_ipmi_fetcher(self, host_name: HostName, ip_address: HostAddress) -> IPMIFetcher:
         ipmi_credentials = self.management_credentials(host_name, "ipmi")

@@ -7,7 +7,7 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from . import _perfometer
-from ._explicit_graphs import ExplicitGraphRecipeBuilder
+from ._explicit_graphs import ExplicitGraphRecipeBuilder, ExplicitGraphSpecificationNew
 from ._graph_recipe_builder import graph_recipe_builder_registry
 from ._graph_specification import graph_specification_registry
 from ._graph_templates import TemplateGraphRecipeBuilder, TemplateGraphSpecificationNew
@@ -28,6 +28,7 @@ from ._valuespecs import PageVsAutocomplete
 
 def register(page_registry: PageRegistry, config_variable_registry: ConfigVariableRegistry) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
+    graph_specification_registry.register(ExplicitGraphSpecificationNew)
     graph_specification_registry.register(TemplateGraphSpecificationNew)
     graph_recipe_builder_registry.register(ExplicitGraphRecipeBuilder())
     graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())

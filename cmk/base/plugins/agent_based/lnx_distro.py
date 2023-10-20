@@ -155,9 +155,8 @@ _HANDLERS: Final = (
 )
 
 
-def parse_lnx_distro(string_table: StringTable) -> Section:
+def parse_lnx_distro(string_table: StringTable) -> Section | None:
     parsed: dict[str, list[str]] = {}
-    section: Section = {}
     filename = None
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
@@ -170,10 +169,9 @@ def parse_lnx_distro(string_table: StringTable) -> Section:
 
     for file_name, handler in _HANDLERS:
         if file_name in parsed:
-            section = dict(handler(parsed[file_name]))
-            break
+            return dict(handler(parsed[file_name]))
 
-    return section
+    return None
 
 
 register.agent_section(

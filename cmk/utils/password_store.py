@@ -131,7 +131,7 @@ def save(stored_passwords: Mapping[str, str], custom_path: Path | None = None) -
         password_on_one_line = pw.replace("\n", "")
         content += f"{ident}:{password_on_one_line}\n"
 
-    store.save_bytes_to_file(custom_path or password_store_path(), _obfuscate(content))
+    store.save_bytes_to_file(custom_path or password_store_path(), PasswordStore.encrypt(content))
 
 
 def load() -> dict[str, str]:
@@ -144,7 +144,7 @@ def _load(store_path: Path) -> dict[str, str]:
         store_path_bytes: bytes = store_path.read_bytes()
         if not store_path_bytes:
             return passwords
-        for line in _deobfuscate(store_path_bytes).splitlines():
+        for line in PasswordStore.decrypt(store_path_bytes).splitlines():
             ident, password = line.strip().split(":", 1)
             passwords[ident] = password
 
@@ -215,7 +215,3 @@ class PasswordStore:
         tag, encrypted = rest[: TaggedCiphertext.TAG_LENGTH], rest[TaggedCiphertext.TAG_LENGTH :]
         key = PasswordStoreSecret().derive_secret_key(salt)
         return aes_gcm_decrypt(key, nonce, TaggedCiphertext(ciphertext=encrypted, tag=tag))
-
-
-_obfuscate = PasswordStore.encrypt
-_deobfuscate = PasswordStore.decrypt

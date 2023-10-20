@@ -13,7 +13,7 @@ from cmk.utils import password_store
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.crypto.secrets import PasswordStoreSecret
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.password_store import PasswordId
+from cmk.utils.password_store import PasswordId, PasswordStore
 
 PW_STORE = "pw_from_store"
 PW_EXPL = "pw_explicit"
@@ -88,15 +88,15 @@ def test_extract_from_unknown_valuespec() -> None:
 
 
 def test_obfuscation() -> None:
-    obfuscated = password_store._obfuscate(secret := "$ecret")
+    obfuscated = PasswordStore.encrypt(secret := "$ecret")
     assert (
         int.from_bytes(
-            obfuscated[: password_store.PasswordStore.VERSION_BYTE_LENGTH],
+            obfuscated[: PasswordStore.VERSION_BYTE_LENGTH],
             byteorder="big",
         )
-        == password_store.PasswordStore.VERSION
+        == PasswordStore.VERSION
     )
-    assert password_store._deobfuscate(obfuscated) == secret
+    assert PasswordStore.decrypt(obfuscated) == secret
 
 
 def test_save_obfuscated() -> None:
@@ -105,23 +105,23 @@ def test_save_obfuscated() -> None:
 
 
 def test_obfuscate_with_own_secret() -> None:
-    obfuscated = password_store._obfuscate(secret := "$ecret")
-    assert password_store._deobfuscate(obfuscated) == secret
+    obfuscated = PasswordStore.encrypt(secret := "$ecret")
+    assert PasswordStore.decrypt(obfuscated) == secret
 
     # The user may want to write some arbritary secret to the file.
     cmk.utils.paths.password_store_secret_file.write_bytes(b"this_will_be_pretty_secure_now.not.")
 
     # Old should not be decryptable anymore
     with pytest.raises(InvalidTag):
-        assert password_store._deobfuscate(obfuscated)
+        assert PasswordStore.decrypt(obfuscated)
 
     # Test encryption and decryption with new key
-    assert password_store._deobfuscate(password_store._obfuscate(secret)) == secret
+    assert PasswordStore.decrypt(PasswordStore.encrypt(secret)) == secret
 
 
 def test_encrypt_decrypt_identity() -> None:
     data = "some random data to be encrypted"
-    assert password_store.PasswordStore.decrypt(password_store.PasswordStore.encrypt(data)) == data
+    assert PasswordStore.decrypt(PasswordStore.encrypt(data)) == data
 
 
 @pytest.mark.usefixtures("fixed_secret")
@@ -140,4 +140,4 @@ def test_pw_store_characterization() -> None:
         b"\xbc\x97\x19u"
     )
 
-    assert password_store._deobfuscate(encrypted) == "Time is an illusion. Lunchtime doubly so."
+    assert PasswordStore.decrypt(encrypted) == "Time is an illusion. Lunchtime doubly so."

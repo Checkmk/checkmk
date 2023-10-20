@@ -1438,8 +1438,8 @@ class DowntimeClient(RestApiClient):
 
     def delete(
         self,
-        site_id: str,
         delete_type: Literal["by_id", "query", "params"],
+        site_id: str | None = None,
         downtime_id: str | None = None,
         query: str | None = None,
         host_name: str | None = None,
@@ -1447,12 +1447,11 @@ class DowntimeClient(RestApiClient):
         expect_ok: bool = True,
     ) -> Response:
         body: dict[str, Any] = {
-            "site_id": site_id,
             "delete_type": delete_type,
         }
 
         if delete_type == "by_id":
-            body.update({"downtime_id": downtime_id})
+            body.update({"downtime_id": downtime_id, "site_id": site_id})
 
         elif delete_type == "query":
             body.update({"query": query})

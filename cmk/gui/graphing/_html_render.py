@@ -47,11 +47,13 @@ from ._graph_recipe_builder import build_graph_recipes
 from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase
 from ._graph_specification import (
     CombinedSingleMetricSpec,
+    GraphDataRange,
     GraphMetric,
+    GraphRecipe,
     GraphSpecification,
     TemplateGraphSpecification,
 )
-from ._utils import GraphDataRange, GraphRecipe, SizeEx
+from ._utils import SizeEx
 from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str

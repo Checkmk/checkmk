@@ -27,7 +27,9 @@ from cmk.gui.type_defs import UnitInfo, UnitRenderFunc
 
 from ._graph_specification import (
     CombinedSingleMetricSpec,
+    GraphDataRange,
     GraphMetric,
+    GraphRecipe,
     HorizontalRule,
     MetricOpTransformation,
     TransformationParametersForecast,
@@ -35,7 +37,7 @@ from ._graph_specification import (
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, evaluate_time_series_expression
 from ._type_defs import LineType
-from ._utils import Curve, GraphDataRange, GraphRecipe, RRDData, SizeEx
+from ._utils import Curve, RRDData, SizeEx
 
 Seconds = int
 

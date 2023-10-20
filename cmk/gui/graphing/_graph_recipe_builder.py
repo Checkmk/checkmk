@@ -11,8 +11,7 @@ from cmk.utils.plugin_registry import Registry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
-from ._graph_specification import GraphSpecification
-from ._utils import GraphRecipe
+from ._graph_specification import GraphRecipe, GraphSpecification
 
 _TGraphSpecification_contra = TypeVar(
     "_TGraphSpecification_contra",

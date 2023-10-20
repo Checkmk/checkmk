@@ -16,7 +16,9 @@ from cmk.utils.metrics import MetricName
 
 from cmk.gui.config import active_config
 from cmk.gui.graphing._graph_specification import (
+    GraphDataRange,
     GraphMetric,
+    GraphRecipe,
     MetricOpRRDChoice,
     MetricOpRRDSource,
     MetricOpTransformation,
@@ -25,7 +27,6 @@ from cmk.gui.graphing._graph_specification import (
     TransformationParametersPercentile,
 )
 from cmk.gui.graphing._rrd_fetch import fetch_rrd_data_for_graph, translate_and_merge_rrd_columns
-from cmk.gui.graphing._utils import GraphDataRange, GraphRecipe
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 

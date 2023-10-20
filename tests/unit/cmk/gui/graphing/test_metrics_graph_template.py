@@ -23,17 +23,13 @@ from cmk.gui.graphing._expression import (
 )
 from cmk.gui.graphing._graph_specification import (
     GraphMetric,
+    GraphRecipeBase,
     MetricOpConstant,
     MetricOperation,
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from cmk.gui.graphing._utils import (
-    GraphRecipeBase,
-    GraphTemplate,
-    MetricDefinition,
-    ScalarDefinition,
-)
+from cmk.gui.graphing._utils import GraphTemplate, MetricDefinition, ScalarDefinition
 from cmk.gui.metrics import translate_perf_data
 
 

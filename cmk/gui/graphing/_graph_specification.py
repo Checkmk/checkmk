@@ -18,7 +18,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import SingleInfos, TranslatedMetric, VisualContext
+from cmk.gui.type_defs import GraphRenderOptions, SingleInfos, TranslatedMetric, VisualContext
 
 from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType, Operators
 
@@ -460,3 +460,34 @@ def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecificati
     # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
     # suppressions below
     return parse_obj_as(GraphSpecification, raw)  # type: ignore[arg-type]
+
+
+class GraphDataRange(BaseModel, frozen=True):
+    time_range: tuple[int, int]
+    # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
+    # colon separated [step length]:[rrd point count]
+    step: int | str
+    vertical_range: tuple[float, float] | None = None
+
+
+class AdditionalGraphHTML(BaseModel, frozen=True):
+    title: str
+    html: str
+
+
+class GraphRecipeBase(BaseModel, frozen=True):
+    title: str
+    unit: str
+    explicit_vertical_range: tuple[float | None, float | None]
+    horizontal_rules: Sequence[HorizontalRule]
+    omit_zero_metrics: bool
+    consolidation_function: GraphConsoldiationFunction | None
+    metrics: Sequence[GraphMetric]
+    additional_html: AdditionalGraphHTML | None = None
+    render_options: GraphRenderOptions = GraphRenderOptions()
+    data_range: GraphDataRange | None = None
+    mark_requested_end_time: bool = False
+
+
+class GraphRecipe(GraphRecipeBase, frozen=True):
+    specification: GraphSpecification

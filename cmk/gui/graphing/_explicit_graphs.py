@@ -5,8 +5,7 @@
 
 from typing import Final
 
-from ._graph_specification import ExplicitGraphSpecification
-from ._utils import GraphRecipe
+from ._graph_specification import ExplicitGraphSpecification, GraphRecipe
 
 
 class ExplicitGraphRecipeBuilder:

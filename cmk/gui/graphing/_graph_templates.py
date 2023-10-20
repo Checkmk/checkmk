@@ -30,6 +30,8 @@ from ._expression import (
 )
 from ._graph_specification import (
     GraphMetric,
+    GraphRecipe,
+    GraphRecipeBase,
     HorizontalRule,
     MetricOpConstant,
     MetricOpOperator,
@@ -41,8 +43,6 @@ from ._utils import (
     get_graph_data_from_livestatus,
     get_graph_range,
     get_graph_templates,
-    GraphRecipe,
-    GraphRecipeBase,
     GraphTemplate,
     MetricDefinition,
     MetricUnitColor,

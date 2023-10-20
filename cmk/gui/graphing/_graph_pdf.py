@@ -14,7 +14,7 @@ from cmk.gui.type_defs import RGBColor, SizeMM
 from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
 from ._color import darken_color, lighten_color, parse_color
 from ._graph_render_config import GraphRenderConfigImage
-from ._utils import GraphDataRange
+from ._graph_specification import GraphDataRange
 
 
 def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches

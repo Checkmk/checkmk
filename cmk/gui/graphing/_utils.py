@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Literal, NamedTuple, NewType, NotRequired, Self
 
-from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 from livestatus import livestatus_lql, SiteId
@@ -36,7 +35,6 @@ from cmk.gui.time_series import TimeSeries, TimeSeriesValue
 from cmk.gui.type_defs import (
     Choice,
     Choices,
-    GraphRenderOptions,
     Perfdata,
     PerfDataTuple,
     Row,
@@ -57,13 +55,7 @@ from ._color import (
     parse_color_into_hexrgb,
 )
 from ._expression import CriticalOf, Metric, MetricExpression, parse_expression, WarningOf
-from ._graph_specification import (
-    GraphMetric,
-    GraphSpecification,
-    HorizontalRule,
-    MetricOperation,
-    MetricOpRRDChoice,
-)
+from ._graph_specification import MetricOperation, MetricOpRRDChoice
 from ._type_defs import GraphConsoldiationFunction, LineType
 from ._unit_info import unit_info
 
@@ -92,15 +84,7 @@ class Curve(TypedDict):
     scalars: NotRequired[dict[str, tuple[TimeSeriesValue, str]]]
 
 
-class GraphDataRange(BaseModel, frozen=True):
-    time_range: tuple[int, int]
-    # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
-    # colon separated [step length]:[rrd point count]
-    step: int | str
-    vertical_range: tuple[float, float] | None = None
-
-
-GraphRange = tuple[float | None, float | None]
+GraphRangeSpec = tuple[int | str, int | str]
 SizeEx = NewType("SizeEx", int)
 
 
@@ -216,29 +200,6 @@ class GraphTemplate:
             # https://github.com/python/mypy/issues/1178
             metrics=[_parse_raw_metric_definition(r) for r in template["metrics"]],
         )
-
-
-class AdditionalGraphHTML(BaseModel, frozen=True):
-    title: str
-    html: str
-
-
-class GraphRecipeBase(BaseModel, frozen=True):
-    title: str
-    unit: str
-    explicit_vertical_range: GraphRange
-    horizontal_rules: Sequence[HorizontalRule]
-    omit_zero_metrics: bool
-    consolidation_function: GraphConsoldiationFunction | None
-    metrics: Sequence[GraphMetric]
-    additional_html: AdditionalGraphHTML | None = None
-    render_options: GraphRenderOptions = GraphRenderOptions()
-    data_range: GraphDataRange | None = None
-    mark_requested_end_time: bool = False
-
-
-class GraphRecipe(GraphRecipeBase, frozen=True):
-    specification: GraphSpecification
 
 
 RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
@@ -764,7 +725,7 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
 
 def get_graph_range(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics
-) -> GraphRange:
+) -> tuple[float | None, float | None]:
     if graph_template.range is None:
         return None, None
 

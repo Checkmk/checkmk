@@ -23,15 +23,19 @@ from cmk.gui.i18n import _
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.type_defs import ColumnName
 
-from ._graph_specification import CombinedSingleMetricSpec, GraphMetric, NeededElementForRRDDataKey
+from ._graph_specification import (
+    CombinedSingleMetricSpec,
+    GraphDataRange,
+    GraphMetric,
+    GraphRecipe,
+    NeededElementForRRDDataKey,
+)
 from ._timeseries import op_func_wrapper, time_series_operators
 from ._type_defs import GraphConsoldiationFunction
 from ._unit_info import unit_info
 from ._utils import (
     CheckMetricEntry,
     find_matching_translation,
-    GraphDataRange,
-    GraphRecipe,
     metric_info,
     reverse_translate_into_all_potentially_relevant_metrics_cached,
     RRDData,

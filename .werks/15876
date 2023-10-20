@@ -1,0 +1,14 @@
+Title: sap_hana_db_status: Be ok for passive nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698058635
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p13
+
+The service <i>"SAP HANA Database Status"</i> went critical on a passive node.
+In now remains ok and reports <i>"System is in passive mode"</i>.
+

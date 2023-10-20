@@ -9,10 +9,7 @@ from typing import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
+from cmk.base.plugins.agent_based import sap_hana_db_status as shds
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Result,
@@ -34,11 +31,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
         )
     ],
 )
-def test_parse_sap_hana_db_status(
-    fix_register: FixRegister, info: StringTable, expected_result: Mapping[str, str]
-) -> None:
-    section_plugin = fix_register.agent_sections[SectionName("sap_hana_db_status")]
-    assert section_plugin.parse_function(info) == expected_result
+def test_parse_sap_hana_db_status(info: StringTable, expected_result: Mapping[str, str]) -> None:
+    assert shds.parse_sap_hana_db_status(info) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -54,11 +48,12 @@ def test_parse_sap_hana_db_status(
     ],
 )
 def test_inventory_sap_hana_db_status(
-    fix_register: FixRegister, info: StringTable, expected_result: Sequence[Service]
+    info: StringTable, expected_result: Sequence[Service]
 ) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_db_status")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_db_status")]
-    assert list(plugin.discovery_function(section)) == expected_result
+    assert (
+        list(shds.discover_sap_hana_db_status(shds.parse_sap_hana_db_status(info)))
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -94,11 +89,10 @@ def test_inventory_sap_hana_db_status(
     ],
 )
 def test_check_sap_hana_db_status(
-    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
+    item: str, info: StringTable, expected_result: CheckResult
 ) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_db_status")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_db_status")]
-    assert list(plugin.check_function(item, section)) == expected_result
+    section = shds.parse_sap_hana_db_status(info)
+    assert list(shds.check_sap_hana_db_status(item, section)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -112,10 +106,7 @@ def test_check_sap_hana_db_status(
         ),
     ],
 )
-def test_check_sap_hana_db_status_stale(
-    fix_register: FixRegister, item: str, info: StringTable
-) -> None:
-    section = fix_register.agent_sections[SectionName("sap_hana_db_status")].parse_function(info)
-    plugin = fix_register.check_plugins[CheckPluginName("sap_hana_db_status")]
+def test_check_sap_hana_db_status_stale(item: str, info: StringTable) -> None:
+    section = shds.parse_sap_hana_db_status(info)
     with pytest.raises(IgnoreResultsError):
-        list(plugin.check_function(item, section))
+        list(shds.check_sap_hana_db_status(item, section))

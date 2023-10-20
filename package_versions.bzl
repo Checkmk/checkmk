@@ -1,6 +1,10 @@
 # TODO: Duplicated from defines.make:
 # we need to centralize this again as soon as the whole build process is migrated to bazel.
 PYTHON_VERSION = "3.11.5"
+PYTHON_VERSION_ARRAY = PYTHON_VERSION.split(".")
+PYTHON_VERSION_MAJOR = PYTHON_VERSION_ARRAY[0]
+PYTHON_VERSION_MINOR = PYTHON_VERSION_ARRAY[1]
+PYTHON_MAJOR_DOT_MINOR = "%s.%s" % (PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR)
 PYTHON_SHA256 = "85cd12e9cf1d6d5a45f17f7afe1cebe7ee628d3282281c492e86adf636defa3f"
 
 PATCH_VERSION = "2.7.6"

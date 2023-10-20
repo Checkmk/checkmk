@@ -1,5 +1,6 @@
 load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_requirements_file")
 load("@python_modules//:requirements.bzl", "all_requirements")
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
 
 config_setting(
     name = "git_ssl_no_verify",
@@ -28,10 +29,12 @@ config_setting(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt);" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt);" % module,
         ),
     }),
@@ -53,10 +56,12 @@ config_setting(
     cmd = select({
         "//conditions:default": build_cmd.format(
             git_ssl_no_verify = "",
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = dep,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
+            pyMajMin = PYTHON_MAJOR_DOT_MINOR,
             requirements = dep,
         ),
     }),
@@ -88,17 +93,17 @@ genrule(
         done
 
         # For some highly obscure unknown reason some files end up world-writable. Fix that!
-        chmod -R o-w $(RULEDIR)/python3-modules/lib/python3.11/site-packages
+        chmod -R o-w $(RULEDIR)/python3-modules/lib/python{pyMajMin}/site-packages
 
         # Cleanup some unwanted files (example scripts)
-        find $(RULEDIR)/python3-modules/bin -name "*.py" ! -name snmpsimd.py -exec rm -f {} \\;
+        find $(RULEDIR)/python3-modules/bin -name "*.py" ! -name snmpsimd.py -exec rm -f {{}} \\;
 
         # These files break the integration tests on the CI server. Don't know exactly
         # why this happens only there, but should be a working fix.
         rm -r -f $(RULEDIR)/python3-modules/snmpsim
 
         # Cleanup unneeded test files of numpy
-        rm -r -f $(RULEDIR)/python3-modules/lib/python3.11/site-packages/numpy/*/tests
+        rm -r -f $(RULEDIR)/python3-modules/lib/python{pyMajMin}/site-packages/numpy/*/tests
 
         # Fix python interpreter for kept scripts
         sed -E -i '1s|^#!.*/python3?$$|#!/usr/bin/env python3|' $(RULEDIR)/python3-modules/bin/[!_]*
@@ -117,5 +122,5 @@ genrule(
             $$(echo $$F | sed 's|[^/]*/|../|g' | sed 's|\\.\\./|\\$$ORIGIN/|' | sed 's|[^/]*$$||') $$F ;
         done
         cd -
-    """,
+    """.format(pyMajMin = PYTHON_MAJOR_DOT_MINOR),
 )

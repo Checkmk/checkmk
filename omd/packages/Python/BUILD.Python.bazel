@@ -1,16 +1,7 @@
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
-load("@omd_packages//:package_versions.bzl", "PYTHON_VERSION")
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 
 package(default_visibility = ["//visibility:public"])
-
-# PYTHON_VERSION is loaded from bazel_variables in order to be shared within bazel
-PYTHON_VERSION_ARRAY = PYTHON_VERSION.split(".")
-
-PYTHON_VERSION_MAJOR = PYTHON_VERSION_ARRAY[0]
-
-PYTHON_VERSION_MINOR = PYTHON_VERSION_ARRAY[1]
-
-PYTHON_MAJOR_DOT_MINOR = "%s.%s" % (PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR)
 
 INSTALL_PREFIX = "py_install"
 

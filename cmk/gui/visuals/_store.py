@@ -252,7 +252,9 @@ def load_visuals_of_a_user(
     user_id: UserId,
 ) -> CustomUserVisuals[TVisual]:
     user_visuals: CustomUserVisuals[TVisual] = {}
-    for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
+    for name, raw_visual in store.try_load_file_from_pickle_cache(
+        path, default={}, temp_dir=cmk.utils.paths.tmp_dir, root_dir=cmk.utils.paths.omd_root
+    ).items():
         visual = internal_to_runtime_transformer(raw_visual)
         visual["owner"] = user_id
         visual["name"] = name
@@ -277,7 +279,10 @@ def _get_packaged_visuals(
 
         try:
             for name, raw_visual in store.try_load_file_from_pickle_cache(
-                dirpath, default={}
+                dirpath,
+                default={},
+                temp_dir=cmk.utils.paths.tmp_dir,
+                root_dir=cmk.utils.paths.omd_root,
             ).items():
                 visual = internal_to_runtime_transformer(raw_visual)
                 visual["owner"] = UserId.builtin()
@@ -409,7 +414,12 @@ def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
             if dirpath.is_dir():
                 continue
 
-            for name, visual in store.try_load_file_from_pickle_cache(dirpath, default={}).items():
+            for name, visual in store.try_load_file_from_pickle_cache(
+                dirpath,
+                default={},
+                temp_dir=cmk.utils.paths.tmp_dir,
+                root_dir=cmk.utils.paths.omd_root,
+            ).items():
                 visual["packaged"] = True
                 declare_packaged_visual_permission(what, name, visual)
         except Exception:

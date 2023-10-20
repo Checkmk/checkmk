@@ -32,6 +32,7 @@ from typing import cast, Generic, Literal, Self, TypeVar
 
 from typing_extensions import TypedDict
 
+import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
@@ -914,7 +915,12 @@ class Overridable(Base[_T_OverridableSpec]):
                     if not userdb.user_exists(user_id):
                         continue
 
-                    user_pages = store.try_load_file_from_pickle_cache(path, default={})
+                    user_pages = store.try_load_file_from_pickle_cache(
+                        path,
+                        default={},
+                        temp_dir=cmk.utils.paths.tmp_dir,
+                        root_dir=cmk.utils.paths.omd_root,
+                    )
                     for name, page_dict in user_pages.items():
                         page_dict["owner"] = user_id
                         page_dict["name"] = name

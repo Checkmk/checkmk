@@ -193,7 +193,12 @@ def _delete_topology_configuration(topology_configuration: TopologyConfiguration
         return
 
     try:
-        data = store.try_load_file_from_pickle_cache(topology_settings_lookup, default={})
+        data = store.try_load_file_from_pickle_cache(
+            topology_settings_lookup,
+            default={},
+            temp_dir=cmk.utils.paths.tmp_dir,
+            root_dir=cmk.utils.paths.omd_root,
+        )
     except json.JSONDecodeError:
         data = {}
 
@@ -211,7 +216,12 @@ def _save_topology_configuration(topology_configuration: TopologyConfiguration) 
         topology_settings_lookup.touch()
 
     try:
-        data = store.try_load_file_from_pickle_cache(topology_settings_lookup, default={})
+        data = store.try_load_file_from_pickle_cache(
+            topology_settings_lookup,
+            default={},
+            temp_dir=cmk.utils.paths.tmp_dir,
+            root_dir=cmk.utils.paths.omd_root,
+        )
     except json.JSONDecodeError:
         data = {}
 
@@ -234,7 +244,10 @@ def _get_topology_frontend_configuration_for_filter(
         return {}
 
     found_topology_hash = store.try_load_file_from_pickle_cache(
-        topology_settings_lookup, default={}
+        topology_settings_lookup,
+        default={},
+        temp_dir=cmk.utils.paths.tmp_dir,
+        root_dir=cmk.utils.paths.omd_root,
     ).get(query_identifier.identifier)
     if found_topology_hash is None:
         return {}
@@ -1410,7 +1423,10 @@ def cleanup_topology_layouts() -> None:
 
     with locked(topology_settings_lookup):
         topology_settings: dict[str, str] = store.try_load_file_from_pickle_cache(
-            topology_settings_lookup, default={}
+            topology_settings_lookup,
+            default={},
+            temp_dir=cmk.utils.paths.tmp_dir,
+            root_dir=cmk.utils.paths.omd_root,
         )
         reverse_lookup: dict[str, str] = {y: x for x, y in topology_settings.items()}
         paths = sorted(

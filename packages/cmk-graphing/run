@@ -159,7 +159,7 @@ run_py_import_cycles() {
 
 run_bandit() {
     # shellcheck disable=SC2086
-    bandit --recursive --severity-level=high $1
+    bandit --configfile=pyproject.toml --recursive --severity-level=high $1
 }
 
 run_mypy() {

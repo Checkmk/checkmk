@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Callable, Literal, Self
@@ -16,6 +17,7 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
 from cmk.gui.type_defs import GraphRenderOptions, SingleInfos, TranslatedMetric, VisualContext
@@ -456,6 +458,27 @@ GraphSpecification = Annotated[
 ]
 
 
+class GraphSpecificationNew(BaseModel, ABC, frozen=True):
+    graph_type: str
+
+    @staticmethod
+    @abstractmethod
+    def name() -> str:
+        ...
+
+    @abstractmethod
+    def recipes(self) -> Sequence[GraphRecipeNew]:
+        ...
+
+
+class GraphSpecificationRegistry(Registry[type[GraphSpecificationNew]]):
+    def plugin_name(self, instance: type[GraphSpecificationNew]) -> str:
+        return instance.name()
+
+
+graph_specification_registry = GraphSpecificationRegistry()
+
+
 def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecification:
     # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
     # suppressions below
@@ -491,3 +514,7 @@ class GraphRecipeBase(BaseModel, frozen=True):
 
 class GraphRecipe(GraphRecipeBase, frozen=True):
     specification: GraphSpecification
+
+
+class GraphRecipeNew(GraphRecipeBase, frozen=True):
+    specification: GraphSpecificationNew

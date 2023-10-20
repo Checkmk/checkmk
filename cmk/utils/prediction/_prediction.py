@@ -7,7 +7,7 @@ import logging
 import math
 from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Literal, NamedTuple, Protocol
+from typing import Literal, NamedTuple, Protocol, Self
 
 from pydantic import BaseModel
 
@@ -48,6 +48,17 @@ class DataStat(NamedTuple):
     min_: float
     max_: float
     stdev: float | None
+
+    @classmethod
+    def from_values(cls, values: Sequence[float]) -> Self:
+        """Statistically summarize all the measured values"""
+        average = sum(values) / float(len(values))
+        return cls(
+            average=average,
+            min_=min(values),
+            max_=max(values),
+            stdev=_std_dev(values, average),
+        )
 
 
 class PredictionInfo(BaseModel, frozen=True):
@@ -173,28 +184,15 @@ def _forward_fill_resample(
 
 def _data_stats(slices: Iterable[Iterable[float | None]]) -> list[DataStat | None]:
     "Statistically summarize all the upsampled RRD data"
-
-    descriptors: list[DataStat | None] = []
-
-    for time_column in zip(*slices):
-        point_line = [x for x in time_column if x is not None]
-        if point_line:
-            average = sum(point_line) / float(len(point_line))
-            descriptors.append(
-                DataStat(
-                    average=average,
-                    min_=min(point_line),
-                    max_=max(point_line),
-                    stdev=_std_dev(point_line, average),
-                )
-            )
-        else:
-            descriptors.append(None)
-
-    return descriptors
+    return [  # can't inline this b/c it is unit tested :-/
+        DataStat.from_values(point_line)
+        if (point_line := [x for x in time_column if x is not None])
+        else None
+        for time_column in zip(*slices)
+    ]
 
 
-def _std_dev(point_line: list[float], average: float) -> float | None:
+def _std_dev(point_line: Sequence[float], average: float) -> float | None:
     samples = len(point_line)
     # In the case of a single data-point an unbiased standard deviation is undefined.
     if samples == 1:

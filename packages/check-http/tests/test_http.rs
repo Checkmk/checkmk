@@ -1,5 +1,5 @@
 use anyhow::Result as AnyhowResult;
-use check_http::{check_http, cli::Cli};
+use check_http::{check_http, cli::Cli, Output, State};
 use clap::Parser;
 
 use std::io::{Read, Write};
@@ -25,9 +25,16 @@ async fn test_basic_get() -> AnyhowResult<()> {
 
     let check_http_payload = process_http(listener, BASIC_HTTP_RESPONSE)?;
 
-    check_http_thread.await??;
+    let Output {
+        state,
+        summary,
+        details,
+    } = check_http_thread.await?;
 
     assert!(check_http_payload.starts_with("GET / HTTP/1.1"));
+    assert!(matches!(state, State::Ok));
+    assert!(summary.starts_with("Downloaded"));
+    assert!(details.is_none());
 
     Ok(())
 }

@@ -1,7 +1,10 @@
+use check_http::{check_http, cli::Cli};
 use clap::Parser;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = check_http::cli::Cli::parse();
-    Ok(check_http::check_http(args).await?)
+async fn main() {
+    let args = Cli::parse();
+    let output = check_http(args).await;
+    println!("{}", output);
+    std::process::exit(output.state.into());
 }

@@ -1,13 +1,70 @@
 use anyhow::Result as AnyhowResult;
 use http::{HeaderMap, HeaderName, HeaderValue, Method};
 use reqwest::{header::USER_AGENT, RequestBuilder};
-use std::time::{Duration, Instant};
+use std::{
+    fmt::{Display, Formatter, Result as FormatResult},
+    time::{Duration, Instant},
+};
 
 pub mod cli;
 mod pwstore;
 
-pub async fn check_http(args: cli::Cli) -> AnyhowResult<()> {
-    let request = prepare_request(
+pub enum State {
+    Ok,
+    Warn,
+    Crit,
+    Unknown,
+}
+
+impl Display for State {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        match self {
+            Self::Ok => write!(f, "OK"),
+            Self::Warn => write!(f, "WARNING"),
+            Self::Crit => write!(f, "CRITICAL"),
+            Self::Unknown => write!(f, "UNKNOWN"),
+        }
+    }
+}
+
+impl From<State> for i32 {
+    fn from(value: State) -> Self {
+        match value {
+            State::Ok => 0,
+            State::Warn => 1,
+            State::Crit => 2,
+            State::Unknown => 3,
+        }
+    }
+}
+
+pub struct Output {
+    pub state: State,
+    pub summary: String,
+    pub details: Option<String>,
+}
+
+impl Display for Output {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        match &self.details {
+            Some(det) => write!(f, "HTTP {} - {}\n{}", self.state, self.summary, det),
+            None => write!(f, "HTTP {} - {}", self.state, self.summary),
+        }
+    }
+}
+
+impl Output {
+    pub fn from_short(state: State, summary: &str) -> Self {
+        Self {
+            state,
+            summary: summary.to_string(),
+            details: None,
+        }
+    }
+}
+
+pub async fn check_http(args: cli::Cli) -> Output {
+    let request = match prepare_request(
         args.url,
         args.method,
         args.user_agent,
@@ -15,29 +72,62 @@ pub async fn check_http(args: cli::Cli) -> AnyhowResult<()> {
         args.timeout,
         args.auth_user,
         args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
-    )?;
+    ) {
+        Ok(req) => req,
+        Err(_) => {
+            return Output::from_short(State::Unknown, "Error building the request");
+        }
+    };
 
     let now = Instant::now();
 
-    let response = request.send().await?;
+    let response = match request.send().await {
+        Ok(resp) => resp,
+        Err(err) => {
+            if err.is_timeout() {
+                return Output::from_short(State::Crit, "timeout");
+            } else if err.is_connect() {
+                return Output::from_short(State::Crit, "Failed to connect");
+            } else {
+                return Output::from_short(State::Unknown, "Error while sending request");
+            }
+        }
+    };
+
+    let response = match response.error_for_status() {
+        Ok(resp) => resp,
+        Err(err) => {
+            return Output::from_short(
+                State::Warn,
+                &format!("HTTP status code {}", err.status().unwrap().as_str()),
+            );
+        }
+    };
 
     let headers = response.headers();
     println!("{:#?}", headers);
 
     let body = match args.without_body {
-        false => response.text().await?,
+        false => match response.text().await {
+            Ok(bd) => bd,
+            Err(_) => {
+                return Output::from_short(State::Unknown, "Error fetching the reponse body");
+            }
+        },
         true => "".to_string(),
     };
 
     let elapsed = now.elapsed();
 
-    println!(
-        "Downloaded {} bytes in {}.{} seconds.",
-        body.len(),
-        elapsed.as_secs(),
-        elapsed.subsec_millis()
-    );
-    Ok(())
+    Output::from_short(
+        State::Ok,
+        &format!(
+            "Downloaded {} bytes in {}.{} seconds.",
+            body.len(),
+            elapsed.as_secs(),
+            elapsed.subsec_millis()
+        ),
+    )
 }
 
 fn prepare_request(

@@ -41,3 +41,24 @@ def parse_sap_hana_cluster_aware(info):
         elif instance is not None:
             instance.append([e.strip('"') for e in line])
     return parsed
+
+
+def get_replication_state(raw: str) -> tuple[State, str, str]:
+    if raw == "0":
+        return State.UNKNOWN, "unknown status from replication script", "state_unknown"
+    if raw == "10":
+        return State.CRIT, "no system replication", "state_no_replication"
+    if raw == "11":
+        return State.CRIT, "error", "state_error"
+    if raw == "12":
+        # "12" actually stands for "unknown replication status", but as per customer's information
+        # (see SUP-1436), this should be indicated as "passive" replication aka secondary SAP HANA node.
+        return State.OK, "passive", "state_replication_unknown"
+    if raw == "13":
+        return State.WARN, "initializing", "state_initializing"
+    if raw == "14":
+        return State.OK, "syncing", "state_syncing"
+    if raw == "15":
+        return State.OK, "active", "state_active"
+
+    return State.UNKNOWN, "unknown[%s]" % raw, "state_unknown"

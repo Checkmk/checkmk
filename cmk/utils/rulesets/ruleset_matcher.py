@@ -134,11 +134,11 @@ class RulesetMatcher:
     def __init__(
         self,
         host_tags: TagsOfHosts,
-        host_paths: dict[HostName, str],
+        host_paths: Mapping[HostName, str],
         labels: LabelManager,
-        all_configured_hosts: set[HostName],
-        clusters_of: dict[HostName, list[HostName]],
-        nodes_of: dict[HostName, list[HostName]],
+        all_configured_hosts: Sequence[HostName],
+        clusters_of: Mapping[HostName, Sequence[HostName]],
+        nodes_of: Mapping[HostName, Sequence[HostName]],
     ) -> None:
         super().__init__()
 
@@ -442,11 +442,11 @@ class RulesetOptimizer:
         self,
         ruleset_matcher: RulesetMatcher,
         host_tags: TagsOfHosts,
-        host_paths: dict[HostName, str],
+        host_paths: Mapping[HostName, str],
         labels: LabelManager,
-        all_configured_hosts: set[HostName],
-        clusters_of: dict[HostName, list[HostName]],
-        nodes_of: dict[HostName, list[HostName]],
+        all_configured_hosts: Sequence[HostName],
+        clusters_of: Mapping[HostName, Sequence[HostName]],
+        nodes_of: Mapping[HostName, Sequence[HostName]],
     ) -> None:
         super().__init__()
         self._ruleset_matcher = ruleset_matcher
@@ -493,7 +493,7 @@ class RulesetOptimizer:
         self._host_ruleset_cache.clear()
         self._all_matching_hosts_match_cache.clear()
 
-    def all_processed_hosts(self) -> set[HostName]:
+    def all_processed_hosts(self) -> Sequence[HostName]:
         """Returns a set of all processed hosts"""
         return self._all_processed_hosts
 
@@ -512,7 +512,7 @@ class RulesetOptimizer:
 
         # Only add references to configured hosts
         nodes_and_clusters.intersection_update(self._all_configured_hosts)
-        self._all_processed_hosts = nodes_and_clusters
+        self._all_processed_hosts = list(nodes_and_clusters)
 
         # The folder host lookup includes a list of all -processed- hosts within a given
         # folder. Any update with set_all_processed hosts invalidates this cache, because

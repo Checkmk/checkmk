@@ -368,6 +368,26 @@ impl Sqls {
     pub fn cache_age(&self) -> u32 {
         self.cache_age
     }
+
+    pub fn get_filtered_always(&self) -> Vec<String> {
+        self.get_filtered(self.always())
+    }
+
+    pub fn get_filtered_cached(&self) -> Vec<String> {
+        self.get_filtered(self.cached())
+    }
+
+    fn get_filtered(&self, sqls: &[String]) -> Vec<String> {
+        sqls.iter()
+            .filter_map(|sql| {
+                if self.disabled().iter().any(|s| s == sql) {
+                    None
+                } else {
+                    Some(sql.to_owned())
+                }
+            })
+            .collect()
+    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -763,6 +783,18 @@ connection:
         assert_eq!(s.cached(), &vec!["ccc".to_string(), "ddd".to_string()]);
         assert_eq!(s.disabled(), &vec!["eee".to_string()]);
         assert_eq!(s.cache_age(), 900);
+    }
+
+    #[test]
+    fn test_sqls_filtered() {
+        let s = Sqls {
+            always: vec!["eee".to_string(), "aaa".to_string()],
+            cached: vec!["ccc".to_string(), "eee".to_string()],
+            disabled: vec!["eee".to_string()],
+            cache_age: 900,
+        };
+        assert_eq!(s.get_filtered_always(), vec!["aaa".to_string()]);
+        assert_eq!(s.get_filtered_cached(), vec!["ccc".to_string()]);
     }
 
     #[test]

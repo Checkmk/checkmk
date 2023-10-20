@@ -11,14 +11,7 @@ from cmk.config_generation.v1 import ActiveCheckCommand, HostConfig, IPAddressFa
 from cmk.plugins.collection.config_generation.bi_aggr import active_check_bi_aggr
 
 HOST_CONFIG = HostConfig(
-    name="hostname",
-    address="0.0.0.1",
-    alias="host_alias",
-    ip_family=IPAddressFamily.IPv4,
-    ipv4address=None,
-    ipv6address=None,
-    additional_ipv4addresses=[],
-    additional_ipv6addresses=[],
+    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPv4
 )
 
 

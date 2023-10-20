@@ -16,14 +16,7 @@ from cmk.config_generation.v1 import (
 from cmk.plugins.collection.config_generation.jenkins import special_agent_jenkins
 
 HOST_CONFIG = HostConfig(
-    name="hostname",
-    address="0.0.0.1",
-    alias="host_alias",
-    ip_family=IPAddressFamily.IPv4,
-    ipv4address=None,
-    ipv6address=None,
-    additional_ipv4addresses=[],
-    additional_ipv6addresses=[],
+    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPv4
 )
 
 

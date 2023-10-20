@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Literal
 
@@ -20,10 +20,10 @@ class HostConfig:
     address: str
     alias: str
     ip_family: IPAddressFamily
-    ipv4address: str | None
-    ipv6address: str | None
-    additional_ipv4addresses: Sequence[str]
-    additional_ipv6addresses: Sequence[str]
+    ipv4address: str | None = None
+    ipv6address: str | None = None
+    additional_ipv4addresses: Sequence[str] = field(default_factory=list)
+    additional_ipv6addresses: Sequence[str] = field(default_factory=list)
 
     @property
     def all_ipv4addresses(self):

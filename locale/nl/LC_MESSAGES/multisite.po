@@ -128,6 +128,11 @@ msgstr ""
 " De tekst loopt automatisch door op de volgende regel. Een lege regel begint "
 "een nieuwe paragraaf."
 
+msgid ""
+" This also includes any changes made since the last activation that did not "
+"require manual activation (marked with "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " en %s '%s'"
@@ -4165,10 +4170,6 @@ msgstr ""
 "de punt de byte aangeeft die moet worden opgehaald en het getal na de punt "
 "de bit aangeeft die moet worden opgehaald. Het nummer van het bit ligt "
 "altijd tussen 0 en 7."
-
-#, fuzzy
-msgid "Adds RobotMK monitoring"
-msgstr "Host toevoegen aan de bewaking"
 
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
@@ -15865,7 +15866,7 @@ msgid "Deploy Remote Desktop Licenses plugin"
 msgstr "Deploy Remote Desktop Licenses plugin"
 
 #, fuzzy
-msgid "Deploy RobotMK monitoring"
+msgid "Deploy Robotmk"
 msgstr "Controleer niet"
 
 msgid "Deploy SMART plugin"
@@ -17273,7 +17274,7 @@ msgid "Do not deploy Remote Desktop Licenses plugin"
 msgstr "Implementeer geen Remote Desktop Licenses plugin"
 
 #, fuzzy
-msgid "Do not deploy RobotMK monitoring"
+msgid "Do not deploy Robotmk"
 msgstr "Gebruik de mtr plugin niet"
 
 msgid "Do not deploy SMART plugin"
@@ -17634,10 +17635,6 @@ msgstr "Doe dit recursief"
 
 msgid "Do transfer context"
 msgstr "Draag context over"
-
-#, fuzzy
-msgid "Do you really want revert the following changes?"
-msgstr "Wilt u echt de map %s verwijderen?"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Wilt u echt de geselecteerde aggregaten verplaatsen?"
@@ -20250,6 +20247,10 @@ msgstr "Verwachte DNS-antwoorden"
 
 msgid "Expected String"
 msgstr "Verwachte String"
+
+#, fuzzy
+msgid "Expected active paths"
+msgstr "Verwacht aantal actieve paden"
 
 msgid "Expected autoextend setting"
 msgstr "Verwachte autoextend instelling"
@@ -28443,6 +28444,10 @@ msgstr "InfluxDB dienst regels"
 msgid "Info"
 msgstr "Info"
 
+#, fuzzy
+msgid "Info:"
+msgstr "Info"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -32714,9 +32719,6 @@ msgstr ""
 msgid "Magnetic volumes space"
 msgstr "Magnetische volumes ruimte"
 
-msgid "Mail Receiving"
-msgstr "Ontvangst van post"
-
 #, python-format
 msgid "Mail could not be delivered. Exit code of command is %r. Output is: %s"
 msgstr ""
@@ -32733,6 +32735,14 @@ msgstr "Mail vertraging"
 
 msgid "Mail queue name"
 msgstr "Naam mailwachtrij"
+
+#, fuzzy
+msgid "Mail receiving"
+msgstr "Ontvangst van post"
+
+#, fuzzy
+msgid "Mail sending"
+msgstr "SMS-uitgaven"
 
 msgid "Mailman mailing lists queues (Linux)"
 msgstr "Mailman mailinglijst wachtrijen (Linux)"
@@ -36029,6 +36039,10 @@ msgstr "Netwerkcontroles zonder agent"
 
 msgid "Networks"
 msgstr "Netwerken"
+
+#, fuzzy
+msgid "Never"
+msgstr "(nooit)"
 
 msgid "Never analyzed/vacuumed tables"
 msgstr "Nooit geanalyseerde/gezogen tabellen"
@@ -41321,10 +41335,6 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Plugin naam"
 
-#, fuzzy
-msgid "Plugin doesn't exist"
-msgstr "Map bestaat niet"
-
 msgid "Plugin file pattern"
 msgstr "Plugin bestandspatroon"
 
@@ -44639,6 +44649,10 @@ msgstr "Terugkeren procestijden binnen prestatiegegevens"
 msgid "Revert changes"
 msgstr "Inventariswijzigingen"
 
+#, fuzzy
+msgid "Revert changes?"
+msgstr "Inventariswijzigingen"
+
 msgid "Revolutions per minute"
 msgstr "Omwentelingen per minuut"
 
@@ -44685,16 +44699,16 @@ msgstr "Robot Framework: Laatste foutenlogboek"
 msgid "Robot Framework: Last log"
 msgstr "Robot Framework: Laatste logboek"
 
-#, fuzzy
-msgid "RobotMK (Windows)"
-msgstr "RobotMK logboeken"
-
 msgid "RobotMK logs"
 msgstr "RobotMK logboeken"
 
 #, fuzzy
 msgid "Robotmk"
 msgstr "Verslag indienen"
+
+#, fuzzy
+msgid "Robotmk (Windows)"
+msgstr "RobotMK logboeken"
 
 msgid "Role"
 msgstr "Rol"
@@ -45309,6 +45323,9 @@ msgstr "SMS succespercentage"
 msgid "SMT Threads"
 msgstr "SMT Draden"
 
+msgid "SMTP"
+msgstr ""
+
 msgid "SMTP AUTH type to check (default none, only LOGIN supported)"
 msgstr ""
 "SMTP AUTH type om te controleren (standaard geen, alleen LOGIN ondersteund)"
@@ -45322,14 +45339,15 @@ msgstr "SMTP Opdrachten"
 msgid "SMTP Responses"
 msgstr "SMTP antwoorden"
 
-msgid "SMTP Server"
-msgstr "SMTP-server"
-
 msgid "SMTP TCP Port to connect to"
 msgstr "SMTP TCP-poort om verbinding mee te maken"
 
 msgid "SMTP commands to execute."
 msgstr "SMTP commando's uit te voeren."
+
+#, fuzzy
+msgid "SMTP server"
+msgstr "SMTP-server"
 
 msgid "SNAT Consumption"
 msgstr "SNAT-verbruik"
@@ -49613,9 +49631,11 @@ msgid ""
 "get data from 'https://microsoftgraph.chinacloudapi.cn'</li></ul>"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Specify the destination path in the format <tt>Path/To/Folder</tt>, for "
-"example<tt>INBOX/Processed_Mails</tt>."
+"example <tt>INBOX/Processed_Mails</tt>. Note that the maximum depth of "
+"folder trees might be limited by your mail provider."
 msgstr ""
 "Geef het bestemmingspad aan in het formaat <tt>Path/To/Folder</tt>, "
 "bijvoorbeeld<tt>INBOX/Processed_Mails</tt>."
@@ -53456,11 +53476,12 @@ msgstr ""
 "$HOSTNAME$</tt> binnen deze URL gebruiken om ze te laten vervangen door de "
 "waarden van de hosts."
 
+#, fuzzy
 msgid ""
-"The basic function of this check is to log in into an IMAP or POP3 mailbox "
-"to monitor whether or not the login is possible. A extended feature is, that "
-"the check can fetch all (or just some) from the mailbox and forward them as "
-"events to the Event Console."
+"The basic function of this check is to log in into an IMAP, POP3 or EWS "
+"mailbox to monitor whether or not the login is possible. An extended feature "
+"is, that the check can fetch all (or just some) from the mailbox and forward "
+"them as events to the Event Console."
 msgstr ""
 "De basisfunctie van deze controle is het inloggen in een IMAP of POP3 "
 "mailbox om te controleren of het inloggen mogelijk is of niet. Een "
@@ -55338,9 +55359,6 @@ msgstr ""
 "Het aantal resterende inodes op het bestandssysteem. Merk op dat deze "
 "instelling geen effect heeft op sommige bestandssysteemcontroles."
 
-msgid "The number of replication failures"
-msgstr "Het aantal replicatie mislukkingen"
-
 #, fuzzy
 msgid ""
 "The number of seconds a cache file may be old if check_mk should use it "
@@ -55647,10 +55665,6 @@ msgstr ""
 "De plaatsaanduiding <tt>0</tt> wordt vervangen door de oorspronkelijke "
 "tekst. Dit maakt het mogelijk om nieuwe informatie vooraan of aan het eind "
 "toe te voegen. "
-
-#, fuzzy, python-format
-msgid "The plugin '%s' is not a valid notification plugin."
-msgstr "De timeout %s is geen geldig geheel getal."
 
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
@@ -57376,11 +57390,12 @@ msgstr ""
 "controller op de bewaakte host moet resetten (raadpleeg `cmk-agent-ctl "
 "help`).</li></ul>"
 
+#, fuzzy
 msgid ""
-"This active check sends out special E-Mails to a defined mail address using "
-"the SMTP protocol and then tries to receive these mails back by querying the "
-"inbox of a IMAP or POP3 mailbox. With this check you can verify that your "
-"whole mail delivery progress is working."
+"This active check sends out special emails to a defined mail address using "
+"either the SMTP protocol or an EWS connection and then tries to receive "
+"these mails back by querying the inbox of an IMAP, POP3 or EWS mailbox. With "
+"this check you can verify that your whole mail delivery progress is working."
 msgstr ""
 "Deze actieve controle verstuurt speciale e-mailberichten naar een bepaald "
 "mailadres met behulp van het SMTP-protocol en probeert vervolgens deze "
@@ -64346,6 +64361,10 @@ msgstr "Bovenste niveaus voor het aantal sloten"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Bovenste niveaus voor het aantal geregistreerde desktops"
+
+#, fuzzy
+msgid "Upper levels for the number of replication failures"
+msgstr "Bovenste niveaus voor het aantal sessies"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr ""
@@ -72813,6 +72832,29 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Add host to the monitoring"
+#~ msgid "Adds RobotMK monitoring"
+#~ msgstr "Host toevoegen aan de bewaking"
+
+#, fuzzy
+#~| msgid "Do you really want to delete the folder %s?"
+#~ msgid "Do you really want revert the following changes?"
+#~ msgstr "Wilt u echt de map %s verwijderen?"
+
+#, fuzzy
+#~| msgid "Folder does not exist"
+#~ msgid "Plugin doesn't exist"
+#~ msgstr "Map bestaat niet"
+
+#~ msgid "The number of replication failures"
+#~ msgstr "Het aantal replicatie mislukkingen"
+
+#, fuzzy, python-format
+#~| msgid "The timeout %s is not a valid integer number."
+#~ msgid "The plugin '%s' is not a valid notification plugin."
+#~ msgstr "De timeout %s is geen geldig geheel getal."
 
 #~ msgid "Path to .env file"
 #~ msgstr "Pad naar .env bestand"

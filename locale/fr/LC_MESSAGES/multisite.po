@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-09-13 10:32+0000\n"
-"Last-Translator: Elias Voelker <elias.voelker@tribe29.com>\n"
+"PO-Revision-Date: 2023-10-20 14:59+0000\n"
+"Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
 "Language: fr\n"
@@ -126,6 +126,11 @@ msgid ""
 msgstr ""
 " Le texte sera automatiquement mis en forme. Une ligne vide permet de "
 "commencer un nouveau paragraphe."
+
+msgid ""
+" This also includes any changes made since the last activation that did not "
+"require manual activation (marked with "
+msgstr ""
 
 #, python-format
 msgid " and %s '%s'"
@@ -754,7 +759,6 @@ msgstr ""
 msgid "&lt;None&gt;"
 msgstr "&lt;None&gt;"
 
-#, fuzzy
 msgid ""
 "'Activate Changes' is blocked. Distributed monitoring is not available after "
 "trial expiration, including hosts added via CMCDump"
@@ -2562,7 +2566,6 @@ msgstr "Demandes d'ASP rejetées"
 msgid "AWS EC2 instances"
 msgstr "Instances AWS EC2"
 
-#, fuzzy
 msgid "AWS S3 (object storage)"
 msgstr "Stockage alloué"
 
@@ -4212,10 +4215,6 @@ msgstr ""
 "spécifie le bit à extraire. Le numéro du bit est toujours compris entre 0 et "
 "7."
 
-#, fuzzy
-msgid "Adds RobotMK monitoring"
-msgstr "Ajouter un hôte à la surveillance"
-
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
 "agent will then automatically use this to provide readings of hardware "
@@ -4338,7 +4337,6 @@ msgstr "Les hôtes affectés contiennent"
 msgid "Affected sites"
 msgstr "Sites affectés"
 
-#, fuzzy
 msgid ""
 "After a battery diagnostics the battery capacity is reduced until the "
 "battery is fully charged again. Here you can specify an alternative lower "
@@ -4404,7 +4402,6 @@ msgstr ""
 "automatiques, vous devez installer un agent \"baked\" qui contient le "
 "plugin. Ceci doit être fait manuellement (pour la dernière fois)."
 
-#, fuzzy
 msgid ""
 "After download, upload the license usage report to the Checkmk customer "
 "portal.<br>Navigate to 'Subscription' in the customer portal and select your "
@@ -16059,7 +16056,7 @@ msgid "Deploy Remote Desktop Licenses plugin"
 msgstr "Plugin Déploiement des licences Remote Desktop"
 
 #, fuzzy
-msgid "Deploy RobotMK monitoring"
+msgid "Deploy Robotmk"
 msgstr "Ne pas surveiller"
 
 msgid "Deploy SMART plugin"
@@ -17489,7 +17486,7 @@ msgid "Do not deploy Remote Desktop Licenses plugin"
 msgstr "Ne pas déployer le plugin Remote Desktop Licenses"
 
 #, fuzzy
-msgid "Do not deploy RobotMK monitoring"
+msgid "Do not deploy Robotmk"
 msgstr "Ne pas déployer le plugin mtr"
 
 msgid "Do not deploy SMART plugin"
@@ -17855,10 +17852,6 @@ msgstr "Faites-le de manière récursive"
 
 msgid "Do transfer context"
 msgstr "Transférer le contexte"
-
-#, fuzzy
-msgid "Do you really want revert the following changes?"
-msgstr "Voulez-vous vraiment supprimer le dossier %s ?"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Voulez-vous vraiment déplacer les agrégations sélectionnées ?"
@@ -20505,6 +20498,10 @@ msgstr "Réponses DNS attendues"
 
 msgid "Expected String"
 msgstr "Chaîne attendue"
+
+#, fuzzy
+msgid "Expected active paths"
+msgstr "Nombre attendu de voies actives"
 
 msgid "Expected autoextend setting"
 msgstr "Paramètre d'extension automatique attendu"
@@ -28807,6 +28804,10 @@ msgstr "Règles du service InfluxDB"
 msgid "Info"
 msgstr "Info"
 
+#, fuzzy
+msgid "Info:"
+msgstr "Info"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -33111,9 +33112,6 @@ msgstr ""
 msgid "Magnetic volumes space"
 msgstr "Espace des volumes magnétiques"
 
-msgid "Mail Receiving"
-msgstr "Réception du courrier"
-
 #, python-format
 msgid "Mail could not be delivered. Exit code of command is %r. Output is: %s"
 msgstr ""
@@ -33131,6 +33129,14 @@ msgstr "Latence du courrier"
 
 msgid "Mail queue name"
 msgstr "Nom de la file d'attente de courrier"
+
+#, fuzzy
+msgid "Mail receiving"
+msgstr "Réception du courrier"
+
+#, fuzzy
+msgid "Mail sending"
+msgstr "Dépenses en SMS"
 
 msgid "Mailman mailing lists queues (Linux)"
 msgstr "Files d'attente des listes de diffusion Mailman (Linux)"
@@ -36466,6 +36472,10 @@ msgstr "Contrôles de réseau sans agent"
 
 msgid "Networks"
 msgstr "Réseaux"
+
+#, fuzzy
+msgid "Never"
+msgstr "(jamais)"
 
 msgid "Never analyzed/vacuumed tables"
 msgstr "Tables jamais analysées/vidées"
@@ -41841,10 +41851,6 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nom du plugin"
 
-#, fuzzy
-msgid "Plugin doesn't exist"
-msgstr "Le dossier n'existe pas"
-
 msgid "Plugin file pattern"
 msgstr "Modèle de fichier de plugin"
 
@@ -45223,6 +45229,10 @@ msgstr "Retour des temps de traitement dans les données de performance"
 msgid "Revert changes"
 msgstr "Variation des stocks"
 
+#, fuzzy
+msgid "Revert changes?"
+msgstr "Variation des stocks"
+
 msgid "Revolutions per minute"
 msgstr "Révolutions par minute"
 
@@ -45269,16 +45279,16 @@ msgstr "Robot Framework : Dernier journal d'erreurs"
 msgid "Robot Framework: Last log"
 msgstr "Robot Framework : Dernier journal"
 
-#, fuzzy
-msgid "RobotMK (Windows)"
-msgstr "Journaux de RobotMK"
-
 msgid "RobotMK logs"
 msgstr "Journaux de RobotMK"
 
 #, fuzzy
 msgid "Robotmk"
 msgstr "Soumettre un rapport"
+
+#, fuzzy
+msgid "Robotmk (Windows)"
+msgstr "Journaux de RobotMK"
 
 msgid "Role"
 msgstr "Rôle"
@@ -45902,6 +45912,9 @@ msgstr "Taux de réussite des SMS"
 msgid "SMT Threads"
 msgstr "Fils SMT"
 
+msgid "SMTP"
+msgstr ""
+
 msgid "SMTP AUTH type to check (default none, only LOGIN supported)"
 msgstr ""
 "Type d'AUTH SMTP à vérifier (par défaut aucun, seul LOGIN est supporté)"
@@ -45915,14 +45928,15 @@ msgstr "Commandes SMTP"
 msgid "SMTP Responses"
 msgstr "Réponses SMTP"
 
-msgid "SMTP Server"
-msgstr "Serveur SMTP"
-
 msgid "SMTP TCP Port to connect to"
 msgstr "Port TCP SMTP auquel se connecter"
 
 msgid "SMTP commands to execute."
 msgstr "Commandes SMTP à exécuter."
+
+#, fuzzy
+msgid "SMTP server"
+msgstr "Serveur SMTP"
 
 msgid "SNAT Consumption"
 msgstr "Consommation de SNAT"
@@ -50274,9 +50288,11 @@ msgid ""
 "get data from 'https://microsoftgraph.chinacloudapi.cn'</li></ul>"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Specify the destination path in the format <tt>Path/To/Folder</tt>, for "
-"example<tt>INBOX/Processed_Mails</tt>."
+"example <tt>INBOX/Processed_Mails</tt>. Note that the maximum depth of "
+"folder trees might be limited by your mail provider."
 msgstr ""
 "Spécifiez le chemin de destination au format <tt>Path/To/Folder</tt>, par "
 "exemple<tt>INBOX/Processed_Mails</tt>."
@@ -54149,11 +54165,12 @@ msgstr ""
 "$HOSTADDRESS$</tt> et <tt>$HOSTNAME$</tt> dans cette URL pour qu'elles "
 "soient remplacées par les valeurs des hôtes."
 
+#, fuzzy
 msgid ""
-"The basic function of this check is to log in into an IMAP or POP3 mailbox "
-"to monitor whether or not the login is possible. A extended feature is, that "
-"the check can fetch all (or just some) from the mailbox and forward them as "
-"events to the Event Console."
+"The basic function of this check is to log in into an IMAP, POP3 or EWS "
+"mailbox to monitor whether or not the login is possible. An extended feature "
+"is, that the check can fetch all (or just some) from the mailbox and forward "
+"them as events to the Event Console."
 msgstr ""
 "La fonction de base de cette vérification est de se connecter à une boîte "
 "aux lettres IMAP ou POP3 pour contrôler si la connexion est possible ou non. "
@@ -56060,9 +56077,6 @@ msgstr ""
 "ce paramètre n'a aucun effet sur certaines vérifications du système de "
 "fichiers."
 
-msgid "The number of replication failures"
-msgstr "Le nombre d'échecs de réplication"
-
 #, fuzzy
 msgid ""
 "The number of seconds a cache file may be old if check_mk should use it "
@@ -56372,10 +56386,6 @@ msgid ""
 msgstr ""
 "L'espace réservé <tt>\\0</tt> sera remplacé par le texte original. Cela vous "
 "permet d'ajouter de nouvelles informations au début ou à la fin. "
-
-#, fuzzy, python-format
-msgid "The plugin '%s' is not a valid notification plugin."
-msgstr "Le délai d'attente %s n'est pas un nombre entier valide."
 
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
@@ -58118,11 +58128,12 @@ msgstr ""
 "réinitialiser le contrôleur d'agent sur l'hôte surveillé (référez-vous à "
 "`cmk-agent-ctl help`).</li></ul>"
 
+#, fuzzy
 msgid ""
-"This active check sends out special E-Mails to a defined mail address using "
-"the SMTP protocol and then tries to receive these mails back by querying the "
-"inbox of a IMAP or POP3 mailbox. With this check you can verify that your "
-"whole mail delivery progress is working."
+"This active check sends out special emails to a defined mail address using "
+"either the SMTP protocol or an EWS connection and then tries to receive "
+"these mails back by querying the inbox of an IMAP, POP3 or EWS mailbox. With "
+"this check you can verify that your whole mail delivery progress is working."
 msgstr ""
 "Cette vérification active envoie des courriers électroniques spéciaux à une "
 "adresse électronique définie en utilisant le protocole SMTP, puis tente de "
@@ -65191,6 +65202,10 @@ msgstr "Niveaux supérieurs pour le nombre de serrures"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Niveaux supérieurs pour le nombre de postes de travail enregistrés"
+
+#, fuzzy
+msgid "Upper levels for the number of replication failures"
+msgstr "Niveaux supérieurs pour le nombre de sessions"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr ""
@@ -73798,6 +73813,29 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#, fuzzy
+#~| msgid "Add host to the monitoring"
+#~ msgid "Adds RobotMK monitoring"
+#~ msgstr "Ajouter un hôte à la surveillance"
+
+#, fuzzy
+#~| msgid "Do you really want to delete the folder %s?"
+#~ msgid "Do you really want revert the following changes?"
+#~ msgstr "Voulez-vous vraiment supprimer le dossier %s ?"
+
+#, fuzzy
+#~| msgid "Folder does not exist"
+#~ msgid "Plugin doesn't exist"
+#~ msgstr "Le dossier n'existe pas"
+
+#~ msgid "The number of replication failures"
+#~ msgstr "Le nombre d'échecs de réplication"
+
+#, fuzzy, python-format
+#~| msgid "The timeout %s is not a valid integer number."
+#~ msgid "The plugin '%s' is not a valid notification plugin."
+#~ msgstr "Le délai d'attente %s n'est pas un nombre entier valide."
 
 #~ msgid "Path to .env file"
 #~ msgstr "Chemin vers le fichier .env"

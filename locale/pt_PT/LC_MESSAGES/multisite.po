@@ -127,6 +127,11 @@ msgstr ""
 " O texto será automaticamente limitado. Uma linha vazia irá começar um novo "
 "parágrafo."
 
+msgid ""
+" This also includes any changes made since the last activation that did not "
+"require manual activation (marked with "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " e %s '%s'"
@@ -4169,10 +4174,6 @@ msgstr ""
 "Os endereços são especificados com uma notação de ponto, onde o número antes "
 "do ponto especifica o byte a ser buscado e o número após o ponto especifica "
 "o bit a ser buscado. O número do bit está sempre entre 0 e 7."
-
-#, fuzzy
-msgid "Adds RobotMK monitoring"
-msgstr "Adicionar o anfitrião ao monitoramento"
 
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
@@ -15904,7 +15905,7 @@ msgid "Deploy Remote Desktop Licenses plugin"
 msgstr "Implementar o plugin Remote Desktop Licenses"
 
 #, fuzzy
-msgid "Deploy RobotMK monitoring"
+msgid "Deploy Robotmk"
 msgstr "Não monitorar"
 
 msgid "Deploy SMART plugin"
@@ -17316,7 +17317,7 @@ msgid "Do not deploy Remote Desktop Licenses plugin"
 msgstr "Não implante o plugin Remote Desktop Licenses"
 
 #, fuzzy
-msgid "Do not deploy RobotMK monitoring"
+msgid "Do not deploy Robotmk"
 msgstr "Não implante o plugin mtr"
 
 msgid "Do not deploy SMART plugin"
@@ -17677,10 +17678,6 @@ msgstr "Faça isto recursivamente"
 
 msgid "Do transfer context"
 msgstr "Contexto de transferência"
-
-#, fuzzy
-msgid "Do you really want revert the following changes?"
-msgstr "Você realmente quer apagar a pasta %s?"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Você realmente quer mover as agregações selecionadas?"
@@ -20293,6 +20290,10 @@ msgstr "Respostas DNS esperadas"
 
 msgid "Expected String"
 msgstr "Corda Esperada"
+
+#, fuzzy
+msgid "Expected active paths"
+msgstr "Número esperado de caminhos ativos"
 
 msgid "Expected autoextend setting"
 msgstr "Definição esperada de auto-extensão"
@@ -28490,6 +28491,10 @@ msgstr "Regras de serviço do InfluxDB"
 msgid "Info"
 msgstr "Informações"
 
+#, fuzzy
+msgid "Info:"
+msgstr "Informações"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -32774,9 +32779,6 @@ msgstr ""
 msgid "Magnetic volumes space"
 msgstr "Espaço para volumes magnéticos"
 
-msgid "Mail Receiving"
-msgstr "Recepção de correio"
-
 #, python-format
 msgid "Mail could not be delivered. Exit code of command is %r. Output is: %s"
 msgstr ""
@@ -32793,6 +32795,14 @@ msgstr "Latência do correio"
 
 msgid "Mail queue name"
 msgstr "Nome da fila de correio"
+
+#, fuzzy
+msgid "Mail receiving"
+msgstr "Recepção de correio"
+
+#, fuzzy
+msgid "Mail sending"
+msgstr "Despesas com SMS"
 
 msgid "Mailman mailing lists queues (Linux)"
 msgstr "Filas de correio (Linux)"
@@ -36100,6 +36110,10 @@ msgstr "Verificação da rede sem agente"
 
 msgid "Networks"
 msgstr "Redes"
+
+#, fuzzy
+msgid "Never"
+msgstr "(nunca)"
 
 msgid "Never analyzed/vacuumed tables"
 msgstr "Nunca analisado/vacuumed tabelas"
@@ -41412,10 +41426,6 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nome do Plugin"
 
-#, fuzzy
-msgid "Plugin doesn't exist"
-msgstr "A pasta não existe"
-
 msgid "Plugin file pattern"
 msgstr "Padrão de arquivo de plugin"
 
@@ -44759,6 +44769,10 @@ msgstr "Tempos de processo de retorno dentro dos dados de desempenho"
 msgid "Revert changes"
 msgstr "Modificações no inventário"
 
+#, fuzzy
+msgid "Revert changes?"
+msgstr "Modificações no inventário"
+
 msgid "Revolutions per minute"
 msgstr "Revoluções por minuto"
 
@@ -44805,16 +44819,16 @@ msgstr "Robot Framework: Último registo de erros"
 msgid "Robot Framework: Last log"
 msgstr "Estrutura do robô: Último registo"
 
-#, fuzzy
-msgid "RobotMK (Windows)"
-msgstr "Registos do RobotMK"
-
 msgid "RobotMK logs"
 msgstr "Registos do RobotMK"
 
 #, fuzzy
 msgid "Robotmk"
 msgstr "Submeter relatório"
+
+#, fuzzy
+msgid "Robotmk (Windows)"
+msgstr "Registos do RobotMK"
 
 msgid "Role"
 msgstr "Papel"
@@ -45433,6 +45447,9 @@ msgstr "Taxa de sucesso dos SMS"
 msgid "SMT Threads"
 msgstr "Roscas SMT"
 
+msgid "SMTP"
+msgstr ""
+
 msgid "SMTP AUTH type to check (default none, only LOGIN supported)"
 msgstr ""
 "Tipo SMTP AUTH a verificar (por defeito nenhum, apenas suportado LOGIN)"
@@ -45446,14 +45463,15 @@ msgstr "Comandos SMTP"
 msgid "SMTP Responses"
 msgstr "Respostas SMTP"
 
-msgid "SMTP Server"
-msgstr "Servidor SMTP"
-
 msgid "SMTP TCP Port to connect to"
 msgstr "Porta TCP SMTP para ligação a"
 
 msgid "SMTP commands to execute."
 msgstr "Comandos SMTP a executar."
+
+#, fuzzy
+msgid "SMTP server"
+msgstr "Servidor SMTP"
 
 msgid "SNAT Consumption"
 msgstr "Consumo de SNAT"
@@ -49757,9 +49775,11 @@ msgid ""
 "get data from 'https://microsoftgraph.chinacloudapi.cn'</li></ul>"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Specify the destination path in the format <tt>Path/To/Folder</tt>, for "
-"example<tt>INBOX/Processed_Mails</tt>."
+"example <tt>INBOX/Processed_Mails</tt>. Note that the maximum depth of "
+"folder trees might be limited by your mail provider."
 msgstr ""
 "Especifique o caminho de destino no formato <tt>Path/To/Folder</tt>, por "
 "exemplo<tt>INBOX/Processed_Mails</tt>."
@@ -53591,11 +53611,12 @@ msgstr ""
 "<tt>$HOSTNAME$</tt> dentro desta URL para fazê-los ser substituídos pelos "
 "valores dos hosts."
 
+#, fuzzy
 msgid ""
-"The basic function of this check is to log in into an IMAP or POP3 mailbox "
-"to monitor whether or not the login is possible. A extended feature is, that "
-"the check can fetch all (or just some) from the mailbox and forward them as "
-"events to the Event Console."
+"The basic function of this check is to log in into an IMAP, POP3 or EWS "
+"mailbox to monitor whether or not the login is possible. An extended feature "
+"is, that the check can fetch all (or just some) from the mailbox and forward "
+"them as events to the Event Console."
 msgstr ""
 "A função básica desta verificação é fazer login em uma caixa de correio IMAP "
 "ou POP3 para monitorar se o login é ou não possível. Uma característica "
@@ -55466,9 +55487,6 @@ msgstr ""
 "O número de inodos restantes no sistema de arquivos. Note que esta "
 "configuração não tem efeito em algumas verificações do sistema de arquivos."
 
-msgid "The number of replication failures"
-msgstr "O número de falhas de replicação"
-
 #, fuzzy
 msgid ""
 "The number of seconds a cache file may be old if check_mk should use it "
@@ -55769,10 +55787,6 @@ msgid ""
 msgstr ""
 "O espaço reservado <tt>\\0</tt> será substituído pelo texto original. Isto "
 "permite adicionar novas informações na frente ou no final. "
-
-#, fuzzy, python-format
-msgid "The plugin '%s' is not a valid notification plugin."
-msgstr "O timeout %s não é um número inteiro válido."
 
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
@@ -57491,11 +57505,12 @@ msgstr ""
 "criptografado (nesse caso, você também precisa redefinir o controlador do "
 "agente no host monitorado (consulte a `cmk-agent-ctl help`).</li></ul>"
 
+#, fuzzy
 msgid ""
-"This active check sends out special E-Mails to a defined mail address using "
-"the SMTP protocol and then tries to receive these mails back by querying the "
-"inbox of a IMAP or POP3 mailbox. With this check you can verify that your "
-"whole mail delivery progress is working."
+"This active check sends out special emails to a defined mail address using "
+"either the SMTP protocol or an EWS connection and then tries to receive "
+"these mails back by querying the inbox of an IMAP, POP3 or EWS mailbox. With "
+"this check you can verify that your whole mail delivery progress is working."
 msgstr ""
 "Esta verificação ativa envia e-mails especiais para um endereço de e-mail "
 "definido usando o protocolo SMTP e depois tenta receber esses e-mails de "
@@ -64450,6 +64465,10 @@ msgstr "Níveis superiores para o número de fechaduras"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Níveis superiores para o número de áreas de trabalho registadas"
+
+#, fuzzy
+msgid "Upper levels for the number of replication failures"
+msgstr "Níveis superiores para o número de sessões"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr ""
@@ -72888,6 +72907,29 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Add host to the monitoring"
+#~ msgid "Adds RobotMK monitoring"
+#~ msgstr "Adicionar o anfitrião ao monitoramento"
+
+#, fuzzy
+#~| msgid "Do you really want to delete the folder %s?"
+#~ msgid "Do you really want revert the following changes?"
+#~ msgstr "Você realmente quer apagar a pasta %s?"
+
+#, fuzzy
+#~| msgid "Folder does not exist"
+#~ msgid "Plugin doesn't exist"
+#~ msgstr "A pasta não existe"
+
+#~ msgid "The number of replication failures"
+#~ msgstr "O número de falhas de replicação"
+
+#, fuzzy, python-format
+#~| msgid "The timeout %s is not a valid integer number."
+#~ msgid "The plugin '%s' is not a valid notification plugin."
+#~ msgstr "O timeout %s não é um número inteiro válido."
 
 #~ msgid "Path to .env file"
 #~ msgstr "Caminho para o arquivo .env"

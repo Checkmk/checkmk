@@ -127,6 +127,11 @@ msgid ""
 msgstr ""
 " Textul va fi înfășurat automat. O linie goală va începe un nou paragraf."
 
+msgid ""
+" This also includes any changes made since the last activation that did not "
+"require manual activation (marked with "
+msgstr ""
+
 #, python-format
 msgid " and %s '%s'"
 msgstr " și %s '%s'"
@@ -4187,10 +4192,6 @@ msgstr ""
 "punctului specifică octetul care trebuie recuperat, iar numărul de după "
 "punct specifică bitul care trebuie recuperat. Numărul bitului este "
 "întotdeauna cuprins între 0 și 7."
-
-#, fuzzy
-msgid "Adds RobotMK monitoring"
-msgstr "Adăugați gazda la monitorizare"
 
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
@@ -16004,7 +16005,7 @@ msgid "Deploy Remote Desktop Licenses plugin"
 msgstr "Implementarea pluginului Licențe pentru desktop la distanță"
 
 #, fuzzy
-msgid "Deploy RobotMK monitoring"
+msgid "Deploy Robotmk"
 msgstr "Nu monitorizați"
 
 msgid "Deploy SMART plugin"
@@ -17429,7 +17430,7 @@ msgid "Do not deploy Remote Desktop Licenses plugin"
 msgstr "Nu implementați pluginul Licențe pentru desktop la distanță"
 
 #, fuzzy
-msgid "Do not deploy RobotMK monitoring"
+msgid "Do not deploy Robotmk"
 msgstr "Nu implementați extensia StorCLI"
 
 msgid "Do not deploy SMART plugin"
@@ -17793,10 +17794,6 @@ msgstr "Faceți acest lucru în mod recursiv"
 
 msgid "Do transfer context"
 msgstr "Transferați contextul"
-
-#, fuzzy
-msgid "Do you really want revert the following changes?"
-msgstr "O agregare legată de un singur element"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Chiar doriți să mutați agregările selectate?"
@@ -20430,6 +20427,10 @@ msgstr "Răspunsuri DNS așteptate"
 
 msgid "Expected String"
 msgstr "Șirul așteptat"
+
+#, fuzzy
+msgid "Expected active paths"
+msgstr "Numărul preconizat de trasee active"
 
 msgid "Expected autoextend setting"
 msgstr "Setarea de extindere automată preconizată"
@@ -28692,6 +28693,10 @@ msgstr "Regulile serviciului InfluxDB"
 msgid "Info"
 msgstr "Informații"
 
+#, fuzzy
+msgid "Info:"
+msgstr "Informații"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -32989,9 +32994,6 @@ msgstr ""
 msgid "Magnetic volumes space"
 msgstr "Spațiul volumelor magnetice"
 
-msgid "Mail Receiving"
-msgstr "Primirea corespondenței"
-
 #, python-format
 msgid "Mail could not be delivered. Exit code of command is %r. Output is: %s"
 msgstr ""
@@ -33008,6 +33010,14 @@ msgstr "Latența corespondenței"
 
 msgid "Mail queue name"
 msgstr "Numele cozii de corespondență"
+
+#, fuzzy
+msgid "Mail receiving"
+msgstr "Primirea corespondenței"
+
+#, fuzzy
+msgid "Mail sending"
+msgstr "Cheltuieli pentru SMS"
 
 msgid "Mailman mailing lists queues (Linux)"
 msgstr "Mailman listele de corespondență cozi (Linux)"
@@ -36342,6 +36352,10 @@ msgstr "Verificări în rețea fără agent"
 
 msgid "Networks"
 msgstr "Rețele"
+
+#, fuzzy
+msgid "Never"
+msgstr "(niciodată)"
 
 msgid "Never analyzed/vacuumed tables"
 msgstr "Mesele nu au fost niciodată analizate/vacuate"
@@ -41702,10 +41716,6 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nume Plugin"
 
-#, fuzzy
-msgid "Plugin doesn't exist"
-msgstr "Dosarul nu există"
-
 msgid "Plugin file pattern"
 msgstr "Model de fișier plug-in"
 
@@ -45057,6 +45067,10 @@ msgstr "Timpii de procesare a returului în cadrul datelor de performanță"
 msgid "Revert changes"
 msgstr "Modificări ale stocurilor"
 
+#, fuzzy
+msgid "Revert changes?"
+msgstr "Modificări ale stocurilor"
+
 msgid "Revolutions per minute"
 msgstr "Rotații pe minut"
 
@@ -45103,16 +45117,16 @@ msgstr "Cadrul robotului: Ultimul jurnal de erori"
 msgid "Robot Framework: Last log"
 msgstr "Cadrul robotului: Ultimul jurnal"
 
-#, fuzzy
-msgid "RobotMK (Windows)"
-msgstr "Jurnalele RobotMK"
-
 msgid "RobotMK logs"
 msgstr "Jurnalele RobotMK"
 
 #, fuzzy
 msgid "Robotmk"
 msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Robotmk (Windows)"
+msgstr "Jurnalele RobotMK"
 
 msgid "Role"
 msgstr "Rol"
@@ -45732,6 +45746,9 @@ msgstr "Rata de succes a SMS-urilor"
 msgid "SMT Threads"
 msgstr "Fire SMT"
 
+msgid "SMTP"
+msgstr ""
+
 msgid "SMTP AUTH type to check (default none, only LOGIN supported)"
 msgstr ""
 "Tipul SMTP AUTH de verificat (implicit niciunul, este acceptat doar LOGIN)"
@@ -45745,14 +45762,15 @@ msgstr "Comenzi SMTP"
 msgid "SMTP Responses"
 msgstr "Răspunsuri SMTP"
 
-msgid "SMTP Server"
-msgstr "Server SMTP"
-
 msgid "SMTP TCP Port to connect to"
 msgstr "Portul SMTP TCP la care să se conecteze"
 
 msgid "SMTP commands to execute."
 msgstr "Comenzile SMTP care urmează să fie executate."
+
+#, fuzzy
+msgid "SMTP server"
+msgstr "Server SMTP"
 
 msgid "SNAT Consumption"
 msgstr "Consumul de SNAT"
@@ -50114,9 +50132,11 @@ msgid ""
 "get data from 'https://microsoftgraph.chinacloudapi.cn'</li></ul>"
 msgstr ""
 
+#, fuzzy
 msgid ""
 "Specify the destination path in the format <tt>Path/To/Folder</tt>, for "
-"example<tt>INBOX/Processed_Mails</tt>."
+"example <tt>INBOX/Processed_Mails</tt>. Note that the maximum depth of "
+"folder trees might be limited by your mail provider."
 msgstr ""
 "Specificați calea de destinație în formatul <tt>Path/To/Folder</tt>, de "
 "exemplu<tt>INBOX/Processed_Mails</tt>."
@@ -53981,11 +54001,12 @@ msgstr ""
 "tt> și <tt>$HOSTNAME$</tt> în cadrul acestui URL pentru a face ca acestea să "
 "fie înlocuite cu valorile gazdelor."
 
+#, fuzzy
 msgid ""
-"The basic function of this check is to log in into an IMAP or POP3 mailbox "
-"to monitor whether or not the login is possible. A extended feature is, that "
-"the check can fetch all (or just some) from the mailbox and forward them as "
-"events to the Event Console."
+"The basic function of this check is to log in into an IMAP, POP3 or EWS "
+"mailbox to monitor whether or not the login is possible. An extended feature "
+"is, that the check can fetch all (or just some) from the mailbox and forward "
+"them as events to the Event Console."
 msgstr ""
 "Funcția de bază a acestei verificări este de a se conecta la o căsuță "
 "poștală IMAP sau POP3 pentru a monitoriza dacă este posibilă sau nu "
@@ -55877,9 +55898,6 @@ msgstr ""
 "această setare nu are niciun efect asupra unor verificări ale sistemului de "
 "fișiere."
 
-msgid "The number of replication failures"
-msgstr "Numărul de eșecuri de replicare"
-
 #, fuzzy
 msgid ""
 "The number of seconds a cache file may be old if check_mk should use it "
@@ -56181,10 +56199,6 @@ msgid ""
 msgstr ""
 "Marca de poziție <tt>\\0</tt> va fi înlocuită cu textul original. Acest "
 "lucru vă permite să adăugați informații noi în față sau la sfârșit. "
-
-#, fuzzy, python-format
-msgid "The plugin '%s' is not a valid notification plugin."
-msgstr "Timpul de așteptare %s nu este un număr întreg valid."
 
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
@@ -57921,11 +57935,12 @@ msgstr ""
 "agentului de pe gazda monitorizată (consultați `cmk-agent-ctl help`).</li></"
 "ul>"
 
+#, fuzzy
 msgid ""
-"This active check sends out special E-Mails to a defined mail address using "
-"the SMTP protocol and then tries to receive these mails back by querying the "
-"inbox of a IMAP or POP3 mailbox. With this check you can verify that your "
-"whole mail delivery progress is working."
+"This active check sends out special emails to a defined mail address using "
+"either the SMTP protocol or an EWS connection and then tries to receive "
+"these mails back by querying the inbox of an IMAP, POP3 or EWS mailbox. With "
+"this check you can verify that your whole mail delivery progress is working."
 msgstr ""
 "Această verificare activă trimite e-mailuri speciale la o adresă de e-mail "
 "definită folosind protocolul SMTP și apoi încearcă să primească înapoi "
@@ -64961,6 +64976,10 @@ msgstr "Niveluri superioare pentru numărul de încuietori"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Niveluri superioare pentru numărul de birouri înregistrate"
+
+#, fuzzy
+msgid "Upper levels for the number of replication failures"
+msgstr "Niveluri superioare pentru numărul de sesiuni"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr ""
@@ -73502,6 +73521,28 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, fuzzy
+#~| msgid "Add host to the monitoring"
+#~ msgid "Adds RobotMK monitoring"
+#~ msgstr "Adăugați gazda la monitorizare"
+
+#, fuzzy
+#~ msgid "Do you really want revert the following changes?"
+#~ msgstr "O agregare legată de un singur element"
+
+#, fuzzy
+#~| msgid "Folder does not exist"
+#~ msgid "Plugin doesn't exist"
+#~ msgstr "Dosarul nu există"
+
+#~ msgid "The number of replication failures"
+#~ msgstr "Numărul de eșecuri de replicare"
+
+#, fuzzy, python-format
+#~| msgid "The timeout %s is not a valid integer number."
+#~ msgid "The plugin '%s' is not a valid notification plugin."
+#~ msgstr "Timpul de așteptare %s nu este un număr întreg valid."
 
 #~ msgid "Path to .env file"
 #~ msgstr "Calea către fișierul .env"

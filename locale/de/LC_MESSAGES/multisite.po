@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-10-11 17:25+0000\n"
+"PO-Revision-Date: 2023-10-20 06:00+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -126,6 +126,14 @@ msgid ""
 msgstr ""
 " Der Text wird automatisch umgebrochen. Eine leere Zeile beginnt einen neuen "
 "Absatz."
+
+msgid ""
+" This also includes any changes made since the last activation that did not "
+"require manual activation (marked with "
+msgstr ""
+" Dazu zählen auch alle Änderungen, die seit der letzten Aktivierung "
+"vorgenommen wurden und keine manuelle Aktivierung erforderten "
+"(gekennzeichnet mit "
 
 #, python-format
 msgid " and %s '%s'"
@@ -4175,9 +4183,6 @@ msgstr ""
 "Adressen werden mit einer Punkt-Notation geschrieben, wobei die Nummer vor "
 "dem Punkt das Byte und die nach dem Punkt das Bit nennt, welches geholt "
 "werden soll. Die Nummer des Bits liegt immer zwischen 0 und 7."
-
-msgid "Adds RobotMK monitoring"
-msgstr "Fügt Robotmk-Monitoring hinzu"
 
 msgid ""
 "Adds a headless version of the OpenHardwareMonitor to the windows agent. The "
@@ -15857,8 +15862,8 @@ msgstr "OpenHardwareMonitor (GUI-los) ausrollen"
 msgid "Deploy Remote Desktop Licenses plugin"
 msgstr "Remote Desktop Lizenzen Plugin ausrollen"
 
-msgid "Deploy RobotMK monitoring"
-msgstr "Robotmk-Monitoring verteilen"
+msgid "Deploy Robotmk"
+msgstr "Robotmk verteilen"
 
 msgid "Deploy SMART plugin"
 msgstr "Das SMART Plugin ausrollen"
@@ -17275,8 +17280,8 @@ msgstr "OpenHardwareMonitor (ohne GUI) nicht ausrollen"
 msgid "Do not deploy Remote Desktop Licenses plugin"
 msgstr "Remote Desktop Lizenzen Plugin nicht ausrollen"
 
-msgid "Do not deploy RobotMK monitoring"
-msgstr "Robotmk-Monitoring nicht verteilen"
+msgid "Do not deploy Robotmk"
+msgstr "Robotmk nicht verteilen"
 
 msgid "Do not deploy SMART plugin"
 msgstr "Das SMART Plugin nicht ausrollen"
@@ -17636,9 +17641,6 @@ msgstr "Führe rekursiv aus"
 
 msgid "Do transfer context"
 msgstr "Kontext übermitteln"
-
-msgid "Do you really want revert the following changes?"
-msgstr "Wollen Sie die folgenden Änderungen wirklich rückgängig machen?"
 
 msgid "Do you really want to move the selected aggregations?"
 msgstr "Wollen Sie die ausgewählten Aggregationen wirklich verschieben?"
@@ -20252,6 +20254,9 @@ msgstr "Erwartete DNS-Antworten"
 
 msgid "Expected String"
 msgstr "Erwartete Zeichenkette"
+
+msgid "Expected active paths"
+msgstr "Erwartete aktive Pfade"
 
 msgid "Expected autoextend setting"
 msgstr "Erwarteter Pfadzustand"
@@ -28446,6 +28451,9 @@ msgstr "InfluxDB Service-Regeln"
 msgid "Info"
 msgstr "Info"
 
+msgid "Info:"
+msgstr "Info:"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -32694,9 +32702,6 @@ msgstr ""
 msgid "Magnetic volumes space"
 msgstr "Magnetischer Datenträgerplatz"
 
-msgid "Mail Receiving"
-msgstr "Emailempfang"
-
 #, python-format
 msgid "Mail could not be delivered. Exit code of command is %r. Output is: %s"
 msgstr ""
@@ -32714,6 +32719,12 @@ msgstr "Emaillatenz"
 
 msgid "Mail queue name"
 msgstr "Mailschlangen-Namen"
+
+msgid "Mail receiving"
+msgstr "E-Mailempfang"
+
+msgid "Mail sending"
+msgstr "E-Mailversand"
 
 msgid "Mailman mailing lists queues (Linux)"
 msgstr "Mailmain Mailinglisten-Schlangen (Linux)"
@@ -36007,6 +36018,10 @@ msgstr "Netzwerkchecks ohne Agent"
 
 msgid "Networks"
 msgstr "Netzwerke"
+
+#, fuzzy
+msgid "Never"
+msgstr "(nie)"
 
 msgid "Never analyzed/vacuumed tables"
 msgstr "Niemals ausgewertete/vakuumierte Tabellen"
@@ -41306,9 +41321,6 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Pluginname"
 
-msgid "Plugin doesn't exist"
-msgstr "Plugin existiert nicht"
-
 msgid "Plugin file pattern"
 msgstr "Plugin-Dateimuster"
 
@@ -44618,6 +44630,9 @@ msgstr "Zeige Ausführungszeiten innerhalb der Leistungsdaten"
 msgid "Revert changes"
 msgstr "Änderungen rückgängig machen"
 
+msgid "Revert changes?"
+msgstr "Änderungen rückgängig machen?"
+
 msgid "Revolutions per minute"
 msgstr "Umdrehungen pro Minute"
 
@@ -44664,14 +44679,14 @@ msgstr "Robot-Framework: Letztes Fehlerprotokoll"
 msgid "Robot Framework: Last log"
 msgstr "Robot-Framework: Letztes Protokoll"
 
-msgid "RobotMK (Windows)"
-msgstr "Robotmk (Windows)"
-
 msgid "RobotMK logs"
 msgstr "Robotmk-Protokolle"
 
 msgid "Robotmk"
 msgstr "Robotmk"
+
+msgid "Robotmk (Windows)"
+msgstr "Robotmk (Windows)"
 
 msgid "Role"
 msgstr "Rolle"
@@ -45287,6 +45302,9 @@ msgstr "SMS-Erfolgsrate"
 msgid "SMT Threads"
 msgstr "SMT Threads"
 
+msgid "SMTP"
+msgstr "SMTP"
+
 msgid "SMTP AUTH type to check (default none, only LOGIN supported)"
 msgstr "SMTP AUTH Typ prüfen (Standard: kein, nur LOGIN unterstützt)"
 
@@ -45299,14 +45317,14 @@ msgstr "SMTP Befehle"
 msgid "SMTP Responses"
 msgstr "SMTP Antworten"
 
-msgid "SMTP Server"
-msgstr "SMTP-Server"
-
 msgid "SMTP TCP Port to connect to"
 msgstr "TCP-Port für die SMTP-Verbindung"
 
 msgid "SMTP commands to execute."
 msgstr "SMTP Befehle ausführen."
+
+msgid "SMTP server"
+msgstr "SMTP-Server"
 
 msgid "SNAT Consumption"
 msgstr "SNAT Verbrauch"
@@ -49598,10 +49616,12 @@ msgstr ""
 
 msgid ""
 "Specify the destination path in the format <tt>Path/To/Folder</tt>, for "
-"example<tt>INBOX/Processed_Mails</tt>."
+"example <tt>INBOX/Processed_Mails</tt>. Note that the maximum depth of "
+"folder trees might be limited by your mail provider."
 msgstr ""
 "Geben Sie den Zielpfad im Format <tt>Pfad/Zum/Ordner</tt> an, z.B. <tt>INBOX/"
-"Processed_mails</tt>."
+"Processed_mails</tt>. Beachten Sie, dass die maximale Tiefe der Ordnerbäume "
+"von Ihrem E-Mail-Anbieter begrenzt sein kann."
 
 msgid ""
 "Specify the distinguished name to be used to bind to the LDAP directory, e. "
@@ -53400,15 +53420,16 @@ msgstr ""
 "Hosts ersetzt werden."
 
 msgid ""
-"The basic function of this check is to log in into an IMAP or POP3 mailbox "
-"to monitor whether or not the login is possible. A extended feature is, that "
-"the check can fetch all (or just some) from the mailbox and forward them as "
-"events to the Event Console."
+"The basic function of this check is to log in into an IMAP, POP3 or EWS "
+"mailbox to monitor whether or not the login is possible. An extended feature "
+"is, that the check can fetch all (or just some) from the mailbox and forward "
+"them as events to the Event Console."
 msgstr ""
-"Die Grundfunktion dieses Checks ist der Test, ob das Anmelden an einem IMAP- "
-"oder POP3-Postfach funktioniert. Darüber hinaus kann der Check einige oder "
-"alle Emails aus dem Postfach auslegen und für eine weitere Verarbeitung an "
-"die Event Console weitergeben."
+"Die Grundfunktion dieses Checks besteht darin, sich in ein IMAP-, POP3- oder "
+"EWS-Postfach einzuloggen, um zu überprüfen, ob die Anmeldung möglich ist "
+"oder nicht. Eine erweiterte Funktion ist, dass der Check alle (oder nur "
+"einige) Nachrichten aus der Mailbox holen kann und sie als Ereignisse an die "
+"Event Console weiterleitet."
 
 msgid ""
 "The battery capacity in percent at and below which a critical state is "
@@ -55293,9 +55314,6 @@ msgstr ""
 "Die Anzahl der im Dateisystem verfügbaren Inodes. Auf manchen Dateiesystemen "
 "ist diese Einstellung bedeutungslos."
 
-msgid "The number of replication failures"
-msgstr "Anzahl von Replikations-Fehlern"
-
 msgid ""
 "The number of seconds a cache file may be old if check_mk should use it "
 "instead of getting information from the target hosts while checking a "
@@ -55597,10 +55615,6 @@ msgid ""
 msgstr ""
 "Der Platzhalter <tt>\\0</tt> wird durch den ursprünglichen Text ersetzt. "
 "Damit können Sie am Anfang oder am Ende Ergänzungen hinzufügen. "
-
-#, python-format
-msgid "The plugin '%s' is not a valid notification plugin."
-msgstr "Das Plugin '%s' ist kein gültiges Benachrichtigungs-Plugin."
 
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
@@ -57323,16 +57337,16 @@ msgstr ""
 "`cmk-agent-ctl help`).</li></ul>"
 
 msgid ""
-"This active check sends out special E-Mails to a defined mail address using "
-"the SMTP protocol and then tries to receive these mails back by querying the "
-"inbox of a IMAP or POP3 mailbox. With this check you can verify that your "
-"whole mail delivery progress is working."
+"This active check sends out special emails to a defined mail address using "
+"either the SMTP protocol or an EWS connection and then tries to receive "
+"these mails back by querying the inbox of an IMAP, POP3 or EWS mailbox. With "
+"this check you can verify that your whole mail delivery progress is working."
 msgstr ""
-"Diese aktive Check versendet spezielle Emails an eine von Ihnen festgelegte "
-"Adresse via SMTP. Die Zieladresse muss ein Mail-Echo sein, dass die Email an "
-"den Absender zurücksendet. Der Check versucht dann, aus einem IMAP oder POP3-"
-"Postfach die Antwort auszulesen. Auf dieser Art können Sie die komplette "
-"Schleife von Email Senden und Empfangen testen."
+"Dieser aktive Check sendet spezielle E-Mails an eine definierte Mailadresse "
+"entweder über das SMTP-Protokoll oder eine EWS-Verbindung und versucht dann, "
+"diese E-Mails durch Abfrage des Posteingangs eines IMAP-, POP3- oder EWS-"
+"Postfachs zurückzubekommen. Mit diesem Check können Sie überprüfen, ob Ihr "
+"gesamter Mail-Zustellungsprozess funktioniert."
 
 msgid ""
 "This active check uses <tt>traceroute</tt> in order to determine the current "
@@ -64298,6 +64312,9 @@ msgstr "Obergrenzen für die Anzahl der Sperren"
 
 msgid "Upper levels for the number of registered desktops"
 msgstr "Obergrenze für die Anzahl der registrierten Desktops"
+
+msgid "Upper levels for the number of replication failures"
+msgstr "Obere Schwellwerte für die Anzahl an Replikationsfehlern"
 
 msgid "Upper levels for the number of requests that were rejected (spillover)"
 msgstr "Obere Schwellwerte für die Anzahl der abgelehnten Anfragen (Spillover)"
@@ -72750,6 +72767,22 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Adds RobotMK monitoring"
+#~ msgstr "Fügt Robotmk-Monitoring hinzu"
+
+#~ msgid "Do you really want revert the following changes?"
+#~ msgstr "Wollen Sie die folgenden Änderungen wirklich rückgängig machen?"
+
+#~ msgid "Plugin doesn't exist"
+#~ msgstr "Plugin existiert nicht"
+
+#~ msgid "The number of replication failures"
+#~ msgstr "Anzahl von Replikations-Fehlern"
+
+#, python-format
+#~ msgid "The plugin '%s' is not a valid notification plugin."
+#~ msgstr "Das Plugin '%s' ist kein gültiges Benachrichtigungs-Plugin."
 
 #~ msgid "Path to .env file"
 #~ msgstr "Pfad zur .env-Datei"

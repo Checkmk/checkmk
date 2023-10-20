@@ -128,16 +128,20 @@ class CertificateWithPrivateKey(NamedTuple):
         """Generate an RSA private key and create a self-signed certificated for it."""
 
         private_key = RsaPrivateKey.generate(key_size)
+        name = X509Name.create(
+            common_name=common_name,
+            organization_name=organization or f"Checkmk Site {omd_site()}",
+            organizational_unit=organizational_unit_name,
+        )
         certificate = Certificate._create(
-            private_key.public_key,
-            private_key,
-            common_name,
-            organization or f"Checkmk Site {omd_site()}",
-            expiry,
-            start_date=start_date or Certificate._naive_utcnow(),
-            organizational_unit_name=organizational_unit_name,
+            subject_public_key=private_key.public_key,
+            subject_name=name,
             subject_alt_dns_names=subject_alt_dns_names,
+            expiry=expiry,
+            start_date=start_date or Certificate._naive_utcnow(),
             is_ca=is_ca,
+            issuer_signing_key=private_key,
+            issuer_name=name,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -285,46 +289,35 @@ class Certificate:
     @classmethod
     def _create(
         cls,
-        public_key: RsaPublicKey,
-        signing_key: RsaPrivateKey,
-        common_name: str,
-        organization: str,
+        *,
+        # subject info
+        subject_public_key: RsaPublicKey,
+        subject_name: X509Name,
+        subject_alt_dns_names: list[str] | None = None,
+        # cert properties
         expiry: relativedelta,
         start_date: datetime,
-        organizational_unit_name: str | None = None,
-        subject_alt_dns_names: list[str] | None = None,
         is_ca: bool = False,
+        # issuer info
+        issuer_signing_key: RsaPrivateKey,
+        issuer_name: X509Name,
     ) -> Certificate:
         """
-        Internal method currently only useful for `CertificateWithPrivateKey.generate_self_signed`
-
-        The reason is that extensions and key usages are hard-coded in a way only appropriate for
-        self-signed certificates.
+        Internal method to create a new certificate. It makes a lot of assumptions about how our
+        certificates are used and is not suitable for general use.
         """
         assert not Certificate._is_timezone_aware(
             start_date
         ), "Certificate expiry must use naive datetimes"
 
-        name_attrs = [
-            x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
-            x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
-        ]
-        if organizational_unit_name is not None:
-            name_attrs.append(
-                x509.NameAttribute(
-                    x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit_name
-                )
-            )
-        name = x509.Name(name_attrs)
-
         builder = (
             x509.CertificateBuilder()
-            .subject_name(name)
-            .issuer_name(name)
+            .subject_name(subject_name._name)
+            .issuer_name(issuer_name._name)
             .not_valid_before(start_date)
             .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
-            .public_key(public_key._key)
+            .public_key(subject_public_key._key)
         )
 
         # RFC 5280 4.2.1.9.  Basic Constraints
@@ -332,11 +325,11 @@ class Certificate:
         builder = builder.add_extension(basic_constraints, critical=True)
 
         # RFC 5280 4.2.1.2.  Subject Key Identifier
+        #     this extension MUST appear in all conforming CA certificates
+        #     ...
         #     this extension SHOULD be included in all end entity certificates
-        #
-        # ... which is all our certs since we don't build any chains at the moment
         builder = builder.add_extension(
-            x509.SubjectKeyIdentifier.from_public_key(public_key._key), critical=False
+            x509.SubjectKeyIdentifier.from_public_key(subject_public_key._key), critical=False
         )
 
         # RFC 5280 4.2.1.9.  Key Usage
@@ -346,6 +339,7 @@ class Certificate:
         # RFC 3279 2.3 and other links in RFC 5280 4.2.1.9. before enabling more usages.
         builder = builder.add_extension(
             x509.KeyUsage(
+                # TODO: we need digital_signature for TLS
                 digital_signature=not is_ca,  # signing data
                 content_commitment=False,  # aka non_repudiation
                 key_encipherment=False,
@@ -366,7 +360,7 @@ class Certificate:
             )
 
         return Certificate(
-            builder.sign(private_key=signing_key._key, algorithm=HashAlgorithm.Sha512.value)
+            builder.sign(private_key=issuer_signing_key._key, algorithm=HashAlgorithm.Sha512.value)
         )
 
     @classmethod
@@ -403,11 +397,11 @@ class Certificate:
 
     @property
     def common_name(self) -> str:
-        return self._get_name_attribute(x509.oid.NameOID.COMMON_NAME)
+        return self._get_name_attribute(self._cert.subject, x509.oid.NameOID.COMMON_NAME)
 
     @property
     def organization_name(self) -> str:
-        return self._get_name_attribute(x509.oid.NameOID.ORGANIZATION_NAME)
+        return self._get_name_attribute(self._cert.subject, x509.oid.NameOID.ORGANIZATION_NAME)
 
     @property
     def not_valid_before(self) -> datetime:
@@ -432,7 +426,7 @@ class Certificate:
 
         We assume the signature is made with PKCS1 v1.5 padding, as this is the only scheme
         cryptography.io supports for X.509 certificates (see `RsaPublicKey.verify`). This is true
-        for certificates created with `Certificate.create`, but might not be true for certificates
+        for certificates created with `Certificate._create`, but might not be true for certificates
         loaded from elsewhere.
         """
 
@@ -526,14 +520,6 @@ class Certificate:
         """
         return (self._cert.not_valid_after - datetime.now()).days
 
-    def _get_name_attribute(self, attribute: x509.ObjectIdentifier) -> str:
-        attr = self._cert.subject.get_attributes_for_oid(attribute)
-        if (count := len(attr)) != 1:
-            raise ValueError(
-                f"Expected to find exactly one attribute for identifier {attribute}, found {count}"
-            )
-        return attr[0].value
-
     def fingerprint(self, algorithm: HashAlgorithm) -> bytes:
         """return the fingerprint
 
@@ -566,6 +552,15 @@ class Certificate:
         assert all(isinstance(x, str) for x in sans)
         # Well look at that assert...
         return sans  # type: ignore[no-any-return]
+
+    @staticmethod
+    def _get_name_attribute(name: x509.Name, attribute: x509.ObjectIdentifier) -> str:
+        attr = name.get_attributes_for_oid(attribute)
+        if (count := len(attr)) != 1:
+            raise ValueError(
+                f"Expected to find exactly one attribute for identifier {attribute}, found {count}"
+            )
+        return attr[0].value
 
     @staticmethod
     def _is_timezone_aware(dt: datetime) -> bool:
@@ -764,3 +759,33 @@ class RsaPublicKey:
             self._key.verify(signature, message, padding_scheme, digest_algorithm.value)
         except cryptography.exceptions.InvalidSignature as e:
             raise InvalidSignatureError(e) from e
+
+
+class X509Name:
+    """Thin wrapper for X509 Name objects"""
+
+    def __init__(self, name: x509.Name) -> None:
+        self._name = name
+
+    @classmethod
+    def create(
+        cls,
+        *,
+        common_name: str,
+        organization_name: str | None = None,
+        organizational_unit: str | None = None,
+    ) -> X509Name:
+        if common_name == "":
+            raise ValueError("common name must not be empty")
+
+        attributes = [x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name)]
+        if organization_name is not None:
+            attributes.append(
+                x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization_name)
+            )
+        if organizational_unit is not None:
+            attributes.append(
+                x509.NameAttribute(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
+            )
+
+        return X509Name(x509.Name(attributes))

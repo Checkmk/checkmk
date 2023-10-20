@@ -262,6 +262,7 @@ class CMKFetcher:
         ]
     ]:
         nodes = self.config_cache.nodes_of(host_name)
+        hosts_config = self.config_cache.hosts_config
         if nodes is None:
             # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
             # address is unknown). When called as non keepalive ipaddress may be None or
@@ -279,6 +280,7 @@ class CMKFetcher:
                     ip_address_,
                     ConfigCache.address_family(host_name_),
                     config_cache=self.config_cache,
+                    is_cluster=host_name in hosts_config.clusters,
                     force_snmp_cache_refresh=(
                         self.force_snmp_cache_refresh if nodes is None else False
                     ),

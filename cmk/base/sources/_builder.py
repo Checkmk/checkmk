@@ -110,6 +110,7 @@ class _Builder:
         *,
         simulation_mode: bool,
         config_cache: ConfigCache,
+        is_cluster: bool,
         selected_sections: SectionNameCollection,
         on_scan_error: OnError,
         max_age_agent: MaxAge,
@@ -117,6 +118,8 @@ class _Builder:
         snmp_backend_override: SNMPBackendEnum | None,
     ) -> None:
         super().__init__()
+        assert not is_cluster
+
         self.host_name: Final = host_name
         self.config_cache: Final = config_cache
         self.ipaddress: Final = ipaddress
@@ -128,7 +131,6 @@ class _Builder:
         self.max_age_snmp: Final = max_age_snmp
         self.snmp_backend_override: Final = snmp_backend_override
 
-        assert host_name not in self.config_cache.hosts_config.clusters
         self._elems: dict[str, Source] = {}
         self._initialize_agent_based()
 
@@ -356,6 +358,7 @@ def make_sources(
     address_family: AddressFamily,
     *,
     config_cache: ConfigCache,
+    is_cluster: bool,
     force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
@@ -365,7 +368,7 @@ def make_sources(
     snmp_backend_override: SNMPBackendEnum | None,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
-    if host_name in config_cache.hosts_config.clusters:
+    if is_cluster:
         # Cluster hosts do not have any actual data sources
         # Instead all data is provided by the nodes
         return ()
@@ -392,6 +395,7 @@ def make_sources(
         address_family,
         simulation_mode=simulation_mode,
         config_cache=config_cache,
+        is_cluster=is_cluster,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
         max_age_agent=max_age_agent(),

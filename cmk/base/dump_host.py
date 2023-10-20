@@ -8,7 +8,7 @@ import time
 
 import cmk.utils.render
 import cmk.utils.tty as tty
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.paths import tmp_dir
 from cmk.utils.timeperiod import timeperiod_active
 
@@ -101,7 +101,8 @@ def _agent_description(config_cache: ConfigCache, host_name: HostName) -> str:
 def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     # pylint: disable=too-many-branches
     out.output("\n")
-    if hostname in config_cache.hosts_config.clusters:
+    hosts_config = config_cache.hosts_config
+    if hostname in hosts_config.clusters:
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise RuntimeError()
@@ -113,7 +114,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
     ipaddress = _ip_address_for_dump_host(
-        config_cache, hostname, family=config_cache.default_address_family(hostname)
+        config_cache, hosts_config, hostname, family=config_cache.default_address_family(hostname)
     )
 
     addresses: str | None = ""
@@ -124,6 +125,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             secondary = str(
                 _ip_address_for_dump_host(
                     config_cache,
+                    hosts_config,
                     hostname,
                     family=config_cache.default_address_family(hostname),
                 )
@@ -152,7 +154,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
     labels = [tag_template % ":".join(l) for l in sorted(config_cache.labels(hostname).items())]
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
-    if hostname in config_cache.hosts_config.clusters:
+    if hostname in hosts_config.clusters:
         parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:
             raise RuntimeError()
@@ -183,6 +185,7 @@ def dump_host(config_cache: ConfigCache, hostname: HostName) -> None:
             hostname,
             ipaddress,
             ConfigCache.address_family(hostname),
+            is_cluster=hostname in hosts_config.clusters,
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
@@ -238,6 +241,7 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
 
 def _ip_address_for_dump_host(
     config_cache: ConfigCache,
+    hosts_config: Hosts,
     host_name: HostName,
     *,
     family: socket.AddressFamily,
@@ -247,6 +251,6 @@ def _ip_address_for_dump_host(
     except Exception:
         return (
             HostAddress("")
-            if host_name in config_cache.hosts_config.clusters
+            if host_name in hosts_config.clusters
             else ip_lookup.fallback_ip_for(family)
         )

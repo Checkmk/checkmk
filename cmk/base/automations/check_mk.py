@@ -1921,6 +1921,7 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: float | None,
         file_cache_options: FileCacheOptions,
     ) -> tuple[int, str]:
+        hosts_config = config_cache.hosts_config
         check_interval = config_cache.check_mk_check_interval(host_name)
         state, output = 0, ""
         for source in sources.make_sources(
@@ -1928,6 +1929,7 @@ class AutomationDiagHost(Automation):
             ipaddress,
             ConfigCache.address_family(host_name),
             config_cache=config_cache,
+            is_cluster=host_name in hosts_config.clusters,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
@@ -2286,6 +2288,7 @@ class AutomationGetAgentOutput(Automation):
         hostname = HostName(args[0])
         ty = args[1]
         config_cache = config.get_config_cache()
+        hosts_config = config.make_hosts_config()
 
         # No caching option over commandline here.
         file_cache_options = FileCacheOptions()
@@ -2302,7 +2305,8 @@ class AutomationGetAgentOutput(Automation):
                     hostname,
                     ipaddress,
                     ConfigCache.address_family(hostname),
-                    config_cache=config.get_config_cache(),
+                    config_cache=config_cache,
+                    is_cluster=hostname in hosts_config.clusters,
                     simulation_mode=config.simulation_mode,
                     file_cache_options=file_cache_options,
                     file_cache_max_age=MaxAge(

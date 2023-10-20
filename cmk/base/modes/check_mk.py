@@ -528,7 +528,9 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
     try:
         config_cache = config.get_config_cache()
         config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
-        if hostname in config_cache.hosts_config.clusters:
+
+        hosts_config = config.make_hosts_config()
+        if hostname in hosts_config.clusters:
             raise MKBailOut("Can not be used with cluster hosts")
 
         ipaddress = config.lookup_ip_address(config_cache, hostname)
@@ -542,6 +544,7 @@ def mode_dump_agent(options: Mapping[str, object], hostname: HostName) -> None:
             ipaddress,
             ConfigCache.address_family(hostname),
             config_cache=config_cache,
+            is_cluster=False,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(

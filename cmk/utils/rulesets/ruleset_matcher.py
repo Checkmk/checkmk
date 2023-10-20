@@ -12,7 +12,6 @@ from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, Type
 
 from typing_extensions import TypedDict
 
-from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, HostLabel, Labels
 from cmk.utils.parameters import boil_down_parameters
@@ -449,6 +448,7 @@ class RulesetOptimizer:
         nodes_of: Mapping[HostName, Sequence[HostName]],
     ) -> None:
         super().__init__()
+        self.__labels_of_host: dict[HostName, Labels] = {}
         self._ruleset_matcher = ruleset_matcher
         self._labels = labels
         self._host_tags = {hn: set(tags_of_host.items()) for hn, tags_of_host in host_tags.items()}
@@ -880,7 +880,6 @@ class RulesetOptimizer:
             self._hosts_grouped_by_tags.setdefault(group_ref, set()).add(hostname)
             self._host_grouped_ref[hostname] = group_ref
 
-    @instance_method_lru_cache(maxsize=None)
     def labels_of_host(self, hostname: HostName) -> Labels:
         """Returns the effective set of host labels from all available sources
 
@@ -891,12 +890,16 @@ class RulesetOptimizer:
 
         Last one wins.
         """
+        with contextlib.suppress(KeyError):
+            # Also cached in `ConfigCache.labels(HostName) -> Labels`
+            return self.__labels_of_host[hostname]
+
         labels: dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(hostname))
         labels.update(self._labels.explicit_host_labels.get(hostname, {}))
         labels.update(self._builtin_labels_of_host(hostname))
-        return labels
+        return self.__labels_of_host.setdefault(hostname, labels)
 
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:
         """Returns the effective set of host label keys with their source

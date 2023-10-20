@@ -2949,6 +2949,7 @@ class ConfigCache:
 
     def labels(self, host_name: HostName) -> Labels:
         with contextlib.suppress(KeyError):
+            # TODO(ml): Also cached in `RulesetOptimizer.labels_of_host(HostName) -> Labels`.
             return self.__labels[host_name]
 
         return self.__labels.setdefault(host_name, self.ruleset_matcher.labels_of_host(host_name))

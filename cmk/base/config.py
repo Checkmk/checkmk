@@ -166,9 +166,7 @@ host_service_levels: list[RuleSpec[int]] = []
 
 _AgentTargetVersion = None | str | tuple[str, str] | tuple[str, dict[str, str]]
 
-AllHosts = list[HostName]
-ShadowHosts = dict[HostName, dict]
-AllClusters = dict[HostName, list[HostName]]
+ShadowHosts = dict[HostName, dict[str, Any]]
 
 ObjectMacros = dict[str, AnyStr]
 
@@ -770,7 +768,7 @@ class PackedConfigGenerator:
             if self._config_cache.is_active(hn) and self._config_cache.is_online(hn)
         )
 
-        def filter_all_hosts(all_hosts_orig: AllHosts) -> list[HostName]:
+        def filter_all_hosts(all_hosts_orig: list[HostName]) -> list[HostName]:
             all_hosts_red = []
             for host_entry in all_hosts_orig:
                 hostname = host_entry.split("|", 1)[0]
@@ -778,7 +776,9 @@ class PackedConfigGenerator:
                     all_hosts_red.append(host_entry)
             return all_hosts_red
 
-        def filter_clusters(clusters_orig: AllClusters) -> dict[HostName, list[HostName]]:
+        def filter_clusters(
+            clusters_orig: dict[HostName, list[HostName]]
+        ) -> dict[HostName, list[HostName]]:
             clusters_red = {}
             for cluster_entry, cluster_nodes in clusters_orig.items():
                 clustername = HostName(cluster_entry.split("|", 1)[0])

@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
-from typing import Final
-
-from livestatus import SiteId
+from collections.abc import Callable, Iterable, Sequence
+from typing import ClassVar, Final
 
 from cmk.utils import pnp_cleanup, regex
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
-from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
@@ -56,6 +52,11 @@ from ._utils import (
 
 
 class TemplateGraphRecipeBuilder:
+    # Overwritten in cmk/gui/graphing/cee/__init__.py
+    TUNE_GRAPH_TEMPLATE: ClassVar[
+        Callable[[GraphTemplate, TemplateGraphSpecification], GraphTemplate | None]
+    ] = lambda graph_template, _spec: graph_template
+
     def __init__(self) -> None:
         self.graph_type: Final = "template"
 
@@ -90,12 +91,9 @@ class TemplateGraphRecipeBuilder:
         index: int,
     ) -> GraphRecipe | None:
         if not (
-            graph_template_tuned := self._template_tuning(
+            graph_template_tuned := TemplateGraphRecipeBuilder.TUNE_GRAPH_TEMPLATE(
                 graph_template,
-                site=spec.site,
-                host_name=spec.host_name,
-                service_description=spec.service_description,
-                destination=spec.destination,
+                spec,
             )
         ):
             return None
@@ -126,16 +124,6 @@ class TemplateGraphRecipeBuilder:
                 graph_id=graph_template_tuned.id,
             ),
         )
-
-    @staticmethod
-    def _template_tuning(
-        graph_template: GraphTemplate,
-        site: SiteId | None,
-        host_name: HostName | None,
-        service_description: ServiceName | None,
-        destination: str | None,
-    ) -> GraphTemplate | None:
-        return graph_template
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use

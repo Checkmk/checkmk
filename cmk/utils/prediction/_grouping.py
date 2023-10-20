@@ -7,11 +7,19 @@ import time
 from collections.abc import Callable, Mapping, Sequence
 from typing import Final, Literal, NamedTuple, NewType
 
-from cmk.utils import dateutils
-
 Timegroup = NewType("Timegroup", str)
 
 PeriodName = Literal["wday", "day", "hour", "minute"]
+
+_WEEKDAYS = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
 
 
 class PeriodInfo(NamedTuple):
@@ -40,7 +48,7 @@ def _second_of_day(t: time.struct_time) -> int:
 
 def _group_by_wday(timestamp: int) -> tuple[Timegroup, int]:
     st = time.localtime(timestamp)
-    return Timegroup(dateutils.weekday_ids()[st.tm_wday]), _second_of_day(st)
+    return Timegroup(_WEEKDAYS[st.tm_wday]), _second_of_day(st)
 
 
 def _group_by_day(timestamp: int) -> tuple[Timegroup, int]:

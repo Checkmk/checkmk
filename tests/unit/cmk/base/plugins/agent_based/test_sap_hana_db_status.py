@@ -50,7 +50,7 @@ def test_inventory_sap_hana_db_status(
     info: StringTable, expected_result: Sequence[Service]
 ) -> None:
     assert (
-        list(shds.discover_sap_hana_db_status(shds.parse_sap_hana_db_status(info)))
+        list(shds.discover_sap_hana_db_status(shds.parse_sap_hana_db_status(info), None))
         == expected_result
     )
 
@@ -91,7 +91,7 @@ def test_check_sap_hana_db_status(
     item: str, info: StringTable, expected_result: CheckResult
 ) -> None:
     section = shds.parse_sap_hana_db_status(info)
-    assert list(shds.check_sap_hana_db_status(item, section)) == expected_result
+    assert list(shds.check_sap_hana_db_status(item, section, None)) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -108,4 +108,22 @@ def test_check_sap_hana_db_status(
 def test_check_sap_hana_db_status_stale(item: str, info: StringTable) -> None:
     section = shds.parse_sap_hana_db_status(info)
     with pytest.raises(IgnoreResultsError):
-        list(shds.check_sap_hana_db_status(item, section))
+        list(shds.check_sap_hana_db_status(item, section, None))
+
+
+def test_check_sap_hana_ddb_status_passive_ok() -> None:
+    section = shds.parse_sap_hana_db_status(
+        [
+            ["[[HXE 98]]"],
+            [
+                "Status: error, Details: hdbsql ERROR: * -10709: Connection failed (RTE:[89006] System call 'connect' failed, rc=113:No route to host"
+            ],
+        ]
+    )
+    assert all(
+        r.state is State.OK
+        for r in shds.check_sap_hana_db_status(
+            "HXE 98", section, {"HXE 98": {"sys_repl_status": "12"}}
+        )
+        if isinstance(r, Result)
+    )

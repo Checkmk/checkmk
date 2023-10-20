@@ -665,16 +665,9 @@ class RulesetOptimizer:
         except KeyError:
             pass
 
-        if with_foreign_hosts:
-            valid_hosts = self._all_configured_hosts
-        else:
-            valid_hosts = self._all_processed_hosts
-
         # Thin out the valid hosts further. If the rule is located in a folder
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
-        valid_hosts = self.get_hosts_within_folder(rule_path, with_foreign_hosts).intersection(
-            valid_hosts
-        )
+        valid_hosts = self._get_hosts_within_folder(rule_path, with_foreign_hosts)
 
         if tag_conditions and hostlist is None and not labels:
             # TODO: Labels could also be optimized like the tags
@@ -863,7 +856,7 @@ class RulesetOptimizer:
     ) -> set[HostName]:
         return self._hosts_grouped_by_tags[self._host_grouped_ref[hostname]].intersection(hosts)
 
-    def get_hosts_within_folder(self, folder_path: str, with_foreign_hosts: bool) -> set[HostName]:
+    def _get_hosts_within_folder(self, folder_path: str, with_foreign_hosts: bool) -> set[HostName]:
         cache_id = with_foreign_hosts, folder_path
         if cache_id not in self._folder_host_lookup:
             hosts_in_folder = set()

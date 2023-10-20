@@ -5,5 +5,6 @@
 pub mod args;
 pub mod config;
 mod constants;
+pub mod emit;
 pub mod ms_sql;
 pub mod setup;

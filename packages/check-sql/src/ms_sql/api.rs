@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::config::CheckConfig;
+use crate::emit::header;
 use anyhow::Result;
 
 use tiberius::{AuthMethod, Client, Config};
@@ -21,9 +22,43 @@ pub enum Credentials<'a> {
     },
 }
 
+pub struct Section {
+    pub name: String,
+    pub separator: Option<char>,
+}
+
 impl CheckConfig {
-    pub async fn exec(&self) -> Result<()> {
-        Ok(())
+    pub async fn exec(&self) -> Result<String> {
+        if let Some(ms_sql) = self.ms_sql() {
+            let sqls = ms_sql.sqls();
+            let always: Vec<Section> = sqls.get_filtered_always().iter().map(to_section).collect();
+            let cached: Vec<Section> = sqls.get_filtered_cached().iter().map(to_section).collect();
+            Ok(always
+                .iter()
+                .chain(cached.iter())
+                .map(|s| header(&s.name, s.separator))
+                .collect::<Vec<String>>()
+                .join(""))
+        } else {
+            anyhow::bail!("No Config")
+        }
+    }
+}
+
+fn to_section(name: &String) -> Section {
+    Section {
+        name: name.to_owned(),
+        separator: get_section_separator(name),
+    }
+}
+
+fn get_section_separator(name: &str) -> Option<char> {
+    match name {
+        "instance" | "database" | "counters" | "blocked_sessions" | "transactionlogs"
+        | "datafiles" | "cluster" => Some('|'),
+        "jobs" | "mirroring" | "availability_groups" => Some('\t'),
+        "tablespaces" | "connections" => None,
+        _ => None,
     }
 }
 

@@ -3,12 +3,20 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 use anyhow::Result;
 use check_sql::setup;
-use log::info;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let config = setup::init(std::env::args_os())?;
-    config.exec().await?;
-    info!("Success");
+    match config.exec().await {
+        Ok(output) => {
+            print!("{output}");
+            log::info!("Success");
+        }
+        Err(e) => {
+            print!("{e}");
+            log::error!("{e}")
+        }
+    };
+
     Ok(())
 }

@@ -38,7 +38,55 @@ from tests.testlib import SpecialAgent
                 "--proxy",
                 "abc:8567",
             ],
-            id="Proxy settings",
+            id="Proxy settings, url proxy",
+        ),
+        pytest.param(
+            {
+                "api_key": ("password", "my-api-key"),
+                "proxy": (
+                    "environment",
+                    "environment",
+                ),
+            },
+            [
+                "testhost",
+                "my-api-key",
+                "--proxy",
+                "FROM_ENVIRONMENT",
+            ],
+            id="Proxy settings, environment proxy",
+        ),
+        pytest.param(
+            {
+                "api_key": ("password", "my-api-key"),
+                "proxy": (
+                    "no_proxy",
+                    None,
+                ),
+            },
+            [
+                "testhost",
+                "my-api-key",
+                "--proxy",
+                "NO_PROXY",
+            ],
+            id="Proxy settings, no proxy",
+        ),
+        pytest.param(
+            {
+                "api_key": ("password", "my-api-key"),
+                "proxy": (
+                    "global",
+                    "test_proxy",
+                ),
+            },
+            [
+                "testhost",
+                "my-api-key",
+                "--proxy",
+                "FROM_ENVIRONMENT",
+            ],
+            id="Proxy settings, global proxy not found in gloabl config",
         ),
         pytest.param(
             {

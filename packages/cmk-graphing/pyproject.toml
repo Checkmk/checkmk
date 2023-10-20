@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "cmk_graphing"
 version = "1.0.0"
 
+[tool.setuptools.package-data]
+cmk_graphing = ["py.typed"]
+
 [tool.bandit]
 
 [tool.black]

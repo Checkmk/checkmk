@@ -333,7 +333,7 @@ class ActiveCheck:
 
         for param_dict in plugin_params:
             params = active_check.parameter_parser(param_dict)
-            for service in active_check.service_function(params, host_config, http_proxies):
+            for service in active_check.commands_function(params, host_config, http_proxies):
                 arguments = _replace_passwords(
                     self.host_name,
                     self.stored_passwords,
@@ -588,7 +588,7 @@ class SpecialAgent:
         }
 
         parsed_params = special_agent.parameter_parser(params)
-        for command in special_agent.config_function(parsed_params, host_config, http_proxies):
+        for command in special_agent.commands_function(parsed_params, host_config, http_proxies):
             path = self._make_source_path(special_agent.name)
             args = _replace_passwords(
                 self.host_name, self.stored_passwords, command.command_arguments

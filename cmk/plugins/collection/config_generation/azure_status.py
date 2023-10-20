@@ -26,5 +26,5 @@ def agent_azure_status_config(
 special_agent_azure_status = SpecialAgentConfig(
     name="azure_status",
     parameter_parser=AzureStatusParams.model_validate,
-    config_function=agent_azure_status_config,
+    commands_function=agent_azure_status_config,
 )

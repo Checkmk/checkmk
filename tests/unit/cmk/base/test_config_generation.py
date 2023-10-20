@@ -268,7 +268,7 @@ class TestSpecialAgentLegacyConfiguration(NamedTuple):
                 "my_active_check": ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    service_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             ActiveCheckCommand("First service", ["--arg1", "argument1"]),
                             ActiveCheckCommand("Second service", ["--arg2", "argument2"]),
@@ -324,7 +324,7 @@ class TestSpecialAgentLegacyConfiguration(NamedTuple):
                 "my_active_check": ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    service_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
                                 "My service",
@@ -360,7 +360,7 @@ class TestSpecialAgentLegacyConfiguration(NamedTuple):
                 "my_active_check": ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    service_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
                                 "My service",
@@ -463,7 +463,7 @@ def test_get_active_service_data(
                 "my_active_check": ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    service_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
                                 "My service",
@@ -625,7 +625,7 @@ def test_get_active_service_data_warnings(
                 "my_active_check": ActiveCheckConfig(
                     name="my_active_check",
                     parameter_parser=lambda p: p,
-                    service_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             ActiveCheckCommand(
                                 "My service",
@@ -855,7 +855,7 @@ def test_get_host_address_config(
                 "test_agent": SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    config_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
                                 command_arguments=["arg1", "arg2;1"],
@@ -875,7 +875,7 @@ def test_get_host_address_config(
                 "test_agent": SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    config_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(command_arguments=["arg1", "arg2;1"]),
                             SpecialAgentCommand(command_arguments=["arg3", "arg4"]),
@@ -897,7 +897,7 @@ def test_get_host_address_config(
                 "test_agent": SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    config_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
                                 command_arguments=["--password", StoredSecret("mypassword")],
@@ -917,7 +917,7 @@ def test_get_host_address_config(
                 "test_agent": SpecialAgentConfig(
                     name="test_agent",
                     parameter_parser=lambda e: e,
-                    config_function=lambda *_: (
+                    commands_function=lambda *_: (
                         [
                             SpecialAgentCommand(
                                 command_arguments=["--password", StoredSecret("mypassword")],

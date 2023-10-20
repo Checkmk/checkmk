@@ -22,6 +22,6 @@ class SpecialAgentCommand:
 class SpecialAgentConfig(Generic[_ParsedParameters]):
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
-    config_function: Callable[
+    commands_function: Callable[
         [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[SpecialAgentCommand]
     ]

@@ -86,5 +86,5 @@ def check_bi_aggr_services(
 
 
 active_check_bi_aggr = ActiveCheckConfig(
-    name="bi_aggr", parameter_parser=parse_bi_aggr_params, service_function=check_bi_aggr_services
+    name="bi_aggr", parameter_parser=parse_bi_aggr_params, commands_function=check_bi_aggr_services
 )

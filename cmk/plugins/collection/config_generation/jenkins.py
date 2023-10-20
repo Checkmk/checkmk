@@ -57,5 +57,5 @@ def agent_jenkins_config(
 
 
 special_agent_jenkins = SpecialAgentConfig(
-    name="jenkins", parameter_parser=parse_jenkins_params, config_function=agent_jenkins_config
+    name="jenkins", parameter_parser=parse_jenkins_params, commands_function=agent_jenkins_config
 )

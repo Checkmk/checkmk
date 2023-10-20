@@ -30,6 +30,6 @@ class ActiveCheckCommand:
 class ActiveCheckConfig(Generic[_ParsedParameters]):
     name: str
     parameter_parser: Callable[[Mapping[str, object]], _ParsedParameters]
-    service_function: Callable[
+    commands_function: Callable[
         [_ParsedParameters, HostConfig, Mapping[str, HTTPProxy]], Iterable[ActiveCheckCommand]
     ]

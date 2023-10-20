@@ -152,5 +152,5 @@ def generate_icmp_services(
 
 
 active_check_icmp = ActiveCheckConfig(
-    name="icmp", parameter_parser=parse_icmp_params, service_function=generate_icmp_services
+    name="icmp", parameter_parser=parse_icmp_params, commands_function=generate_icmp_services
 )

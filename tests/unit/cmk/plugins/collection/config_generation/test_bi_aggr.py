@@ -45,7 +45,7 @@ def test_check_bi_aggr_argument_parsing(
 ) -> None:
     """Tests if all required arguments are present."""
     services = list(
-        active_check_bi_aggr.service_function(
+        active_check_bi_aggr.commands_function(
             active_check_bi_aggr.parameter_parser(params), HOST_CONFIG, {}
         )
     )

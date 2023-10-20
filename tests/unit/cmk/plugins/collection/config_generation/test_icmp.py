@@ -248,7 +248,7 @@ def test_generate_icmp_services(
     expected_result: Sequence[ActiveCheckCommand],
 ) -> None:
     services = list(
-        active_check_icmp.service_function(
+        active_check_icmp.commands_function(
             active_check_icmp.parameter_parser(params),
             HOST_CONFIG,
             {},

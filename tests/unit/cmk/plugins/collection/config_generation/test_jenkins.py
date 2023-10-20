@@ -87,6 +87,6 @@ def test_agent_jenkins_arguments_password_store(
 ) -> None:
     parsed_params = special_agent_jenkins.parameter_parser(params)
     assert (
-        list(special_agent_jenkins.config_function(parsed_params, HOST_CONFIG, {}))
+        list(special_agent_jenkins.commands_function(parsed_params, HOST_CONFIG, {}))
         == expected_result
     )

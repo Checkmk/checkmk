@@ -11,7 +11,7 @@ SETLOCAL EnableDelayedExpansion
 
 if "%*" == "" (
 echo: Run default...
-set ctl_arg_all=1
+set worker_arg_all=1
 ) else (
 :CheckOpts
 if "%~1"=="-h" goto Usage

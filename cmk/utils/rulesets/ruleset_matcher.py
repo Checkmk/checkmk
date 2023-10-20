@@ -898,7 +898,6 @@ class RulesetOptimizer:
         labels.update(self._builtin_labels_of_host(hostname))
         return labels
 
-    @instance_method_lru_cache(maxsize=None)
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:
         """Returns the effective set of host label keys with their source
         identifier instead of the value Order and merging logic is equal to

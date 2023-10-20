@@ -1,0 +1,16 @@
+<<<mssql_instance:sep(124)>>>
+<<<mssql_databases:sep(124)>>>
+<<<mssql_counters:sep(124)>>>
+<<<mssql_tablespaces>>>
+<<<mssql_blocked_sessions:sep(124)>>>
+<<<mssql_backup:sep(124)>>>
+<<<mssql_transactionlogs:sep(124)>>>
+<<<mssql_datafiles:sep(124)>>>
+<<<mssql_cluster:sep(124)>>>
+<<<mssql_jobs:sep(09)>>>
+<<<mssql_mirroring:sep(09)>>>
+<<<mssql_availability_groups:sep(09)>>>
+<<<mssql_versions:sep(124)>>>
+<<<mssql_connections>>>
+<<<mssql_instance:sep(124)>>>
+ERROR: Failed to gather SQL server instances

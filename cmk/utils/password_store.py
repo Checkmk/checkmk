@@ -184,41 +184,6 @@ def _helper_password_store_path(config_path: ConfigPath) -> Path:
 
 
 class PasswordStore:
-    """Encrypt the password store with the locally known password store key
-
-    But why?
-
-    We are a monitoring system. We definitely need credentials in clear text to contact remote some
-    systems all the time. And we also need to be able do this after restarting the whole system.
-    This means the secrets need to be available to the site user on disk in clear text.
-
-    To underline this fact, we kept the password store file in clear text on disk for a long time.
-    This approach made the situation clearly visible to everyone. And we were pretty comfortable
-    with this.
-
-    We are faced with the requirement that no credential shall be stored in clear text on disk, they
-    need to be encrypted. We'd love to have that too. But since securing is not possible, we are now
-    obfuscating. The best we can do in this case.
-
-    "Sometimes people don't want to hear the truth because they don't want their illusions
-    destroyed." - Friedrich Nietzsche
-
-    What we do from now is:
-
-    a) Use a locally stored secret accessible to the site user.
-    b) Encrypt the password store which is also accessible to the site user.
-
-    Obviously there is no added security here. Just obfuscation.
-
-    Sorry. But this is the way it is.
-
-    With the development of Checkmk 2.2 we will evaluate the usage of HSMs as well
-    as vault solutions in the future which may be helpful in some use cases.
-
-    PS. If you think this is all nonsense and you have a secure solution to this situation, I am
-    very interested in learning from you.
-    """
-
     VERSION = 0
     VERSION_BYTE_LENGTH = 2
 

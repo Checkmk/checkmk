@@ -78,6 +78,13 @@ class PredictionData(BaseModel, frozen=True):
     def num_points(self) -> int:
         return len(self.points)
 
+    def predict(self, timestamp: int) -> DataStat | None:
+        unbound_index = (timestamp - self.data_twindow[0]) // self.step
+        # NOTE: A one hour prediction is valid for 24 hours, while the time range only covers one hour.
+        # This is why we have to wrap larger indices back into the available list.
+        # For consistenty we allow negative times as well.
+        return self.points[unbound_index % len(self.points)]
+
 
 class PredictionStore:
     def __init__(

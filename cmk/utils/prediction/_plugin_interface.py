@@ -73,7 +73,7 @@ def get_predictive_levels(
     now = int(time.time())
     period_info = PREDICTION_PERIODS[params.period]
 
-    timegroup, current_slice_start, current_slice_end, rel_time = get_timegroup_relative_time(
+    timegroup, current_slice_start, current_slice_end, _rel_time = get_timegroup_relative_time(
         now, period_info
     )
 
@@ -109,11 +109,7 @@ def get_predictive_levels(
         )
         prediction_store.save_prediction(info, data_for_pred)
 
-    # Find reference value in data_for_pred
-    index = int(rel_time / data_for_pred.step)
-    reference = data_for_pred.points[index]
-
-    if reference is None:
+    if (reference := data_for_pred.predict(now)) is None:
         return None, (None, None, None, None)
 
     return reference.average, estimate_levels(

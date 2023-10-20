@@ -5,6 +5,8 @@
 
 set -e
 
+JOBS=6
+
 failure() {
     test ${#@} -eq 0 || echo "$(basename "$0"):" "$@" >&2
     exit 1
@@ -14,30 +16,33 @@ usage() {
     echo "usage: $(basename "$0") [OPTION]..."
     echo "Run the CI pipeline or parts of it."
     echo
-    echo "  -f, --format             format Python files with isort and black"
-    echo "  -F, --check-format       check for correct formatting (isort, black)"
-    echo "  -C, --py-import-cycles   run py-import-cycles"
-    echo "  -B, --bandit             run bandit"
-    echo "  -m, --mypy               run mypy"
-    echo "  -p, --pylint             run pylint"
-    echo "  -u, --unit-tests         run unit tests"
-    echo "  -a, --all                shortcut for -F -C -B -m -p -u"
-    echo "  -d, --documentation      generate documentation"
-    echo "  -h, --help               show this help"
+    echo "  -c, --clean             remove artifacts first"
+    echo "  -F, --check-format      check for correct formatting (isort, black)"
+    echo "  -u, --unit-tests        run unit tests"
+    echo "  -m, --mypy              run mypy"
+    echo "  -p, --pylint            run pylint"
+    echo "  -B, --bandit            run bandit"
+    echo "  -C, --py-import-cycles  run py-import-cycles"
+    echo "  -a, --all               shortcut for -F -u -m -p -B -C"
+    echo "  -f, --format            format sources"
+    echo "  -d, --documentation     generate documentation"
+    echo "  -j N, --jobs=N          allow N jobs at once, default is ${JOBS}"
+    echo "  -h, --help              show this help"
 }
 
 parse_options() {
     # Yes, all those option variables are global.
-    RUN_FORMAT=no
+    RUN_CLEAN=no
     RUN_CHECK_FORMAT=no
-    RUN_PY_IMPORT_CYCLES=no
-    RUN_BANDIT=no
+    RUN_UNIT_TESTS=no
     RUN_MYPY=no
     RUN_PYLINT=no
-    RUN_UNIT_TESTS=no
+    RUN_BANDIT=no
+    RUN_PY_IMPORT_CYCLES=no
+    RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'fFCBmpuadh' --long 'format,check-format,py-import-cycles,bandit,mypy,pylint,unit-tests,all,documentation,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFumpBCafdj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,py-import-cycles,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -46,8 +51,8 @@ parse_options() {
 
     while true; do
         case "$1" in
-            '-f' | '--format')
-                RUN_FORMAT=yes
+            '-c' | '--clean')
+                RUN_CLEAN=yes
                 shift
                 continue
                 ;;
@@ -56,13 +61,8 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-C' | '--py-import-cycles')
-                RUN_PY_IMPORT_CYCLES=yes
-                shift
-                continue
-                ;;
-            '-B' | '--bandit')
-                RUN_BANDIT=yes
+            '-u' | '--unit-tests')
+                RUN_UNIT_TESTS=yes
                 shift
                 continue
                 ;;
@@ -76,24 +76,39 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-u' | '--unit-tests')
-                RUN_UNIT_TESTS=yes
+            '-B' | '--bandit')
+                RUN_BANDIT=yes
+                shift
+                continue
+                ;;
+            '-C' | '--py-import-cycles')
+                RUN_PY_IMPORT_CYCLES=yes
                 shift
                 continue
                 ;;
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
-                RUN_PY_IMPORT_CYCLES=yes
-                RUN_BANDIT=yes
+                RUN_UNIT_TESTS=yes
                 RUN_MYPY=yes
                 RUN_PYLINT=yes
-                RUN_UNIT_TESTS=yes
+                RUN_BANDIT=yes
+                RUN_PY_IMPORT_CYCLES=yes
+                shift
+                continue
+                ;;
+            '-f' | '--format')
+                RUN_FORMAT=yes
                 shift
                 continue
                 ;;
             '-d' | '--documentation')
                 RUN_DOCUMENTATION=yes
                 shift
+                continue
+                ;;
+            '-j' | '--jobs')
+                JOBS="$2"
+                shift 2
                 continue
                 ;;
             '-h' | '--help')
@@ -109,7 +124,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_FORMAT RUN_CHECK_FORMAT RUN_PY_IMPORT_CYCLES RUN_BANDIT RUN_MYPY RUN_PYLINT RUN_UNIT_TESTS RUN_DOCUMENTATION
+    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_UNIT_TESTS RUN_MYPY RUN_PYLINT RUN_BANDIT RUN_PY_IMPORT_CYCLES RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_pipenv() {
@@ -124,6 +139,7 @@ run_pipenv() {
 }
 
 setup_venv() {
+    test "${SETUP_VENV_RAN}" = "yes" && return
     # --quiet doesn't really work, see https://github.com/pypa/pipenv/issues/5037, but redirecting
     # stdout is OK, errors go to stderr, and so do the initial venv creation messages.
     run_pipenv sync --dev >/dev/null
@@ -131,25 +147,46 @@ setup_venv() {
     # poor man's "activate", but without any danger of naming clashes
     PATH="$(pwd)/.venv/bin:$PATH"
     hash -r
+    SETUP_VENV_RAN=yes
 }
 
-run_format() {
-    # shellcheck disable=SC2086
-    isort $1
-
-    # shellcheck disable=SC2086
-    black --quiet $1
+run_clean() {
+    rm -rf .cache .mypy_cache .pytest_cache .venv
 }
 
 run_check_format() {
+    setup_venv
     # shellcheck disable=SC2086
     isort --check-only --diff $1
-
     # shellcheck disable=SC2086
     black --quiet --check --diff $1
 }
 
+run_unit_tests() {
+    setup_venv
+    pytest
+}
+
+run_mypy() {
+    setup_venv
+    # shellcheck disable=SC2086
+    mypy --scripts-are-modules --show-error-codes $1
+}
+
+run_pylint() {
+    setup_venv
+    # shellcheck disable=SC2086
+    pylint --jobs="${JOBS}" $1
+}
+
+run_bandit() {
+    setup_venv
+    # shellcheck disable=SC2086
+    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high $1
+}
+
 run_py_import_cycles() {
+    setup_venv
     py_import_cycles \
         --project-path . \
         --packages cmk_graphing \
@@ -157,30 +194,16 @@ run_py_import_cycles() {
         --verbose
 }
 
-run_bandit() {
+run_format() {
+    setup_venv
     # shellcheck disable=SC2086
-    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high $1
-}
-
-run_mypy() {
+    isort $1
     # shellcheck disable=SC2086
-    mypy --scripts-are-modules --show-error-codes $1
-}
-
-run_pylint() {
-    # shellcheck disable=SC2086
-    pylint $1
-}
-
-run_unit_tests() {
-    python -m pytest \
-        --color=yes \
-        --code-highlight=yes \
-        tests
+    black --quiet $1
 }
 
 run_documentation() {
-    echo "Run documentation"
+    echo "TODO: generate documentation"
 }
 
 get_candidates_from_filesystem() {
@@ -208,17 +231,16 @@ main() {
     # and we can call this script from everywhere.
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
-    setup_venv
-
+    test ${RUN_CLEAN} = yes && run_clean
     python_files=$(get_candidates_from_filesystem | filter_for_python_files)
-    test ${RUN_FORMAT} = yes && run_format "$python_files"
     test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"
-    test ${RUN_PY_IMPORT_CYCLES} = yes && run_py_import_cycles
-    test ${RUN_BANDIT} = yes && run_bandit "$python_files"
+    test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_MYPY} = yes && run_mypy "$python_files"
     test ${RUN_PYLINT} = yes && run_pylint "$python_files"
-    test ${RUN_UNIT_TESTS} = yes && run_unit_tests
+    test ${RUN_BANDIT} = yes && run_bandit "$python_files"
+    test ${RUN_PY_IMPORT_CYCLES} = yes && run_py_import_cycles
     test ${RUN_DOCUMENTATION} = yes && run_documentation
+    test ${RUN_FORMAT} = yes && run_format "$python_files"
     true
 }
 

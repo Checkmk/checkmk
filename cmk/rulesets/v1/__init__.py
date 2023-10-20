@@ -28,7 +28,15 @@ from cmk.rulesets.v1._rulespec import (
     ServiceRuleSpec,
     SpecialAgentRuleSpec,
 )
-from cmk.rulesets.v1._valuespec import DictElement, Dictionary, ItemSpec, TextInput, ValueSpec
+from cmk.rulesets.v1._valuespec import (
+    DictElement,
+    Dictionary,
+    ItemSpec,
+    MonitoringState,
+    State,
+    TextInput,
+    ValueSpec,
+)
 
 __all__ = [
     "ActiveChecksRuleSpec",
@@ -55,4 +63,6 @@ __all__ = [
     "TextInput",
     "ValueSpec",
     "Localizable",
+    "MonitoringState",
+    "State",
 ]

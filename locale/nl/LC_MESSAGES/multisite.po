@@ -4839,6 +4839,10 @@ msgstr "Luchtstroom"
 msgid "Airflow Deviation in Percent"
 msgstr "Luchtstroom Afwijking in Procent"
 
+#, fuzzy
+msgid "Airflow Deviation measured at airflow sensors"
+msgstr "Niveaus voor luchtstroomafwijking gemeten aan luchtstroomsensoren "
+
 msgid "Airflow deviation"
 msgstr "Luchtstroomafwijking"
 
@@ -30509,9 +30513,6 @@ msgstr "Niveaus voor %s mail wachtrij"
 msgid "Levels for ATS Output parameters"
 msgstr "Niveaus voor ATS-uitgangsparameters"
 
-msgid "Levels for Airflow Deviation measured at airflow sensors "
-msgstr "Niveaus voor luchtstroomafwijking gemeten aan luchtstroomsensoren "
-
 msgid "Levels for CPU utilization"
 msgstr "Niveaus voor CPU-gebruik"
 
@@ -37858,6 +37859,10 @@ msgstr "Aantal onderwerpen live"
 
 msgid "Number of total and running sessions"
 msgstr "Aantal totale en lopende sessies"
+
+#, fuzzy
+msgid "Number of unacknowlegded alerts"
+msgstr "Aantal onbekende signaleringen"
 
 msgid "Number of unassigned shards"
 msgstr "Aantal niet-toegewezen scherven"
@@ -60243,13 +60248,6 @@ msgstr ""
 "draaiende threads in een JVM."
 
 msgid ""
-"This rule sets the warn and crit levels for the number of unacknowlegded "
-"alerts"
-msgstr ""
-"Deze regel stelt de waarschuwings- en kriticoniveaus in voor het aantal niet-"
-"erkende waarschuwingen"
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -72832,6 +72830,13 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "This rule sets the warn and crit levels for the number of unacknowlegded "
+#~ "alerts"
+#~ msgstr ""
+#~ "Deze regel stelt de waarschuwings- en kriticoniveaus in voor het aantal "
+#~ "niet-erkende waarschuwingen"
 
 #, fuzzy
 #~| msgid "Add host to the monitoring"

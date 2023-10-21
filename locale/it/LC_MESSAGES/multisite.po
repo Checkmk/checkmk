@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-09-13 10:38+0000\n"
-"Last-Translator: Gianluca Ulivi <gianlu9858@gmail.com>\n"
+"PO-Revision-Date: 2023-10-20 17:46+0000\n"
+"Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
 "software/it/>\n"
 "Language: it\n"
@@ -4274,9 +4274,9 @@ msgstr "Aerohive HiveManager"
 msgid "Aerohive HiveManager NG"
 msgstr "Aerohive HiveManager NG"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Affected %s: %s"
-msgstr "Siti interessati"
+msgstr ""
 
 msgid "Affected by service"
 msgstr "Interessato dal servizio"
@@ -4850,6 +4850,12 @@ msgstr "Flusso d'aria"
 
 msgid "Airflow Deviation in Percent"
 msgstr "Deviazione del flusso d'aria in percentuale"
+
+#, fuzzy
+msgid "Airflow Deviation measured at airflow sensors"
+msgstr ""
+"Livelli di deviazione del flusso d'aria misurati sui sensori del flusso "
+"d'aria "
 
 msgid "Airflow deviation"
 msgstr "Deviazione del flusso d'aria"
@@ -6746,9 +6752,9 @@ msgstr "Autore"
 msgid "Author comment (regex)"
 msgstr "Commento dell'autore"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Author: %s"
-msgstr "Autore"
+msgstr ""
 
 #, fuzzy
 msgid "Authority"
@@ -17707,13 +17713,11 @@ msgstr "Vuoi davvero spostare le aggregazioni selezionate?"
 msgid "Do you really want to move the selected rules?"
 msgstr "Vuoi davvero spostare le regole selezionate?"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
 "the monitoring core and blocks %s until the next activation!"
 msgstr ""
-"Volete davvero rinominare i seguenti host? Questo comporta il riavvio del "
-"nucleo di monitoraggio!"
 
 msgid "Do you really want to switch the event daemon mode?"
 msgstr "Vuoi davvero cambiare la modalità del demone degli eventi?"
@@ -29113,9 +29117,9 @@ msgstr "Nome del file non valido"
 msgid "Invalid file name for tarfile_name given."
 msgstr "Nome di file non valido per tarfile_name dato."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid file type expected %s received '%s'"
-msgstr "Tipo di elemento fixel non valido '%s'"
+msgstr ""
 
 #, fuzzy
 msgid "Invalid file type."
@@ -30603,11 +30607,6 @@ msgstr "Livelli per la coda di posta %s"
 
 msgid "Levels for ATS Output parameters"
 msgstr "Livelli per i parametri di uscita ATS"
-
-msgid "Levels for Airflow Deviation measured at airflow sensors "
-msgstr ""
-"Livelli di deviazione del flusso d'aria misurati sui sensori del flusso "
-"d'aria "
 
 msgid "Levels for CPU utilization"
 msgstr "Livelli di utilizzo della CPU"
@@ -36594,9 +36593,9 @@ msgstr "Nessun cambiamento in sospeso"
 msgid "No performance data: %s"
 msgstr "Nessun dato sulle prestazioni: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "No remote %s processed."
-msgstr "Nessun registro di audit remoto elaborato."
+msgstr ""
 
 msgid "No replication with this site"
 msgstr "Nessuna replica con questo sito"
@@ -36677,9 +36676,9 @@ msgstr ""
 "Nessun albero dell'inventario dell'host %s. Potrebbe anche non avere accesso "
 "a questo host."
 
-#, fuzzy, python-format
+#, python-format
 msgid "No such tree below %r"
-msgstr "Uso della licenza"
+msgstr ""
 
 msgid "No test host"
 msgstr "Nessun host di prova"
@@ -37992,6 +37991,10 @@ msgstr "Numero di argomenti in diretta"
 
 msgid "Number of total and running sessions"
 msgstr "Numero di sessioni totali e in corso"
+
+#, fuzzy
+msgid "Number of unacknowlegded alerts"
+msgstr "Numero di allarmi sconosciuti"
 
 msgid "Number of unassigned shards"
 msgstr "Numero di frammenti non assegnati"
@@ -43933,9 +43936,9 @@ msgstr "Rinominare le operazioni"
 msgid "Renaming Setup configuration..."
 msgstr "Rinominare la configurazione di Setup..."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Renaming host(s) in %s..."
-msgstr "Rinominare gli host nelle cartelle..."
+msgstr ""
 
 msgid "Renaming host(s) in base configuration, rrd, history files, etc."
 msgstr ""
@@ -44772,9 +44775,9 @@ msgstr "Stato risultante se lo stato è \"riscaldamento\""
 msgid "Results"
 msgstr "Risultati"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Results: %d"
-msgstr "Risultati"
+msgstr ""
 
 msgid "Resumables"
 msgstr "Resumables"
@@ -50238,9 +50241,9 @@ msgstr "Richieste di istanze spot"
 msgid "Spread over"
 msgstr "Distribuito su"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Spreading: %s minutes"
-msgstr " distribuito su %d minuti "
+msgstr ""
 
 msgid "Sproc Latency"
 msgstr "Latenza Sproc"
@@ -51571,9 +51574,9 @@ msgstr "Ha scartato con successo tutte le modifiche in sospeso."
 msgid "Successfully discovered hosts"
 msgstr "Eliminati con successo %d host"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Successfully got %s from sites: %s<br>%s"
-msgstr "Ottenuti con successo i log di audit dai siti: %s<br>%s"
+msgstr ""
 
 #, python-format
 msgid "Successfully logged into remote site %s."
@@ -60470,13 +60473,6 @@ msgstr ""
 "esecuzione in una JVM."
 
 msgid ""
-"This rule sets the warn and crit levels for the number of unacknowlegded "
-"alerts"
-msgstr ""
-"Questa regola imposta i livelli di warn e crit per il numero di avvisi non "
-"confermati"
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -62535,9 +62531,9 @@ msgstr "Larghezza di banda totale (somma di in e out)"
 msgid "Total cache usage"
 msgstr "Utilizzo totale della cache"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Total comments: %d"
-msgstr "Totale documenti"
+msgstr ""
 
 msgid "Total containers"
 msgstr "Totale contenitori"
@@ -70224,13 +70220,11 @@ msgstr ""
 "Non è possibile interrogare intervalli di tempo che sono prima "
 "dell'orizzonte."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You cannot rename a host while you have pending changes on the site the host "
 "is monitored on (%s)."
 msgstr ""
-"Non è possibile rinominare un host mentre sono in corso modifiche sul sito "
-"centrale (%s) o sul sito in cui l'host è monitorato (%s)."
 
 msgid "You cannot save this rule."
 msgstr "Non è possibile salvare questa regola."
@@ -70972,15 +70966,12 @@ msgstr ""
 "La tua dichiarazione di ricerca non è valida. Non puoi usare un lookahead "
 "qui."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your search statement is not valid. You need to provide a %s (regex). For "
 "example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to "
 "search for a single backslash."
 msgstr ""
-"L'istruzione di ricerca non è valida. È necessario fornire un'espressione "
-"regolare (regex). Ad esempio, è necessario utilizzare <tt>\\\\</tt> invece "
-"di <tt>\\</tt> se si desidera cercare un singolo backslash."
 
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
@@ -73077,6 +73068,13 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid ""
+#~ "This rule sets the warn and crit levels for the number of unacknowlegded "
+#~ "alerts"
+#~ msgstr ""
+#~ "Questa regola imposta i livelli di warn e crit per il numero di avvisi "
+#~ "non confermati"
 
 #, fuzzy
 #~| msgid "Add host to the monitoring"

@@ -133,6 +133,9 @@ VARIABLES:
     - NAME: CHANGED_CMC_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc/' || true"
 
+    - NAME: CHANGED_CMK_AGENT_BASED_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-based/' || true"
+
     - NAME: CHANGED_CMK_AGENT_CTL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
@@ -376,6 +379,13 @@ STAGES:
       TEXT_ON_SKIP: 'No cmc files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
+
+    - NAME: 'Package cmk-agent-based'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_AGENT_BASED_FILES
+      DIR: 'packages/cmk-agent-based'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-agent-based.txt"
+      TEXT_ON_SKIP: 'No cmk-agent-based files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-based.txt"
 
     - NAME: 'Package cmk-agent-ctl'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_AGENT_CTL_FILES

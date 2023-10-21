@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from re import compile as regex
+from cmk.agent_based.v1 import regex
 
-__all__ = [
-    "regex",
-]
+
+def test_regex() -> None:
+    """
+    We use `re.compile`. This is just a sanity check."""
+    assert regex("foo").match("foobar")

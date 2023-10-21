@@ -181,6 +181,7 @@ tenacity = "==8.2.2"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
 semver = "==3.0.0"
+cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}
 cmk-werks = {editable = true, path = "./packages/cmk-werks"}

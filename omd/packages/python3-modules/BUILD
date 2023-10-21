@@ -48,6 +48,7 @@ config_setting(
     srcs = [
         "@freetds",
         "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@omd_packages//packages:cmk-agent-based",
         "@omd_packages//packages:cmk-agent-receiver",
         "@omd_packages//packages:cmk-graphing",
         "@omd_packages//packages:cmk-werks",
@@ -75,6 +76,7 @@ config_setting(
     ("agent-receiver", "$(execpath @omd_packages//packages:cmk-agent-receiver)"),
     ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
+    ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
 ]]
 
 genrule(

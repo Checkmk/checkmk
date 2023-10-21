@@ -5,10 +5,10 @@
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import CheckResult
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import cisco_temperature as ct
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+
+from cmk.agent_based.v1 import CheckResult, Metric, Result, Service, State
 
 
 @pytest.mark.parametrize(

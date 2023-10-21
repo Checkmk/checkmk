@@ -22,6 +22,7 @@ def _names(space):
 def test_v1() -> None:
     if _names(v1) != [
         "Attributes",
+        "CheckResult",
         "GetRateError",
         "HostLabel",
         "IgnoreResults",

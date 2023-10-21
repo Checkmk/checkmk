@@ -8,8 +8,9 @@ from typing import Any, NotRequired
 
 from typing_extensions import TypedDict
 
-from cmk.base.api.agent_based.checking_classes import Service
 from cmk.base.api.agent_based.section_classes import SNMPTree
+
+from cmk.agent_based.v1 import Service
 
 from ..section_classes import SNMPDetectSpecification
 

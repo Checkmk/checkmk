@@ -986,8 +986,7 @@ def test_check_ps_common(inv_item: Service, reference: type_defs.CheckResult) ->
         _cpu_cores, data, _ = ps_section._parse_ps(now, info)
         parsed.extend((None, ps_info, cmd_line, now) for (ps_info, cmd_line) in data)
 
-    factory_defaults = {"levels": (1, 1, 99999, 99999)}
-    factory_defaults.update(inv_item.parameters)
+    factory_defaults = {"levels": (1, 1, 99999, 99999), **inv_item.parameters}
     item = inv_item.item
     assert item is not None
     with set_timezone("CET"):  # needed for comparison of displayed times, which is in localtime

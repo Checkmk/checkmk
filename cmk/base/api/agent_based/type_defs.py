@@ -16,8 +16,9 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
-from cmk.checkengine.discovery import HostLabel
 from cmk.checkengine.sectionparser import ParsedSectionName
+
+from cmk.agent_based.v1 import HostLabel
 
 
 class OIDSpecTuple(NamedTuple):

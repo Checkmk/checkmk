@@ -10,7 +10,8 @@ from typing import Any
 import pytest
 
 from cmk.base.api.agent_based import render, utils
-from cmk.base.api.agent_based.checking_classes import Metric, Result, State
+
+from cmk.agent_based.v1 import Metric, Result, State
 
 
 @pytest.mark.parametrize(

@@ -5,17 +5,6 @@
 
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.checkengine.discovery import HostLabel  # pylint: disable=cmk-module-layer-violation
-
-from cmk.base.api.agent_based.checking_classes import (
-    IgnoreResults,
-    IgnoreResultsError,
-    Metric,
-    Result,
-    Service,
-    ServiceLabel,
-    State,
-)
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
 from cmk.base.api.agent_based.utils import (
@@ -41,7 +30,18 @@ from cmk.base.api.agent_based.utils import (
 )
 from cmk.base.api.agent_based.value_store import get_value_store
 
-from cmk.agent_based.v1 import regex
+from cmk.agent_based.v1 import (
+    CheckResult,
+    HostLabel,
+    IgnoreResults,
+    IgnoreResultsError,
+    Metric,
+    regex,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 
 from . import clusterize, register, render, type_defs
 
@@ -63,6 +63,7 @@ __all__ = [
     "not_matches",
     "not_startswith",
     "Attributes",
+    "CheckResult",
     "check_levels",
     "check_levels_predictive",
     "clusterize",

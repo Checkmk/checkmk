@@ -32,7 +32,7 @@ from cmk.snmplib import SNMPBackendEnum
 from cmk.fetchers import Mode, TCPEncryptionHandling
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
-from cmk.checkengine.discovery import AutocheckEntry, DiscoveryCheckParameters, HostLabel
+from cmk.checkengine.discovery import AutocheckEntry, DiscoveryCheckParameters
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.sectionparser import ParsedSectionName
@@ -44,6 +44,8 @@ from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import ConfigCache, ip_address_of
 from cmk.base.ip_lookup import AddressFamily
+
+from cmk.agent_based.v1 import HostLabel
 
 
 def test_all_offline_hosts(monkeypatch: MonkeyPatch) -> None:

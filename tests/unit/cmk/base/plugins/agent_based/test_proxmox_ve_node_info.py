@@ -8,13 +8,13 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.checking_classes import CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_node_info import (
     check_proxmox_ve_node_info,
     parse_proxmox_ve_node_info,
     Section,
 )
+
+from cmk.agent_based.v1 import CheckResult, Result, State
 
 NODE_DATA = parse_proxmox_ve_node_info(
     [

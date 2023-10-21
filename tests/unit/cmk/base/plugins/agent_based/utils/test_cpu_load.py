@@ -7,9 +7,10 @@ from unittest.mock import Mock
 
 from tests.testlib.prediction import FixedPredictionUpdater
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads
 from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
+
+from cmk.agent_based.v1 import Metric, Result, State
 
 
 def test_cpu_loads_fixed_levels() -> None:

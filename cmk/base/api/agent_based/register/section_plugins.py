@@ -18,7 +18,6 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
-from cmk.checkengine.discovery import HostLabel
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.register.utils import (
@@ -38,6 +37,8 @@ from cmk.base.api.agent_based.type_defs import (
     StringByteTable,
     StringTable,
 )
+
+from cmk.agent_based.v1 import HostLabel
 
 
 def _create_parse_annotation(

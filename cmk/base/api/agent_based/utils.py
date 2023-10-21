@@ -11,8 +11,9 @@ import re
 from collections.abc import Callable, Generator, MutableMapping
 from typing import Any, overload
 
-from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
+
+from cmk.agent_based.v1 import IgnoreResultsError, Metric, Result, State
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___

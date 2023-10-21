@@ -14,15 +14,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    CheckPlugin,
-    DiscoveryFunction,
-    IgnoreResults,
-    Metric,
-    Result,
-    Service,
-)
+from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
@@ -31,6 +23,8 @@ from cmk.base.api.agent_based.register.utils import (
     validate_function_arguments,
     validate_ruleset_type,
 )
+
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

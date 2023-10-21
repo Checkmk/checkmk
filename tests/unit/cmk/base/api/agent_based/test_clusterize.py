@@ -4,14 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # import pytest
 
-from cmk.base.api.agent_based.checking_classes import (
-    IgnoreResults,
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State,
-)
 from cmk.base.api.agent_based.clusterize import make_node_notice_results
+
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
 
 _OK_RESULT = Result(state=State.OK, summary="I am fine")
 

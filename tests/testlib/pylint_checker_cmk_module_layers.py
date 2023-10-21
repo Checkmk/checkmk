@@ -231,13 +231,14 @@ def _allow_default_plus_gui_base_and_bakery(
     )
 
 
-def _is_allowed_for_agent_based_api(
+def _is_allowed_for_agent_based_api_exposure_under_plugins(
     *,
     imported: ModuleName,
     component: Component,  # pylint: disable=unused-argument
 ) -> bool:
     return any(
         (
+            _in_component(imported=imported, component=Component("cmk.agent_based.v1")),
             _in_component(imported=imported, component=Component("cmk.base.api.agent_based")),
             _in_component(
                 imported=imported,
@@ -335,7 +336,10 @@ _COMPONENTS = (
     # and we want to encourage that
     (Component("cmk.base.api.agent_based.value_store"), _allow_default_plus_checkers),
     (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
-    (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
+    (
+        Component("cmk.base.plugins.agent_based.agent_based_api"),
+        _is_allowed_for_agent_based_api_exposure_under_plugins,
+    ),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),

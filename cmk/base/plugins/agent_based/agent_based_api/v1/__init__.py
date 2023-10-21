@@ -5,8 +5,6 @@
 
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.utils.regex import regex  # pylint: disable=cmk-module-layer-violation
-
 from cmk.checkengine.discovery import HostLabel  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.checking_classes import (
@@ -42,6 +40,8 @@ from cmk.base.api.agent_based.utils import (
     startswith,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
+
+from cmk.agent_based.v1 import regex
 
 from . import clusterize, register, render, type_defs
 

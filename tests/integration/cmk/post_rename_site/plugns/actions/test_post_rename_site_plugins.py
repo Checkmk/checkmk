@@ -37,6 +37,5 @@ def plugin_path(site: Site) -> Iterator[str]:
 
 
 @pytest.mark.usefixtures("plugin_path")
-@pytest.mark.skip(reason="hangs in CI")
 def test_load_post_rename_site_plugin(site: Site) -> None:
     assert site.python_helper("helper_verify_rename_action.py").check_output().rstrip() == "True"

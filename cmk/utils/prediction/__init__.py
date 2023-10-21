@@ -6,13 +6,14 @@
 
 from ._grouping import PREDICTION_PERIODS, Timegroup, timezone_at
 from ._paths import PREDICTION_DIR
-from ._plugin_interface import estimate_levels, get_predictive_levels
+from ._plugin_interface import estimate_levels, get_predictive_levels, get_updated_prediction
 from ._prediction import DataStat, PredictionData, PredictionInfo, PredictionParameters
 from ._query import PredictionQuerier
 
 __all__ = [
     "PREDICTION_PERIODS",
     "get_predictive_levels",
+    "get_updated_prediction",
     "DataStat",
     "estimate_levels",
     "PredictionData",

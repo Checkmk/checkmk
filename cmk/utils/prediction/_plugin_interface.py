@@ -59,18 +59,14 @@ def _get_prediction(
     return store.get_data(timegroup)
 
 
-# levels_factor: this multiplies all absolute levels. Usage for example
-# in the cpu.loads check the multiplies the levels by the number of CPU
-# cores.
-def get_predictive_levels(
+def get_updated_prediction(
     host_name: str,
     service_description: ServiceName,
     dsname: str,
     params: PredictionParameters,
     get_recorded_data: Callable[[str, int, int], MetricRecord],
-    levels_factor: float = 1.0,
-) -> tuple[float | None, EstimatedLevels]:
-    now = int(time.time())
+    now: int,
+) -> PredictionData:
     period_info = PREDICTION_PERIODS[params.period]
 
     current_slice = Slice.from_timestamp(now, period_info)
@@ -107,7 +103,19 @@ def get_predictive_levels(
         )
         prediction_store.save_prediction(info, data_for_pred)
 
-    if (reference := data_for_pred.predict(now)) is None:
+    return data_for_pred
+
+
+# levels_factor: this multiplies all absolute levels. Usage for example
+# in the cpu.loads check the multiplies the levels by the number of CPU
+# cores.
+def get_predictive_levels(
+    prediction: PredictionData,
+    now: int,
+    params: PredictionParameters,
+    levels_factor: float = 1.0,
+) -> tuple[float | None, EstimatedLevels]:
+    if (reference := prediction.predict(now)) is None:
         return None, (None, None, None, None)
 
     return reference.average, estimate_levels(

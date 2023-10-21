@@ -9,6 +9,7 @@ These are meant to be exposed in the API
 import functools
 import itertools
 import re
+import time as stdlib_time
 from collections.abc import Callable, Generator, MutableMapping
 from typing import Any, overload
 
@@ -17,7 +18,7 @@ import livestatus
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import get_predictive_levels, PredictionParameters
+from cmk.utils.prediction import get_predictive_levels, get_updated_prediction, PredictionParameters
 
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
@@ -388,19 +389,25 @@ def check_levels_predictive(
 
     host_name = HostName(plugin_contexts.host_name())
     service_description = plugin_contexts.service_description()
-
+    now = int(stdlib_time.time())
+    params = PredictionParameters.parse_obj(levels)
     try:
         ref_value, levels_tuple = get_predictive_levels(
-            host_name,
-            service_description,
-            metric_name,
-            PredictionParameters.parse_obj(levels),
-            functools.partial(
-                livestatus.get_rrd_data,
-                livestatus.LocalConnection(),
+            get_updated_prediction(
                 host_name,
                 service_description,
+                metric_name,
+                params,
+                functools.partial(
+                    livestatus.get_rrd_data,
+                    livestatus.LocalConnection(),
+                    host_name,
+                    service_description,
+                ),
+                now,
             ),
+            now,
+            params,
         )
         if ref_value is not None:
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)

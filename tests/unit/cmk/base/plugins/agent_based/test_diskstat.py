@@ -148,6 +148,10 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     }
 
     mocker.patch(
+        "cmk.base.api.agent_based.utils.get_updated_prediction",
+        return_value=object(),
+    )
+    mocker.patch(
         "cmk.base.api.agent_based.utils.get_predictive_levels",
         return_value=(None, (2.1, 4.1, None, None)),
     )

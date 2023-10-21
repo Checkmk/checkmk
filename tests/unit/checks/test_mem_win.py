@@ -272,6 +272,10 @@ def test_mem_win(
     expected_result: CheckResult,
 ) -> None:
     mocker.patch(
+        "cmk.base.check_api._get_updated_prediction",
+        return_value=object(),
+    )
+    mocker.patch(
         "cmk.base.check_api._get_predictive_levels",
         return_value=(100000, (90000, 110000, None, None)),
     )

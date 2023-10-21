@@ -33,6 +33,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import get_predictive_levels as _get_predictive_levels
+from cmk.utils.prediction import get_updated_prediction as _get_updated_prediction
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 from cmk.checkengine.checkresults import state_markers as state_markers
@@ -304,18 +305,24 @@ def check_levels(  # pylint: disable=too-many-branches
         if not dsname:
             raise TypeError("Metric name is empty/None")
 
+        now = int(time.time())
         try:
             ref_value, levels = _get_predictive_levels(
-                host_name(),
-                service_description(),
-                dsname,
-                params,
-                _partial(
-                    _livestatus.get_rrd_data,
-                    _livestatus.LocalConnection(),
-                    host_name,
-                    service_description,
+                _get_updated_prediction(
+                    host_name(),
+                    service_description(),
+                    dsname,
+                    params,
+                    _partial(
+                        _livestatus.get_rrd_data,
+                        _livestatus.LocalConnection(),
+                        host_name(),
+                        service_description(),
+                    ),
+                    now,
                 ),
+                now,
+                params,
                 levels_factor=factor * scale,
             )
             if ref_value:

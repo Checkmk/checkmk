@@ -6,6 +6,7 @@
 
 import logging
 import time
+from collections.abc import Callable
 from typing import assert_never, Literal
 
 from cmk.utils.hostaddress import HostName
@@ -17,6 +18,7 @@ from ._paths import PREDICTION_DIR
 from ._prediction import (
     compute_prediction,
     LevelsSpec,
+    MetricRecord,
     PredictionData,
     PredictionInfo,
     PredictionParameters,
@@ -65,6 +67,7 @@ def get_predictive_levels(
     service_description: ServiceName,
     dsname: str,
     params: PredictionParameters,
+    get_recorded_data: Callable[[str, int, int], MetricRecord],
     levels_factor: float = 1.0,
 ) -> tuple[float | None, EstimatedLevels]:
     now = int(time.time())
@@ -102,8 +105,7 @@ def get_predictive_levels(
             info,
             now,
             period_info,
-            host_name,
-            service_description,
+            get_recorded_data,
         )
         prediction_store.save_prediction(info, data_for_pred)
 

@@ -18,7 +18,10 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 import socket
 import time
 from collections.abc import Callable
+from functools import partial as _partial
 from typing import Any, Literal
+
+import livestatus as _livestatus
 
 import cmk.utils.debug as _debug
 
@@ -308,6 +311,12 @@ def check_levels(  # pylint: disable=too-many-branches
                 service_description(),
                 dsname,
                 params,
+                _partial(
+                    _livestatus.get_rrd_data,
+                    _livestatus.LocalConnection(),
+                    host_name,
+                    service_description,
+                ),
                 levels_factor=factor * scale,
             )
             if ref_value:

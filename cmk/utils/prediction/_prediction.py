@@ -5,13 +5,11 @@
 
 import logging
 import math
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel
-
-import livestatus
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
@@ -25,6 +23,16 @@ logger = logging.getLogger("cmk.prediction")
 
 
 LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
+
+
+class MetricRecord(Protocol):
+    @property
+    def window(self) -> range:
+        ...
+
+    @property
+    def values(self) -> Sequence[float | None]:
+        ...
 
 
 class PredictionParameters(BaseModel, frozen=True):
@@ -110,8 +118,7 @@ def compute_prediction(
     info: PredictionInfo,
     now: int,
     period_info: PeriodInfo,
-    host_name: HostName,
-    service_description: ServiceName,
+    get_recorded_data: Callable[[str, int, int], MetricRecord],
 ) -> PredictionData:
     time_windows = time_slices(now, info.params.horizon * 86400, period_info, info.name)
 
@@ -123,16 +130,7 @@ def compute_prediction(
             from_time - start,
         )
         for start, end in time_windows
-        if (
-            response := livestatus.get_rrd_data(
-                livestatus.LocalConnection(),
-                host_name,
-                service_description,
-                f"{info.dsname}.max",
-                start,
-                end,
-            )
-        )
+        if (response := get_recorded_data(f"{info.dsname}.max", start, end))
     ]
 
     return _calculate_data_for_prediction(raw_slices)

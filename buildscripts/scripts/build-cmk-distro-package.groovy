@@ -110,7 +110,12 @@ def main() {
                             VERSION: VERSION,
                         ],
                         // TODO: SPoT!!, see https://jira.lan.tribe29.com/browse/CMK-13857
-                        dependency_paths: ["agents/wnx", "agents/windows", "packages/cmk-agent-ctl"],
+                        dependency_paths: [
+                            "agents/wnx",
+                            "agents/windows",
+                            "packages/cmk-agent-ctl",
+                            "packages/check-sql"
+                        ],
                         dest: "artifacts/winagt-build",
                     );
                     dir("${checkout_dir}/artifacts/winagt-build") {

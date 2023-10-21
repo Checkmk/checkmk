@@ -12,7 +12,6 @@ import sys
 from collections.abc import Callable, Iterable, Sequence
 from typing import NamedTuple, overload, Self
 
-from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 
@@ -275,11 +274,9 @@ class Metric(
         if not metric_name:
             raise TypeError("metric name must not be empty")
 
-        # this is not very elegant, but it ensures consistency to cmk.utils.misc.pnp_cleanup
-        pnp_name = quote_pnp_string(metric_name)
-        if metric_name != pnp_name:
-            offenders = "".join(set(metric_name) - set(pnp_name))
-            raise TypeError("invalid character(s) in metric name: %r" % offenders)
+        # this is set is chosen such that the metric name would not be changed by `pnp_cleanup`
+        if offenders := set(metric_name) & {" ", ":", "/", "\\"}:
+            raise TypeError("invalid character(s) in metric name: %r" % "".join(offenders))
 
     @staticmethod
     def _sanitize_single_value(field: str, value: float | None) -> _EvalableFloat | None:

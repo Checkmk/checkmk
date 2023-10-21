@@ -95,14 +95,17 @@ def get_predictive_levels(
             dsname=dsname,
             params=params,
         )
+        logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
+        prediction_store.remove_prediction(info.name)
+
         data_for_pred = compute_prediction(
             info,
-            prediction_store,
             now,
             period_info,
             host_name,
             service_description,
         )
+        prediction_store.save_prediction(info, data_for_pred)
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred.step)

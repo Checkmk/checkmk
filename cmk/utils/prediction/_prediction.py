@@ -139,15 +139,11 @@ class PredictionStore:
 
 def compute_prediction(
     info: PredictionInfo,
-    prediction_store: PredictionStore,
     now: int,
     period_info: PeriodInfo,
     host_name: HostName,
     service_description: ServiceName,
 ) -> PredictionData:
-    logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
-    prediction_store.remove_prediction(info.name)
-
     time_windows = time_slices(now, info.params.horizon * 86400, period_info, info.name)
 
     from_time = time_windows[0][0]
@@ -169,11 +165,7 @@ def compute_prediction(
         )
     ]
 
-    data_for_pred = _calculate_data_for_prediction(raw_slices)
-
-    prediction_store.save_prediction(info, data_for_pred)
-
-    return data_for_pred
+    return _calculate_data_for_prediction(raw_slices)
 
 
 def _calculate_data_for_prediction(

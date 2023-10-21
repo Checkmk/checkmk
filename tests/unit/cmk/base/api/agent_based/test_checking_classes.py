@@ -10,7 +10,7 @@ import pytest
 from cmk.checkengine.parameters import Parameters
 
 from cmk.base.api.agent_based.checking_classes import (
-    EvalableFloat,
+    _EvalableFloat,
     IgnoreResults,
     Metric,
     Result,
@@ -21,7 +21,7 @@ from cmk.base.api.agent_based.checking_classes import (
 
 
 def test_evalable_float() -> None:
-    inf = EvalableFloat("inf")
+    inf = _EvalableFloat("inf")
     assert literal_eval("%r" % inf) == float("inf")
 
 

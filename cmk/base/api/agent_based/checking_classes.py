@@ -31,7 +31,7 @@ class _KV(NamedTuple):
     value: str
 
 
-class EvalableFloat(float):
+class _EvalableFloat(float):
     """Extends the float representation for Infinities in such way that
     they can be parsed by eval"""
 
@@ -226,9 +226,9 @@ class Metric(
         "_MetricTuple",
         [
             ("name", str),
-            ("value", EvalableFloat),
-            ("levels", tuple[EvalableFloat | None, EvalableFloat | None]),
-            ("boundaries", tuple[EvalableFloat | None, EvalableFloat | None]),
+            ("value", _EvalableFloat),
+            ("levels", tuple[_EvalableFloat | None, _EvalableFloat | None]),
+            ("boundaries", tuple[_EvalableFloat | None, _EvalableFloat | None]),
         ],
     )
 ):
@@ -265,7 +265,7 @@ class Metric(
         return super().__new__(
             cls,
             name=name,
-            value=EvalableFloat(value),
+            value=_EvalableFloat(value),
             levels=cls._sanitize_optionals("levels", levels),
             boundaries=cls._sanitize_optionals("boundaries", boundaries),
         )
@@ -282,11 +282,11 @@ class Metric(
             raise TypeError("invalid character(s) in metric name: %r" % offenders)
 
     @staticmethod
-    def _sanitize_single_value(field: str, value: float | None) -> EvalableFloat | None:
+    def _sanitize_single_value(field: str, value: float | None) -> _EvalableFloat | None:
         if value is None:
             return None
         if isinstance(value, (int, float)):
-            return EvalableFloat(value)
+            return _EvalableFloat(value)
         raise TypeError("%s values for metric must be float, int or None" % field)
 
     @classmethod
@@ -294,7 +294,7 @@ class Metric(
         cls,
         field: str,
         values: _OptionalPair,
-    ) -> tuple[EvalableFloat | None, EvalableFloat | None]:
+    ) -> tuple[_EvalableFloat | None, _EvalableFloat | None]:
         if values is None:
             return None, None
 

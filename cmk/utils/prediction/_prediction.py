@@ -13,9 +13,6 @@ from pydantic import BaseModel
 
 import livestatus
 
-import cmk.utils.debug
-import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.misc import pnp_cleanup
@@ -61,34 +58,6 @@ class PredictionData(BaseModel, frozen=True):
     @property
     def num_points(self) -> int:
         return len(self.points)
-
-
-def _get_rrd_data_with_mk_general_exception(
-    host_name: HostName,
-    service_description: str,
-    metric_name: str,
-    fromtime: int,
-    untiltime: int,
-) -> livestatus.RRDResponse:
-    """Wrapper to raise MKGeneralException."""
-    try:
-        response = livestatus.get_rrd_data(
-            livestatus.LocalConnection(),
-            host_name,
-            service_description,
-            f"{metric_name}.max",
-            fromtime,
-            untiltime,
-        )
-    except livestatus.MKLivestatusNotFoundError as e:
-        if cmk.utils.debug.enabled():
-            raise
-        raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
-
-    if response is None:
-        raise MKGeneralException("Cannot retrieve historic data with Nagios Core")
-
-    return response
 
 
 class PredictionStore:
@@ -155,10 +124,11 @@ def compute_prediction(
         )
         for start, end in time_windows
         if (
-            response := _get_rrd_data_with_mk_general_exception(
+            response := livestatus.get_rrd_data(
+                livestatus.LocalConnection(),
                 host_name,
                 service_description,
-                info.dsname,
+                f"{info.dsname}.max",
                 start,
                 end,
             )

@@ -1434,7 +1434,7 @@ def get_rrd_data(
     fromtime: int,
     untiltime: int,
     max_entries: int = 400,
-) -> RRDResponse | None:
+) -> RRDResponse:
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
@@ -1464,8 +1464,7 @@ def get_rrd_data(
     lql = livestatus_lql([host_name], [column], service_description) + "OutputFormat: python\n"
 
     if (response := connection.query_value(lql)) is None:
-        # I think we should rather raise something here, but I am not sure what.
-        return None
+        raise MKLivestatusQueryError("Cannot get historic data")
 
     raw_start, raw_end, raw_step, *values = response
 

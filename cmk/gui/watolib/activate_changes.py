@@ -2562,6 +2562,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     )
                 },
                 version.__version__,
+                parse_version=version.parse_check_mk_version,
             )
             packaging.make_post_package_change_actions(
                 ((packaging.PackagePart.GUI, packaging.PackagePart.WEB), packaging.reload_apache),

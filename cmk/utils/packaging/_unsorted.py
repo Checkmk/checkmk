@@ -13,11 +13,9 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
-from typing import Final
+from typing import Final, Protocol, Self
 
 from pydantic import BaseModel
-
-from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
 from ._installed import Installer
 from ._mkp import (
@@ -33,6 +31,14 @@ from ._reporter import all_local_files, all_rule_pack_files
 from ._type_defs import PackageError, PackageID, PackageName
 
 _logger = logging.getLogger(__name__)
+
+
+class ComparableVersion(Protocol):
+    def __ge__(self, other: Self) -> bool:
+        ...
+
+    def __lt__(self, other: Self) -> bool:
+        ...
 
 
 def _get_permissions(part: PackagePart, rel_path: Path) -> int:
@@ -299,6 +305,7 @@ def install(
     *,
     site_version: str,
     allow_outdated: bool = True,
+    parse_version: Callable[[str], ComparableVersion],
 ) -> Manifest:
     try:
         return _install(
@@ -309,6 +316,7 @@ def install(
             callbacks,
             site_version=site_version,
             allow_outdated=allow_outdated,
+            parse_version=parse_version,
         )
     finally:
         # it is enabled, even if installing failed
@@ -323,6 +331,7 @@ def _install(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
+    parse_version: Callable[[str], ComparableVersion],
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
@@ -342,7 +351,7 @@ def _install(
         _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
-        installer, path_config, manifest, old_manifest, site_version, allow_outdated
+        installer, path_config, manifest, old_manifest, site_version, allow_outdated, parse_version
     )
 
     extract_mkp(manifest, mkp, path_config.get_path)
@@ -392,11 +401,12 @@ def _raise_for_installability(
     old_package: Manifest | None,
     site_version: str,
     allow_outdated: bool,
+    parse_version: Callable[[str], ComparableVersion],
 ) -> None:
     """Raise a `PackageException` if we should not install this package"""
-    _raise_for_too_old_cmk_version(package.version_min_required, site_version)
+    _raise_for_too_old_cmk_version(parse_version, package.version_min_required, site_version)
     if not allow_outdated:
-        _raise_for_too_new_cmk_version(package.version_usable_until, site_version)
+        _raise_for_too_new_cmk_version(parse_version, package.version_usable_until, site_version)
     _raise_for_conflicts(package, old_package, installer, path_config)
 
 
@@ -473,13 +483,15 @@ def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
         )
 
 
-def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
+def _raise_for_too_old_cmk_version(
+    parse_version: Callable[[str], ComparableVersion], min_version: str, site_version: str
+) -> None:
     """Raise PackageException if the site is too old for this package
 
     If the sites version can not be parsed or is a daily build, the check is simply passing without error.
     """
     try:
-        too_old = parse_check_mk_version(site_version) < parse_check_mk_version(min_version)
+        too_old = parse_version(site_version) < parse_version(min_version)
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
@@ -490,7 +502,9 @@ def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
         )
 
 
-def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str) -> None:
+def _raise_for_too_new_cmk_version(
+    parse_version: Callable[[str], ComparableVersion], until_version: str | None, site_version: str
+) -> None:
     """Raise PackageException if the site is too new for this package
 
     If the sites version can not be parsed or is a daily build, the check is simply passing without error.
@@ -499,7 +513,7 @@ def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str)
         return
 
     try:
-        too_new = parse_check_mk_version(site_version) >= parse_check_mk_version(until_version)
+        too_new = parse_version(site_version) >= parse_version(until_version)
     except Exception:
         # Be compatible: When a version can not be parsed, then skip this check
         return
@@ -589,6 +603,7 @@ def update_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     site_version: str,
+    parse_version: Callable[[str], ComparableVersion],
 ) -> tuple[Sequence[Manifest], Sequence[Manifest]]:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore(
@@ -603,6 +618,7 @@ def update_active_packages(
             path_config,
             callbacks,
             site_version=site_version,
+            parse_version=parse_version,
         ),
         _install_applicable_inactive_packages(
             package_store,
@@ -610,6 +626,7 @@ def update_active_packages(
             path_config,
             callbacks,
             site_version=site_version,
+            parse_version=parse_version,
         ),
     )
 
@@ -619,6 +636,7 @@ def _deinstall_inapplicable_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
+    parse_version: Callable[[str], ComparableVersion],
     site_version: str,
 ) -> Sequence[Manifest]:
     uninstalled = []
@@ -631,6 +649,7 @@ def _deinstall_inapplicable_active_packages(
                 manifest,
                 site_version,
                 allow_outdated=False,
+                parse_version=parse_version,
             )
         except PackageError as exc:
             _logger.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
@@ -653,6 +672,7 @@ def _install_applicable_inactive_packages(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
+    parse_version: Callable[[str], ComparableVersion],
 ) -> Sequence[Manifest]:
     installed = []
     for name, manifests in _sort_enabled_packages_for_installation(package_store):
@@ -667,6 +687,7 @@ def _install_applicable_inactive_packages(
                         callbacks,
                         allow_outdated=False,
                         site_version=site_version,
+                        parse_version=parse_version,
                     )
                 )
             except PackageError as exc:
@@ -702,6 +723,7 @@ def disable_outdated(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
+    parse_version: Callable[[str], ComparableVersion],
     site_version: str,
 ) -> Sequence[Manifest]:
     """Check installed packages and disables the outdated ones
@@ -712,7 +734,9 @@ def disable_outdated(
     disabled = []
     for manifest in installer.get_installed_manifests():
         try:
-            _raise_for_too_new_cmk_version(manifest.version_usable_until, site_version)
+            _raise_for_too_new_cmk_version(
+                parse_version, manifest.version_usable_until, site_version
+            )
         except PackageError as exc:
             _logger.info(
                 "[%s %s]: Disabling: %s",

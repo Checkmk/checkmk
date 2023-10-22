@@ -22,6 +22,7 @@ from cmk.utils import store
 from cmk.utils.packaging import _mkp as mkp
 from cmk.utils.packaging import _reporter as reporter
 from cmk.utils.packaging import _unsorted as packaging_unsorted
+from cmk.utils.version import parse_check_mk_version
 
 import cmk.ec.export as ec
 
@@ -262,6 +263,7 @@ def test_install(
         _NO_CALLBACKS,
         allow_outdated=False,
         site_version="3.14.0p15",
+        parse_version=parse_check_mk_version,
     )
     assert installer.is_installed(packaging.PackageName("aaa")) is True
     manifest = _read_manifest(installer, packaging.PackageName("aaa"))
@@ -430,7 +432,9 @@ def test_reload_gui_with_gui_part() -> None:
 )
 def test_raise_for_too_new_cmk_version_raises(until_version: str, site_version: str) -> None:
     with pytest.raises(packaging.PackageError):
-        packaging_unsorted._raise_for_too_new_cmk_version(until_version, site_version)
+        packaging_unsorted._raise_for_too_new_cmk_version(
+            parse_check_mk_version, until_version, site_version
+        )
 
 
 @pytest.mark.parametrize(
@@ -444,7 +448,9 @@ def test_raise_for_too_new_cmk_version_raises(until_version: str, site_version: 
     ],
 )
 def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_version: str) -> None:
-    packaging_unsorted._raise_for_too_new_cmk_version(until_version, site_version)
+    packaging_unsorted._raise_for_too_new_cmk_version(
+        parse_check_mk_version, until_version, site_version
+    )
 
 
 def _setup_local_files_structure() -> None:

@@ -10,13 +10,15 @@ from typing import get_args, NamedTuple, NoReturn
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.structured_data import SDKey, SDValue
 
-from cmk.checkengine.inventory import InventoryPluginName, ItemDataCollection
+from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
+_SDValue = int | float | str | bool | None
+
+
 # get allowed value types back as a tuple to guarantee consistency
-_ATTR_DICT_VAL_TYPES = get_args(get_args(Mapping[SDKey, SDValue])[1])
+_ATTR_DICT_VAL_TYPES = get_args(_SDValue)
 
 _VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
 
@@ -30,23 +32,23 @@ def _parse_valid_path(path: list[str]) -> list[str]:
     return path
 
 
-def _raise_invalid_attr_dict(kwarg_name: str, dict_: Mapping[SDKey, SDValue]) -> NoReturn:
+def _raise_invalid_attr_dict(kwarg_name: str, dict_: Mapping[str, _SDValue]) -> NoReturn:
     value_types = ", ".join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
     raise TypeError(
-        f"{kwarg_name} must be a dict with keys of type {SDKey.__name__}"
+        f"{kwarg_name} must be a dict with keys of type `str`"
         f" and values of type {value_types}. Got {dict_!r}"
     )
 
 
 def _parse_valid_dict(
-    kwarg_name: str, dict_: Mapping[SDKey, SDValue] | None
-) -> Mapping[SDKey, SDValue]:
+    kwarg_name: str, dict_: Mapping[str, _SDValue] | None
+) -> Mapping[str, _SDValue]:
     if dict_ is None:
         return {}
     if not isinstance(dict_, dict):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     if not all(
-        isinstance(k, SDKey) and isinstance(v, _ATTR_DICT_VAL_TYPES) for k, v in dict_.items()
+        isinstance(k, str) and isinstance(v, _ATTR_DICT_VAL_TYPES) for k, v in dict_.items()
     ):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     return dict_
@@ -56,9 +58,9 @@ class Attributes(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_AttributesTuple",
         [
-            ("path", list[SDKey]),
-            ("inventory_attributes", Mapping[SDKey, SDValue]),
-            ("status_attributes", Mapping[SDKey, SDValue]),
+            ("path", list[str]),
+            ("inventory_attributes", Mapping[str, _SDValue]),
+            ("status_attributes", Mapping[str, _SDValue]),
         ],
     )
 ):
@@ -68,8 +70,8 @@ class Attributes(
         cls,
         *,
         path: list[str],
-        inventory_attributes: Mapping[SDKey, SDValue] | None = None,
-        status_attributes: Mapping[SDKey, SDValue] | None = None,
+        inventory_attributes: Mapping[str, _SDValue] | None = None,
+        status_attributes: Mapping[str, _SDValue] | None = None,
     ) -> "Attributes":
         """
 
@@ -102,21 +104,15 @@ class Attributes(
             status_attributes=status_attributes,
         )
 
-    def collect(self, collection: ItemDataCollection) -> None:
-        if self.inventory_attributes:
-            collection.inventory_pairs.append(self.inventory_attributes)
-        if self.status_attributes:
-            collection.status_data_pairs.append(self.status_attributes)
-
 
 class TableRow(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_TableRowTuple",
         [
-            ("path", list[SDKey]),
-            ("key_columns", Mapping[SDKey, SDValue]),
-            ("inventory_columns", Mapping[SDKey, SDValue]),
-            ("status_columns", Mapping[SDKey, SDValue]),
+            ("path", list[str]),
+            ("key_columns", Mapping[str, _SDValue]),
+            ("inventory_columns", Mapping[str, _SDValue]),
+            ("status_columns", Mapping[str, _SDValue]),
         ],
     )
 ):
@@ -126,9 +122,9 @@ class TableRow(
         cls,
         *,
         path: list[str],
-        key_columns: Mapping[SDKey, SDValue],
-        inventory_columns: Mapping[SDKey, SDValue] | None = None,
-        status_columns: Mapping[SDKey, SDValue] | None = None,
+        key_columns: Mapping[str, _SDValue],
+        inventory_columns: Mapping[str, _SDValue] | None = None,
+        status_columns: Mapping[str, _SDValue] | None = None,
     ) -> "TableRow":
         """
 
@@ -169,15 +165,6 @@ class TableRow(
             inventory_columns=inventory_columns,
             status_columns=status_columns,
         )
-
-    def collect(self, collection: ItemDataCollection) -> None:
-        # TableRow provides:
-        #   - key_columns: {"kc": "kc-val", ...}
-        #   - rows: [{"c": "c-val", ...}, ...]
-        collection.key_columns.extend(self.key_columns)
-        collection.inventory_rows.append({**self.key_columns, **self.inventory_columns})
-        if self.status_columns:
-            collection.status_data_rows.append({**self.key_columns, **self.status_columns})
 
 
 InventoryResult = Iterable[Attributes | TableRow]

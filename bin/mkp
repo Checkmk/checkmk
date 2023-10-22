@@ -47,13 +47,26 @@ _PATH_CONFIG = PathConfig(
     web_dir=cmk.utils.paths.local_web_dir,
 )
 
-_CALLBACKS: Final = {
-    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
-        install=ec.install_packaged_rule_packs,
-        uninstall=ec.uninstall_packaged_rule_packs,
-        release=ec.release_packaged_rule_packs,
+
+_SITE_CONTEXT: Final = cli.SiteContext(
+    callbacks={
+        PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
+            install=ec.install_packaged_rule_packs,
+            uninstall=ec.uninstall_packaged_rule_packs,
+            release=ec.release_packaged_rule_packs,
+        ),
+    },
+    post_package_change_actions=make_post_package_change_actions(
+        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
+        ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
+        (
+            (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
+            request_index_rebuild,
+        ),
     ),
-}
+    version=__version__,
+    parse_version=parse_check_mk_version,
+)
 
 
 if __name__ == "__main__":
@@ -61,17 +74,7 @@ if __name__ == "__main__":
         cli.main(
             sys.argv[1:] or ["--help"],
             _PATH_CONFIG,
-            _CALLBACKS,
-            __version__,
-            make_post_package_change_actions(
-                ((PackagePart.GUI, PackagePart.WEB), reload_apache),
-                ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
-                (
-                    (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
-                    request_index_rebuild,
-                ),
-            ),
+            _SITE_CONTEXT,
             cmk.utils.store.save_bytes_to_file,
-            parse_check_mk_version,
         )
     )

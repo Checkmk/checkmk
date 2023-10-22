@@ -18,10 +18,7 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 import socket
 import time
 from collections.abc import Callable
-from functools import partial as _partial
 from typing import Any, Literal
-
-import livestatus as _livestatus
 
 import cmk.utils.debug as _debug
 
@@ -305,18 +302,8 @@ def check_levels(  # pylint: disable=too-many-branches
         if not dsname:
             raise TypeError("Metric name is empty/None")
 
-        prediction_updater = _PredictionUpdater(
-            HostName(host_name()),
-            service_description(),
-            _PredictionParameters.model_validate(params),
-            _partial(
-                _livestatus.get_rrd_data,
-                _livestatus.LocalConnection(),
-            ),
-        )
-
         try:
-            ref_value, levels = prediction_updater.get_predictive_levels(
+            ref_value, levels = params["__get_predictive_levels__"](
                 dsname,
                 levels_factor=factor * scale,
             )

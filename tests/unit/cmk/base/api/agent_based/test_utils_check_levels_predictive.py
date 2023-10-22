@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pytest_mock import MockerFixture
+from tests.testlib.prediction import FixedPredictionUpdater
 
 from cmk.base.api.agent_based import utils
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
-
-from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
 
 
 class MockPredictionUpdater:
@@ -21,17 +19,20 @@ class MockPredictionUpdater:
         return None, (2.2, 4.2, None, None)
 
 
-def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> None:
-    mocker.patch(
-        "cmk.base.api.agent_based.utils.PredictionUpdater",
-        MockPredictionUpdater,
-    )
-    with current_host("unittest"), current_service("test_check", "unittest-service-description"):
-        result = next(
-            utils.check_levels_predictive(
-                42.42, metric_name="metric_name", levels={"period": "wday", "horizon": 10}
-            )
+def test_check_levels_predictive_default_render_func() -> None:
+    result = next(
+        utils.check_levels_predictive(
+            42.42,
+            metric_name="metric_name",
+            levels={
+                "period": "wday",
+                "horizon": 10,
+                "__get_predictive_levels__": FixedPredictionUpdater(
+                    None, (2.2, 4.2, None, None)
+                ).get_predictive_levels,
+            },
         )
+    )
 
     assert isinstance(result, Result)
     assert result.summary.startswith("42.42")

@@ -14,6 +14,8 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from functools import partial
 from typing import Final
 
+import livestatus
+
 import cmk.utils.debug
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
@@ -24,6 +26,7 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
+from cmk.utils.prediction import PredictionParameters, PredictionUpdater
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.servicename import ServiceName
@@ -631,7 +634,11 @@ def get_aggregated_result(
     params_kw = (
         {}
         if plugin.check_default_parameters is None
-        else {"params": _final_read_only_check_parameters(service.parameters)}
+        else {
+            "params": _final_read_only_check_parameters(
+                host_name, service.description, service.parameters
+            )
+        }
     )
 
     try:
@@ -690,19 +697,42 @@ def get_aggregated_result(
 
 
 def _final_read_only_check_parameters(
+    host_name: HostName,
+    service_name: ServiceName,
     entries: TimespecificParameters | LegacyCheckParameters,
 ) -> Parameters:
-    raw_parameters = (
-        entries.evaluate(timeperiod_active)
-        if isinstance(entries, TimespecificParameters)
-        else entries
+    return Parameters(
+        # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
+        # wrap_parameters is a no-op for dictionaries.
+        # For auto-migrated plugins expecting tuples, they will be
+        # unwrapped by a decorator of the original check_function.
+        wrap_parameters(
+            _inject_prediction_callback(
+                host_name,
+                service_name,
+                entries.evaluate(timeperiod_active)
+                if isinstance(entries, TimespecificParameters)
+                else entries,
+            ),
+        )
     )
 
-    # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
-    # wrap_parameters is a no-op for dictionaries.
-    # For auto-migrated plugins expecting tuples, they will be
-    # unwrapped by a decorator of the original check_function.
-    return Parameters(wrap_parameters(raw_parameters))
+
+def _inject_prediction_callback(
+    host_name: HostName, service_name: ServiceName, params: LegacyCheckParameters
+) -> LegacyCheckParameters:
+    if not isinstance(params, dict):
+        return params
+
+    if "__get_predictive_levels__" in params:
+        params["__get_predictive_levels__"] = PredictionUpdater(
+            host_name,
+            service_name,
+            PredictionParameters.model_validate(params),
+            partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
+        )
+
+    return {k: _inject_prediction_callback(host_name, service_name, v) for k, v in params.items()}
 
 
 class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):

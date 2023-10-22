@@ -7,7 +7,8 @@ from collections.abc import Mapping
 from typing import Any
 
 import pytest
-from pytest_mock import MockerFixture
+
+from tests.testlib.prediction import FixedPredictionUpdater
 
 from tests.unit.conftest import FixRegister
 
@@ -28,16 +29,6 @@ _SECTION = {
     "VirtualTotal": 140737488224256,
     "VirtualFree": 140737374928896,
 }
-
-
-class MockPredictionUpdater:
-    def __init__(self, *a: object, **kw: object) -> None:
-        return
-
-    def get_predictive_levels(
-        self, *a: object, **kw: object
-    ) -> tuple[int, tuple[int, int, None, None]]:
-        return (100000, (90000, 110000, None, None))
 
 
 @pytest.mark.usefixtures("initialised_item_state")
@@ -146,11 +137,17 @@ class MockPredictionUpdater:
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
                 "pagefile": {
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
             },
             [
@@ -212,11 +209,17 @@ class MockPredictionUpdater:
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
                 "pagefile": {
                     "period": "minute",
                     "horizon": 90,
                     "levels_upper": ("relative", (10.0, 20.0)),
+                    "__get_predictive_levels__": FixedPredictionUpdater(
+                        100000, (90000, 110000, None, None)
+                    ).get_predictive_levels,
                 },
                 "average": 60,
             },
@@ -276,12 +279,10 @@ class MockPredictionUpdater:
     ],
 )
 def test_mem_win(
-    mocker: MockerFixture,
     fix_register: FixRegister,
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
-    mocker.patch("cmk.base.check_api._PredictionUpdater", MockPredictionUpdater)
     with current_host("unittest-hn"), current_service("unittest_sd", "unittest_sd_description"):
         assert (
             list(

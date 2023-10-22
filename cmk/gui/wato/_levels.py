@@ -35,6 +35,13 @@ def PredictiveLevels(
     return Transform(
         Dictionary(
             title=_("Predictive Levels (only on CMC)"),
+            ignored_keys=[
+                # This is a place holder:
+                # The backend uses this marker to inject a callback to get the prediction.
+                # Its main purpose it to bind the host name and service description,
+                # which are not known to the plugin.
+                "__prediction_updater__",
+            ],
             optional_keys=[
                 "weight",
                 "levels_upper",
@@ -225,7 +232,7 @@ def PredictiveLevels(
                 ),
             ],
         ),
-        back=lambda p: p,
+        back=lambda p: {"__get_predictive_levels__": None, **p},
     )
 
 

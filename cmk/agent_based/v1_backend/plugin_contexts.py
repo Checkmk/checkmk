@@ -7,10 +7,9 @@ Implents the magical host_name, check_type and service_description functions.
 
 This is aweful, but we can not get rid of it, as this is currently needed by
 (at least)
- * predictive levels
  * logwatch
  * robotmk
- * legacy check_* agent_* files ("argument thingys")
+ * legacy check_* agent_* files ("argument thingys", supported last in 2.3)
 """
 
 from collections.abc import Iterator

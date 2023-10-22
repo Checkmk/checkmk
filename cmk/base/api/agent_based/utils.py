@@ -6,23 +6,16 @@
 
 These are meant to be exposed in the API
 """
-import functools
 import itertools
 import re
 from collections.abc import Callable, Generator, MutableMapping
 from typing import Any, overload
 
-import livestatus
-
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import PredictionParameters, PredictionUpdater
 
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
-
-from cmk.agent_based.v1_backend import plugin_contexts
 
 #     ____       _            _
 #    |  _ \  ___| |_ ___  ___| |_   ___ _ __   ___  ___
@@ -386,14 +379,8 @@ def check_levels_predictive(
     # validate the metric name, before we can get the levels.
     _ = Metric(metric_name, value)
 
-    prediction_updater = PredictionUpdater(
-        HostName(plugin_contexts.host_name()),
-        plugin_contexts.service_description(),
-        PredictionParameters.model_validate(levels),
-        functools.partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
-    )
     try:
-        ref_value, levels_tuple = prediction_updater.get_predictive_levels(metric_name)
+        ref_value, levels_tuple = levels["__get_predictive_levels__"](metric_name)
         if ref_value is not None:
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
         else:

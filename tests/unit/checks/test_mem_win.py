@@ -30,6 +30,16 @@ _SECTION = {
 }
 
 
+class MockPredictionUpdater:
+    def __init__(self, *a: object, **kw: object) -> None:
+        return
+
+    def get_predictive_levels(
+        self, *a: object, **kw: object
+    ) -> tuple[int, tuple[int, int, None, None]]:
+        return (100000, (90000, 110000, None, None))
+
+
 @pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, expected_result",
@@ -271,14 +281,7 @@ def test_mem_win(
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
-    mocker.patch(
-        "cmk.base.check_api._get_updated_prediction",
-        return_value=object(),
-    )
-    mocker.patch(
-        "cmk.base.check_api._get_predictive_levels",
-        return_value=(100000, (90000, 110000, None, None)),
-    )
+    mocker.patch("cmk.base.check_api._PredictionUpdater", MockPredictionUpdater)
     with current_host("unittest-hn"), current_service("unittest_sd", "unittest_sd_description"):
         assert (
             list(

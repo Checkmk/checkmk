@@ -11,16 +11,21 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
 
 
+class MockPredictionUpdater:
+    def __init__(self, *a: object, **kw: object) -> None:
+        return
+
+    def get_predictive_levels(
+        self, *a: object, **kw: object
+    ) -> tuple[None, tuple[float, float, None, None]]:
+        return None, (2.2, 4.2, None, None)
+
+
 def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> None:
     mocker.patch(
-        "cmk.base.api.agent_based.utils.get_updated_prediction",
-        return_value=object(),
+        "cmk.base.api.agent_based.utils.PredictionUpdater",
+        MockPredictionUpdater,
     )
-    mocker.patch(
-        "cmk.base.api.agent_based.utils.get_predictive_levels",
-        return_value=(None, (2.2, 4.2, None, None)),
-    )
-
     with current_host("unittest"), current_service("test_check", "unittest-service-description"):
         result = next(
             utils.check_levels_predictive(

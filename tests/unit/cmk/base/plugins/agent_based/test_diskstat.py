@@ -28,6 +28,16 @@ def test_parse_diskstat_minimum() -> None:
     )
 
 
+class MockPredictionUpdater:
+    def __init__(self, *a: object, **kw: object) -> None:
+        return
+
+    def get_predictive_levels(
+        self, *a: object, **kw: object
+    ) -> tuple[None, tuple[float, float, None, None]]:
+        return None, (2.1, 4.1, None, None)
+
+
 @pytest.mark.usefixtures("initialised_item_state")
 def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     # SUP-5924
@@ -147,14 +157,7 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
         "write_wait": (30.0, 50.0),
     }
 
-    mocker.patch(
-        "cmk.base.api.agent_based.utils.get_updated_prediction",
-        return_value=object(),
-    )
-    mocker.patch(
-        "cmk.base.api.agent_based.utils.get_predictive_levels",
-        return_value=(None, (2.1, 4.1, None, None)),
-    )
+    mocker.patch("cmk.base.api.agent_based.utils.PredictionUpdater", MockPredictionUpdater)
     with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
         "unittest_sd",
         "unittest_sd_description",

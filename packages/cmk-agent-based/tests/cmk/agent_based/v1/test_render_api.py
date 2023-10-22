@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 
 import pytest
 
-from tests.testlib import set_timezone
-
-import cmk.base.api.agent_based.render as render
+from cmk.agent_based.v1 import render
 
 
 @pytest.mark.parametrize(
@@ -19,9 +18,9 @@ import cmk.base.api.agent_based.render as render
         (1587908220.0, "Apr 26 2020"),
     ],
 )
-def test_date(epoch: float | None, output: str) -> None:
-    with set_timezone("UTC"):
-        assert output == render.date(epoch=epoch)
+def test_date(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(time, "localtime", time.gmtime)
+    assert output == render.date(epoch=epoch)
 
 
 @pytest.mark.parametrize(
@@ -32,9 +31,9 @@ def test_date(epoch: float | None, output: str) -> None:
         (1587908220.0, "Apr 26 2020 13:37:00"),
     ],
 )
-def test_datetime(epoch: float | None, output: str) -> None:
-    with set_timezone("UTC"):
-        assert output == render.datetime(epoch=epoch)
+def test_datetime(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(time, "localtime", time.gmtime)
+    assert output == render.datetime(epoch=epoch)
 
 
 @pytest.mark.parametrize(
@@ -72,7 +71,7 @@ def test_timespan_negative() -> None:
     ],
 )
 def test__digits_left(value: float, output: int) -> None:
-    assert output == render._digits_left(value)
+    assert output == render._digits_left(value)  # pylint: disable=protected-access
 
 
 @pytest.mark.parametrize(
@@ -90,7 +89,7 @@ def test__digits_left(value: float, output: int) -> None:
     ],
 )
 def test__auto_scale(value: float, use_si_units: bool, output: tuple[str, str]) -> None:
-    assert output == render._auto_scale(value, use_si_units)
+    assert output == render._auto_scale(value, use_si_units)  # pylint: disable=protected-access
 
 
 @pytest.mark.parametrize(

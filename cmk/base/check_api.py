@@ -37,13 +37,13 @@ from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
-from cmk.base.api.agent_based import render as _render
 
 # pylint: disable=unused-import
 from cmk.base.api.agent_based.register.utils_legacy import (
     LegacyCheckDefinition as LegacyCheckDefinition,
 )
 
+from cmk.agent_based.v1 import render as _render
 from cmk.agent_based.v1_backend.plugin_contexts import (
     host_name as host_name,  # pylint: disable=unused-import
 )

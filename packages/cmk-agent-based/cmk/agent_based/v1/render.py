@@ -2,13 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Render functions for check development
-
-These are meant to be exposed in the API
 """
-import math
-import time
-from collections.abc import Iterable
+The "render" namespace adds functions to render values in a human readable way.
+
+All of the render functions take a single numerical value as an argument, and return
+a string.
+"""
+import math as _math
+import time as _time
+from collections.abc import Iterable as _Iterable
 
 _DATE_FORMAT = "%b %d %Y"
 
@@ -48,7 +50,7 @@ def date(epoch: float | None) -> str:
     """
     if epoch is None:
         return "never"
-    return time.strftime(_DATE_FORMAT, time.localtime(float(epoch)))
+    return _time.strftime(_DATE_FORMAT, _time.localtime(float(epoch)))
 
 
 def datetime(epoch: float | None) -> str:
@@ -65,10 +67,10 @@ def datetime(epoch: float | None) -> str:
     """
     if epoch is None:
         return "never"
-    return time.strftime("%s %%H:%%M:%%S" % _DATE_FORMAT, time.localtime(float(epoch)))
+    return _time.strftime(f"{_DATE_FORMAT} %H:%M:%S", _time.localtime(float(epoch)))
 
 
-def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
+def _gen_timespan_chunks(seconds: float, nchunks: int) -> _Iterable[str]:
     if seconds < 0:
         raise ValueError("Cannot render negative timespan")
 
@@ -79,7 +81,7 @@ def _gen_timespan_chunks(seconds: float, nchunks: int) -> Iterable[str]:
 
     for unit, scale in _TIME_UNITS[start : start + nchunks]:
         last_chunk = unit.endswith("seconds")
-        value = (round if last_chunk else int)(seconds / scale)  # type: ignore[operator]
+        value = round(seconds / scale) if last_chunk else int(seconds / scale)
         yield f"{value:.0f} {unit if value != 1 else unit[:-1]}"
         if last_chunk:
             break
@@ -105,7 +107,7 @@ def timespan(seconds: float) -> str:
 
     """
     ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
-    if ts == "0 %s" % _TIME_UNITS[-1][0]:
+    if ts == f"0 {_TIME_UNITS[-1][0]}":
         ts = "0 seconds"
     return ts
 
@@ -119,21 +121,21 @@ def _digits_left(value: float) -> int:
 
     """
     try:
-        return max(int(math.log10(abs(value)) + 1), 1)
+        return max(int(_math.log10(abs(value)) + 1), 1)
     except ValueError:
         return 1
 
 
 def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True) -> tuple[str, str]:
     if use_si_units:
-        base = 1000
+        base = 1000.0
         size_prefixes = _SIZE_PREFIXES_SI
     else:
-        base = 1024
+        base = 1024.0
         size_prefixes = _SIZE_PREFIXES_IEC
 
     try:
-        log_value = int(math.log(abs(value), base))
+        log_value = int(_math.log(abs(value), base))
     except ValueError:
         log_value = 0
 
@@ -142,7 +144,7 @@ def _auto_scale(value: float, use_si_units: bool, add_bytes_prefix: bool = True)
     if add_bytes_prefix:
         unit = (unit + ("B" if use_si_units else "iB")).lstrip("i")
     scaled_value = float(value) / base**exponent
-    fmt = "%%.%df" % max(3 - _digits_left(scaled_value), 0)
+    fmt = f"%.{max(3 - _digits_left(scaled_value), 0)}f"
     return fmt % scaled_value, unit
 
 
@@ -153,7 +155,8 @@ def frequency(hertz: float) -> str:
         >>> frequency(1e10 / 3.)
         '3.33 GHz'
     """
-    return "%s %sHz" % _auto_scale(float(hertz), use_si_units=True, add_bytes_prefix=False)
+    value_str, unit = _auto_scale(float(hertz), use_si_units=True, add_bytes_prefix=False)
+    return f"{value_str} {unit}Hz"
 
 
 def disksize(bytes_: float) -> str:
@@ -164,7 +167,7 @@ def disksize(bytes_: float) -> str:
       '1.02 kB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=True)
-    return "{} {}".format(value_str if unit != "B" else value_str.split(".")[0], unit)
+    return f"{value_str if unit != 'B' else value_str.split('.')[0]} {unit}"
 
 
 def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
@@ -175,7 +178,7 @@ def bytes(bytes_: float) -> str:  # pylint: disable=redefined-builtin
       '1.00 MiB'
     """
     value_str, unit = _auto_scale(float(bytes_), use_si_units=False)
-    return "{} {}".format(value_str if unit != "B" else value_str.split(".")[0], unit)
+    return f"{value_str if unit != 'B' else value_str.split('.')[0]} {unit}"
 
 
 def filesize(bytes_: float) -> str:
@@ -185,16 +188,17 @@ def filesize(bytes_: float) -> str:
       >>> filesize(12345678)
       '12,345,678 B'
     """
-    val_str = "%.0f" % float(bytes_)
+    val_str = f"{float(bytes_):.0f}"
     offset = len(val_str) % 3
 
     groups = [val_str[0:offset]] + [val_str[i : i + 3] for i in range(offset, len(val_str), 3)]
-    return "%s B" % ",".join(groups).strip(",")
+    return f"{','.join(groups).strip(',')} B"
 
 
 def networkbandwidth(octets_per_sec: float) -> str:
     """Render network bandwidth using an appropriate SI prefix"""
-    return "%s %sit/s" % _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
+    value_str, unit = _auto_scale(float(octets_per_sec) * 8, use_si_units=True)
+    return f"{value_str} {unit}it/s"
 
 
 def nicspeed(octets_per_sec: float) -> str:
@@ -219,7 +223,8 @@ def iobandwidth(bytes_: float) -> str:
         '128 B/s'
 
     """
-    return "%s %s/s" % _auto_scale(float(bytes_), use_si_units=True)
+    value_str, unit = _auto_scale(float(bytes_), use_si_units=True)
+    return f"{value_str} {unit}/s"
 
 
 def percent(percentage: float) -> str:
@@ -246,3 +251,18 @@ def percent(percentage: float) -> str:
 
     # this includes negative values!
     return f"{value:.2f}%"
+
+
+__all__ = [
+    "bytes",
+    "date",
+    "datetime",
+    "disksize",
+    "filesize",
+    "frequency",
+    "iobandwidth",
+    "networkbandwidth",
+    "nicspeed",
+    "percent",
+    "timespan",
+]

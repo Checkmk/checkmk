@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from typing import assert_never, Final
+from typing import assert_never, Final, Self
 
 from ._mkp import PackagePart
 
@@ -36,6 +37,10 @@ class PathConfig:
     pnp_templates_dir: Path
     tmp_dir: Path
     web_dir: Path
+
+    @classmethod
+    def from_toml(cls, content: str) -> Self:
+        return cls(**tomllib.loads(content)["paths"])
 
     def get_path(self, part: PackagePart) -> Path:
         match part:

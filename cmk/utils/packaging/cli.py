@@ -23,6 +23,7 @@ from ._mkp import (
 )
 from ._parts import PackageOperationCallbacks, PathConfig, ui_title
 from ._reporter import files_inventory
+from ._standalone import read_path_config, simple_file_write
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 from ._unsorted import (
     ComparableVersion,
@@ -46,6 +47,37 @@ class SiteContext:
     post_package_change_actions: Callable[[Sequence[Manifest]], None]
     version: str
     parse_version: Callable[[str], ComparableVersion]
+
+
+_HandlerFunction = Callable[
+    [
+        argparse.Namespace,
+        PathConfig | None,
+        Callable[[str, bytes], None],
+    ],
+    int,
+]
+
+_SiteExclusiveHandlerFunction = Callable[
+    [
+        SiteContext,
+        argparse.Namespace,
+        PathConfig | None,
+        Callable[[str, bytes], None],
+    ],
+    int,
+]
+
+
+def partial(wrappee: _SiteExclusiveHandlerFunction, site_context: SiteContext) -> _HandlerFunction:
+    def wrapped(
+        args: argparse.Namespace,
+        path_config: PathConfig | None,
+        persisting_function: Callable[[str, bytes], None],
+    ) -> int:
+        return wrappee(site_context, args, path_config, persisting_function)
+
+    return wrapped
 
 
 def _render_table(headers: list[str], rows: Iterable[list[str]]) -> str:
@@ -106,12 +138,14 @@ def _args_find(
 
 
 def _command_find(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show information about local files"""
+    if path_config is None:
+        path_config = read_path_config()
+
     installer = Installer(path_config.installed_packages_dir)
 
     files = files_inventory(installer, path_config)
@@ -139,9 +173,8 @@ def _args_inspect(
 
 
 def _command_inspect(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show manifest of an MKP file"""
@@ -164,12 +197,14 @@ def _args_show_all(
 
 
 def _command_show_all(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show all manifests"""
+    if path_config is None:
+        path_config = read_path_config()
+
     stored_manifests = get_stored_manifests(
         PackageStore(
             shipped_dir=path_config.packages_shipped_dir,
@@ -198,12 +233,14 @@ def _args_show(
 
 
 def _command_show(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show manifest of a stored package"""
+    if path_config is None:
+        path_config = read_path_config()
+
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
@@ -217,12 +254,14 @@ def _command_show(
 
 
 def _command_files(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show all files beloning to a package"""
+    if path_config is None:
+        path_config = read_path_config()
+
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
@@ -248,12 +287,14 @@ def _args_list(
 
 
 def _command_list(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show a table of all known files, including the deployment state"""
+    if path_config is None:
+        path_config = read_path_config()
+
     installer = Installer(path_config.installed_packages_dir)
     classified_manifests = get_classified_manifests(
         PackageStore(
@@ -311,7 +352,7 @@ def _args_install_deprecated(
 def _command_install_deprecated(
     site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """This command is deprecated. Please use the `add` and `enable` commands."""
@@ -326,12 +367,14 @@ def _args_add(
 
 
 def _command_add(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Add an MKP to the collection of managed MKPs"""
+    if path_config is None:
+        path_config = read_path_config()
+
     file_path: Path = args.file
     try:
         file_content = file_path.read_bytes()
@@ -362,21 +405,26 @@ def _args_release(
 def _command_release(
     site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
+    if path_config is None:
+        path_config = read_path_config()
+
     release(Installer(path_config.installed_packages_dir), args.name, site_context.callbacks)
     return 0
 
 
 def _command_remove(
-    site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Remove a package from the site"""
+    if path_config is None:
+        path_config = read_path_config()
+
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
@@ -395,7 +443,7 @@ def _command_remove(
 def _command_disable_outdated(
     site_context: SiteContext,
     _args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Disable MKP packages that are declared to be outdated with the new version.
@@ -404,6 +452,9 @@ def _command_disable_outdated(
     For all installed packages, this command compares that version with the Checkmk version.
     In case it is outdated, the package is disabled.
     """
+    if path_config is None:
+        path_config = read_path_config()
+
     disabled = disable_outdated(
         Installer(path_config.installed_packages_dir),
         PackageStore(
@@ -423,7 +474,7 @@ def _command_disable_outdated(
 def _command_update_active(
     site_context: SiteContext,
     _args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Disable MKP packages that are not suitable for this version, and enable others.
@@ -433,6 +484,9 @@ def _command_update_active(
 
     This command deactivates all packages that are not applicable, and then activates the ones that are.
     """
+    if path_config is None:
+        path_config = read_path_config()
+
     uninstalled, installed = update_active_packages(
         Installer(path_config.installed_packages_dir),
         path_config,
@@ -464,10 +518,13 @@ def _args_package_id(
 def _command_enable(
     site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Enable a disabled package"""
+    if path_config is None:
+        path_config = read_path_config()
+
     installer = Installer(path_config.installed_packages_dir)
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
@@ -491,10 +548,13 @@ def _command_enable(
 def _command_disable(
     site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Disable an enabled package"""
+    if path_config is None:
+        path_config = read_path_config()
+
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
@@ -526,10 +586,13 @@ def _args_template(
 def _command_template(
     site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Create a template of a package manifest"""
+    if path_config is None:
+        path_config = read_path_config()
+
     installer = Installer(path_config.installed_packages_dir)
 
     unpackaged = get_unpackaged_files(installer, path_config)
@@ -563,13 +626,16 @@ def _args_package(
 def _command_package(
     site_context: SiteContext,
     args: argparse.Namespace,
-    path_config: PathConfig,
+    path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Create an .mkp file from the provided manifest.
 
     You can use the `template` command to create a manifest template.
     """
+    if path_config is None:
+        path_config = read_path_config()
+
     if (package := read_manifest_optionally(args.manifest_file)) is None:
         return 1
 
@@ -631,7 +697,7 @@ def _get_package_id(
             )
 
 
-def _parse_arguments(argv: list[str]) -> argparse.Namespace:
+def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="mkp",
         description=__doc__,
@@ -647,17 +713,30 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
     _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
     _add_command(subparsers, "files", _args_package_id, _command_files)
     _add_command(subparsers, "list", _args_list, _command_list)
-    # Can be dropped in 2.3
-    _add_command(subparsers, "install", _args_install_deprecated, _command_install_deprecated)
     _add_command(subparsers, "add", _args_add, _command_add)
-    _add_command(subparsers, "release", _args_release, _command_release)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)
-    _add_command(subparsers, "enable", _args_package_id, _command_enable)
-    _add_command(subparsers, "disable", _args_package_id, _command_disable)
-    _add_command(subparsers, "template", _args_template, _command_template)
-    _add_command(subparsers, "package", _args_package, _command_package)
-    _add_command(subparsers, "disable-outdated", _no_args, _command_disable_outdated)
-    _add_command(subparsers, "update-active", _no_args, _command_update_active)
+
+    if site_context is None:
+        return parser.parse_args(argv)
+
+    # Can be dropped in 2.3
+    _add_command(
+        subparsers,
+        "install",
+        _args_install_deprecated,
+        partial(_command_install_deprecated, site_context),
+    )
+    _add_command(subparsers, "release", _args_release, partial(_command_release, site_context))
+    _add_command(subparsers, "enable", _args_package_id, partial(_command_enable, site_context))
+    _add_command(subparsers, "disable", _args_package_id, partial(_command_disable, site_context))
+    _add_command(subparsers, "template", _args_template, partial(_command_template, site_context))
+    _add_command(subparsers, "package", _args_package, partial(_command_package, site_context))
+    _add_command(
+        subparsers, "disable-outdated", _no_args, partial(_command_disable_outdated, site_context)
+    )
+    _add_command(
+        subparsers, "update-active", _no_args, partial(_command_update_active, site_context)
+    )
 
     return parser.parse_args(argv)
 
@@ -670,15 +749,7 @@ def _add_command(
     subparsers: argparse._SubParsersAction,
     cmd: str,
     args_adder: Callable[[argparse.ArgumentParser], None],
-    handler: Callable[
-        [
-            SiteContext,
-            argparse.Namespace,
-            PathConfig,
-            Callable[[str, bytes], None],
-        ],
-        int,
-    ],
+    handler: _HandlerFunction,
 ) -> None:
     subparser = subparsers.add_parser(cmd, help=handler.__doc__, description=handler.__doc__)
     args_adder(subparser)
@@ -694,12 +765,13 @@ def set_up_logging(verbosity: int) -> None:
 
 def main(
     argv: list[str],
-    path_config: PathConfig,
-    site_context: SiteContext,
-    persisting_function: Callable[[str, bytes], None],
+    path_config: PathConfig | None = None,
+    site_context: SiteContext | None = None,
+    persisting_function: Callable[[str, bytes], None] = simple_file_write,
 ) -> int:
-    args = _parse_arguments(argv)
+    args = _parse_arguments(argv, site_context)
     set_up_logging(args.verbose)
+
     try:
         return args.handler(
             site_context,

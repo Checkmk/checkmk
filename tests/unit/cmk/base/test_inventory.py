@@ -43,8 +43,9 @@ from cmk.checkengine.inventory import (
 from cmk.checkengine.parser import HostSections
 from cmk.checkengine.sectionparser import ParsedSectionName, SectionPlugin
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
+
+from cmk.agent_based.v1 import Attributes, TableRow
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:

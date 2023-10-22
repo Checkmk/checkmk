@@ -17,8 +17,8 @@ from typing import Final
 
 from pydantic import BaseModel
 
-import cmk.utils.store as store
-from cmk.utils.version import parse_check_mk_version
+import cmk.utils.store as store  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
 from ._installed import Installer
 from ._mkp import (

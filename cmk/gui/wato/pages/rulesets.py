@@ -1145,6 +1145,7 @@ class ModeEditRuleset(WatoMode):
                         folder,
                         rule,
                         rulenr,
+                        search_options,
                         service_labels=service_labels,
                         analyse_rule_matching=bool(self._hostname),
                     )
@@ -1160,15 +1161,6 @@ class ModeEditRuleset(WatoMode):
         css = []
         if rule.is_disabled():
             css.append("disabled")
-        if (
-            rule.ruleset.has_rule_search_options(search_options)
-            and rule.matches_search(search_options)
-            and (
-                "fulltext" not in search_options
-                or not rule.ruleset.matches_fulltext_search(search_options)
-            )
-        ):
-            css.append("matches_search")
         return [" ".join(css)]
 
     def _set_focus(self, rule: Rule) -> None:
@@ -1182,13 +1174,27 @@ class ModeEditRuleset(WatoMode):
         folder,
         rule: Rule,
         rulenr,
+        search_options,
         service_labels: Labels,
         analyse_rule_matching: bool,
     ) -> None:
         if analyse_rule_matching:
-            table.cell(_("Match"))
+            table.cell(_("Match host"), css=["narrow"])
             title, img = self._match(match_state, rule, service_labels=service_labels)
             html.icon(img, title)
+
+        if rule.ruleset.has_rule_search_options(search_options):
+            table.cell(_("Match search"), css=["narrow"])
+            if rule.matches_search(search_options) and (
+                "fulltext" not in search_options
+                or not rule.ruleset.matches_fulltext_search(search_options)
+            ):
+                if _is_ineffective_rules_page(search_options):
+                    html.icon("hyphen", _("Ineffective rule"))
+                else:
+                    html.icon("checkmark", _("Matches"))
+            else:
+                html.empty_icon()
 
         table.cell("#", css=["narrow nowrap"])
         html.write_text(rulenr)

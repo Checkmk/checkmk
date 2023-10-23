@@ -49,6 +49,7 @@ from cmk.gui.watolib.audit_log import AuditLogFilterRaw, AuditLogStore, build_au
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.objref import ObjectRefType
+from cmk.gui.watolib.paths import wato_var_dir
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -67,7 +68,7 @@ class ModeAuditLog(WatoMode):
     def __init__(self) -> None:
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
-        self._store = AuditLogStore()
+        self._current_audit_log = wato_var_dir() / "log" / "wato_audit.log"
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
     def title(self) -> str:
@@ -110,7 +111,8 @@ class ModeAuditLog(WatoMode):
             breadcrumb=breadcrumb,
         )
 
-        self._extend_display_dropdown(menu)
+        if request.var("file_selection"):
+            self._extend_display_dropdown(menu)
         return menu
 
     def _page_menu_entries_setup(self) -> Iterator[PageMenuEntry]:
@@ -122,32 +124,37 @@ class ModeAuditLog(WatoMode):
             )
 
     def _page_menu_entries_actions(self) -> Iterator[PageMenuEntry]:
-        if not self._log_exists():
-            return
-
         if not user.may("wato.auditlog"):
             return
 
         if not user.may("wato.edit"):
             return
 
-        if user.may("wato.clear_auditlog"):
+        if user.may("wato.clear_auditlog") and request.var("file_selection"):
+            vs_file_selection = self._vs_file_selection()
+            file_selection = vs_file_selection.from_html_vars("file_selection")
+            vs_file_selection.validate_value(file_selection, "file_selection")
             yield PageMenuEntry(
-                title=_("Clear log"),
+                title=_("Archive log"),
                 icon_name="delete",
                 item=make_simple_link(
                     make_confirm_delete_link(
-                        url=makeactionuri(request, transactions, [("_action", "clear")]),
-                        title=_("Clear audit log"),
-                        confirm_button=_("Clear"),
+                        url=makeactionuri(
+                            request,
+                            transactions,
+                            [
+                                ("_action", "clear"),
+                            ],
+                        ),
+                        title=_("Archive current audit log"),
+                        confirm_button=_("Archive"),
                     )
                 ),
+                is_enabled=wato_var_dir() / "log" / file_selection == self._current_audit_log,
+                disabled_tooltip=_("You can only archive the current audit log"),
             )
 
     def _page_menu_entries_export(self) -> Iterator[PageMenuEntry]:
-        if not self._log_exists():
-            return
-
         if not user.may("wato.auditlog"):
             return
 
@@ -157,11 +164,21 @@ class ModeAuditLog(WatoMode):
         if not user.may("general.csv_export"):
             return
 
-        yield PageMenuEntry(
-            title=_("Export CSV"),
-            icon_name="download_csv",
-            item=make_simple_link(makeactionuri(request, transactions, [("_action", "csv")])),
-        )
+        if request.var("file_selection"):
+            yield PageMenuEntry(
+                title=_("Export CSV"),
+                icon_name="download_csv",
+                item=make_simple_link(
+                    makeactionuri(
+                        request,
+                        transactions,
+                        [
+                            ("_action", "csv"),
+                            ("file_selection", request.var("file_selection")),
+                        ],
+                    )
+                ),
+            )
 
     def _extend_display_dropdown(self, menu: PageMenu) -> None:
         display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
@@ -211,9 +228,6 @@ class ModeAuditLog(WatoMode):
             self._display_audit_log_options()
             return HTML(output_funnel.drain())
 
-    def _log_exists(self):
-        return self._store.exists()
-
     def action(self) -> ActionResult:
         if request.var("_action") == "clear":
             user.need_permission("wato.auditlog")
@@ -228,8 +242,51 @@ class ModeAuditLog(WatoMode):
         return None
 
     def page(self) -> None:
-        self._options.update(self._get_audit_log_options_from_request())
+        html.begin_form("fileselection_form", method="POST")
+        if not request.has_var("file_selection"):
+            html.write_text(_("Please choose an audit log to view:"))
+            html.br()
+            html.br()
+        self._vs_file_selection().render_input("file_selection", None)
+        html.button(varname="_view_log", title=_("View"), cssclass="hot")
+        html.hidden_fields()
+        html.end_form()
 
+        if request.var("file_selection"):
+            self._options.update(self._get_audit_log_options_from_request())
+            self._show_audit_log()
+
+    def _vs_file_selection(self):
+        return DropdownChoice(
+            title=_("File selection"),
+            choices=self._get_audit_log_files(),
+            no_preselect_title="",
+        )
+
+    def _get_audit_log_files(self) -> list[tuple[str, str]]:
+        """
+        Collect all audit log files in ~/var/checkmk/wato/log and sort like:
+
+        wato_audit.log (current)
+        wato_audit.log.2023-10-24-2
+        wato_audit.log.2023-10-24
+        wato_audit.log.2023-10-23-2
+        wato_audit.log.2023-10-23
+        wato_audit.log.2023-09-23
+        """
+        return sorted(
+            [
+                (
+                    f.name,
+                    f.name if f.name != "wato_audit.log" else "wato_audit.log (%s)" % _("current"),
+                )
+                for f in (wato_var_dir() / "log").glob("wato_audit.*")
+            ],
+            key=lambda x: x[1].split(".")[-1],
+            reverse=True,
+        )
+
+    def _show_audit_log(self) -> None:
         audit = self._parse_audit_log()
 
         if not audit:
@@ -401,7 +458,11 @@ class ModeAuditLog(WatoMode):
             )
 
             html.icon_button(
-                makeactionuri(request, transactions, time_url_args(next_log_time)),
+                makeactionuri(
+                    request,
+                    transactions,
+                    time_url_args(next_log_time),
+                ),
                 "{}: {}".format(_("Newer events"), render.date(next_log_time)),
                 "back",
             )
@@ -411,7 +472,11 @@ class ModeAuditLog(WatoMode):
 
         if previous_log_time is not None:
             html.icon_button(
-                makeactionuri(request, transactions, time_url_args(previous_log_time)),
+                makeactionuri(
+                    request,
+                    transactions,
+                    time_url_args(previous_log_time),
+                ),
                 "{}: {}".format(_("Older events"), render.date(previous_log_time)),
                 "forth",
             )
@@ -456,7 +521,14 @@ class ModeAuditLog(WatoMode):
 
         html.open_div(class_="update_buttons")
         html.button("apply", _("Apply"), "submit")
-        html.buttonlink(makeuri(request, [], remove_prefix="options_"), _("Reset"))
+        html.buttonlink(
+            makeuri(
+                request,
+                [],
+                remove_prefix="options_",
+            ),
+            _("Reset"),
+        )
         html.close_div()
 
         html.close_div()
@@ -531,12 +603,9 @@ class ModeAuditLog(WatoMode):
         ]
 
     def _clear_audit_log_after_confirm(self) -> ActionResult:
-        self._clear_audit_log()
-        flash(_("Cleared audit log."))
+        AuditLogStore().clear()
+        flash(_("Archived audit log"))
         return redirect(self.mode_url())
-
-    def _clear_audit_log(self):
-        self._store.clear()
 
     def _export_audit_log(self, audit: list[AuditLogStore.Entry]) -> ActionResult:
         response.set_content_type("text/csv")
@@ -591,6 +660,10 @@ class ModeAuditLog(WatoMode):
         return FinalizeRequest(code=200)
 
     def _parse_audit_log(self) -> list[AuditLogStore.Entry]:
+        vs_file_selection = self._vs_file_selection()
+        file_selection = vs_file_selection.from_html_vars("file_selection")
+        vs_file_selection.validate_value(file_selection, "file_selection")
+        self._options.update(self._get_audit_log_options_from_request())
         options: AuditLogFilterRaw = {
             "object_type": self._options.get("object_type"),
             "object_ident": self._options.get("object_ident"),
@@ -599,4 +672,6 @@ class ModeAuditLog(WatoMode):
         }
 
         entries_filter = build_audit_log_filter(options)
-        return list(reversed(self._store.read(entries_filter)))
+        return list(
+            reversed(AuditLogStore(wato_var_dir() / "log" / file_selection).read(entries_filter))
+        )

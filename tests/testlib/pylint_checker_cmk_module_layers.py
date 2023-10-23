@@ -35,7 +35,7 @@ def removesuffix(text: str, suffix: str) -> str:
     return text[: -len(suffix)] if suffix and text.endswith(suffix) else text
 
 
-def _get_absolute_importee(
+def get_absolute_importee(
     *,
     root_name: str,
     modname: str,
@@ -390,7 +390,7 @@ class CMKModuleLayerChecker(BaseChecker):
                 node,
                 ModuleName(modname)
                 if node.level is None
-                else _get_absolute_importee(
+                else get_absolute_importee(
                     root_name=node.root().name,
                     modname=modname,
                     level=node.level,

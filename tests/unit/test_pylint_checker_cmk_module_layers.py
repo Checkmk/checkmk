@@ -8,8 +8,8 @@ from pylint.lint import PyLinter
 
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
-    _get_absolute_importee,
     CMKModuleLayerChecker,
+    get_absolute_importee,
     ModuleName,
     ModulePath,
 )
@@ -31,7 +31,7 @@ def test_get_absolute_importee(
     root_name: str, modname: str, level: int, is_package: bool, abs_module: str
 ) -> None:
     assert (
-        _get_absolute_importee(
+        get_absolute_importee(
             root_name=root_name,
             modname=modname,
             level=level,

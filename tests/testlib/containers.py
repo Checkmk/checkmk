@@ -91,11 +91,7 @@ def execute_tests_in_container(
 
         if interactive:
             logger.info("+-------------------------------------------------")
-            logger.info("| Next steps:")
-            logger.info("| ")
-            logger.info("| /git/scripts/run-pipenv shell")
-            logger.info("| ")
-            logger.info("| ... start whatever test you want, for example:")
+            logger.info("| Next steps: Start whatever test you want, for example:")
             logger.info("| ")
             logger.info("| VERSION=git make -C tests test-integration")
             logger.info("| ")
@@ -123,7 +119,15 @@ def execute_tests_in_container(
             )
             logger.info("| VERSION defaults to the current daily build of you branch.")
             logger.info("+-------------------------------------------------")
-            dockerpty.start(client.api, container.id)
+
+            if command:
+                dockerpty.exec_command(
+                    client.api,
+                    container.id,
+                    ["/git/scripts/run-pipenv", "run"] + command,
+                )
+            dockerpty.exec_command(client.api, container.id, ["/git/scripts/run-pipenv", "shell"])
+
             return 0
 
         # Now execute the real test in the container context

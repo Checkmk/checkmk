@@ -874,11 +874,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "raritan_pdu_outletcount",
-            RuleGroup.CheckgroupParameters("plug_count"),
-        ),
-        (
-            "check",
             "rds_licenses",
             RuleGroup.CheckgroupParameters("rds_licenses"),
         ),

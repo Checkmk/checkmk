@@ -128,9 +128,6 @@ RUN /opt/install-python.sh
 COPY scripts/install-freetds.sh /opt/
 RUN /opt/install-freetds.sh
 
-# Exclusively for this distro at the moment, because it is used by several CI
-# jobs for special tasks (checking out git, "make dist", orchestrating other
-# containers, ...). Scripts should be usable with other Ubuntu versions.
 COPY scripts/install-rust-cargo.sh /opt/
 RUN /opt/install-rust-cargo.sh
 

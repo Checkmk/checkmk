@@ -249,6 +249,13 @@ nagios(
 load("//omd/packages/python3-modules:create_python_requirements.bzl", "create_python_requirements")
 create_python_requirements(
     name = "python_modules",
+    # TODO: differentiate between own code and things we get from other omd packages
+    ignored_modules = [
+        "protobuf",  # don't build with pip -> see protobuf omd packages
+        "rrdtool",  # don't build with pip -> see rrdtool omd packages
+        "agent-receiver",  # don't build with pip (yet)
+        "werks",  # don't build with pip (yet)
+    ],
     requirements = "//:Pipfile",
 )
 

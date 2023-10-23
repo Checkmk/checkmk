@@ -248,10 +248,6 @@ def _verify_check_result(
     if result_data and canon_data == result_data:
         return True, ""
 
-    if mode == CheckModes.UPDATE:
-        logger.info("[%s] Canon updated!", check_id)
-        return True, ""
-
     with open(
         json_canon_file_path := str(output_dir / f"{safe_name}.canon.json"),
         mode="w",
@@ -272,10 +268,11 @@ def _verify_check_result(
         check=False,
     ).stdout
 
-    if len(canon_data) != len(result_data):
-        logger.error("[%s] Invalid field count! Data mismatch:\n%s", check_id, diff)
-    else:
-        logger.error("[%s] Data mismatch:\n%s", check_id, diff)
+    if mode == CheckModes.DEFAULT:
+        if len(canon_data) != len(result_data):
+            logger.error("[%s] Invalid field count! Data mismatch:\n%s", check_id, diff)
+        else:
+            logger.error("[%s] Data mismatch:\n%s", check_id, diff)
 
     return False, diff
 
@@ -323,16 +320,17 @@ def process_check_output(
             output_dir,
             config.mode,
         )
+        if config.mode == CheckModes.UPDATE and diff:
+            check_canons[check_id] = check_results[check_id]
+            logger.info("[%s] Canon updated!", check_id)
+            passed = True
+            continue
         if check_success:
             if passed is None:
                 passed = True
             continue
-        if config.mode == CheckModes.UPDATE:
-            check_canons[check_id] = check_results[check_id]
-            logger.info("[%s] Canon updated!", check_id)
-            passed = True
-        else:
-            passed = False
+
+        passed = False
         diffs[check_id] = diff
 
     if diffs:

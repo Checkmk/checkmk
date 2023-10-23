@@ -10,7 +10,6 @@ from typing import cast
 
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.graphing._html_render import default_dashlet_graph_render_options
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -19,6 +18,7 @@ from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
+from .dashlet.dashlets import default_dashlet_graph_render_options
 from .store import add_dashlet, get_permitted_dashboards, load_dashboard_with_cloning
 from .type_defs import ABCGraphDashletConfig
 
@@ -112,7 +112,7 @@ class VisualTypeDashboards(VisualType):
             elif specification[0] == "combined":
                 add_type = "combined_graph"
                 parameters = copy.deepcopy(specification[1])
-                parameters["graph_render_options"] = default_dashlet_graph_render_options
+                parameters["graph_render_options"] = default_dashlet_graph_render_options()
                 context = parameters.pop("context", {})
                 # FIXME: mypy doesn't know if the parameter is well-formed, but we promise it is!
                 assert isinstance(context, dict)

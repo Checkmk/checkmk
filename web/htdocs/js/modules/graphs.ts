@@ -19,32 +19,37 @@ type LazyString = string; // not sure how teal with this for the moment
 export type HorizontalRule = [number, string, string, string | LazyString];
 type SizePT = number;
 
-interface DefaultGraphRenderOptions {
-    font_size: number;
+interface GraphRenderConfig {
+    border_width: number;
+    color_gradient: number;
+    editing: boolean;
+    explicit_title: string | null;
+    fixed_timerange: boolean;
+    font_size: SizePT;
+    foreground_color: string;
+    interaction: boolean;
+    onclick: string | null;
+    preview: boolean;
     resizable: boolean;
     show_controls: boolean;
-    show_pin: boolean;
-    show_legend: boolean;
     show_graph_time: boolean;
-    show_vertical_axis: boolean;
-    vertical_axis_width: "fixed" | ["explicit", SizePT];
-    show_time_axis: boolean;
-    show_title: boolean;
-    title_format: boolean;
+    show_legend: boolean;
     show_margin: boolean;
-    preview: boolean;
-    interaction: boolean;
-    editing: boolean;
-    fixed_timerange: boolean;
+    show_pin: boolean;
+    show_time_axis: boolean;
     show_time_range_previews: boolean;
-    background_color: string;
-    foreground_color: string;
-    canvas_color: string;
-    onclick?: string;
-    show_timeranges?: any;
+    show_title: boolean | "inline";
+    show_vertical_axis: boolean;
+    size: [bigint, bigint];
+    title_format: (
+        | "plain"
+        | "add_host_name"
+        | "add_host_alias"
+        | "add_service_description"
+    )[];
+    vertical_axis_width: "fixed" | ["explicit", SizePT];
 }
 
-type GraphRenderOptions = DefaultGraphRenderOptions;
 interface _GraphDataRangeMandatory {
     time_range: TimeRange;
     step: Seconds | string;
@@ -58,7 +63,7 @@ interface AjaxContext {
     graph_id: string;
     definition: GraphRecipe;
     data_range: GraphDataRange;
-    render_options: GraphRenderOptions;
+    render_config: GraphRenderConfig;
     display_id: string;
 }
 
@@ -115,7 +120,7 @@ export interface GraphArtwork {
     id: string;
     canvas_obj: HTMLCanvasElement;
     ajax_context?: AjaxContext;
-    render_options: GraphRenderOptions;
+    render_config: GraphRenderConfig;
     time_origin?: number;
     vertical_origin?: number;
     // Labelling, size, layout
@@ -165,7 +170,7 @@ interface DelayedGraph {
     graph_load_container: HTMLElement | Node | null;
     graph_recipe: GraphRecipe;
     graph_data_range: GraphDataRange;
-    graph_render_options: GraphRenderOptions;
+    graph_render_config: GraphRenderConfig;
     script_object: HTMLScriptElement;
     graph_display_id: string;
 }
@@ -192,9 +197,9 @@ function get_id_of_graph(ajax_context: AjaxContext) {
                 JSON.stringify(
                     g_graphs[graph_id].ajax_context!.definition.specification
                 ) &&
-            JSON.stringify(ajax_context.render_options) ==
+            JSON.stringify(ajax_context.render_config) ==
                 JSON.stringify(
-                    g_graphs[graph_id].ajax_context!.render_options
+                    g_graphs[graph_id].ajax_context!.render_config
                 ) &&
             ajax_context.display_id ==
                 g_graphs[graph_id].ajax_context!.display_id
@@ -210,7 +215,7 @@ function get_id_of_graph(ajax_context: AjaxContext) {
 export function create_graph(
     html_code: string,
     graph_artwork: GraphArtwork,
-    graph_render_options: GraphRenderOptions,
+    graph_render_config: GraphRenderConfig,
     ajax_context: AjaxContext
 ) {
     // Detect whether or not a new graph_id has to be calculated. During the view
@@ -223,7 +228,7 @@ export function create_graph(
     const container_div = document.createElement("div");
     container_div.setAttribute("id", graph_id);
     container_div.innerHTML = html_code;
-    if (graph_render_options.show_timeranges)
+    if (graph_render_config.show_time_range_previews)
         container_div.className = "graph_container timeranges";
     else container_div.className = "graph_container";
 
@@ -242,7 +247,7 @@ export function create_graph(
     // before and after these assignments
     g_graphs[graph_id] = graph_artwork;
     g_graphs[graph_id]["ajax_context"] = ajax_context;
-    g_graphs[graph_id]["render_options"] = graph_render_options;
+    g_graphs[graph_id]["render_config"] = graph_render_config;
     g_graphs[graph_id]["id"] = graph_id;
     render_graph(g_graphs[graph_id]);
 }
@@ -278,7 +283,7 @@ function get_current_script(): HTMLScriptElement {
 export function load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphRenderOptions,
+    graph_render_config: GraphRenderConfig,
     graph_display_id: string
 ) {
     const script_object = get_current_script();
@@ -291,7 +296,7 @@ export function load_graph_content(
             graph_load_container: graph_load_container,
             graph_recipe: graph_recipe,
             graph_data_range: graph_data_range,
-            graph_render_options: graph_render_options,
+            graph_render_config: graph_render_config,
             script_object: script_object,
             graph_display_id: graph_display_id,
         });
@@ -300,7 +305,7 @@ export function load_graph_content(
         do_load_graph_content(
             graph_recipe,
             graph_data_range,
-            graph_render_options,
+            graph_render_config,
             script_object,
             graph_display_id
         );
@@ -327,7 +332,7 @@ export function register_delayed_graph_listener() {
 function do_load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphRenderOptions,
+    graph_render_config: GraphRenderConfig,
     script_object: HTMLScriptElement,
     graph_display_id: string
 ) {
@@ -344,7 +349,7 @@ function do_load_graph_content(
             JSON.stringify({
                 graph_recipe: graph_recipe,
                 graph_data_range: graph_data_range,
-                graph_render_options: graph_render_options,
+                graph_render_config: graph_render_config,
                 graph_display_id: graph_display_id,
             })
         );
@@ -429,7 +434,7 @@ function delayed_graph_renderer() {
             do_load_graph_content(
                 entry.graph_recipe,
                 entry.graph_data_range,
-                entry.graph_render_options,
+                entry.graph_render_config,
                 entry.script_object,
                 entry.graph_display_id
             );
@@ -487,7 +492,7 @@ function render_graph(graph: GraphArtwork) {
 
     if (!ctx) throw new Error("ctx shouldn't be null!");
 
-    const font_size = from_display_coord(graph.render_options.font_size);
+    const font_size = from_display_coord(graph.render_config.font_size);
     ctx.font = font_size + "pt sans-serif";
 
     const width = canvas.width;
@@ -500,7 +505,7 @@ function render_graph(graph: GraphArtwork) {
     const v_axis_width = graph_vertical_axis_width(graph);
 
     const v_line_color = [
-        graph.render_options.foreground_color,
+        graph.render_config.foreground_color,
         "#8097b19c",
         "#8097b19c",
     ];
@@ -543,7 +548,7 @@ function render_graph(graph: GraphArtwork) {
 
     let position, label;
     // render grid
-    if (!graph.render_options.preview) {
+    if (!graph.render_config.preview) {
         let line_width;
 
         // Paint the vertical axis
@@ -551,7 +556,7 @@ function render_graph(graph: GraphArtwork) {
         ctx.save();
         ctx.textAlign = "end";
         ctx.textBaseline = "middle";
-        ctx.fillStyle = graph.render_options.foreground_color;
+        ctx.fillStyle = graph.render_config.foreground_color;
         for (let i = 0; i < labels.length; i++) {
             position = labels[i][0];
             label = labels[i][1];
@@ -564,7 +569,7 @@ function render_graph(graph: GraphArtwork) {
                 );
             }
 
-            if (graph.render_options.show_vertical_axis && label != null)
+            if (graph.render_config.show_vertical_axis && label != null)
                 ctx.fillText(
                     label,
                     t_orig - v_label_margin,
@@ -576,7 +581,7 @@ function render_graph(graph: GraphArtwork) {
         // Paint time axis
         labels = graph["time_axis"]["labels"];
         ctx.save();
-        ctx.fillStyle = graph.render_options.foreground_color;
+        ctx.fillStyle = graph.render_config.foreground_color;
         for (let i = 0; i < labels.length; i++) {
             position = labels[i][0];
             label = labels[i][1];
@@ -674,12 +679,12 @@ function render_graph(graph: GraphArtwork) {
         }
     }
 
-    if (!graph.render_options.preview && graph.render_options.show_time_axis) {
+    if (!graph.render_config.preview && graph.render_config.show_time_axis) {
         // Paint time axis labels
         ctx.save();
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
-        ctx.fillStyle = graph.render_options.foreground_color;
+        ctx.fillStyle = graph.render_config.foreground_color;
         const labels = graph["time_axis"]["labels"];
         labels.forEach(([position, label]) => {
             if (label != null) {
@@ -713,15 +718,15 @@ function render_graph(graph: GraphArtwork) {
     ctx.restore();
 
     // paint the optional pin
-    if (graph.render_options.show_pin && graph.pin_time != null) {
+    if (graph.render_config.show_pin && graph.pin_time != null) {
         const pin_x = trans_t(graph.pin_time);
         if (pin_x >= t_orig) {
             paint_line(
                 [pin_x, v_orig + axis_over_width],
                 [pin_x, 0],
-                graph.render_options.foreground_color
+                graph.render_config.foreground_color
             );
-            paint_dot([pin_x, 0], graph.render_options.foreground_color);
+            paint_dot([pin_x, 0], graph.render_config.foreground_color);
         }
     }
     // paint forecast graph future start
@@ -748,24 +753,24 @@ function hex_to_rgba(color: string) {
 }
 
 function graph_vertical_axis_width(graph: GraphArtwork) {
-    if (graph.render_options.preview) return 0;
+    if (graph.render_config.preview) return 0;
 
     if (
-        !graph.render_options.show_vertical_axis &&
-        !graph.render_options.show_controls
+        !graph.render_config.show_vertical_axis &&
+        !graph.render_config.show_controls
     )
         return 0;
 
     if (
-        graph.render_options.vertical_axis_width instanceof Array &&
-        graph.render_options.vertical_axis_width[0] == "explicit"
+        graph.render_config.vertical_axis_width instanceof Array &&
+        graph.render_config.vertical_axis_width[0] == "explicit"
     ) {
         return from_display_coord(
-            pt_to_px(graph.render_options.vertical_axis_width[1])
+            pt_to_px(graph.render_config.vertical_axis_width[1])
         );
     }
 
-    return 6 * from_display_coord(pt_to_px(graph.render_options.font_size));
+    return 6 * from_display_coord(pt_to_px(graph.render_config.font_size));
 }
 
 function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
@@ -773,10 +778,10 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
         "graph"
     )[0] as HTMLElement;
     if (!graph_div) return;
-    graph_div.style.color = graph.render_options.foreground_color;
+    graph_div.style.color = graph.render_config.foreground_color;
 
     const inverted_fg_color = render_color(
-        invert_color(parse_color(graph.render_options.foreground_color))
+        invert_color(parse_color(graph.render_config.foreground_color))
     );
 
     const style = document.createElement("style");
@@ -785,7 +790,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             selector: "div.graph div.v_axis_label",
             attrs: {
                 color: render_color_rgba(
-                    parse_color(graph.render_options.foreground_color),
+                    parse_color(graph.render_config.foreground_color),
                     0.8
                 ),
             },
@@ -794,7 +799,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             selector: "div.graph div.time",
             attrs: {
                 color: render_color_rgba(
-                    parse_color(graph.render_options.foreground_color),
+                    parse_color(graph.render_config.foreground_color),
                     0.8
                 ),
             },
@@ -804,7 +809,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
                 "div.graph table.legend th.scalar.inactive, div.graph table.legend td.scalar.inactive",
             attrs: {
                 color: render_color_rgba(
-                    parse_color(graph.render_options.foreground_color),
+                    parse_color(graph.render_config.foreground_color),
                     0.6
                 ),
             },
@@ -813,21 +818,21 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             selector: "div.graph table.legend th",
             attrs: {
                 "border-bottom":
-                    "1px solid " + graph.render_options.foreground_color,
+                    "1px solid " + graph.render_config.foreground_color,
             },
         },
         {
             selector: "div.graph table.legend th.scalar",
             attrs: {
-                color: graph.render_options.foreground_color,
+                color: graph.render_config.foreground_color,
                 "border-bottom":
-                    "1px solid " + graph.render_options.foreground_color,
+                    "1px solid " + graph.render_config.foreground_color,
             },
         },
         {
             selector: "div.graph a",
             attrs: {
-                color: graph.render_options.foreground_color,
+                color: graph.render_config.foreground_color,
             },
         },
         {
@@ -862,7 +867,7 @@ function update_graph_styling(graph: GraphArtwork, container: HTMLElement) {
             selector: "div.graph div.indicator",
             attrs: {
                 "border-right":
-                    "1px dotted " + graph.render_options.foreground_color,
+                    "1px dotted " + graph.render_config.foreground_color,
             },
         },
     ];
@@ -895,11 +900,11 @@ function from_display_coord(display_coord: number) {
 }
 
 function graph_bottom_border(graph: GraphArtwork) {
-    if (graph.render_options.preview) return 0;
+    if (graph.render_config.preview) return 0;
 
-    if (graph.render_options.show_time_axis)
+    if (graph.render_config.show_time_axis)
         return (
-            from_display_coord(pt_to_px(graph.render_options.font_size)) +
+            from_display_coord(pt_to_px(graph.render_config.font_size)) +
             t_label_margin
         );
     else return 0;
@@ -1097,8 +1102,8 @@ function graph_activate_mouse_control(graph: GraphArtwork) {
     utils.add_event_handler("mouseup", global_graph_mouse_up);
 
     if (
-        graph.ajax_context!.render_options.show_controls &&
-        graph.ajax_context!.render_options.resizable
+        graph.ajax_context!.render_config.show_controls &&
+        graph.ajax_context!.render_config.resizable
     ) {
         // Find resize img element
         const container = get_graph_container(canvas);
@@ -1114,7 +1119,7 @@ function graph_activate_mouse_control(graph: GraphArtwork) {
         utils.add_event_handler("mousemove", graph_mouse_resize);
     }
 
-    if (graph.ajax_context!.render_options.interaction) {
+    if (graph.ajax_context!.render_config.interaction) {
         utils.add_event_handler("mousemove", update_mouse_hovering);
     }
 }
@@ -1216,7 +1221,7 @@ function global_graph_mouse_up(event: Event) {
                 set_pin_position(event, graph, pos[0]);
             }
 
-            if (graph.render_options.interaction)
+            if (graph.render_config.interaction)
                 sync_all_graph_timeranges(graph_id);
         }
     } else if (!g_resizing_graph) {
@@ -1264,8 +1269,8 @@ function global_graph_mouse_up(event: Event) {
 }
 
 function handle_graph_clicked(graph: GraphArtwork) {
-    if (graph.render_options.onclick) {
-        eval(graph.render_options.onclick);
+    if (graph.render_config.onclick) {
+        eval(graph.render_config.onclick);
     }
 }
 
@@ -1274,7 +1279,7 @@ function set_consolidation_function(
     graph: GraphArtwork,
     consolidation_function: string
 ) {
-    if (graph.render_options.interaction) {
+    if (graph.render_config.interaction) {
         update_graph(
             event,
             graph,
@@ -1292,8 +1297,8 @@ function set_consolidation_function(
 function remove_pin(event: Event, graph: GraphArtwork) {
     // Only try to remove the pin when there is currently one
     if (
-        graph.render_options.interaction &&
-        graph.render_options.show_pin &&
+        graph.render_config.interaction &&
+        graph.render_config.show_pin &&
         graph.pin_time !== null
     ) {
         set_pin_position(event, graph, -1);
@@ -1306,7 +1311,7 @@ function set_pin_position(
     graph: GraphArtwork,
     timestamp: number
 ): boolean | void {
-    if (graph.render_options.interaction && graph.render_options.show_pin)
+    if (graph.render_config.interaction && graph.render_config.show_pin)
         return update_graph(
             event,
             graph,
@@ -1321,7 +1326,7 @@ function set_pin_position(
 
 // move is used for dragging and also for resizing
 function graph_mouse_move(event: MouseEvent, graph: GraphArtwork) {
-    if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
+    if (!graph.render_config.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     if (g_graph_update_in_process || g_graph_in_cooldown_period) return false;
 
@@ -1365,7 +1370,7 @@ function update_mouse_hovering(event: Event) {
 
     hover.add();
 
-    if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
+    if (!graph.render_config.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     const canvas_rect = canvas.getBoundingClientRect();
     update_mouse_indicator(
@@ -1437,7 +1442,7 @@ function remove_all_mouse_indicators() {
 }
 
 function graph_mouse_wheel(event: Event, graph: GraphArtwork) {
-    if (!graph.render_options.interaction) return; // don't do anything when this graph is not allowed to set the pin
+    if (!graph.render_config.interaction) return; // don't do anything when this graph is not allowed to set the pin
 
     if (g_graph_update_in_process) return utils.prevent_default_events(event);
 
@@ -1850,13 +1855,13 @@ function handle_graph_update(
     //         "graph_id"       : context["graph_id"],
     //         "definition"     : graph_recipe,
     //         "data_range"     : graph_data_range,
-    //         "render_options" : graph_render_options,
+    //         "render_config"  : graph_render_config,
     // }
     const graph_id = response.context.graph_id;
     const graph: GraphArtwork = response.graph;
     graph["id"] = graph_id;
     graph["ajax_context"] = response.context;
-    graph["render_options"] = graph["ajax_context"]["render_options"];
+    graph["render_config"] = graph["ajax_context"]["render_config"];
     g_graphs[graph_id] = graph;
 
     // replace eventual references
@@ -1942,7 +1947,7 @@ function sync_all_graph_timeranges(
         // time ranges, like the timerange chooser graphs on the overview page
         if (
             (!skip_origin || name != graph_id) &&
-            !g_graphs[name].render_options.fixed_timerange
+            !g_graphs[name].render_config.fixed_timerange
         ) {
             g_timerange_update_queue.push([
                 name,

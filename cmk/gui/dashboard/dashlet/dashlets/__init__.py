@@ -6,7 +6,7 @@
 from ..registry import DashletRegistry
 from .custom_url import URLDashlet
 from .failed_notifications import FailedNotificationsDashlet
-from .graph import TemplateGraphDashlet
+from .graph import default_dashlet_graph_render_options, TemplateGraphDashlet
 from .logo import MKLogoDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet, StatsDashletConfig
@@ -27,6 +27,7 @@ __all__ = [
     "StatsDashletConfig",
     "LinkedViewDashletConfig",
     "copy_view_into_dashlet",
+    "default_dashlet_graph_render_options",
 ]
 
 

@@ -20,7 +20,7 @@ from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing._graph_recipe_builder import build_graph_recipes
 from cmk.gui.graphing._graph_specification import GraphSpecification, TemplateGraphSpecification
-from cmk.gui.graphing._html_render import default_dashlet_graph_render_options, GraphDestinations
+from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._utils import (
     graph_templates_internal,
     metric_info,
@@ -29,7 +29,7 @@ from cmk.gui.graphing._utils import (
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import Choices, SingleInfos, VisualContext
+from cmk.gui.type_defs import Choices, GraphRenderOptions, SingleInfos, SizePT, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Dictionary,
@@ -164,7 +164,7 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, TGraphSpec]):
         return (
             "graph_render_options",
             vs_graph_render_options(
-                default_values=default_dashlet_graph_render_options,
+                default_values=default_dashlet_graph_render_options(),
                 exclude=[
                     "show_time_range_previews",
                     "title_format",
@@ -289,7 +289,11 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             self._dashlet_id,
             self._graph_specification.json(),
             json.dumps(
-                self._dashlet_spec.get("graph_render_options", default_dashlet_graph_render_options)
+                default_dashlet_graph_render_options()
+                # Something is wrong with the typing here. self._dashlet_spec is a subclass of
+                # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
+                # a dict ...
+                | self._dashlet_spec.get("graph_render_options", {})  # type: ignore[operator]
             ),
             json.dumps(self._dashlet_spec["timerange"]),
         )
@@ -401,3 +405,16 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:
         yield "$SITE$"
+
+
+def default_dashlet_graph_render_options() -> GraphRenderOptions:
+    return GraphRenderOptions(
+        font_size=SizePT(8),
+        show_graph_time=False,
+        show_margin=False,
+        show_legend=False,
+        show_title=False,
+        show_controls=False,
+        resizable=False,
+        show_time_range_previews=False,
+    )

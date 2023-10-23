@@ -23,15 +23,11 @@ from cmk.gui.exceptions import MKUnauthenticatedException, MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.logged_in import user
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import GraphRenderOptions, SizePT
 
-from ._artwork import (
-    add_default_render_options,
-    compute_graph_artwork,
-    compute_graph_artwork_curves,
-    GraphArtwork,
-)
+from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._graph_pdf import (
     compute_pdf_graph_data_range,
     get_mm_per_ex,
@@ -39,6 +35,7 @@ from ._graph_pdf import (
     render_graph_pdf,
 )
 from ._graph_recipe_builder import build_graph_recipes
+from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import (
     CombinedSingleMetricSpec,
     GraphMetric,
@@ -100,9 +97,12 @@ def _answer_graph_image_request(
         end_time = int(time.time())
         start_time = end_time - (25 * 3600)
 
-        graph_render_options = graph_image_render_options()
+        graph_render_config = GraphRenderConfigImage.from_render_options_and_context(
+            graph_image_render_options(),
+            user,
+        )
 
-        graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
+        graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
         graph_recipes = build_graph_recipes(
             TemplateGraphSpecification(
                 site=livestatus.SiteId(site) if site else None,
@@ -119,10 +119,10 @@ def _answer_graph_image_request(
             graph_artwork = compute_graph_artwork(
                 graph_recipe,
                 graph_data_range,
-                graph_render_options,
+                graph_render_config.size,
                 resolve_combined_single_metric_spec,
             )
-            graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_options)
+            graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_config)
 
             graphs.append(base64.b64encode(graph_png).decode("ascii"))
 
@@ -135,10 +135,10 @@ def _answer_graph_image_request(
 
 
 def graph_image_data_range(
-    graph_render_options: GraphRenderOptions, start_time: int, end_time: int
+    graph_render_config: GraphRenderConfigImage, start_time: int, end_time: int
 ) -> GraphDataRange:
-    mm_per_ex = get_mm_per_ex(graph_render_options["font_size"])
-    width_mm = graph_render_options["size"][0] * mm_per_ex
+    mm_per_ex = get_mm_per_ex(graph_render_config.font_size)
+    width_mm = graph_render_config.size[0] * mm_per_ex
     return compute_pdf_graph_data_range(width_mm, start_time, end_time)
 
 
@@ -155,10 +155,6 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
         show_title=True,
         border_width=0.05,
     )
-
-    # Populate missing keys
-    graph_render_options = add_default_render_options(graph_render_options, render_unthemed=True)
-
     # Enforce settings optionally setable via request
     if api_request and api_request.get("render_options"):
         graph_render_options.update(api_request["render_options"])
@@ -169,18 +165,18 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
 def render_graph_image(
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphRenderOptions,
+    graph_render_config: GraphRenderConfigImage,
 ) -> bytes:
-    width_ex, height_ex = graph_render_options["size"]
-    mm_per_ex = get_mm_per_ex(graph_render_options["font_size"])
+    width_ex, height_ex = graph_render_config.size
+    mm_per_ex = get_mm_per_ex(graph_render_config.font_size)
 
-    legend_height = graph_legend_height(graph_artwork, graph_render_options)
+    legend_height = graph_legend_height(graph_artwork, graph_render_config)
     image_height = (height_ex * mm_per_ex) + legend_height
 
     # TODO: Better use reporting.get_report_instance()
     doc = pdf.Document(
         font_family="Helvetica",
-        font_size=graph_render_options["font_size"],
+        font_size=graph_render_config.font_size,
         lineheight=1.2,
         pagesize=(width_ex * mm_per_ex, image_height),
         margins=(0, 0, 0, 0),
@@ -199,7 +195,7 @@ def render_graph_image(
         instance,
         graph_artwork,
         graph_data_range,
-        graph_render_options,
+        graph_render_config,
         pos_left=0.0,
         pos_top=0.0,
         total_width=(width_ex * mm_per_ex),

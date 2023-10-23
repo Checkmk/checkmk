@@ -671,11 +671,6 @@ class GraphRenderOptions(TypedDict, total=False):
     size: tuple[int, int]
     title_format: Sequence[GraphTitleFormat]
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
-    background_color: str | None
-    foreground_color: str | None
-    canvas_color: str | None
-    explicit_title: str
-    onclick: str
 
 
 ActionResult = FinalizeRequest | None

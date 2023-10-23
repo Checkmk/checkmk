@@ -28,7 +28,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
-from ._artwork import get_default_graph_render_options
+from ._graph_render_config import GraphRenderConfigBase
 from ._unit_info import unit_info
 from ._utils import metric_info
 
@@ -106,18 +106,13 @@ def _vs_title_infos() -> ListChoice:
 def vs_graph_render_option_elements(default_values=None, exclude=None):
     # Allow custom default values to be specified by the caller. This is, for example,
     # needed by the dashlets which should add the host/service by default.
-    if default_values is None:
-        default_values = get_default_graph_render_options()
-    else:
-        default_values = default_values.copy()
-        for k, v in get_default_graph_render_options().items():
-            default_values.setdefault(k, v)
+    default_values = GraphRenderConfigBase.model_validate(default_values or {})
 
     elements = [
         (
             "font_size",
             Fontsize(
-                default_value=default_values["font_size"],
+                default_value=default_values.font_size,
             ),
         ),
         (
@@ -129,7 +124,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
                     (True, _("Show graph title")),
                     ("inline", _("Show graph title on graph area")),
                 ],
-                default_value=default_values["show_title"],
+                default_value=default_values.show_title,
             ),
         ),
         (
@@ -144,7 +139,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show graph time range"),
                 label=_("Show the graph time range on top of the graph"),
-                default_value=default_values["show_graph_time"],
+                default_value=default_values.show_graph_time,
             ),
         ),
         (
@@ -152,7 +147,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show margin round the graph"),
                 label=_("Show a margin round the graph"),
-                default_value=default_values["show_margin"],
+                default_value=default_values.show_margin,
             ),
         ),
         (
@@ -160,7 +155,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show legend"),
                 label=_("Show the graph legend"),
-                default_value=default_values["show_legend"],
+                default_value=default_values.show_legend,
             ),
         ),
         (
@@ -168,7 +163,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show vertical axis"),
                 label=_("Show the graph vertical axis"),
-                default_value=default_values["show_vertical_axis"],
+                default_value=default_values.show_vertical_axis,
             ),
         ),
         (
@@ -191,7 +186,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show time axis"),
                 label=_("Show the graph time axis"),
-                default_value=default_values["show_time_axis"],
+                default_value=default_values.show_time_axis,
             ),
         ),
         (
@@ -199,7 +194,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show controls"),
                 label=_("Show the graph controls"),
-                default_value=default_values["show_controls"],
+                default_value=default_values.show_controls,
             ),
         ),
         (
@@ -207,7 +202,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show pin"),
                 label=_("Show the pin"),
-                default_value=default_values["show_pin"],
+                default_value=default_values.show_pin,
             ),
         ),
         (
@@ -215,7 +210,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Show time range previews"),
                 label="Show previews",
-                default_value=default_values["show_time_range_previews"],
+                default_value=default_values.show_time_range_previews,
             ),
         ),
         (
@@ -223,7 +218,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             Checkbox(
                 title=_("Timerange synchronization"),
                 label="Do not follow timerange changes of other graphs on the current page",
-                default_value=default_values["fixed_timerange"],
+                default_value=default_values.fixed_timerange,
             ),
         ),
     ]

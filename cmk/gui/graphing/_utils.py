@@ -232,7 +232,7 @@ class GraphRecipeBase(BaseModel, frozen=True):
     consolidation_function: GraphConsoldiationFunction | None
     metrics: Sequence[GraphMetric]
     additional_html: AdditionalGraphHTML | None = None
-    render_options: GraphRenderOptions = {}
+    render_options: GraphRenderOptions = GraphRenderOptions()
     data_range: GraphDataRange | None = None
     mark_requested_end_time: bool = False
 

@@ -12,6 +12,7 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import (
     CombinedSingleMetricSpec,
     GraphMetric,
@@ -24,6 +25,7 @@ from cmk.gui.graphing._html_render import (
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
+from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter2
 from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
@@ -34,7 +36,6 @@ from cmk.gui.painter_options import (
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
-    GraphRenderOptions,
     PainterParameters,
     Row,
     ViewName,
@@ -43,6 +44,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Dictionary,
@@ -164,7 +166,7 @@ def paint_time_graph_cmk(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
-    override_graph_render_options: GraphRenderOptions | None = None,
+    show_time_range_previews: bool | None = None,
 ) -> tuple[Literal[""], HTML | str]:
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -173,15 +175,20 @@ def paint_time_graph_cmk(
     painter_params = cell.painter_parameters()
     painter_params = _migrate_old_graph_render_options(painter_params)
 
-    graph_render_options = painter_params["graph_render_options"]
-
-    if override_graph_render_options is not None:
-        graph_render_options.update(override_graph_render_options)
+    graph_render_options = painter_params["graph_render_options"].copy()
+    if show_time_range_previews is not None:
+        graph_render_options["show_time_range_previews"] = show_time_range_previews
 
     painter_options = PainterOptions.get_instance()
     options = painter_options.get_without_default("graph_render_options")
     if options is not None:
         graph_render_options.update(options)
+
+    graph_render_config = GraphRenderConfig.from_render_options_and_context(
+        graph_render_options,
+        user,
+        theme.get(),
+    )
 
     now = int(time.time())
     if "set_default_time_range" in painter_params:
@@ -195,11 +202,14 @@ def paint_time_graph_cmk(
     if painter_option_pnp_timerange is not None:
         time_range = get_graph_timerange_from_painter_options()
 
-    graph_data_range = make_graph_data_range(time_range, graph_render_options)
+    graph_data_range = make_graph_data_range(
+        time_range,
+        graph_render_config.size[1],
+    )
 
     if is_mobile(request, response):
-        graph_render_options.update(
-            {
+        graph_render_config = graph_render_config.model_copy(
+            update={
                 "interaction": False,
                 "show_controls": False,
                 "show_pin": False,
@@ -231,7 +241,7 @@ def paint_time_graph_cmk(
             service_description=row.get("service_description", "_HOST_"),
         ),
         graph_data_range,
-        graph_render_options,
+        graph_render_config,
         resolve_combined_single_metric_spec,
         # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
         # Unfortunately, we have no access to this information here. Regarding the rows, we could
@@ -255,7 +265,7 @@ def paint_cmk_graphs_with_timeranges(
         row,
         cell,
         resolve_combined_single_metric_spec,
-        override_graph_render_options={"show_time_range_previews": True},
+        show_time_range_previews=True,
     )
 
 

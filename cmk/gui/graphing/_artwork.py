@@ -23,8 +23,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
-from cmk.gui.type_defs import GraphRenderOptions, SizePT, UnitInfo, UnitRenderFunc
-from cmk.gui.utils.theme import theme
+from cmk.gui.type_defs import UnitInfo, UnitRenderFunc
 
 from ._graph_specification import (
     CombinedSingleMetricSpec,
@@ -114,83 +113,6 @@ class GraphArtwork(BaseModel):
     display_id: str
 
 
-#   .--Default Render Options----------------------------------------------.
-#   |                   ____                _                              |
-#   |                  |  _ \ ___ _ __   __| | ___ _ __                    |
-#   |                  | |_) / _ \ '_ \ / _` |/ _ \ '__|                   |
-#   |                  |  _ <  __/ | | | (_| |  __/ |                      |
-#   |                  |_| \_\___|_| |_|\__,_|\___|_|                      |
-#   |                                                                      |
-#   |                   ___        _   _                                   |
-#   |                  / _ \ _ __ | |_(_) ___  _ __  ___                   |
-#   |                 | | | | '_ \| __| |/ _ \| '_ \/ __|                  |
-#   |                 | |_| | |_) | |_| | (_) | | | \__ \                  |
-#   |                  \___/| .__/ \__|_|\___/|_| |_|___/                  |
-#   |                       |_|                                            |
-#   '----------------------------------------------------------------------'
-
-
-def get_default_graph_render_options() -> GraphRenderOptions:
-    return GraphRenderOptions(
-        font_size=SizePT(8.0),
-        resizable=True,
-        show_controls=True,
-        show_pin=True,
-        show_legend=True,
-        show_graph_time=True,
-        show_vertical_axis=True,
-        vertical_axis_width="fixed",
-        show_time_axis=True,
-        show_title=True,
-        title_format=("plain",),
-        show_margin=True,
-        preview=False,
-        interaction=True,
-        editing=False,
-        fixed_timerange=False,
-        show_time_range_previews=True,
-        background_color="default",
-        foreground_color="default",
-        canvas_color="default",
-    )
-
-
-def _graph_colors(theme_id: str) -> GraphRenderOptions:
-    return {
-        "modern-dark": GraphRenderOptions(
-            background_color=None,
-            foreground_color="#ffffff",
-            canvas_color=None,
-        ),
-        "pdf": GraphRenderOptions(
-            background_color="#f8f4f0",
-            foreground_color="#000000",
-            canvas_color="#ffffff",
-        ),
-    }.get(
-        theme_id,
-        GraphRenderOptions(
-            background_color=None,
-            foreground_color="#000000",
-            canvas_color=None,
-        ),
-    )
-
-
-def add_default_render_options(
-    graph_render_options: GraphRenderOptions, render_unthemed: bool = False
-) -> GraphRenderOptions:
-    options = get_default_graph_render_options()
-    options.update(graph_render_options)
-    options.setdefault("size", user.load_file("graph_size", (70, 16)))
-
-    # Users can't modify graph colors. Only defaults are allowed
-    theme_colors = _graph_colors(theme.get() if not render_unthemed else "pdf")
-    options.update(theme_colors)
-
-    return options
-
-
 # .
 #   .--Create graph artwork------------------------------------------------.
 #   |                 _         _                      _                   |
@@ -210,15 +132,13 @@ def add_default_render_options(
 def compute_graph_artwork(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphRenderOptions,
+    size: tuple[int, int],
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     graph_display_id: str = "",
 ) -> GraphArtwork:
-    graph_render_options = add_default_render_options(graph_render_options)
-
     curves = list(
         compute_graph_artwork_curves(
             graph_recipe,
@@ -230,7 +150,7 @@ def compute_graph_artwork(
     pin_time = _load_graph_pin()
     _compute_scalars(graph_recipe, curves, pin_time)
     layouted_curves, mirrored = _layout_graph_curves(curves)  # do stacking, mirroring
-    width, height = graph_render_options["size"]
+    width, height = size
 
     try:
         start_time, end_time, step = curves[0]["rrddata"].twindow
@@ -240,8 +160,8 @@ def compute_graph_artwork(
     return GraphArtwork(
         # Labelling, size, layout
         title=graph_recipe.title,
-        width=int(width),  # in widths of lower case 'x'
-        height=height,
+        width=(width := size[0]),  # in widths of lower case 'x'
+        height=(height := size[1]),
         mirrored=mirrored,
         # Actual data and axes
         curves=layouted_curves,

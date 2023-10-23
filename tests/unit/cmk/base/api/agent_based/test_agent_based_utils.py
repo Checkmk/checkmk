@@ -9,7 +9,6 @@ import pytest
 
 import cmk.base.api.agent_based.utils as utils
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 
 
 def _test_atomic_relation(relation_name, value, testcases):
@@ -142,11 +141,11 @@ def test_exists(testcases: tuple[str, bool]) -> None:
 
 
 def test_all_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
+    spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
+    spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
+    spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
 
-    assert utils.all_of(spec1, spec2, spec3) == SNMPDetectSpecification(
+    assert utils.all_of(spec1, spec2, spec3) == utils.SNMPDetectSpecification(
         [
             [
                 (".1", "1?", True),
@@ -161,9 +160,9 @@ def test_all_of() -> None:
 
 
 def test_any_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
+    spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
+    spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
+    spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
 
     spec123 = utils.any_of(spec1, spec2, spec3)
 
@@ -180,10 +179,10 @@ def test_any_of() -> None:
 
 
 def test_any_of_all_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
-    spec4 = SNMPDetectSpecification([[(".4", "4?", True)]])
+    spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
+    spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
+    spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
+    spec4 = utils.SNMPDetectSpecification([[(".4", "4?", True)]])
 
     spec12 = utils.all_of(spec1, spec2)
     spec34 = utils.all_of(spec3, spec4)
@@ -194,7 +193,7 @@ def test_any_of_all_of() -> None:
     spec1234 = utils.any_of(spec12, spec34)
     _validate_detect_spec(spec1234)
 
-    assert spec1234 == SNMPDetectSpecification(
+    assert spec1234 == utils.SNMPDetectSpecification(
         [
             [(".1", "1?", True), (".2", "2?", True)],
             [(".3", "3?", True), (".4", "4?", True)],
@@ -203,15 +202,15 @@ def test_any_of_all_of() -> None:
 
 
 def test_all_of_any_of() -> None:
-    spec1 = SNMPDetectSpecification([[(".1", "1?", True)]])
-    spec2 = SNMPDetectSpecification([[(".2", "2?", True)]])
-    spec3 = SNMPDetectSpecification([[(".3", "3?", True)]])
-    spec4 = SNMPDetectSpecification([[(".4", "4?", True)]])
+    spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
+    spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
+    spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
+    spec4 = utils.SNMPDetectSpecification([[(".4", "4?", True)]])
 
     spec12 = utils.any_of(spec1, spec2)
     spec34 = utils.any_of(spec3, spec4)
 
-    assert utils.all_of(spec12, spec34) == SNMPDetectSpecification(
+    assert utils.all_of(spec12, spec34) == utils.SNMPDetectSpecification(
         [
             [(".1", "1?", True), (".3", "3?", True)],
             [(".1", "1?", True), (".4", "4?", True)],

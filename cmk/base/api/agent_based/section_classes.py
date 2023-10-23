@@ -6,25 +6,20 @@
 """
 import string
 from collections.abc import Sequence
-
-from cmk.snmplib import SNMPDetectBaseType
-
-from cmk.base.api.agent_based.type_defs import OIDSpecTuple, SNMPTreeTuple
+from typing import Literal, NamedTuple
 
 
-class SNMPDetectSpecification(SNMPDetectBaseType):
-    """A specification for SNMP device detection
+class _OIDSpecTuple(NamedTuple):
+    column: int | str
+    encoding: Literal["string", "binary"]
+    save_to_cache: bool
 
-    Note that the structure of this object is not part of the API,
-    and may change at any time.
-    """
-
-    # This class is only part of the check *API*, in the sense that it hides
-    # the SNMPDetectBaseType from the user (and from the auto generated doc!).
-    # Use it for type annotations API frontend objects
+    # we create a deepcopy in our unit tests, so support it.
+    def __deepcopy__(self, _memo: object) -> "_OIDSpecTuple":
+        return self
 
 
-class OIDBytes(OIDSpecTuple):
+class OIDBytes(_OIDSpecTuple):
     """Class to indicate that the OIDs value should be provided as list of integers
 
     Args:
@@ -43,7 +38,7 @@ class OIDBytes(OIDSpecTuple):
         return f"OIDBytes({self.column!r})"
 
 
-class OIDCached(OIDSpecTuple):
+class OIDCached(_OIDSpecTuple):
     """Class to indicate that the OIDs value should be cached
 
     Args:
@@ -62,7 +57,7 @@ class OIDCached(OIDSpecTuple):
         return f"OIDCached({self.column!r})"
 
 
-class OIDEnd(OIDSpecTuple):
+class OIDEnd(_OIDSpecTuple):
     """Class to indicate the end of the OID string should be provided
 
     When specifying an OID in an SNMPTree object, the parse function
@@ -76,6 +71,11 @@ class OIDEnd(OIDSpecTuple):
 
     def __repr__(self) -> str:
         return "OIDEnd()"
+
+
+class SNMPTreeTuple(NamedTuple):
+    base: str
+    oids: Sequence[_OIDSpecTuple]
 
 
 class SNMPTree(SNMPTreeTuple):
@@ -107,7 +107,7 @@ class SNMPTree(SNMPTreeTuple):
     """
     VALID_CHARACTERS = {".", *string.digits}
 
-    def __new__(cls, base: str, oids: Sequence[str | OIDSpecTuple]) -> "SNMPTree":
+    def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> "SNMPTree":
         # TODO: we must validate list property before iterating over oids
         # (otherwise '123' will become ['1', '2', '3']).
         if not isinstance(oids, list):
@@ -117,7 +117,8 @@ class SNMPTree(SNMPTreeTuple):
             cls,
             base=base,
             oids=[
-                o if isinstance(o, OIDSpecTuple) else OIDSpecTuple(o, "string", False) for o in oids
+                o if isinstance(o, _OIDSpecTuple) else _OIDSpecTuple(o, "string", False)
+                for o in oids
             ],
         )
 
@@ -142,7 +143,7 @@ class SNMPTree(SNMPTreeTuple):
         if not base.startswith("."):
             raise ValueError(f"{base!r} must start with '.'")
 
-    def _validate_oids(self, oid_list: Sequence[OIDSpecTuple]) -> None:
+    def _validate_oids(self, oid_list: Sequence[_OIDSpecTuple]) -> None:
         """Validate OIDs
 
         Note that in fact, this function can deal with, and may return integers.

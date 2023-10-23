@@ -12,7 +12,7 @@ from cmk.base.api.agent_based.section_classes import SNMPTree
 
 from cmk.agent_based.v1 import Service
 
-from ..section_classes import SNMPDetectSpecification
+from ..utils import SNMPDetectSpecification
 
 _DiscoveredParameters = Mapping | tuple | str | None
 

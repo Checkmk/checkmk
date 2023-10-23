@@ -11,8 +11,6 @@ import re
 from collections.abc import Callable, Generator, MutableMapping
 from typing import Any, overload
 
-from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
-
 from cmk.agent_based.v1 import IgnoreResultsError, Metric, Result, State
 
 #     ____       _            _
@@ -21,6 +19,20 @@ from cmk.agent_based.v1 import IgnoreResultsError, Metric, Result, State
 #    | |_| |  __/ ||  __/ (__| |_  \__ \ |_) |  __/ (__
 #    |____/ \___|\__\___|\___|\__| |___/ .__/ \___|\___|
 #                                      |_|
+
+_SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
+
+
+class SNMPDetectSpecification(_SNMPDetectBaseType):
+    """A specification for SNMP device detection
+
+    Note that the structure of this object is not part of the API,
+    and may change at any time.
+    """
+
+    # This class is only part of the check *API*, in the sense that it hides
+    # the SNMPDetectBaseType from the user (and from the auto generated doc!).
+    # Use it for type annotations API frontend objects
 
 
 def all_of(

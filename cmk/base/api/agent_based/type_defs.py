@@ -8,7 +8,7 @@ Some of these are exposed in the API, some are not.
 """
 
 from collections.abc import Callable, Generator, Sequence
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal, NamedTuple, Protocol
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
@@ -19,22 +19,6 @@ from cmk.snmplib import SNMPDetectBaseType
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.agent_based.v1 import HostLabel
-
-
-class OIDSpecTuple(NamedTuple):
-    column: int | str
-    encoding: Literal["string", "binary"]
-    save_to_cache: bool
-
-    # we create a deepcopy in our unit tests, so support it.
-    def __deepcopy__(self, _memo: object) -> "OIDSpecTuple":
-        return self
-
-
-class SNMPTreeTuple(NamedTuple):
-    base: str
-    oids: Sequence[OIDSpecTuple]
-
 
 RuleSetTypeName = Literal["merged", "all"]
 
@@ -63,6 +47,30 @@ class AgentSectionPlugin(NamedTuple):
     full_module: str | None  # not available for auto migrated plugins.
 
 
+class _OIDSpecLike(Protocol):
+    @property
+    def column(self) -> int | str:
+        ...
+
+    @property
+    def encoding(self) -> Literal["string", "binary"]:
+        ...
+
+    @property
+    def save_to_cache(self) -> bool:
+        ...
+
+
+class _SNMPTreeLike(Protocol):
+    @property
+    def base(self) -> str:
+        ...
+
+    @property
+    def oids(self) -> Sequence[_OIDSpecLike]:
+        ...
+
+
 class SNMPSectionPlugin(NamedTuple):
     name: SectionName
     parsed_section_name: ParsedSectionName
@@ -72,7 +80,7 @@ class SNMPSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     detect_spec: SNMPDetectBaseType
-    trees: Sequence[SNMPTreeTuple]
+    trees: Sequence[_SNMPTreeLike]
     supersedes: set[SectionName]
     full_module: str | None  # not available for auto migrated plugins.
 

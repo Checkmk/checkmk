@@ -131,14 +131,14 @@ async fn analyze_response(
         }
     };
 
-    let response = match response.error_for_status() {
-        Ok(resp) => resp,
-        Err(err) => {
-            return Output::from_short(
-                State::Warn,
-                &format!("HTTP status code {}", err.status().unwrap().as_str()),
-            );
-        }
+    let status = response.status();
+    let http_version = response.version();
+    let response_state = if status.is_client_error() {
+        State::Warn
+    } else if status.is_server_error() {
+        State::Crit
+    } else {
+        State::Ok
     };
 
     let body = match without_body {
@@ -154,9 +154,11 @@ async fn analyze_response(
     let elapsed = start_time.elapsed();
 
     Output::from_short(
-        State::Ok,
+        response_state,
         &format!(
-            "Downloaded {} bytes in {}.{} seconds.",
+            "{:?} {} - {} bytes in {}.{} second response time",
+            http_version,
+            status,
             body.len(),
             elapsed.as_secs(),
             elapsed.subsec_millis()

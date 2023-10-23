@@ -33,7 +33,7 @@ async fn test_basic_get() -> AnyhowResult<()> {
 
     assert!(check_http_payload.starts_with("GET / HTTP/1.1"));
     assert!(matches!(state, State::Ok));
-    assert!(summary.starts_with("Downloaded"));
+    assert!(summary.starts_with("HTTP/1.1 200 OK"));
     assert!(details.is_none());
 
     Ok(())

@@ -39,7 +39,7 @@ from tests.testlib.web_session import CMKWebSession
 import livestatus
 
 from cmk.utils.paths import counters_dir, piggyback_dir, piggyback_source_dir
-from cmk.utils.version import Edition
+from cmk.utils.version import Edition, Version
 
 logger = logging.getLogger(__name__)
 
@@ -1505,10 +1505,18 @@ class SiteFactory:
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
-        # tmpfs should have been restored:
-        assert os.path.exists(site.path(counters_dir))
-        assert os.path.exists(site.path(str(piggyback_dir)))
-        assert os.path.exists(site.path(str(piggyback_source_dir)))
+        # restoring the tmpfs was broken and has been fixed with
+        # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
+        from_version = Version.from_str(test_site.version.version)
+        if (
+            (Version.from_str("2.1.0p36") <= from_version < Version.from_str("2.2.0"))
+            or (Version.from_str("2.2.0p13") <= from_version < Version.from_str("2.3.0"))
+            or Version.from_str("2.3.0b1") <= from_version
+        ):
+            # tmpfs should have been restored:
+            assert os.path.exists(site.path(counters_dir))
+            assert os.path.exists(site.path(str(piggyback_dir)))
+            assert os.path.exists(site.path(str(piggyback_source_dir)))
 
         # refresh the site object after creating the site
         self._base_ident = ""

@@ -353,7 +353,7 @@ class RulesetMatcher:
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
-                match = self._matches_service_conditions(
+                match = RulesetMatcher._matches_service_conditions(
                     service_description_condition, service_labels_condition, match_object
                 )
                 self._service_match_cache[service_cache_id] = match
@@ -361,13 +361,13 @@ class RulesetMatcher:
             if match:
                 yield value
 
+    @staticmethod
     def _matches_service_conditions(
-        self,
         service_description_condition: tuple[bool, Pattern[str]],
         service_labels_condition: Mapping[str, str | Mapping[Literal["$ne"], str]],
         match_object: RulesetMatchObject,
     ) -> bool:
-        if not self._matches_service_description_condition(
+        if not RulesetMatcher._matches_service_description_condition(
             service_description_condition, match_object
         ):
             return False
@@ -379,8 +379,8 @@ class RulesetMatcher:
 
         return True
 
+    @staticmethod
     def _matches_service_description_condition(
-        self,
         service_description_condition: tuple[bool, Pattern[str]],
         match_object: RulesetMatchObject,
     ) -> bool:
@@ -393,8 +393,9 @@ class RulesetMatcher:
             return not negate
         return negate
 
+    @staticmethod
     def get_values_for_generic_agent(
-        self, ruleset: Iterable[RuleSpec[TRuleValue]], path_for_rule_matching: str
+        ruleset: Iterable[RuleSpec[TRuleValue]], path_for_rule_matching: str
     ) -> Sequence[TRuleValue]:
         """Compute rulesets for "generic" hosts
 
@@ -411,7 +412,7 @@ class RulesetMatcher:
             if rule_path is not None and not path_for_rule_matching.startswith(rule_path):
                 continue
 
-            if (tags := cond.get("host_tags", {})) and not self.ruleset_optimizer.matches_host_tags(
+            if (tags := cond.get("host_tags", {})) and not RulesetOptimizer.matches_host_tags(
                 set(), tags
             ):
                 continue
@@ -419,7 +420,7 @@ class RulesetMatcher:
             if (labels := cond.get("host_labels", {})) and not matches_labels({}, labels):
                 continue
 
-            if not self.ruleset_optimizer.matches_host_name(cond.get("host_name"), HostName("")):
+            if not RulesetOptimizer.matches_host_name(cond.get("host_name"), HostName("")):
                 continue
 
             entries.append(rule["value"])
@@ -589,7 +590,9 @@ class RulesetOptimizer:
                         hosts,
                         service_labels_condition,
                         service_labels_condition_cache_id,
-                        self._convert_pattern_list(rule["condition"].get("service_description")),
+                        RulesetOptimizer._convert_pattern_list(
+                            rule["condition"].get("service_description")
+                        ),
                     )
                 )
             return new_rules
@@ -600,9 +603,8 @@ class RulesetOptimizer:
 
         return self.__service_ruleset_cache.setdefault(cache_id, _impl(ruleset, with_foreign_hosts))
 
-    def _convert_pattern_list(
-        self, patterns: HostOrServiceConditions | None
-    ) -> PreprocessedPattern:
+    @staticmethod
+    def _convert_pattern_list(patterns: HostOrServiceConditions | None) -> PreprocessedPattern:
         """Compiles a list of service match patterns to a to a single regex
 
         Reducing the number of individual regex matches improves the performance dramatically.
@@ -633,7 +635,7 @@ class RulesetOptimizer:
         rule_path = condition.get("host_folder", "/")
 
         cache_id = (
-            self._condition_cache_id(
+            RulesetOptimizer._condition_cache_id(
                 hostlist,
                 tag_conditions,
                 labels,
@@ -685,7 +687,7 @@ class RulesetOptimizer:
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if tag_conditions and not self.matches_host_tags(
+                if tag_conditions and not RulesetOptimizer.matches_host_tags(
                     self._host_tags[hostname],
                     tag_conditions,
                 ):
@@ -696,7 +698,7 @@ class RulesetOptimizer:
                     if not matches_labels(host_labels, labels):
                         continue
 
-                if not self.matches_host_name(hostlist, hostname):
+                if not RulesetOptimizer.matches_host_name(hostlist, hostname):
                     continue
 
                 matching.add(hostname)
@@ -704,9 +706,8 @@ class RulesetOptimizer:
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
 
-    def matches_host_name(
-        self, host_entries: HostOrServiceConditions | None, hostname: HostName
-    ) -> bool:
+    @staticmethod
+    def matches_host_name(host_entries: HostOrServiceConditions | None, hostname: HostName) -> bool:
         if not host_entries:
             return True
 
@@ -723,8 +724,8 @@ class RulesetOptimizer:
 
         return negate
 
+    @staticmethod
     def matches_host_tags(
-        self,
         hosttags: set[tuple[TagGroupID, TagID]],
         required_tags: Mapping[TagGroupID, TagCondition],
     ) -> bool:
@@ -733,8 +734,8 @@ class RulesetOptimizer:
             for taggroup_id, tag_condition in required_tags.items()
         )
 
+    @staticmethod
     def _condition_cache_id(
-        self,
         hostlist: HostOrServiceConditions | None,
         tag_conditions: Mapping[TagGroupID, TagCondition],
         labels: Mapping[str, str | Mapping[Literal["$ne"], str]],
@@ -880,7 +881,7 @@ class RulesetOptimizer:
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(hostname))
         labels.update(self._labels.explicit_host_labels.get(hostname, {}))
-        labels.update(self._builtin_labels_of_host(hostname))
+        labels.update(RulesetOptimizer._builtin_labels_of_host())
         return self.__labels_of_host.setdefault(hostname, labels)
 
     def label_sources_of_host(self, hostname: HostName) -> LabelSources:
@@ -889,7 +890,7 @@ class RulesetOptimizer:
         _get_host_labels()"""
         labels: LabelSources = {}
         labels.update({k: "discovered" for k in self._discovered_labels_of_host(hostname).keys()})
-        labels.update({k: "discovered" for k in self._builtin_labels_of_host(hostname)})
+        labels.update({k: "discovered" for k in RulesetOptimizer._builtin_labels_of_host()})
         labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
         labels.update(
             {k: "explicit" for k in self._labels.explicit_host_labels.get(hostname, {}).keys()}
@@ -908,7 +909,7 @@ class RulesetOptimizer:
         return {l.name: l.value for l in host_labels}
 
     @staticmethod
-    def _builtin_labels_of_host(hostname: HostName) -> Labels:
+    def _builtin_labels_of_host() -> Labels:
         return {
             label_id: label["value"] for label_id, label in BuiltinHostLabelsStore().load().items()
         }

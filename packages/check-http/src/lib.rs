@@ -9,6 +9,7 @@ use std::{
 pub mod cli;
 mod pwstore;
 
+#[derive(PartialEq, Eq)]
 pub enum State {
     Ok,
     Warn,

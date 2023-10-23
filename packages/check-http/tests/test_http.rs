@@ -4,26 +4,54 @@ use clap::Parser;
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
+use std::sync::atomic;
 
-const TEST_PORT: u16 = 8888;
+const START_PORT: u16 = 8888;
+const MAX_PORTS: u16 = 100;
 const LOCALHOST_DNS: &str = "localhost";
 
-const BASIC_HTTP_RESPONSE: &str = "HTTP/1.1 200 OK\nConnection: close\n\n";
+static PORT_INDEX: atomic::AtomicU16 = atomic::AtomicU16::new(0);
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_basic_get() -> AnyhowResult<()> {
-    let listener = TcpListener::bind("0.0.0.0:8888")?;
+    check_http_output(
+        vec!["check_http", "-t", "1"],
+        "HTTP/1.1 200 OK\nConnection: close\n\n",
+        "GET / HTTP/1.1",
+        State::Ok,
+        "HTTP/1.1 200 OK",
+    )
+    .await
+}
 
-    let args = Cli::parse_from(vec![
-        "check_http",
-        "-u",
-        &format!("http://{}:{}", LOCALHOST_DNS, TEST_PORT),
-        "-t",
-        "1",
-    ]);
+#[tokio::test(flavor = "multi_thread")]
+async fn test_status_4xx() -> AnyhowResult<()> {
+    check_http_output(
+        vec!["check_http", "-t", "1"],
+        "HTTP/1.1 401 nope\nConnection: close\n\n",
+        "GET / HTTP/1.1",
+        State::Warn,
+        "HTTP/1.1 401 Unauthorized",
+    )
+    .await
+}
+
+async fn check_http_output(
+    mut raw_args: Vec<&str>,
+    http_response: &str,
+    expected_http_payload_start: &str,
+    expected_state: State,
+    expected_summary_start: &str,
+) -> AnyhowResult<()> {
+    let (port, listener) = tcp_listener("0.0.0.0");
+    let url = format!("http://{}:{}", LOCALHOST_DNS, port);
+
+    raw_args.extend(["-u", &url].iter());
+    let args = Cli::parse_from(raw_args);
+
     let check_http_thread = tokio::spawn(check_http(args));
 
-    let check_http_payload = process_http(listener, BASIC_HTTP_RESPONSE)?;
+    let check_http_payload = process_http(listener, http_response)?;
 
     let Output {
         state,
@@ -31,9 +59,9 @@ async fn test_basic_get() -> AnyhowResult<()> {
         details,
     } = check_http_thread.await?;
 
-    assert!(check_http_payload.starts_with("GET / HTTP/1.1"));
-    assert!(matches!(state, State::Ok));
-    assert!(summary.starts_with("HTTP/1.1 200 OK"));
+    assert!(check_http_payload.starts_with(expected_http_payload_start));
+    assert!(state == expected_state);
+    assert!(summary.starts_with(expected_summary_start));
     assert!(details.is_none());
 
     Ok(())
@@ -47,4 +75,21 @@ fn process_http(listener: TcpListener, send_response: &str) -> AnyhowResult<Stri
     stream.shutdown(std::net::Shutdown::Both)?;
 
     Ok(String::from_utf8(buffer[..len].into())?)
+}
+
+fn next_port_index() -> u16 {
+    let next_port = PORT_INDEX.fetch_add(1, atomic::Ordering::Relaxed);
+    if next_port > MAX_PORTS {
+        panic!("No free port after {} tries", MAX_PORTS);
+    };
+    next_port
+}
+
+fn tcp_listener(addr: &str) -> (u16, TcpListener) {
+    loop {
+        let port = START_PORT + next_port_index();
+        if let Ok(listener) = TcpListener::bind(format!("{}:{}", addr, port)) {
+            return (port, listener);
+        };
+    }
 }

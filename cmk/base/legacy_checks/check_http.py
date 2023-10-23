@@ -139,15 +139,11 @@ def _certificate_args(
     settings: Mapping[str, Any],
     proxy_used: bool,
 ) -> list[object]:
-    args = []
+    args: list[object] = []
 
     if "cert_days" in settings:
-        # legacy behavior
-        if isinstance(settings["cert_days"], int):
-            args += ["-C", settings["cert_days"]]
-        else:
-            warn, crit = settings["cert_days"]
-            args += ["-C", "%d,%d" % (warn, crit)]
+        warn, crit = settings["cert_days"]
+        args += ["-C", "%d,%d" % (warn, crit)]
 
     if proxy_used:
         args += ["--ssl", "-j", "CONNECT"]

@@ -18,6 +18,7 @@ def main() {
         "PUSH_TO_REGISTRY",
         "PUSH_TO_REGISTRY_ONLY",
         "BUILD_IMAGE_WITHOUT_CACHE",
+        "CUSTOM_CMK_BASE_IMAGE",
     ]);
 
     check_environment_variables([
@@ -112,8 +113,9 @@ def main() {
                                 --version=${cmk_version} \
                                 --source_path=${source_dir} \
                                 --set_latest_tag=${SET_LATEST_TAG} \
-                                --set_branch_latest_tag ${SET_BRANCH_LATEST_TAG} \
+                                --set_branch_latest_tag=${SET_BRANCH_LATEST_TAG} \
                                 --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
+                                --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
                                 --action=build \
                                 -vvvv
                             """);
@@ -158,8 +160,9 @@ def main() {
                             --version=${cmk_version} \
                             --source_path=${source_dir} \
                             --set_latest_tag=${SET_LATEST_TAG} \
-                            --set_branch_latest_tag ${SET_BRANCH_LATEST_TAG} \
+                            --set_branch_latest_tag=${SET_BRANCH_LATEST_TAG} \
                             --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
+                            --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
                             --action=push \
                             -vvvv
                         """);

@@ -104,6 +104,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--action", required=True, choices=["build", "push"], help="Action to perform"
     )
+    parser.add_argument(
+        "--image_cmk_base", help="Custom CMK base image, defaults to checked in IMAGE_CMK_BASE"
+    )
 
     return parser.parse_args()
 
@@ -294,10 +297,17 @@ def build_tar_gz(
     args: argparse.Namespace, version_tag: str, docker_path: str, docker_repo_name: str
 ) -> None:
     """Build the check-mk-EDITION-docker-VERSION.tar.gz file"""
-    # make it more ugly and less professional if possible, still to good to maintain
-    image_cmk_base = run_cmd(
-        cmd=[f"{Path(__file__).parent.parent}/docker_image_aliases/resolve.py", "IMAGE_CMK_BASE"]
-    ).stdout.strip()
+    if args.image_cmk_base in (None, "", "None", "null"):
+        # make it more ugly and less professional if possible, still to good to maintain
+        image_cmk_base = run_cmd(
+            cmd=[
+                f"{Path(__file__).parent.parent}/docker_image_aliases/resolve.py",
+                "IMAGE_CMK_BASE",
+            ]
+        ).stdout.strip()
+    else:
+        image_cmk_base = args.image_cmk_base
+
     buildargs = {
         "CMK_VERSION": args.version,
         "CMK_EDITION": args.edition,

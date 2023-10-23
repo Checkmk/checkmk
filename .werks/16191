@@ -8,4 +8,4 @@ Level: 1
 Version: 2.3.0b1
 
 The preparation phase for distributing changes to remote sites typically takes longer in a managed edition to ensure that each customer is handled separately.
-This phase has been accelerated with additional caching.
+This phase has been accelerated with additional caching and improved storage of intermediate results.

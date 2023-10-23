@@ -1454,8 +1454,12 @@ class Folder(FolderProtocol):
             }
         return {}
 
-    def save(self) -> None:
+    def save(self, is_custom_folder: bool = False) -> None:
         self.persist_instance()
+        if is_custom_folder:
+            # save a folder that is used only temporarily for a specific purpose (e.g. syncing to
+            # remote sites) -> skip further saving functionality (e.g. communicating with redis)
+            return
         folder_tree().invalidate_caches()
 
     def serialize(self) -> WATOFolderInfo:
@@ -1508,12 +1512,15 @@ class Folder(FolderProtocol):
         self.effective_attributes.drop_caches()
         self._choices_for_moving_host = None
 
-        for subfolder in self._subfolders.values():
-            subfolder.drop_caches()
-
         if self._hosts is not None:
             for host in self._hosts.values():
                 host.drop_caches()
+
+        if self._loaded_subfolders is None:
+            return
+
+        for subfolder in self._loaded_subfolders.values():
+            subfolder.drop_caches()
 
     def id(self) -> str:
         """The unique identifier of this particular instance.

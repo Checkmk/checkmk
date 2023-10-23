@@ -143,6 +143,11 @@ agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 $(foreach VERS,$(filter 2.%,$(AGENT_PLUGIN_PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
 $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
+	@if [ -z ${DOCKER_REGISTRY_NO_HTTPS} ]; then \
+  	   echo "DOCKER_REGISTRY_NO_HTTPS is not set, please export this environment variable during make target call."; \
+  	   echo "Hint: export DOCKER_REGISTRY_NO_HTTPS=artifacts.lan.tribe29.com:4000"; \
+  	   exit 1; \
+  	fi; \
 	# Clean up auto-generated files, which do not have a corresponding source file anymore
 	flock ./agent-plugin-unit $(FIND_INVALID_TEST_FILES)
 	# Recursive Makefiles suck big time...
@@ -153,7 +158,7 @@ $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-
 	    *) SUFFIX="" ;; \
 	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
-	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION_MAJ_MIN="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
+	IMAGE_HASH="$$(docker build --build-arg DOCKER_REGISTRY="${DOCKER_REGISTRY_NO_HTTPS}" --build-arg PYTHON_VERSION_MAJ_MIN="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
 	echo "Docker image: $$IMAGE_HASH" && \
 	docker run \
 	    --rm \

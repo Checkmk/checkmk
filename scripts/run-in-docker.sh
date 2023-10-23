@@ -16,6 +16,11 @@ GIT_COMMON_DIR="$(realpath "$(git rev-parse --git-common-dir)")"
 
 CMD="${*:-bash}"
 
+# Make the registry login available within the container, e.g. for agent plugin unit tests which are pulling
+# images from the registry within IMAGE_TESTING
+DOCKER_CONF_PATH="${HOME}/.docker"
+mkdir -p "${DOCKER_CONF_PATH}"
+
 # This block makes sure a local containerized session does not interfere with
 # native builds. Maybe in the future this script should not be executed in
 # a CI environment (since those come with their own containerization solutions)
@@ -44,6 +49,8 @@ if [ "$USER" != "jenkins" ]; then
         -v "${REPO_DIR}/.docker_workspace/home:${REPO_DIR}/build_user_home/" \
         -e HOME="${REPO_DIR}/build_user_home/" \
         "
+
+    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${REPO_DIR}/build_user_home/.docker"
 else
     # Needed for .cargo which is shared between workspaces
     SHARED_CARGO_FOLDER="${HOME}/shared_cargo_folder"
@@ -56,6 +63,8 @@ else
     # That's why we need to mount the reference repos.
     GIT_REFERENCE_CLONE_PATH="/home/jenkins/git_reference_clones/check_mk.git"
     REFERENCE_CLONE_MOUNT="-v ${GIT_REFERENCE_CLONE_PATH}:${GIT_REFERENCE_CLONE_PATH}:ro"
+
+    DOCKER_CONF_JENKINS_MOUNT="-v ${DOCKER_CONF_PATH}:${DOCKER_CONF_PATH}"
 fi
 
 : "${IMAGE_ALIAS:=IMAGE_TESTING}"
@@ -84,6 +93,7 @@ docker run -a stdout -a stderr \
     ${CARGO_JENKINS_MOUNT} \
     ${DOCKER_LOCAL_ARGS} \
     ${REFERENCE_CLONE_MOUNT} \
+    ${DOCKER_CONF_JENKINS_MOUNT} \
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     --group-add="$(getent group docker | cut -d: -f3)" \
     -w "${PWD}" \
@@ -100,6 +110,8 @@ docker run -a stdout -a stderr \
     -e BAZEL_CACHE_USER \
     -e BAZEL_CACHE_PASSWORD \
     -e CI \
+    -e GCC_TOOLCHAIN \
+    -e DOCKER_REGISTRY_NO_HTTPS \
     ${DOCKER_RUN_ADDOPTS} \
     "${IMAGE_ID}" \
     sh -c "${CMD}"

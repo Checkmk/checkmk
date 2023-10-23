@@ -224,7 +224,7 @@ export class SearchFilters {
     _build_regex_from_set(entries: Set<string>): string {
         const list_entries: string[] = [];
         entries.forEach(hostname => {
-            list_entries.push(hostname);
+            list_entries.push(hostname + "$");
         });
 
         if (list_entries.length > 1) return "(" + list_entries.join("|") + ")";
@@ -241,7 +241,7 @@ export class SearchFilters {
             .replace(/\)+$/, "")
             .split("|")
             .forEach((hostname?: string) => {
-                if (hostname) current_hosts.add(hostname);
+                if (hostname) current_hosts.add(hostname.replace(/\$+$/g, ""));
             });
         return current_hosts;
     }

@@ -520,12 +520,6 @@ class RulesetOptimizer:
         # lookup are iterated one by one later on in all_matching_hosts
         self._folder_host_lookup = {}
 
-        self._adjust_processed_hosts_similarity()
-
-    def _adjust_processed_hosts_similarity(self) -> None:
-        """This function computes the tag similarities between of the processed hosts
-        The result is a similarity factor, which helps finding the most perfomant operation
-        for the current hostset"""
         used_groups = {
             self._host_grouped_ref.get(hostname, ()) for hostname in self._all_processed_hosts
         }

@@ -61,12 +61,21 @@ def parse_arguments() -> argparse.Namespace:
         help="Verbose mode (for even more output use -vvvv)",
     )
 
-    parser.add_argument("--branch", required=True)
     parser.add_argument(
-        "--edition", required=True, choices=["raw", "enterprise", "managed", "cloud", "saas"]
+        "--branch",
+        required=True,
+        help="Branch to build with, e.g. '2.1.0', 'master', 'sandbox-user.name-lower-chars'",
     )
-    parser.add_argument("--version", required=True)
-    parser.add_argument("--source_path", required=True)
+    parser.add_argument(
+        "--edition",
+        required=True,
+        choices=["raw", "enterprise", "managed", "cloud", "saas"],
+        help="Checkmk edition to build",
+    )
+    parser.add_argument("--version", required=True, help="Version to build e.g. '2023.10.19'")
+    parser.add_argument(
+        "--source_path", required=True, help="Full path to downloaded tar.gz and deb files"
+    )
 
     parser.add_argument(
         "--set_latest_tag",
@@ -74,12 +83,27 @@ def parse_arguments() -> argparse.Namespace:
         nargs="?",
         const=True,
         default=False,
+        help="Flag to set/push 'latest' tag to build image",
     )
     parser.add_argument(
-        "--set_branch_latest_tag", type=strtobool, nargs="?", const=True, default=False
+        "--set_branch_latest_tag",
+        type=strtobool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Flag to set/push 'BRANCHNAME-latest' tag to build image",
     )
-    parser.add_argument("--no_cache", type=strtobool, nargs="?", const=True, default=False)
-    parser.add_argument("--action", required=True, choices=["build", "push"])
+    parser.add_argument(
+        "--no_cache",
+        type=strtobool,
+        nargs="?",
+        const=True,
+        default=False,
+        help="Flag to build image without docker cache",
+    )
+    parser.add_argument(
+        "--action", required=True, choices=["build", "push"], help="Action to perform"
+    )
 
     return parser.parse_args()
 

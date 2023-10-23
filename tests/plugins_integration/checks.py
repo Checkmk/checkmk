@@ -236,7 +236,7 @@ def _verify_check_result(
         mode="w",
         encoding="utf-8",
     ) as json_file:
-        json.dump(result_data, json_file, indent=4)
+        json.dump(result_data, json_file, indent=4, sort_keys=True)
 
     if mode != CheckModes.UPDATE:
         # ignore columns in the canon that are not supposed to be returned
@@ -253,7 +253,7 @@ def _verify_check_result(
         mode="w",
         encoding="utf-8",
     ) as json_file:
-        json.dump(canon_data, json_file, indent=4)
+        json.dump(canon_data, json_file, indent=4, sort_keys=True)
 
     if result_data is None or len(result_data) == 0:
         logger.error("[%s] No data returned!", check_id)
@@ -304,7 +304,7 @@ def process_check_output(
 
     passed = None
     check_results = {
-        _: item.get("extensions") for _, item in sorted(get_check_results(site, host_name).items())
+        _: item.get("extensions") for _, item in get_check_results(site, host_name).items()
     }
     for check_id in check_results:
         logger.debug('> Processing check id "%s"...', check_id)
@@ -340,7 +340,7 @@ def process_check_output(
             mode="a",
             encoding="utf-8",
         ) as json_file:
-            json.dump(diffs, json_file, indent=4)
+            json.dump(diffs, json_file, indent=4, sort_keys=True)
 
     if config.mode != CheckModes.DEFAULT:
         with open(
@@ -348,7 +348,7 @@ def process_check_output(
             mode="w",
             encoding="utf-8",
         ) as json_file:
-            json.dump(check_canons, json_file, indent=4)
+            json.dump(check_canons, json_file, indent=4, sort_keys=True)
 
     return passed is True
 

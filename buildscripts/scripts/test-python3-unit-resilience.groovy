@@ -9,20 +9,12 @@ def main() {
             stage('run test-unit-resilience') {
                 dir("${checkout_dir}") {
                     try {
-                        withEnv([
-                            "PYTEST_ADDOPTS='--junitxml=${workspace}/junit-${name}.xml'",
-                        ]) {
-                            sh("make -C tests test-unit-resilience");
-                        }
-                    } catch(Exception e) {
+                        sh("make -C tests test-unit-resilience");
+                    }
+                    catch(Exception e) {
                         // We want to keep failed resilience builds in order to follow a process, see CMK-14487
                         currentBuild.setKeepLog(true)
                         throw e
-                    } finally {
-                        step([
-                            $class: "JUnitResultArchiver",
-                            testResults: "junit-${name}.xml",
-                        ])
                     }
                 }
             }

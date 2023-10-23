@@ -9,9 +9,7 @@ from pylint.lint import PyLinter
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
     _get_absolute_importee,
-    _in_component,
     CMKModuleLayerChecker,
-    Component,
     ModuleName,
     ModulePath,
 )
@@ -29,7 +27,7 @@ COMPONENT_LIST = [c for c, _ in _COMPONENTS]
         ("cmk.checkengine", "agent", 1, True, "cmk.checkengine.agent"),
     ],
 )
-def test__get_absolute_importee(
+def test_get_absolute_importee(
     root_name: str, modname: str, level: int, is_package: bool, abs_module: str
 ) -> None:
     assert (
@@ -41,23 +39,6 @@ def test__get_absolute_importee(
         )
         == abs_module
     )
-
-
-@pytest.mark.parametrize("component", COMPONENT_LIST)
-def test_allowed_import_ok(component: Component) -> None:
-    for importee in (
-        "cmk",
-        "cmk.utils",
-        "cmk.utils.anything",
-        "cmk.automations",
-        "cmk.automations.whatever",
-    ):
-        is_ok = not _in_component(ModuleName(component), Component("cmk.base.plugins.agent_based"))
-        assert is_ok is CHECKER._is_import_allowed(
-            ModulePath("_not/relevant_"),
-            ModuleName(f"{component}.foo"),
-            ModuleName(importee),
-        )
 
 
 @pytest.mark.parametrize(

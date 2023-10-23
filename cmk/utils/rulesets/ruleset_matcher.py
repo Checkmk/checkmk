@@ -8,7 +8,7 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
+from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -469,7 +469,7 @@ class RulesetOptimizer:
         self._all_processed_hosts_similarity = 1.0
 
         self._service_ruleset_cache: dict[tuple[int, bool], PreprocessedServiceRuleset] = {}
-        self._host_ruleset_cache: dict[tuple[int, bool], PreprocessedHostRuleset[object]] = {}
+        self.__host_ruleset_cache: dict[tuple[int, bool], PreprocessedHostRuleset[Any]] = {}
         self._all_matching_hosts_match_cache: dict[
             tuple[_ConditionCacheID, bool], set[HostName]
         ] = {}
@@ -486,11 +486,11 @@ class RulesetOptimizer:
         self._initialize_host_lookup()
 
     def clear_ruleset_caches(self) -> None:
-        self._host_ruleset_cache.clear()
+        self.__host_ruleset_cache.clear()
         self._service_ruleset_cache.clear()
 
     def clear_caches(self) -> None:
-        self._host_ruleset_cache.clear()
+        self.__host_ruleset_cache.clear()
         self._all_matching_hosts_match_cache.clear()
 
     def all_processed_hosts(self) -> Sequence[HostName]:
@@ -535,37 +535,30 @@ class RulesetOptimizer:
     def get_host_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> PreprocessedHostRuleset[TRuleValue]:
-        # Note on the `type: ignore` in this function.  The cache may store
-        # any `RuleSpec[TRuleValue]`.  The consequence is that the actual
-        # type for `TRuleValue` isn't conserved.
-        cache_id = id(ruleset), with_foreign_hosts
-
-        if cache_id in self._host_ruleset_cache:
-            return self._host_ruleset_cache[cache_id]  # type: ignore[return-value]
-
-        host_ruleset: PreprocessedHostRuleset[TRuleValue] = self._convert_host_ruleset(
-            ruleset, with_foreign_hosts
-        )
-        self._host_ruleset_cache[cache_id] = host_ruleset  # type: ignore[assignment]
-        return host_ruleset
-
-    def _convert_host_ruleset(
-        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-    ) -> PreprocessedHostRuleset[TRuleValue]:
         """Precompute host lookup map
 
         Instead of a ruleset like list structure with precomputed host lists we compute a
         direct map for hostname based lookups for the matching rule values
         """
-        host_values: PreprocessedHostRuleset[TRuleValue] = {}
-        for rule in ruleset:
-            if _is_disabled(rule):
-                continue
 
-            for hostname in self._all_matching_hosts(rule["condition"], with_foreign_hosts):
-                host_values.setdefault(hostname, []).append(rule["value"])
+        def _impl(
+            ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
+        ) -> PreprocessedHostRuleset[TRuleValue]:
+            host_values: PreprocessedHostRuleset[TRuleValue] = {}
+            for rule in ruleset:
+                if _is_disabled(rule):
+                    continue
 
-        return host_values
+                for hostname in self._all_matching_hosts(rule["condition"], with_foreign_hosts):
+                    host_values.setdefault(hostname, []).append(rule["value"])
+
+            return host_values
+
+        cache_id = id(ruleset), with_foreign_hosts
+        with contextlib.suppress(KeyError):
+            return self.__host_ruleset_cache[cache_id]
+
+        return self.__host_ruleset_cache.setdefault(cache_id, _impl(ruleset, with_foreign_hosts))
 
     def get_service_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool

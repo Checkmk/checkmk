@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0f275aef2787ce7a51d2068d26e80b0950e8b03255f1ae9bbcca1f33d08c5186"
+            "sha256": "f6618a5d54ec81676d8d7b6056e66832aadb32d05ad4b3b85a5f9081912d4ea3"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -2638,6 +2638,14 @@
             "markers": "python_version >= '3.7'",
             "version": "==2.5.0"
         },
+        "xmltodict": {
+            "hashes": [
+                "sha256:341595a488e3e01a85a9d8911d8912fd922ede5fecc4dce437eb4b6c8d037e56",
+                "sha256:aa89e8fd76320154a40d19a0df04a4695fb9dc5ba977cbb68ab3e4eb225e7852"
+            ],
+            "index": "pypi",
+            "version": "==0.13.0"
+        },
         "yarl": {
             "hashes": [
                 "sha256:009a028127e0a1755c38b03244c0bea9d5565630db9c4cf9572496e947137a87",
@@ -5269,6 +5277,14 @@
             ],
             "index": "pypi",
             "version": "==1.26.25.14"
+        },
+        "types-xmltodict": {
+            "hashes": [
+                "sha256:8884534bab0364c4b22d5973f3c8153ff40d413a801d9e70eb893e676909f1fc",
+                "sha256:cb251c59e838986d8402b10d804225ade9fd6c9f66d01dc45cd6cfdf43640128"
+            ],
+            "index": "pypi",
+            "version": "==0.13.0.3"
         },
         "typing-extensions": {
             "hashes": [

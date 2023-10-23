@@ -345,6 +345,7 @@ CEE_UNUSED_PACKAGES = [
     "wrapt",
     "yarl",
     "zipp",
+    "xmltodict",
 ]
 
 

@@ -93,6 +93,7 @@ polyfactory = "*" # used for generating mock data for unit tests
 checkmk-dev-tools = "==0.1.24"  # provides tooling for build artifacts
 fastapi = "*"  # needed to run fake idp for cse tests
 uvicorn = "*"
+types-xmltodict = "*" # used by xmltodict
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py
@@ -202,6 +203,7 @@ GitPython = "~=3.1"  # used for werk collecting
 icalendar = "==5.0.7"  # used for importing .ical files
 recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalendar objects
 typing-extensions = "*"
+xmltodict = "==0.13.0" # used for parsing robotmk test results
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

@@ -1,0 +1,12 @@
+Title: win_os: Add HW/SW inventory field 'version'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698134267
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+For Windows hosts we use the 'caption' field for the HW/SW inventory 'version'
+field but without the prefix 'Microsoft', eg.:
+'Microsoft Windows Server 2008 R2 Standard' -> 'Windows Server 2008 R2 Standard'

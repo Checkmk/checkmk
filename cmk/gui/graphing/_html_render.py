@@ -24,7 +24,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphRenderOptions
+from cmk.gui.type_defs import GraphRenderOptions, SizePT
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -93,15 +93,15 @@ def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ):
-    graph_render_options = {
-        "size": (30, 10),
-        "font_size": 6.0,  # pt
-        "resizable": False,
-        "show_controls": False,
-        "show_legend": False,
-        "interaction": False,
-        "show_time_range_previews": False,
-    }
+    graph_render_options = GraphRenderOptions(
+        size=(30, 10),
+        font_size=SizePT(6.0),
+        resizable=False,
+        show_controls=False,
+        show_legend=False,
+        interaction=False,
+        show_time_range_previews=False,
+    )
 
     graph_data_range = make_graph_data_range(
         ((end_time := int(time.time())) - 8 * 3600, end_time), graph_render_options
@@ -894,18 +894,18 @@ def _render_time_range_selection(
         duration = timerange_attrs["duration"]
         assert isinstance(duration, int)
         graph_render_options.update(
-            {
-                "size": (20, 4),
-                "font_size": 6.0,  # pt
-                "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
-                "fixed_timerange": True,  # Do not follow timerange changes of other graphs
-                "explicit_title": timerange_attrs["title"],
-                "show_legend": False,
-                "show_controls": False,
-                "preview": True,
-                "resizable": False,
-                "interaction": False,
-            }
+            GraphRenderOptions(
+                size=(20, 4),
+                font_size=SizePT(6.0),
+                onclick="cmk.graphs.change_graph_timerange(graph, %d)" % duration,
+                fixed_timerange=True,  # Do not follow timerange changes of other graphs
+                explicit_title=timerange_attrs["title"],
+                show_legend=False,
+                show_controls=False,
+                preview=True,
+                resizable=False,
+                interaction=False,
+            )
         )
 
         timerange = now - duration, now
@@ -1063,16 +1063,16 @@ def _graph_title_height_ex(graph_render_options: GraphRenderOptions) -> SizeEx:
     return SizeEx(1)
 
 
-default_dashlet_graph_render_options: Mapping[str, Any] = {
-    "font_size": 8,
-    "show_graph_time": False,
-    "show_margin": False,
-    "show_legend": False,
-    "show_title": False,
-    "show_controls": False,
-    "resizable": False,
-    "show_time_range_previews": False,
-}
+default_dashlet_graph_render_options = GraphRenderOptions(
+    font_size=SizePT(8),
+    show_graph_time=False,
+    show_margin=False,
+    show_legend=False,
+    show_title=False,
+    show_controls=False,
+    resizable=False,
+    show_time_range_previews=False,
+)
 
 
 def host_service_graph_dashlet_cmk(
@@ -1084,7 +1084,7 @@ def host_service_graph_dashlet_cmk(
     *,
     graph_display_id: str = "",
 ) -> HTML | None:
-    graph_render_options = {**default_dashlet_graph_render_options}
+    graph_render_options = default_dashlet_graph_render_options.copy()
     graph_render_options = add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
 
@@ -1136,7 +1136,7 @@ def host_service_graph_dashlet_cmk(
         )
         if graph_artwork.curves:
             legend_height = _graph_legend_height_ex(graph_render_options, graph_artwork)
-            graph_render_options["size"] = (width, height - legend_height)
+            graph_render_options["size"] = (width, int(height - legend_height))
 
     html_code = _render_graphs_from_definitions(
         [graph_recipe],

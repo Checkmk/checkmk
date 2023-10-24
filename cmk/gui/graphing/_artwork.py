@@ -23,7 +23,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
-from cmk.gui.type_defs import GraphRenderOptions, UnitInfo, UnitRenderFunc
+from cmk.gui.type_defs import GraphRenderOptions, SizePT, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
 from ._graph_specification import (
@@ -132,7 +132,7 @@ class GraphArtwork(BaseModel):
 
 def get_default_graph_render_options() -> GraphRenderOptions:
     return GraphRenderOptions(
-        font_size=8.0,  # pt
+        font_size=SizePT(8.0),
         resizable=True,
         show_controls=True,
         show_pin=True,
@@ -142,7 +142,7 @@ def get_default_graph_render_options() -> GraphRenderOptions:
         vertical_axis_width="fixed",
         show_time_axis=True,
         show_title=True,
-        title_format="plain",
+        title_format=("plain",),
         show_margin=True,
         preview=False,
         interaction=True,
@@ -155,27 +155,21 @@ def get_default_graph_render_options() -> GraphRenderOptions:
     )
 
 
-class GraphColors(TypedDict):
-    background_color: str | None
-    foreground_color: str | None
-    canvas_color: str | None
-
-
-def _graph_colors(theme_id: str) -> GraphColors:
+def _graph_colors(theme_id: str) -> GraphRenderOptions:
     return {
-        "modern-dark": GraphColors(
+        "modern-dark": GraphRenderOptions(
             background_color=None,
             foreground_color="#ffffff",
             canvas_color=None,
         ),
-        "pdf": GraphColors(
+        "pdf": GraphRenderOptions(
             background_color="#f8f4f0",
             foreground_color="#000000",
             canvas_color="#ffffff",
         ),
     }.get(
         theme_id,
-        GraphColors(
+        GraphRenderOptions(
             background_color=None,
             foreground_color="#000000",
             canvas_color=None,
@@ -253,7 +247,7 @@ def compute_graph_artwork(
         curves=layouted_curves,
         horizontal_rules=graph_recipe.horizontal_rules,
         vertical_axis=_compute_graph_v_axis(
-            graph_recipe, graph_data_range, height, layouted_curves, mirrored
+            graph_recipe, graph_data_range, SizeEx(height), layouted_curves, mirrored
         ),
         time_axis=_compute_graph_t_axis(start_time, end_time, width, step),
         mark_requested_end_time=graph_recipe.mark_requested_end_time,

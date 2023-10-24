@@ -24,7 +24,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphRenderOptions
+from cmk.gui.type_defs import GraphRenderOptions, SizePT
 
 from ._artwork import (
     add_default_render_options,
@@ -143,19 +143,18 @@ def graph_image_data_range(
 
 
 def graph_image_render_options(api_request: dict[str, Any] | None = None) -> GraphRenderOptions:
-    # Set image rendering defaults
-    graph_render_options = {
-        "font_size": 8.0,  # pt
-        "resizable": False,
-        "show_controls": False,
-        "title_format": ("add_title_infos", ["add_service_description"]),
-        "interaction": False,
-        "size": (80, 30),  # ex
+    graph_render_options = GraphRenderOptions(
+        font_size=SizePT(8.0),
+        resizable=False,
+        show_controls=False,
+        title_format=("plain", "add_service_description"),
+        interaction=False,
+        size=(80, 30),  # ex
         # Specific for PDF rendering.
-        "color_gradient": 20.0,
-        "show_title": True,
-        "border_width": 0.05,
-    }
+        color_gradient=20.0,
+        show_title=True,
+        border_width=0.05,
+    )
 
     # Populate missing keys
     graph_render_options = add_default_render_options(graph_render_options, render_unthemed=True)

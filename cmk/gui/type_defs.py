@@ -650,7 +650,33 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-GraphRenderOptions = dict[str, Any]
+class GraphRenderOptions(TypedDict, total=False):
+    border_width: SizeMM
+    color_gradient: float
+    editing: bool
+    fixed_timerange: bool
+    font_size: SizePT
+    interaction: bool
+    preview: bool
+    resizable: bool
+    show_controls: bool
+    show_graph_time: bool
+    show_legend: bool
+    show_margin: bool
+    show_pin: bool
+    show_time_axis: bool
+    show_time_range_previews: bool
+    show_title: bool | Literal["inline"]
+    show_vertical_axis: bool
+    size: tuple[int, int]
+    title_format: Sequence[GraphTitleFormat]
+    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
+    background_color: str | None
+    foreground_color: str | None
+    canvas_color: str | None
+    explicit_title: str
+    onclick: str
+
 
 ActionResult = FinalizeRequest | None
 

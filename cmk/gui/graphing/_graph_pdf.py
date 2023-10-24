@@ -35,6 +35,13 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 
     # Styling for PDF graphs. Note: We could make some of these
     # configurable
+    raw_foreground_color = graph_render_options["foreground_color"]
+    raw_background_color = graph_render_options["background_color"]
+    raw_canvas_color = graph_render_options["canvas_color"]
+    assert raw_foreground_color
+    assert raw_background_color
+    assert raw_canvas_color
+
     font_size = graph_render_options["font_size"]
     mm_per_ex = _mm_per_ex_by_render_options(graph_render_options)
     v_label_margin = 1.0  # mm
@@ -44,23 +51,19 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     top_margin = _graph_top_margin(graph_render_options)
     right_margin = _graph_right_margin(graph_render_options)
     bottom_margin = _graph_bottom_margin(graph_render_options)
-    axis_color = parse_color(graph_render_options["foreground_color"])
-    zero_rule_color = parse_color(graph_render_options["foreground_color"])
-    canvas_color = parse_color(graph_render_options["canvas_color"])
-    background_color = parse_color(graph_render_options["background_color"])
-    foreground_color = parse_color(graph_render_options["foreground_color"])
+    axis_color = parse_color(raw_foreground_color)
+    zero_rule_color = parse_color(raw_foreground_color)
+    canvas_color = parse_color(raw_canvas_color)
+    background_color = parse_color(raw_background_color)
+    foreground_color = parse_color(raw_foreground_color)
     axis_over_width = _graph_axis_over_width(graph_render_options)
     color_gradient = graph_render_options["color_gradient"] / 100.0
     curve_line_width = 0.1  # mm
     rule_line_width = 0.1  # mm
     label_line_width = 0.04  # mm
-    v_line_color = tuple(
-        map(parse_color, [graph_render_options["foreground_color"], "#a0a0a0", "#a0a0a0"])
-    )
+    v_line_color = tuple(map(parse_color, [raw_foreground_color, "#a0a0a0", "#a0a0a0"]))
     v_line_dash = [None, [0.2, 0.4], None]
-    t_line_color = tuple(
-        map(parse_color, [graph_render_options["foreground_color"], "#a0a0a0", "#666666"])
-    )
+    t_line_color = tuple(map(parse_color, [raw_foreground_color, "#a0a0a0", "#666666"]))
     t_line_dash = [None, [0.2, 0.2], None]
     legend_box_line_width = 0.1
 

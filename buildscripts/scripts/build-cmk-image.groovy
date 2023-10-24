@@ -104,15 +104,19 @@ def main() {
                             /// build-cmk-container does not support the downloads dir
                             /// to have an arbitrary location, so we have to provide
                             /// `download` inside the checkout_dir
-                            sh("""buildscripts/scripts/build-cmk-container.sh \
-                                ${branch_name} \
-                                ${EDITION} \
-                                ${cmk_version} \
-                                ${source_dir} \
-                                ${SET_LATEST_TAG} \
-                                ${SET_BRANCH_LATEST_TAG} \
-                                ${BUILD_IMAGE_WITHOUT_CACHE} \
-                                build""");
+                            sh("""
+                                scripts/run-pipenv run python \
+                                buildscripts/scripts/build-cmk-container.py \
+                                --branch=${branch_name} \
+                                --edition=${EDITION} \
+                                --version=${cmk_version} \
+                                --source_path=${source_dir} \
+                                --set_latest_tag=${SET_LATEST_TAG} \
+                                --set_branch_latest_tag ${SET_BRANCH_LATEST_TAG} \
+                                --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
+                                --action=build \
+                                -vvvv
+                            """);
                         }
 
                         def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
@@ -146,15 +150,19 @@ def main() {
                     }
 
                     conditional_stage("Push images", push_to_registry) {
-                        sh("""buildscripts/scripts/build-cmk-container.sh \
-                            ${branch_name} \
-                            ${EDITION} \
-                            ${cmk_version} \
-                            ${source_dir} \
-                            ${SET_LATEST_TAG} \
-                            ${SET_BRANCH_LATEST_TAG} \
-                            ${BUILD_IMAGE_WITHOUT_CACHE} \
-                            push""");
+                        sh("""
+                            scripts/run-pipenv run python \
+                            buildscripts/scripts/build-cmk-container.py \
+                            --branch=${branch_name} \
+                            --edition=${EDITION} \
+                            --version=${cmk_version} \
+                            --source_path=${source_dir} \
+                            --set_latest_tag=${SET_LATEST_TAG} \
+                            --set_branch_latest_tag ${SET_BRANCH_LATEST_TAG} \
+                            --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
+                            --action=push \
+                            -vvvv
+                        """);
                     }
                 }
             }

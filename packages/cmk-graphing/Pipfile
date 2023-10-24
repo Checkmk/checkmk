@@ -4,12 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
-isort = "*"
-black = "*"
 bandit = "*"
+black = "*"
+isort = "*"
 mypy = "*"
 pylint = "*"
 pytest = "*"
+# LSP server stuff for IDEs
+pyls-isort = "*"
+pylsp-mypy = "*"
+python-lsp-black = "*"
+python-lsp-server = "*"
 
 [requires]
 python_version = "3.11"

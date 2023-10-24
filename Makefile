@@ -217,7 +217,7 @@ setversion:
 	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' bin/mkbackup ; \
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/mkbench bin/livedump; \
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
-	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
+	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
@@ -427,7 +427,12 @@ setup:
 	fi ; \
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
-	$(MAKE) -C docker_image setup
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+	sudo add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable"
+	sudo apt-get update
+	sudo apt-get install docker-ce
+	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
 	$(MAKE) -C locale setup
 
 linesofcode:

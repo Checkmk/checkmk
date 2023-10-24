@@ -468,7 +468,7 @@ class RulesetOptimizer:
         # It is used to determine the best rule evualation method
         self._all_processed_hosts_similarity = 1.0
 
-        self._service_ruleset_cache: dict[tuple[int, bool], PreprocessedServiceRuleset] = {}
+        self.__service_ruleset_cache: dict[tuple[int, bool], PreprocessedServiceRuleset] = {}
         self.__host_ruleset_cache: dict[tuple[int, bool], PreprocessedHostRuleset[Any]] = {}
         self._all_matching_hosts_match_cache: dict[
             tuple[_ConditionCacheID, bool], set[HostName]
@@ -487,7 +487,7 @@ class RulesetOptimizer:
 
     def clear_ruleset_caches(self) -> None:
         self.__host_ruleset_cache.clear()
-        self._service_ruleset_cache.clear()
+        self.__service_ruleset_cache.clear()
 
     def clear_caches(self) -> None:
         self.__host_ruleset_cache.clear()
@@ -563,47 +563,42 @@ class RulesetOptimizer:
     def get_service_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> PreprocessedServiceRuleset[TRuleValue]:
-        cache_id = id(ruleset), with_foreign_hosts
+        def _impl(
+            ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
+        ) -> PreprocessedServiceRuleset[TRuleValue]:
+            new_rules: PreprocessedServiceRuleset[TRuleValue] = []
+            for rule in ruleset:
+                if _is_disabled(rule):
+                    continue
 
-        if cache_id in self._service_ruleset_cache:
-            return self._service_ruleset_cache[cache_id]
+                # Directly compute set of all matching hosts here, this will avoid
+                # recomputation later
+                hosts = self._all_matching_hosts(rule["condition"], with_foreign_hosts)
 
-        cached_ruleset = self._convert_service_ruleset(
-            ruleset, with_foreign_hosts=with_foreign_hosts
-        )
-        self._service_ruleset_cache[cache_id] = cached_ruleset
-        return cached_ruleset
-
-    def _convert_service_ruleset(
-        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-    ) -> PreprocessedServiceRuleset[TRuleValue]:
-        new_rules: PreprocessedServiceRuleset[TRuleValue] = []
-        for rule in ruleset:
-            if _is_disabled(rule):
-                continue
-
-            # Directly compute set of all matching hosts here, this will avoid
-            # recomputation later
-            hosts = self._all_matching_hosts(rule["condition"], with_foreign_hosts)
-
-            # Prepare cache id
-            service_labels_condition = rule["condition"].get("service_labels", {})
-            service_labels_condition_cache_id = tuple(
-                (label_id, _tags_or_labels_cache_id(label_spec))
-                for label_id, label_spec in service_labels_condition.items()
-            )
-
-            # And now preprocess the configured patterns in the servlist
-            new_rules.append(
-                (
-                    rule["value"],
-                    hosts,
-                    service_labels_condition,
-                    service_labels_condition_cache_id,
-                    self._convert_pattern_list(rule["condition"].get("service_description")),
+                # Prepare cache id
+                service_labels_condition = rule["condition"].get("service_labels", {})
+                service_labels_condition_cache_id = tuple(
+                    (label_id, _tags_or_labels_cache_id(label_spec))
+                    for label_id, label_spec in service_labels_condition.items()
                 )
-            )
-        return new_rules
+
+                # And now preprocess the configured patterns in the servlist
+                new_rules.append(
+                    (
+                        rule["value"],
+                        hosts,
+                        service_labels_condition,
+                        service_labels_condition_cache_id,
+                        self._convert_pattern_list(rule["condition"].get("service_description")),
+                    )
+                )
+            return new_rules
+
+        cache_id = id(ruleset), with_foreign_hosts
+        with contextlib.suppress(KeyError):
+            return self.__service_ruleset_cache[cache_id]
+
+        return self.__service_ruleset_cache.setdefault(cache_id, _impl(ruleset, with_foreign_hosts))
 
     def _convert_pattern_list(
         self, patterns: HostOrServiceConditions | None

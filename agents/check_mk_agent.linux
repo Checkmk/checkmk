@@ -465,6 +465,15 @@ section_checkmk_failed_plugin() {
 
 section_labels() {
     echo '<<<labels:sep(0)>>>'
+
+    while read -r line; do
+        case $line in
+            ID=*) echo '{"cmk/os_platform":"'"${line##*=}"'"}' ;;
+            NAME=*) echo '{"cmk/os_name":'"${line##*=}"'}' ;;
+            VERSION_ID=*) echo '{"cmk/os_version":'"${line##*=}"'}' ;;
+        esac
+    done <<<"$(cat /etc/os-release 2>/dev/null)"
+
     if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
         echo '{"cmk/device_type":"container"}'
     elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then

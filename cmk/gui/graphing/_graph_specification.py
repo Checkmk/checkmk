@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Annotated, Callable, Literal
+from typing import Annotated, Callable, Literal, Self
 
 from pydantic import BaseModel, Field, parse_obj_as
 from typing_extensions import TypedDict
@@ -130,6 +130,24 @@ class TransformationParametersPercentile(BaseModel, frozen=True):
     percentile: int
 
 
+class VSTransformationParametersForecast(TypedDict):
+    past: (
+        Literal["m1", "m3", "m6", "y0", "y1"]
+        | tuple[Literal["age"], int]
+        | tuple[Literal["date"], tuple[float, float]]
+    )
+    future: (
+        Literal["m-1", "m-3", "m-6", "y-1"]
+        | tuple[Literal["next"], int]
+        | tuple[Literal["until"], float]
+    )
+    changepoint_prior_scale: float
+    seasonality_mode: Literal["additive", "multiplicative"]
+    interval_width: float
+    display_past: int
+    display_model_parametrization: bool
+
+
 class TransformationParametersForecast(BaseModel, frozen=True):
     past: (
         Literal["m1", "m3", "m6", "y0", "y1"]
@@ -146,6 +164,61 @@ class TransformationParametersForecast(BaseModel, frozen=True):
     interval_width: Literal["0.68", "0.86", "0.95"]
     display_past: int
     display_model_parametrization: bool
+
+    @classmethod
+    def from_vs_parameters(cls, vs_params: VSTransformationParametersForecast) -> Self:
+        return cls(
+            past=vs_params["past"],
+            future=vs_params["future"],
+            changepoint_prior_scale=cls._parse_changepoint_prior_scale(
+                vs_params["changepoint_prior_scale"]
+            ),
+            seasonality_mode=vs_params["seasonality_mode"],
+            interval_width=cls._parse_interval_width(vs_params["interval_width"]),
+            display_past=vs_params["display_past"],
+            display_model_parametrization=vs_params["display_model_parametrization"],
+        )
+
+    def to_vs_parameters(self) -> VSTransformationParametersForecast:
+        return VSTransformationParametersForecast(
+            past=self.past,
+            future=self.future,
+            changepoint_prior_scale=float(self.changepoint_prior_scale),
+            seasonality_mode=self.seasonality_mode,
+            interval_width=float(self.interval_width),
+            display_past=self.display_past,
+            display_model_parametrization=self.display_model_parametrization,
+        )
+
+    @staticmethod
+    def _parse_changepoint_prior_scale(
+        raw: float,
+    ) -> Literal["0.001", "0.01", "0.05", "0.1", "0.2"]:
+        match raw:
+            case 0.001:
+                return "0.001"
+            case 0.01:
+                return "0.01"
+            case 0.05:
+                return "0.05"
+            case 0.1:
+                return "0.1"
+            case 0.2:
+                return "0.2"
+        raise ValueError(raw)
+
+    @staticmethod
+    def _parse_interval_width(
+        raw: float,
+    ) -> Literal["0.68", "0.86", "0.95"]:
+        match raw:
+            case 0.68:
+                return "0.68"
+            case 0.86:
+                return "0.86"
+            case 0.95:
+                return "0.95"
+        raise ValueError(raw)
 
 
 # TODO transformation is not part of cre but we first have to fix all types

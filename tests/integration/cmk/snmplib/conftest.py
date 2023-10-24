@@ -193,11 +193,11 @@ def _is_listening(process_def: ProcessDef) -> bool:
     if snmpsimd_died:
         print("=============================================snmpsimd dead from the beginning")
     process = _snmpsimd_process(process_def)
-    if process is None:
-        snmpsimd_died = True
-        print(
-            "=============================================snmpsimd dead _snmpsimd_process didn't find process"
-        )
+    snmpsimd_proc_found = process is not None
+
+    if not snmpsimd_proc_found:
+        logger.debug("Did not detect actual snmpsim-command process")
+        return False
 
     if not snmpsimd_died:
         pid = process.pid  # type: ignore[union-attr]

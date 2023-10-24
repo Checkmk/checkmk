@@ -1,0 +1,16 @@
+Title: mk_oracle: restore compatibility with oracle 12c
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1698138075
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p18
+
+<a href="https://checkmk.com/werk/14839">Werk #14839</a> added the function
+<tt>listagg</tt> to one of our queries.
+
+Older versions of oracle database expect a <tt>WITHIN</tt> statement after the
+<tt>listagg</tt> function. This was added to assure compatibility with older
+databases.

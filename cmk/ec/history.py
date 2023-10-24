@@ -63,10 +63,6 @@ class History:
         self._lock = threading.Lock()
         self._mongodb = MongoDB()
         self._active_history_period = ActiveHistoryPeriod()
-        self.reload_configuration(config)
-
-    def reload_configuration(self, config: Config) -> None:
-        self._config = config
         if self._config["archive_mode"] == "mongodb":
             _reload_configuration_mongodb(self)
         else:

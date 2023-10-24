@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+
 import pytest
 
 from tests.testlib import CMKEventConsole
@@ -12,7 +14,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.ec.config import Config, Rule, ServiceLevel
 from cmk.ec.defaults import default_rule_pack
 from cmk.ec.event import Event
-from cmk.ec.main import EventServer
+from cmk.ec.history import History
+from cmk.ec.main import EventServer, StatusTableEvents, StatusTableHistory
+from cmk.ec.settings import Settings
 
 RULE = Rule(
     actions=[],
@@ -41,13 +45,21 @@ def fixture_config_with_host_patterns(config: Config) -> Config:
 
 def test_event_rewrite(
     event_server: EventServer,
+    settings: Settings,
     config_with_host_patterns: Config,
 ) -> None:
     """
     Event server rewrite_event() method should change event state
     even if incomplete StatePatterns are given in rule["State"].
     """
-    event_server.reload_configuration(config=config_with_host_patterns)
+    history = History(
+        settings,
+        config_with_host_patterns,
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+    )
+    event_server.reload_configuration(config=config_with_host_patterns, history=history)
     event = CMKEventConsole.new_event(
         Event(
             host=HostName("heute"),

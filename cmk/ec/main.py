@@ -1163,8 +1163,9 @@ class EventServer(ECServerThread):
                 event["phase"] = "closed"
                 self._event_status.remove_event(event, "AUTODELETE")
 
-    def reload_configuration(self, config: Config) -> None:
+    def reload_configuration(self, config: Config, history: History) -> None:
         self._config = config
+        self._history = history
         self._snmp_trap_parser = SNMPTrapParser(
             self.settings, self._config, self._logger.getChild("snmp")
         ).parse
@@ -2198,8 +2199,9 @@ class StatusServer(ECServerThread):
         self.close_tcp_socket()
         self.open_tcp_socket()
 
-    def reload_configuration(self, config: Config) -> None:
+    def reload_configuration(self, config: Config, history: History) -> None:
         self._config = config
+        self._history = history
         self._reopen_sockets = True
 
     def serve(self) -> None:  # pylint: disable=too-many-branches
@@ -2661,8 +2663,9 @@ class EventStatus:
         self._logger = logger
         self.flush()
 
-    def reload_configuration(self, config: Config) -> None:
+    def reload_configuration(self, config: Config, history: History) -> None:
         self._config = config
+        self._history = history
 
     def flush(self) -> None:
         # TODO: Improve types!
@@ -3473,11 +3476,13 @@ def reload_configuration(
 ) -> None:
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
-        history.reload_configuration(config)
-        event_server.reload_configuration(config)
+        history = History(
+            settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
+        )
+        event_server.reload_configuration(config, history)
 
-    event_status.reload_configuration(config)
-    status_server.reload_configuration(config)
+    event_status.reload_configuration(config, history)
+    status_server.reload_configuration(config, history)
     logger.info("Reloaded configuration.")
 
 

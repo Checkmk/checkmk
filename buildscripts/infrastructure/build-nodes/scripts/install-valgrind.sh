@@ -37,16 +37,9 @@ build_package() {
     rm -rf "$TARGET_DIR/src"
 }
 
-test_package() {
-    log "Testing for valgrind $VALGRIND_VERSION in \$PATH"
-    valgrind --version | grep "^valgrind-$VALGRIND_VERSION$" >/dev/null 2>&1 || (
-        echo "Invalid valgrind version: $(valgrind --version)"
-        exit 1
-    )
-}
-
 if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
-test_package
+
+test_package "valgrind --version" "^valgrind-$VALGRIND_VERSION$"

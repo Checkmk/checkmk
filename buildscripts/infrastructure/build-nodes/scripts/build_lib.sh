@@ -195,3 +195,11 @@ get_version() {
     local NAME="$2"
     make --no-print-directory --file="$(find_defines_make "$SEARCH_PATH")" print-"$NAME"
 }
+
+test_package() {
+    log "Testing for ${1% *} in \$PATH"
+    $1 | grep "$2" >/dev/null 2>&1 || (
+        echo "Invalid version: $($1)"
+        exit 1
+    )
+}

@@ -29,3 +29,5 @@ if [ "$1" != "link-only" ]; then
 fi
 
 ln -s "${TARGET_DIR}/${DIR_NAME}/${BAZEL_EXE_FILE}" "/usr/bin/bazel"
+
+test_package "bazel --version" "^bazel $BAZEL_VERSION$"

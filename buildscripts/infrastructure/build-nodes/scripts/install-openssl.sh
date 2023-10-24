@@ -39,3 +39,5 @@ build_package() {
 }
 
 cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+
+test_package "openssl version" "^OpenSSL $OPENSSL_VERSION"

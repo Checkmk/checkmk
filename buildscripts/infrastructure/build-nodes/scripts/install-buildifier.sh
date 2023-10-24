@@ -21,13 +21,7 @@ install_package() {
         go get github.com/bazelbuild/buildtools/buildifier@${BUILDIFIER_VERSION}
 }
 
-test_package() {
-    log "Testing for go in \$PATH"
-    go version | grep "go$GO_VERSION\." >/dev/null 2>&1 || (
-        echo "Invalid version: $(go version)"
-        exit 1
-    )
-}
+test_package "go version" "go$GO_VERSION\."
 
 case "$DISTRO" in
     ubuntu-20.04)

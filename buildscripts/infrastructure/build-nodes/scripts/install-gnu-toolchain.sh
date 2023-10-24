@@ -160,3 +160,22 @@ if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 set_symlinks
+
+test_packages() {
+    for i in $(dpkg -L binutils | grep '/bin/'); do
+        this_version=$($i --version)
+        if [[ "$this_version" == *"Binutils)"* ]]; then
+            echo "$this_version" | grep -q "$BINUTILS_VERSION" >/dev/null 2>&1 || (
+                echo "Invalid version: $(i)"
+                exit 1
+            )
+        else
+            echo "$i not of interest"
+            # e.g. /usr/bin/dwp would report "GNU dwp (GNU Binutils for Ubuntu) 2.34"
+        fi
+    done
+}
+
+test_packages
+test_package "gcc --version" "$GCC_VERSION$"
+test_package "gdb --version" "$GDB_VERSION$"

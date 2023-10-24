@@ -70,3 +70,5 @@ if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
+
+test_package "/opt/bin/python3 --version" "Python $PYTHON_VERSION"

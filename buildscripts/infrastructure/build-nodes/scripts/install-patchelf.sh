@@ -5,6 +5,10 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=build_lib.sh
+. "${SCRIPT_DIR}/build_lib.sh"
+
 VERSION="0.14.3"
 INSTALL_PREFIX=/opt/patchelf-${VERSION}
 
@@ -41,3 +45,5 @@ echo "$PWD"
 make -j8 install
 
 ln -sf "${INSTALL_PREFIX}/bin/"* /usr/bin
+
+test_package "patchelf --version" "patchelf $VERSION$"

@@ -14,6 +14,7 @@ from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 @dataclass
 class Section:
     name: str
+    version: str
     kernel_version: str
     arch: Literal["x86_64", "i386"]
     service_pack: str
@@ -35,6 +36,7 @@ def parse_win_os(string_table: StringTable) -> Section:
 
     return Section(
         name=name,
+        version=name.removeprefix("Microsoft").strip(),
         kernel_version=kernel_version,
         arch="x86_64" if arch.lower() == "64-bit" else "i386",
         service_pack=f"{service_pack_maj}.{service_pack_min}",

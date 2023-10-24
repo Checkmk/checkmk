@@ -647,7 +647,7 @@ def test_get_active_service_data_warnings(
             },
             [
                 ActiveServiceDescription(
-                    plugin_name="check_my_active_check",
+                    plugin_name="my_active_check",
                     description="My service",
                     params={"description": "My active check", "param1": "param1"},
                 ),

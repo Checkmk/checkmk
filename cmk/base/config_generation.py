@@ -317,7 +317,7 @@ class ActiveCheck:
             )
             return self._iterate_legacy_services(plugin_name, plugin_info, plugin_params)
 
-        if (active_check := self._plugins.get(plugin_name.replace("check_", ""))) is not None:
+        if (active_check := self._plugins.get(plugin_name)) is not None:
             return self._iterate_services(active_check, plugin_params)
 
         return None
@@ -494,7 +494,7 @@ class ActiveCheck:
                 plugin_name, plugin_info, plugin_params
             )
 
-        if (active_check := self._plugins.get(plugin_name.replace("check_", ""))) is not None:
+        if (active_check := self._plugins.get(plugin_name)) is not None:
             return self._iterate_service_descriptions(active_check, plugin_params)
 
         return None
@@ -522,7 +522,7 @@ class ActiveCheck:
         for desc, _args, _command_line, params in self._iterate_services(
             active_check, plugin_params
         ):
-            yield ActiveServiceDescription(f"check_{active_check.name}", desc, params)
+            yield ActiveServiceDescription(active_check.name, desc, params)
 
 
 class SpecialAgent:

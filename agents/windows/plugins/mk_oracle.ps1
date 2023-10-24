@@ -1034,7 +1034,9 @@ Function sql_dataguard_stats {
           JOIN v$parameter vp on 1=1
           JOIN v$instance i on 1=1
           left outer join V$dataguard_stats ds on 1=1
-          left outer join v$managed_standby ms on ms.process = 'MRP0'
+          left outer join (select listagg(to_char(inst_id) || '.' || status, ', ') status
+                           from gv$managed_standby
+                           where  process = 'MRP0') ms on 1=1
           WHERE vp.name = 'log_archive_config'
           AND   vp.value is not null
           ORDER BY 1;

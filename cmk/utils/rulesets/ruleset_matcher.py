@@ -361,38 +361,6 @@ class RulesetMatcher:
             if match:
                 yield value
 
-    @staticmethod
-    def get_values_for_generic_agent(
-        ruleset: Iterable[RuleSpec[TRuleValue]], path_for_rule_matching: str
-    ) -> Sequence[TRuleValue]:
-        """Compute rulesets for "generic" hosts
-
-        This fictious host has no name and no tags.
-        It matches all rules that do not require specific hosts or tags.
-        It matches rules that e.g. except specific hosts or tags (is not, has not set).
-        """
-        entries: list[TRuleValue] = []
-        for rule in ruleset:
-            if _is_disabled(rule):
-                continue
-
-            rule_path = (cond := rule["condition"]).get("host_folder")
-            if rule_path is not None and not path_for_rule_matching.startswith(rule_path):
-                continue
-
-            if (tags := cond.get("host_tags", {})) and not matches_host_tags(set(), tags):
-                continue
-
-            if (labels := cond.get("host_labels", {})) and not matches_labels({}, labels):
-                continue
-
-            if not matches_host_name(cond.get("host_name"), HostName("")):
-                continue
-
-            entries.append(rule["value"])
-
-        return entries
-
 
 # TODO: improve and cleanup types
 _ConditionCacheID: TypeAlias = tuple[
@@ -513,7 +481,7 @@ class RulesetOptimizer:
         ) -> PreprocessedHostRuleset[TRuleValue]:
             host_values: PreprocessedHostRuleset[TRuleValue] = {}
             for rule in ruleset:
-                if _is_disabled(rule):
+                if is_disabled(rule):
                     continue
 
                 for hostname in self._all_matching_hosts(rule["condition"], with_foreign_hosts):
@@ -535,7 +503,7 @@ class RulesetOptimizer:
         ) -> PreprocessedServiceRuleset[TRuleValue]:
             new_rules: PreprocessedServiceRuleset[TRuleValue] = []
             for rule in ruleset:
-                if _is_disabled(rule):
+                if is_disabled(rule):
                     continue
 
                 # Directly compute set of all matching hosts here, this will avoid
@@ -952,7 +920,7 @@ def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
     return tag_id_to_tag_group_id_map
 
 
-def _is_disabled(rule: RuleSpec[TRuleValue]) -> bool:
+def is_disabled(rule: RuleSpec[TRuleValue]) -> bool:
     # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
     return "options" in rule and bool(rule["options"].get("disabled", False))
 

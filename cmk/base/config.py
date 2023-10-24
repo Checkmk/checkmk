@@ -4243,7 +4243,7 @@ class CEEConfigCache(ConfigCache):
                 _boil_down_agent_rules(
                     defaults=defaults,
                     rulesets={
-                        varname: RulesetMatcher.get_values_for_generic_agent(ruleset, match_path)
+                        varname: CEEConfigCache._get_values_for_generic_agent(ruleset, match_path)
                         for varname, ruleset in CEEConfigCache._agent_config_rulesets()
                     },
                 ),
@@ -4251,6 +4251,42 @@ class CEEConfigCache(ConfigCache):
             for match_path, attributes in folder_attributes.items()
             if attributes.get("bake_agent_package", False)
         )
+
+    @staticmethod
+    def _get_values_for_generic_agent(
+        ruleset: Iterable[RuleSpec[tuple[str, Any]]], path_for_rule_matching: str
+    ) -> Sequence[tuple[str, Any]]:
+        """Compute rulesets for "generic" hosts
+
+        This fictious host has no name and no tags.
+        It matches all rules that do not require specific hosts or tags.
+        It matches rules that e.g. except specific hosts or tags (is not, has not set).
+        """
+        entries: list[tuple[str, Any]] = []
+        for rule in ruleset:
+            if ruleset_matcher.is_disabled(rule):
+                continue
+
+            rule_path = (cond := rule["condition"]).get("host_folder")
+            if rule_path is not None and not path_for_rule_matching.startswith(rule_path):
+                continue
+
+            if (tags := cond.get("host_tags", {})) and not ruleset_matcher.matches_host_tags(
+                set(), tags
+            ):
+                continue
+
+            if (labels := cond.get("host_labels", {})) and not ruleset_matcher.matches_labels(
+                {}, labels
+            ):
+                continue
+
+            if not ruleset_matcher.matches_host_name(cond.get("host_name"), HostName("")):
+                continue
+
+            entries.append(rule["value"])
+
+        return entries
 
     @staticmethod
     def _agent_config_rulesets() -> Iterable[tuple[str, Any]]:

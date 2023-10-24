@@ -1,6 +1,6 @@
 use anyhow::Result as AnyhowResult;
-use http::{HeaderMap, HeaderName, HeaderValue, Method};
-use reqwest::{header::USER_AGENT, RequestBuilder};
+use http::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::{header::USER_AGENT, Error as ReqwestError, Method, RequestBuilder, Response};
 use std::{
     fmt::{Display, Formatter, Result as FormatResult},
     time::{Duration, Instant},
@@ -78,56 +78,9 @@ pub async fn check_http(args: cli::Cli) -> Output {
             return Output::from_short(State::Unknown, "Error building the request");
         }
     };
-
     let now = Instant::now();
-
-    let response = match request.send().await {
-        Ok(resp) => resp,
-        Err(err) => {
-            if err.is_timeout() {
-                return Output::from_short(State::Crit, "timeout");
-            } else if err.is_connect() {
-                return Output::from_short(State::Crit, "Failed to connect");
-            } else {
-                return Output::from_short(State::Unknown, "Error while sending request");
-            }
-        }
-    };
-
-    let response = match response.error_for_status() {
-        Ok(resp) => resp,
-        Err(err) => {
-            return Output::from_short(
-                State::Warn,
-                &format!("HTTP status code {}", err.status().unwrap().as_str()),
-            );
-        }
-    };
-
-    let headers = response.headers();
-    println!("{:#?}", headers);
-
-    let body = match args.without_body {
-        false => match response.text().await {
-            Ok(bd) => bd,
-            Err(_) => {
-                return Output::from_short(State::Unknown, "Error fetching the reponse body");
-            }
-        },
-        true => "".to_string(),
-    };
-
-    let elapsed = now.elapsed();
-
-    Output::from_short(
-        State::Ok,
-        &format!(
-            "Downloaded {} bytes in {}.{} seconds.",
-            body.len(),
-            elapsed.as_secs(),
-            elapsed.subsec_millis()
-        ),
-    )
+    let response = request.send().await;
+    analyze_response(response, now, args.without_body).await
 }
 
 fn prepare_request(
@@ -158,4 +111,55 @@ fn prepare_request(
     } else {
         Ok(req)
     }
+}
+
+async fn analyze_response(
+    response: Result<Response, ReqwestError>,
+    start_time: Instant,
+    without_body: bool,
+) -> Output {
+    let response = match response {
+        Ok(resp) => resp,
+        Err(err) => {
+            if err.is_timeout() {
+                return Output::from_short(State::Crit, "timeout");
+            } else if err.is_connect() {
+                return Output::from_short(State::Crit, "Failed to connect");
+            } else {
+                return Output::from_short(State::Unknown, "Error while sending request");
+            }
+        }
+    };
+
+    let response = match response.error_for_status() {
+        Ok(resp) => resp,
+        Err(err) => {
+            return Output::from_short(
+                State::Warn,
+                &format!("HTTP status code {}", err.status().unwrap().as_str()),
+            );
+        }
+    };
+
+    let body = match without_body {
+        false => match response.text().await {
+            Ok(bd) => bd,
+            Err(_) => {
+                return Output::from_short(State::Unknown, "Error fetching the reponse body");
+            }
+        },
+        true => "".to_string(),
+    };
+
+    let elapsed = start_time.elapsed();
+
+    Output::from_short(
+        State::Ok,
+        &format!(
+            "Downloaded {} bytes in {}.{} seconds.",
+            body.len(),
+            elapsed.as_secs(),
+            elapsed.subsec_millis()
+        ),
+    )
 }

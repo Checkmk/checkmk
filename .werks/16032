@@ -7,6 +7,7 @@ Edition: cee
 Level: 1
 Version: 2.3.0b1
 
-When generating a report containing the 
+When generating a report containing the `Hosts/Services: SLA - Service specific` column
+the generation of the report would crash.
 
 Now the report is rendered correctly again.

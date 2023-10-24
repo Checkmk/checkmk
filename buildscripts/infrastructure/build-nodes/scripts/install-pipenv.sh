@@ -28,3 +28,6 @@ pip3 install \
 #   only /usr/bin does not work, because GitHub Actions do not have permissions to write there.
 PIPENV_PATH="/opt/Python-${PYTHON_VERSION}/bin/pipenv"
 ln -sf "${PIPENV_PATH}"* /usr/bin || ln -sf "${PIPENV_PATH}"* /opt/bin
+
+test_package "pipenv --version" "$PIPENV_VERSION$"
+test_package "pip3 freeze" "virtualenv"

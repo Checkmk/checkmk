@@ -24,19 +24,6 @@ install_package() {
     apt-get install -y nodejs
 }
 
-test_package() {
-    log "Testing for node v$NODEJS_VERSION in \$PATH"
-    node --version | grep "^v$NODEJS_VERSION\." >/dev/null 2>&1 || (
-        echo "Invalid version: $(node --version)"
-        exit 1
-    )
-
-    log "Testing for npm $NPM_VERSION in \$PATH"
-    npm --version | grep "^$NPM_VERSION\." >/dev/null 2>&1 || (
-        echo "Invalid version: $(npm --version)"
-        exit 1
-    )
-}
-
 install_package
-test_package
+test_package "node --version" "^v$NODEJS_VERSION\."
+test_package "npm --version" "^$NPM_VERSION\."

@@ -16,7 +16,7 @@ from typing import Set
 from typing import Tuple as _Tuple
 from typing import Union
 
-from livestatus import LivestatusOutputFormat, OnlySites, SiteId
+from livestatus import LivestatusOutputFormat, lqencode, OnlySites, SiteId
 
 import cmk.utils.defines as defines
 import cmk.utils.paths
@@ -961,9 +961,9 @@ def get_availability_rawdata(
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
         tl_site, tl_host, tl_service = av_object
-        av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (
-            tl_host,
-            tl_service,
+        av_filter += "Filter: host_name = {}\nFilter: service_description = {}\n".format(
+            lqencode(str(tl_host)),
+            lqencode(tl_service),
         )
         only_sites = [SiteId(tl_site)]
     elif what == "service":

@@ -190,10 +190,14 @@ def _is_listening(process_def: ProcessDef) -> bool:
     port = process_def.port
     exitcode = p.poll()
     snmpsimd_died = exitcode is not None
-
+    if snmpsimd_died:
+        print("=============================================snmpsimd dead from the beginning")
     process = _snmpsimd_process(process_def)
     if process is None:
         snmpsimd_died = True
+        print(
+            "=============================================snmpsimd dead _snmpsimd_process didn't find process"
+        )
 
     if not snmpsimd_died:
         pid = process.pid  # type: ignore[union-attr]
@@ -209,15 +213,17 @@ def _is_listening(process_def: ProcessDef) -> bool:
                         num_sockets += 1
                 except OSError:
                     pass
-        except OSError:
+        except OSError as e:
             exitcode = p.poll()
             if exitcode is None:
                 raise
             snmpsimd_died = True
+            print(f"====================================snmpsimd dead OSError try-except {e}")
 
     if snmpsimd_died:
-        assert p.stdout is not None
-        output = p.stdout.read()
+        # assert p.stdout is not None
+        # output = p.stdout.read()
+        output = "foobar"
         raise Exception("snmpsimd died. Exit code: %s; output: %s" % (exitcode, output))
 
     logger.debug("snmpsimd is running")

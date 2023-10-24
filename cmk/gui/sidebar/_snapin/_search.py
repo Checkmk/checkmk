@@ -563,29 +563,26 @@ class QuicksearchManager:
 
         found_filters = self._find_search_object_expressions(query)
 
-        search_objects: list[ABCQuicksearchConductor] = []
         if found_filters:
             # The query contains at least one search expression to search a specific search plugin.
             used_filters = self._get_used_filters_from_query(query, found_filters)
-            search_objects.append(
+            return [
                 LivestatusQuicksearchConductor(
                     used_filters,
                     FilterBehaviour.CONTINUE,
                 )
-            )
-        else:
-            # No explicit filters specified by search expression. Execute the quicksearch plugins in
-            # the order they are configured to let them answer the query.
-            for filter_name, filter_behaviour_str in active_config.quicksearch_search_order:
-                search_objects.append(
-                    self._make_conductor(
-                        filter_name,
-                        {filter_name: [_to_regex(query)]},
-                        FilterBehaviour[filter_behaviour_str.upper()],
-                    )
-                )
+            ]
 
-        return search_objects
+        # No explicit filters specified by search expression. Execute the quicksearch plugins in
+        # the order they are configured to let them answer the query.
+        return [
+            self._make_conductor(
+                filter_name,
+                {filter_name: [_to_regex(query)]},
+                FilterBehaviour[filter_behaviour_str.upper()],
+            )
+            for filter_name, filter_behaviour_str in active_config.quicksearch_search_order
+        ]
 
     @staticmethod
     def _find_search_object_expressions(query: SearchQuery) -> list[tuple[str, int]]:

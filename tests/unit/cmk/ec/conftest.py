@@ -14,7 +14,7 @@ import cmk.utils.paths
 import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
-from cmk.ec.history import create_history, History
+from cmk.ec.history import create_history, FileHistory
 from cmk.ec.main import (
     default_slave_status_master,
     EventServer,
@@ -55,14 +55,16 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="history")
-def fixture_history(settings: Settings, config: Config) -> History:
-    return create_history(
+def fixture_history(settings: Settings, config: Config) -> FileHistory:
+    history = create_history(
         settings,
         config,
         logging.getLogger("cmk.mkeventd"),
         StatusTableEvents.columns,
         StatusTableHistory.columns,
     )
+    assert isinstance(history, FileHistory)
+    return history
 
 
 @pytest.fixture(name="perfcounters")
@@ -72,7 +74,7 @@ def fixture_perfcounters() -> Perfcounters:
 
 @pytest.fixture(name="event_status")
 def fixture_event_status(
-    settings: Settings, config: Config, perfcounters: Perfcounters, history: History
+    settings: Settings, config: Config, perfcounters: Perfcounters, history: FileHistory
 ) -> EventStatus:
     return EventStatus(
         settings, config, perfcounters, history, logging.getLogger("cmk.mkeventd.EventStatus")
@@ -86,7 +88,7 @@ def fixture_event_server(
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,
     lock_configuration: ECLock,
-    history: History,
+    history: FileHistory,
     event_status: EventStatus,
 ) -> EventServer:
     return EventServer(
@@ -110,7 +112,7 @@ def fixture_status_server(
     slave_status: SlaveStatus,
     perfcounters: Perfcounters,
     lock_configuration: ECLock,
-    history: History,
+    history: FileHistory,
     event_status: EventStatus,
     event_server: EventServer,
 ) -> StatusServer:

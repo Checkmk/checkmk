@@ -16,7 +16,7 @@ from cmk.ec.history import (
     _current_history_period,
     _grep_pipeline,
     convert_history_line,
-    History,
+    FileHistory,
     parse_history_file,
 )
 
@@ -41,7 +41,7 @@ def test_current_history_period(
         assert _current_history_period(config=config_with_weekly_history_rotation) == 1549843200
 
 
-def test_convert_history_line(history: History) -> None:
+def test_convert_history_line(history: FileHistory) -> None:
     """History convert values."""
     values = "1	1666942292.2998602	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	".split(
         "\t"
@@ -56,7 +56,7 @@ def test_convert_history_line(history: History) -> None:
     assert values[5] == 5  # type: ignore[comparison-overlap]
 
 
-def test_history_parse(history: History, tmp_path: Path) -> None:
+def test_history_parse(history: FileHistory, tmp_path: Path) -> None:
     """History parse file"""
     values = """1666942211.07616	NEW			1002	1	999: # Network services, Internet style # # Updated from https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml . # # New ports will be added on request if they have been officially assigned # by IANA and used in the real-world or are needed by a debian package. # If you need a huge list of used numbers please install the nmap package. tcpmux 1/tcp # TCP port service multiplexer echo 7/tcp	1666942208.0	1666942208.0		0	heute		OMD	0	6	9	asdf	0	open						host	heute	0	
 1666942292.2998602	DELETE	cmkadmin		5	1	4: # Network services, Internet style # # Updated from https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml . # # New ports will be added on request if they have been officially assigned # by IANA and used in the real-world or are needed by a debian package. # If you need a huge list of used numbers please install the nmap package. tcpmux 1/tcp # TCP port service multiplexer echo 7/tcp	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	

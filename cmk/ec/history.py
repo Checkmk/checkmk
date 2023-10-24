@@ -48,31 +48,6 @@ Columns = Sequence[tuple[str, float | int | str | list[object]]]
 
 
 class History(ABC):
-    def __init__(
-        self,
-        settings: Settings,
-        config: Config,
-        logger: Logger,
-        event_columns: Columns,
-        history_columns: Columns,
-    ) -> None:
-        self._settings = settings
-        self._config = config
-        self._logger = logger
-        self._event_columns = event_columns
-        self._history_columns = history_columns
-        self._lock = threading.Lock()
-        self._mongodb = MongoDB()
-        self._active_history_period = ActiveHistoryPeriod()
-        if self._get_archive_mode() == "mongodb":
-            _reload_configuration_mongodb(self)
-        else:
-            _reload_configuration_files(self)
-
-    @abstractmethod
-    def _get_archive_mode(self) -> Literal["file", "mongodb"]:
-        ...
-
     @abstractmethod
     def flush(self) -> None:
         ...
@@ -91,8 +66,23 @@ class History(ABC):
 
 
 class FileHistory(History):
-    def _get_archive_mode(self) -> Literal["file", "mongodb"]:
-        return "file"
+    def __init__(
+        self,
+        settings: Settings,
+        config: Config,
+        logger: Logger,
+        event_columns: Columns,
+        history_columns: Columns,
+    ) -> None:
+        self._settings = settings
+        self._config = config
+        self._logger = logger
+        self._event_columns = event_columns
+        self._history_columns = history_columns
+        self._lock = threading.Lock()
+        self._mongodb = MongoDB()
+        self._active_history_period = ActiveHistoryPeriod()
+        _reload_configuration_files(self)
 
     def flush(self) -> None:
         _flush_files(self)
@@ -108,8 +98,23 @@ class FileHistory(History):
 
 
 class MongoDBHistory(History):
-    def _get_archive_mode(self) -> Literal["file", "mongodb"]:
-        return "mongodb"
+    def __init__(
+        self,
+        settings: Settings,
+        config: Config,
+        logger: Logger,
+        event_columns: Columns,
+        history_columns: Columns,
+    ) -> None:
+        self._settings = settings
+        self._config = config
+        self._logger = logger
+        self._event_columns = event_columns
+        self._history_columns = history_columns
+        self._lock = threading.Lock()
+        self._mongodb = MongoDB()
+        self._active_history_period = ActiveHistoryPeriod()
+        _reload_configuration_mongodb(self)
 
     def flush(self) -> None:
         _flush_mongodb(self)
@@ -168,13 +173,13 @@ class MongoDB:
         self.db: Any = None
 
 
-def _reload_configuration_mongodb(history: History) -> None:
+def _reload_configuration_mongodb(history: MongoDBHistory) -> None:
     # Configure the auto deleting indexes in the DB
     _update_mongodb_indexes(history._settings, history._mongodb)
     _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
 
 
-def _housekeeping_mongodb(history: History) -> None:
+def _housekeeping_mongodb(history: MongoDBHistory) -> None:
     pass
 
 
@@ -196,7 +201,7 @@ def _mongodb_local_connection_opts(settings: Settings) -> tuple[str | None, int 
     return ip, port
 
 
-def _flush_mongodb(history: History) -> None:
+def _flush_mongodb(history: MongoDBHistory) -> None:
     history._mongodb.db.ec_archive.drop()
 
 
@@ -246,7 +251,9 @@ def _mongodb_next_id(mongodb: MongoDB, name: str, first_id: int = 0) -> int:
     return ret["seq"]
 
 
-def _add_mongodb(history: History, event: Event, what: HistoryWhat, who: str, addinfo: str) -> None:
+def _add_mongodb(
+    history: MongoDBHistory, event: Event, what: HistoryWhat, who: str, addinfo: str
+) -> None:
     _log_event(history._config, history._logger, event, what, who, addinfo)
     if not history._mongodb.connection:
         _connect_mongodb(history._settings, history._mongodb)
@@ -276,7 +283,7 @@ def _log_event(
 
 
 def _get_mongodb(  # pylint: disable=too-many-branches
-    history: History,
+    history: MongoDBHistory,
     query: QueryGET,
 ) -> Iterable[Any]:
     filters, limit = query.filters, query.limit
@@ -364,15 +371,17 @@ def _reload_configuration_files(history: History) -> None:
     pass
 
 
-def _flush_files(history: History) -> None:
+def _flush_files(history: FileHistory) -> None:
     _expire_logfiles(history._settings, history._config, history._logger, history._lock, True)
 
 
-def _housekeeping_files(history: History) -> None:
+def _housekeeping_files(history: FileHistory) -> None:
     _expire_logfiles(history._settings, history._config, history._logger, history._lock, False)
 
 
-def _add_files(history: History, event: Event, what: HistoryWhat, who: str, addinfo: str) -> None:
+def _add_files(
+    history: FileHistory, event: Event, what: HistoryWhat, who: str, addinfo: str
+) -> None:
     """Make a new entry in the event history.
 
     Each entry is tab-separated line with the following columns:
@@ -542,7 +551,7 @@ def _grep_pattern(argument: str) -> str:
     return f"-e {shlex.quote(argument)}"
 
 
-def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[Any]:
+def _get_files(history: FileHistory, logger: Logger, query: QueryGET) -> Iterable[Any]:
     if not history._settings.paths.history_dir.value.exists():
         return []
 

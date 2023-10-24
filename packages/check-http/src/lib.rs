@@ -1,6 +1,9 @@
 use anyhow::Result as AnyhowResult;
 use http::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::{header::USER_AGENT, Error as ReqwestError, Method, RequestBuilder, Response};
+use reqwest::{
+    header::USER_AGENT, Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult,
+    StatusCode, Version,
+};
 use std::{
     fmt::{Display, Formatter, Result as FormatResult},
     time::{Duration, Instant},
@@ -64,6 +67,14 @@ impl Output {
     }
 }
 
+struct ProcessedResponse {
+    pub version: Version,
+    pub status: StatusCode,
+    pub _headers: HeaderMap, // TODO(au): use
+    pub body: ReqwestResult<String>,
+    pub elapsed: Duration,
+}
+
 pub async fn check_http(args: cli::Cli) -> Output {
     let request = match prepare_request(
         args.url,
@@ -79,9 +90,21 @@ pub async fn check_http(args: cli::Cli) -> Output {
             return Output::from_short(State::Unknown, "Error building the request");
         }
     };
-    let now = Instant::now();
-    let response = request.send().await;
-    analyze_response(response, now, args.without_body).await
+
+    let response = match perform_request(request, args.without_body).await {
+        Ok(resp) => resp,
+        Err(err) => {
+            if err.is_timeout() {
+                return Output::from_short(State::Crit, "timeout");
+            } else if err.is_connect() {
+                return Output::from_short(State::Crit, "Failed to connect");
+            } else {
+                return Output::from_short(State::Unknown, "Error while sending request");
+            }
+        }
+    };
+
+    check_response(response).await
 }
 
 fn prepare_request(
@@ -114,55 +137,57 @@ fn prepare_request(
     }
 }
 
-async fn analyze_response(
-    response: Result<Response, ReqwestError>,
-    start_time: Instant,
+async fn perform_request(
+    request: RequestBuilder,
     without_body: bool,
-) -> Output {
-    let response = match response {
-        Ok(resp) => resp,
-        Err(err) => {
-            if err.is_timeout() {
-                return Output::from_short(State::Crit, "timeout");
-            } else if err.is_connect() {
-                return Output::from_short(State::Crit, "Failed to connect");
-            } else {
-                return Output::from_short(State::Unknown, "Error while sending request");
-            }
-        }
-    };
+) -> Result<ProcessedResponse, ReqwestError> {
+    let now = Instant::now();
+    let response = request.send().await?;
 
+    let _headers = response.headers().to_owned();
+    let version = response.version();
     let status = response.status();
-    let http_version = response.version();
-    let response_state = if status.is_client_error() {
+    let body = match without_body {
+        false => response.text().await,
+        true => Ok("".to_string()),
+    };
+    let elapsed = now.elapsed();
+
+    Ok(ProcessedResponse {
+        version,
+        status,
+        _headers,
+        body,
+        elapsed,
+    })
+}
+
+async fn check_response(response: ProcessedResponse) -> Output {
+    let response_state = if response.status.is_client_error() {
         State::Warn
-    } else if status.is_server_error() {
+    } else if response.status.is_server_error() {
         State::Crit
     } else {
         State::Ok
     };
 
-    let body = match without_body {
-        false => match response.text().await {
-            Ok(bd) => bd,
-            Err(_) => {
-                return Output::from_short(State::Unknown, "Error fetching the reponse body");
-            }
-        },
-        true => "".to_string(),
+    let body = match response.body {
+        Ok(bd) => bd,
+        Err(_) => {
+            // TODO(au): Handle this without cancelling the check.
+            return Output::from_short(State::Unknown, "Error fetching the reponse body");
+        }
     };
-
-    let elapsed = start_time.elapsed();
 
     Output::from_short(
         response_state,
         &format!(
             "{:?} {} - {} bytes in {}.{} second response time",
-            http_version,
-            status,
+            response.version,
+            response.status,
             body.len(),
-            elapsed.as_secs(),
-            elapsed.subsec_millis()
+            response.elapsed.as_secs(),
+            response.elapsed.subsec_millis()
         ),
     )
 }

@@ -241,7 +241,7 @@ def compute_graph_artwork(
     try:
         start_time, end_time, step = curves[0]["rrddata"].twindow
     except IndexError:  # Empty graph
-        (start_time, end_time), step = graph_data_range["time_range"], 60
+        (start_time, end_time), step = graph_data_range.time_range, 60
 
     return GraphArtwork(
         # Labelling, size, layout
@@ -262,10 +262,10 @@ def compute_graph_artwork(
         end_time=int(end_time),
         step=int(step),
         explicit_vertical_range=graph_recipe.explicit_vertical_range,
-        requested_vrange=graph_data_range.get("vertical_range"),
-        requested_start_time=int(graph_data_range["time_range"][0]),
-        requested_end_time=int(graph_data_range["time_range"][1]),
-        requested_step=int(graph_data_range["step"]),
+        requested_vrange=graph_data_range.vertical_range,
+        requested_start_time=graph_data_range.time_range[0],
+        requested_end_time=graph_data_range.time_range[1],
+        requested_step=graph_data_range.step,
         pin_time=pin_time,
         # Definition itself, for reproducing the graph
         definition=graph_recipe,
@@ -720,8 +720,8 @@ def _compute_v_axis_min_max(
 
     # An explizit range set by user zoom has always
     # precedence!
-    if graph_data_range.get("vertical_range"):
-        min_value, max_value = graph_data_range["vertical_range"]
+    if graph_data_range.vertical_range:
+        min_value, max_value = graph_data_range.vertical_range
 
     # In case the graph is mirrored, the 0 line is always exactly in the middle
     if mirrored:
@@ -742,7 +742,7 @@ def _compute_v_axis_min_max(
 
     # Make range a little bit larger, approx by 0.5 ex. But only if no zooming
     # is being done.
-    if not graph_data_range.get("vertical_range"):
+    if not graph_data_range.vertical_range:
         vrange_per_ex = vrange / height
 
         # Let displayed range have a small border

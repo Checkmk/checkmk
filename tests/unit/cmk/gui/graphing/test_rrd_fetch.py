@@ -105,7 +105,7 @@ _GRAPH_RECIPE = GraphRecipe(
     ),
 )
 
-_GRAPH_DATA_RANGE: GraphDataRange = {"time_range": (1681985455, 1681999855), "step": 20}
+_GRAPH_DATA_RANGE = GraphDataRange(time_range=(1681985455, 1681999855), step=20)
 
 
 def test_fetch_rrd_data_for_graph(mock_livestatus: MockLiveStatusConnection) -> None:

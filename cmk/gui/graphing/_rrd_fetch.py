@@ -125,7 +125,7 @@ def _chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -
     sample_data = next(iter(rrd_data.values()))
     step = sample_data.twindow[2]
     # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - graph_data_range["time_range"][1]) > step:
+    if abs(time.time() - graph_data_range.time_range[1]) > step:
         return
 
     # To avoid a gap when querying:
@@ -164,9 +164,9 @@ def fetch_rrd_data(
     consolidation_func_name: GraphConsoldiationFunction | None,
     graph_data_range: GraphDataRange,
 ) -> list[tuple[MetricProperties, TimeSeriesValues]]:
-    start_time, end_time = graph_data_range["time_range"]
+    start_time, end_time = graph_data_range.time_range
 
-    step = graph_data_range["step"]
+    step = graph_data_range.step
     # assumes str step is well formatted, colon separated step length & rrd point count
     if not isinstance(step, str):
         step = max(1, step)

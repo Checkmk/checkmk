@@ -188,7 +188,7 @@ def _graph_ajax_context(
 ) -> dict[str, Any]:
     return {
         "definition": graph_artwork.definition.dict(),
-        "data_range": graph_data_range,
+        "data_range": graph_data_range.model_dump(),
         "render_options": graph_render_options,
         "display_id": graph_artwork.display_id,
     }
@@ -564,7 +564,7 @@ def _render_ajax_graph(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, Any]:
-    graph_data_range = context["data_range"]
+    graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_options = context["render_options"]
     graph_recipe = GraphRecipe.parse_obj(context["definition"])
 
@@ -572,12 +572,13 @@ def _render_ajax_graph(
     end_time_var = request.var("end_time")
     step_var = request.var("step")
     if start_time_var is not None and end_time_var is not None and step_var is not None:
-        start_time = float(start_time_var)
-        end_time = float(end_time_var)
-        step = float(step_var)
+        start_time = int(start_time_var)
+        end_time = int(end_time_var)
+        # since step can be relatively small, we round
+        step: int | str = int(round(float(step_var)))
     else:
-        start_time, end_time = graph_data_range["time_range"]
-        step = graph_data_range["step"]
+        start_time, end_time = graph_data_range.time_range
+        step = graph_data_range.step
 
     size = graph_render_options["size"]
 
@@ -607,9 +608,11 @@ def _render_ajax_graph(
         )
 
     graph_render_options["size"] = size
-    graph_data_range["time_range"] = (start_time, end_time)
-    graph_data_range["vertical_range"] = vertical_range
-    graph_data_range["step"] = step
+    graph_data_range = GraphDataRange(
+        time_range=(start_time, end_time),
+        vertical_range=vertical_range,
+        step=step,
+    )
 
     # Persist the current data range for the graph editor
     if graph_render_options["editing"]:
@@ -632,31 +635,40 @@ def _render_ajax_graph(
         "context": {
             "graph_id": context["graph_id"],
             "definition": graph_recipe.dict(),
-            "data_range": graph_data_range,
+            "data_range": graph_data_range.model_dump(),
             "render_options": graph_render_options,
         },
     }
 
 
 def load_user_graph_data_range() -> GraphDataRange:
-    return user.load_file(
-        "graph_range",
-        GraphDataRange(
+    return (
+        GraphDataRange.model_validate(raw_range)
+        if (
+            raw_range := user.load_file(
+                "graph_range",
+                None,
+            )
+        )
+        else GraphDataRange(
             time_range=(int(time.time() - 86400), int(time.time())),
             step="86400:80000",
-        ),
+        )
     )
 
 
 def _save_user_graph_data_range(graph_data_range: GraphDataRange) -> None:
-    user.save_file("graph_range", graph_data_range)
+    user.save_file("graph_range", graph_data_range.model_dump())
 
 
 def forget_manual_vertical_zoom() -> None:
     user_range = load_user_graph_data_range()
-    if "vertical_range" in user_range:
-        del user_range["vertical_range"]
-        _save_user_graph_data_range(user_range)
+    _save_user_graph_data_range(
+        GraphDataRange(
+            time_range=user_range.time_range,
+            step=user_range.step,
+        )
+    )
 
 
 def _resolve_graph_recipe_with_error_handling(
@@ -714,19 +726,12 @@ def _render_graphs_from_definitions(
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    # Estimate step. Step is the number of seconds each fetched data point represents.
-    # It does not make sense to fetch the data in *much* greater precision than our
-    # display has. A *bit* more precision is useful for better optical zoom.
-    graph_data_range.setdefault(
-        "step", estimate_graph_step_for_html(graph_data_range["time_range"], graph_render_options)
-    )
-
     output = HTML()
     for graph_recipe in graph_recipes:
         recipe_specific_render_options = graph_render_options | graph_recipe.render_options
-        recipe_specific_data_range = graph_data_range.copy()
-        if graph_recipe.data_range:
-            recipe_specific_data_range.update(graph_recipe.data_range)
+        recipe_specific_data_range = graph_data_range.model_copy(
+            update=dict(graph_recipe.data_range or {})
+        )
 
         if render_async:
             output += _render_graph_container_html(
@@ -776,7 +781,7 @@ def _render_graph_container_html(
         "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
             graph_recipe.json(),
-            json.dumps(graph_data_range),
+            graph_data_range.model_dump_json(),
             json.dumps(graph_render_options),
             json.dumps(graph_display_id),
         )
@@ -802,7 +807,7 @@ def ajax_render_graph_content(
             "result_code": 0,
             "result": _render_graph_content_html(
                 GraphRecipe.parse_obj(api_request["graph_recipe"]),
-                api_request["graph_data_range"],
+                GraphDataRange.model_validate(api_request["graph_data_range"]),
                 api_request["graph_render_options"],
                 resolve_combined_single_metric_spec,
                 graph_display_id=api_request["graph_display_id"],
@@ -983,7 +988,7 @@ def __render_ajax_graph_hover(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, object]:
-    graph_data_range = context["data_range"]
+    graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_recipe = GraphRecipe.parse_obj(context["definition"])
 
     curves = compute_graph_artwork_curves(

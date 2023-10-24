@@ -43,7 +43,7 @@ def test_openapi_get_graph_graph(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.average:0.0:30.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: rrddata:load1:load1.average:0:30:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
@@ -102,7 +102,7 @@ def test_openapi_get_graph_metric(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.average:1.0:2.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: rrddata:load1:load1.average:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = aut_user_auth_wsgi_app.post(
@@ -161,7 +161,7 @@ def test_openapi_get_graph_metric_without_site(
         "GET services\nColumns: perf_data metrics check_command\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     mock_livestatus.expect_query(
-        "GET services\nColumns: rrddata:load1:load1.average:1.0:2.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
+        "GET services\nColumns: rrddata:load1:load1.average:1:2:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
         resp = api_client.get_graph(

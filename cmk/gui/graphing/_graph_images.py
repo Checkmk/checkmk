@@ -226,10 +226,10 @@ def graph_recipes_for_api_request(
     default_time_range = ((now := int(time.time())) - (25 * 3600), now)
 
     # Get and validate the data range
-    graph_data_range: GraphDataRange = api_request.get("data_range", {})
-    graph_data_range.setdefault("time_range", default_time_range)
+    raw_graph_data_range = api_request.get("data_range", {})
+    raw_graph_data_range.setdefault("time_range", default_time_range)
 
-    time_range = graph_data_range["time_range"]
+    time_range = raw_graph_data_range.setdefault("time_range", default_time_range)
     if not time_range or len(time_range) != 2:
         raise MKUserError(None, _("The graph data range is wrong or missing"))
 
@@ -243,7 +243,7 @@ def graph_recipes_for_api_request(
     except ValueError:
         raise MKUserError(None, _("Invalid end time given"))
 
-    graph_data_range["step"] = 60
+    raw_graph_data_range["step"] = 60
 
     try:
         graph_recipes = build_graph_recipes(graph_specification)
@@ -256,7 +256,7 @@ def graph_recipes_for_api_request(
             for graph_recipe in graph_recipes
         ]
 
-    return graph_data_range, graph_recipes
+    return GraphDataRange.model_validate(raw_graph_data_range), graph_recipes
 
 
 def graph_spec_from_request(
@@ -279,7 +279,7 @@ def graph_spec_from_request(
     )
 
     api_curves = []
-    (start_time, end_time), step = graph_data_range["time_range"], 60  # empty graph
+    (start_time, end_time), step = graph_data_range.time_range, 60  # empty graph
 
     for c in curves:
         start_time, end_time, step = c["rrddata"].twindow

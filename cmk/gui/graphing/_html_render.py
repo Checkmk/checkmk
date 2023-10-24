@@ -207,14 +207,16 @@ def render_plain_graph_title(
 
 
 def _render_graph_title_elements(
-    graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
+    graph_artwork: GraphArtwork,
+    graph_render_options: GraphRenderOptions,
+    explicit_title: str | None = None,
 ) -> list[tuple[str, str | None]]:
     if not graph_render_options["show_title"]:
         return []
 
     # Hard override of the graph title. This is e.g. needed for the graph previews
-    if "title" in graph_render_options:
-        return [(graph_render_options["title"], None)]
+    if explicit_title is not None:
+        return [(explicit_title, None)]
 
     title_elements: list[tuple[str, str | None]] = []
 
@@ -272,7 +274,11 @@ def _show_html_graph_title(
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
 ) -> None:
     title = text_with_links_to_user_translated_html(
-        _render_graph_title_elements(graph_artwork, graph_render_options),
+        _render_graph_title_elements(
+            graph_artwork,
+            graph_render_options,
+            explicit_title=graph_render_options.get("explicit_title"),
+        ),
         separator=" / ",
     )
     if not title:
@@ -893,7 +899,7 @@ def _render_time_range_selection(
                 "font_size": 6.0,  # pt
                 "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
                 "fixed_timerange": True,  # Do not follow timerange changes of other graphs
-                "title": timerange_attrs["title"],
+                "explicit_title": timerange_attrs["title"],
                 "show_legend": False,
                 "show_controls": False,
                 "preview": True,

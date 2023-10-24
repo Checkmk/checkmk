@@ -1055,6 +1055,7 @@ inventory_displayhints.update({
     ".software.os.kernel_version": {"title": _l("Kernel Version"), "short": _l("Kernel")},
     ".software.os.arch": {"title": _l("Kernel Architecture"), "short": _l("Architecture")},
     ".software.os.service_pack": {"title": _l("Latest Service Pack"), "short": _l("Service Pack")},
+    ".software.os.build": {"title": _l("Build")},
     ".software.os.service_packs:": {"title": _l("Service Packs"), "keyorder": ["name"]},
     ".software.packages:": {
         "title": _l("Packages"),

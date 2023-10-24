@@ -470,6 +470,8 @@ class ModeCheckManPage(WatoMode):
             raise MKUserError(None, _("There is no manpage for this check."))
         self._manpage = manpage
 
+        self._check_default_parameters: object = None
+
         checks = get_check_information().plugin_infos
         if (check_info := checks.get(self._check_plugin_name)) is not None:
             self._check_type = "check_mk"
@@ -478,7 +480,7 @@ class ModeCheckManPage(WatoMode):
             self._ruleset: str | None = (
                 RuleGroup.CheckgroupParameters(ruleset_name) if ruleset_name else None
             )
-            self._check_default_parameters: object = check_info.get("check_default_parameters")
+            self._check_default_parameters = check_info.get("check_default_parameters")
 
         elif self._check_plugin_name in check_builtins:
             self._check_type = "check_mk"

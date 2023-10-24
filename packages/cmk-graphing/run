@@ -163,13 +163,13 @@ run_unit_tests() {
 run_mypy() {
     setup_venv
     # shellcheck disable=SC2086
-    mypy --scripts-are-modules --show-error-codes $1
+    mypy $1
 }
 
 run_pylint() {
     setup_venv
     # shellcheck disable=SC2086
-    pylint --jobs="${JOBS}" $1
+    PYTHONPATH=. pylint --jobs="${JOBS}" $1
 }
 
 run_bandit() {

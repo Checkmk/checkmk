@@ -22,6 +22,7 @@ py_version = 311
 known_first_party = "werks"
 
 [tool.mypy]
+explicit_package_bases = true
 strict = true
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = true

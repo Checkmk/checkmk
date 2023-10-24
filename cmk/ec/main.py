@@ -56,7 +56,15 @@ from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
-from .history import ActiveHistoryPeriod, Columns, get_logfile, History, HistoryWhat, quote_tab
+from .history import (
+    ActiveHistoryPeriod,
+    Columns,
+    create_history,
+    get_logfile,
+    History,
+    HistoryWhat,
+    quote_tab,
+)
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
@@ -3476,7 +3484,7 @@ def reload_configuration(
 ) -> None:
     with lock_configuration:
         config = load_configuration(settings, logger, slave_status)
-        history = History(
+        history = create_history(
             settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
         )
         event_server.reload_configuration(config, history)
@@ -3524,7 +3532,7 @@ def main() -> None:  # pylint: disable=too-many-branches
 
         slave_status = default_slave_status_master()
         config = load_configuration(settings, logger, slave_status)
-        history = History(
+        history = create_history(
             settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
         )
 

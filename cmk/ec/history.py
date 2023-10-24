@@ -10,6 +10,7 @@ import shlex
 import subprocess
 import threading
 import time
+from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Sequence
 from logging import Logger
 from pathlib import Path
@@ -46,7 +47,7 @@ HistoryWhat = Literal[
 Columns = Sequence[tuple[str, float | int | str | list[object]]]
 
 
-class History:
+class History(ABC):
     def __init__(
         self,
         settings: Settings,
@@ -63,33 +64,63 @@ class History:
         self._lock = threading.Lock()
         self._mongodb = MongoDB()
         self._active_history_period = ActiveHistoryPeriod()
-        if self._config["archive_mode"] == "mongodb":
+        if self._get_archive_mode() == "mongodb":
             _reload_configuration_mongodb(self)
         else:
             _reload_configuration_files(self)
 
+    @abstractmethod
+    def _get_archive_mode(self) -> Literal["file", "mongodb"]:
+        ...
+
     def flush(self) -> None:
-        if self._config["archive_mode"] == "mongodb":
+        if self._get_archive_mode() == "mongodb":
             _flush_mongodb(self)
         else:
             _flush_files(self)
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        if self._config["archive_mode"] == "mongodb":
+        if self._get_archive_mode() == "mongodb":
             _add_mongodb(self, event, what, who, addinfo)
         else:
             _add_files(self, event, what, who, addinfo)
 
     def get(self, query: QueryGET) -> Iterable[Any]:
-        if self._config["archive_mode"] == "mongodb":
+        if self._get_archive_mode() == "mongodb":
             return _get_mongodb(self, query)
         return _get_files(self, self._logger, query)
 
     def housekeeping(self) -> None:
-        if self._config["archive_mode"] == "mongodb":
+        if self._get_archive_mode() == "mongodb":
             _housekeeping_mongodb(self)
         else:
             _housekeeping_files(self)
+
+
+class FileHistory(History):
+    def _get_archive_mode(self) -> Literal["file", "mongodb"]:
+        return "file"
+
+
+class MongoDBHistory(History):
+    def _get_archive_mode(self) -> Literal["file", "mongodb"]:
+        return "mongodb"
+
+
+def create_history(
+    settings: Settings,
+    config: Config,
+    logger: Logger,
+    event_columns: Columns,
+    history_columns: Columns,
+) -> History:
+    match config["archive_mode"]:
+        case "file":
+            return FileHistory(settings, config, logger, event_columns, history_columns)
+        case "mongodb":
+            return MongoDBHistory(settings, config, logger, event_columns, history_columns)
+        case _ as default:
+            assert_never(default)
 
 
 # .

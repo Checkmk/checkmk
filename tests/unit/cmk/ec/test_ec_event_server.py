@@ -14,7 +14,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.ec.config import Config, Rule, ServiceLevel
 from cmk.ec.defaults import default_rule_pack
 from cmk.ec.event import Event
-from cmk.ec.history import History
+from cmk.ec.history import create_history
 from cmk.ec.main import EventServer, StatusTableEvents, StatusTableHistory
 from cmk.ec.settings import Settings
 
@@ -52,7 +52,7 @@ def test_event_rewrite(
     Event server rewrite_event() method should change event state
     even if incomplete StatePatterns are given in rule["State"].
     """
-    history = History(
+    history = create_history(
         settings,
         config_with_host_patterns,
         logging.getLogger("cmk.mkeventd"),

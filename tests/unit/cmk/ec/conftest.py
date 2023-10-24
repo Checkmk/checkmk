@@ -14,7 +14,7 @@ import cmk.utils.paths
 import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
-from cmk.ec.history import History
+from cmk.ec.history import create_history, History
 from cmk.ec.main import (
     default_slave_status_master,
     EventServer,
@@ -56,7 +56,7 @@ def fixture_config() -> Config:
 
 @pytest.fixture(name="history")
 def fixture_history(settings: Settings, config: Config) -> History:
-    return History(
+    return create_history(
         settings,
         config,
         logging.getLogger("cmk.mkeventd"),

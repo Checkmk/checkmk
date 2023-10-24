@@ -10,8 +10,6 @@ from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
 from typing import Any, Protocol, TypeVar
 
-from cmk.utils.exceptions import MKGeneralException
-
 
 class _ValueStoreManagerProtokol(Protocol):
     active_service_interface: MutableMapping[str, Any] | None
@@ -31,10 +29,10 @@ def get_value_store() -> MutableMapping[str, Any]:
     between different check executions. It is a MutableMapping,
     so it can be used just like a dictionary.
     """
-    if _active_host_value_store is None:
-        raise MKGeneralException("no value store manager available")
-    if _active_host_value_store.active_service_interface is None:
-        raise MKGeneralException("no service interface for value store manager available")
+    assert (
+        _active_host_value_store is not None
+        and _active_host_value_store.active_service_interface is not None
+    )
     return _active_host_value_store.active_service_interface
 
 

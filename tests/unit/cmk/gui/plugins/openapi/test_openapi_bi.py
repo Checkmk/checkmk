@@ -12,6 +12,8 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+import cmk.gui.watolib.activate_changes as activate_changes
+
 
 def test_openapi_get_bi_packs(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
@@ -623,3 +625,37 @@ def test_post_bi_pack_creating_contact_groups_regression(
         status=404,
         headers={"Accept": "application/json", "Content-Type": "application/json"},
     )
+
+
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_get_aggregation_state_should_not_update_config_generation(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+    wato_enabled: bool,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
+    url = f"{base}{postfix}"
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.set_sites(["NO_SITE"])
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query("GET status\nColumns: program_start")
+    live.expect_query(
+        "GET hosts\nColumns: host_name host_tags host_labels host_childs host_parents host_alias host_filename"
+    )
+
+    generation_before_calling_endpoint = activate_changes._get_current_config_generation()
+
+    with live():
+        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+            _response = aut_user_auth_wsgi_app.post(
+                url,
+                headers={"Accept": "application/json", "Content-Type": "application/json"},
+                status=200,
+                params=json.dumps({"filter_names": ["Host heute"]}),
+            )
+
+    generation_after_calling_endpoint = activate_changes._get_current_config_generation()
+
+    assert generation_before_calling_endpoint == generation_after_calling_endpoint

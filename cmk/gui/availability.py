@@ -12,7 +12,7 @@ import time
 from collections.abc import Callable, Iterator
 from typing import Any, Literal, NamedTuple, Union
 
-from livestatus import LivestatusOutputFormat, OnlySites, SiteId
+from livestatus import LivestatusOutputFormat, lqencode, OnlySites, SiteId
 
 import cmk.utils.defines as defines
 import cmk.utils.paths
@@ -968,8 +968,8 @@ def get_availability_rawdata(
     if av_object:
         tl_site, tl_host, tl_service = av_object
         av_filter += "Filter: host_name = {}\nFilter: service_description = {}\n".format(
-            tl_host,
-            tl_service,
+            lqencode(str(tl_host)),
+            lqencode(tl_service),
         )
         assert tl_site is not None
         only_sites = [tl_site]

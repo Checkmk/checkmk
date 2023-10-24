@@ -744,7 +744,9 @@ class QuicksearchSnapin(SidebarSnapin):
             return
 
         try:
-            search_objects = self._quicksearch_manager._determine_search_objects(query)
+            search_objects = self._quicksearch_manager._determine_search_objects(
+                livestatus.lqencode(query)
+            )
             self._quicksearch_manager._conduct_search(search_objects)
 
         except TooManyRowsError as e:
@@ -1616,7 +1618,7 @@ class MonitoringSearch(ABCMegaMenuSearch):
 class PageSearchMonitoring(AjaxPage):
     def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
-        return MenuSearchResultsRenderer("monitoring").render(query)
+        return MenuSearchResultsRenderer("monitoring").render(livestatus.lqencode(query))
 
 
 class SetupSearch(ABCMegaMenuSearch):
@@ -1653,7 +1655,7 @@ class PageSearchSetup(AjaxPage):
     def page(self) -> PageResult:
         query = request.get_str_input_mandatory("q")
         try:
-            return MenuSearchResultsRenderer("setup").render(query)
+            return MenuSearchResultsRenderer("setup").render(livestatus.lqencode(query))
         except IndexNotFoundException:
             with output_funnel.plugged():
                 html.open_div(class_="topic")

@@ -73,38 +73,55 @@ class History(ABC):
     def _get_archive_mode(self) -> Literal["file", "mongodb"]:
         ...
 
+    @abstractmethod
     def flush(self) -> None:
-        if self._get_archive_mode() == "mongodb":
-            _flush_mongodb(self)
-        else:
-            _flush_files(self)
+        ...
 
+    @abstractmethod
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        if self._get_archive_mode() == "mongodb":
-            _add_mongodb(self, event, what, who, addinfo)
-        else:
-            _add_files(self, event, what, who, addinfo)
+        ...
 
+    @abstractmethod
     def get(self, query: QueryGET) -> Iterable[Any]:
-        if self._get_archive_mode() == "mongodb":
-            return _get_mongodb(self, query)
-        return _get_files(self, self._logger, query)
+        ...
 
+    @abstractmethod
     def housekeeping(self) -> None:
-        if self._get_archive_mode() == "mongodb":
-            _housekeeping_mongodb(self)
-        else:
-            _housekeeping_files(self)
+        ...
 
 
 class FileHistory(History):
     def _get_archive_mode(self) -> Literal["file", "mongodb"]:
         return "file"
 
+    def flush(self) -> None:
+        _flush_files(self)
+
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        _add_files(self, event, what, who, addinfo)
+
+    def get(self, query: QueryGET) -> Iterable[Any]:
+        return _get_files(self, self._logger, query)
+
+    def housekeeping(self) -> None:
+        _housekeeping_files(self)
+
 
 class MongoDBHistory(History):
     def _get_archive_mode(self) -> Literal["file", "mongodb"]:
         return "mongodb"
+
+    def flush(self) -> None:
+        _flush_mongodb(self)
+
+    def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
+        _add_mongodb(self, event, what, who, addinfo)
+
+    def get(self, query: QueryGET) -> Iterable[Any]:
+        return _get_mongodb(self, query)
+
+    def housekeeping(self) -> None:
+        _housekeeping_mongodb(self)
 
 
 def create_history(

@@ -2309,37 +2309,50 @@ def _no_bi_aggregate_active() -> bool:
 
 def _customize_menu_topics() -> list[TopicMenuTopic]:
     general_items = []
-    monitoring_items = [
-        TopicMenuItem(
-            name="views",
-            title=_("Views"),
-            url="edit_views.py",
-            sort_index=10,
-            is_show_more=False,
-            icon="view",
-        ),
-        TopicMenuItem(
-            name="dashboards",
-            title=_("Dashboards"),
-            url="edit_dashboards.py",
-            sort_index=20,
-            is_show_more=False,
-            icon="dashboard",
-        ),
-    ]
+    monitoring_items = []
     graph_items = []
-    business_reporting_items = [
-        TopicMenuItem(
-            name="reports",
-            title=_("Reports"),
-            url="edit_reports.py",
-            sort_index=10,
-            is_show_more=True,
-            icon="report",
+    business_reporting_items = []
+
+    if user.may("general.edit_views"):
+        monitoring_items.append(
+            TopicMenuItem(
+                name="views",
+                title=_("Views"),
+                url="edit_views.py",
+                sort_index=10,
+                is_show_more=False,
+                icon="view",
+            ),
         )
-    ]
+
+    if user.may("general.edit_dashboards"):
+        monitoring_items.append(
+            TopicMenuItem(
+                name="dashboards",
+                title=_("Dashboards"),
+                url="edit_dashboards.py",
+                sort_index=20,
+                is_show_more=False,
+                icon="dashboard",
+            ),
+        )
+
+    if user.may("general.edit_reports"):
+        business_reporting_items.append(
+            TopicMenuItem(
+                name="reports",
+                title=_("Reports"),
+                url="edit_reports.py",
+                sort_index=10,
+                is_show_more=True,
+                icon="report",
+            )
+        )
 
     for index, page_type_ in enumerate(all_page_types().values()):
+        if not user.may(f"general.edit_{page_type_.type_name()}"):
+            continue
+
         item = TopicMenuItem(
             name=page_type_.type_name(),
             title=page_type_.phrase("title_plural"),
@@ -2392,6 +2405,24 @@ def _customize_menu_topics() -> list[TopicMenuTopic]:
     return topics
 
 
+def hide_customize_menu() -> bool:
+    permissions = [
+        "general.edit_pagetype_topic",
+        "general.edit_bookmark_list",
+        "general.edit_custom_snapin",
+        "general.edit_graph_collection",
+        "general.edit_graph_tuning",
+        "general.edit_custom_graph",
+        "general.edit_forecast_graph",
+        "general.edit_sla_configuration",
+        "general.edit_views",
+        "general.edit_dashboards",
+        "general.edit_reports",
+    ]
+
+    return not any(user.may(perm) for perm in permissions)
+
+
 mega_menu_registry.register(
     MegaMenu(
         name="customize",
@@ -2399,6 +2430,7 @@ mega_menu_registry.register(
         icon="main_customize",
         sort_index=10,
         topics=_customize_menu_topics,
+        hide=hide_customize_menu,
     )
 )
 

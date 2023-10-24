@@ -1,0 +1,13 @@
+Title: Mega menu: Hide "Customize" menu and menu items for users with no permission
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1698216784
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Before this Werk, users without permissions to access the "Customize" menu could still see it in the mega menu,
+and then when accessing it they would get an error message. This Werk fixes that behaviour by hiding the menu
+entries to which the user does not have access, or the entire menu in case the user does not have any 
+customisation permissions.

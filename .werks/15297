@@ -1,0 +1,13 @@
+Title: mk_oracle.ps1: port changes made in werk 14839 to windows agent plugin
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1698137301
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p18
+
+Changes made in <a href="https://checkmk.com/werk/14839">Werk #14839</a> where
+only applied to the linux agent plugin of mk_oracle. Now those changes are also
+applied to mk_oracle.ps1

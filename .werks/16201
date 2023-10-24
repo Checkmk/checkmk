@@ -1,0 +1,10 @@
+Title: REST API bi: Do not update config generation when retrieving BI aggregations status
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1698140022
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk, when calling the endpoint to get the BI aggregations status, it incremented the configuration generation number. This Werk fixes that problem and now the endpoint does not update the configuration generation number.

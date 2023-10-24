@@ -100,6 +100,11 @@ class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
     options: RuleOptionsSpec
 
 
+def is_disabled(rule: RuleSpec[TRuleValue]) -> bool:
+    # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
+    return "options" in rule and bool(rule["options"].get("disabled", False))
+
+
 class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
@@ -918,11 +923,6 @@ def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
             if grouped_tag.id is not None:
                 tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
     return tag_id_to_tag_group_id_map
-
-
-def is_disabled(rule: RuleSpec[TRuleValue]) -> bool:
-    # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
-    return "options" in rule and bool(rule["options"].get("disabled", False))
 
 
 def matches_host_tags(

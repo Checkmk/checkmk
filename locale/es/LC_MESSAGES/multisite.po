@@ -5924,9 +5924,11 @@ msgstr ""
 "Un identificador debe estar compuesto únicamente por letras, dígitos, "
 "guiones y guiones bajos y debe empezar por una letra o un guión bajo."
 
+#, fuzzy
 msgid ""
 "An identifier must only consist of letters, digits, dollar, underscore, "
-"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
+"dash, dot, plus, and at. It must start with a letter, digit, dollar, or "
+"underscore."
 msgstr ""
 "Un identificador sólo puede estar formado por letras, cifras, dólares, "
 "guiones bajos, guiones, puntos y arrobas. Debe empezar por una letra, una "

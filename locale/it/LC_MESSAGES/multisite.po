@@ -5892,9 +5892,11 @@ msgstr ""
 "Un identificatore deve essere composto solo da lettere, cifre, trattini e "
 "underscore e deve iniziare con una lettera o underscore."
 
+#, fuzzy
 msgid ""
 "An identifier must only consist of letters, digits, dollar, underscore, "
-"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
+"dash, dot, plus, and at. It must start with a letter, digit, dollar, or "
+"underscore."
 msgstr ""
 "Un identificatore deve essere composto solo da lettere, cifre, dollari, "
 "trattini bassi, trattini, punti e at. Deve iniziare con una lettera, una "

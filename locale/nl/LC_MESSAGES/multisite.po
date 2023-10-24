@@ -5873,9 +5873,11 @@ msgstr ""
 "Een identifier mag alleen uit letters, cijfers, streepjes en underscore "
 "bestaan en moet met een letter of underscore beginnen."
 
+#, fuzzy
 msgid ""
 "An identifier must only consist of letters, digits, dollar, underscore, "
-"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
+"dash, dot, plus, and at. It must start with a letter, digit, dollar, or "
+"underscore."
 msgstr ""
 "Een identificator mag alleen bestaan uit letters, cijfers, dollar, "
 "underscore, streepje, punt en at. Het moet beginnen met een letter, cijfer, "

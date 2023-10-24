@@ -5716,9 +5716,11 @@ msgstr ""
 "識別子は、文字、数字、ダッシュ、アンダースコアのみで構成され、文字またはアン"
 "ダースコアで始まる必要があります。"
 
+#, fuzzy
 msgid ""
 "An identifier must only consist of letters, digits, dollar, underscore, "
-"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
+"dash, dot, plus, and at. It must start with a letter, digit, dollar, or "
+"underscore."
 msgstr ""
 "識別子は、文字、数字、ドル、アンダースコア、ダッシュ、ドット、およびアットの"
 "みで 構成されなければならない。また、文字、数字、ドル、アンダースコアで始めな"

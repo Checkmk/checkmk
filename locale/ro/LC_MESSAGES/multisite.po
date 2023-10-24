@@ -5914,9 +5914,11 @@ msgstr ""
 "caractere de subsol și trebuie să înceapă cu o literă sau un caracter de "
 "subsol."
 
+#, fuzzy
 msgid ""
 "An identifier must only consist of letters, digits, dollar, underscore, "
-"dash, dot, and at. It must start with a letter, digit, dollar, or underscore."
+"dash, dot, plus, and at. It must start with a letter, digit, dollar, or "
+"underscore."
 msgstr ""
 "Un identificator trebuie să fie format numai din litere, cifre, dolari, "
 "subliniere, liniuță, punct și at. Acesta trebuie să înceapă cu o literă, o "

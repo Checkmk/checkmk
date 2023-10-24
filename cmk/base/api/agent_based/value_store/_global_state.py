@@ -6,16 +6,21 @@
 This module keeps the global state of the ValueStore.
 """
 
-from collections.abc import Generator, MutableMapping
+from collections.abc import Iterator, MutableMapping
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Protocol, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
 
-from ._utils import ValueStoreManager
 
-_active_host_value_store: ValueStoreManager | None = None
+class _ValueStoreManagerProtokol(Protocol):
+    active_service_interface: MutableMapping[str, Any] | None
+
+    def save(self) -> None:
+        ...
+
+
+_active_host_value_store: _ValueStoreManagerProtokol | None = None
 
 
 # Caveat: this function (and its docstring) is part of the public Check API.
@@ -33,19 +38,22 @@ def get_value_store() -> MutableMapping[str, Any]:
     return _active_host_value_store.active_service_interface
 
 
+TVSManager = TypeVar("TVSManager", bound=_ValueStoreManagerProtokol)
+
+
 @contextmanager
-def load_host_value_store(
-    host_name: HostName,
+def set_value_store_manager(
+    vs_manager: TVSManager,
     *,
     store_changes: bool,
-) -> Generator[ValueStoreManager, None, None]:
+) -> Iterator[TVSManager]:
     """Create and load the value store for the host"""
     global _active_host_value_store
 
     pushed_back_store = _active_host_value_store
 
     try:
-        _active_host_value_store = ValueStoreManager(host_name)
+        _active_host_value_store = vs_manager
         yield _active_host_value_store
 
         if store_changes:

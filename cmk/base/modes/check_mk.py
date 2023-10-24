@@ -106,7 +106,7 @@ import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.api.agent_based.value_store import load_host_value_store
+from cmk.base.api.agent_based.value_store import set_value_store_manager, ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
     CMKFetcher,
@@ -2295,8 +2295,8 @@ def mode_check(
             Snapshot,
         ]
     ] = ()
-    with error_handler, plugin_contexts.current_host(hostname), load_host_value_store(
-        hostname, store_changes=not dry_run
+    with error_handler, plugin_contexts.current_host(hostname), set_value_store_manager(
+        ValueStoreManager(hostname), store_changes=not dry_run
     ) as value_store_manager:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)

@@ -43,11 +43,11 @@ the check function is called.
 
 """
 
-from ._global_state import get_value_store, load_host_value_store
+from ._global_state import get_value_store, set_value_store_manager
 from ._utils import ValueStoreManager
 
 __all__ = [
     "get_value_store",
-    "load_host_value_store",
+    "set_value_store_manager",
     "ValueStoreManager",
 ]

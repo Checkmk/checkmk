@@ -283,7 +283,7 @@ class ValueStoreManager:
             serializer=repr,
             deserializer=literal_eval,
         )
-        self.active_service_interface: _ValueStore | None = None
+        self.active_service_interface: MutableMapping[str, Any] | None = None
         self._host_name = host_name
 
     @contextmanager

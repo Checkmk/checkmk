@@ -144,7 +144,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
 from cmk.base.api.agent_based import plugin_contexts
-from cmk.base.api.agent_based.value_store import load_host_value_store
+from cmk.base.api.agent_based.value_store import set_value_store_manager, ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -501,8 +501,8 @@ def _execute_discovery(
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    with plugin_contexts.current_host(host_name), load_host_value_store(
-        host_name, store_changes=False
+    with plugin_contexts.current_host(host_name), set_value_store_manager(
+        ValueStoreManager(host_name), store_changes=False
     ) as value_store_manager:
         is_cluster = host_name in hosts_config.clusters
         check_plugins = CheckPluginMapper(

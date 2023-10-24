@@ -353,45 +353,13 @@ class RulesetMatcher:
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
-                match = RulesetMatcher._matches_service_conditions(
+                match = matches_service_conditions(
                     service_description_condition, service_labels_condition, match_object
                 )
                 self._service_match_cache[service_cache_id] = match
 
             if match:
                 yield value
-
-    @staticmethod
-    def _matches_service_conditions(
-        service_description_condition: tuple[bool, Pattern[str]],
-        service_labels_condition: Mapping[str, str | Mapping[Literal["$ne"], str]],
-        match_object: RulesetMatchObject,
-    ) -> bool:
-        if not RulesetMatcher._matches_service_description_condition(
-            service_description_condition, match_object
-        ):
-            return False
-
-        if service_labels_condition and not matches_labels(
-            match_object.service_labels, service_labels_condition
-        ):
-            return False
-
-        return True
-
-    @staticmethod
-    def _matches_service_description_condition(
-        service_description_condition: tuple[bool, Pattern[str]],
-        match_object: RulesetMatchObject,
-    ) -> bool:
-        negate, pattern = service_description_condition
-
-        if (
-            match_object.service_description is not None
-            and pattern.match(match_object.service_description) is not None
-        ):
-            return not negate
-        return negate
 
     @staticmethod
     def get_values_for_generic_agent(
@@ -412,15 +380,13 @@ class RulesetMatcher:
             if rule_path is not None and not path_for_rule_matching.startswith(rule_path):
                 continue
 
-            if (tags := cond.get("host_tags", {})) and not RulesetOptimizer.matches_host_tags(
-                set(), tags
-            ):
+            if (tags := cond.get("host_tags", {})) and not matches_host_tags(set(), tags):
                 continue
 
             if (labels := cond.get("host_labels", {})) and not matches_labels({}, labels):
                 continue
 
-            if not RulesetOptimizer.matches_host_name(cond.get("host_name"), HostName("")):
+            if not matches_host_name(cond.get("host_name"), HostName("")):
                 continue
 
             entries.append(rule["value"])
@@ -687,7 +653,7 @@ class RulesetOptimizer:
             for hostname in hosts_to_check:
                 # When no tag matching is requested, do not filter by tags. Accept all hosts
                 # and filter only by hostlist
-                if tag_conditions and not RulesetOptimizer.matches_host_tags(
+                if tag_conditions and not matches_host_tags(
                     self._host_tags[hostname],
                     tag_conditions,
                 ):
@@ -698,41 +664,13 @@ class RulesetOptimizer:
                     if not matches_labels(host_labels, labels):
                         continue
 
-                if not RulesetOptimizer.matches_host_name(hostlist, hostname):
+                if not matches_host_name(hostlist, hostname):
                     continue
 
                 matching.add(hostname)
 
         self._all_matching_hosts_match_cache[cache_id] = matching
         return matching
-
-    @staticmethod
-    def matches_host_name(host_entries: HostOrServiceConditions | None, hostname: HostName) -> bool:
-        if not host_entries:
-            return True
-
-        negate, host_entries = parse_negated_condition_list(host_entries)
-        if hostname == "":  # -> generic agent host
-            return negate
-
-        for entry in host_entries:
-            if not isinstance(entry, dict) and hostname == entry:
-                return not negate
-
-            if isinstance(entry, dict) and regex(entry["$regex"]).match(hostname) is not None:
-                return not negate
-
-        return negate
-
-    @staticmethod
-    def matches_host_tags(
-        hosttags: set[tuple[TagGroupID, TagID]],
-        required_tags: Mapping[TagGroupID, TagCondition],
-    ) -> bool:
-        return all(
-            matches_tag_condition(taggroup_id, tag_condition, hosttags)
-            for taggroup_id, tag_condition in required_tags.items()
-        )
 
     @staticmethod
     def _condition_cache_id(
@@ -987,6 +925,113 @@ def _tags_or_labels_cache_id(tag_or_label_spec: object) -> object:
     return tag_or_label_spec
 
 
+def parse_negated_condition_list(
+    entries: HostOrServiceConditions,
+) -> tuple[bool, HostOrServiceConditionsSimple]:
+    if isinstance(entries, dict) and "$nor" in entries:
+        return True, entries["$nor"]
+    if isinstance(entries, list):
+        return False, entries
+    raise ValueError("unsupported conditions")
+
+
+def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
+    """The old rules only have a list of tags and don't know anything about the
+    tag groups they are coming from. Create a map based on the current tag config
+    """
+    tag_id_to_tag_group_id_map: dict[TagID, TagGroupID] = {}
+
+    for aux_tag in tag_config.aux_tag_list.get_tags():
+        tag_id_to_tag_group_id_map[aux_tag.id] = TagGroupID(aux_tag.id)
+
+    for tag_group in tag_config.tag_groups:
+        for grouped_tag in tag_group.tags:
+            # Do not care for the choices with a None value here. They are not relevant for this map
+            if grouped_tag.id is not None:
+                tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
+    return tag_id_to_tag_group_id_map
+
+
+def _is_disabled(rule: RuleSpec[TRuleValue]) -> bool:
+    # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
+    return "options" in rule and bool(rule["options"].get("disabled", False))
+
+
+def matches_host_tags(
+    hosttags: set[tuple[TagGroupID, TagID]],
+    required_tags: Mapping[TagGroupID, TagCondition],
+) -> bool:
+    return all(
+        matches_tag_condition(taggroup_id, tag_condition, hosttags)
+        for taggroup_id, tag_condition in required_tags.items()
+    )
+
+
+def matches_host_name(host_entries: HostOrServiceConditions | None, hostname: HostName) -> bool:
+    if not host_entries:
+        return True
+
+    negate, host_entries = parse_negated_condition_list(host_entries)
+    if hostname == "":  # -> generic agent host
+        return negate
+
+    for entry in host_entries:
+        if not isinstance(entry, dict) and hostname == entry:
+            return not negate
+
+        if isinstance(entry, dict) and regex(entry["$regex"]).match(hostname) is not None:
+            return not negate
+
+    return negate
+
+
+def matches_labels(
+    object_labels: Labels | None, required_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
+) -> bool:
+    for label_group_id, label_spec in required_labels.items():
+        is_not = isinstance(label_spec, dict)
+        if isinstance(label_spec, dict):
+            label_spec = label_spec["$ne"]
+
+        if object_labels is None:
+            return False
+
+        if (object_labels.get(label_group_id) == label_spec) is is_not:
+            return False
+
+    return True
+
+
+def matches_service_conditions(
+    service_description_condition: tuple[bool, Pattern[str]],
+    service_labels_condition: Mapping[str, str | Mapping[Literal["$ne"], str]],
+    match_object: RulesetMatchObject,
+) -> bool:
+    if not matches_service_description_condition(service_description_condition, match_object):
+        return False
+
+    if service_labels_condition and not matches_labels(
+        match_object.service_labels, service_labels_condition
+    ):
+        return False
+
+    return True
+
+
+def matches_service_description_condition(
+    service_description_condition: tuple[bool, Pattern[str]],
+    match_object: RulesetMatchObject,
+) -> bool:
+    negate, pattern = service_description_condition
+
+    if (
+        match_object.service_description is not None
+        and pattern.match(match_object.service_description) is not None
+    ):
+        return not negate
+    return negate
+
+
 def matches_tag_condition(
     taggroup_id: TagGroupID,
     tag_condition: TagCondition,
@@ -1032,52 +1077,3 @@ def matches_tag_condition(
         taggroup_id,
         tag_condition,
     ) in hosttags
-
-
-def matches_labels(
-    object_labels: Labels | None, required_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
-) -> bool:
-    for label_group_id, label_spec in required_labels.items():
-        is_not = isinstance(label_spec, dict)
-        if isinstance(label_spec, dict):
-            label_spec = label_spec["$ne"]
-
-        if object_labels is None:
-            return False
-
-        if (object_labels.get(label_group_id) == label_spec) is is_not:
-            return False
-
-    return True
-
-
-def parse_negated_condition_list(
-    entries: HostOrServiceConditions,
-) -> tuple[bool, HostOrServiceConditionsSimple]:
-    if isinstance(entries, dict) and "$nor" in entries:
-        return True, entries["$nor"]
-    if isinstance(entries, list):
-        return False, entries
-    raise ValueError("unsupported conditions")
-
-
-def get_tag_to_group_map(tag_config: TagConfig) -> Mapping[TagID, TagGroupID]:
-    """The old rules only have a list of tags and don't know anything about the
-    tag groups they are coming from. Create a map based on the current tag config
-    """
-    tag_id_to_tag_group_id_map: dict[TagID, TagGroupID] = {}
-
-    for aux_tag in tag_config.aux_tag_list.get_tags():
-        tag_id_to_tag_group_id_map[aux_tag.id] = TagGroupID(aux_tag.id)
-
-    for tag_group in tag_config.tag_groups:
-        for grouped_tag in tag_group.tags:
-            # Do not care for the choices with a None value here. They are not relevant for this map
-            if grouped_tag.id is not None:
-                tag_id_to_tag_group_id_map[grouped_tag.id] = tag_group.id
-    return tag_id_to_tag_group_id_map
-
-
-def _is_disabled(rule: RuleSpec[TRuleValue]) -> bool:
-    # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
-    return "options" in rule and bool(rule["options"].get("disabled", False))

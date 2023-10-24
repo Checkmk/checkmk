@@ -202,7 +202,7 @@ setversion:
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
 	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/neb/CMakeLists.txt
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
-	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' docker_image/Dockerfile
+	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
 	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
@@ -405,12 +405,7 @@ setup:
 	fi ; \
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
-	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-	sudo add-apt-repository \
-        "deb [arch=amd64] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable"
-	sudo apt-get update
-	sudo apt-get install docker-ce
-	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
+	$(MAKE) -C docker_image setup
 	$(MAKE) -C locale setup
 	$(MAKE) check-setup
 

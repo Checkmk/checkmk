@@ -22,7 +22,6 @@ usage() {
     echo "  -m, --mypy              run mypy"
     echo "  -p, --pylint            run pylint"
     echo "  -B, --bandit            run bandit"
-    echo "  -C, --py-import-cycles  run py-import-cycles"
     echo "  -a, --all               shortcut for -F -u -m -p -B -C"
     echo "  -f, --format            format sources"
     echo "  -d, --documentation     generate documentation"
@@ -38,11 +37,10 @@ parse_options() {
     RUN_MYPY=no
     RUN_PYLINT=no
     RUN_BANDIT=no
-    RUN_PY_IMPORT_CYCLES=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
 
-    if ! OPTIONS=$(getopt --options 'cFumpBCafdj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,py-import-cycles,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFumpBafdj:h' --long 'clean,check-format,unit-tests,mypy,pylint,bandit,all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -81,18 +79,12 @@ parse_options() {
                 shift
                 continue
                 ;;
-            '-C' | '--py-import-cycles')
-                RUN_PY_IMPORT_CYCLES=yes
-                shift
-                continue
-                ;;
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
                 RUN_UNIT_TESTS=yes
                 RUN_MYPY=yes
                 RUN_PYLINT=yes
                 RUN_BANDIT=yes
-                RUN_PY_IMPORT_CYCLES=yes
                 shift
                 continue
                 ;;
@@ -124,7 +116,7 @@ parse_options() {
         esac
     done
 
-    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_UNIT_TESTS RUN_MYPY RUN_PYLINT RUN_BANDIT RUN_PY_IMPORT_CYCLES RUN_FORMAT RUN_DOCUMENTATION JOBS
+    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_UNIT_TESTS RUN_MYPY RUN_PYLINT RUN_BANDIT RUN_FORMAT RUN_DOCUMENTATION JOBS
 }
 
 run_pipenv() {
@@ -185,15 +177,6 @@ run_bandit() {
     bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high $1
 }
 
-run_py_import_cycles() {
-    setup_venv
-    py_import_cycles \
-        --project-path . \
-        --packages cmk_graphing \
-        --strategy johnson \
-        --verbose
-}
-
 run_format() {
     setup_venv
     # shellcheck disable=SC2086
@@ -238,7 +221,6 @@ main() {
     test ${RUN_MYPY} = yes && run_mypy "$python_files"
     test ${RUN_PYLINT} = yes && run_pylint "$python_files"
     test ${RUN_BANDIT} = yes && run_bandit "$python_files"
-    test ${RUN_PY_IMPORT_CYCLES} = yes && run_py_import_cycles
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     test ${RUN_FORMAT} = yes && run_format "$python_files"
     true

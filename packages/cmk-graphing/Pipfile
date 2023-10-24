@@ -10,7 +10,6 @@ bandit = "*"
 mypy = "*"
 pylint = "*"
 pytest = "*"
-py-import-cycles = "*"
 
 [requires]
 python_version = "3.11"

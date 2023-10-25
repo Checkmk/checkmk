@@ -474,12 +474,6 @@ class RulesetOptimizer:
     def get_host_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> Mapping[HostAddress, Sequence[TRuleValue]]:
-        """Precompute host lookup map
-
-        Instead of a ruleset like list structure with precomputed host lists we compute a
-        direct map for hostname based lookups for the matching rule values
-        """
-
         def _impl(
             ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
         ) -> Mapping[HostAddress, Sequence[TRuleValue]]:

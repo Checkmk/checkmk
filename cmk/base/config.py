@@ -1079,8 +1079,7 @@ def get_plugin_parameters(
 
     if ruleset_type == "all":
         host_rules = matcher.get_host_values(host_name, rules)
-        host_rules.append(default_parameters)
-        return [Parameters(d) for d in host_rules]
+        return [Parameters(d) for d in itertools.chain(host_rules, (default_parameters,))]
 
     if ruleset_type == "merged":
         return Parameters(
@@ -1907,7 +1906,7 @@ class ConfigCache:
         self.__explicit_host_attributes: dict[HostName, dict[str, str]] = {}
         self.__computed_datasources: dict[HostName | HostAddress, ComputedDataSources] = {}
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
-        self.__active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
+        self.__active_checks: dict[HostName, list[tuple[str, Sequence[Any]]]] = {}
         self.__special_agents: dict[HostName, Sequence[tuple[str, Mapping[str, object]]]] = {}
         self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
@@ -2453,7 +2452,7 @@ class ConfigCache:
         for key, ruleset in extra_host_conf.items():
             if key in attrs:
                 # An explicit value is already set
-                values = [attrs[key]]
+                values: Sequence[object] = [attrs[key]]
             else:
                 values = self.ruleset_matcher.get_host_values(host_name, ruleset)
                 if not values:
@@ -2599,19 +2598,19 @@ class ConfigCache:
             host_name, inv_parameters.get(str(plugin.ruleset_name), default)
         )
 
-    def custom_checks(self, host_name: HostName) -> list[dict[Any, Any]]:
+    def custom_checks(self, host_name: HostName) -> Sequence[dict[Any, Any]]:
         """Return the free form configured custom checks without formalization"""
         return self.ruleset_matcher.get_host_values(host_name, custom_checks)
 
-    def active_checks(self, host_name: HostName) -> list[tuple[str, list[Any]]]:
+    def active_checks(self, host_name: HostName) -> list[tuple[str, Sequence[Any]]]:
         """Returns the list of active checks configured for this host
 
         These are configured using the active check formalization of WATO
         where the whole parameter set is configured using valuespecs.
         """
 
-        def make_active_checks() -> list[tuple[str, list[Any]]]:
-            configured_checks: list[tuple[str, list[Any]]] = []
+        def make_active_checks() -> list[tuple[str, Sequence[Any]]]:
+            configured_checks: list[tuple[str, Sequence[Any]]] = []
             for plugin_name, ruleset in sorted(active_checks.items(), key=lambda x: x[0]):
                 # Skip Check_MK HW/SW Inventory for all ping hosts, even when the
                 # user has enabled the inventory for ping only hosts
@@ -3979,7 +3978,7 @@ def _boil_down_agent_rules(
 class CEEConfigCache(ConfigCache):
     def __init__(self) -> None:
         self.__rrd_config: dict[HostName, RRDConfig | None] = {}
-        self.__recuring_downtimes: dict[HostName, list[RecurringDowntime]] = {}
+        self.__recuring_downtimes: dict[HostName, Sequence[RecurringDowntime]] = {}
         self.__flap_settings: dict[HostName, tuple[float, float, float]] = {}
         self.__log_long_output: dict[HostName, bool] = {}
         self.__state_translation: dict[HostName, dict] = {}
@@ -4011,8 +4010,8 @@ class CEEConfigCache(ConfigCache):
 
         return self.__rrd_config.setdefault(host_name, _rrd_config())
 
-    def recurring_downtimes(self, host_name: HostName) -> list[RecurringDowntime]:
-        def _impl() -> list[RecurringDowntime]:
+    def recurring_downtimes(self, host_name: HostName) -> Sequence[RecurringDowntime]:
+        def _impl() -> Sequence[RecurringDowntime]:
             return self.ruleset_matcher.get_host_values(
                 host_name,
                 host_recurring_downtimes,  # type: ignore[name-defined] # pylint: disable=undefined-variable

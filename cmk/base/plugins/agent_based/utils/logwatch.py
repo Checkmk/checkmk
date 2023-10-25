@@ -59,7 +59,7 @@ def extract_unseen_lines(
     ]
 
 
-def get_ec_rule_params() -> list:
+def get_ec_rule_params() -> Sequence[Any]:
     """Isolate the remaining API violation w.r.t. parameters"""
     return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
         host_name(),

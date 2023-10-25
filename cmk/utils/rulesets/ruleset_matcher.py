@@ -56,7 +56,6 @@ TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
 TagsOfHosts: TypeAlias = dict[HostName | HostAddress, Mapping[TagGroupID, TagID]]
 
 
-PreprocessedHostRuleset: TypeAlias = dict[HostName | HostAddress, list[TRuleValue]]
 PreprocessedPattern: TypeAlias = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset: TypeAlias = list[
     tuple[
@@ -205,15 +204,15 @@ class RulesetMatcher:
         self,
         hostname: HostName | HostAddress,
         ruleset: Iterable[RuleSpec[TRuleValue]],
-    ) -> list[TRuleValue]:
+    ) -> Sequence[TRuleValue]:
         """Returns a generator of the values of the matched rules."""
 
         # When the requested host is part of the local sites configuration,
         # then use only the sites hosts for processing the rules
         with_foreign_hosts = hostname not in self.ruleset_optimizer.all_processed_hosts()
 
-        optimized_ruleset: PreprocessedHostRuleset[
-            TRuleValue
+        optimized_ruleset: Mapping[
+            HostName | HostAddress, Sequence[TRuleValue]
         ] = self.ruleset_optimizer.get_host_ruleset(ruleset, with_foreign_hosts)
 
         return optimized_ruleset.get(hostname, [])
@@ -409,7 +408,7 @@ class RulesetOptimizer:
         self._all_processed_hosts_similarity = 1.0
 
         self.__service_ruleset_cache: dict[tuple[int, bool], PreprocessedServiceRuleset] = {}
-        self.__host_ruleset_cache: dict[tuple[int, bool], PreprocessedHostRuleset[Any]] = {}
+        self.__host_ruleset_cache: dict[tuple[int, bool], Mapping[HostAddress, Sequence[Any]]] = {}
         self._all_matching_hosts_match_cache: dict[
             tuple[_ConditionCacheID, bool], set[HostName]
         ] = {}
@@ -474,7 +473,7 @@ class RulesetOptimizer:
 
     def get_host_ruleset(
         self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-    ) -> PreprocessedHostRuleset[TRuleValue]:
+    ) -> Mapping[HostAddress, Sequence[TRuleValue]]:
         """Precompute host lookup map
 
         Instead of a ruleset like list structure with precomputed host lists we compute a
@@ -483,8 +482,8 @@ class RulesetOptimizer:
 
         def _impl(
             ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
-        ) -> PreprocessedHostRuleset[TRuleValue]:
-            host_values: PreprocessedHostRuleset[TRuleValue] = {}
+        ) -> Mapping[HostAddress, Sequence[TRuleValue]]:
+            host_values: dict[HostAddress, list[TRuleValue]] = {}
             for rule in ruleset:
                 if is_disabled(rule):
                     continue

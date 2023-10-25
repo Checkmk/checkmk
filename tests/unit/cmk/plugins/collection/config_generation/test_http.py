@@ -8,7 +8,30 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from cmk.config_generation.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
+from cmk.plugins.collection.config_generation.http import (
+    active_check_http,
+    DirectHost,
+    Family,
+    HostSettings,
+    HTTPParams,
+    URLMode,
+)
+
+HOST_CONFIG = HostConfig(
+    name="hostname",
+    address="0.0.0.1",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+    ipv4address="0.0.0.2",
+    ipv6address="fe80::240",
+    additional_ipv4addresses=["0.0.0.4", "0.0.0.5"],
+    additional_ipv6addresses=[
+        "fe80::241",
+        "fe80::242",
+        "fe80::243",
+    ],
+)
 
 
 @pytest.mark.parametrize(
@@ -81,7 +104,7 @@ from tests.testlib import ActiveCheck
                 "CONNECT",
                 "--sni",
                 "-b",
-                "user:pwd",
+                PlainTextSecret(value="pwd", format="user:%s"),
                 "-I",
                 "163.172.86.64",
                 "-H",
@@ -192,7 +215,7 @@ from tests.testlib import ActiveCheck
                 "CONNECT",
                 "--sni",
                 "-b",
-                ("store", "check_http", "user:%s"),
+                StoredSecret(value="check_http", format="user:%s"),
                 "-p",
                 "23",
                 "-I",
@@ -203,6 +226,7 @@ from tests.testlib import ActiveCheck
         ),
         (
             {
+                "name": "irrelevant",
                 "host": {
                     "address": ("proxy", {"address": "[dead:beef::face]", "port": 23}),
                     "port": 42,
@@ -229,6 +253,7 @@ from tests.testlib import ActiveCheck
         ),
         (
             {
+                "name": "irrelevant",
                 "host": {"address": ("direct", "www.test123.com")},
                 "mode": ("url", {"ssl": "auto"}),
             },
@@ -303,7 +328,7 @@ from tests.testlib import ActiveCheck
             [
                 "--sni",
                 "-I",
-                "$_HOSTADDRESS_4$",
+                "0.0.0.2",
                 "-H",
                 "virtual.host",
             ],
@@ -317,7 +342,7 @@ from tests.testlib import ActiveCheck
             [
                 "--sni",
                 "-I",
-                "$_HOSTADDRESS_4$",
+                "0.0.0.2",
             ],
         ),
         pytest.param(
@@ -340,7 +365,7 @@ from tests.testlib import ActiveCheck
                 "-I",
                 "proxy",
                 "-H",
-                "$_HOSTADDRESS_6$:43",
+                "fe80::240:43",
             ],
             id="proxy + virtual host (which is ignored)",
         ),
@@ -387,7 +412,7 @@ from tests.testlib import ActiveCheck
                 "-c",
                 "0.200000",
                 "-t",
-                10,
+                "10",
                 "-A",
                 "user",
                 "-k",
@@ -395,7 +420,7 @@ from tests.testlib import ActiveCheck
                 "-k",
                 "line2",
                 "-a",
-                "user:password",
+                PlainTextSecret(value="password", format="user:%s"),
                 "--onredirect=warning",
                 "-e",
                 "Checkmk",
@@ -418,7 +443,7 @@ from tests.testlib import ActiveCheck
                 "-m",
                 "1:500",
                 "-M",
-                86400,
+                "86400",
                 "-L",
                 "-4",
                 "--sni",
@@ -437,7 +462,7 @@ from tests.testlib import ActiveCheck
                 "host": {},
                 "mode": ("url", {"expect_regex": ("checkmk", False, False, False)}),
             },
-            ["-r", "checkmk", "--sni", "-I", "$_HOSTADDRESS_4$"],
+            ["-r", "checkmk", "--sni", "-I", "0.0.0.2"],
             id="check url, regex without additional options",
         ),
     ],
@@ -447,8 +472,11 @@ def test_check_http_argument_parsing(
     expected_args: Sequence[object],
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_http")
-    assert active_check.run_argument_function(params) == expected_args
+    parsed_params = active_check_http.parameter_parser(params)
+    commands = list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_args
 
 
 @pytest.mark.parametrize(
@@ -493,5 +521,80 @@ def test_check_http_service_description(
     params: Mapping[str, Any],
     expected_description: str,
 ) -> None:
-    active_check = ActiveCheck("check_http")
-    assert active_check.run_service_description(params) == expected_description
+    parsed_params = active_check_http.parameter_parser(params)
+    commands = list(active_check_http.commands_function(parsed_params, HOST_CONFIG, {}))
+
+    assert len(commands) == 1
+    assert commands[0].service_description == expected_description
+
+
+@pytest.mark.parametrize(
+    "params, expected_result",
+    [
+        (
+            {
+                "name": "myservice",
+                "host": {
+                    "address": ("direct", "checkmk.com"),
+                    "port": 443,
+                    "address_family": "ipv4_enforced",
+                    "virthost": "virthost",
+                },
+                "mode": (
+                    "url",
+                    {
+                        "uri": "/product",
+                        "ssl": "1.2",
+                        "response_time": (100.0, 200.0),
+                        "timeout": 10,
+                        "user_agent": "user",
+                        "add_headers": ["line1", "line2"],
+                        "auth": ("user", ("password", "password")),
+                        "onredirect": "warning",
+                        "expect_response_header": "Product | Checkmk",
+                        "expect_response": ["Checkmk"],
+                        "expect_string": "checkmk",
+                        "expect_regex": ("checkmk", True, True, True),
+                        "post_data": ("data", "text/html"),
+                        "method": "GET",
+                        "no_body": True,
+                        "page_size": (1, 500),
+                        "max_age": 86400,
+                        "urlize": True,
+                        "extended_perfdata": True,
+                    },
+                ),
+            },
+            HTTPParams(
+                name="myservice",
+                host=DirectHost(
+                    address="checkmk.com",
+                    settings=HostSettings(port=443, family=Family.enforce_ipv4, virtual="virthost"),
+                ),
+                mode=URLMode(
+                    uri="/product",
+                    ssl="1.2",
+                    response_time=(100.0, 200.0),
+                    timeout=10,
+                    user_agent="user",
+                    add_headers=["line1", "line2"],
+                    auth=("user", ("password", "password")),
+                    onredirect="warning",
+                    expect_response_header="Product | Checkmk",
+                    expect_response=["Checkmk"],
+                    expect_string="checkmk",
+                    expect_regex=("checkmk", True, True, True),
+                    post_data=("data", "text/html"),
+                    method="GET",
+                    no_body=True,
+                    page_size=(1, 500),
+                    max_age=86400,
+                    urlize=True,
+                    extended_perfdata=True,
+                ),
+            ),
+        )
+    ],
+)
+def test_parse_http_params(params: Mapping[str, object], expected_result: HTTPParams) -> None:
+    assert active_check_http.parameter_parser(params) == expected_result

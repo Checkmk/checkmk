@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import assert_never, Literal, TypedDict
+from typing import assert_never, Generator, Literal, TypedDict
 
 from cmk.utils.paths import robotmk_html_log_dir  # pylint: disable=cmk-module-layer-violation
 
@@ -85,6 +85,14 @@ def _item(result: robotmk_api.Result, test: robotmk_api.Test) -> str:
     return f"{result.suite_name} {test.id_}"
 
 
+def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> Generator[Service, None, None]:
+    if not result.outcome.Executed.rebot.Ok:
+        return
+
+    for test_name in extract_tests_from_suites(result.outcome.Executed.rebot.Ok.xml.robot.suite):
+        yield Service(item=test_name)
+
+
 def discover(section: robotmk_api.Section) -> DiscoveryResult:
     for result in section:
         if isinstance(result, robotmk_api.Result):
@@ -103,10 +111,7 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
 
         if isinstance(result, robotmk_api.SuiteExecutionReport):
             yield Service(item=f"Suite {result.suite_name}")
-            for test_name in extract_tests_from_suites(
-                result.outcome.Executed.rebot.Ok.xml.robot.suite
-            ):
-                yield Service(item=test_name)
+            yield from _discover_tests(result)
 
 
 def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:

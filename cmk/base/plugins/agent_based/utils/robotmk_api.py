@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Literal
 
 import xmltodict
-from pydantic import BaseModel, BeforeValidator, Json, TypeAdapter
+from pydantic import BaseModel, BeforeValidator, Field, Json, TypeAdapter
 from typing_extensions import Annotated
 
 from .robotmk_parse_xml import Rebot
@@ -50,8 +50,8 @@ class RebotResult(JSON, frozen=True):
 
 
 class RebotOutcome(JSON, frozen=True):
-    Ok: RebotResult
-    Error: str | None = None
+    Ok: RebotResult | None = Field(default=None)
+    Error: str | None = Field(default=None)
 
 
 class AttemptsOutcome(JSON, frozen=True):
@@ -61,7 +61,7 @@ class AttemptsOutcome(JSON, frozen=True):
 
 class ExecutionReport(JSON, frozen=True):
     Executed: AttemptsOutcome
-    AlreadyRunning: Literal["AlreadyRunning"] | None = None
+    AlreadyRunning: Literal["AlreadyRunning"] | None = Field(default=None)
 
 
 class SuiteExecutionReport(JSON, frozen=True):
@@ -114,7 +114,6 @@ class ExecutionConfig(JSON, frozen=True):
 class EnvironmentConfig(JSON, frozen=True):
     type: str
     binary_path: str
-    robocorp_home_path: str
     robot_yaml_path: str
     build_timeout: int
 

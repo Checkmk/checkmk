@@ -582,8 +582,8 @@ def _render_ajax_graph(
     end_time_var = request.var("end_time")
     step_var = request.var("step")
     if start_time_var is not None and end_time_var is not None and step_var is not None:
-        start_time = int(start_time_var)
-        end_time = int(end_time_var)
+        start_time = int(float(start_time_var))
+        end_time = int(float(end_time_var))
         # since step can be relatively small, we round
         step: int | str = int(round(float(step_var)))
     else:

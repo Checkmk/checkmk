@@ -487,7 +487,7 @@ class RulesetOptimizer:
 
             return host_values
 
-        cache_id = id(ruleset), with_foreign_hosts
+        cache_id = hash(tuple(rule["id"] for rule in ruleset)), with_foreign_hosts
         with contextlib.suppress(KeyError):
             return self.__host_ruleset_cache[cache_id]
 
@@ -529,7 +529,7 @@ class RulesetOptimizer:
                 )
             return new_rules
 
-        cache_id = id(ruleset), with_foreign_hosts
+        cache_id = hash(tuple(rule["id"] for rule in ruleset)), with_foreign_hosts
         with contextlib.suppress(KeyError):
             return self.__service_ruleset_cache[cache_id]
 

@@ -13,12 +13,12 @@ OPENSSL_VERSION=3.0.11
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR="/opt"
+TARGET="" # for x64, use the default target
 
 # OpenSSL "config" seems to have problems with detecting 32bit architecture in some cases
-CONFIG_COMMAND=config
-[ "${ARCHITECTURE}" = i386 ] && CONFIG_COMMAND="Configure linux-x86"
+[ "${ARCHITECTURE}" = i386 ] && TARGET="linux-x86"
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=7
+BUILD_ID=8
 
 build_package() {
     mkdir -p "$TARGET_DIR/src"
@@ -30,7 +30,7 @@ build_package() {
     # Now build the package
     tar xf "${ARCHIVE_NAME}"
     cd "${DIR_NAME}"
-    ./"${CONFIG_COMMAND}" --libdir=lib --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
+    ./config "${TARGET}" --libdir=lib --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
     make -j6
     make install
 

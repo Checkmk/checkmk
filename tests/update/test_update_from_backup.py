@@ -21,11 +21,11 @@ from tests.testlib.utils import (
     get_services_with_status,
     qa_test_data_path,
 )
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion, version_from_env
+from tests.update.conftest import BaseVersions
 
 from cmk.utils.version import Edition
 
-from tests.update.conftest import BaseVersions
 
 logger = logging.getLogger(__name__)
 
@@ -106,12 +106,17 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
         assert len(base_ok_services[hostname]) > 0
 
-    target_version = CMKVersion(
-        CMKVersion.DAILY, Edition.CEE, current_base_branch_name(), current_branch_version()
+    target_version = version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CEE,
+        fallback_branch=current_base_branch_name(),
     )
+    assert target_version.edition == Edition.CEE, "This test works with CEE only"
+
     min_version = CMKVersion(
         BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name(), current_branch_version()
     )
+
     target_site = site_factory.interactive_update(base_site, target_version, min_version)
 
     target_services = {}
@@ -180,9 +185,12 @@ def test_update_from_backup_demo(
 
         assert len(base_services[hostname]) > 0, f"No services found in host {hostname}"
 
-    target_version = CMKVersion(
-        CMKVersion.DAILY, Edition.CCE, current_base_branch_name(), current_branch_version()
+    target_version = version_from_env(
+        fallback_version_spec=CMKVersion.DAILY,
+        fallback_edition=Edition.CCE,
+        fallback_branch=current_base_branch_name(),
     )
+    assert target_version.edition == Edition.CCE, "This test works with CCE only"
 
     site_factory_demo = SiteFactory(
         version=target_version,

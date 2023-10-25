@@ -8,10 +8,12 @@ NAGIOS_INSTALL := $(BUILD_HELPER_DIR)/$(NAGIOS_DIR)-install
 # as non-root, we use our own user and group for compiling.
 # All files will be packaged as user 'root' later anyway.
 
+.PHONY: $(NAGIOS_BUILD)
 $(NAGIOS_BUILD):
 	$(BAZEL_BUILD) @$(NAGIOS)//:$(NAGIOS)
 	$(BAZEL_BUILD) @$(NAGIOS)//:skel
 
+.PHONY: $(NAGIOS_INSTALL)
 $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(NAGIOS)/$(NAGIOS)/ $(DESTDIR)$(OMD_ROOT)/
 	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(NAGIOS)/bin $(DESTDIR)$(OMD_ROOT)/
@@ -23,4 +25,3 @@ $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/nagios/p1.pl
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/doc/nagios/*
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/diskspace/nagios
-	$(TOUCH) $@

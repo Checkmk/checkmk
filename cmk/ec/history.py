@@ -190,7 +190,7 @@ class MongoDBHistory(History):
         _reload_configuration_mongodb(self)
 
     def flush(self) -> None:
-        _flush_mongodb(self)
+        self._mongodb.db.ec_archive.drop()
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
         _add_mongodb(self, event, what, who, addinfo)
@@ -272,10 +272,6 @@ def _mongodb_local_connection_opts(settings: Settings) -> tuple[str | None, int 
             elif entry.startswith("port"):
                 port = int(entry.split("=")[1].strip())
     return ip, port
-
-
-def _flush_mongodb(history: MongoDBHistory) -> None:
-    history._mongodb.db.ec_archive.drop()
 
 
 def _get_mongodb_max_history_age(mongodb: MongoDB) -> int:

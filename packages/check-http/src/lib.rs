@@ -1,13 +1,17 @@
 use anyhow::Result as AnyhowResult;
 use http::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{
-    header::USER_AGENT, Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult,
-    StatusCode, Version,
+    header::USER_AGENT,
+    redirect::{Action, Attempt, Policy},
+    Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
 use std::{
     fmt::{Display, Formatter, Result as FormatResult},
+    net::SocketAddr,
     time::{Duration, Instant},
 };
+
+use crate::cli::OnRedirect;
 
 pub mod cli;
 mod pwstore;
@@ -84,6 +88,8 @@ pub async fn check_http(args: cli::Cli) -> Output {
         args.timeout,
         args.auth_user,
         args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
+        args.onredirect.clone(),
+        args.max_redirs,
     ) {
         Ok(req) => req,
         Err(_) => {
@@ -98,15 +104,18 @@ pub async fn check_http(args: cli::Cli) -> Output {
                 return Output::from_short(State::Crit, "timeout");
             } else if err.is_connect() {
                 return Output::from_short(State::Crit, "Failed to connect");
+            } else if err.is_redirect() {
+                return Output::from_short(State::Crit, &err.to_string()); // Hit one of max_redirs, sticky, stickyport
             } else {
                 return Output::from_short(State::Unknown, "Error while sending request");
             }
         }
     };
 
-    check_response(response).await
+    check_response(response, args.onredirect).await
 }
 
+#[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
 fn prepare_request(
     url: String,
     method: Method,
@@ -115,6 +124,8 @@ fn prepare_request(
     timeout: Duration,
     auth_user: Option<String>,
     auth_pw: Option<String>,
+    onredirect: OnRedirect,
+    max_redirs: usize,
 ) -> AnyhowResult<RequestBuilder> {
     let mut cli_headers = HeaderMap::new();
     if let Some(ua) = user_agent {
@@ -124,7 +135,9 @@ fn prepare_request(
         cli_headers.extend(hds);
     }
 
+    let redirect_policy = get_redirect_policy(onredirect, max_redirs);
     let client = reqwest::Client::builder()
+        .redirect(redirect_policy)
         .timeout(timeout)
         .default_headers(cli_headers)
         .build()?;
@@ -135,6 +148,56 @@ fn prepare_request(
     } else {
         Ok(req)
     }
+}
+
+fn get_redirect_policy(onredirect: OnRedirect, max_redirs: usize) -> Policy {
+    match onredirect {
+        OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::none(),
+        OnRedirect::Follow => Policy::limited(max_redirs),
+        OnRedirect::Sticky => Policy::custom(move |att| policy_sticky(att, max_redirs, false)),
+        OnRedirect::Stickyport => Policy::custom(move |att| policy_sticky(att, max_redirs, true)),
+    }
+}
+
+fn policy_sticky(attempt: Attempt, max_redirs: usize, sticky_port: bool) -> Action {
+    if attempt.previous().len() > max_redirs {
+        return attempt.error("too many redirects");
+    }
+
+    let previous_socket_addr = attempt
+        .previous()
+        .last()
+        .unwrap()
+        .socket_addrs(|| None)
+        .unwrap();
+    let socket_addr = attempt.url().socket_addrs(|| None).unwrap();
+
+    match sticky_port {
+        false => {
+            if contains_unchanged_ip(&previous_socket_addr, &socket_addr) {
+                attempt.follow()
+            } else {
+                attempt.error("Detected changed IP")
+            }
+        }
+        true => {
+            if contains_unchanged_addr(&previous_socket_addr, &socket_addr) {
+                attempt.follow()
+            } else {
+                attempt.error("Detected changed IP/port")
+            }
+        }
+    }
+}
+
+fn contains_unchanged_ip(old: &[SocketAddr], new: &[SocketAddr]) -> bool {
+    old.iter()
+        .any(|addr| new.iter().any(|prev_addr| prev_addr.ip() == addr.ip()))
+}
+
+fn contains_unchanged_addr(old: &[SocketAddr], new: &[SocketAddr]) -> bool {
+    old.iter()
+        .any(|addr| new.iter().any(|prev_addr| prev_addr == addr))
 }
 
 async fn perform_request(
@@ -162,11 +225,17 @@ async fn perform_request(
     })
 }
 
-async fn check_response(response: ProcessedResponse) -> Output {
+async fn check_response(response: ProcessedResponse, onredirect: OnRedirect) -> Output {
     let response_state = if response.status.is_client_error() {
         State::Warn
     } else if response.status.is_server_error() {
         State::Crit
+    } else if response.status.is_redirection() {
+        match onredirect {
+            OnRedirect::Warning => State::Warn,
+            OnRedirect::Critical => State::Crit,
+            _ => State::Ok, // If we reach this point, the redirect is ok
+        }
     } else {
         State::Ok
     };
@@ -190,4 +259,49 @@ async fn check_response(response: ProcessedResponse) -> Output {
             response.elapsed.subsec_millis()
         ),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::SocketAddr;
+
+    use crate::{contains_unchanged_addr, contains_unchanged_ip};
+
+    #[test]
+    fn test_contains_unchanged_ip() {
+        let old_addrs: Vec<SocketAddr> = vec![
+            "1.2.3.4:80".parse().unwrap(),
+            "[1234:abcd::]:80".parse().unwrap(),
+        ];
+        let new_addrs = old_addrs.clone();
+        assert!(contains_unchanged_ip(&old_addrs, &new_addrs));
+
+        let new_addrs: Vec<SocketAddr> = vec![
+            "1.2.3.4:443".parse().unwrap(),
+            "[2345:abcd::]:80".parse().unwrap(),
+        ];
+        assert!(contains_unchanged_ip(&old_addrs, &new_addrs));
+
+        let new_addrs: Vec<SocketAddr> = vec![
+            "2.3.4.5:80".parse().unwrap(),
+            "[2345:abcd::]:80".parse().unwrap(),
+        ];
+        assert!(!contains_unchanged_ip(&old_addrs, &new_addrs));
+    }
+
+    #[test]
+    fn test_contains_unchanged_addr() {
+        let old_addrs: Vec<SocketAddr> = vec![
+            "1.2.3.4:80".parse().unwrap(),
+            "[1234:abcd::]:80".parse().unwrap(),
+        ];
+        let new_addrs = old_addrs.clone();
+        assert!(contains_unchanged_addr(&old_addrs, &new_addrs));
+
+        let new_addrs: Vec<SocketAddr> = vec![
+            "1.2.3.4:443".parse().unwrap(),
+            "[2345:abcd::]:80".parse().unwrap(),
+        ];
+        assert!(!contains_unchanged_addr(&old_addrs, &new_addrs));
+    }
 }

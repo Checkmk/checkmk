@@ -1,6 +1,6 @@
 use crate::pwstore;
 use anyhow::{anyhow, Result as AnyhowResult};
-use clap::{Args, Parser};
+use clap::{Args, Parser, ValueEnum};
 use http::{HeaderName, HeaderValue, Method};
 use std::time::Duration;
 
@@ -37,6 +37,25 @@ pub struct Cli {
     /// Set HTTP method. Default: GET
     #[arg(short='j', long, default_value_t=Method::GET)]
     pub method: Method,
+
+    /// How to handle redirected pages. sticky is like follow but stick to the
+    /// specified IP address. stickyport also ensures port stays the same.
+    #[arg(short = 'f', long, default_value = "follow")]
+    pub onredirect: OnRedirect,
+
+    /// Maximal number of redirects
+    #[arg(long, default_value_t = 15)]
+    pub max_redirs: usize,
+}
+
+#[derive(Clone, Debug, ValueEnum)]
+pub enum OnRedirect {
+    Ok,
+    Warning,
+    Critical,
+    Follow,
+    Sticky,
+    Stickyport,
 }
 
 #[derive(Args, Debug)]

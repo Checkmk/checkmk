@@ -8,7 +8,7 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, Literal, NamedTuple, Required, TypeAlias, TypeVar
+from typing import Any, cast, Generic, Literal, NamedTuple, NotRequired, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
@@ -93,11 +93,11 @@ class RuleConditionsSpec(TypedDict, total=False):
     host_folder: str
 
 
-class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
-    value: Required[TRuleValue]
-    condition: Required[RuleConditionsSpec]
-    id: Required[str]  # a UUID if provided by either the GUI or the REST API
-    options: RuleOptionsSpec
+class RuleSpec(Generic[TRuleValue], TypedDict):
+    value: TRuleValue
+    condition: RuleConditionsSpec
+    id: str  # a UUID if provided by either the GUI or the REST API
+    options: NotRequired[RuleOptionsSpec]
 
 
 def is_disabled(rule: RuleSpec[TRuleValue]) -> bool:

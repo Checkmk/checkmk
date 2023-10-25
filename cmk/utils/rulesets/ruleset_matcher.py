@@ -171,7 +171,7 @@ class RulesetMatcher:
             tuple[HostName, ServiceName, Item | None], RulesetMatchObject
         ] = {}
 
-    def get_host_bool_value(self, hostname: HostName, ruleset: Iterable[RuleSpec[bool]]) -> bool:
+    def get_host_bool_value(self, hostname: HostName, ruleset: Sequence[RuleSpec[bool]]) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -189,7 +189,7 @@ class RulesetMatcher:
     def get_host_merged_dict(
         self,
         hostname: HostName,
-        ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]],
+        ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -203,7 +203,7 @@ class RulesetMatcher:
     def get_host_values(
         self,
         hostname: HostName | HostAddress,
-        ruleset: Iterable[RuleSpec[TRuleValue]],
+        ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> Sequence[TRuleValue]:
         """Returns a generator of the values of the matched rules."""
 
@@ -258,7 +258,7 @@ class RulesetMatcher:
         )
 
     def get_service_bool_value(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec[TRuleValue]]
+        self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -278,7 +278,7 @@ class RulesetMatcher:
         self,
         hostname: HostName,
         description: ServiceName,
-        ruleset: Iterable[RuleSpec[Mapping[str, TRuleValue]]],
+        ruleset: Sequence[RuleSpec[Mapping[str, TRuleValue]]],
     ) -> Mapping[str, TRuleValue]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
@@ -295,7 +295,7 @@ class RulesetMatcher:
         return merged
 
     def service_extra_conf(
-        self, hostname: HostName, description: ServiceName, ruleset: Iterable[RuleSpec[TRuleValue]]
+        self, hostname: HostName, description: ServiceName, ruleset: Sequence[RuleSpec[TRuleValue]]
     ) -> list[TRuleValue]:
         """Compute outcome of a service rule set that has an item."""
         return list(
@@ -309,7 +309,7 @@ class RulesetMatcher:
         hostname: HostName,
         description: ServiceName,
         item: Item,
-        ruleset: Iterable[RuleSpec[TRuleValue]],
+        ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> list[TRuleValue]:
         return list(
             self.get_service_ruleset_values(
@@ -320,7 +320,7 @@ class RulesetMatcher:
     def get_service_ruleset_values(
         self,
         match_object: RulesetMatchObject,
-        ruleset: Iterable[RuleSpec[TRuleValue]],
+        ruleset: Sequence[RuleSpec[TRuleValue]],
     ) -> Iterator[TRuleValue]:
         """Returns a generator of the values of the matched rules"""
         with_foreign_hosts = (
@@ -472,7 +472,7 @@ class RulesetOptimizer:
         )
 
     def get_host_ruleset(
-        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
+        self, ruleset: Sequence[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> Mapping[HostAddress, Sequence[TRuleValue]]:
         def _impl(
             ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
@@ -494,7 +494,7 @@ class RulesetOptimizer:
         return self.__host_ruleset_cache.setdefault(cache_id, _impl(ruleset, with_foreign_hosts))
 
     def get_service_ruleset(
-        self, ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool
+        self, ruleset: Sequence[RuleSpec[TRuleValue]], with_foreign_hosts: bool
     ) -> PreprocessedServiceRuleset[TRuleValue]:
         def _impl(
             ruleset: Iterable[RuleSpec[TRuleValue]], with_foreign_hosts: bool

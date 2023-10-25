@@ -250,7 +250,7 @@ timeperiods: TimeperiodSpecs = {}
 clusters: dict[HostName, list[HostName]] = {}
 clustered_services: list[RuleSpec[object]] = []
 # new in 1.1.4
-clustered_services_of: dict[HostAddress, Iterable[RuleSpec[object]]] = {}
+clustered_services_of: dict[HostAddress, Sequence[RuleSpec[object]]] = {}
 # new for 1.2.5i1 Wato Rule
 clustered_services_mapping: list[RuleSpec[HostAddress]] = []
 clustered_services_configuration: list[

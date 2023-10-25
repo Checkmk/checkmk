@@ -187,7 +187,7 @@ class MongoDBHistory(History):
         self._logger = logger
         self._event_columns = event_columns
         self._mongodb = MongoDB()
-        _reload_configuration_mongodb(self)
+        self._reload_configuration_mongodb()
 
     def flush(self) -> None:
         self._mongodb.db.ec_archive.drop()
@@ -284,6 +284,11 @@ class MongoDBHistory(History):
     def housekeeping(self) -> None:
         """Not needed in mongo since the lifetime of DB entries is taken care automatically."""
 
+    def _reload_configuration_mongodb(self) -> None:
+        """Configure the auto deleting indexes in the DB"""
+        _update_mongodb_indexes(self._settings, self._mongodb)
+        _update_mongodb_history_lifetime(self._settings, self._config, self._mongodb)
+
 
 def create_history(
     settings: Settings,
@@ -327,12 +332,6 @@ class MongoDB:
     def __init__(self) -> None:
         self.connection: pymongo.MongoClient | None = None
         self.db: Any = None
-
-
-def _reload_configuration_mongodb(history: MongoDBHistory) -> None:
-    # Configure the auto deleting indexes in the DB
-    _update_mongodb_indexes(history._settings, history._mongodb)
-    _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
 
 
 def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:

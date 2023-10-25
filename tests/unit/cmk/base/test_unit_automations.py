@@ -90,14 +90,17 @@ def test_service_labels(monkeypatch):
             [
                 {
                     "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "01",
                     "value": {"label1": "val1"},
                 },
                 {
                     "condition": {"service_description": [{"$regex": "CPU load"}]},
+                    "id": "02",
                     "value": {"label2": "val2"},
                 },
                 {
                     "condition": {"service_description": [{"$regex": "CPU temp"}]},
+                    "id": "03",
                     "value": {"label1": "val1"},
                 },
             ]

@@ -167,6 +167,7 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                     },
+                    "id": "01",
                     "value": {"label1": "val1"},
                 },
                 {
@@ -174,6 +175,7 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                     },
+                    "id": "02",
                     "value": {"label2": "val2"},
                 },
             ],

@@ -11,6 +11,7 @@ Tests for legacy tuple rulesets.
 # pylint: disable=redefined-outer-name
 
 from collections.abc import Mapping, Sequence
+from typing import Final
 
 import pytest
 
@@ -47,47 +48,59 @@ def ts(monkeypatch):
 
 
 def test_service_extra_conf(ts: Scenario) -> None:
-    ruleset: Sequence[RuleSpec[str]] = [
-        {"condition": {}, "options": {}, "value": "1"},
-        {"condition": {}, "options": {}, "value": "2"},
+    ruleset: Final[Sequence[RuleSpec[str]]] = [
+        {"condition": {}, "id": "01", "options": {}, "value": "1"},
+        {"condition": {}, "id": "02", "options": {}, "value": "2"},
         {
             "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
+            "id": "03",
             "options": {},
             "value": "3",
         },
         {
             "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+            "id": "04",
             "options": {},
             "value": "4",
         },
         {
             "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}},
+            "id": "05",
             "options": {},
             "value": "5",
         },
         {
             "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}, "host_name": ["host1"]},
+            "id": "06",
             "options": {},
             "value": "6",
         },
-        {"condition": {"host_name": ["host1"]}, "options": {}, "value": "7"},
+        {"condition": {"host_name": ["host1"]}, "options": {}, "id": "07", "value": "7"},
         {
             "condition": {"service_description": [{"$regex": "service1$"}], "host_name": ["host1"]},
+            "id": "08",
             "options": {},
             "value": "8",
         },
         {
             "condition": {"service_description": [{"$regex": "ser$"}], "host_name": ["host1"]},
+            "id": "09",
             "options": {},
             "value": "9",
         },
         {
             "condition": {"service_description": [{"$regex": "^serv$"}], "host_name": ["host1"]},
+            "id": "10",
             "options": {},
             "value": "10",
         },
-        {"condition": {"host_name": [{"$regex": "host"}]}, "options": {}, "value": "11"},
-        {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": "12"},
+        {
+            "condition": {"host_name": [{"$regex": "host"}]},
+            "id": "11",
+            "options": {},
+            "value": "11",
+        },
+        {"condition": {"host_name": {"$nor": ["host2"]}}, "id": "12", "options": {}, "value": "12"},
     ]
 
     matcher = ts.config_cache.ruleset_matcher
@@ -121,47 +134,60 @@ def test_service_extra_conf(ts: Scenario) -> None:
     ]
 
 
-@pytest.fixture(scope="function")
-def host_ruleset():
-    return [
-        {"condition": {}, "options": {}, "value": {"1": True}},
-        {
-            "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
-            "options": {},
-            "value": {"2": True},
+HOST_RULESET: Final[Sequence[RuleSpec[Mapping[str, bool]]]] = [
+    {"condition": {}, "id": "01", "options": {}, "value": {"1": True}},
+    {
+        "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
+        "id": "02",
+        "options": {},
+        "value": {"2": True},
+    },
+    {
+        "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+        "id": "03",
+        "options": {},
+        "value": {"3": True},
+    },
+    {
+        "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}},
+        "id": "04",
+        "options": {},
+        "value": {"4": True},
+    },
+    {
+        "condition": {
+            "host_tags": {TagGroupID("agent"): TagID("no-agent")},
+            "host_name": ["host1"],
         },
-        {
-            "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
-            "options": {},
-            "value": {"3": True},
-        },
-        {
-            "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}},
-            "options": {},
-            "value": {"4": True},
-        },
-        {
-            "condition": {
-                "host_tags": {TagGroupID("agent"): TagID("no-agent")},
-                "host_name": ["host1"],
-            },
-            "options": {},
-            "value": {"5": True},
-        },
-        {
-            "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}, "host_name": ["host1"]},
-            "options": {},
-            "value": {"6": True},
-        },
-        {"condition": {"host_name": ["host1"]}, "options": {}, "value": {"7": True}},
-        {"condition": {"host_name": [{"$regex": "host"}]}, "options": {}, "value": {"8": True}},
-        {"condition": {"host_name": {"$nor": ["host2"]}}, "options": {}, "value": {"9": True}},
-    ]
+        "id": "05",
+        "options": {},
+        "value": {"5": True},
+    },
+    {
+        "condition": {"host_tags": {TagGroupID("tag3"): TagID("tag3")}, "host_name": ["host1"]},
+        "id": "06",
+        "options": {},
+        "value": {"6": True},
+    },
+    {"condition": {"host_name": ["host1"]}, "id": "07", "options": {}, "value": {"7": True}},
+    {
+        "condition": {"host_name": [{"$regex": "host"}]},
+        "id": "08",
+        "options": {},
+        "value": {"8": True},
+    },
+    {
+        "condition": {"host_name": {"$nor": ["host2"]}},
+        "id": "09",
+        "options": {},
+        "value": {"9": True},
+    },
+]
 
 
-def test_get_host_values(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]]) -> None:
+def test_get_host_values(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
-    assert ruleset_matcher.get_host_values(HostName("host1"), host_ruleset) == [
+    assert ruleset_matcher.get_host_values(HostName("host1"), HOST_RULESET) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -171,18 +197,16 @@ def test_get_host_values(ts: Scenario, host_ruleset: Sequence[RuleSpec[object]])
         {"9": True},
     ]
 
-    assert ruleset_matcher.get_host_values(HostName("host2"), host_ruleset) == [
+    assert ruleset_matcher.get_host_values(HostName("host2"), HOST_RULESET) == [
         {"1": True},
         {"2": True},
         {"8": True},
     ]
 
 
-def test_get_host_merged_dict(
-    ts: Scenario, host_ruleset: Sequence[RuleSpec[Mapping[str, object]]]
-) -> None:
+def test_get_host_merged_dict(ts: Scenario) -> None:
     ruleset_matcher = ts.config_cache.ruleset_matcher
-    assert ruleset_matcher.get_host_merged_dict(HostName("host1"), host_ruleset) == {
+    assert ruleset_matcher.get_host_merged_dict(HostName("host1"), HOST_RULESET) == {
         "1": True,
         "2": True,
         "3": True,
@@ -192,7 +216,7 @@ def test_get_host_merged_dict(
         "9": True,
     }
 
-    assert ruleset_matcher.get_host_merged_dict(HostName("host2"), host_ruleset) == {
+    assert ruleset_matcher.get_host_merged_dict(HostName("host2"), HOST_RULESET) == {
         "1": True,
         "2": True,
         "8": True,
@@ -205,13 +229,20 @@ def test_get_host_merged_dict(
         # ruleset, outcome host1, outcome host2
         ([], False, False),
         (
-            [{"condition": {}, "options": {}, "value": False}],
+            [{"condition": {}, "id": "01", "options": {}, "value": False}],
             False,
             False,
         ),
-        ([{"condition": {}, "options": {}, "value": True}], True, True),
+        ([{"condition": {}, "id": "02", "options": {}, "value": True}], True, True),
         (
-            [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": True}],
+            [
+                {
+                    "condition": {"host_name": {"$nor": ["host1"]}},
+                    "id": "03",
+                    "options": {},
+                    "value": True,
+                }
+            ],
             False,
             True,
         ),
@@ -219,6 +250,7 @@ def test_get_host_merged_dict(
             [
                 {
                     "condition": {"host_name": {"$nor": ["host1", "host2"]}},
+                    "id": "04",
                     "options": {},
                     "value": True,
                 }
@@ -230,6 +262,7 @@ def test_get_host_merged_dict(
             [
                 {
                     "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+                    "id": "05",
                     "options": {},
                     "value": True,
                 }
@@ -244,6 +277,7 @@ def test_get_host_merged_dict(
                         "host_tags": {TagGroupID("criticality"): TagID("test")},
                         "host_name": {"$nor": ["host1"]},
                     },
+                    "id": "06",
                     "options": {},
                     "value": True,
                 }
@@ -252,12 +286,26 @@ def test_get_host_merged_dict(
             False,
         ),
         (
-            [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": True}],
+            [
+                {
+                    "condition": {"host_name": {"$nor": ["host1"]}},
+                    "id": "07",
+                    "options": {},
+                    "value": True,
+                }
+            ],
             False,
             True,
         ),
         (
-            [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": False}],
+            [
+                {
+                    "condition": {"host_name": {"$nor": ["host1"]}},
+                    "id": "08",
+                    "options": {},
+                    "value": False,
+                }
+            ],
             False,
             False,
         ),
@@ -268,6 +316,7 @@ def test_get_host_merged_dict(
                         "host_tags": {TagGroupID("criticality"): TagID("test")},
                         "host_name": {"$nor": ["host1"]},
                     },
+                    "id": "08",
                     "options": {},
                     "value": False,
                 }
@@ -279,6 +328,7 @@ def test_get_host_merged_dict(
             [
                 {
                     "condition": {"service_description": [{"$regex": "serv"}]},
+                    "id": "09",
                     "options": {},
                     "value": True,
                 }
@@ -290,6 +340,7 @@ def test_get_host_merged_dict(
             [
                 {
                     "condition": {"service_description": [{"$regex": "serv"}]},
+                    "id": "10",
                     "options": {},
                     "value": False,
                 }
@@ -301,6 +352,7 @@ def test_get_host_merged_dict(
             [
                 {
                     "condition": {"service_description": [{"$regex": "service1"}]},
+                    "id": "11",
                     "options": {},
                     "value": False,
                 }
@@ -314,6 +366,7 @@ def test_get_host_merged_dict(
             [
                 {
                     "condition": {"service_description": [{"$regex": "service1"}]},
+                    "id": "12",
                     "options": {},
                     "value": False,
                 },

@@ -96,7 +96,7 @@ class RuleConditionsSpec(TypedDict, total=False):
 class RuleSpec(Generic[TRuleValue], TypedDict, total=False):
     value: Required[TRuleValue]
     condition: Required[RuleConditionsSpec]
-    id: str  # Should not be optional but nearly not test has that attribute set!
+    id: Required[str]  # a UUID if provided by either the GUI or the REST API
     options: RuleOptionsSpec
 
 

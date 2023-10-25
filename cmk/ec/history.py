@@ -81,19 +81,96 @@ class FileHistory(History):
         self._history_columns = history_columns
         self._lock = threading.Lock()
         self._active_history_period = ActiveHistoryPeriod()
-        _reload_configuration_files(self)
 
     def flush(self) -> None:
-        _flush_files(self)
+        _expire_logfiles(self._settings, self._config, self._logger, self._lock, True)
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        _add_files(self, event, what, who, addinfo)
+        """Make a new entry in the event history.
+
+        Each entry is tab-separated line with the following columns:
+        0: time of log entry
+        1: type of entry (keyword)
+        2: user who initiated the action (for GUI actions)
+        3: additional information about the action
+        4-oo: StatusTableEvents.columns
+        """
+        _log_event(self._config, self._logger, event, what, who, addinfo)
+        with self._lock:
+            columns = [
+                quote_tab(str(time.time())),
+                quote_tab(scrub_string(what)),
+                quote_tab(scrub_string(who)),
+                quote_tab(scrub_string(addinfo)),
+            ]
+            columns += [
+                quote_tab(event.get(colname[6:], defval))  # drop "event_"
+                for colname, defval in self._event_columns
+            ]
+
+            with get_logfile(
+                self._config,
+                self._settings.paths.history_dir.value,
+                self._active_history_period,
+            ).open(mode="ab") as f:
+                f.write(b"\t".join(columns) + b"\n")
 
     def get(self, query: QueryGET) -> Iterable[Any]:
-        return _get_files(self, self._logger, query)
+        if not self._settings.paths.history_dir.value.exists():
+            return []
+
+        filters = query.filters
+        self._logger.debug("Filters: %r", filters)
+        limit = query.limit
+        self._logger.debug("Limit: %r", limit)
+
+        grep_pipeline = _grep_pipeline(filters)
+
+        time_filters = [
+            (operator_name, argument)
+            for column_name, operator_name, _predicate, argument in filters
+            if column_name.split("_")[-1] == "time"
+        ]
+        time_range = (
+            _greatest_lower_bound_for_filters(time_filters),
+            _least_upper_bound_for_filters(time_filters),
+        )
+        self._logger.debug("time range: %r", time_range)
+
+        # We do not want to open all files. So our strategy is:
+        # look for "time" filters and first apply the filter to
+        # the first entry and modification time of the file. Only
+        # if at least one of both timestamps is accepted then we
+        # take that file into account.
+        # Use the later logfiles first, to get the newer log entries
+        # first. When a limit is reached, the newer entries should
+        # be processed in most cases. We assume that now.
+        # To keep a consistent order of log entries, we should care
+        # about sorting the log lines in reverse, but that seems to
+        # already be done by the GUI, so we don't do that twice. Skipping
+        # this # will lead into some lines of a single file to be limited in
+        # wrong order. But this should be better than before.
+        history_entries: list[Any] = []
+        for path in sorted(self._settings.paths.history_dir.value.glob("*.log"), reverse=True):
+            if limit is not None and limit <= 0:
+                self._logger.debug("query limit reached")
+                break
+            if not _intersects(time_range, _get_logfile_timespan(path)):
+                self._logger.debug("skipping history file %s because of time filters", path)
+                continue
+            tac = f"nl -b a {shlex.quote(str(path))} | tac"  # Process younger lines first
+            cmd = " | ".join([tac] + grep_pipeline)
+            self._logger.debug("preprocessing history file with command [%s]", cmd)
+            new_entries = parse_history_file(
+                self._history_columns, path, query.filter_row, cmd, limit, self._logger
+            )
+            history_entries += new_entries
+            if limit is not None:
+                limit -= len(new_entries)
+        return history_entries
 
     def housekeeping(self) -> None:
-        _housekeeping_files(self)
+        _expire_logfiles(self._settings, self._config, self._logger, self._lock, False)
 
 
 class MongoDBHistory(History):
@@ -363,51 +440,6 @@ def _get_mongodb(  # pylint: disable=too-many-branches
 #   '----------------------------------------------------------------------'
 
 
-def _reload_configuration_files(history: History) -> None:
-    pass
-
-
-def _flush_files(history: FileHistory) -> None:
-    _expire_logfiles(history._settings, history._config, history._logger, history._lock, True)
-
-
-def _housekeeping_files(history: FileHistory) -> None:
-    _expire_logfiles(history._settings, history._config, history._logger, history._lock, False)
-
-
-def _add_files(
-    history: FileHistory, event: Event, what: HistoryWhat, who: str, addinfo: str
-) -> None:
-    """Make a new entry in the event history.
-
-    Each entry is tab-separated line with the following columns:
-    0: time of log entry
-    1: type of entry (keyword)
-    2: user who initiated the action (for GUI actions)
-    3: additional information about the action
-    4-oo: StatusTableEvents.columns
-    """
-    _log_event(history._config, history._logger, event, what, who, addinfo)
-    with history._lock:
-        columns = [
-            quote_tab(str(time.time())),
-            quote_tab(scrub_string(what)),
-            quote_tab(scrub_string(who)),
-            quote_tab(scrub_string(addinfo)),
-        ]
-        columns += [
-            quote_tab(event.get(colname[6:], defval))  # drop "event_"
-            for colname, defval in history._event_columns
-        ]
-
-        with get_logfile(
-            history._config,
-            history._settings.paths.history_dir.value,
-            history._active_history_period,
-        ).open(mode="ab") as f:
-            f.write(b"\t".join(columns) + b"\n")
-
-
 def quote_tab(col: Any) -> bytes:
     if isinstance(col, bool):
         return b"1" if col else b"0"
@@ -545,61 +577,6 @@ def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
 
 def _grep_pattern(argument: str) -> str:
     return f"-e {shlex.quote(argument)}"
-
-
-def _get_files(history: FileHistory, logger: Logger, query: QueryGET) -> Iterable[Any]:
-    if not history._settings.paths.history_dir.value.exists():
-        return []
-
-    filters = query.filters
-    logger.debug("Filters: %r", filters)
-    limit = query.limit
-    logger.debug("Limit: %r", limit)
-
-    grep_pipeline = _grep_pipeline(filters)
-
-    time_filters = [
-        (operator_name, argument)
-        for column_name, operator_name, _predicate, argument in filters
-        if column_name.split("_")[-1] == "time"
-    ]
-    time_range = (
-        _greatest_lower_bound_for_filters(time_filters),
-        _least_upper_bound_for_filters(time_filters),
-    )
-    logger.debug("time range: %r", time_range)
-
-    # We do not want to open all files. So our strategy is:
-    # look for "time" filters and first apply the filter to
-    # the first entry and modification time of the file. Only
-    # if at least one of both timestamps is accepted then we
-    # take that file into account.
-    # Use the later logfiles first, to get the newer log entries
-    # first. When a limit is reached, the newer entries should
-    # be processed in most cases. We assume that now.
-    # To keep a consistent order of log entries, we should care
-    # about sorting the log lines in reverse, but that seems to
-    # already be done by the GUI, so we don't do that twice. Skipping
-    # this # will lead into some lines of a single file to be limited in
-    # wrong order. But this should be better than before.
-    history_entries: list[Any] = []
-    for path in sorted(history._settings.paths.history_dir.value.glob("*.log"), reverse=True):
-        if limit is not None and limit <= 0:
-            logger.debug("query limit reached")
-            break
-        if not _intersects(time_range, _get_logfile_timespan(path)):
-            logger.debug("skipping history file %s because of time filters", path)
-            continue
-        tac = f"nl -b a {shlex.quote(str(path))} | tac"  # Process younger lines first
-        cmd = " | ".join([tac] + grep_pipeline)
-        logger.debug("preprocessing history file with command [%s]", cmd)
-        new_entries = parse_history_file(
-            history._history_columns, path, query.filter_row, cmd, limit, logger
-        )
-        history_entries += new_entries
-        if limit is not None:
-            limit -= len(new_entries)
-    return history_entries
 
 
 def _greatest_lower_bound_for_filters(

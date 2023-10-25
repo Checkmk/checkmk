@@ -217,7 +217,7 @@ class MongoDBHistory(History):
         return _get_mongodb(self, query)
 
     def housekeeping(self) -> None:
-        _housekeeping_mongodb(self)
+        """Not needed in mongo since the lifetime of DB entries is taken care automatically."""
 
 
 def create_history(
@@ -268,10 +268,6 @@ def _reload_configuration_mongodb(history: MongoDBHistory) -> None:
     # Configure the auto deleting indexes in the DB
     _update_mongodb_indexes(history._settings, history._mongodb)
     _update_mongodb_history_lifetime(history._settings, history._config, history._mongodb)
-
-
-def _housekeeping_mongodb(history: MongoDBHistory) -> None:
-    pass
 
 
 def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:

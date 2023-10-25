@@ -11,7 +11,7 @@ import time
 from collections.abc import Callable, Collection, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, assert_never, TypeVar
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -32,6 +32,8 @@ from cmk.utils.structured_data import (
     UpdateResult,
 )
 from cmk.utils.validatedstr import ValidatedString
+
+from cmk.agent_based.v1 import Attributes, TableRow
 
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey, SourceType
@@ -54,7 +56,6 @@ __all__ = [
     "inventorize_host",
     "inventorize_status_data_of_real_host",
     "InventoryPlugin",
-    "PInventoryResult",
 ]
 
 
@@ -64,16 +65,10 @@ class InventoryPluginName(ValidatedString):
         return super().exceptions()
 
 
-class PInventoryResult(Protocol):
-    @property
-    def path(self) -> Sequence[str]:
-        ...
-
-
 @dataclass(frozen=True)
 class InventoryPlugin:
     sections: Sequence[ParsedSectionName]
-    function: Callable[..., Iterable[PInventoryResult]]
+    function: Callable[..., Iterable[Attributes | TableRow]]
     ruleset_name: RuleSetName | None
 
 
@@ -292,7 +287,7 @@ def inventorize_status_data_of_real_host(
 
 @dataclass(frozen=True)
 class ItemsOfInventoryPlugin:
-    items: list[PInventoryResult]
+    items: Sequence[Attributes | TableRow]
     raw_cache_info: tuple[int, int] | None
 
 
@@ -372,9 +367,10 @@ def _collect_inventory_plugin_items(
             console.verbose(f" {tty.green}{tty.bold}{plugin_name}{tty.normal}: ok\n")
 
 
-def _parse_inventory_plugin_item(
-    item: PInventoryResult, expected_class_name: str
-) -> PInventoryResult:
+_TV = TypeVar("_TV", bound=Attributes | TableRow)
+
+
+def _parse_inventory_plugin_item(item: _TV, expected_class_name: str) -> _TV:
     if item.__class__.__name__ != expected_class_name:
         raise TypeError(
             f"Cannot create {item.__class__.__name__} at path {item.path}:"
@@ -429,29 +425,25 @@ def _create_trees_from_inventory_plugin_items(
     return MutableTrees(inventory_tree, status_data_tree)
 
 
-def _collect_item(item: PInventoryResult, collection: ItemDataCollection) -> None:
-    # PInventoryResult can either be `Attribtes` or `TableRow`.
-    # Once we've moved them to the dependency-free cmk.agent_based.v1 namespace
-    # we can use the Union type and do a simple type dispatch here.
-    if hasattr(item, "inventory_attributes") and hasattr(item, "status_attributes"):
-        if item.inventory_attributes:
-            collection.inventory_pairs.append(item.inventory_attributes)
-        if item.status_attributes:
-            collection.status_data_pairs.append(item.status_attributes)
-        return
+def _collect_item(item: Attributes | TableRow, collection: ItemDataCollection) -> None:
+    match item:
+        case Attributes():
+            if item.inventory_attributes:
+                collection.inventory_pairs.append(item.inventory_attributes)
+            if item.status_attributes:
+                collection.status_data_pairs.append(item.status_attributes)
 
-    if (
-        hasattr(item, "key_columns")
-        and hasattr(item, "status_columns")
-        and hasattr(item, "inventory_columns")
-    ):
-        # TableRow provides:
-        #   - key_columns: {"kc": "kc-val", ...}
-        #   - rows: [{"c": "c-val", ...}, ...]
-        collection.key_columns.extend(item.key_columns)
-        collection.inventory_rows.append({**item.key_columns, **item.inventory_columns})
-        if item.status_columns:
-            collection.status_data_rows.append({**item.key_columns, **item.status_columns})
+        case TableRow():
+            # TableRow provides:
+            #   - key_columns: {"kc": "kc-val", ...}
+            #   - rows: [{"c": "c-val", ...}, ...]
+            collection.key_columns.extend(item.key_columns)
+            collection.inventory_rows.append({**item.key_columns, **item.inventory_columns})
+            if item.status_columns:
+                collection.status_data_rows.append({**item.key_columns, **item.status_columns})
+
+        case other_type:
+            assert_never(other_type)
 
 
 # Data for the HW/SW Inventory has a validity period (live data or persisted).

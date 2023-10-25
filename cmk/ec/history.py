@@ -213,8 +213,73 @@ class MongoDBHistory(History):
             }
         )
 
-    def get(self, query: QueryGET) -> Iterable[Any]:
-        return _get_mongodb(self, query)
+    def get(self, query: QueryGET) -> Iterable[Any]:  # pylint: disable=too-many-branches
+        filters, limit = query.filters, query.limit
+
+        history_entries = []
+
+        if not self._mongodb.connection:
+            _connect_mongodb(self._settings, self._mongodb)
+
+        # Construct the mongodb filtering specification. We could fetch all information
+        # and do filtering on this data, but this would be way too inefficient.
+        mongo_query = {}
+        for column_name, operator_name, _predicate, argument in filters:
+            if operator_name == "=":
+                mongo_filter: str | dict[str, str] = argument
+            elif operator_name == ">":
+                mongo_filter = {"$gt": argument}
+            elif operator_name == "<":
+                mongo_filter = {"$lt": argument}
+            elif operator_name == ">=":
+                mongo_filter = {"$gte": argument}
+            elif operator_name == "<=":
+                mongo_filter = {"$lte": argument}
+            elif operator_name == "~":  # case sensitive regex, find pattern in string
+                mongo_filter = {"$regex": argument, "$options": ""}
+            elif operator_name == "=~":  # case insensitive, match whole string
+                mongo_filter = {"$regex": argument, "$options": "mi"}
+            elif operator_name == "~~":  # case insensitive regex, find pattern in string
+                mongo_filter = {"$regex": argument, "$options": "i"}
+            elif operator_name == "in":
+                mongo_filter = {"$in": argument}
+            else:
+                assert_never(operator_name)
+
+            if column_name[:6] == "event_":
+                mongo_query["event." + column_name[6:]] = mongo_filter
+            elif column_name[:8] == "history_":
+                key = column_name[8:]
+                if key == "line":
+                    key = "_id"
+                mongo_query[key] = mongo_filter
+            else:
+                raise Exception(f"Filter {column_name} not implemented for MongoDB")
+
+        result = self._mongodb.db.ec_archive.find(mongo_query).sort("time", -1)
+
+        # Might be used for debugging / profiling
+        # open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
+        #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
+
+        if limit:
+            result = result.limit(limit + 1)
+
+        # now convert the MongoDB data structure to the eventd internal one
+        for entry in result:
+            item = [
+                entry["_id"],
+                entry["time"],
+                entry["what"],
+                entry["who"],
+                entry["addinfo"],
+            ]
+            for colname, defval in self._event_columns:
+                key = colname[6:]  # drop "event_"
+                item.append(entry["event"].get(key, defval))
+            history_entries.append(item)
+
+        return history_entries
 
     def housekeeping(self) -> None:
         """Not needed in mongo since the lifetime of DB entries is taken care automatically."""
@@ -339,78 +404,6 @@ def _log_event(
 ) -> None:
     if config["debug_rules"]:
         logger.info("Event %d: %s/%s/%s - %s", event["id"], what, who, addinfo, event["text"])
-
-
-def _get_mongodb(  # pylint: disable=too-many-branches
-    history: MongoDBHistory,
-    query: QueryGET,
-) -> Iterable[Any]:
-    filters, limit = query.filters, query.limit
-
-    history_entries = []
-
-    if not history._mongodb.connection:
-        _connect_mongodb(history._settings, history._mongodb)
-
-    # Construct the mongodb filtering specification. We could fetch all information
-    # and do filtering on this data, but this would be way too inefficient.
-    mongo_query = {}
-    for column_name, operator_name, _predicate, argument in filters:
-        if operator_name == "=":
-            mongo_filter: str | dict[str, str] = argument
-        elif operator_name == ">":
-            mongo_filter = {"$gt": argument}
-        elif operator_name == "<":
-            mongo_filter = {"$lt": argument}
-        elif operator_name == ">=":
-            mongo_filter = {"$gte": argument}
-        elif operator_name == "<=":
-            mongo_filter = {"$lte": argument}
-        elif operator_name == "~":  # case sensitive regex, find pattern in string
-            mongo_filter = {"$regex": argument, "$options": ""}
-        elif operator_name == "=~":  # case insensitive, match whole string
-            mongo_filter = {"$regex": argument, "$options": "mi"}
-        elif operator_name == "~~":  # case insensitive regex, find pattern in string
-            mongo_filter = {"$regex": argument, "$options": "i"}
-        elif operator_name == "in":
-            mongo_filter = {"$in": argument}
-        else:
-            assert_never(operator_name)
-
-        if column_name[:6] == "event_":
-            mongo_query["event." + column_name[6:]] = mongo_filter
-        elif column_name[:8] == "history_":
-            key = column_name[8:]
-            if key == "line":
-                key = "_id"
-            mongo_query[key] = mongo_filter
-        else:
-            raise Exception(f"Filter {column_name} not implemented for MongoDB")
-
-    result = history._mongodb.db.ec_archive.find(mongo_query).sort("time", -1)
-
-    # Might be used for debugging / profiling
-    # open(cmk.utils.paths.omd_root + '/var/log/check_mk/ec_history_debug.log', 'a').write(
-    #    pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
-
-    if limit:
-        result = result.limit(limit + 1)
-
-    # now convert the MongoDB data structure to the eventd internal one
-    for entry in result:
-        item = [
-            entry["_id"],
-            entry["time"],
-            entry["what"],
-            entry["who"],
-            entry["addinfo"],
-        ]
-        for colname, defval in history._event_columns:
-            key = colname[6:]  # drop "event_"
-            item.append(entry["event"].get(key, defval))
-        history_entries.append(item)
-
-    return history_entries
 
 
 # .

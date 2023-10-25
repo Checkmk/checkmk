@@ -1,0 +1,14 @@
+Title: nfsiostat: fix units and parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698239388
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p37
+
+Units falsely displayed seconds, although milliseconds are corret.
+
+Newer versions of nfsiostat output more data, this confused our parser.

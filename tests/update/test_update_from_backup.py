@@ -136,6 +136,10 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
         assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),
+    reason=f"The CCE currently does not support {os.environ.get('DISTRO')}",
+)
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

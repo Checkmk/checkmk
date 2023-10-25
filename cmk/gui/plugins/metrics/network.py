@@ -1485,13 +1485,13 @@ metric_info["read_retrans"] = {
 
 metric_info["read_avg_rtt_ms"] = {
     "title": _("Read average rtt"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
 metric_info["read_avg_exe_ms"] = {
     "title": _("Read average exe"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
@@ -1516,13 +1516,13 @@ metric_info["write_b_op"] = {
 
 metric_info["write_avg_rtt_ms"] = {
     "title": _("Write average rtt"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 
 metric_info["write_avg_exe_ms"] = {
     "title": _("Write average exe"),
-    "unit": "s",
+    "unit": "ms",
     "color": "#90ee90",
 }
 

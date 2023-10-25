@@ -8,9 +8,21 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.config_generation.v1 import HostConfig, HTTPProxy, IPAddressFamily, PlainTextSecret
+from cmk.plugins.collection.config_generation.datadog import special_agent_datadog
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(
+    name="testhost",
+    address="0.0.0.1",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+    ipv4address=None,
+    ipv6address=None,
+    additional_ipv4addresses=[],
+    additional_ipv6addresses=[],
+)
+
+HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -68,8 +80,8 @@ pytestmark = pytest.mark.checks
             },
             [
                 "testhost",
-                "12345",
-                "powerg",
+                PlainTextSecret(value="12345", format="%s"),
+                PlainTextSecret(value="powerg", format="%s"),
                 "api.datadoghq.eu",
                 "--proxy",
                 "abc:8567",
@@ -137,8 +149,8 @@ pytestmark = pytest.mark.checks
             },
             [
                 "testhost",
-                "12345",
-                "powerg",
+                PlainTextSecret(value="12345", format="%s"),
+                PlainTextSecret(value="powerg", format="%s"),
                 "api.datadoghq.eu",
                 "--monitor_tags",
                 "--monitor_monitor_tags",
@@ -174,8 +186,8 @@ pytestmark = pytest.mark.checks
             },
             [
                 "testhost",
-                "12345",
-                "powerg",
+                PlainTextSecret(value="12345", format="%s"),
+                PlainTextSecret(value="powerg", format="%s"),
                 "api.datadoghq.eu",
                 "--sections",
             ],
@@ -187,11 +199,10 @@ def test_datadog_argument_parsing(
     params: Mapping[str, Any],
     expected_result: Sequence[str],
 ) -> None:
-    assert (
-        SpecialAgent("agent_datadog").argument_func(
-            params,
-            "testhost",
-            "address",
-        )
-        == expected_result
+    parsed_params = special_agent_datadog.parameter_parser(params)
+    commands = list(
+        special_agent_datadog.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES)
     )
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_result

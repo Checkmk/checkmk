@@ -66,12 +66,14 @@ class PlainTextSecret(Secret):
     pass
 
 
-def get_secret_from_params(secret_type: str, secret_value: str) -> Secret:
+def get_secret_from_params(
+    secret_type: str, secret_value: str, display_format: str = "%s"
+) -> Secret:
     if secret_type == SecretType.STORE:
-        return StoredSecret(secret_value)
+        return StoredSecret(secret_value, format=display_format)
 
     if secret_type == SecretType.PASSWORD:
-        return PlainTextSecret(secret_value)
+        return PlainTextSecret(secret_value, format=display_format)
 
     raise ValueError(f"{secret_type} is not a valid secret type")
 

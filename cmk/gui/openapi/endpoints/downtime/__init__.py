@@ -54,6 +54,7 @@ from cmk.gui.openapi.endpoints.downtime.request_schemas import (
 )
 from cmk.gui.openapi.endpoints.downtime.response_schemas import DowntimeCollection, DowntimeObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 
 from cmk import fields
@@ -544,3 +545,11 @@ def _downtime_properties(info):
         "recurring": "yes" if info["recurring"] else "no",
         "comment": info["comment"],
     }
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create_host_related_downtime)
+    endpoint_registry.register(create_service_related_downtime)
+    endpoint_registry.register(show_downtimes)
+    endpoint_registry.register(show_downtime)
+    endpoint_registry.register(delete_downtime)

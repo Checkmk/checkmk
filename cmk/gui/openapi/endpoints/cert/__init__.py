@@ -30,6 +30,7 @@ from cmk.gui.openapi.endpoints.cert.response_schemas import (
     X509PEM,
 )
 from cmk.gui.openapi.restful_objects import Endpoint, permissions
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 
@@ -161,3 +162,9 @@ def agent_controller_certificates_settings(param: object) -> Response:
             detail="Unauthorized to read the global settings",
         )
     return serve_json(config.active_config.agent_controller_certificates)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(root_cert)
+    endpoint_registry.register(make_certificate)
+    endpoint_registry.register(agent_controller_certificates_settings)

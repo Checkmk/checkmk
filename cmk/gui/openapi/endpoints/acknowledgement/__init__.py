@@ -35,6 +35,7 @@ from cmk.gui.openapi.endpoints.acknowledgement.request_schemas import (
     AcknowledgeServiceRelatedProblem,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException
 
 from cmk import fields
@@ -263,3 +264,8 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
         )
 
     return http.Response(status=204)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(set_acknowledgement_on_hosts)
+    endpoint_registry.register(set_acknowledgement_on_services)

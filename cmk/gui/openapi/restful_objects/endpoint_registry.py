@@ -11,16 +11,22 @@ This registry has multiple jobs:
 
 """
 from collections.abc import Iterator
-from typing import Any
+from typing import TypedDict
 
+from cmk.gui.http import HTTPMethod
+from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.params import fill_out_path_template, path_parameters
-from cmk.gui.openapi.restful_objects.type_defs import (
-    EndpointEntry,
-    EndpointKey,
-    LinkRelation,
-    OpenAPIParameter,
-    ParameterKey,
-)
+from cmk.gui.openapi.restful_objects.type_defs import LinkRelation, OpenAPIParameter, ParameterKey
+
+
+class EndpointEntry(TypedDict, total=True):
+    endpoint: Endpoint
+    href: str
+    method: HTTPMethod
+    rel: LinkRelation
+
+
+EndpointKey = tuple[str, LinkRelation]
 
 
 # This is the central store for all our endpoints. We use this to determine the correct URLs at
@@ -37,8 +43,12 @@ class EndpointRegistry:
         ...      link_relation = '.../update'
         ...
 
+        >>> class WrappedEndpoint:
+        ...      endpoint = Endpoint
+        ...
+
         >>> reg = EndpointRegistry()
-        >>> reg.add_endpoint(Endpoint)
+        >>> reg.register(WrappedEndpoint)
         >>> endpoint = reg.lookup(__name__, ".../update", {'hostname': 'example.com'})
         >>> assert endpoint['href'] == '/foo/d41d8cd98f/example.com', endpoint
         >>> assert endpoint['method'] == 'get'
@@ -53,9 +63,9 @@ class EndpointRegistry:
 
     def __init__(self) -> None:
         self._endpoints: dict[EndpointKey, dict[ParameterKey, EndpointEntry]] = {}
-        self._endpoint_list: list[EndpointEntry] = []
+        self._endpoint_list: list[Endpoint] = []
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[Endpoint]:
         return iter(self._endpoint_list)
 
     def lookup(
@@ -104,10 +114,8 @@ class EndpointRegistry:
         entry["href"] = fill_out_path_template(entry["href"], examples)
         return entry
 
-    def add_endpoint(  # type: ignore[no-untyped-def]
-        self,
-        endpoint,  # not typed due to cyclical imports. need to refactor modules first.
-    ) -> None:
+    def register(self, wrapped_endpoint: WrappedEndpoint) -> None:
+        endpoint = wrapped_endpoint.endpoint
         self._endpoint_list.append(endpoint)
         func = endpoint.func
         module_name = func.__module__
@@ -127,14 +135,12 @@ class EndpointRegistry:
             "rel": endpoint.link_relation,  # legacy
         }
 
-    def remove_endpoint(  # type: ignore[no-untyped-def]
-        self,
-        endpoint,  # not typed due to cyclical imports. need to refactor modules first.
-    ) -> None:
+    def unregister(self, wrapped_endpoint: WrappedEndpoint) -> None:
         """
         Removes an endpoint. This is currently only used in tests.
         The implementation is not optimized for performance.
         """
+        endpoint = wrapped_endpoint.endpoint
         self._endpoint_list.remove(endpoint)
         parameter_key = None
         endpoint_key = None

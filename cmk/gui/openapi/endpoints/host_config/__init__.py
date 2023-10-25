@@ -76,6 +76,7 @@ from cmk.gui.openapi.restful_objects import (
     permissions,
     response_schemas,
 )
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
@@ -809,3 +810,19 @@ def _host_etag_values(host: Host) -> dict[str, Any]:
         "attributes": {k: v for k, v in host.attributes.items() if k != "meta_data"},
         "cluster_nodes": host.cluster_nodes(),
     }
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(create_host)
+    endpoint_registry.register(create_cluster_host)
+    endpoint_registry.register(bulk_create_hosts)
+    endpoint_registry.register(list_hosts)
+    endpoint_registry.register(update_nodes)
+    endpoint_registry.register(update_host)
+    endpoint_registry.register(bulk_update_hosts)
+    endpoint_registry.register(rename_host)
+    endpoint_registry.register(renaming_job_wait_for_completion)
+    endpoint_registry.register(move)
+    endpoint_registry.register(delete)
+    endpoint_registry.register(bulk_delete)
+    endpoint_registry.register(show_host)

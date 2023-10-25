@@ -98,9 +98,11 @@ def install_endpoint(fresh_app_instance):
         hooks.call("permission-checked", param["body"]["permission"])
         return Response(status=204)
 
+    ENDPOINT_REGISTRY.register(test)
+
     yield test
 
-    ENDPOINT_REGISTRY.remove_endpoint(test.endpoint)
+    ENDPOINT_REGISTRY.unregister(test)
 
 
 def test_openapi_endpoint_decorator_resets_used_permissions(
@@ -155,9 +157,10 @@ def install_endpoint_raise(fresh_app_instance):
         """Smth"""
         raise ProblemException(418, "short", "long")
 
+    ENDPOINT_REGISTRY.register(test)
     yield test
 
-    ENDPOINT_REGISTRY.remove_endpoint(test.endpoint)
+    ENDPOINT_REGISTRY.unregister(test)
 
 
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(

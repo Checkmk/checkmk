@@ -40,6 +40,7 @@ from cmk.gui.openapi.endpoints.site_management.response_schemas import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.constructors import domain_object
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.site_management import (
@@ -246,3 +247,13 @@ def _convert_validate_and_save_site_data(
     )
 
     return serve_json(data=_serialize_site(site_obj), status=200)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_site)
+    endpoint_registry.register(show_sites)
+    endpoint_registry.register(post_site)
+    endpoint_registry.register(put_site)
+    endpoint_registry.register(delete_site)
+    endpoint_registry.register(site_login)
+    endpoint_registry.register(site_logout)

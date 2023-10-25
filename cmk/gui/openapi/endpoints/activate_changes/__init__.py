@@ -30,6 +30,7 @@ from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
 )
 from cmk.gui.openapi.endpoints.utils import may_fail
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.activate_changes import (
@@ -279,3 +280,11 @@ def list_pending_changes(params: Mapping[str, Any]) -> Response:
         }
     )
     return constructors.response_with_etag_created_from_dict(response, pending_changes)
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(activate_changes)
+    endpoint_registry.register(activate_changes_wait_for_completion)
+    endpoint_registry.register(show_activation)
+    endpoint_registry.register(list_activations)
+    endpoint_registry.register(list_pending_changes)

@@ -25,6 +25,7 @@ from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 
 from cmk import fields
@@ -688,3 +689,20 @@ def _update_bi_pack(params, must_exist: bool) -> Response:  # type: ignore[no-un
     bi_packs.add_pack(new_pack)
     bi_packs.save_config()
     return serve_json(BIPackEndpointSchema().dump(new_pack.serialize()))
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(get_bi_rule)
+    endpoint_registry.register(put_bi_rule)
+    endpoint_registry.register(post_bi_rule)
+    endpoint_registry.register(delete_bi_rule)
+    endpoint_registry.register(get_bi_aggregation_state)
+    endpoint_registry.register(get_bi_aggregation)
+    endpoint_registry.register(put_bi_aggregation)
+    endpoint_registry.register(post_bi_aggregation)
+    endpoint_registry.register(delete_bi_aggregation)
+    endpoint_registry.register(get_bi_packs)
+    endpoint_registry.register(get_bi_pack)
+    endpoint_registry.register(delete_bi_pack)
+    endpoint_registry.register(put_bi_pack)
+    endpoint_registry.register(post_bi_pack)

@@ -391,14 +391,6 @@ OpenAPITag = TypedDict(
 )
 
 
-class EndpointEntry(TypedDict, total=True):
-    endpoint: Any
-    href: str
-    method: HTTPMethod
-    rel: LinkRelation
-
-
-EndpointKey = tuple[str, LinkRelation]
 ParameterKey = tuple[str, ...]
 
 StatusCodeInt = Literal[

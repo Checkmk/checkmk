@@ -30,6 +30,7 @@ from cmk.gui.openapi.endpoints.host_internal.response_schemas import (
     HostConfigSchemaInternal,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
@@ -96,7 +97,7 @@ permission_registry.register(
         ]
     ),
 )
-def register(params: Mapping[str, Any]) -> Response:
+def register_host(params: Mapping[str, Any]) -> Response:
     """Register an existing host, ie. link it to a UUID"""
     host_name = params["host_name"]
     host = _verified_host(host_name)
@@ -254,3 +255,9 @@ def show_host(params: Mapping[str, Any]) -> Response:
             "is_cluster": host.is_cluster(),
         }
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(register_host)
+    endpoint_registry.register(link_with_uuid)
+    endpoint_registry.register(show_host)

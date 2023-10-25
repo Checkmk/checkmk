@@ -19,6 +19,7 @@ from typing import Any
 
 from cmk.gui.http import ContentDispositionType, Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.utils import agent
 
 from cmk import fields
@@ -70,3 +71,7 @@ def download_agent(params: Mapping[str, Any]) -> Response:
         response.data = f.read()
     response.status_code = 200
     return response
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(download_agent)

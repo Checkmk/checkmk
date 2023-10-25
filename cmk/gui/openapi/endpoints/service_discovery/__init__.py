@@ -33,6 +33,7 @@ from cmk.gui.openapi.restful_objects.constructors import (
     link_rel,
     object_property,
 )
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
@@ -761,3 +762,15 @@ def _serve_services(
             extensions={},
         )
     )
+
+
+def register(endpoint_registry: EndpointRegistry) -> None:
+    endpoint_registry.register(show_service_discovery_result)
+    endpoint_registry.register(show_services)
+    endpoint_registry.register(update_service_phase)
+    endpoint_registry.register(show_service_discovery_run)
+    endpoint_registry.register(service_discovery_run_wait_for_completion)
+    endpoint_registry.register(execute_service_discovery)
+    endpoint_registry.register(execute)
+    endpoint_registry.register(execute_bulk_discovery)
+    endpoint_registry.register(show_bulk_discovery_status)

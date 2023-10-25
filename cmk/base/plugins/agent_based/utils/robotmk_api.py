@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Literal
 
 import xmltodict
-from pydantic import BaseModel, BeforeValidator, Field, Json, TypeAdapter
+from pydantic import BaseModel, BeforeValidator, Field, Json, RootModel, TypeAdapter
 from typing_extensions import Annotated
 
 from .robotmk_parse_xml import Rebot
@@ -38,6 +38,10 @@ class AttemptOutcome(enum.Enum):
     EnvironmentFailure = "EnvironmentFailure"
     TimedOut = "TimedOut"
     OtherError = "OtherError"
+
+
+class EnvironmentBuild(RootModel, frozen=True):
+    root: dict[str, EnvironmentBuildStatus]
 
 
 def _parse_xml(xml_value: str) -> Rebot:
@@ -139,9 +143,11 @@ class ConfigFileContent(JSON, frozen=True):
     config_file_content: Json[ConfigFileValue]
 
 
-Section = list[Result | ConfigFileContent | SuiteExecutionReport]
+Section = list[Result | ConfigFileContent | SuiteExecutionReport | EnvironmentBuild]
 
-SubSection = Result | ConfigReadingError | ConfigFileContent | SuiteExecutionReport
+SubSection = (
+    Result | ConfigReadingError | ConfigFileContent | SuiteExecutionReport | EnvironmentBuild
+)
 
 
 def _parse_line(line: str) -> SubSection:
@@ -152,6 +158,8 @@ def _parse_line(line: str) -> SubSection:
 def parse(string_table: Sequence[Sequence[str]]) -> Section:
     subsections = [_parse_line(line[0]) for line in string_table]
     results = [
-        s for s in subsections if isinstance(s, (Result, ConfigFileContent, SuiteExecutionReport))
+        s
+        for s in subsections
+        if isinstance(s, (Result, ConfigFileContent, SuiteExecutionReport, EnvironmentBuild))
     ]
     return Section(results)

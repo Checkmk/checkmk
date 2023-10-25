@@ -75,6 +75,8 @@ RUN yum -y makecache \
     perl-Locale-Maketext-Simple \
     perl-Time-HiRes \
     perl-devel \
+    perl-IPC-Cmd \
+    perl-Test-Simple \
     php \
     ping \
     postgresql-devel \

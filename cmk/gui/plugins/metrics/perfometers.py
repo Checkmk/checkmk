@@ -662,15 +662,6 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": ["mem_used", "swap_used", "caches", "mem_free", "swap_free"],
-        "label": ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
-        "total": "mem_total",
-    }
-)
-
-perfometer_info.append(
-    {
-        "type": "linear",
         "segments": ["mem_used"],
         "total": "mem_total",
     }

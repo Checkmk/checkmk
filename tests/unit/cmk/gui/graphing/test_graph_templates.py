@@ -519,13 +519,6 @@ def test_non_trivial_perfometer_declarations() -> None:
             "segments": ["fs_used(%)"],
             "total": 100,
         },
-        {
-            "type": "linear",
-            "segments": ["mem_used", "swap_used", "caches", "mem_free", "swap_free"],
-            # Remove label?
-            "label": ("mem_used,swap_used,+,mem_total,/,100,*", "%"),
-            "total": "mem_total",
-        },
         {"type": "linear", "segments": ["mem_used(%)"], "total": 100.0},
         {
             # Simple "+" operations will be 'segments = [metric_a, metric_b, ...]'

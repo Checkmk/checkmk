@@ -61,12 +61,12 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Read average RTT: 0.690/s', [
+                    0, 'Read average RTT: 0.690/ms', [
                         ('read_avg_rtt_ms', 0.69, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Read average EXE: 0.690/s', [
+                    0, 'Read average EXE: 0.690/ms', [
                         ('read_avg_exe_ms', 0.69, None, None, None, None)
                     ]
                 ),

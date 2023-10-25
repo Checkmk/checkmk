@@ -28,6 +28,6 @@ install_package() {
     rm -rf /var/lib/apt/lists/*
 }
 
-# install_package
+install_package
 test_package "node --version" "^v$NODEJS_VERSION\."
 test_package "npm --version" "^$NPM_VERSION\."

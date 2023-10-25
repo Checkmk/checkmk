@@ -19,6 +19,7 @@ from cmk.ec.history import (
     FileHistory,
     parse_history_file,
 )
+from cmk.ec.main import StatusTableHistory
 
 
 @pytest.fixture(name="config_with_weekly_history_rotation")
@@ -49,7 +50,7 @@ def test_convert_history_line(history: FileHistory) -> None:
 
     assert len(values) == 30
 
-    convert_history_line(history._history_columns, values)
+    convert_history_line(StatusTableHistory.columns, values)
 
     assert values[0] == 1  # type: ignore[comparison-overlap]
     assert values[1] == 1666942292.2998602  # type: ignore[comparison-overlap]
@@ -72,7 +73,7 @@ def test_history_parse(history: FileHistory, tmp_path: Path) -> None:
     cmd = " | ".join([tac] + _grep_pipeline([filter_]))  # type: ignore[list-item]
 
     new_entries = parse_history_file(
-        history._history_columns,
+        StatusTableHistory.columns,
         path,
         lambda x: True,
         cmd,

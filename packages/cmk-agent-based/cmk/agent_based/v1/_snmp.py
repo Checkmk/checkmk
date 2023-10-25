@@ -6,7 +6,7 @@
 """
 import string
 from collections.abc import Sequence
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, Self
 
 
 class _OIDSpecTuple(NamedTuple):
@@ -15,7 +15,7 @@ class _OIDSpecTuple(NamedTuple):
     save_to_cache: bool
 
     # we create a deepcopy in our unit tests, so support it.
-    def __deepcopy__(self, _memo: object) -> "_OIDSpecTuple":
+    def __deepcopy__(self, _memo: object) -> Self:
         return self
 
 
@@ -73,12 +73,12 @@ class OIDEnd(_OIDSpecTuple):
         return "OIDEnd()"
 
 
-class SNMPTreeTuple(NamedTuple):
+class _SNMPTreeTuple(NamedTuple):
     base: str
     oids: Sequence[_OIDSpecTuple]
 
 
-class SNMPTree(SNMPTreeTuple):
+class SNMPTree(_SNMPTreeTuple):
     # This extends the basic tuple type by
     # * validation
     # * a more user friendly way of creation
@@ -105,9 +105,9 @@ class SNMPTree(SNMPTreeTuple):
         ...     ],
         ... )
     """
-    VALID_CHARACTERS = {".", *string.digits}
+    VALID_CHARACTERS: set[str] = {".", *string.digits}
 
-    def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> "SNMPTree":
+    def __new__(cls, base: str, oids: Sequence[str | _OIDSpecTuple]) -> Self:
         # TODO: we must validate list property before iterating over oids
         # (otherwise '123' will become ['1', '2', '3']).
         if not isinstance(oids, list):
@@ -172,4 +172,4 @@ class SNMPTree(SNMPTreeTuple):
 
         # make sure the base is as long as possible
         if len(heads) > 1 and len(set(heads)) == 1:
-            raise ValueError("base can be extended by '.%s'" % heads[0])
+            raise ValueError(f"base can be extended by '.{heads[0]}'")

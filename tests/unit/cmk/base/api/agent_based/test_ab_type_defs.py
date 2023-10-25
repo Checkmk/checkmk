@@ -9,7 +9,7 @@ import pytest
 
 from cmk.snmplib import SpecialColumn
 
-from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
+from cmk.agent_based.v1 import OIDEnd, SNMPTree
 
 
 def test_oid_end_repr() -> None:

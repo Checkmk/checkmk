@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, SNMPTree
+from cmk.agent_based.v1 import OIDBytes, OIDCached, SNMPTree
 
 
 @pytest.mark.parametrize("value", [3, ("foo", "bar")])

@@ -131,6 +131,7 @@ def test_endswith(value: str, testcases: Sequence[tuple[str, bool]]) -> None:
     ],
 )
 def test_exists(testcases: tuple[str, bool]) -> None:
+    # TODO: this tests an implementation detail. Use `evaluate_snmp_detection` to test the functionaliy!
     spec = utils.exists(".1.2.3")
     _validate_detect_spec(spec)
     assert len(spec) == 1
@@ -141,6 +142,7 @@ def test_exists(testcases: tuple[str, bool]) -> None:
 
 
 def test_all_of() -> None:
+    # TODO: this tests an implementation detail. Use `evaluate_snmp_detection` to test the functionaliy!
     spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
@@ -160,6 +162,7 @@ def test_all_of() -> None:
 
 
 def test_any_of() -> None:
+    # TODO: this tests an implementation detail. Use `evaluate_snmp_detection` to test the functionaliy!
     spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
@@ -179,6 +182,7 @@ def test_any_of() -> None:
 
 
 def test_any_of_all_of() -> None:
+    # TODO: this tests an implementation detail. Use `evaluate_snmp_detection` to test the functionaliy!
     spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])
@@ -202,6 +206,7 @@ def test_any_of_all_of() -> None:
 
 
 def test_all_of_any_of() -> None:
+    # TODO: this tests an implementation detail. Use `evaluate_snmp_detection` to test the functionaliy!
     spec1 = utils.SNMPDetectSpecification([[(".1", "1?", True)]])
     spec2 = utils.SNMPDetectSpecification([[(".2", "2?", True)]])
     spec3 = utils.SNMPDetectSpecification([[(".3", "3?", True)]])

@@ -12,7 +12,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     SNMPSectionPlugin,
@@ -20,6 +19,8 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 from cmk.base.api.agent_based.utils import SNMPDetectSpecification
+
+from cmk.agent_based.v1 import OIDEnd, SNMPTree
 
 
 def _generator_function():

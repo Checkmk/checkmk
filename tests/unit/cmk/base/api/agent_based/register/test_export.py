@@ -26,11 +26,10 @@ from cmk.base.api.agent_based.register import (
     is_registered_snmp_section_plugin,
     is_stored_ruleset,
 )
-from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import HostLabelGenerator
 from cmk.base.api.agent_based.utils import startswith
 
-from cmk.agent_based.v1 import DiscoveryResult
+from cmk.agent_based.v1 import DiscoveryResult, SNMPTree
 
 from .test_check_plugins import dummy_function_ips
 from .test_section_plugins import parse_dummy

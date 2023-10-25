@@ -26,7 +26,6 @@ from cmk.base.api.agent_based.register.utils import (
     validate_function_arguments,
     validate_ruleset_type,
 )
-from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -38,7 +37,7 @@ from cmk.base.api.agent_based.type_defs import (
     StringTable,
 )
 
-from cmk.agent_based.v1 import HostLabel
+from cmk.agent_based.v1 import HostLabel, SNMPTree
 
 
 def _create_parse_annotation(

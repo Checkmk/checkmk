@@ -5,7 +5,6 @@
 
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
@@ -36,10 +35,14 @@ from cmk.agent_based.v1 import (
     IgnoreResults,
     IgnoreResultsError,
     Metric,
+    OIDBytes,
+    OIDCached,
+    OIDEnd,
     regex,
     Result,
     Service,
     ServiceLabel,
+    SNMPTree,
     State,
     TableRow,
 )

@@ -18,20 +18,26 @@ from ._checking_classes import (
 )
 from ._inventory_classes import Attributes, TableRow
 from ._regex import regex
+from ._snmp import OIDBytes, OIDCached, OIDEnd, SNMPTree
 
+# TODO: when everything is here, adjust the order to the one in cmk.base.plugins
 __all__ = [
     "Attributes",
-    "TableRow",
+    "CheckResult",
+    "DiscoveryResult",
     "HostLabel",
     "IgnoreResults",
     "IgnoreResultsError",
     "Metric",
+    "OIDBytes",
+    "OIDCached",
+    "OIDEnd",
+    "regex",
+    "render",
     "Result",
     "Service",
     "ServiceLabel",
+    "SNMPTree",
     "State",
-    "regex",
-    "render",
-    "CheckResult",
-    "DiscoveryResult",
+    "TableRow",
 ]

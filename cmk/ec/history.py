@@ -193,7 +193,25 @@ class MongoDBHistory(History):
         self._mongodb.db.ec_archive.drop()
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        _add_mongodb(self, event, what, who, addinfo)
+        _log_event(self._config, self._logger, event, what, who, addinfo)
+        if not self._mongodb.connection:
+            _connect_mongodb(self._settings, self._mongodb)
+        # We converted _id to be an auto incrementing integer. This makes the unique
+        # index compatible to history_line of the file (which is handled as integer)
+        # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
+        # for the first step, we use the integer index for simplicity
+        now = time.time()
+        self._mongodb.db.ec_archive.insert_one(
+            {
+                "_id": _mongodb_next_id(self._mongodb, "ec_archive_id"),
+                "dt": datetime.datetime.fromtimestamp(now),
+                "time": now,
+                "event": event,
+                "what": what,
+                "who": who,
+                "addinfo": addinfo,
+            }
+        )
 
     def get(self, query: QueryGET) -> Iterable[Any]:
         return _get_mongodb(self, query)
@@ -318,30 +336,6 @@ def _mongodb_next_id(mongodb: MongoDB, name: str, first_id: int = 0) -> int:
         mongodb.db.counters.insert_one({"_id": name, "seq": first_id})
         return first_id
     return ret["seq"]
-
-
-def _add_mongodb(
-    history: MongoDBHistory, event: Event, what: HistoryWhat, who: str, addinfo: str
-) -> None:
-    _log_event(history._config, history._logger, event, what, who, addinfo)
-    if not history._mongodb.connection:
-        _connect_mongodb(history._settings, history._mongodb)
-    # We converted _id to be an auto incrementing integer. This makes the unique
-    # index compatible to history_line of the file (which is handled as integer)
-    # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
-    # for the first step, we use the integer index for simplicity
-    now = time.time()
-    history._mongodb.db.ec_archive.insert_one(
-        {
-            "_id": _mongodb_next_id(history._mongodb, "ec_archive_id"),
-            "dt": datetime.datetime.fromtimestamp(now),
-            "time": now,
-            "event": event,
-            "what": what,
-            "who": who,
-            "addinfo": addinfo,
-        }
-    )
 
 
 def _log_event(

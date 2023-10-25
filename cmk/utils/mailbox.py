@@ -566,7 +566,7 @@ class Mailbox:
             [
                 date
                 for mail_id in ids[0].split()
-                if isinstance(mail_id, str)
+                if isinstance(mail_id, str) or isinstance(mail_id, bytes)
                 for date in (fetch_timestamp(mail_id),)
                 if before is None or date <= before
             ]

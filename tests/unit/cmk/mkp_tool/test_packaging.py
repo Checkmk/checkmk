@@ -16,15 +16,16 @@ from unittest.mock import Mock
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.utils.packaging as packaging
 import cmk.utils.paths
 from cmk.utils import store
-from cmk.utils.packaging import _mkp as mkp
-from cmk.utils.packaging import _reporter as reporter
-from cmk.utils.packaging import _unsorted as packaging_unsorted
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.ec.export as ec
+
+import cmk.mkp_tool as packaging
+from cmk.mkp_tool import _mkp as mkp
+from cmk.mkp_tool import _reporter as reporter
+from cmk.mkp_tool import _unsorted as packaging_unsorted
 
 _PATH_CONFIG = packaging.PathConfig(
     agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
@@ -111,7 +112,7 @@ def fixture_mkp_bytes(installer: packaging.Installer) -> bytes:
 @pytest.fixture(name="reload_apache")
 def fixture_reload_apache(mocker: MockerFixture) -> Mock:
     return mocker.patch(
-        "cmk.utils.packaging._reload_apache",
+        "cmk.mkp_tool._reload_apache",
         side_effect=lambda: None,
     )
 

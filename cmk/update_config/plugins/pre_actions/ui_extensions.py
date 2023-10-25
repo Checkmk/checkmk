@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.packaging import PackageID
-
 from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils import get_failed_plugins, remove_failed_plugin
 
+from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_on_incomp_local_file,

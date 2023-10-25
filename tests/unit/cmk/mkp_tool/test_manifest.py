@@ -9,8 +9,8 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from cmk.utils.packaging import PackageName, PackagePart, PackageVersion
-from cmk.utils.packaging._mkp import Manifest, read_manifest_optionally
+from cmk.mkp_tool import PackageName, PackagePart, PackageVersion
+from cmk.mkp_tool._mkp import Manifest, read_manifest_optionally
 
 TEST_MANIFEST = Manifest(
     title="Unit test package",

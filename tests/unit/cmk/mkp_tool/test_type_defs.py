@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.packaging._type_defs import PackageName, PackageVersion
+from cmk.mkp_tool._type_defs import PackageName, PackageVersion
 
 
 class TestPackageVersion:

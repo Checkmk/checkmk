@@ -516,9 +516,8 @@ def test_non_trivial_perfometer_declarations() -> None:
             # m(%) -> 100 * m / m:max
             # => segments: ["fs_used"], "total": "fs_used:max"
             "type": "linear",
-            "segments": ["fs_used(%)", "100.0,fs_used(%),-#e3fff9"],
+            "segments": ["fs_used(%)"],
             "total": 100,
-            "label": ("fs_used(%)", "%"),
         },
         {
             "type": "linear",

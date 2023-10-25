@@ -645,12 +645,8 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
-        "segments": [
-            "fs_used(%)",
-            "100.0,fs_used(%),-#e3fff9",
-        ],
+        "segments": ["fs_used(%)"],
         "total": 100,
-        "label": ("fs_used(%)", "%"),
     }
 )
 

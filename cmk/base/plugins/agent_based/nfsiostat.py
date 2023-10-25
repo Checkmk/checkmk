@@ -57,7 +57,7 @@ metric_config: Mapping[int, Config] = {
     15: Config("write_avg_exe_ms", "Write Average EXE", "%.3f/ms"),
 }
 
-Section = Mapping[str, str]
+Section = Mapping[str, tuple[str]]
 
 
 def parse_nfsiostat(string_table: StringTable) -> Section:
@@ -73,10 +73,17 @@ def parse_nfsiostat(string_table: StringTable) -> Section:
     # Future expandibility or changes to the nfsiostat command will require
     # at most a re-ordering of these values (in check_nfsiostat_parames) and
     # changing the check to include new metrics (via swtiches/flags)
+    NUMBER = r"(\d+\.\d+|\d+)"
+    NUMBER_SEPARATOR = r"[() %]+"
+    NUMBERS = NUMBER_SEPARATOR.join([NUMBER] * 7)
+    # we want to read the first seven numbers after read: and write:
+    # nfsiostat is able to report more numbers for read and write, but we just care about the
+    # first seven. note that the NUMBER_SEPARATOR trick only works because the first and last number
+    # on our list is not in brackets.
     return {
         f"'{m[0]}',": m[1:]
         for m in re.findall(
-            r"(\S+:\S+) mounted on \S+:%s" % (r".*?(\d+\.\d+|\d+)" * 16),
+            rf"(\S+:\S+) mounted on \S+:.*?{NUMBER_SEPARATOR.join([NUMBER]*2)}.*?read:.*?{NUMBERS}.*?write:.*?{NUMBERS}",
             " ".join(new_info),
             flags=re.DOTALL,
         )

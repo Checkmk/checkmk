@@ -1,4 +1,5 @@
 use anyhow::Result as AnyhowResult;
+use cli::ForceIP;
 use http::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{
     header::USER_AGENT,
@@ -7,7 +8,7 @@ use reqwest::{
 };
 use std::{
     fmt::{Display, Formatter, Result as FormatResult},
-    net::SocketAddr,
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     time::{Duration, Instant},
 };
 
@@ -90,6 +91,7 @@ pub async fn check_http(args: cli::Cli) -> Output {
         args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
         args.onredirect.clone(),
         args.max_redirs,
+        args.force_ip_version,
     ) {
         Ok(req) => req,
         Err(_) => {
@@ -126,6 +128,7 @@ fn prepare_request(
     auth_pw: Option<String>,
     onredirect: OnRedirect,
     max_redirs: usize,
+    force_ip: Option<ForceIP>,
 ) -> AnyhowResult<RequestBuilder> {
     let mut cli_headers = HeaderMap::new();
     if let Some(ua) = user_agent {
@@ -135,8 +138,18 @@ fn prepare_request(
         cli_headers.extend(hds);
     }
 
-    let redirect_policy = get_redirect_policy(onredirect, max_redirs);
-    let client = reqwest::Client::builder()
+    let redirect_policy = get_redirect_policy(onredirect, force_ip.clone(), max_redirs);
+    let client = reqwest::Client::builder();
+
+    let client = match force_ip {
+        None => client,
+        Some(ipv) => match ipv {
+            ForceIP::Ipv4 => client.local_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+            ForceIP::Ipv6 => client.local_address(IpAddr::V6(Ipv6Addr::UNSPECIFIED)),
+        },
+    };
+
+    let client = client
         .redirect(redirect_policy)
         .timeout(timeout)
         .default_headers(cli_headers)
@@ -150,27 +163,43 @@ fn prepare_request(
     }
 }
 
-fn get_redirect_policy(onredirect: OnRedirect, max_redirs: usize) -> Policy {
+fn get_redirect_policy(
+    onredirect: OnRedirect,
+    force_ip: Option<ForceIP>,
+    max_redirs: usize,
+) -> Policy {
     match onredirect {
         OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::none(),
         OnRedirect::Follow => Policy::limited(max_redirs),
-        OnRedirect::Sticky => Policy::custom(move |att| policy_sticky(att, max_redirs, false)),
-        OnRedirect::Stickyport => Policy::custom(move |att| policy_sticky(att, max_redirs, true)),
+        OnRedirect::Sticky => {
+            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, false))
+        }
+        OnRedirect::Stickyport => {
+            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, true))
+        }
     }
 }
 
-fn policy_sticky(attempt: Attempt, max_redirs: usize, sticky_port: bool) -> Action {
+fn policy_sticky(
+    attempt: Attempt,
+    force_ip: Option<ForceIP>,
+    max_redirs: usize,
+    sticky_port: bool,
+) -> Action {
     if attempt.previous().len() > max_redirs {
         return attempt.error("too many redirects");
     }
 
-    let previous_socket_addr = attempt
+    let previous_socket_addrs = attempt
         .previous()
         .last()
         .unwrap()
         .socket_addrs(|| None)
         .unwrap();
-    let socket_addr = attempt.url().socket_addrs(|| None).unwrap();
+    let socket_addrs = attempt.url().socket_addrs(|| None).unwrap();
+
+    let previous_socket_addr = filter_socket_addrs(previous_socket_addrs, force_ip.clone());
+    let socket_addr = filter_socket_addrs(socket_addrs, force_ip);
 
     match sticky_port {
         false => {
@@ -187,6 +216,16 @@ fn policy_sticky(attempt: Attempt, max_redirs: usize, sticky_port: bool) -> Acti
                 attempt.error("Detected changed IP/port")
             }
         }
+    }
+}
+
+fn filter_socket_addrs(addrs: Vec<SocketAddr>, force_ip: Option<ForceIP>) -> Vec<SocketAddr> {
+    match force_ip {
+        None => addrs,
+        Some(ipv) => match ipv {
+            ForceIP::Ipv4 => addrs.into_iter().filter(|addr| addr.is_ipv4()).collect(),
+            ForceIP::Ipv6 => addrs.into_iter().filter(|addr| addr.is_ipv6()).collect(),
+        },
     }
 }
 
@@ -265,7 +304,9 @@ async fn check_response(response: ProcessedResponse, onredirect: OnRedirect) -> 
 mod tests {
     use std::net::SocketAddr;
 
-    use crate::{contains_unchanged_addr, contains_unchanged_ip};
+    use crate::{
+        cli::ForceIP, contains_unchanged_addr, contains_unchanged_ip, filter_socket_addrs,
+    };
 
     #[test]
     fn test_contains_unchanged_ip() {
@@ -303,5 +344,29 @@ mod tests {
             "[2345:abcd::]:80".parse().unwrap(),
         ];
         assert!(!contains_unchanged_addr(&old_addrs, &new_addrs));
+    }
+
+    #[test]
+    fn test_filter_socket_addrs() {
+        let addrs: Vec<SocketAddr> = vec![
+            "1.2.3.4:443".parse().unwrap(),
+            "2.3.4.5:1234".parse().unwrap(),
+            "[2345:abcd::]:80".parse().unwrap(),
+            "[1234:abcd::]:8888".parse().unwrap(),
+        ];
+        let ipv4_addrs: Vec<SocketAddr> = vec![
+            "1.2.3.4:443".parse().unwrap(),
+            "2.3.4.5:1234".parse().unwrap(),
+        ];
+        let ipv6_addrs: Vec<SocketAddr> = vec![
+            "[2345:abcd::]:80".parse().unwrap(),
+            "[1234:abcd::]:8888".parse().unwrap(),
+        ];
+        assert_eq!(addrs, filter_socket_addrs(addrs.clone(), None));
+        assert_eq!(
+            ipv4_addrs,
+            filter_socket_addrs(addrs.clone(), Some(ForceIP::Ipv4))
+        );
+        assert_eq!(ipv6_addrs, filter_socket_addrs(addrs, Some(ForceIP::Ipv6)));
     }
 }

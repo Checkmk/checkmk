@@ -46,6 +46,10 @@ pub struct Cli {
     /// Maximal number of redirects
     #[arg(long, default_value_t = 15)]
     pub max_redirs: usize,
+
+    /// Force IP version for connection
+    #[arg(long)]
+    pub force_ip_version: Option<ForceIP>,
 }
 
 #[derive(Clone, Debug, ValueEnum)]
@@ -56,6 +60,12 @@ pub enum OnRedirect {
     Follow,
     Sticky,
     Stickyport,
+}
+
+#[derive(Clone, Debug, ValueEnum)]
+pub enum ForceIP {
+    Ipv4,
+    Ipv6,
 }
 
 #[derive(Args, Debug)]

@@ -132,6 +132,70 @@ def test_item(section, item, request):
     assert services[0][0] == item
 
 
+def test_nfsiostat_parse_old_nfsiostat_output(
+    section1: Section,
+) -> None:
+    assert section1["'abcdef312-t2:/ifs/ic/abcdef_ticks',"] == tuple(
+        [
+            "1.66",
+            "0.00",
+            # read
+            "0.276",
+            "35.397",
+            "128.271",
+            "0",
+            "0.0",
+            "11.251",
+            "11.361",
+            # write
+            "0.000",
+            "0.000",
+            "0.000",
+            "0",
+            "0.0",
+            "0.000",
+            "0.000",
+        ]
+    )
+
+
+def test_nfsiostat_parse_newer_nfsiostat_output_format():
+    # exe is the last value we report, avg queue and errors is not transported
+    # read:  0.018 3 0.3 is not in the output
+    # write: 0.077 4 0.4 is not in the output
+    OUTPUT = (
+        "host:/share mounted on /mount/point:"
+        "ops/s rpc bklog"
+        "3.909 1.234"
+        "read: ops/s kB/s kB/op retrans avg RTT (ms) avg exe (ms) avg queue (ms) errors"
+        "0.014 0.641 44.231 1 (0.1%) 0.900 0.927 0.018 3 (0.3%)"
+        "write: ops/s kB/s kB/op retrans avg RTT (ms) avg exe (ms) avg queue (ms) errors"
+        "0.082 5.133 62.228 2 (0.2%) 1.925 2.009 0.077 4 (0.4%)"
+    )
+    assert nfsiostat.parse_nfsiostat([OUTPUT.split(" ")]) == {
+        "'host:/share',": (
+            "3.909",
+            "1.234",
+            # read
+            "0.014",
+            "0.641",
+            "44.231",
+            "1",
+            "0.1",
+            "0.900",
+            "0.927",
+            # write
+            "0.082",
+            "5.133",
+            "62.228",
+            "2",
+            "0.2",
+            "1.925",
+            "2.009",
+        )
+    }
+
+
 def test_nfsiostat_check(
     section1: Section,
 ) -> None:

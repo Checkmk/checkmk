@@ -12,6 +12,7 @@ description:
  operations per second, rpc backlog, read/write: operations per second, bytes per
  second, bytes per operation, retransmissions (%), average RTT (ms) and average
  exe (ms).
+ All metrics are average values since the time the filesystem was mounted.
 
 item:
  Name of the NFS mount

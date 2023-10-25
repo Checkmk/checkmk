@@ -80,7 +80,6 @@ class FileHistory(History):
         self._event_columns = event_columns
         self._history_columns = history_columns
         self._lock = threading.Lock()
-        self._mongodb = MongoDB()
         self._active_history_period = ActiveHistoryPeriod()
         _reload_configuration_files(self)
 
@@ -110,10 +109,7 @@ class MongoDBHistory(History):
         self._config = config
         self._logger = logger
         self._event_columns = event_columns
-        self._history_columns = history_columns
-        self._lock = threading.Lock()
         self._mongodb = MongoDB()
-        self._active_history_period = ActiveHistoryPeriod()
         _reload_configuration_mongodb(self)
 
     def flush(self) -> None:

@@ -796,10 +796,12 @@ class UpdateRuleObject(base.BaseSchema):
         ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
         ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
         ...              ],
-        ...         }
+        ...         },
+        ...         'value_raw': '''{"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"], "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"]}''',
         ...     })
         >>> rv
         {'properties': {'disabled': False}, \
+'value_raw': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}, \
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
@@ -807,6 +809,7 @@ class UpdateRuleObject(base.BaseSchema):
 
         >>> s.dump(rv)
         {'properties': {'disabled': False}, \
+'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
 'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
 'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
@@ -828,6 +831,7 @@ class UpdateRuleObject(base.BaseSchema):
             "to be a valid Python type."
         ),
         example="{'cmk/os_family': 'linux'}",
+        required=True,
     )
     conditions = fields.Nested(
         RuleConditions,
@@ -862,10 +866,12 @@ class InputRuleObject(UpdateRuleObject):
         ...                  {'key': 'criticality', 'operator': 'is_not', 'value': 'prod'},
         ...                  {'key': 'foo', 'operator': 'is_not', 'value': 'testing'},
         ...              ],
-        ...         }
+        ...         },
+        ...         'value_raw': '''{"ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"], "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"]}''',
         ...     })
         >>> rv
         {'properties': {'disabled': False}, \
+'value_raw': {'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}, \
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
@@ -875,7 +881,9 @@ class InputRuleObject(UpdateRuleObject):
         ''
 
         >>> s.dump(rv)
-        {'properties': {'disabled': False}, 'conditions': {\
+        {'properties': {'disabled': False}, \
+'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
+'conditions': {\
 'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
 'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
 'host_labels': [{'key': 'os', 'operator': 'is', 'value': 'windows'}, {'key': 'foo', 'operator': 'is_not', 'value': 'bar'}]}, \

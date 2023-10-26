@@ -10,7 +10,6 @@ import urllib
 from typing import Any
 
 import pytest
-from webtest import TestResponse  # type: ignore[import]
 
 from tests.testlib.rest_api_client import (
     ClientRegistry,
@@ -51,7 +50,7 @@ DEFAULT_CONDITIONS: RuleConditions = {
 
 
 @pytest.fixture(scope="function", name="new_rule")
-def new_rule_fixture(clients: ClientRegistry) -> tuple[TestResponse, dict[str, Any]]:
+def new_rule_fixture(clients: ClientRegistry) -> tuple[Response, dict[str, Any]]:
     return _create_rule(
         clients,
         folder="/",
@@ -70,8 +69,9 @@ def _create_rule(
     disabled: bool = False,
     ruleset: str = "inventory_df_rules",
     value: dict[str, Any] | list[Any] | tuple | str | None = None,
-    value_raw: str = DEFAULT_VALUE_RAW,
-) -> tuple[TestResponse, dict[str, Any]]:
+    value_raw: str | None = DEFAULT_VALUE_RAW,
+    expect_ok: bool = True,
+) -> tuple[Response, dict[str, Any]]:
     if value is None:
         value = {
             "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
@@ -103,6 +103,7 @@ def _create_rule(
         properties=properties,
         value_raw=value_raw,
         conditions=conditions,
+        expect_ok=expect_ok,
     )
     return resp, values
 
@@ -134,13 +135,14 @@ def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
 
 def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
     value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
-    clients.Rule.create(
+    r = clients.Rule.create(
         ruleset=RuleGroup.CheckgroupParameters("filesystem"),
         value_raw=value_raw,
         conditions={},
         folder="~",
         properties={"disabled": False, "description": "API2I"},
     )
+    print(r)
 
 
 def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
@@ -212,7 +214,7 @@ def test_openapi_create_rule_failure(clients: ClientRegistry) -> None:
 
 def test_openapi_create_rule(
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
 ) -> None:
     new_resp, values = new_rule
 
@@ -276,7 +278,7 @@ def test_openapi_list_rules_with_hyphens(
 
 def test_openapi_list_rules(
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
 ) -> None:
     _, values = new_rule
     rule_set = values["ruleset"]
@@ -296,7 +298,7 @@ def test_openapi_list_rules(
 def test_openapi_delete_rule(
     api_client: RestApiClient,
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
 ) -> None:
     resp, values = new_rule
 
@@ -366,7 +368,7 @@ def test_openapi_create_rule_order(
 
 def test_openapi_move_rule_to_top_of_folder(
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
     test_folders: tuple[str, str],
 ) -> None:
     folder_name_one, folder_name_two = test_folders
@@ -386,7 +388,7 @@ def test_openapi_move_rule_to_top_of_folder(
 
 def test_openapi_move_rule_to_bottom_of_folder(
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
     test_folders: tuple[str, str],
 ) -> None:
     folder_name_one, folder_name_two = test_folders
@@ -406,7 +408,7 @@ def test_openapi_move_rule_to_bottom_of_folder(
 
 def test_openapi_move_rule_after_specific_rule(
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
     test_folders: tuple[str, str],
 ) -> None:
     folder_name_one, folder_name_two = test_folders
@@ -426,7 +428,7 @@ def test_openapi_move_rule_after_specific_rule(
 
 def test_openapi_move_rule_before_specific_rule(
     clients: ClientRegistry,
-    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    new_rule: tuple[Response, dict[str, typing.Any]],
     test_folders: tuple[str, str],
 ) -> None:
     folder_name_one, folder_name_two = test_folders
@@ -669,3 +671,34 @@ def test_openapi_edit_rule(clients: ClientRegistry) -> None:
     assert updated_rule["extensions"]["folder"] == created_rule["extensions"]["folder"]
     assert updated_rule["extensions"]["folder_index"] == created_rule["extensions"]["folder_index"]
     assert updated_rule["extensions"]["value_raw"] == new_raw_value
+
+
+def test_create_rule_no_value_raw(clients: ClientRegistry) -> None:
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="I should fail.  value_raw should not be None.",
+        value_raw=None,  # no value_raw field will be sent
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: value_raw"
+
+
+def test_update_rule_no_value_raw(
+    clients: ClientRegistry,
+    new_rule: tuple[Response, dict[str, typing.Any]],
+) -> None:
+    new_resp, _ = new_rule
+    rule_id = new_resp.json["id"]
+    conditions = new_resp.json["extensions"]["conditions"]
+    properties = new_resp.json["extensions"]["properties"]
+    resp = clients.Rule.edit(
+        rule_id=rule_id,
+        value_raw=None,
+        conditions=conditions,
+        properties=properties,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: value_raw"

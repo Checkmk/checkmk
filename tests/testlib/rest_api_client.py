@@ -1134,9 +1134,9 @@ class RuleClient(RestApiClient):
     def create(
         self,
         ruleset: str,
-        value_raw: str,
         conditions: RuleConditions,
         folder: str = "~",
+        value_raw: str | None = None,
         properties: RuleProperties | None = None,
         expect_ok: bool = True,
     ) -> Response:

@@ -12,8 +12,8 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.ec.config import Config
-from cmk.ec.history import (
-    _current_history_period,
+from cmk.ec.history import _current_history_period
+from cmk.ec.history_file import (
     _grep_pipeline,
     convert_history_line,
     FileHistory,

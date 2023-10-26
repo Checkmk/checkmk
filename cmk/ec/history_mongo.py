@@ -13,7 +13,7 @@ from typing import Any, assert_never, Literal
 
 from .config import Config
 from .event import Event
-from .history import History
+from .history import _log_event, History
 from .query import QueryGET
 from .settings import Settings
 
@@ -58,7 +58,7 @@ class MongoDBHistory(History):
         self._mongodb.db.ec_archive.drop()
 
     def add(self, event: Event, what: HistoryWhat, who: str = "", addinfo: str = "") -> None:
-        # _log_event(self._config, self._logger, event, what, who, addinfo)
+        _log_event(self._config, self._logger, event, what, who, addinfo)
         if not self._mongodb.connection:
             _connect_mongodb(self._settings, self._mongodb)
         # We converted _id to be an auto incrementing integer. This makes the unique

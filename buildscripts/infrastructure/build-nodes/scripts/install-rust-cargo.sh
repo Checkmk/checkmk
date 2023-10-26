@@ -64,4 +64,4 @@ if [ "$1" != "link-only" ]; then
 fi
 ln -sf "${CARGO_HOME}/bin/"* /usr/bin/
 
-test_package "rustc --version" "^rustc $TOOLCHAIN_VERSION\."
+test_package "rustc --version" "^rustc $TOOLCHAIN_VERSION"

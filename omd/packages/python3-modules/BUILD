@@ -49,7 +49,7 @@ config_setting(
         "@freetds",
         "@omd_packages//:agent-receiver",
         "@omd_packages//omd/packages/omd:use_system_openssl",
-        "@omd_packages//packages:werks",
+        "@omd_packages//packages:cmk-werks",
         "@openssl",
         "@python",
     ],
@@ -72,7 +72,7 @@ config_setting(
     }),
 ) for module, dep in [
     ("agent-receiver", "$(execpath @omd_packages//:agent-receiver)"),
-    ("werks", "$(execpath @omd_packages//packages:werks)"),
+    ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
 ]]
 
 genrule(

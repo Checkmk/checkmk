@@ -26,7 +26,7 @@ b | 2""",
     ]
 
     for table in tables:
-        assert markdown_table_to_dict(table) == dict(a="1", b="2")
+        assert markdown_table_to_dict(table) == {"a": "1", "b": "2"}
 
 
 def test_table_too_short() -> None:

@@ -8,7 +8,8 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, NamedTuple
+from dataclasses import dataclass
+from typing import Any
 
 import livestatus
 
@@ -315,7 +316,7 @@ def _show_graph_html_content(
         class_=["graph"] + (["preview"] if graph_render_config.preview else []),
         style=(
             f"font-size: {graph_render_config.font_size:.1f}pt;"
-            f"{_graph_padding_styles(graph_render_config)}"
+            f"{_graph_padding_styles(graph_render_config.show_margin)}"
         ),
     )
 
@@ -528,26 +529,48 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     html.close_table()
 
 
-class Bounds(NamedTuple):
+@dataclass(frozen=True, kw_only=True)
+class Bounds:
     top: int
     right: int
     bottom: int
     left: int
 
 
-def _graph_padding_styles(graph_render_config: GraphRenderConfig) -> str:
-    return "padding: %0.2fex %0.2fex %0.2fex %0.2fex;" % _graph_margin_ex(graph_render_config)
+def _graph_padding_styles(show_margin: bool) -> str:
+    bounds = _graph_margin_ex(show_margin)
+    return (
+        "padding: "
+        f"{bounds.top:.2f}ex "
+        f"{bounds.right:.2f}ex "
+        f"{bounds.bottom:.2f}ex "
+        f"{bounds.left:.2f}ex;"
+    )
 
 
-def _graph_margin_ex(  # type: ignore[no-untyped-def]
-    graph_render_config: GraphRenderConfig, defaults=(8, 16, 4, 8)
+def _graph_margin_ex(
+    show_margin: bool,
+    *,
+    top: int = 8,
+    right: int = 16,
+    bottom: int = 4,
+    left: int = 8,
 ) -> Bounds:
-    """Return 4-Tuple for top, right, bottom, left spacing"""
-    if graph_render_config.preview:
-        return Bounds(0, 0, 0, 0)
-    if graph_render_config.show_margin:
-        return Bounds(*(x / html_size_per_ex for x in defaults))
-    return Bounds(0, 0, 0, 0)
+    return (
+        Bounds(
+            top=int(round(top / html_size_per_ex)),
+            right=int(round(right / html_size_per_ex)),
+            bottom=int(round(bottom / html_size_per_ex)),
+            left=int(round(left / html_size_per_ex)),
+        )
+        if show_margin
+        else Bounds(
+            top=0,
+            right=0,
+            bottom=0,
+            left=0,
+        )
+    )
 
 
 def ajax_graph(
@@ -1085,7 +1108,7 @@ def host_service_graph_dashlet_cmk(
     height_var = request.get_float_input_mandatory("height", 0.0)
     height = int(height_var / html_size_per_ex)
 
-    bounds = _graph_margin_ex(graph_render_config)
+    bounds = _graph_margin_ex(graph_render_config.show_margin)
     height -= _graph_title_height_ex(graph_render_config)
     height -= bounds.top + bounds.bottom
     width -= bounds.left + bounds.right

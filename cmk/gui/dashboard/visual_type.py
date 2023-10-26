@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterator, Mapping
-from typing import Any, cast
+from collections.abc import Iterator
+from typing import cast
 
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui.graphing._graph_specification import GraphSpecification, parse_raw_graph_specification
+from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.http import response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -84,7 +86,7 @@ class VisualTypeDashboards(VisualType):
             # parameters = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
             #                         'graph_index': 0, 'host_name': 'server123'}])
             add_type, context, parameters = self._handle_add_graph(
-                parameters["definition"]["specification"]
+                parse_raw_graph_specification(parameters["definition"]["specification"])
             )
 
         # the DashletConfig below doesn't take None for context, so at this point we should have one
@@ -144,25 +146,25 @@ class VisualTypeDashboards(VisualType):
 
     def _handle_add_graph(
         self,
-        raw_graph_specification: tuple[str, Mapping[str, Any]],
+        graph_specification: GraphSpecification,
     ) -> tuple[str, VisualContext, dict[str, object]]:
-        if raw_graph_specification[0] == "template":
+        if isinstance(graph_specification, TemplateGraphSpecification):
             return (
                 "pnpgraph",
                 {
-                    "host": {"host": raw_graph_specification[1]["host_name"]},
+                    "host": {"host": graph_specification.host_name},
                     # The service context has to be set, even for host graphs. Otherwise the
                     # pnpgraph dashlet would complain about missing context information when
                     # displaying host graphs.
-                    "service": {"service": raw_graph_specification[1]["service_description"]},
+                    "service": {"service": graph_specification.service_description},
                 },
                 {
-                    "source": raw_graph_specification[1]["graph_id"],
+                    "source": graph_specification.graph_id,
                     "single_infos": [],
                 },
             )
 
         raise MKGeneralException(
             _("Graph specification '%s' is insufficient for Dashboard.")
-            % raw_graph_specification[0]
+            % graph_specification.graph_type
         )

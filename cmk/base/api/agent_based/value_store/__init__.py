@@ -36,7 +36,7 @@ host value store and enter the services context, before
 the check function is called.
 
 
-.. autofunction:: load_host_value_store
+.. autofunction:: set_value_store_manager
 
 
 .. autoclass:: ValueStoreManager

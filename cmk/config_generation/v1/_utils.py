@@ -94,3 +94,7 @@ def get_http_proxy(
             return str(global_proxy.url)
 
     return "FROM_ENVIRONMENT"
+
+
+def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
+    return params

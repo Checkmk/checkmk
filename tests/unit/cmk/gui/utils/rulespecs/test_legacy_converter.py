@@ -19,7 +19,6 @@ from cmk.gui.utils.rulespecs.legacy_converter import (
 )
 
 import cmk.rulesets.v1 as api_v1
-from cmk.rulesets.v1 import Localizable
 
 
 @pytest.mark.parametrize(
@@ -31,13 +30,54 @@ from cmk.rulesets.v1 import Localizable
             ),
             legacy_valuespecs.MonitoringState(title=_("title"), default_value=0),
             id="MonitoringState",
-        )
+        ),
+        pytest.param(
+            api_v1.Dictionary(elements={}),
+            legacy_valuespecs.Dictionary(elements=[]),
+            id="minimal Dictionary",
+        ),
+        pytest.param(
+            api_v1.Dictionary(
+                elements={
+                    "key_req": api_v1.DictElement(
+                        api_v1.MonitoringState(title=api_v1.Localizable("title")),
+                        required=True,
+                    ),
+                    "key_opt": api_v1.DictElement(
+                        api_v1.MonitoringState(title=api_v1.Localizable("title")),
+                        show_more=True,
+                    ),
+                    "key_ignored": api_v1.DictElement(
+                        api_v1.MonitoringState(title=api_v1.Localizable("title")),
+                        ignored=True,
+                    ),
+                },
+                title=api_v1.Localizable("Configuration title"),
+                help_text=api_v1.Localizable("Helpful description"),
+                no_elements_text=api_v1.Localizable("No elements specified"),
+            ),
+            legacy_valuespecs.Dictionary(
+                elements=[
+                    ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
+                    ("key_opt", legacy_valuespecs.MonitoringState(title=_("title"))),
+                    ("key_ignored", legacy_valuespecs.MonitoringState(title=_("title"))),
+                ],
+                title=_("Configuration title"),
+                help=_("Helpful description"),
+                empty_text=_("No elements specified"),
+                required_keys=["key_req"],
+                default_keys=["key_req"],
+                show_more_keys=["key_opt"],
+                ignored_keys=["key_ignored"],
+            ),
+            id="Dictionary",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
     new_valuespec: api_v1.ValueSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
-    assert _convert_to_legacy_valuespec(new_valuespec, _).__dict__ == expected.__dict__
+    _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
 
 
 @pytest.mark.parametrize(
@@ -62,9 +102,9 @@ def test_convert_to_legacy_rulespec_group(
         pytest.param(
             api_v1.CheckParameterRuleSpecWithItem(
                 name="test_rulespec",
-                title=Localizable("rulespec title"),
+                title=api_v1.Localizable("rulespec title"),
                 group=api_v1.RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS,
-                item=api_v1.TextInput(title=Localizable("item title")),
+                item=api_v1.TextInput(title=api_v1.Localizable("item title")),
                 value_spec=partial(
                     api_v1.Dictionary,
                     elements={
@@ -73,7 +113,7 @@ def test_convert_to_legacy_rulespec_group(
                         ),
                     },
                 ),
-                help_text=Localizable("help text"),
+                help_text=api_v1.Localizable("help text"),
             ),
             legacy_rulespecs.CheckParameterRulespecWithItem(
                 check_group_name="test_rulespec",
@@ -95,9 +135,7 @@ def test_convert_to_legacy_rulespec_group(
 def test_convert_to_legacy_rulespec(
     new_rulespec: api_v1.RuleSpec, expected: legacy_rulespecs.Rulespec
 ) -> None:
-    converted_rulespec = convert_to_legacy_rulespec(new_rulespec, _)
-
-    _compare_specs(converted_rulespec, expected)
+    _compare_specs(convert_to_legacy_rulespec(new_rulespec, _), expected)
 
 
 def _compare_specs(actual: object, expected: object) -> None:

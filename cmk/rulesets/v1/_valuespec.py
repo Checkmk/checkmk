@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from cmk.rulesets.v1._localize import Localizable
@@ -22,12 +22,46 @@ class DropdownChoice:
 
 @dataclass(frozen=True)
 class DictElement:
+    """
+    Args:
+        spec: Configuration specification of this entry
+        required: Whether the user has to configure the value in question. If set to False, it may
+                  be omitted.
+        show_more: Only show if "show more" is activated
+    """
+
     spec: "ValueSpec"
+    required: bool | None = False
+    ignored: bool | None = False  # TODO check if hidden_keys are needed in addition
+    show_more: bool | None = False
 
 
-@dataclass
+@dataclass(frozen=True)
 class Dictionary:
-    elements: Mapping[str, DictElement]  # TODO check if key is a valid Python identifier
+    """
+    Specifies a (multi-)selection of configuration options.
+
+    Args:
+        elements: key-value mapping where the key identifies the selected option and the value
+                  specifies how the option can be configured. The key has to be a valid python
+                  identifier.
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic
+        no_elements_text: Text to show if no elements are specified
+    """
+
+    elements: Mapping[str, DictElement]
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    custom_validate: Callable[[Mapping[str, object]], None] | None = None
+    no_elements_text: Localizable | None = None
+
+    def __post_init__(self):
+        for key in self.elements.keys():
+            assert key.isidentifier(), f"'{key}' is not a valid python identifier"
 
 
 class State(enum.Enum):

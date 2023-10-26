@@ -17,7 +17,6 @@ from cmk.gui.type_defs import VisualContext
 from cmk.gui.visuals.type import VisualType
 
 from .dashlet import copy_view_into_dashlet, dashlet_registry, DashletConfig, ViewDashletConfig
-from .dashlet.dashlets import default_dashlet_graph_render_options
 from .store import add_dashlet, get_permitted_dashboards, load_dashboard_with_cloning
 from .type_defs import ABCGraphDashletConfig
 
@@ -161,36 +160,6 @@ class VisualTypeDashboards(VisualType):
                     "source": raw_graph_specification[1]["graph_id"],
                     "single_infos": [],
                 },
-            )
-        if raw_graph_specification[0] == "custom":
-            # Override the dashlet type here. It would be better to get the
-            # correct dashlet type from the menu. But this does not seem to
-            # be a trivial change.
-            return (
-                "custom_graph",
-                {},
-                {
-                    "custom_graph": raw_graph_specification[1],
-                    "single_infos": [],
-                },
-            )
-        if raw_graph_specification[0] == "combined":
-            parameters = dict(raw_graph_specification[1])
-            parameters["graph_render_options"] = default_dashlet_graph_render_options()
-            context = parameters.pop("context", {})
-            # FIXME: mypy doesn't know if the parameter is well-formed, but we promise it is!
-            assert isinstance(context, dict)
-
-            single_infos = raw_graph_specification[1]["single_infos"]
-            if "host" in single_infos:
-                context["host"] = {"host": context.get("host")}
-            if "service" in single_infos:
-                context["service"] = {"service": context.get("service")}
-            parameters["single_infos"] = []
-            return (
-                "combined_graph",
-                context,
-                parameters,
             )
 
         raise MKGeneralException(

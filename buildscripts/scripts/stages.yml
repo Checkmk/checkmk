@@ -384,14 +384,14 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/agent-controller.txt"
 
     - NAME: 'check-cert'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CHECK_CERT_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_CERT_FILES
       DIR: 'packages/check-cert'
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-cert.txt"
       TEXT_ON_SKIP: 'No check-cert files changes'
       RESULT_CHECK_FILE_PATTERN: "results/check-cert.txt"
 
     - NAME: 'check-http'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CHECK_HTTP_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_HTTP_FILES
       DIR: 'packages/check-http'
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/check-http.txt"
       TEXT_ON_SKIP: 'No check-http files changes'
@@ -414,7 +414,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
     - NAME: 'CMK graphing'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_GRAPHING_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_GRAPHING_FILES
       DIR: 'packages/cmk-graphing'
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-graphing.txt"
       TEXT_ON_SKIP: 'No CMK graphing files changed'

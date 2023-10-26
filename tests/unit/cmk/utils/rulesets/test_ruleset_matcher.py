@@ -196,7 +196,6 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     }
 
 
-@pytest.mark.usefixtures("fix_register")
 def test_labels_of_service_discovered_labels() -> None:
     test_host = HostName("test-host")
     xyz_host = HostName("xyz")

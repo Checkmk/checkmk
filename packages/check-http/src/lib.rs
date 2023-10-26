@@ -17,7 +17,7 @@ use crate::cli::OnRedirect;
 pub mod cli;
 mod pwstore;
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum State {
     Ok,
     Warn,
@@ -47,6 +47,17 @@ impl From<State> for i32 {
     }
 }
 
+impl State {
+    fn as_marker(&self) -> &'static str {
+        match self {
+            State::Ok => "",
+            State::Warn => " (!)",
+            State::Crit => " (!!)",
+            State::Unknown => " (?)",
+        }
+    }
+}
+
 pub struct Output {
     pub state: State,
     pub summary: String,
@@ -64,9 +75,10 @@ impl Display for Output {
 
 impl Output {
     pub fn from_short(state: State, summary: &str) -> Self {
+        let summary = format!("{}{}", summary, state.as_marker());
         Self {
             state,
-            summary: summary.to_string(),
+            summary,
             details: None,
         }
     }
@@ -265,6 +277,8 @@ async fn perform_request(
 }
 
 async fn check_response(response: ProcessedResponse, onredirect: OnRedirect) -> Output {
+    let mut outputs: Vec<Output> = Vec::new();
+
     let response_state = if response.status.is_client_error() {
         State::Warn
     } else if response.status.is_server_error() {
@@ -278,26 +292,65 @@ async fn check_response(response: ProcessedResponse, onredirect: OnRedirect) -> 
     } else {
         State::Ok
     };
+    outputs.push(Output::from_short(
+        response_state,
+        &format!("{:?} {}", response.version, response.status),
+    ));
 
-    let body = match response.body {
-        Ok(bd) => bd,
+    match response.body {
+        Ok(bd) => {
+            outputs.push(Output::from_short(
+                State::Ok,
+                &format!("Page size: {} bytes", bd.as_bytes().len()),
+            ));
+        }
         Err(_) => {
-            // TODO(au): Handle this without cancelling the check.
-            return Output::from_short(State::Unknown, "Error fetching the reponse body");
+            outputs.push(Output::from_short(
+                State::Crit,
+                "Error fetching the reponse body",
+            ));
         }
     };
 
-    Output::from_short(
-        response_state,
+    outputs.push(Output::from_short(
+        State::Ok,
         &format!(
-            "{:?} {} - {} bytes in {}.{} second response time",
-            response.version,
-            response.status,
-            body.len(),
+            "Response time: {}.{}s",
             response.elapsed.as_secs(),
             response.elapsed.subsec_millis()
         ),
-    )
+    ));
+
+    merge_outputs(&outputs)
+}
+
+fn merge_outputs(outputs: &[Output]) -> Output {
+    let summary = outputs
+        .iter()
+        .map(|output| output.summary.clone())
+        .collect::<Vec<String>>()
+        .join(", ");
+    let details = outputs
+        .iter()
+        .filter_map(|output| output.details.clone())
+        .collect::<Vec<String>>()
+        .join("\n");
+    let details = if details.is_empty() {
+        None
+    } else {
+        Some(details)
+    };
+    let state = outputs
+        .iter()
+        .map(|output| output.state.clone())
+        .max()
+        .unwrap();
+
+    Output {
+        state,
+        summary,
+        details,
+    }
 }
 
 #[cfg(test)]

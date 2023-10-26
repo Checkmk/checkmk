@@ -21,12 +21,10 @@ install_package() {
         go get github.com/bazelbuild/buildtools/buildifier@${BUILDIFIER_VERSION}
 }
 
-test_package "go version" "go$GO_VERSION\."
-
 case "$DISTRO" in
     ubuntu-20.04)
         install_package
-        test_package
+        test_package "go version" "go$GO_VERSION\."
         ;;
     *)
         echo "ERROR: Unhandled DISTRO: $DISTRO - buildifier should only be available in IMAGE_TESTING!"

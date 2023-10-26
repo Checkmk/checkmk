@@ -156,11 +156,6 @@ build_package() {
     rm -rf "$TARGET_DIR/src"
 }
 
-if [ "$1" != "link-only" ]; then
-    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
-fi
-set_symlinks
-
 test_packages() {
     for i in $(dpkg -L binutils | grep '/bin/'); do
         this_version=$($i --version)
@@ -176,6 +171,11 @@ test_packages() {
     done
 }
 
+if [ "$1" != "link-only" ]; then
+    cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+fi
+set_symlinks
+
 test_packages
-test_package "gcc --version" "$GCC_VERSION$"
-test_package "gdb --version" "$GDB_VERSION$"
+test_package "/usr/bin/gcc --version" "$GCC_VERSION"
+test_package "/usr/bin/gdb --version" "$GDB_VERSION"

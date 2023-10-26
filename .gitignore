@@ -63,6 +63,7 @@ config.status
 config.sub
 configure
 depcomp
+version_txt_from_previous_run
 agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/

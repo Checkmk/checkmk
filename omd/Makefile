@@ -62,6 +62,7 @@ PACKAGES += enterprise
 endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
+PACKAGES += cloud
 PACKAGES += managed
 endif
 ifeq ($(EDITION),cloud)

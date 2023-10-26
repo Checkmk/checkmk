@@ -55,7 +55,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> list[tuple[str, str]]:
-    if edition() is Edition.CCE:
+    if edition() in (Edition.CME, Edition.CCE):
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
 
     return RAW_AZURE_SERVICES

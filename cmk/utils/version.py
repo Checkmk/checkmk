@@ -18,6 +18,7 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -64,18 +65,22 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def mark_edition_only(feature_to_mark: str, exclusive_to: Edition) -> str:
+def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
     """
-    >>> mark_edition_only("Feature", Edition.CRE)
+    >>> mark_edition_only("Feature", [Edition.CRE])
     'Feature (Raw Edition)'
-    >>> mark_edition_only("Feature", Edition.CEE)
+    >>> mark_edition_only("Feature", [Edition.CEE])
     'Feature (Enterprise Edition)'
-    >>> mark_edition_only("Feature", Edition.CCE)
+    >>> mark_edition_only("Feature", [Edition.CCE])
     'Feature (Cloud Edition)'
-    >>> mark_edition_only("Feature", Edition.CME)
+    >>> mark_edition_only("Feature", [Edition.CME])
     'Feature (Managed Services Edition)'
+    >>> mark_edition_only("Feature", [Edition.CCE, Edition.CME])
+    'Feature (Cloud Edition, Managed Services Edition)'
     """
-    return f"{feature_to_mark} ({exclusive_to.title.removeprefix('Checkmk ')})"
+    return (
+        f"{feature_to_mark} ({', '.join([e.title.removeprefix('Checkmk ') for e in exclusive_to])})"
+    )
 
 
 # Version string: <major>.<minor>.<sub><vtype><patch>-<year>.<month>.<day>

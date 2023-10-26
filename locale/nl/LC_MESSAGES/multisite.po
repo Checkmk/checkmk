@@ -7997,6 +7997,10 @@ msgstr "Bug fix"
 msgid "Bugle"
 msgstr "Bugle"
 
+#, fuzzy
+msgid "Build"
+msgstr "Cache bouwen"
+
 msgid "Build Cache"
 msgstr "Cache bouwen"
 

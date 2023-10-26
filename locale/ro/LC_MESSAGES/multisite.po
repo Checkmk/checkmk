@@ -8061,6 +8061,10 @@ msgstr "Corectare de erori"
 msgid "Bugle"
 msgstr "Bugle"
 
+#, fuzzy
+msgid "Build"
+msgstr "Construiți memoria cache"
+
 msgid "Build Cache"
 msgstr "Construiți memoria cache"
 

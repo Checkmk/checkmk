@@ -8027,6 +8027,10 @@ msgstr "Correzione di bug"
 msgid "Bugle"
 msgstr "Bugle"
 
+#, fuzzy
+msgid "Build"
+msgstr "Costruire la cache"
+
 msgid "Build Cache"
 msgstr "Costruire la cache"
 

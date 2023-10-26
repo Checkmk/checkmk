@@ -7807,6 +7807,10 @@ msgstr "バグ修正"
 msgid "Bugle"
 msgstr "ラッパ"
 
+#, fuzzy
+msgid "Build"
+msgstr "ビルドキャッシュ"
+
 msgid "Build Cache"
 msgstr "ビルドキャッシュ"
 

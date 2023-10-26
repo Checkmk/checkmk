@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Callable
+from typing import Any, Callable
 
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
@@ -99,6 +99,9 @@ def _convert_to_legacy_valuespec(
             ignored_keys=legacy_key_props.ignored,
             show_more_keys=legacy_key_props.show_more,
         )
+    if isinstance(to_convert, ruleset_api_v1.TextInput):
+        return _convert_to_legacy_text_input(to_convert, localizer)
+
     if isinstance(to_convert, ruleset_api_v1.MonitoringState):
         return legacy_valuespecs.MonitoringState(
             title=to_convert.title.localize(localizer),
@@ -106,6 +109,28 @@ def _convert_to_legacy_valuespec(
         )
 
     raise NotImplementedError(to_convert)
+
+
+def _convert_to_legacy_text_input(
+    to_convert: ruleset_api_v1.TextInput, localizer: Callable[[str], str]
+) -> legacy_valuespecs.TextInput:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+
+    if to_convert.input_hint is not None:
+        converted_kwargs["placeholder"] = to_convert.input_hint
+
+    if to_convert.default_value is not None:
+        converted_kwargs["default_value"] = to_convert.default_value
+
+    if to_convert.custom_validate is not None:
+        # TODO wrap validate function
+        raise NotImplementedError("Custom validation")
+
+    return legacy_valuespecs.TextInput(**converted_kwargs)
 
 
 def _convert_to_legacy_item_spec(

@@ -11,13 +11,32 @@ from cmk.rulesets.v1._localize import Localizable
 
 
 @dataclass
-class TextInput:
-    title: Localizable
-
-
-@dataclass
 class DropdownChoice:
     ...
+
+
+@dataclass(frozen=True)
+class TextInput:
+    """
+    Args:
+        title: Human readable title
+        label: Text displayed in front of the input field
+        help_text: Description to help the user with the configuration
+        input_hint: A short hint to aid the user with data entry (e.g. an example)
+        default_value: Default text
+        custom_validate: Custom validation function. Will be executed in addition to any
+                 builtin validation logic. Needs to raise a ValidationError in case
+                 validation fails, the return value of the function will not be consumed
+    """
+
+    title: Localizable | None = None
+    label: Localizable | None = None
+    help_text: Localizable | None = None
+    input_hint: str | None = None
+
+    default_value: str | None = None
+
+    custom_validate: Callable[[str], object] | None = None
 
 
 @dataclass(frozen=True)
@@ -48,7 +67,8 @@ class Dictionary:
         title: Human readable title
         help_text: Description to help the user with the configuration
         custom_validate: Custom validation function. Will be executed in addition to any
-                         builtin validation logic
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails, the return value of the function will not be consumed
         no_elements_text: Text to show if no elements are specified
     """
 
@@ -56,7 +76,7 @@ class Dictionary:
     title: Localizable | None = None
     help_text: Localizable | None = None
 
-    custom_validate: Callable[[Mapping[str, object]], None] | None = None
+    custom_validate: Callable[[Mapping[str, object]], object] | None = None
     no_elements_text: Localizable | None = None
 
     def __post_init__(self):

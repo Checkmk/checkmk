@@ -72,6 +72,28 @@ import cmk.rulesets.v1 as api_v1
             ),
             id="Dictionary",
         ),
+        pytest.param(
+            api_v1.TextInput(),
+            legacy_valuespecs.TextInput(),
+            id="minimal TextInput",
+        ),
+        pytest.param(
+            api_v1.TextInput(
+                title=api_v1.Localizable("spec title"),
+                label=api_v1.Localizable("spec label"),
+                input_hint="firstname",
+                help_text=api_v1.Localizable("help text"),
+                default_value="myname",
+            ),
+            legacy_valuespecs.TextInput(
+                title=_("spec title"),
+                label=_("spec label"),
+                placeholder="firstname",
+                help=_("help text"),
+                default_value="myname",
+            ),
+            id="TextInput",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(

@@ -1,9 +1,9 @@
+import json
 import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
 
-import json
 import pytest
 
 from tests.testlib.agent import (
@@ -13,6 +13,7 @@ from tests.testlib.agent import (
     register_controller,
     wait_until_host_receives_data,
 )
+from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     current_base_branch_name,
@@ -136,6 +137,7 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
         assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
 
 
+@skip_if_not_cloud_edition
 @pytest.mark.skipif(
     os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),
     reason=f"The CCE currently does not support {os.environ.get('DISTRO')}",

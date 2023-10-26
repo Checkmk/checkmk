@@ -11,27 +11,14 @@
 set -eux
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-
-failure() {
-    echo "$(basename "$0"):" "$@" >&2
-    exit 1
-}
+# shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
+. "${SCRIPT_DIR}/build_lib.sh"
 
 # read optional command line argument
 if [ "$#" -eq 1 ]; then
     CLANG_VERSION=$1
 else
-    cd "${SCRIPT_DIR}"
-    while true; do
-        if [ -e defines.make ]; then
-            CLANG_VERSION=$(make --no-print-directory --file=defines.make print-CLANG_VERSION)
-            break
-        elif [ "$PWD" = / ]; then
-            failure "could not determine Clang version"
-        else
-            cd ..
-        fi
-    done
+    CLANG_VERSION=$(get_version "$SCRIPT_DIR" CLANG_VERSION)
 fi
 
 DISTRO=$(lsb_release -is)

@@ -4,6 +4,11 @@ log() {
     echo "+++ $1"
 }
 
+failure() {
+    echo "$(basename "$0"):" "$@" >&2
+    exit 1
+}
+
 _artifact_name() {
     local DIR_NAME="$1"
     local DISTRO="$2"

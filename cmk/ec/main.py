@@ -59,12 +59,13 @@ from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import (
     ActiveHistoryPeriod,
     Columns,
-    create_history,
+    FileHistory,
     get_logfile,
     History,
     HistoryWhat,
     quote_tab,
 )
+from .history_mongo import MongoDBHistory
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
 from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
@@ -223,6 +224,22 @@ class ECServerThread(threading.Thread):
 
     def terminate(self) -> None:
         self._terminate_event.set()
+
+
+def create_history(
+    settings: Settings,
+    config: Config,
+    logger: Logger,
+    event_columns: Columns,
+    history_columns: Columns,
+) -> History:
+    match config["archive_mode"]:
+        case "file":
+            return FileHistory(settings, config, logger, event_columns, history_columns)
+        case "mongodb":
+            return MongoDBHistory(settings, config, logger, event_columns, history_columns)
+        case _ as default:
+            assert_never(default)
 
 
 def allowed_ip(

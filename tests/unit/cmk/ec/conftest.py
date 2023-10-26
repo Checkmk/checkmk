@@ -14,8 +14,9 @@ import cmk.utils.paths
 import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
-from cmk.ec.history import create_history, FileHistory
+from cmk.ec.history import FileHistory
 from cmk.ec.main import (
+    create_history,
     default_slave_status_master,
     EventServer,
     EventStatus,

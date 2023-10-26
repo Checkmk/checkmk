@@ -15,6 +15,7 @@ class RuleSpecMainGroup(Enum):
 
 class RuleSpecSubGroup(Enum):
     CHECK_PARAMETERS_APPLICATIONS = auto()
+    CHECK_PARAMETERS_VIRTUALIZATION = auto()
 
 
 @dataclass(frozen=True)

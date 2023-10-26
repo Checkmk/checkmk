@@ -31,6 +31,10 @@ from cmk.rulesets.v1._rulespec import (
 from cmk.rulesets.v1._valuespec import (
     DictElement,
     Dictionary,
+    DropdownChoice,
+    DropdownChoiceElement,
+    InvalidElementMode,
+    InvalidElementValidator,
     ItemSpec,
     MonitoringState,
     State,
@@ -67,4 +71,8 @@ __all__ = [
     "MonitoringState",
     "State",
     "ValidationError",
+    "DropdownChoice",
+    "DropdownChoiceElement",
+    "InvalidElementValidator",
+    "InvalidElementMode",
 ]

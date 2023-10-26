@@ -199,7 +199,7 @@ get_version() {
 test_package() {
     log "Testing for ${1% *} in \$PATH"
     $1 | grep "$2" >/dev/null 2>&1 || (
-        echo "Invalid version: $($1)"
+        echo "Invalid version: $($1) expected $2"
         exit 1
     )
 }

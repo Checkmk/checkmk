@@ -18,17 +18,7 @@ failure() {
 if [ "$#" -eq 1 ]; then
     PYTHON_VERSION=$1
 else
-    cd "${SCRIPT_DIR}"
-    while true; do
-        if [ -e defines.make ]; then
-            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
-            break
-        elif [ "$PWD" == / ]; then
-            failure "could not determine Python version"
-        else
-            cd ..
-        fi
-    done
+    PYTHON_VERSION=$(get_version "$SCRIPT_DIR" PYTHON_VERSION)
 fi
 
 OPENSSL_VERSION=1.1.1u
@@ -68,7 +58,8 @@ build_package() {
 
 if [ "$1" != "link-only" ]; then
     cached_build "${TARGET_DIR}" "${DIR_NAME}" "${BUILD_ID}" "${DISTRO}" "${BRANCH_VERSION}"
+    test_package "${TARGET_DIR}/${DIR_NAME}/bin/python3 --version" "Python $PYTHON_VERSION"
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
 
-test_package "/opt/bin/python3 --version" "Python $PYTHON_VERSION"
+test_package "/opt/bin/python3 --version" "Python $(get_version "$SCRIPT_DIR" PYTHON_VERSION)"

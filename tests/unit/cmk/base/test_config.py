@@ -23,7 +23,7 @@ from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 from cmk.utils.sectionname import SectionName
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -64,6 +64,7 @@ def test_all_offline_hosts_with_wato_default_config(monkeypatch: MonkeyPatch) ->
         "only_hosts",
         [
             {
+                "id": "01",
                 "condition": {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("offline")}}},
                 "value": True,
             },
@@ -89,6 +90,7 @@ def test_all_configured_offline_hosts(monkeypatch: MonkeyPatch) -> None:
         "only_hosts",
         [
             {
+                "id": "01",
                 "condition": {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("offline")}}},
                 "value": True,
             },
@@ -240,12 +242,12 @@ def test_host_folder_matching(
     ts.set_ruleset(
         "agent_ports",
         [
-            {"condition": {"host_folder": "/wato/level11/level22/"}, "value": 22},
-            {"condition": {"host_folder": "/wato/level11/"}, "value": 11},
-            {"condition": {"host_folder": "/wato/level1/level3/"}, "value": 3},
-            {"condition": {"host_folder": "/wato/level1/level2/"}, "value": 2},
-            {"condition": {"host_folder": "/wato/level1/"}, "value": 1},
-            {"condition": {}, "value": 0},
+            {"id": "01", "condition": {"host_folder": "/wato/level11/level22/"}, "value": 22},
+            {"id": "02", "condition": {"host_folder": "/wato/level11/"}, "value": 11},
+            {"id": "03", "condition": {"host_folder": "/wato/level1/level3/"}, "value": 3},
+            {"id": "04", "condition": {"host_folder": "/wato/level1/level2/"}, "value": 2},
+            {"id": "05", "condition": {"host_folder": "/wato/level1/"}, "value": 1},
+            {"id": "06", "condition": {}, "value": 0},
         ],
     )
 
@@ -436,27 +438,27 @@ def test_is_no_ip_host(
             HostName("testhost"),
             {TagGroupID("address_family"): TagID("ip-v4-only")},
             False,
-            [{"condition": {}, "value": "ipv6"}],
+            [{"id": "01", "condition": {}, "value": "ipv6"}],
         ),
         (HostName("testhost"), {TagGroupID("address_family"): TagID("ip-v4v6")}, False, []),
         (
             HostName("testhost"),
             {TagGroupID("address_family"): TagID("ip-v4v6")},
             True,
-            [{"condition": {}, "value": "ipv6"}],
+            [{"id": "02", "condition": {}, "value": "ipv6"}],
         ),
         (HostName("testhost"), {TagGroupID("address_family"): TagID("ip-v6-only")}, True, []),
         (
             HostName("testhost"),
             {TagGroupID("address_family"): TagID("ip-v6-only")},
             True,
-            [{"condition": {}, "value": "ipv4"}],
+            [{"id": "03", "condition": {}, "value": "ipv4"}],
         ),
         (
             HostName("testhost"),
             {TagGroupID("address_family"): TagID("ip-v6-only")},
             True,
-            [{"condition": {}, "value": "ipv6"}],
+            [{"id": "04", "condition": {}, "value": "ipv6"}],
         ),
         (HostName("testhost"), {TagGroupID("address_family"): TagID("no-ip")}, False, []),
     ],
@@ -497,10 +499,10 @@ def test_host_config_management_address(
     assert config_cache.management_address(hostname) == result
 
 
-def _management_config_ruleset() -> list[dict[str, Any]]:
+def _management_config_ruleset() -> Sequence[RuleSpec[object]]:
     return [
-        {"condition": {}, "value": ("snmp", "eee")},
-        {"condition": {}, "value": ("ipmi", {"username": "eee", "password": "eee"})},
+        {"id": "01", "condition": {}, "value": ("snmp", "eee")},
+        {"id": "02", "condition": {}, "value": ("ipmi", {"username": "eee", "password": "eee"})},
     ]
 
 
@@ -532,7 +534,7 @@ def test_host_config_management_credentials(
     protocol: Literal["snmp", "ipmi"],
     credentials: dict[str, str] | None,
     expected_result: str | dict[str, str] | None,
-    ruleset: list,
+    ruleset: Sequence[RuleSpec[object]],
 ) -> None:
     hostname = HostName("hostname")
     ts = Scenario()
@@ -688,6 +690,7 @@ def test_is_usewalk_host(monkeypatch: MonkeyPatch) -> None:
         "usewalk_hosts",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [hostname]},
                 "value": True,
             },
@@ -746,7 +749,14 @@ def test_agent_port(monkeypatch: MonkeyPatch, hostname: HostName, result: int) -
     ts.add_host(hostname)
     ts.set_ruleset(
         "agent_ports",
-        [{"condition": {"host_name": [HostName("testhost2")]}, "value": 1337, "options": {}}],
+        [
+            {
+                "id": "01",
+                "condition": {"host_name": [HostName("testhost2")]},
+                "value": 1337,
+                "options": {},
+            }
+        ],
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache._agent_port(hostname) == result
@@ -764,7 +774,14 @@ def test_tcp_connect_timeout(monkeypatch: MonkeyPatch, hostname: HostName, resul
     ts.add_host(hostname)
     ts.set_ruleset(
         "tcp_connect_timeouts",
-        [{"condition": {"host_name": [HostName("testhost2")]}, "value": 12.0, "options": {}}],
+        [
+            {
+                "id": "01",
+                "condition": {"host_name": [HostName("testhost2")]},
+                "value": 12.0,
+                "options": {},
+            }
+        ],
     )
     config_cache = ts.apply(monkeypatch)
     assert config_cache._tcp_connect_timeout(hostname) == result
@@ -786,6 +803,7 @@ def test_encryption_handling(
         "encryption_handling",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {"accept": "tls_encrypted_only"},
             }
@@ -811,6 +829,7 @@ def test_symmetric_agent_encryption(
         "agent_encryption",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "my-super-secret-psk",
             }
@@ -836,6 +855,7 @@ def test_agent_target_version(
         "check_mk_agent_target_versions",
         [
             {
+                "id": "01",
                 "condition": {"host_name": ["testhost2"]},
                 "value": "site",
             }
@@ -866,12 +886,14 @@ def test_special_agents(monkeypatch: MonkeyPatch, hostname: HostName, result: li
         {
             "abc": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {"param1": 1},
                 }
             ],
             "xyz": [
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {"param2": 1},
                 }
@@ -896,10 +918,12 @@ def test_only_from(monkeypatch: MonkeyPatch, hostname: HostName, result: list[st
         {
             "only_from": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ["127.0.0.1"],
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ["127.0.0.2"],
                 },
@@ -929,14 +953,17 @@ def test_explicit_check_command(
         "host_check_commands",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "command1",
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "command2",
             },
             {
+                "id": "03",
                 "condition": {"host_name": [HostName("testhost3")]},
                 "value": "smart",
             },
@@ -959,14 +986,17 @@ def test_ping_levels(monkeypatch: MonkeyPatch, hostname: HostName, result: dict[
         "ping_levels",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {"ding": 1},
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {"ding": 3},
             },
             {
+                "id": "03",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {"dong": 1},
             },
@@ -990,14 +1020,17 @@ def test_icons_and_actions(monkeypatch: MonkeyPatch, hostname: HostName, result:
         "host_icons_and_actions",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "icon1",
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "icon1",
             },
             {
+                "id": "03",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "icon2",
             },
@@ -1024,20 +1057,24 @@ def test_host_config_extra_host_attributes(
         {
             "dingdong": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ["value1"],
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ["value2"],
                 },
             ],
             "_custom": [
                 {
+                    "id": "03",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ["value1"],
                 },
                 {
+                    "id": "04",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ["value2"],
                 },
@@ -1070,10 +1107,12 @@ def test_host_config_inventory_parameters(
         {
             "if": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {"value1": 1},
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {"value2": 2},
                 },
@@ -1122,6 +1161,7 @@ def test_discovery_check_parameters(
         "periodic_discovery",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {
                     "check_interval": 1,
@@ -1131,6 +1171,7 @@ def test_discovery_check_parameters(
                 },
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {
                     "check_interval": 2,
@@ -1167,12 +1208,14 @@ def test_notification_plugin_parameters(
         {
             "mail": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {
                         "value1": 1,
                     },
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {
                         "value1": 2,
@@ -1217,12 +1260,14 @@ def test_host_config_active_checks(
         {
             "abc": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {
                         "param1": 1,
                     },
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {
                         "param2": 2,
@@ -1231,6 +1276,7 @@ def test_host_config_active_checks(
             ],
             "xyz": [
                 {
+                    "id": "03",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": {
                         "param2": 1,
@@ -1258,12 +1304,14 @@ def test_host_config_custom_checks(
         "custom_checks",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {
                     "param1": 1,
                 },
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {
                     "param2": 2,
@@ -1349,10 +1397,12 @@ def test_host_config_static_checks(
         {
             "checkgroup": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ("checktype1", "item1", {"param1": 1}),
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
                     "value": ("checktype2", "item2", {"param2": 2}),
                 },
@@ -1376,6 +1426,7 @@ def test_hostgroups(monkeypatch: MonkeyPatch, hostname: HostName, result: list[s
         "host_groups",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": "dingdong",
             },
@@ -1406,18 +1457,22 @@ def test_contactgroups(monkeypatch: MonkeyPatch, hostname: HostName, result: lis
             # Seems both, a list of groups and a group name is allowed. We should clean
             # this up to be always a list of groups in the future...
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2"), HostName("testhost3")]},
                 "value": "dingdong",
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2"), HostName("testhost3")]},
                 "value": ["abc"],
             },
             {
+                "id": "03",
                 "condition": {"host_name": [HostName("testhost2"), HostName("testhost3")]},
                 "value": ["xyz"],
             },
             {
+                "id": "04",
                 "condition": {"host_name": [HostName("testhost3")]},
                 "value": "haha",
             },
@@ -1442,6 +1497,7 @@ def test_config_cache_exit_code_spec_overall(
         "check_mk_exit_status",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {
                     "overall": {"connection": 1},
@@ -1470,6 +1526,7 @@ def test_config_cache_exit_code_spec_individual(
         "check_mk_exit_status",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": {
                     "overall": {"connection": 1},
@@ -1524,6 +1581,7 @@ def test_config_cache_exit_code_spec(monkeypatch: MonkeyPatch, ruleset: dict[str
         "check_mk_exit_status",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [hostname]},
                 "value": ruleset,
             },
@@ -1567,10 +1625,12 @@ def test_config_cache_snmp_credentials_of_version(
         "snmp_communities",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2"), HostName("testhost3")]},
                 "value": "bla",
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2"), HostName("testhost4")]},
                 "value": ("noAuthNoPriv", "v3"),
             },
@@ -1599,6 +1659,7 @@ def test_snmp_check_interval(
         "snmp_check_interval",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": ("snmp_uptime", 4),
             },
@@ -1701,7 +1762,7 @@ def test_service_depends_on(monkeypatch: MonkeyPatch) -> None:
     test_host = HostName("test-host")
     ts = Scenario()
     ts.add_host(test_host)
-    ts.set_ruleset(
+    ts.set_option(
         "service_dependencies",
         [
             ("dep1", [], config.ALL_HOSTS, ["svc1"], {}),
@@ -1839,9 +1900,10 @@ def test_tags_of_service(monkeypatch: MonkeyPatch) -> None:
         "service_tag_rules",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
+                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                 },
                 "value": [("criticality", "prod")],
             }
@@ -1890,10 +1952,12 @@ def test_labels(monkeypatch: MonkeyPatch) -> None:
         "host_label_rules",
         [
             {
+                "id": "01",
                 "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
                 "value": {"from-rule": "rule1"},
             },
             {
+                "id": "02",
                 "condition": {"host_tags": {TagGroupID("agent"): TagID("no-agent")}},
                 "value": {"from-rule2": "rule2"},
             },
@@ -1970,6 +2034,7 @@ def test_config_cache_extra_attributes_of_service(
         {
             "check_interval": [
                 {
+                    "id": "01",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": [HostName("testhost2")],
@@ -1979,6 +2044,7 @@ def test_config_cache_extra_attributes_of_service(
             ],
             "dingdong": [
                 {
+                    "id": "02",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": [HostName("testhost2")],
@@ -1986,6 +2052,7 @@ def test_config_cache_extra_attributes_of_service(
                     "value": ["value1"],
                 },
                 {
+                    "id": "03",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": [HostName("testhost2")],
@@ -1995,6 +2062,7 @@ def test_config_cache_extra_attributes_of_service(
             ],
             "_custom": [
                 {
+                    "id": "04",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": [HostName("testhost2")],
@@ -2002,6 +2070,7 @@ def test_config_cache_extra_attributes_of_service(
                     "value": ["value1"],
                 },
                 {
+                    "id": "05",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": [HostName("testhost2")],
@@ -2032,6 +2101,7 @@ def test_config_cache_icons_and_actions(
         "service_icons_and_actions",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2039,6 +2109,7 @@ def test_config_cache_icons_and_actions(
                 "value": "icon1",
             },
             {
+                "id": "02",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2046,6 +2117,7 @@ def test_config_cache_icons_and_actions(
                 "value": "icon1",
             },
             {
+                "id": "03",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2081,6 +2153,7 @@ def test_config_cache_servicegroups_of_service(
         "service_groups",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2118,6 +2191,7 @@ def test_config_cache_contactgroups_of_service(
             # allowed. We should clean this up to be always a list of groups in the
             # future...
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2"), HostName("testhost3")],
@@ -2125,6 +2199,7 @@ def test_config_cache_contactgroups_of_service(
                 "value": "dingdong",
             },
             {
+                "id": "02",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2"), HostName("testhost3")],
@@ -2132,6 +2207,7 @@ def test_config_cache_contactgroups_of_service(
                 "value": ["abc"],
             },
             {
+                "id": "03",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2"), HostName("testhost3")],
@@ -2139,6 +2215,7 @@ def test_config_cache_contactgroups_of_service(
                 "value": ["xyz"],
             },
             {
+                "id": "04",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost3")],
@@ -2167,6 +2244,7 @@ def test_config_cache_passive_check_period_of_service(
         "check_periods",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2201,6 +2279,7 @@ def test_config_cache_custom_attributes_of_service(
         "custom_service_attributes",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2211,6 +2290,7 @@ def test_config_cache_custom_attributes_of_service(
                 ],
             },
             {
+                "id": "02",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2241,6 +2321,7 @@ def test_config_cache_service_level_of_service(
         "service_service_levels",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2248,6 +2329,7 @@ def test_config_cache_service_level_of_service(
                 "value": 10,
             },
             {
+                "id": "02",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2277,6 +2359,7 @@ def test_config_cache_check_period_of_service(
         "check_periods",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost2")],
@@ -2284,6 +2367,7 @@ def test_config_cache_check_period_of_service(
                 "value": "24X7",
             },
             {
+                "id": "02",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost3")],
@@ -2291,6 +2375,7 @@ def test_config_cache_check_period_of_service(
                 "value": "xyz",
             },
             {
+                "id": "03",
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
                     "host_name": [HostName("testhost3")],
@@ -2390,10 +2475,10 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     [
         (False, None),
         (False, []),
-        (False, [{"condition": {}, "value": None}]),
-        (False, [{"condition": {}, "value": {}}]),
-        (True, [{"condition": {}, "value": {"status_data_inventory": True}}]),
-        (False, [{"condition": {}, "value": {"status_data_inventory": False}}]),
+        (False, [{"id": "01", "condition": {}, "value": None}]),
+        (False, [{"id": "02", "condition": {}, "value": {}}]),
+        (True, [{"id": "03", "condition": {}, "value": {"status_data_inventory": True}}]),
+        (False, [{"id": "04", "condition": {}, "value": {"status_data_inventory": False}}]),
     ],
 )
 def test_config_cache_status_data_inventory(
@@ -2428,10 +2513,12 @@ def test_host_config_service_level(
         "host_service_levels",
         [
             {
+                "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": 10,
             },
             {
+                "id": "02",
                 "condition": {"host_name": [HostName("testhost2")]},
                 "value": 2,
             },
@@ -2486,6 +2573,7 @@ def test_host_config_add_discovery_check(
         "periodic_discovery",
         [
             {
+                "id": "01",
                 "condition": {
                     "host_name": ["xyz"],
                 },
@@ -2499,6 +2587,7 @@ def test_host_config_add_discovery_check(
             "ignored_services",
             [
                 {
+                    "id": "02",
                     "condition": {
                         "service_description": [{"$regex": "Check_MK inventory"}],
                         "host_name": ["xyz"],

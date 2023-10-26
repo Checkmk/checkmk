@@ -1128,6 +1128,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
         "clustered_services",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "fs_"}],
                     "host_name": [node1_hostname],

@@ -43,6 +43,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
         "clustered_services",
         [
             {
+                "id": "01",
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
                     "host_name": [node],
@@ -94,14 +95,17 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         {
             "temperature": [
                 {
+                    "id": "01",
                     "value": ("smart_temp", "cluster-item", {"source": "enforced-on-node"}),
                     "condition": {"host_name": [node]},
                 },
                 {
+                    "id": "02",
                     "value": ("smart_temp", "node-item", {"source": "enforced-on-node"}),
                     "condition": {"host_name": [node]},
                 },
                 {
+                    "id": "03",
                     "value": (
                         "smart_temp",
                         "cluster-item-overridden",
@@ -116,6 +120,7 @@ def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
         "clustered_services",
         [
             {
+                "id": "04",
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART cluster"}],
                     "host_name": [node],
@@ -360,35 +365,43 @@ def test_check_table(
         {
             "temperature": [
                 {
+                    "id": "01",
                     "condition": {"host_name": ["no-autochecks", "autocheck-overwrite"]},
                     "value": ("smart.temp", "/dev/sda", {}),
                 },
                 {
+                    "id": "02",
                     "condition": {"host_name": ["ignore-not-existing-checks"]},
                     "value": ("blub.bla", "ITEM", {}),
                 },
                 {
+                    "id": "03",
                     "condition": {"host_name": ["ignore-disabled-rules"]},
                     "options": {"disabled": True},
                     "value": ("smart.temp", "ITEM1", {}),
                 },
                 {
+                    "id": "04",
                     "condition": {"host_name": ["ignore-disabled-rules"]},
                     "value": ("smart.temp", "ITEM2", {}),
                 },
                 {
+                    "id": "05",
                     "condition": {"host_name": ["static-check-overwrite"]},
                     "value": ("smart.temp", "/dev/sda", {"rule": 1}),
                 },
                 {
+                    "id": "06",
                     "condition": {"host_name": ["static-check-overwrite"]},
                     "value": ("smart.temp", "/dev/sda", {"rule": 2}),
                 },
                 {
+                    "id": "07",
                     "condition": {"host_name": ["node1"]},
                     "value": ("smart.temp", "static-node1", {}),
                 },
                 {
+                    "id": "08",
                     "condition": {"host_name": ["cluster1"]},
                     "value": ("smart.temp", "static-cluster", {}),
                 },
@@ -399,6 +412,7 @@ def test_check_table(
         "clustered_services",
         [
             {
+                "id": "09",
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
                     "host_name": [
@@ -518,6 +532,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
         {
             "filesystem": [
                 {
+                    "id": "01",
                     "condition": {"host_name": [hostname_str]},
                     "value": (plugin_name, item, {"source": "static"}),
                 }
@@ -553,6 +568,7 @@ def test_check_table__get_static_check_entries(
     static_checks: dict[str, list] = {
         "ps": [
             {
+                "id": "01",
                 "condition": {"service_description": [], "host_name": [hostname]},
                 "options": {},
                 "value": ("ps", "item", static_parameters_default),
@@ -564,11 +580,12 @@ def test_check_table__get_static_check_entries(
     ts.add_host(hostname)
     ts.set_option("static_checks", static_checks)
 
-    ts.set_ruleset(
+    ts.set_option(
         "checkgroup_parameters",
         {
             "ps": [
                 {
+                    "id": "02",
                     "condition": {"service_description": [], "host_name": [hostname]},
                     "options": {},
                     "value": check_group_parameters,

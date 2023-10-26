@@ -131,6 +131,7 @@ def test_get_cmk_passive_service_attributes(
         {
             "contact_groups": [
                 {
+                    "id": "01",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["localhost"],
@@ -141,6 +142,7 @@ def test_get_cmk_passive_service_attributes(
             ],
             "check_interval": [
                 {
+                    "id": "02",
                     "condition": {
                         "service_description": [{"$regex": "Check_MK$"}],
                         "host_name": ["blub"],
@@ -149,6 +151,7 @@ def test_get_cmk_passive_service_attributes(
                     "value": 40.0,
                 },
                 {
+                    "id": "03",
                     "condition": {
                         "service_description": [{"$regex": "CPU load$"}],
                         "host_name": ["localhost"],

@@ -763,7 +763,7 @@ class Site:
             cmk_path() + "/.werks",
             cmk_path() + "/agent-receiver",
             cmk_path() + "/active_checks",
-            cmk_path() + "/packages/werks",
+            cmk_path() + "/packages/cmk-werks",
         ]
 
         if self.version.is_raw_edition():

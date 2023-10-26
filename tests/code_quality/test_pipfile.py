@@ -36,7 +36,7 @@ IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
-    repo_path() / "packages/werks/build",
+    repo_path() / "packages/cmk-werks/build",
     repo_path() / "agent-receiver/build",
     repo_path() / "bazel-check_mk",
     repo_path() / "omd/build",

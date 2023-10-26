@@ -150,8 +150,8 @@ VARIABLES:
     - NAME: CHANGED_IMAGE_TESTING
       SH: "echo '${CHANGED_FILES_REL}' | grep 'buildscripts/docker_image_aliases/IMAGE_TESTING/' || true"
 
-    - NAME: CHANGED_WERK_PACKAGE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/werks' || true"
+    - NAME: CHANGED_CMK_WERKS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks' || true"
       REPLACE_NEWLINES: true
 
 STAGES:
@@ -176,7 +176,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/python-format.txt"
 
     - NAME: 'Python Cyclic Dependencies'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE_LOCK,CHANGED_WERK_PACKAGE_FILES,CHANGED_PYTHON_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE_LOCK,CHANGED_CMK_WERKS_FILES,CHANGED_PYTHON_FILES
       DIR: 'tests'
       COMMAND: 'make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt'
       TEXT_ON_SKIP: 'No Python files changed'
@@ -245,7 +245,7 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
 
     - NAME: 'Python Bandit'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYTHON_FILES,CHANGED_WERK_PACKAGE_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYTHON_FILES,CHANGED_CMK_WERKS_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
       ENV_VARS:
           BANDIT_OUTPUT_ARGS: "-f xml -o ${RESULTS}/bandit_results.xml"
@@ -406,12 +406,12 @@ STAGES:
       TEXT_ON_SKIP: 'No check SQL files changed'
       RESULT_CHECK_FILE_PATTERN: "results/check-sql.txt"
 
-    - NAME: 'Werks'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_WERK_PACKAGE_FILES
-      DIR: 'packages/werks'
-      COMMAND: "../../scripts/run-in-docker.sh ./run &> ${RESULTS}/werk_package.txt"
-      TEXT_ON_SKIP: 'No werk package files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/werk_package.txt"
+    - NAME: 'CMK Werks'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_WERKS_FILES
+      DIR: 'packages/cmk-werks'
+      COMMAND: "../../scripts/run-in-docker.sh ./run &> ${RESULTS}/cmk-werks.txt"
+      TEXT_ON_SKIP: 'No CMK werks package files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 
     - NAME: 'CMK graphing'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CMK_GRAPHING_FILES

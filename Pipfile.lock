@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f6618a5d54ec81676d8d7b6056e66832aadb32d05ad4b3b85a5f9081912d4ea3"
+            "sha256": "df6f2b6d6251af651b8daf3c80c3ba84a2de1f55c18181e728f49d322d2beedb"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -116,6 +116,7 @@
                 "sha256:fc37e9aef10a696a5a4474802930079ccfc14d9f9c10b4662169671ff034b7df",
                 "sha256:fdee8405931b0615220e5ddf8cd7edd8592c606a8e4ca2a00704883c396e4479"
             ],
+            "markers": "python_version >= '3.6'",
             "version": "==3.8.6"
         },
         "aiosignal": {
@@ -1744,7 +1745,7 @@
         },
         "werks": {
             "editable": true,
-            "path": "./packages/werks"
+            "path": "./packages/cmk-werks"
         },
         "werkzeug": {
             "hashes": [
@@ -2197,9 +2198,6 @@
             "version": "==0.10.1"
         },
         "coverage": {
-            "extras": [
-                "toml"
-            ],
             "hashes": [
                 "sha256:0cbf38419fb1a347aaf63481c00f0bdc86889d9fbf3f25109cf96c26b403fda1",
                 "sha256:12d15ab5833a997716d76f2ac1e4b4d536814fc213c85ca72756c19e5a6b3d63",

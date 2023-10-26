@@ -42,4 +42,4 @@ if [ "$1" != "link-only" ]; then
 fi
 set_bin_symlinks "${TARGET_DIR}" "${DIR_NAME}"
 
-test_package "valgrind --version" "^valgrind-$VALGRIND_VERSION$"
+test_package "/opt/bin/valgrind --version" "^valgrind-$VALGRIND_VERSION$"

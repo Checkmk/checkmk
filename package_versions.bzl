@@ -1,4 +1,5 @@
-# PYTHON_VERSION is currently sed-ed from defines.make
+# TODO: Duplicated from defines.make:
+# we need to centralize this again as soon as the whole build process is migrated to bazel.
 PYTHON_VERSION = "3.11.5"
 PYTHON_VERSION_ARRAY = PYTHON_VERSION.split(".")
 PYTHON_VERSION_MAJOR = PYTHON_VERSION_ARRAY[0]

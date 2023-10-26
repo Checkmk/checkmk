@@ -56,6 +56,7 @@ doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
 doc/documentation/*.png
 doc/documentation/*.cmapx
+version_txt_from_previous_run
 GPATH
 GRTAGS
 GTAGS

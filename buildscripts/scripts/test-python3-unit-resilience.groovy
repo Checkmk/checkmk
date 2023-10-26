@@ -3,6 +3,7 @@
 /// file: test-python3-unit-resilience.groovy
 
 def main() {
+    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def docker_args = "--ulimit nofile=1024:1024 --init";
     def relative_result_path = "results/junit-resilience.xml"
     def result_path = "${checkout_dir}/${relative_result_path}";
@@ -21,11 +22,7 @@ def main() {
                         currentBuild.setKeepLog(true)
                         throw e
                     } finally {
-                        step([
-                            $class: "JUnitResultArchiver",
-                            // Absolutley no idea why I cannot use an absolute path here...
-                            testResults: "${relative_result_path}",
-                        ])
+                        test_jenkins_helper.analyse_issues("JUNIT", relative_result_path);
                     }
                 }
             }

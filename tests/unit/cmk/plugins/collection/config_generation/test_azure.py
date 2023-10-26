@@ -8,7 +8,15 @@ from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.config_generation.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
+from cmk.plugins.collection.config_generation.azure import special_agent_azure
+
+HOST_CONFIG = HostConfig(
+    name="host",
+    address="127.0.0.1",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+)
 
 
 @pytest.mark.parametrize(
@@ -16,6 +24,7 @@ from tests.testlib import SpecialAgent
     [
         pytest.param(
             {
+                "authority": "china",
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
@@ -29,7 +38,9 @@ from tests.testlib import SpecialAgent
                 "--client",
                 "blueberry",
                 "--secret",
-                "vurystrong",
+                PlainTextSecret(value="vurystrong", format="%s"),
+                "--authority",
+                "china",
                 "--subscription",
                 "banana",
                 "--services",
@@ -40,6 +51,7 @@ from tests.testlib import SpecialAgent
         ),
         pytest.param(
             {
+                "authority": "global",
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
@@ -48,6 +60,7 @@ from tests.testlib import SpecialAgent
                     "explicit": [{"group_name": "my_res_group"}],
                     "tag_based": [("my_tag", "exists")],
                 },
+                "services": [],
             },
             [
                 "--tenant",
@@ -55,7 +68,9 @@ from tests.testlib import SpecialAgent
                 "--client",
                 "blueberry",
                 "--secret",
-                ("store", "azure", "%s"),
+                StoredSecret(value="azure", format="%s"),
+                "--authority",
+                "global",
                 "--subscription",
                 "banana",
                 "--explicit-config",
@@ -67,10 +82,12 @@ from tests.testlib import SpecialAgent
         ),
         pytest.param(
             {
+                "authority": "global",
                 "subscription": "banana",
                 "tenant": "strawberry",
                 "client": "blueberry",
                 "secret": ("store", "azure"),
+                "services": [],
                 "config": {
                     "explicit": [{"group_name": "my_res_group", "resources": ["res1", "res2"]}],
                     "tag_based": [("my_tag_1", "exists"), ("my_tag_2", ("value", "t1"))],
@@ -84,7 +101,9 @@ from tests.testlib import SpecialAgent
                 "--client",
                 "blueberry",
                 "--secret",
-                ("store", "azure", "%s"),
+                StoredSecret(value="azure", format="%s"),
+                "--authority",
+                "global",
                 "--subscription",
                 "banana",
                 "--sequential",
@@ -108,6 +127,8 @@ def test_azure_argument_parsing(
     expected_args: Sequence[Any],
 ) -> None:
     """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_azure")
-    arguments = agent.argument_func(params, "testhost", "address")
-    assert arguments == expected_args
+    parsed_params = special_agent_azure.parameter_parser(params)
+    commands = list(special_agent_azure.commands_function(parsed_params, HOST_CONFIG, {}))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_args

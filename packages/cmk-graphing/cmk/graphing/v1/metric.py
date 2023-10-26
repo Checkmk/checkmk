@@ -3,8 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._color import Color, RGB
-from ._localize import Localizable
-from ._unit import Unit
+from dataclasses import dataclass
 
-__all__ = ["Color", "RGB", "Localizable", "Unit"]
+from ._color import Color
+from ._localize import Localizable
+
+
+@dataclass(frozen=True, kw_only=True)
+class Metric:
+    name: str
+    title: Localizable
+    unit: str
+    color: Color
+
+    def __post_init__(self) -> None:
+        assert self.name

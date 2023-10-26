@@ -35,6 +35,7 @@ from cmk.rulesets.v1._valuespec import (
     MonitoringState,
     State,
     TextInput,
+    ValidationError,
     ValueSpec,
 )
 
@@ -65,4 +66,5 @@ __all__ = [
     "Localizable",
     "MonitoringState",
     "State",
+    "ValidationError",
 ]

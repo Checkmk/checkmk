@@ -11,6 +11,7 @@ import pytest
 import cmk.gui.valuespec as legacy_valuespecs
 import cmk.gui.watolib.rulespecs as legacy_rulespecs
 from cmk.gui import wato, watolib
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.utils.rulespecs.legacy_converter import (
     _convert_to_legacy_rulespec_group,
@@ -19,6 +20,16 @@ from cmk.gui.utils.rulespecs.legacy_converter import (
 )
 
 import cmk.rulesets.v1 as api_v1
+
+
+def _v1_custom_text_validate(value: str) -> None:
+    if value == "admin":
+        raise api_v1.ValidationError(api_v1.Localizable("Forbidden"))
+
+
+def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
+    if value == "admin":
+        raise MKUserError(varprefix, _("Forbidden"))
 
 
 @pytest.mark.parametrize(
@@ -84,6 +95,7 @@ import cmk.rulesets.v1 as api_v1
                 input_hint="firstname",
                 help_text=api_v1.Localizable("help text"),
                 default_value="myname",
+                custom_validate=_v1_custom_text_validate,
             ),
             legacy_valuespecs.TextInput(
                 title=_("spec title"),
@@ -91,6 +103,7 @@ import cmk.rulesets.v1 as api_v1
                 placeholder="firstname",
                 help=_("help text"),
                 default_value="myname",
+                validate=_legacy_custom_text_validate,
             ),
             id="TextInput",
         ),
@@ -174,6 +187,11 @@ def _compare_specs(actual: object, expected: object) -> None:
     assert expected.__dict__.keys() == actual.__dict__.keys()
     for attr, expected_value in expected.__dict__.items():
         actual_value = getattr(actual, attr)
+        if attr in ["_custom_validate", "_validate"]:
+            # testing the equality of the validation in a generic way seems very difficult
+            #  check that the field was set during conversion and test behavior separately
+            assert (actual_value is not None) is (expected_value is not None)
+            continue
         if not callable(expected_value):
             _compare_specs(actual_value, expected_value)
             continue
@@ -182,3 +200,21 @@ def _compare_specs(actual: object, expected: object) -> None:
             _compare_specs(actual_value(), expected_value())
         except TypeError:  # deal with valuespec constructors
             assert actual_value == expected_value
+
+
+def test_convert_validation():
+    converted_spec = _convert_to_legacy_valuespec(
+        api_v1.TextInput(custom_validate=_v1_custom_text_validate), _
+    )
+    expected_spec = legacy_valuespecs.TextInput(validate=_legacy_custom_text_validate)
+
+    test_args = ("admin", "var_prefix")
+    with pytest.raises(MKUserError) as expected_error:
+        expected_spec.validate_value(*test_args)
+
+    with pytest.raises(MKUserError) as actual_error:
+        converted_spec.validate_value(*test_args)
+
+    assert actual_error.value.args == expected_error.value.args
+    assert actual_error.value.message == expected_error.value.message
+    assert actual_error.value.varname == expected_error.value.varname

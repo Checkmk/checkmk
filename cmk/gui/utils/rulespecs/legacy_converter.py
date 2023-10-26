@@ -6,10 +6,11 @@
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar
 
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem
 
@@ -98,6 +99,9 @@ def _convert_to_legacy_valuespec(
             required_keys=legacy_key_props.required,
             ignored_keys=legacy_key_props.ignored,
             show_more_keys=legacy_key_props.show_more,
+            validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
+            if to_convert.custom_validate is not None
+            else None,
         )
     if isinstance(to_convert, ruleset_api_v1.TextInput):
         return _convert_to_legacy_text_input(to_convert, localizer)
@@ -127,8 +131,9 @@ def _convert_to_legacy_text_input(
         converted_kwargs["default_value"] = to_convert.default_value
 
     if to_convert.custom_validate is not None:
-        # TODO wrap validate function
-        raise NotImplementedError("Custom validation")
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
 
     return legacy_valuespecs.TextInput(**converted_kwargs)
 
@@ -137,7 +142,21 @@ def _convert_to_legacy_item_spec(
     to_convert: ruleset_api_v1.ItemSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
     if isinstance(to_convert, ruleset_api_v1.TextInput):
-        return legacy_valuespecs.TextInput(
-            title=_localize_optional(to_convert.title, localizer),
-        )
+        return _convert_to_legacy_text_input(to_convert, localizer)
     raise NotImplementedError(to_convert)
+
+
+_ValidateFuncType = TypeVar("_ValidateFuncType")
+
+
+def _convert_to_legacy_validation(
+    v1_validate_func: Callable[[_ValidateFuncType], object],
+    localizer: Callable[[str], str],
+) -> Callable[[_ValidateFuncType, str], None]:
+    def wrapper(value: _ValidateFuncType, var_prefix: str) -> None:
+        try:
+            v1_validate_func(value)
+        except ruleset_api_v1.ValidationError as e:
+            raise MKUserError(var_prefix, e.message.localize(localizer))
+
+    return wrapper

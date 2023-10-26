@@ -1,1 +1,1 @@
-exports_files(["werks"])
+exports_files(["cmk-werks"])

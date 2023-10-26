@@ -1,0 +1,13 @@
+Title: mk_oracle: Bring back reporting of failed cached commands
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698343197
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p13
+
+This fixes the reporting of failed cached commands of the plugin <tt>mk_oracle</tt>.
+A regression in 2.2.0p12 caused those to not be reported.
+

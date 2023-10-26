@@ -71,6 +71,7 @@ import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import AndOrNotLiteral
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
@@ -105,7 +106,6 @@ from cmk.gui.utils.autocompleter_config import AutocompleterConfig, ContextAutoc
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
-    AndOrNotLiteral,
     encode_labels_for_http,
     get_labels_from_config,
     get_labels_from_core,

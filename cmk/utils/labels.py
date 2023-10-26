@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from ast import literal_eval
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Final, Self
+from typing import Any, Final, Literal, Self
 
 from typing_extensions import TypedDict
 
@@ -190,3 +190,9 @@ class BuiltinHostLabelsStore:
         return {
             "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
         }
+
+
+# Label group specific types
+AndOrNotLiteral = Literal["and", "or", "not"]
+LabelGroup = Sequence[tuple[AndOrNotLiteral, str]]
+LabelGroups = Sequence[tuple[AndOrNotLiteral, LabelGroup]]

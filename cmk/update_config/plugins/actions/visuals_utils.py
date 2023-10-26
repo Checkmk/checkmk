@@ -6,11 +6,11 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
 
+from cmk.utils.labels import LabelGroups as _LabelGroups
 from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.type_defs import VisualTypeName
-from cmk.gui.utils.labels import LabelGroups as _LabelGroups
 from cmk.gui.valuespec import LabelGroups
 
 

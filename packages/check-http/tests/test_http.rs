@@ -61,7 +61,7 @@ async fn check_http_output(
 
     assert!(check_http_payload.starts_with(expected_http_payload_start));
     assert!(state == expected_state);
-    assert!(summary.starts_with(expected_summary_start));
+    assert!(summary.unwrap().starts_with(expected_summary_start));
     assert!(details.is_none());
 
     Ok(())

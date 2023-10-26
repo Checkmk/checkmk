@@ -1,6 +1,8 @@
 use anyhow::Result as AnyhowResult;
-use cli::ForceIP;
+use bytes::Bytes;
+use cli::{Cli, DocumentAgeLevels, ForceIP, PageSizeLimits, ResponseTimeLevels};
 use http::{HeaderMap, HeaderName, HeaderValue};
+use httpdate::parse_http_date;
 use reqwest::{
     header::USER_AGENT,
     redirect::{Action, Attempt, Policy},
@@ -9,7 +11,7 @@ use reqwest::{
 use std::{
     fmt::{Display, Formatter, Result as FormatResult},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime},
 };
 
 use crate::cli::OnRedirect;
@@ -60,25 +62,37 @@ impl State {
 
 pub struct Output {
     pub state: State,
-    pub summary: String,
+    pub summary: Option<String>,
     pub details: Option<String>,
 }
 
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        match &self.details {
-            Some(det) => write!(f, "HTTP {} - {}\n{}", self.state, self.summary, det),
-            None => write!(f, "HTTP {} - {}", self.state, self.summary),
+        write!(f, "HTTP {}", self.state)?;
+        if let Some(summary) = self.summary.as_ref() {
+            write!(f, " - {}", summary)?;
         }
+        if let Some(details) = self.details.as_ref() {
+            write!(f, "\n{}", details)?;
+        }
+        Ok(())
     }
 }
 
 impl Output {
-    pub fn from_short(state: State, summary: &str) -> Self {
+    pub fn from_summary(state: State, summary: &str) -> Self {
         let summary = format!("{}{}", summary, state.as_marker());
         Self {
             state,
-            summary,
+            summary: Some(summary),
+            details: None,
+        }
+    }
+
+    pub fn from_state(state: State) -> Self {
+        Self {
+            state,
+            summary: None,
             details: None,
         }
     }
@@ -87,12 +101,12 @@ impl Output {
 struct ProcessedResponse {
     pub version: Version,
     pub status: StatusCode,
-    pub _headers: HeaderMap, // TODO(au): use
-    pub body: ReqwestResult<String>,
+    pub headers: HeaderMap, // TODO(au): use
+    pub body: Option<ReqwestResult<Bytes>>,
     pub elapsed: Duration,
 }
 
-pub async fn check_http(args: cli::Cli) -> Output {
+pub async fn check_http(args: Cli) -> Output {
     let request = match prepare_request(
         args.url,
         args.method,
@@ -107,7 +121,7 @@ pub async fn check_http(args: cli::Cli) -> Output {
     ) {
         Ok(req) => req,
         Err(_) => {
-            return Output::from_short(State::Unknown, "Error building the request");
+            return Output::from_summary(State::Unknown, "Error building the request");
         }
     };
 
@@ -115,18 +129,25 @@ pub async fn check_http(args: cli::Cli) -> Output {
         Ok(resp) => resp,
         Err(err) => {
             if err.is_timeout() {
-                return Output::from_short(State::Crit, "timeout");
+                return Output::from_summary(State::Crit, "timeout");
             } else if err.is_connect() {
-                return Output::from_short(State::Crit, "Failed to connect");
+                return Output::from_summary(State::Crit, "Failed to connect");
             } else if err.is_redirect() {
-                return Output::from_short(State::Crit, &err.to_string()); // Hit one of max_redirs, sticky, stickyport
+                return Output::from_summary(State::Crit, &err.to_string()); // Hit one of max_redirs, sticky, stickyport
             } else {
-                return Output::from_short(State::Unknown, "Error while sending request");
+                return Output::from_summary(State::Unknown, "Error while sending request");
             }
         }
     };
 
-    check_response(response, args.onredirect).await
+    check_response(
+        response,
+        args.onredirect,
+        args.page_size,
+        args.response_time_levels,
+        args.document_age_levels,
+    )
+    .await
 }
 
 #[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
@@ -258,25 +279,31 @@ async fn perform_request(
     let now = Instant::now();
     let response = request.send().await?;
 
-    let _headers = response.headers().to_owned();
+    let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
     let body = match without_body {
-        false => response.text().await,
-        true => Ok("".to_string()),
+        false => Some(response.bytes().await),
+        true => None,
     };
     let elapsed = now.elapsed();
 
     Ok(ProcessedResponse {
         version,
         status,
-        _headers,
+        headers,
         body,
         elapsed,
     })
 }
 
-async fn check_response(response: ProcessedResponse, onredirect: OnRedirect) -> Output {
+async fn check_response(
+    response: ProcessedResponse,
+    onredirect: OnRedirect,
+    page_size_limits: Option<PageSizeLimits>,
+    response_time_levels: Option<ResponseTimeLevels>,
+    document_age_levels: Option<DocumentAgeLevels>,
+) -> Output {
     let mut outputs: Vec<Output> = Vec::new();
 
     let response_state = if response.status.is_client_error() {
@@ -292,44 +319,105 @@ async fn check_response(response: ProcessedResponse, onredirect: OnRedirect) -> 
     } else {
         State::Ok
     };
-    outputs.push(Output::from_short(
+    outputs.push(Output::from_summary(
         response_state,
         &format!("{:?} {}", response.version, response.status),
     ));
 
-    match response.body {
-        Ok(bd) => {
-            outputs.push(Output::from_short(
-                State::Ok,
-                &format!("Page size: {} bytes", bd.as_bytes().len()),
-            ));
-        }
-        Err(_) => {
-            outputs.push(Output::from_short(
-                State::Crit,
-                "Error fetching the reponse body",
-            ));
-        }
+    if let Some(body) = response.body {
+        match body {
+            Ok(bd) => {
+                outputs.push(check_page_size(bd.len(), page_size_limits));
+            }
+            Err(_) => {
+                outputs.push(Output::from_summary(
+                    State::Crit,
+                    "Error fetching the reponse body",
+                ));
+            }
+        };
     };
 
-    outputs.push(Output::from_short(
-        State::Ok,
-        &format!(
-            "Response time: {}.{}s",
-            response.elapsed.as_secs(),
-            response.elapsed.subsec_millis()
-        ),
-    ));
+    outputs.push(check_response_time(response.elapsed, response_time_levels));
+
+    outputs.push(check_document_age(&response.headers, document_age_levels));
 
     merge_outputs(&outputs)
+}
+
+fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> Output {
+    let output_fn = |state| Output::from_summary(state, &format!("Page size: {} bytes", page_size));
+
+    match page_size_limits {
+        Some((lower, _)) if page_size < lower => output_fn(State::Warn),
+        Some((_, Some(upper))) if page_size > upper => output_fn(State::Warn),
+        _ => output_fn(State::Ok),
+    }
+}
+
+fn check_response_time(
+    response_time: Duration,
+    response_time_levels: Option<ResponseTimeLevels>,
+) -> Output {
+    let output_fn = |state| {
+        Output::from_summary(
+            state,
+            &format!(
+                "Response time: {}.{}s",
+                response_time.as_secs(),
+                response_time.subsec_millis()
+            ),
+        )
+    };
+
+    match response_time_levels {
+        Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => output_fn(State::Crit),
+        Some((warn, _)) if response_time.as_secs_f64() >= warn => output_fn(State::Warn),
+        _ => output_fn(State::Ok),
+    }
+}
+
+fn check_document_age(
+    headers: &HeaderMap,
+    document_age_levels: Option<DocumentAgeLevels>,
+) -> Output {
+    if document_age_levels.is_none() {
+        return Output::from_state(State::Ok);
+    };
+
+    let now = SystemTime::now();
+
+    let age_header = headers.get("last-modified").or(headers.get("date"));
+    let Some(document_age) = age_header else {
+        return Output::from_summary(State::Crit, "Can't determine document age");
+    };
+    let Ok(Ok(age)) = document_age.to_str().map(parse_http_date) else {
+        return Output::from_summary(State::Crit, "Can't decode document age");
+    };
+
+    //TODO(au): Specify "too old" in Output
+    match document_age_levels {
+        Some((_, Some(crit))) if now - Duration::from_secs(crit) > age => {
+            Output::from_summary(State::Crit, "Document age too old")
+        }
+        Some((warn, _)) if now - Duration::from_secs(warn) > age => {
+            Output::from_summary(State::Warn, "Document age too old")
+        }
+        _ => Output::from_state(State::Ok),
+    }
 }
 
 fn merge_outputs(outputs: &[Output]) -> Output {
     let summary = outputs
         .iter()
-        .map(|output| output.summary.clone())
+        .filter_map(|output| output.summary.clone())
         .collect::<Vec<String>>()
         .join(", ");
+    let summary = if summary.is_empty() {
+        None
+    } else {
+        Some(summary)
+    };
     let details = outputs
         .iter()
         .filter_map(|output| output.details.clone())
@@ -340,6 +428,7 @@ fn merge_outputs(outputs: &[Output]) -> Output {
     } else {
         Some(details)
     };
+
     let state = outputs
         .iter()
         .map(|output| output.state.clone())
@@ -357,9 +446,7 @@ fn merge_outputs(outputs: &[Output]) -> Output {
 mod tests {
     use std::net::SocketAddr;
 
-    use crate::{
-        cli::ForceIP, contains_unchanged_addr, contains_unchanged_ip, filter_socket_addrs,
-    };
+    use crate::{contains_unchanged_addr, contains_unchanged_ip, filter_socket_addrs, ForceIP};
 
     #[test]
     fn test_contains_unchanged_ip() {

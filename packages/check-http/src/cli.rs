@@ -2,7 +2,7 @@ use crate::pwstore;
 use anyhow::{anyhow, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
 use http::{HeaderName, HeaderValue, Method};
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 #[derive(Parser, Debug)]
 #[command(about = "check_http")]
@@ -50,7 +50,24 @@ pub struct Cli {
     /// Force IP version for connection
     #[arg(long)]
     pub force_ip_version: Option<ForceIP>,
+
+    /// Minimum/Maximum expected page size in bytes (Format: MIN[,MAX])
+    #[arg(long, value_parser = parse_optional_pair::<usize>)]
+    pub page_size: Option<PageSizeLimits>,
+
+    /// WARN/CRIT levels for response time (Format: WARN>[,CRIT])
+    #[arg(long, value_parser = parse_optional_pair::<f64>)]
+    pub response_time_levels: Option<ResponseTimeLevels>,
+
+    /// WARN/CRIT levels for document age (Format: WARN>[,CRIT])
+    /// If document age is not set, setting this option will also lead to state CRIT
+    #[arg(long, value_parser = parse_optional_pair::<u64>)]
+    pub document_age_levels: Option<DocumentAgeLevels>,
 }
+
+pub type PageSizeLimits = (usize, Option<usize>);
+pub type ResponseTimeLevels = (f64, Option<f64>);
+pub type DocumentAgeLevels = (u64, Option<u64>);
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum OnRedirect {
@@ -89,6 +106,17 @@ fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
 
 fn parse_seconds(secs: &str) -> AnyhowResult<Duration> {
     Ok(Duration::from_secs(secs.parse()?))
+}
+
+fn parse_optional_pair<T>(input: &str) -> AnyhowResult<(T, Option<T>)>
+where
+    T: FromStr,
+    T::Err: 'static + std::error::Error + std::marker::Send + std::marker::Sync,
+{
+    match input.split_once(',') {
+        Some((a, b)) => Ok((a.parse()?, Some(b.parse()?))),
+        None => Ok((input.parse()?, None)),
+    }
 }
 
 #[cfg(test)]

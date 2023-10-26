@@ -193,8 +193,10 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
+ "bytes",
  "clap",
  "http",
+ "httpdate",
  "openssl",
  "reqwest",
  "scrypt",

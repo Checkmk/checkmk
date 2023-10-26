@@ -14,7 +14,8 @@ case "$DISTRO" in
         apt-get update && apt-get install -y packer
         rm -rf /var/lib/apt/lists/*
 
-        exit 0
+        # Test the installation
+        packer --version || exit $?
         ;;
     *)
         echo "ERROR: Unhandled DISTRO: $DISTRO - packer should only be available in IMAGE_TESTING!"

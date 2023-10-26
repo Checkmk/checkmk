@@ -13,12 +13,13 @@ case "$DISTRO" in
         apt-get install -y musl-tools
         rm -rf /var/lib/apt/lists/*
 
-        exit 0
+        # Test the installation
+        musl-gcc --version || exit $?
         ;;
     *)
         # We need musl to build a static binary of the agent controller. The agent controller is only
         # built in the Ubuntu 20.04 image, hence, we only need musl there.
-        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - musl-tools should only be available in IMAGE_TESTING!"
         exit 1
         ;;
 esac

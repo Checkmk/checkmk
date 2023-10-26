@@ -13,10 +13,11 @@ case "$DISTRO" in
         apt-get install -y shellcheck
         rm -rf /var/lib/apt/lists/*
 
-        exit 0
+        # Test the installation
+        shellcheck --version || exit $?
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - shellcheck should only be available in Ubuntu!"
         exit 1
         ;;
 esac

@@ -636,7 +636,11 @@ run_cached() {
 
     # ideally, these should be independent parameters:
     CREATION_TIMEOUT=$((MAXAGE * 2))
-    OUTPUT_TIMEOUT=$((MAXAGE * 3))
+    if [ "${NAME}" = "ntp" ]; then
+        OUTPUT_TIMEOUT=360
+    else
+        OUTPUT_TIMEOUT=$((MAXAGE * 3))
+    fi
     REFRESH_INTERVAL="${MAXAGE}"
 
     [ -d "${MK_VARDIR}/cache" ] || mkdir -p "${MK_VARDIR}/cache"

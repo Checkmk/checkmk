@@ -7,10 +7,10 @@
 
 import json
 import os
-import re
 import subprocess
 from collections.abc import Iterable
 from pathlib import Path
+from subprocess import check_output
 from typing import NamedTuple, NewType
 
 import pkg_resources as pkg
@@ -25,13 +25,11 @@ ImportName = NewType("ImportName", "str")
 
 
 def _get_python_version_from_defines_make() -> VersionInfo:
-    with (repo_path() / "defines.make").open() as defines:
-        python_version = (
-            [line for line in defines.readlines() if re.match(r"^PYTHON_VERSION .*:=", line)][0]
-            .split(":=")[1]
-            .strip()
-        )
-    return VersionInfo.parse(python_version)
+    return VersionInfo.parse(
+        check_output(["make", "--no-print-directory", "print-PYTHON_VERSION"], cwd=repo_path())
+        .decode()
+        .rstrip()
+    )
 
 
 class PipCommand(NamedTuple):

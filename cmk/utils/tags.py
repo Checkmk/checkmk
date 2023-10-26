@@ -16,6 +16,7 @@ from cmk.utils.i18n import _
 TagID = str
 TaggroupID = str
 TaggroupIDToTagID = Mapping[TaggroupID, TagID]
+TAG_GROUP_NAME_PATTERN = r"^\A[-a-z0-9A-Z_]*\Z"
 
 
 class GroupedTagSpec(TypedDict):
@@ -62,7 +63,7 @@ def get_effective_tag_config(tag_config: TagConfigSpec) -> TagConfig:
 
 
 def _validate_tag_id(tag_id: TagID) -> None:
-    if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
+    if not re.match(TAG_GROUP_NAME_PATTERN, tag_id):
         raise MKGeneralException(
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
         )

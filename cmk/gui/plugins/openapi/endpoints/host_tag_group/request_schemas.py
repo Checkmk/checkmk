@@ -2,9 +2,11 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
+import re
 from typing import Any
+
+from cmk.utils.regex import REGEX_ID
+from cmk.utils.tags import TAG_GROUP_NAME_PATTERN
 
 from cmk.gui.fields import AuxTagIDField
 from cmk.gui.fields.utils import BaseSchema
@@ -70,20 +72,20 @@ class HostTagGroupId(fields.String):
     """A field representing a host tag group id"""
 
     default_error_messages = {
-        "invalid": "The specified tag group id is already in use: {name!r}",
+        "used": "The specified tag group id is already in use: {name!r}",
+        "pattern": "Invalid tag ID: {value!r}. Only the characters a-z, A-Z, 0-9, _ and - are allowed.",
     }
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(
-            pattern=r"^[^\d\W][-\w]*\Z",
-            **kwargs,
-        )
+        super().__init__(**kwargs)
 
     def _validate(self, value):
         super()._validate(value)
+        if not (re.match(TAG_GROUP_NAME_PATTERN, value) and re.match(REGEX_ID, value)):
+            raise self.make_error("pattern", value=value)
         group_exists = tag_group_exists(value, builtin_included=True)
         if group_exists:
-            raise self.make_error("invalid", name=value)
+            raise self.make_error("used", name=value)
 
 
 class HostTag(BaseSchema):

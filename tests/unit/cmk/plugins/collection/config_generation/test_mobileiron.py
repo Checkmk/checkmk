@@ -4,11 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.config_generation.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    PlainTextSecret,
+    Secret,
+    StoredSecret,
+)
+from cmk.plugins.collection.config_generation.mobileiron import special_agent_mobileiron
+
+HOST_CONFIG = HostConfig(
+    name="mobileironhostname",
+    address="11.211.3.32",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+)
 
 
 @pytest.mark.parametrize(
@@ -32,7 +45,7 @@ from tests.testlib import SpecialAgent
                 "-u",
                 "mobileironuser",
                 "-p",
-                "mobileironpassword",
+                PlainTextSecret(value="mobileironpassword", format="%s"),
                 "--partition",
                 "10",
                 "--hostname",
@@ -54,12 +67,15 @@ from tests.testlib import SpecialAgent
                 "username": "mobileironuser",
                 "password": ("store", "mobileironpassword"),
                 "key-fields": ("somefield",),
+                "partition": ["10", "20"],
             },
             [
                 "-u",
                 "mobileironuser",
                 "-p",
-                ("store", "mobileironpassword", "%s"),
+                StoredSecret(value="mobileironpassword", format="%s"),
+                "--partition",
+                "10,20",
                 "--hostname",
                 "mobileironhostname",
                 "--key-fields",
@@ -70,10 +86,12 @@ from tests.testlib import SpecialAgent
     ],
 )
 def test_agent_mobileiron_arguments(
-    params: Mapping[str, Any],
-    expected_args: Sequence[Any],
+    params: Mapping[str, object],
+    expected_args: Sequence[str | Secret],
 ) -> None:
     """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_mobileiron")
-    arguments = agent.argument_func(params, "mobileironhostname", "address")
-    assert arguments == expected_args
+    parsed_params = special_agent_mobileiron.parameter_parser(params)
+    commands = list(special_agent_mobileiron.commands_function(parsed_params, HOST_CONFIG, {}))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_args

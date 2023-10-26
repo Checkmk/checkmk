@@ -7,11 +7,17 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.config_generation.v1 import HostConfig, HTTPProxy, IPAddressFamily, PlainTextSecret
+from cmk.plugins.collection.config_generation.kube import special_agent_kube
 
-from cmk.base.config_generation import SpecialAgentInfoFunctionResult
+HOST_CONFIG = HostConfig(
+    name="host",
+    address="11.211.3.32",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+)
 
-pytestmark = pytest.mark.checks
+HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
 
 
 @pytest.mark.parametrize(
@@ -43,7 +49,7 @@ pytestmark = pytest.mark.checks
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                "cluster",
+                PlainTextSecret(value="cluster", format="%s"),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -91,7 +97,7 @@ pytestmark = pytest.mark.checks
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                "cluster",
+                PlainTextSecret(value="cluster", format="%s"),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -132,7 +138,7 @@ pytestmark = pytest.mark.checks
                 "--kubernetes-cluster-hostname",
                 "host",
                 "--token",
-                "randomtoken",
+                PlainTextSecret(value="randomtoken", format="%s"),
                 "--monitored-objects",
                 "pods",
                 "namespaces",
@@ -154,31 +160,36 @@ pytestmark = pytest.mark.checks
 @pytest.mark.usefixtures("fix_register")
 def test_parse_arguments(params: Mapping[str, object], expected_args: Sequence[str]) -> None:
     """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_kube")
-    arguments = agent.argument_func(params, "host", "11.211.3.32")
-    assert arguments == expected_args
+    parsed_params = special_agent_kube.parameter_parser(params)
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_args
 
 
 def test_parse_arguments_with_no_cluster_endpoint() -> None:
-    agent = SpecialAgent("agent_kube")
-    params = {
-        "cluster-name": "cluster",
-        "token": ("password", "token"),
-        "kubernetes-api-server": {
-            "endpoint_v2": "https://127.0.0.1",
-            "verify-cert": False,
-            "proxy": ("no_proxy", "no_proxy"),
-        },
-        "monitored-objects": ["pods"],
-    }
-    arguments = agent.argument_func(params, "host", "127.0.0.1")
-    assert arguments == [
+    parsed_params = special_agent_kube.parameter_parser(
+        {
+            "cluster-name": "cluster",
+            "token": ("password", "token"),
+            "kubernetes-api-server": {
+                "endpoint_v2": "https://127.0.0.1",
+                "verify-cert": False,
+                "proxy": ("no_proxy", "no_proxy"),
+            },
+            "monitored-objects": ["pods"],
+        }
+    )
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -193,8 +204,7 @@ def test_parse_arguments_with_no_cluster_endpoint() -> None:
 
 def test_cronjob_pvcs_piggyback_option() -> None:
     """Test the cronjob and pvc piggyback option"""
-    agent = SpecialAgent("agent_kube")
-    arguments = agent.argument_func(
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -204,17 +214,18 @@ def test_cronjob_pvcs_piggyback_option() -> None:
                 "proxy": ("no_proxy", "no_proxy"),
             },
             "monitored-objects": ["pods", "cronjobs_pods", "pvcs"],
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "cronjobs_pods",
@@ -231,8 +242,7 @@ def test_cronjob_pvcs_piggyback_option() -> None:
 
 def test_cluster_resource_aggregation() -> None:
     """Test the cluster-resource-aggregation option"""
-    agent = SpecialAgent("agent_kube")
-    arguments = agent.argument_func(
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -246,17 +256,18 @@ def test_cluster_resource_aggregation() -> None:
                 "cluster-aggregation-exclude-node-roles",
                 ["control*", "worker"],
             ),
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -267,7 +278,8 @@ def test_cluster_resource_aggregation() -> None:
         "--api-server-proxy",
         "NO_PROXY",
     ]
-    arguments = agent.argument_func(
+
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -278,17 +290,18 @@ def test_cluster_resource_aggregation() -> None:
             },
             "monitored-objects": ["pods"],
             "cluster-resource-aggregation": "cluster-aggregation-include-all-nodes",
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-include-all-nodes",
@@ -297,7 +310,7 @@ def test_cluster_resource_aggregation() -> None:
         "--api-server-proxy",
         "NO_PROXY",
     ]
-    arguments = agent.argument_func(
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -307,17 +320,18 @@ def test_cluster_resource_aggregation() -> None:
                 "proxy": ("no_proxy", "no_proxy"),
             },
             "monitored-objects": ["pods"],
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -332,14 +346,12 @@ def test_cluster_resource_aggregation() -> None:
 
 def test_host_labels_annotation_selection() -> None:
     """Test the import-annotations option"""
-    agent = SpecialAgent("agent_kube")
-
     # Option not set -> no annotations imported. This special case is covered
     # by test_parse_arguments. If test_parse_arguments is migrated, this
     # special case needs to be reconsidered.
 
     # Explicit no filtering
-    arguments = agent.argument_func(
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -350,17 +362,18 @@ def test_host_labels_annotation_selection() -> None:
             },
             "import-annotations": "include-annotations-as-host-labels",
             "monitored-objects": ["pods"],
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -374,7 +387,7 @@ def test_host_labels_annotation_selection() -> None:
     ]
 
     # Explicit filtering
-    arguments = agent.argument_func(
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -388,17 +401,18 @@ def test_host_labels_annotation_selection() -> None:
                 "checkmk-monitoring$",
             ),
             "monitored-objects": ["pods"],
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--cluster-aggregation-exclude-node-roles",
@@ -414,8 +428,7 @@ def test_host_labels_annotation_selection() -> None:
 
 
 def test_parse_namespace_patterns() -> None:
-    agent = SpecialAgent("agent_kube")
-    arguments = agent.argument_func(
+    parsed_params = special_agent_kube.parameter_parser(
         {
             "cluster-name": "cluster",
             "token": ("password", "token"),
@@ -426,17 +439,18 @@ def test_parse_namespace_patterns() -> None:
             },
             "monitored-objects": ["pods"],
             "namespaces": ("namespace-include-patterns", ["default", "kube-system"]),
-        },
-        "host",
-        "11.211.3.32",
+        }
     )
-    assert arguments == [
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == [
         "--cluster",
         "cluster",
         "--kubernetes-cluster-hostname",
         "host",
         "--token",
-        "token",
+        PlainTextSecret(value="token", format="%s"),
         "--monitored-objects",
         "pods",
         "--namespace-include-patterns",
@@ -475,9 +489,9 @@ def test_parse_namespace_patterns() -> None:
                 "--cluster",
                 "test",
                 "--kubernetes-cluster-hostname",
-                "kubi",
+                "host",
                 "--token",
-                "token",
+                PlainTextSecret(value="token", format="%s"),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -508,9 +522,9 @@ def test_parse_namespace_patterns() -> None:
                 "--cluster",
                 "test",
                 "--kubernetes-cluster-hostname",
-                "kubi",
+                "host",
                 "--token",
-                "token",
+                PlainTextSecret(value="token", format="%s"),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -541,9 +555,9 @@ def test_parse_namespace_patterns() -> None:
                 "--cluster",
                 "test",
                 "--kubernetes-cluster-hostname",
-                "kubi",
+                "host",
                 "--token",
-                "randomtoken",
+                PlainTextSecret(value="randomtoken", format="%s"),
                 "--monitored-objects",
                 "pods",
                 "--cluster-aggregation-exclude-node-roles",
@@ -562,10 +576,11 @@ def test_parse_namespace_patterns() -> None:
 def test_client_configuration_host(
     params: Mapping[str, object], expected_arguments: Sequence[str]
 ) -> None:
-    agent = SpecialAgent("agent_kube")
-    arguments: SpecialAgentInfoFunctionResult = agent.argument_func(params, "kubi", "127.0.0.1")
+    parsed_params = special_agent_kube.parameter_parser(params)
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
 
-    assert arguments == expected_arguments
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_arguments
 
 
 @pytest.mark.parametrize(
@@ -626,8 +641,12 @@ def test_client_configuration_host(
 )
 @pytest.mark.usefixtures("fix_register")
 def test_proxy_arguments(params: Mapping[str, object], expected_proxy_arg: str) -> None:
-    agent = SpecialAgent("agent_kube")
-    arguments = agent.argument_func(params, "host", "11.211.3.32")
+    parsed_params = special_agent_kube.parameter_parser(params)
+    commands = list(special_agent_kube.commands_function(parsed_params, HOST_CONFIG, HTTP_PROXIES))
+
+    assert len(commands) == 1
+    arguments = commands[0].command_arguments
+
     assert isinstance(arguments, list)
     for argument, argument_after in zip(arguments[:-1], arguments[1:]):
         if argument == "--api-server-proxy":

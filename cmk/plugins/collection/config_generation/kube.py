@@ -4,13 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-# mypy: disable-error-code="arg-type"
-
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal
 
-from cmk.base.check_api import get_http_proxy, passwordstore_get_cmdline
-from cmk.base.config import special_agent_info
+from pydantic import BaseModel
+
+from cmk.config_generation.v1 import (
+    get_http_proxy,
+    get_secret_from_params,
+    HostConfig,
+    HTTPProxy,
+    noop_parser,
+    SpecialAgentCommand,
+    SpecialAgentConfig,
+)
+
+
+class ProxyParams(BaseModel):
+    proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None] = (
+        "environment",
+        "environment",
+    )
 
 
 def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
@@ -25,13 +39,16 @@ def _timeouts(timeouts: Mapping[str, int], arg_prefix: str) -> Sequence[str]:
 
 
 def _usage_endpoint(
-    params: Mapping[str, object], prefix: Literal["prometheus", "cluster-collector"]
+    params: Mapping[str, object],
+    prefix: Literal["prometheus", "cluster-collector"],
+    http_proxies: Mapping[str, HTTPProxy],
 ) -> list[str]:
+    proxy_params = ProxyParams.model_validate(params)
     args = [
         f"--{prefix}-endpoint",
         str(params["endpoint_v2"]),
         "--usage-proxy",
-        get_http_proxy(params.get("proxy", ("environment", "environment"))).serialize(),
+        get_http_proxy(*proxy_params.proxy, http_proxies),
     ]
     if params.get("verify-cert"):
         args.append("--usage-verify-cert")
@@ -40,12 +57,12 @@ def _usage_endpoint(
     return args
 
 
-def agent_kube_arguments(  # pylint: disable=too-many-branches
-    params: Mapping[str, Any], hostname: str, ipaddress: str | None
-) -> Sequence[str | tuple[str, str, str]]:
+def generate_kube_command(  # pylint: disable=too-many-branches
+    params: Mapping[str, Any], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+) -> Iterator[SpecialAgentCommand]:
     args = ["--cluster", params["cluster-name"]]
-    args.extend(["--kubernetes-cluster-hostname", hostname])
-    args.extend(["--token", passwordstore_get_cmdline("%s", params["token"])])
+    args.extend(["--kubernetes-cluster-hostname", host_config.name])
+    args.extend(["--token", get_secret_from_params(*params["token"])])
 
     args.append("--monitored-objects")
     args.extend(params["monitored-objects"])
@@ -76,19 +93,22 @@ def agent_kube_arguments(  # pylint: disable=too-many-branches
     args.extend(["--api-server-endpoint", api_params["endpoint_v2"]])
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
+    proxy_params = ProxyParams.model_validate(api_params)
     args.extend(
         [
             "--api-server-proxy",
-            get_http_proxy(api_params.get("proxy", ("environment", "environment"))).serialize(),
+            get_http_proxy(*proxy_params.proxy, http_proxies),
         ]
     )
     if api_timeouts := api_params.get("timeout"):
         args.extend(_timeouts(api_timeouts, "k8s-api"))
 
     if (endpoint_params := params.get("usage_endpoint")) is not None:
-        return args + _usage_endpoint(endpoint_params[1], endpoint_params[0])
+        args += _usage_endpoint(endpoint_params[1], endpoint_params[0], http_proxies)
 
-    return args
+    yield SpecialAgentCommand(command_arguments=args)
 
 
-special_agent_info["kube"] = agent_kube_arguments
+special_agent_kube = SpecialAgentConfig(
+    name="kube", parameter_parser=noop_parser, commands_function=generate_kube_command
+)

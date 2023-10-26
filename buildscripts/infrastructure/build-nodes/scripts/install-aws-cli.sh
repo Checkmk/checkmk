@@ -6,7 +6,8 @@
 set -e -o pipefail
 
 case "$DISTRO" in
-    ubuntu-20.04)
+    ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
         curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.11.9.zip" -o "awscliv2.zip"
@@ -18,7 +19,7 @@ case "$DISTRO" in
         aws --version || exit $?
         ;;
     *)
-        echo "ERROR: Unhandled DISTRO: $DISTRO - aws-cli should only be available in IMAGE_TESTING!"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - aws-cli should only be available in Ubuntu!"
         exit 1
         ;;
 esac

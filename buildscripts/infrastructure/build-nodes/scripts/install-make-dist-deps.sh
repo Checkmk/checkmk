@@ -7,6 +7,7 @@ set -e -o pipefail
 
 case "$DISTRO" in
     ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
         echo "Installing for Ubuntu"
 
         apt-get update

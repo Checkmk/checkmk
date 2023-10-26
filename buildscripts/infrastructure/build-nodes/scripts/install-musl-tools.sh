@@ -6,8 +6,9 @@
 set -e -o pipefail
 
 case "$DISTRO" in
-    ubuntu-20.04)
-        echo "Installing for Ubuntu 20.04"
+    ubuntu-*)
+        # installable on all Ubuntu versions to be potentially usable by developers
+        echo "Installing for Ubuntu"
 
         apt-get update
         apt-get install -y musl-tools
@@ -19,7 +20,7 @@ case "$DISTRO" in
     *)
         # We need musl to build a static binary of the agent controller. The agent controller is only
         # built in the Ubuntu 20.04 image, hence, we only need musl there.
-        echo "ERROR: Unhandled DISTRO: $DISTRO - musl-tools should only be available in IMAGE_TESTING!"
+        echo "ERROR: Unhandled DISTRO: $DISTRO - musl-tools should only be available in Ubuntu!"
         exit 1
         ;;
 esac

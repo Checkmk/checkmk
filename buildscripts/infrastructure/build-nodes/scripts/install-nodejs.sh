@@ -14,6 +14,7 @@ NODEJS_VERSION=$(get_version "$SCRIPT_DIR" NODEJS_VERSION)
 NPM_VERSION=$(get_version "$SCRIPT_DIR" NPM_VERSION)
 
 install_package() {
+    # installable on all Ubuntu versions to be potentially usable by developers
     if [ "$(lsb_release -s -i)" != "Ubuntu" ]; then
         echo "ERROR: Unhandled DISTRO: $DISTRO"
         exit 1

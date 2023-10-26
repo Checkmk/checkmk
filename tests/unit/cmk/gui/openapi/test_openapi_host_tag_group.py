@@ -409,8 +409,9 @@ def test_openapi_delete_dependant_host_tag(
 
 
 invalid_tag_group_ids = (
-    "test_tag_group_id\\n",
     "test_tag_group_id\n",
+    "test_tag_group_id$%",
+    "test_tag_group_id\\n",
     "test_tag_gr\noup_id",
     "\ntest_tag_group_id",
 )
@@ -430,7 +431,4 @@ def test_host_tag_group_ident_with_newline(
     )
 
     resp.assert_status_code(400)
-    assert (
-        resp.json["fields"]["ident"][0]
-        == f"{group_id!r} does not match pattern '^[^\\\\d\\\\W][-\\\\w]*\\\\Z'."
-    )
+    assert resp.json["fields"]["ident"][0].startswith(f"Invalid tag ID: {group_id!r}")

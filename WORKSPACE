@@ -55,7 +55,7 @@ rules_pkg_dependencies()
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 load(
-    "//:package_versions.bzl",
+    "//:defines/package_versions.bzl",
     "CRYPT_SSL_SHA256",
     "CRYPT_SSL_VERSION",
     "FREETDS_SHA256",

@@ -1,0 +1,13 @@
+Title: Flapping "NTP Time"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698303244
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p13
+
+A regression in the Checkmk agents for Linux, Solaris, AIX, OpenWrt and FreeBSD resulted in a flapping <i>"NTP Time"</i> service.
+

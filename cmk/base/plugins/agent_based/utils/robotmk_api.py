@@ -60,6 +60,12 @@ class EnvironmentBuild(RootModel, frozen=True):
     root: dict[str, EnvironmentBuildStatuses]
 
 
+class RCCSetupFailures(JSON, frozen=True):
+    telemetry_disabling: list[str]
+    shared_holotree: list[str]
+    holotree_init: list[str]
+
+
 class AttemptOutcome(enum.Enum):
     AllTestsPassed = "AllTestsPassed"
     TestFailures = "TestFailures"
@@ -168,10 +174,17 @@ class ConfigFileContent(JSON, frozen=True):
     config_file_content: Json[ConfigFileValue]
 
 
-Section = list[Result | ConfigFileContent | SuiteExecutionReport | EnvironmentBuild]
+Section = list[
+    Result | ConfigFileContent | SuiteExecutionReport | EnvironmentBuild | RCCSetupFailures
+]
 
 SubSection = (
-    Result | ConfigReadingError | ConfigFileContent | SuiteExecutionReport | EnvironmentBuild
+    Result
+    | ConfigReadingError
+    | ConfigFileContent
+    | SuiteExecutionReport
+    | EnvironmentBuild
+    | RCCSetupFailures
 )
 
 
@@ -185,6 +198,8 @@ def parse(string_table: Sequence[Sequence[str]]) -> Section:
     results = [
         s
         for s in subsections
-        if isinstance(s, (Result, ConfigFileContent, SuiteExecutionReport, EnvironmentBuild))
+        if isinstance(
+            s, (Result, ConfigFileContent, SuiteExecutionReport, EnvironmentBuild, RCCSetupFailures)
+        )
     ]
     return Section(results)

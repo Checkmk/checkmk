@@ -3,23 +3,42 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable as _Iterable
+from typing import assert_never as _assert_never
+from typing import Literal as _Literal
 
-from cmk.checkengine.checkresults import state_markers
+from ._checking_classes import CheckResult as _CheckResult
+from ._checking_classes import IgnoreResultsError as _IgnoreResultsError
+from ._checking_classes import Metric as _Metric
+from ._checking_classes import Result as _Result
+from ._checking_classes import State as _State
 
-from cmk.agent_based.v1 import CheckResult, IgnoreResultsError, Metric, Result, State
+
+def _state_marker(state: _State) -> _Literal["", "(!)", "(!!)", "(?)"]:
+    match state:
+        case _State.OK:
+            return ""
+        case _State.WARN:
+            return "(!)"
+        case _State.CRIT:
+            return "(!!)"
+        case _State.UNKNOWN:
+            return "(?)"
+        case other:
+            _assert_never(other)
 
 
 def make_node_notice_results(
     node_name: str,
-    node_check_results: CheckResult,
+    node_check_results: _CheckResult,
     *,
     force_ok: bool = False,
-) -> Iterable[Result]:
+) -> _Iterable[_Result]:
     """Prepare results of a node for output in a cluster check function
 
     This function consumes everything from a check function (that is, a :class:`.Result`,
-    a :class:`.Metric` or an :class:`.IgnoreResults`) and returns an iterable of :class:`.Result`\\ s.
+    a :class:`.Metric` or an :class:`.IgnoreResults`) and returns an iterable of
+    :class:`.Result`\\ s.
 
     The text is prepended with `'[node]: '`, and the text type is changed from `summary` to `notice`
     (see :class:`.Result` for more details).
@@ -50,25 +69,28 @@ def make_node_notice_results(
 
     # consume potential generator and drop Metrics
     try:
-        returns_wo_metrics = [r for r in node_check_results if not isinstance(r, Metric)]
-    except IgnoreResultsError:
+        returns_wo_metrics = [r for r in node_check_results if not isinstance(r, _Metric)]
+    except _IgnoreResultsError:
         return
 
     # check for encountered IgnoreResults (also tells mypy that it's all Results)
-    results = [r for r in returns_wo_metrics if isinstance(r, Result)]
+    results = [r for r in returns_wo_metrics if isinstance(r, _Result)]
     if len(results) != len(returns_wo_metrics):
         return
 
-    def _nodify(text: str, state: State) -> str:
+    def _nodify(text: str, state: _State) -> str:
         """Prepend node name and, if state is forced to OK, append state marker"""
         node_text = "\n".join(f"[{node_name}]: {line}" for line in text.split("\n"))
         if not force_ok:
             return node_text
-        return f"{node_text.rstrip()}{state_markers[int(state)]}"
+        return f"{node_text.rstrip()}{_state_marker(state)}"
 
     for result in results:
-        yield Result(
-            state=State.OK if force_ok else result.state,
+        yield _Result(
+            state=_State.OK if force_ok else result.state,
             notice=_nodify(result.summary, result.state),
             details=_nodify(result.details, result.state),
         )
+
+
+__all__ = ["make_node_notice_results"]

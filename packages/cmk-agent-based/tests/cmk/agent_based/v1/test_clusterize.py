@@ -4,16 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # import pytest
 
-from cmk.base.api.agent_based.clusterize import make_node_notice_results
+from collections.abc import Iterable
 
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1.clusterize import make_node_notice_results
 
 _OK_RESULT = Result(state=State.OK, summary="I am fine")
 
 _WARN_RESULT = Result(state=State.WARN, summary="Watch out")
 
 
-def _check_function_node(test_results):
+def _check_function_node(
+    test_results: Iterable[Result | Metric | IgnoreResults],
+) -> Iterable[Result | Metric | IgnoreResults]:
     yield from test_results
 
 
@@ -23,9 +26,9 @@ def test_node_returns_nothing() -> None:
 
 
 def test_node_raises() -> None:
-    def _check_node_raises():
+    def _check_node_raises() -> Iterable[IgnoreResults]:
+        yield from ()
         raise IgnoreResultsError()
-        yield  # pylint: disable=unreachable
 
     assert not list(make_node_notice_results("test_node", _check_node_raises()))
 

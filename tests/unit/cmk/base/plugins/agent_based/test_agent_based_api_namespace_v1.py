@@ -116,5 +116,5 @@ def test_v1_register() -> None:
 
 def test_v1_clusterize() -> None:
     expected = {"make_node_notice_results"}
-    if _names(v1.clusterize) != expected:  # TODO or _names(v1_new_location.clusterize) != expected:
-        raise AssertionError(__doc__)
+    assert _names(v1.clusterize) == expected
+    assert _names(v1_new_location.clusterize) == expected

@@ -1,5 +1,9 @@
 use anyhow::Result as AnyhowResult;
-use check_http::{check_http, cli::Cli, Output, State};
+use check_http::{
+    check_http,
+    checking::{Output, State},
+    cli::Cli,
+};
 use clap::Parser;
 
 use std::io::{Read, Write};

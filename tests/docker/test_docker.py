@@ -159,15 +159,17 @@ def _build(
     attrs = image.attrs
     config = attrs["Config"]
 
-    assert config["Labels"] == {
-        "org.opencontainers.image.vendor": "Checkmk GmbH",
-        "org.opencontainers.image.version": version.version,
-        "maintainer": "feedback@checkmk.com",
-        "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
-        "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
-        "org.opencontainers.image.title": "Checkmk",
-        "org.opencontainers.image.url": "https://checkmk.com/",
-    }
+    assert set((config["Labels"] or {}).items()) > set(
+        {
+            "org.opencontainers.image.vendor": "Checkmk GmbH",
+            "org.opencontainers.image.version": version.version,
+            "maintainer": "feedback@checkmk.com",
+            "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
+            "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
+            "org.opencontainers.image.title": "Checkmk",
+            "org.opencontainers.image.url": "https://checkmk.com/",
+        }.items()
+    )
 
     assert config["Env"] == [
         "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",

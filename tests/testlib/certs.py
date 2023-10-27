@@ -49,11 +49,14 @@ def check_certificate_against_public_key(
     )
 
 
-def check_cn(
-    cert_or_csr: Certificate | CertificateSigningRequest,
-    expected_cn: str,
-) -> bool:
-    return cert_or_csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value == expected_cn
+def get_cn(name: Name) -> str | bytes:
+    cn = name.get_attributes_for_oid(NameOID.COMMON_NAME)
+    assert len(cn) == 1
+    return cn[0].value
+
+
+def check_cn(cert_or_csr: Certificate | CertificateSigningRequest, expected_cn: str) -> bool:
+    return get_cn(cert_or_csr.subject) == expected_cn
 
 
 def generate_csr_pair(

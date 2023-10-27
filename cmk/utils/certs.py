@@ -211,7 +211,7 @@ def _sign_csr(
             validity,
             _rsa_public_key_from_cert_or_csr(csr),
         )
-        .issuer_name(signing_cert.issuer)
+        .issuer_name(signing_cert.subject)
         .add_extension(
             SubjectAlternativeName([DNSName(common_name)]),
             critical=False,

@@ -22,13 +22,42 @@ class JSON(BaseModel, frozen=True):
     pass
 
 
-class EnvironmentBuildStatus(enum.Enum):
-    Success = "Success"
-    Failure = "Failure"
+class EnvironmentBuildStatusSuccess(JSON, frozen=True):
+    duration: int = Field(alias="Success")
+
+
+class EnvironmentBuildStatusInProgress(JSON, frozen=True):
+    start_time: int = Field(alias="InProgress")
+
+
+class EnvironmentBuildStatusError(enum.Enum):
+    NonZeroExit = "NonZeroExit"
     Timeout = "Timeout"
+
+
+class EnviromentBuildStatusErrorWithDescription(BaseModel):
+    Error: str
+
+
+class EnvironmentBuildStatusFailure(BaseModel):
+    Failure: EnvironmentBuildStatusError | EnviromentBuildStatusErrorWithDescription
+
+
+class EnvironmentBuildStatusEnum(enum.Enum):
     NotNeeded = "NotNeeded"
     Pending = "Pending"
-    InProgress = "InProgress"
+
+
+EnvironmentBuildStatuses = (
+    EnvironmentBuildStatusEnum
+    | EnvironmentBuildStatusSuccess
+    | EnvironmentBuildStatusInProgress
+    | EnvironmentBuildStatusFailure
+)
+
+
+class EnvironmentBuild(RootModel, frozen=True):
+    root: dict[str, EnvironmentBuildStatuses]
 
 
 class AttemptOutcome(enum.Enum):
@@ -38,10 +67,6 @@ class AttemptOutcome(enum.Enum):
     EnvironmentFailure = "EnvironmentFailure"
     TimedOut = "TimedOut"
     OtherError = "OtherError"
-
-
-class EnvironmentBuild(RootModel, frozen=True):
-    root: dict[str, EnvironmentBuildStatus]
 
 
 def _parse_xml(xml_value: str) -> Rebot:

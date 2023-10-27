@@ -46,6 +46,9 @@ API_DOMAIN = Literal[
     "notification_rule",
     "comment",
     "event_console",
+    "bi_pack",
+    "bi_aggregation",
+    "bi_rule",
 ]
 
 
@@ -1470,6 +1473,13 @@ class DowntimeClient(RestApiClient):
 class GroupConfig(RestApiClient):
     domain: API_DOMAIN
 
+    def get(self, group_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{group_id}",
+            expect_ok=expect_ok,
+        )
+
     def bulk_create(self, groups: tuple[dict[str, str], ...], expect_ok: bool = True) -> Response:
         return self.request(
             "post",
@@ -1984,6 +1994,122 @@ class CommentClient(RestApiClient):
         )
 
 
+class BiPackClient(RestApiClient):
+    domain: API_DOMAIN = "bi_pack"
+
+    def get(self, pack_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{pack_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, pack_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{pack_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, pack_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{pack_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, pack_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{pack_id}",
+            expect_ok=expect_ok,
+        )
+
+
+class BiAggregationClient(RestApiClient):
+    domain: API_DOMAIN = "bi_aggregation"
+
+    def get(self, aggregation_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, aggregation_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, aggregation_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, aggregation_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{aggregation_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_aggregation_state(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/aggregation_state/invoke",
+            expect_ok=expect_ok,
+        )
+
+
+class BiRuleClient(RestApiClient):
+    domain: API_DOMAIN = "bi_rule"
+
+    def get(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, rule_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, rule_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2007,6 +2133,9 @@ class ClientRegistry:
     RuleNotification: RuleNotificationClient
     Comment: CommentClient
     EventConsole: EventConsoleClient
+    BiPack: BiPackClient
+    BiAggregation: BiAggregationClient
+    BiRule: BiRuleClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2032,4 +2161,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         RuleNotification=RuleNotificationClient(request_handler, url_prefix),
         Comment=CommentClient(request_handler, url_prefix),
         EventConsole=EventConsoleClient(request_handler, url_prefix),
+        BiPack=BiPackClient(request_handler, url_prefix),
+        BiAggregation=BiAggregationClient(request_handler, url_prefix),
+        BiRule=BiRuleClient(request_handler, url_prefix),
     )

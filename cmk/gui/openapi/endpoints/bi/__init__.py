@@ -18,8 +18,6 @@ import http.client
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.exceptions import MKGeneralException
-
 from cmk.gui import fields as gui_fields
 from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
@@ -37,6 +35,7 @@ from cmk.bi.packs import (
     BIAggregationPack,
     DeleteErrorUsedByAggregation,
     DeleteErrorUsedByRule,
+    PackNotFoundException,
     RuleNotFoundException,
 )
 from cmk.bi.rule import BIRule, BIRuleSchema
@@ -435,7 +434,7 @@ def _update_bi_aggregation(params, must_exist: bool):  # type: ignore[no-untyped
     aggregation_config = params["body"]
     try:
         target_pack = bi_packs.get_pack_mandatory(aggregation_config["pack_id"])
-    except MKGeneralException:
+    except PackNotFoundException:
         raise _make_error("Unknown bi_pack: %s" % aggregation_config["pack_id"])
 
     aggregation_id = params["aggregation_id"]

@@ -455,3 +455,52 @@ def test_get_aggregation_state_should_not_update_config_generation(
     generation_after_calling_endpoint = activate_changes._get_current_config_generation()
 
     assert generation_before_calling_endpoint == generation_after_calling_endpoint
+
+
+def test_create_bi_aggregation_invalid_pack_id(clients: ClientRegistry) -> None:
+    aggregation = {
+        "aggregation_visualization": {
+            "ignore_rule_styles": False,
+            "layout_id": "builtin_default",
+            "line_style": "round",
+        },
+        "comment": "",
+        "computation_options": {
+            "disabled": True,
+            "escalate_downtimes_as_warn": False,
+            "use_hard_states": False,
+        },
+        "customer": None,
+        "groups": {"names": ["Hosts"], "paths": []},
+        "id": "some_aggregation",
+        "node": {
+            "action": {
+                "params": {"arguments": ["$HOSTNAME$"]},
+                "rule_id": "host",
+                "type": "call_a_rule",
+            },
+            "search": {
+                "conditions": {
+                    "host_choice": {"type": "all_hosts"},
+                    "host_folder": "",
+                    "host_labels": {},
+                    "host_tags": {"tcp": "tcp"},
+                },
+                "refer_to": "host",
+                "type": "host_search",
+            },
+        },
+        "pack_id": "non-existing-pack-id",
+    }
+
+    resp = clients.BiAggregation.create(
+        aggregation_id="some_aggregation",
+        body=aggregation,
+        expect_ok=False,
+    )
+
+    assert resp.json == {
+        "title": "Not Found",
+        "status": 404,
+        "detail": "Unknown bi_pack: non-existing-pack-id",
+    }

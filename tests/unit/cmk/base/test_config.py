@@ -2697,7 +2697,7 @@ host_tags.update({
 })
 
 cmc_host_rrd_config = [
-{'condition': {}, 'value': 'MAIN'},
+{'id':'01', 'condition': {}, 'value': 'MAIN'},
 ] + cmc_host_rrd_config
 
 """
@@ -2780,7 +2780,7 @@ def _add_rule_in_folder(folder_path: Path, value: str) -> None:
         f.write(
             """
 cmc_host_rrd_config = [
-{'condition': %s, 'value': '%s'},
+{'id': '02', 'condition': %s, 'value': '%s'},
 ] + cmc_host_rrd_config
 """
             % (condition, value)

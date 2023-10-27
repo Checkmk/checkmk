@@ -116,7 +116,6 @@ class ExecutionConfig(JSON, frozen=True):
 
 class EnvironmentConfig(JSON, frozen=True):
     type: str
-    binary_path: str
     robot_yaml_path: str
     build_timeout: int
 
@@ -135,6 +134,7 @@ class SuiteConfig(JSON, frozen=True):
 class ConfigFileValue(JSON, frozen=True):
     working_directory: str
     results_directory: str
+    rcc_binary_path: str
     suites: dict[str, SuiteConfig]
 
 

@@ -267,13 +267,11 @@ CEE_UNUSED_PACKAGES = [
     "pymssql",
     "pyprof2calltree",
     "pyrsistent",
-    "pysmi-lextudio",
-    "pysnmp-lextudio",
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
     "setuptools_scm",
-    "snmpsim-lextudio",
+    "snmpsim",
     "tenacity",
     "typing_extensions",
     "websocket_client",
@@ -311,8 +309,6 @@ def test_dependencies_are_declared() -> None:
             "_typeshed",  # used by mypy within typing.TYPE_CHECKING
             "openapi_spec_validator",  # called "openapi-spec-validator" in the Pipfile
             "docstring_parser",  # TODO: Bug in the test code, it *is* used!
-            "pysnmp",
-            "pysmi",
         }
     )
 

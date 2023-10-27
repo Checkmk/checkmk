@@ -1,1 +1,1 @@
-FROM artifacts.lan.tribe29.com:4000/centos@sha256:e4ca2ed0202e76be184e75fb26d14bf974193579039d5573fb2348664deef76e
+FROM artifacts.lan.tribe29.com:4000/centos@sha256:dead07b4d8ed7e29e98de0f4504d87e8880d4347859d839686a31da35a3b532f

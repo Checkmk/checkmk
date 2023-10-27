@@ -19,6 +19,7 @@ from ._checking_classes import (
 from ._inventory_classes import Attributes, TableRow
 from ._regex import regex
 from ._snmp import OIDBytes, OIDCached, OIDEnd, SNMPTree
+from .value_store import get_value_store
 
 # TODO: when everything is here, adjust the order to the one in cmk.base.plugins
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     "CheckResult",
     "clusterize",
     "DiscoveryResult",
+    "get_value_store",
     "HostLabel",
     "IgnoreResults",
     "IgnoreResultsError",

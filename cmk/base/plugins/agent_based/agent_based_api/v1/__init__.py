@@ -26,11 +26,11 @@ from cmk.base.api.agent_based.utils import (
     not_startswith,
     startswith,
 )
-from cmk.base.api.agent_based.value_store import get_value_store
 
 from cmk.agent_based.v1 import (
     Attributes,
     CheckResult,
+    get_value_store,
     HostLabel,
     IgnoreResults,
     IgnoreResultsError,

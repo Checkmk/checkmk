@@ -9,8 +9,6 @@ from dataclasses import dataclass
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils.log.security_event import SecurityEvent
-from typing import Literal
-from cmk.gui.logged_in import user
 
 logger = logging.getLogger("cmk.web")
 
@@ -64,19 +62,4 @@ class AuthenticationSuccessEvent(SecurityEvent):
             "authentication succeeded",
             {"method": auth_method, "user": username, "remote_ip": remote_ip},
             SecurityEvent.Domain.auth,
-        )
-
-
-@dataclass
-class UserManagementEvent(SecurityEvent):
-    """Indicates user creation"""
-    possible_event = Literal["user created", "user deleted", "user modified"]
-    def __init__(self, *, event: possible_event, affected_user: str, acting_user: str | None) -> None:
-        super().__init__(
-            event,
-            {
-                "affected_user": affected_user,
-                "acting_user": acting_user or "Unknown",
-            },
-            SecurityEvent.Domain.user_management,
         )

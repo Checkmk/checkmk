@@ -9,8 +9,9 @@ FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-PYTEST_UNIT_TEST_OPTS = \
-    -T unit \
+PYTEST_DOC_TEST_OPTS := \
+    --import-mode=importlib \
+    -o pythonpath=. \
     --doctest-modules \
     ../cmk/base \
     ../cmk/bi \
@@ -22,7 +23,10 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/utils \
     ../agent-receiver \
     ../omd/packages/omd \
-	../cmk/active_checks \
+    ../cmk/active_checks
+PYTEST_UNIT_TEST_OPTS = \
+    -T unit \
+    $(PYTEST_DOC_TEST_OPTS) \
     unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"

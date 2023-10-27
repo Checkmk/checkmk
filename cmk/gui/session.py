@@ -233,7 +233,7 @@ class FileBasedSession(SessionInterface):
             log_security_event(
                 AuthenticationSuccessEvent(
                     auth_method=auth_type,
-                    username=str(user_name),
+                    username=user_name,
                     remote_ip=request.remote_addr,
                 )
             )

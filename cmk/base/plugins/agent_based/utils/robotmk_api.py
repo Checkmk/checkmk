@@ -118,6 +118,7 @@ class EnvironmentConfig(JSON, frozen=True):
     type: str
     robot_yaml_path: str
     build_timeout: int
+    env_json_path: str | None = None
 
 
 class SessionConfig(JSON, frozen=True):

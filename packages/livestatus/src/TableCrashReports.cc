@@ -6,6 +6,7 @@
 #include "livestatus/TableCrashReports.h"
 
 #include <filesystem>
+#include <functional>
 #include <memory>
 
 #include "livestatus/Column.h"

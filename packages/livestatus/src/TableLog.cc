@@ -8,6 +8,7 @@
 #include <bitset>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <stdexcept>
 

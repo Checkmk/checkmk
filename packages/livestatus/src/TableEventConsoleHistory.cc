@@ -5,6 +5,8 @@
 
 #include "livestatus/TableEventConsoleHistory.h"
 
+#include <memory>
+
 #include "livestatus/Column.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/StringColumn.h"

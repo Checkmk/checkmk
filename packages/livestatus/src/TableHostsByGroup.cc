@@ -5,6 +5,8 @@
 
 #include "livestatus/TableHostsByGroup.h"
 
+#include <functional>
+
 // NOTE: IWYU is wrong here, we really need the IHostGroup definition.
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"

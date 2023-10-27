@@ -419,6 +419,43 @@ def test_check_no_check_yet_pydantic() -> None:
                 ),
             ],
         ),
+        (
+            {
+                0: {
+                    "corrupt": True,
+                    "not_after": None,
+                    "signature_algorithm": None,
+                    "common_name": None,
+                },
+                1: {
+                    "corrupt": False,
+                    "not_after": "2023-12-20T09:22:17+00:00",
+                    "signature_algorithm": "sha512",
+                    "common_name": "signed",
+                },
+                2: {
+                    "corrupt": False,
+                    "not_after": "2023-12-20T09:28:55+00:00",
+                    "signature_algorithm": "sha1",
+                    "common_name": "Lorem ipsum",
+                },
+            },
+            [
+                Result(state=State.WARN, notice="Updater certificate #0 is corrupt"),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #1 (CN='signed') will expire: 22 years 213 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until updater certificate #2 (CN='Lorem ipsum') will expire: 22 years 213 days",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Time until all updater certificates are expired: 22 years 213 days",
+                ),
+            ],
+        ),
     ),
 )
 def test_certificate_results(

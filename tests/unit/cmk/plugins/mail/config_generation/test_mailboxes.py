@@ -7,9 +7,15 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from cmk.config_generation.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
+from cmk.plugins.mail.config_generation.mailboxes import active_check_mailboxes
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(
+    name="host",
+    address="127.0.0.1",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+)
 
 
 @pytest.mark.parametrize(
@@ -17,6 +23,7 @@ pytestmark = pytest.mark.checks
     [
         (
             {
+                "service_description": "Mailboxes",
                 "fetch": (
                     "IMAP",
                     {
@@ -25,54 +32,59 @@ pytestmark = pytest.mark.checks
                             "disable_tls": True,
                             "port": 143,
                         },
-                        "auth": ("basic", ("hans", "wurst")),
+                        "auth": ("basic", ("hans", ("password", "wurst"))),
                     },
-                )
+                ),
             },
             [
                 "--fetch-protocol=IMAP",
                 "--fetch-server=foo",
                 "--fetch-port=143",
                 "--fetch-username=hans",
-                "--fetch-password=wurst",
+                PlainTextSecret(value="wurst", format="--fetch-password=%s"),
             ],
         ),
         (
             {
+                "service_description": "Mailboxes",
                 "fetch": (
                     "EWS",
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("basic", ("hans", "wurst")),
+                        "auth": ("basic", ("hans", ("password", "wurst"))),
                     },
-                )
+                ),
             },
             [
                 "--fetch-protocol=EWS",
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-username=hans",
-                "--fetch-password=wurst",
+                PlainTextSecret(value="wurst", format="--fetch-password=%s"),
             ],
         ),
         (
             {
+                "service_description": "Mailboxes",
                 "fetch": (
                     "EWS",
                     {
                         "server": "foo",
                         "connection": {},
-                        "auth": ("oauth2", ("client_id", "client_secret", "tenant_id")),
+                        "auth": (
+                            "oauth2",
+                            ("client_id", ("password", "client_secret"), "tenant_id"),
+                        ),
                     },
-                )
+                ),
             },
             [
                 "--fetch-protocol=EWS",
                 "--fetch-server=foo",
                 "--fetch-tls",
                 "--fetch-client-id=client_id",
-                "--fetch-client-secret=client_secret",
+                PlainTextSecret(value="client_secret", format="--fetch-client-secret=%s"),
                 "--fetch-tenant-id=tenant_id",
             ],
         ),
@@ -100,11 +112,11 @@ pytestmark = pytest.mark.checks
             },
             [
                 "--fetch-protocol=IMAP",
-                "--fetch-server=$HOSTNAME$",
+                "--fetch-server=host",
                 "--fetch-disable-cert-validation",
                 "--fetch-port=10",
                 "--fetch-username=user",
-                ("store", "password_1", "--fetch-password=%s"),
+                StoredSecret(value="password_1", format="--fetch-password=%s"),
                 "--connect-timeout=10",
                 "--retrieve-max=100",
                 "--warn-age-oldest=0",
@@ -124,5 +136,9 @@ def test_check_mailboxes_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_mailboxes")
-    assert active_check.run_argument_function(params) == expected_args
+    parsed_params = active_check_mailboxes.parameter_parser(params)
+    commands = list(active_check_mailboxes.commands_function(parsed_params, HOST_CONFIG, {}))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_args
+    assert commands[0].service_description == "Mailboxes"

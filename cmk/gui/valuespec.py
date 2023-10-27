@@ -7036,15 +7036,28 @@ class AndOrNotDropdown(DropdownChoice):
         vs_val = self._valuespec.from_html_vars(varprefix_vs)
         return (bool_val, vs_val)
 
+    def validate_datatype(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
+        if value is None:
+            return
+
+        varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
+        # Validate datatype of AndOrNotLiteral: value[0]
+        super().validate_datatype(value[0], varprefix_bool)
+
+        # Validate datatype of valuespec: value[1]
+        vs_validate_datatype = getattr(self._valuespec, "validate_datatype", None)
+        if callable(vs_validate_datatype):
+            vs_validate_datatype(value[1], varprefix_vs)
+
     def _validate_value(self, value: AndOrNotDropdownValue | None, varprefix: str) -> None:
         if value is None:
             return
 
         varprefix_bool, varprefix_vs = self._varprefixes(varprefix)
-        # Validate AndOrNotLiteral: value[0]
+        # Validate value of AndOrNotLiteral: value[0]
         super()._validate_value(value[0], varprefix_bool)
 
-        # Validate valuespec value: value[1]
+        # Validate value of valuespec: value[1]
         vs_validate_value = getattr(self._valuespec, "_validate_value", None)
         if callable(vs_validate_value):
             vs_validate_value(value[1], varprefix_vs)
@@ -7110,7 +7123,12 @@ class LabelGroup(ListOf):
     _sub_vs: ValueSpec = _SingleLabel(world=Labels.World.CORE)
     _magic: str = "@:@"  # Used by ListOf class to count through entries
 
-    def __init__(self) -> None:
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        # ValueSpec
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+    ) -> None:
         super().__init__(
             valuespec=AndOrNotDropdown(
                 valuespec=self._sub_vs,
@@ -7128,6 +7146,8 @@ class LabelGroup(ListOf):
             ignore_complain=True,
             movable=False,
             default_value=[("and", self._sub_vs.default_value())],
+            title=title,
+            help=help,
         )
 
     @property
@@ -7153,6 +7173,11 @@ class LabelGroup(ListOf):
         )
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
+    def title(self) -> str | None:
+        if self._title:
+            return self._title
+        return self._valuespec.title()
+
 
 class LabelGroups(LabelGroup):
     _ident: str = "label_groups"
@@ -7161,6 +7186,7 @@ class LabelGroups(LabelGroup):
     _first_element_label: str | None = "Label"
     _sub_vs: ValueSpec = LabelGroup()
     _magic: str = "@!@"  # Used by ListOf class to count through entries
+    _default_value: ListOfAndOrNotDropdownValue = [("and", [("and", "")])]
 
     @property
     def del_label(self) -> str:
@@ -7179,15 +7205,22 @@ class LabelGroups(LabelGroup):
         super().render_input(varprefix, value)
 
     def _add_empty_row_to_groups(
-        self, label_groups: ListOfAndOrNotDropdownValue
+        self, value: ListOfAndOrNotDropdownValue
     ) -> ListOfAndOrNotDropdownValue:
-        if not label_groups:
-            return [("and", [("and", "")])]
+        if not value:
+            return self._default_value
 
-        for _group_operator, label_group in label_groups:
+        for _group_operator, label_group in value:
             if label_group and label_group[-1] != ("and", ""):
                 label_group.append(("and", ""))
-        return label_groups
+        return value
+
+    def from_html_vars(self, varprefix: str) -> ListOfModel[T]:
+        # By default, i.e. without any user input, rendered and submitted LabelGroups return a value
+        # of [("and", [("and", "")])]  (self._default_value)
+        # For this default case we provide an actually empty value [] here
+        value = super().from_html_vars(varprefix)
+        return [] if value == self._default_value else value
 
 
 # https://github.com/python/mypy/issues/12368

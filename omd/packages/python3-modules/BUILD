@@ -49,6 +49,7 @@ config_setting(
         "@freetds",
         "@omd_packages//:agent-receiver",
         "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@omd_packages//packages:cmk-graphing",
         "@omd_packages//packages:cmk-werks",
         "@openssl",
         "@python",

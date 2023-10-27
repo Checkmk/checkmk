@@ -1,1 +1,4 @@
-exports_files(["cmk-werks"])
+exports_files([
+    "cmk-graphing",
+    "cmk-werks",
+])

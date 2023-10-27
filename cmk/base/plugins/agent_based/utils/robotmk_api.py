@@ -104,13 +104,12 @@ class ConfigReadingError(JSON, frozen=True):
 
 class RobotFrameworkConfig(JSON, frozen=True):
     robot_target: str
-    variable_file: str
-    argument_file: str | None
-    retry_strategy: str
+    command_line_args: list[str] = Field(default=[])
 
 
 class ExecutionConfig(JSON, frozen=True):
     n_retries_max: int
+    retry_strategy: str
     execution_interval_seconds: int
     timeout: int
 

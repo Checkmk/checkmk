@@ -1,1 +1,1 @@
-FROM artifacts.lan.tribe29.com:4000/sle15@sha256:2de5c8cbc89dd99ee158171fc0b2912076d4b69aff55822dca84859ed4b9a468
+FROM artifacts.lan.tribe29.com:4000/sle15@sha256:0c85afe20d00898b68385956767dcb8cc5b97366dc329abc09b6452bb058560b

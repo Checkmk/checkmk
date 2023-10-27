@@ -96,9 +96,9 @@ pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
 pycryptodomex = "==3.9.3"  # needed by pysnmp
 ply = "==3.11"  # needed by pysmi, python-active-directory
-pysmi = "==0.3.4"  # needed by pysnmp
-pysnmp = "==4.4.12"  # needed by Event Console
-snmpsim = "==0.4.7"  # needed by SNMP integration tests
+pysmi-lextudio = "==1.1.13"  # needed by pysnmp
+pysnmp-lextudio = "==5.0.29"  # needed by Event Console
+snmpsim-lextudio = "==1.0.5"  # needed by pysnmp integration tests
 certifi = "==2022.12.7"  # needed by requests
 chardet = "==5.1.0"  # needed by requests
 urllib3 = "==1.26.13"  # needed by requests

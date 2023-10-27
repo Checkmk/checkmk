@@ -101,7 +101,7 @@ graph_info["docker_df"] = {
     "title": _("Disk usage"),
     "metrics": [
         ("docker_size", "area"),
-        ("docker_reclaimable", "area"),
+        ("docker_reclaimable", "line"),
     ],
 }
 
@@ -109,6 +109,6 @@ graph_info["docker_df_count"] = {
     "title": _("Number of objects"),
     "metrics": [
         ("docker_count", "area"),
-        ("docker_active", "area"),
+        ("docker_active", "line"),
     ],
 }

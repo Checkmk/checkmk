@@ -250,8 +250,6 @@ def test_graph_template_with_layered_areas() -> None:
             "livestatus_connects_and_requests",
             "message_processing",
             "rule_efficiency",
-            "docker_df",
-            "docker_df_count",
             "active_shards",
             "number_of_executors",
             "number_of_tasks",

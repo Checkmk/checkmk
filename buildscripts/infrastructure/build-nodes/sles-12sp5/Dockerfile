@@ -12,6 +12,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp5 sles12sp5 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-check in --replacefiles --oldpackage libcurl4-7.60.0-9.8.x86_64 \
+    && zypper -n --no-gpg-check in --replacefiles --oldpackage libpcre1-8.39-8.3.1.x86_64 \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \
     cyrus-sasl-devel \

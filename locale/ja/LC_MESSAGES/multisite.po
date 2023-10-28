@@ -22277,6 +22277,10 @@ msgid "Graph rendering options"
 msgstr "グラフレンダリングオプション"
 
 #, python-format
+msgid "Graph specification '%s' is insufficient for Dashboard."
+msgstr ""
+
+#, python-format
 msgid ""
 "Graph specification '%s' is insufficient for Dashboard. Please save your "
 "graph as a custom graph first, then add that one to the dashboard."
@@ -61833,10 +61837,6 @@ msgid "Unknown entities"
 msgstr "不明なエンティティ"
 
 #, python-format
-msgid "Unknown graph type: %s"
-msgstr "不明なグラフタイプ:%s"
-
-#, python-format
 msgid "Unknown group: %s"
 msgstr "不明なグループ: %s"
 
@@ -70774,6 +70774,10 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "Unknown graph type: %s"
+#~ msgstr "不明なグラフタイプ:%s"
 
 #~ msgid ""
 #~ "This rule sets the warn and crit levels for the number of unacknowlegded "

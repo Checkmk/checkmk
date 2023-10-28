@@ -22766,6 +22766,10 @@ msgid "Graph rendering options"
 msgstr "Opções de renderização gráfica"
 
 #, python-format
+msgid "Graph specification '%s' is insufficient for Dashboard."
+msgstr ""
+
+#, python-format
 msgid ""
 "Graph specification '%s' is insufficient for Dashboard. Please save your "
 "graph as a custom graph first, then add that one to the dashboard."
@@ -63447,10 +63451,6 @@ msgid "Unknown entities"
 msgstr "Entidades desconhecidas"
 
 #, python-format
-msgid "Unknown graph type: %s"
-msgstr "Tipo de gráfico desconhecido: %s"
-
-#, python-format
 msgid "Unknown group: %s"
 msgstr "Grupo desconhecido: %s"
 
@@ -72657,6 +72657,10 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid "Unknown graph type: %s"
+#~ msgstr "Tipo de gráfico desconhecido: %s"
 
 #~ msgid ""
 #~ "This rule sets the warn and crit levels for the number of unacknowlegded "

@@ -64,6 +64,7 @@ def _get_prediction(
 class PredictionUpdater:
     host_name: HostName
     service_description: ServiceName
+    params: PredictionParameters
     partial_get_recorded_data: Callable[[str, str, str, int, int], MetricRecord]
 
     def _get_recorded_data(self, metric_name: str, start: int, end: int) -> MetricRecord:
@@ -71,13 +72,12 @@ class PredictionUpdater:
             self.host_name, self.service_description, metric_name, start, end
         )
 
-    def get_updated_prediction(
+    def _get_updated_prediction(
         self,
         dsname: str,
-        params: PredictionParameters,
         now: int,
     ) -> PredictionData:
-        period_info = PREDICTION_PERIODS[params.period]
+        period_info = PREDICTION_PERIODS[self.params.period]
 
         current_slice = Slice.from_timestamp(now, period_info)
 
@@ -92,7 +92,7 @@ class PredictionUpdater:
             data_for_pred := _get_prediction(
                 store=prediction_store,
                 timegroup=current_slice.group,
-                params=params,
+                params=self.params,
             )
         ) is None:
             info = PredictionInfo(
@@ -100,7 +100,7 @@ class PredictionUpdater:
                 time=now,
                 range=current_slice.interval,
                 dsname=dsname,
-                params=params,
+                params=self.params,
             )
             logger.log(VERBOSE, "Calculating prediction data for time group %s", info.name)
             prediction_store.remove_prediction(info.name)
@@ -120,21 +120,20 @@ class PredictionUpdater:
     # cores.
     def get_predictive_levels(
         self,
-        params: PredictionParameters,
         metric_name: str,
         levels_factor: float = 1.0,
     ) -> tuple[float | None, EstimatedLevels]:
         now = int(time.time())
-        prediction = self.get_updated_prediction(metric_name, params, now)
+        prediction = self._get_updated_prediction(metric_name, now)
         if (reference := prediction.predict(now)) is None:
             return None, (None, None, None, None)
 
         return reference.average, estimate_levels(
             reference_value=reference.average,
             stdev=reference.stdev,
-            levels_lower=params.levels_lower,
-            levels_upper=params.levels_upper,
-            levels_upper_lower_bound=params.levels_upper_min,
+            levels_lower=self.params.levels_lower,
+            levels_upper=self.params.levels_upper,
+            levels_upper_lower_bound=self.params.levels_upper_min,
             levels_factor=levels_factor,
         )
 

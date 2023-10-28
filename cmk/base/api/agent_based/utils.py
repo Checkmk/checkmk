@@ -389,13 +389,11 @@ def check_levels_predictive(
     prediction_updater = PredictionUpdater(
         HostName(plugin_contexts.host_name()),
         plugin_contexts.service_description(),
+        PredictionParameters.model_validate(levels),
         functools.partial(livestatus.get_rrd_data, livestatus.LocalConnection()),
     )
     try:
-        ref_value, levels_tuple = prediction_updater.get_predictive_levels(
-            PredictionParameters.parse_obj(levels),
-            metric_name,
-        )
+        ref_value, levels_tuple = prediction_updater.get_predictive_levels(metric_name)
         if ref_value is not None:
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
         else:

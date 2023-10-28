@@ -32,6 +32,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
+from cmk.utils.prediction import PredictionParameters as _PredictionParameters
 from cmk.utils.prediction import PredictionUpdater as _PredictionUpdater
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
@@ -307,6 +308,7 @@ def check_levels(  # pylint: disable=too-many-branches
         prediction_updater = _PredictionUpdater(
             HostName(host_name()),
             service_description(),
+            _PredictionParameters.model_validate(params),
             _partial(
                 _livestatus.get_rrd_data,
                 _livestatus.LocalConnection(),
@@ -315,7 +317,6 @@ def check_levels(  # pylint: disable=too-many-branches
 
         try:
             ref_value, levels = prediction_updater.get_predictive_levels(
-                params,
                 dsname,
                 levels_factor=factor * scale,
             )

@@ -869,11 +869,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "raritan_pdu_ocprot",
-            RuleGroup.CheckgroupParameters("ocprot_current"),
-        ),
-        (
-            "check",
             "rds_licenses",
             RuleGroup.CheckgroupParameters("rds_licenses"),
         ),

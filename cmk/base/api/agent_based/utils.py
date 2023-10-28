@@ -12,7 +12,6 @@ from collections.abc import Callable, Generator, MutableMapping
 from typing import Any, overload
 
 import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException
 
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
@@ -385,11 +384,6 @@ def check_levels_predictive(
             predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
         else:
             predictive_levels_msg = " (no reference for prediction yet)"
-
-    except MKGeneralException as e:
-        ref_value = None
-        levels_tuple = (None, None, None, None)
-        predictive_levels_msg = " (no reference for prediction: %s)" % e
 
     except Exception as e:
         if cmk.utils.debug.enabled():

@@ -69,7 +69,7 @@ def main() {
                 image_ids[distro] = resolve_docker_image_alias(alias_names[distro]);
             }
             sh("""
-                cp defines.make .bazelversion omd/strip_binaries \
+                cp defines.make package_versions.bzl .bazelversion omd/strip_binaries \
                 buildscripts/infrastructure/build-nodes/scripts
 
                 cp omd/distros/*.mk buildscripts/infrastructure/build-nodes/scripts

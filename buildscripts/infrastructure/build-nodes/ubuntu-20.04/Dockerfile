@@ -103,6 +103,7 @@ COPY scripts/install-iwyu.sh /opt/
 COPY scripts/Check_MK-pubkey.gpg /opt/
 
 # used by lots of scripts (has to be copied to `scripts/` before)
+COPY scripts/package_versions.bzl /opt/
 COPY scripts/defines.make /opt/
 
 # used by install scripts

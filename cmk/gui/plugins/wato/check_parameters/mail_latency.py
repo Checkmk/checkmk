@@ -9,16 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Age, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
 def _parameter_valuespec_mail_latency():
-    return Tuple(
-        title=_("Upper levels for mail latency"),
-        elements=[
-            Age(title=_("Warning at"), default_value=40),
-            Age(title=_("Critical at"), default_value=60),
-        ],
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Age,
+                        default_levels=(40, 60),
+                        title=_("Upper levels for mail latency"),
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

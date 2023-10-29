@@ -432,11 +432,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "barracuda_mail_latency",
-            RuleGroup.CheckgroupParameters("mail_latency"),
-        ),
-        (
-            "check",
             "blade_bx_powerfan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),

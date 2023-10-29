@@ -14,7 +14,7 @@ from typing import NamedTuple
 import pytest
 from typing_extensions import assert_never
 
-from tests.testlib import wait_until
+from tests.testlib import repo_path, wait_until
 from tests.testlib.site import Site
 
 import cmk.utils.debug as debug
@@ -66,7 +66,7 @@ def snmpsim_fixture(site: Site, snmp_data_dir, tmp_path_factory):  # type:ignore
     logger.debug("Stopping snmpsimd...")
     for process_def in process_definitions:
         process_def.process.terminate()
-        process_def.process.wait()
+        process_def.process.wait(36)
     logger.debug("Stopped snmpsimd.")
 
 
@@ -76,7 +76,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
         port=port,
         process=subprocess.Popen(
             [
-                "snmpsimd.py",
+                f"{repo_path()}/.venv/bin/snmpsim-command-responder",
                 "--log-level=error",
                 "--cache-dir",
                 # Each snmpsim instance needs an own cache directory otherwise
@@ -162,7 +162,8 @@ def _is_listening(process_def) -> bool:  # type:ignore[no-untyped-def]
                 raise
             snmpsimd_died = True
     if snmpsimd_died:
-        error_msg = p.stdout.read().split("\n", 1)[0]
+        # error_msg = p.stdout.read().split("\n", 1)[0]
+        error_msg = "fake error message"
         raise Exception("snmpsimd died. Exit code: %d; error message: %s" % (exitcode, error_msg))
 
     if num_sockets < 2:

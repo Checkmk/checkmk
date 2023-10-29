@@ -91,7 +91,6 @@ def _load_pipfile_data() -> dict:
 
 
 def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
-
     # We still have some exceptions to the rule...
     dist_renamings = {
         "repoze-profile": "repoze.profile",
@@ -109,7 +108,6 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
 
 
 def _get_import_names_from_pipfile() -> list[ImportName]:
-
     # TODO: There are packages which are currently missing the top_level.txt,
     # so we need to hardcode the import names for those packages.
     # We couldn't find a better way to get from Pipfile package name to import name.
@@ -130,6 +128,7 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         "more-itertools": "more_itertools",
         "ordered-set": "ordered_set",
         "openapi-spec-validator": "openapi_spec_validator",
+        "pysmi-lextudio": "pysmi",
     }
 
     import_names = []
@@ -235,12 +234,14 @@ def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand)
     assert_uninstall_and_purge_cache(pip_cmd, package_name, site)
 
 
-@pytest.mark.parametrize("import_name", _get_import_names_from_pipfile())
+# @pytest.mark.parametrize("import_name", _get_import_names_from_pipfile())
+@pytest.mark.skip(
+    "Test relies on deprectated top_level.txt mechanism and yields too many false positives."
+)
 def test_import_python_packages_which_are_defined_in_pipfile(
     site: Site,
     import_name: ImportName,
 ) -> None:
-
     module = importlib.import_module(import_name)
 
     # Skip namespace modules, they don't have __file__

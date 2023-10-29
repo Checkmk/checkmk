@@ -46,7 +46,7 @@ from contextlib import contextmanager
 from typing import Any, Protocol, TypeVar
 
 
-class _ValueStoreManagerProtokol(Protocol):
+class _ValueStoreManagerProtocol(Protocol):
     @property
     def active_service_interface(self) -> MutableMapping[str, Any] | None:  # type: ignore[misc]
         ...
@@ -55,10 +55,9 @@ class _ValueStoreManagerProtokol(Protocol):
         ...
 
 
-_active_host_value_store: _ValueStoreManagerProtokol | None = None
+_active_host_value_store: _ValueStoreManagerProtocol | None = None
 
 
-# Caveat: this function (and its docstring) is part of the public Check API.
 def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[misc]
     """Get the value store for the current service from Checkmk
 
@@ -73,18 +72,18 @@ def get_value_store() -> MutableMapping[str, Any]:  # type: ignore[misc]
     return _active_host_value_store.active_service_interface  # type: ignore[misc]
 
 
-TypeValueStoreManager = TypeVar("TypeValueStoreManager", bound=_ValueStoreManagerProtokol)
+_TypeValueStoreManager = TypeVar("_TypeValueStoreManager", bound=_ValueStoreManagerProtocol)
 
 
 @contextmanager
 def set_value_store_manager(
-    vs_manager: TypeValueStoreManager,
+    vs_manager: _TypeValueStoreManager,
     *,
     store_changes: bool,
-) -> Iterator[TypeValueStoreManager]:
+) -> Iterator[_TypeValueStoreManager]:
     """Create and load the value store for the host
 
-    THIS FUNCTION IS NOT TO BE USED BY PLUGINS, AND NOT PART OF THE PLUGIN API.
+    This class is not to be used by plugins, and not part of the plugin API.
     """
     # ^- and yet it sits in this package. That's what you get for using a global state.
     global _active_host_value_store  # pylint: disable=global-statement

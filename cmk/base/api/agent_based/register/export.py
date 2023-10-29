@@ -9,6 +9,8 @@ from typing import overload
 
 from cmk.utils.check_utils import ParametersTypeAlias
 
+from cmk.snmplib import SNMPDetectBaseType
+
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.register import (
@@ -34,7 +36,6 @@ from cmk.base.api.agent_based.type_defs import (
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )
-from cmk.base.api.agent_based.utils import SNMPDetectSpecification
 
 from cmk.agent_based.v1 import SNMPTree
 
@@ -124,7 +125,7 @@ def agent_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpecification,
+    detect: SNMPDetectBaseType,
     fetch: SNMPTree,
     parse_function: SimpleSNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
@@ -141,7 +142,7 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpecification,
+    detect: SNMPDetectBaseType,
     fetch: list[SNMPTree],
     parse_function: SNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
@@ -157,7 +158,7 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpecification,
+    detect: SNMPDetectBaseType,
     fetch: SNMPTree | list[SNMPTree],
     parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None = None,
     parsed_section_name: str | None = None,

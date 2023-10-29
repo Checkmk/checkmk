@@ -18,9 +18,8 @@ from cmk.base.api.agent_based.type_defs import (
     StringByteTable,
     StringTable,
 )
-from cmk.base.api.agent_based.utils import SNMPDetectSpecification
 
-from cmk.agent_based.v1 import OIDEnd, SNMPTree
+from cmk.agent_based.v1 import matches, OIDEnd, SNMPTree
 
 
 def _generator_function():
@@ -127,11 +126,7 @@ def test_create_snmp_section_plugin() -> None:
         ),
     ]
 
-    detect = SNMPDetectSpecification(
-        [
-            [(".1.2.3.4.5", "Foo.*", True)],
-        ]
-    )
+    detect = matches(".1.2.3.4.5", "Foo.*")
 
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
@@ -164,7 +159,7 @@ def test_create_snmp_section_plugin_single_tree() -> None:
         parse_function=lambda string_table: string_table,
         # just one, no list:
         fetch=single_tree,
-        detect_spec=SNMPDetectSpecification([[(".1.2.3.4.5", "Foo.*", True)]]),
+        detect_spec=matches(".1.2.3.4.5", "Foo.*"),
     )
 
     assert plugin.trees == [single_tree]

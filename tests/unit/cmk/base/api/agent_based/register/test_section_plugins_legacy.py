@@ -12,9 +12,8 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.api.agent_based.utils import startswith
 
-from cmk.agent_based.v1 import SNMPTree
+from cmk.agent_based.v1 import SNMPTree, startswith
 
 
 def old_school_parse_function(_info):

@@ -6,35 +6,34 @@
 # For an explanation of what is what see comments in __all__definition at the end
 
 from cmk.base.api.agent_based.utils import (
-    all_of,
-    any_of,
     check_levels,
     check_levels_predictive,
+    get_average,
+    get_rate,
+    GetRateError,
+)
+
+from cmk.agent_based.v1 import (
+    all_of,
+    any_of,
+    Attributes,
+    CheckResult,
     contains,
     endswith,
     equals,
     exists,
-    get_average,
-    get_rate,
-    GetRateError,
+    get_value_store,
+    HostLabel,
+    IgnoreResults,
+    IgnoreResultsError,
     matches,
+    Metric,
     not_contains,
     not_endswith,
     not_equals,
     not_exists,
     not_matches,
     not_startswith,
-    startswith,
-)
-
-from cmk.agent_based.v1 import (
-    Attributes,
-    CheckResult,
-    get_value_store,
-    HostLabel,
-    IgnoreResults,
-    IgnoreResultsError,
-    Metric,
     OIDBytes,
     OIDCached,
     OIDEnd,
@@ -43,6 +42,7 @@ from cmk.agent_based.v1 import (
     Service,
     ServiceLabel,
     SNMPTree,
+    startswith,
     State,
     TableRow,
 )

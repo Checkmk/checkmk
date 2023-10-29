@@ -16,6 +16,22 @@ from ._checking_classes import (
     ServiceLabel,
     State,
 )
+from ._detection import (
+    all_of,
+    any_of,
+    contains,
+    endswith,
+    equals,
+    exists,
+    matches,
+    not_contains,
+    not_endswith,
+    not_equals,
+    not_exists,
+    not_matches,
+    not_startswith,
+    startswith,
+)
 from ._inventory_classes import Attributes, TableRow
 from ._regex import regex
 from ._snmp import OIDBytes, OIDCached, OIDEnd, SNMPTree
@@ -23,15 +39,28 @@ from .value_store import get_value_store
 
 # TODO: when everything is here, adjust the order to the one in cmk.base.plugins
 __all__ = [
+    "all_of",
+    "any_of",
     "Attributes",
     "CheckResult",
     "clusterize",
+    "contains",
     "DiscoveryResult",
+    "endswith",
+    "equals",
+    "exists",
     "get_value_store",
     "HostLabel",
     "IgnoreResults",
     "IgnoreResultsError",
+    "matches",
     "Metric",
+    "not_contains",
+    "not_endswith",
+    "not_equals",
+    "not_exists",
+    "not_matches",
+    "not_startswith",
     "OIDBytes",
     "OIDCached",
     "OIDEnd",
@@ -41,6 +70,7 @@ __all__ = [
     "Service",
     "ServiceLabel",
     "SNMPTree",
+    "startswith",
     "State",
     "TableRow",
 ]

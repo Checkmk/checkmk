@@ -5,13 +5,7 @@
 
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.base.api.agent_based.utils import (
-    check_levels,
-    check_levels_predictive,
-    get_average,
-    get_rate,
-    GetRateError,
-)
+from cmk.base.api.agent_based.utils import check_levels, check_levels_predictive
 
 from cmk.agent_based.v1 import (
     all_of,
@@ -22,7 +16,10 @@ from cmk.agent_based.v1 import (
     endswith,
     equals,
     exists,
+    get_average,
+    get_rate,
     get_value_store,
+    GetRateError,
     HostLabel,
     IgnoreResults,
     IgnoreResultsError,

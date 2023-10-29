@@ -35,6 +35,7 @@ from ._detection import (
 from ._inventory_classes import Attributes, TableRow
 from ._regex import regex
 from ._snmp import OIDBytes, OIDCached, OIDEnd, SNMPTree
+from ._value_store_utils import get_average, get_rate, GetRateError
 from .value_store import get_value_store
 
 # TODO: when everything is here, adjust the order to the one in cmk.base.plugins
@@ -49,6 +50,9 @@ __all__ = [
     "endswith",
     "equals",
     "exists",
+    "GetRateError",
+    "get_average",
+    "get_rate",
     "get_value_store",
     "HostLabel",
     "IgnoreResults",

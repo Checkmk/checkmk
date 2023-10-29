@@ -10,11 +10,9 @@ from typing import Any
 import pytest
 from typing_extensions import TypedDict
 
-from cmk.base.api.agent_based.utils import GetRateError
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults
 from cmk.base.plugins.agent_based.utils.size_trend import size_trend
 
-from cmk.agent_based.v1 import Metric, Result, State
+from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, State
 
 
 class ArgsDict(TypedDict):

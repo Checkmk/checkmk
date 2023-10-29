@@ -98,8 +98,8 @@ def test_inventory_sap_hana_diskusage(
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "HXE 90 HXE - Log.delta": [2000000, 30000000],
-        "HXE 90 HXE - Log.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989],
+        "HXE 90 HXE - Log.delta": (2000000, 30000000),
+        "HXE 90 HXE - Log.trend": (LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989),
     }
     monkeypatch.setattr(sap_hana_diskusage, "get_value_store", lambda: value_store_patched)
     yield value_store_patched

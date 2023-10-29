@@ -5,11 +5,11 @@
 
 import pytest
 
-from cmk.base.api.agent_based.utils import GetRateError
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.cpu_utilization_os import check_cpu_utilization_os
 from cmk.base.plugins.agent_based.utils.container_cgroupv2 import parse_cpu
 from cmk.base.plugins.agent_based.utils.cpu_utilization_os import SectionCpuUtilizationOs
+
+from cmk.agent_based.v1 import GetRateError, Metric, Result, State
 
 AGENT_OUTPUT = [
     ["uptime", "200716.86", "651734.60"],

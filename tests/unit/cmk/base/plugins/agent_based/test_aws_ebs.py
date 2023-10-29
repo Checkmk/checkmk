@@ -10,14 +10,6 @@ from typing import Any
 import pytest
 
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.api.agent_based.utils import GetRateError
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
-    Metric,
-    Result,
-    Service,
-    State,
-)
 from cmk.base.plugins.agent_based.aws_ebs import (
     check_aws_ebs,
     check_aws_ebs_burst_balance,
@@ -25,6 +17,8 @@ from cmk.base.plugins.agent_based.aws_ebs import (
     discover_aws_ebs_burst_balance,
     parse_aws_ebs,
 )
+
+from cmk.agent_based.v1 import get_value_store, GetRateError, Metric, Result, Service, State
 
 STRING_TABLE = [
     [

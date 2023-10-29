@@ -791,11 +791,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "netapp_api_connection",
-            RuleGroup.CheckgroupParameters("netapp_instance"),
-        ),
-        (
-            "check",
             "netapp_api_environment_fan_faults",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),

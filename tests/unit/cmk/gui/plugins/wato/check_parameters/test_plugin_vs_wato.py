@@ -451,11 +451,6 @@ class ErrorReporter:
             "brocade_optical",
             RuleGroup.CheckgroupParameters("brocade_optical"),
         ),
-        (
-            "check",
-            "brocade_sys_mem",
-            RuleGroup.CheckgroupParameters("memory_relative"),
-        ),
         ("check", "bvip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
         ("check", "bvip_poe", RuleGroup.CheckgroupParameters("epower_single")),
         (

@@ -74,4 +74,7 @@ def test_check_esx_vsphere_hostsystem_multipath(
     fix_register: FixRegister, section: Section, item: str, check_results: CheckResult
 ) -> None:
     check = fix_register.check_plugins[CheckPluginName("esx_vsphere_hostsystem_multipath")]
-    assert list(check.check_function(item=item, params={}, section=section)) == check_results
+    assert (
+        list(check.check_function(item=item, params={"levels_map": {}}, section=section))
+        == check_results
+    )

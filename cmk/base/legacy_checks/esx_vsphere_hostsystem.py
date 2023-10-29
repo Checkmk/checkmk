@@ -131,7 +131,7 @@ def esx_vsphere_multipath_convert(data):
 
 
 def inventory_esx_vsphere_hostsystem_multipath(parsed):
-    return [(x, None) for x in esx_vsphere_multipath_convert(parsed)]
+    return [(x, {}) for x in esx_vsphere_multipath_convert(parsed)]
 
 
 @dataclass
@@ -162,6 +162,8 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
     if states is None:
         return states
 
+    levels_map = params["levels_map"]
+
     # Collect states
     for path_state, path_name in states:
         state_item = state_infos.get(path_state)
@@ -173,7 +175,7 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
         path_names.append(path_info)
 
     # Check warn, critical
-    if not params or isinstance(params, list):
+    if not levels_map or isinstance(levels_map, list):
         if (
             state_infos["standby"].count > 0
             and state_infos["standby"].count != state_infos["active"].count
@@ -182,8 +184,8 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
     else:
         state = 0
         for state_name, state_values in state_infos.items():
-            if params.get(state_name):
-                limits = params.get(state_name)
+            if levels_map.get(state_name):
+                limits = levels_map.get(state_name)
                 if len(limits) == 2:
                     warn_max, crit_max = limits
                     crit_min, warn_min = 0, 0
@@ -223,4 +225,5 @@ check_info["esx_vsphere_hostsystem.multipath"] = LegacyCheckDefinition(
     discovery_function=inventory_esx_vsphere_hostsystem_multipath,
     check_function=check_esx_vsphere_hostsystem_multipath,
     check_ruleset_name="multipath_count",
+    check_default_parameters={"levels_map": None},
 )

@@ -811,11 +811,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "netscaler_mem",
-            RuleGroup.CheckgroupParameters("netscaler_mem"),
-        ),
-        (
-            "check",
             "openhardwaremonitor_fan",
             RuleGroup.CheckgroupParameters("hw_fans"),
         ),

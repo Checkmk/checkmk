@@ -15,13 +15,10 @@ from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
 # .1.3.6.1.4.1.5951.4.1.1.41.2.0  13
 # .1.3.6.1.4.1.5951.4.1.1.41.4.0  7902
 
-netscaler_mem_default_levels = (80.0, 90.0)
-
 
 def inventory_netscaler_mem(info):
     if info:
-        return [(None, netscaler_mem_default_levels)]
-    return []
+        yield None, {}
 
 
 def check_netscaler_mem(_no_item, params, info):
@@ -33,7 +30,7 @@ def check_netscaler_mem(_no_item, params, info):
         "Usage",
         used_mem,
         total_mem,
-        ("perc_used", params),
+        ("perc_used", params["levels"]),
         metric_name="mem_used",
     )
 
@@ -48,4 +45,7 @@ check_info["netscaler_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_netscaler_mem,
     check_function=check_netscaler_mem,
     check_ruleset_name="netscaler_mem",
+    check_default_parameters={
+        "levels": (80.0, 90.0),
+    },
 )

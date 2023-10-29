@@ -85,7 +85,6 @@ def get_discovery_expected(subcheck, dataset):
 
 def get_discovery_actual(check: Check, info_arg: object, immu: Immutables) -> DiscoveryResult:
     """Validate and return actual DiscoveryResult"""
-    print(f"discovery: {check.name!r}")
 
     disco_func = check.info.get("discovery_function")
     if not disco_func:
@@ -94,46 +93,7 @@ def get_discovery_actual(check: Check, info_arg: object, immu: Immutables) -> Di
     d_result_raw = check.run_discovery(info_arg)
     immu.test(" after discovery (%s): " % disco_func.__name__)
 
-    d_result = DiscoveryResult(d_result_raw)
-    for entry in d_result.entries:
-        params = get_merged_parameters(check, entry.default_params)
-        validate_discovered_params(check, params)
-
-    return d_result
-
-
-def validate_discovered_params(check, params):
-    """Validate params with respect to the rule's valuespec"""
-    # TODO CMK-4180
-    return
-    # if not params:
-    #     return
-
-    # # get the rule's valuespec
-    # rulespec_group = check.info.get("group")
-    # if rulespec_group is None:
-    #     return
-
-    # key = "checkgroup_parameters:%s" % (rulespec_group,)
-    # if key in rulespec_registry:
-    #     spec = rulespec_registry[key].valuespec
-    # else:
-    #     # Static checks still don't work. For example the test for
-    #     # domino_tasks. For the moment just skip
-    #     # key_sc = "static_checks:%s" % (rulespec_group,)
-    #     return
-
-    # # We need to handle one exception: In the ps params, the key 'cpu_rescale_max'
-    # # *may* be 'None'. However, this is deliberately not allowed by the valuespec,
-    # # to force the user to make a choice. The 'Invalid Parameter' message in this
-    # # case does make sense, as it encourages the user to open and update the
-    # # parameters. See Werk 6646
-    # if 'cpu_rescale_max' in params:
-    #     params = params.copy()
-    #     params.update(cpu_rescale_max=True)
-
-    # print("Loading %r with prams %r" % (key, params))
-    # spec.validate_value(params, "")
+    return DiscoveryResult(d_result_raw)
 
 
 def run_test_on_parse(dataset, immu):
@@ -143,7 +103,6 @@ def run_test_on_parse(dataset, immu):
     test it, and return the result. Otherwise return None.
     If the .parsed attribute is present, it is compared to the result.
     """
-    print(f"parse: {dataset.checkname!r}")
     info = getattr(dataset, "info", None)
     parsed_expected = getattr(dataset, "parsed", None)
 
@@ -188,7 +147,6 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     check_plugin_name = maincheckify(check.name)
 
     for item, params, results_expected_raw in test_cases:
-        print(f"Dataset item {item!r} in check {check.name!r}")
         immu.register(params, "params")
 
         with current_service(check_plugin_name, "unit test description"):
@@ -217,7 +175,6 @@ def optional_freeze_time(dataset):
 
 def run(check_info, dataset):
     """Run all possible tests on 'dataset'"""
-    print(f"START: {dataset!r}")
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
     assert checklist, f"Found no check plugin for {dataset.checkname!r}"
 

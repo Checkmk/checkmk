@@ -335,6 +335,9 @@ class BaseCheck(abc.ABC):
 
         cmk.agent_based.v1_backend.plugin_contexts._hostname = HostName("non-existent-testhost")
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.name!r})"
+
 
 class Check(BaseCheck):
     def __init__(self, name: str) -> None:

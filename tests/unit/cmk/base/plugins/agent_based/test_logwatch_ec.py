@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 
@@ -552,20 +552,28 @@ class FakeTcpError(Exception):
     pass
 
 
+class FakeTcpErrorRaised(Exception):
+    pass
+
+
 def _forward_message(
-    successful: bool,
+    tcp_result: Literal["ok", "raise exception", "set exception"],
     monkeypatch: pytest.MonkeyPatch,
 ) -> tuple[logwatch_ec.LogwatchFordwardResult, list[tuple[object, ...]],]:
     messages_forwarded: list[tuple[object, ...]] = []
 
     def _forward_send_tcp(method, message_chunks, result):
         nonlocal messages_forwarded
-        if successful:
+        if tcp_result == "ok":
             for message in message_chunks:
                 messages_forwarded.append(message)
                 result.num_forwarded += 1
-        else:
+        elif tcp_result == "set exception":
             result.exception = FakeTcpError("could not send messages")
+        elif tcp_result == "raise exception":
+            raise FakeTcpErrorRaised("rise and shine")
+        else:
+            raise NotImplementedError()
 
     monkeypatch.setattr(logwatch_ec, "logwatch_forward_send_tcp", _forward_send_tcp)
 
@@ -582,10 +590,10 @@ def _forward_message(
 def test_forward_tcp_message_forwarded_ok(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    result, messages_forwarded = _forward_message(successful=True, monkeypatch=monkeypatch)
+    result, messages_forwarded = _forward_message(tcp_result="ok", monkeypatch=monkeypatch)
     assert result.num_forwarded == 1
     assert result.num_spooled == 0
-    assert result.num_dropped == 1  # TODO: this is a bug!
+    assert result.num_dropped == 0
     assert result.exception is None
 
     assert len(messages_forwarded) == 1
@@ -596,14 +604,31 @@ def test_forward_tcp_message_forwarded_ok(
     )
 
 
-def test_forward_tcp_message_forwarded_nok(
+def test_forward_tcp_message_forwarded_nok_1(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    result, messages_forwarded = _forward_message(successful=False, monkeypatch=monkeypatch)
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception", monkeypatch=monkeypatch
+    )
 
     assert result.num_forwarded == 0
     assert result.num_spooled == 0
     assert result.num_dropped == 1
     assert isinstance(result.exception, FakeTcpError)
+
+    assert len(messages_forwarded) == 0
+
+
+def test_forward_tcp_message_forwarded_nok_2(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result, messages_forwarded = _forward_message(
+        tcp_result="raise exception", monkeypatch=monkeypatch
+    )
+
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1
+    assert isinstance(result.exception, FakeTcpErrorRaised)
 
     assert len(messages_forwarded) == 0

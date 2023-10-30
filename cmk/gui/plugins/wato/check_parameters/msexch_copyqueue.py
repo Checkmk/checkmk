@@ -9,7 +9,8 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, TextInput, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate, TextInput
 
 
 def _item_spec_msexch_copyqueue():
@@ -20,14 +21,25 @@ def _item_spec_msexch_copyqueue():
 
 
 def _parameter_valuespec_msexch_copyqueue():
-    return Tuple(
-        title=_("Upper Levels for CopyQueue Length"),
-        help=_(
-            "This rule sets upper levels to the number of transaction logs waiting to be copied "
-            "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
-            "(DAG). This is also known as the CopyQueue length."
+    return Migrate(
+        valuespec=Dictionary(
+            help=_(
+                "This rule sets upper levels to the number of transaction logs waiting to be copied "
+                "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
+                "(DAG). This is also known as the CopyQueue length."
+            ),
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Upper Levels for CopyQueue Length"),
+                    ),
+                ),
+            ],
+            optional_keys=[],
         ),
-        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

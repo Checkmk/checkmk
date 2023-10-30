@@ -761,11 +761,6 @@ class ErrorReporter:
         ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
         (
             "check",
-            "msexch_dag_copyqueue",
-            RuleGroup.CheckgroupParameters("msexch_copyqueue"),
-        ),
-        (
-            "check",
             "msexch_isclienttype",
             RuleGroup.CheckgroupParameters("msx_info_store"),
         ),

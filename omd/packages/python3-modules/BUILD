@@ -47,8 +47,8 @@ config_setting(
     name = "%s_compile" % module,
     srcs = [
         "@freetds",
-        "@omd_packages//:agent-receiver",
         "@omd_packages//omd/packages/omd:use_system_openssl",
+        "@omd_packages//packages:cmk-agent-receiver",
         "@omd_packages//packages:cmk-graphing",
         "@omd_packages//packages:cmk-werks",
         "@openssl",
@@ -72,7 +72,7 @@ config_setting(
         ),
     }),
 ) for module, dep in [
-    ("agent-receiver", "$(execpath @omd_packages//:agent-receiver)"),
+    ("agent-receiver", "$(execpath @omd_packages//packages:cmk-agent-receiver)"),
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
 ]]
 

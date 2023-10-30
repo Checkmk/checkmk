@@ -761,7 +761,7 @@ class Site:
             cmk_path() + "/inventory",
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
-            cmk_path() + "/agent-receiver",
+            cmk_path() + "/packages/cmk-agent-receiver",
             cmk_path() + "/active_checks",
             cmk_path() + "/packages/cmk-werks",
         ]

@@ -21,7 +21,7 @@ PYTEST_DOC_TEST_OPTS := \
     ../cmk/special_agents \
     ../cmk/update_config \
     ../cmk/utils \
-    ../agent-receiver \
+    ../packages/cmk-agent-receiver \
     ../omd/packages/omd \
     ../cmk/active_checks
 PYTEST_UNIT_TEST_OPTS = \

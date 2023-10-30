@@ -27,8 +27,8 @@ get_candidates_from_filesystem() {
     SEARCH=
     PRUNE=
     SEARCH+=" active_checks"
-    SEARCH+=" agent-receiver"
-    PRUNE+=" -path $(realpath agent-receiver/build) -prune -o"
+    SEARCH+=" packages/cmk-agent-receiver"
+    PRUNE+=" -path $(realpath packages/cmk-agent-receiver/build) -prune -o"
     SEARCH+=" agents"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory

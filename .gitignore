@@ -51,7 +51,6 @@ check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
-agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
@@ -61,8 +60,6 @@ GPATH
 GRTAGS
 GTAGS
 htmlcov/
-agent-receiver/agent_receiver.egg-info
-agent-receiver/pyproject.toml
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*

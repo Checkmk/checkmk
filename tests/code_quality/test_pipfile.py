@@ -37,7 +37,9 @@ IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
     repo_path() / "packages/cmk-werks/build",
+    # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",
+    repo_path() / "packages/cmk-agent-receiver/build",
     repo_path() / "bazel-check_mk",
     repo_path() / "omd/build",
     repo_path() / "packages/cmc/build",
@@ -138,7 +140,6 @@ def iter_relevant_files(basepath: Path) -> Iterable[Path]:
     exclusions = (
         basepath / "tests",
         basepath / "agents",  # There are so many optional imports...
-        basepath / "agent-receiver",  # uses setup.py
         basepath / "packages",  # ignore all packages
         basepath / "enterprise/core/src/test",  # test files
         basepath / "omd/license_sources",  # update_licenses.py contains imports

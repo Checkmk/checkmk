@@ -60,7 +60,8 @@ class WerkV2Base(BaseModel):
     title: str
 
     @field_validator("level", mode="before")
-    def parse_level(cls, v: str) -> Level:  # pylint: disable=no-self-argument
+    @classmethod
+    def parse_level(cls, v: str) -> Level:
         if isinstance(v, Level):
             return v
         try:
@@ -70,7 +71,8 @@ class WerkV2Base(BaseModel):
 
     # TODO: CMK-14587
     # @field_validator("component")
-    # def parse_component(cls, v: str) -> str:  # pylint: disable=no-self-argument
+    # @classmethod
+    # def parse_component(cls, v: str) -> str:
     #     components = {k for k, _ in WerkTranslator().components()}
     #     if v not in components:
     #         raise TypeError(f"Component {v} not know. Choose from: {components}")
@@ -89,7 +91,8 @@ class Werk(WerkV2Base):
     # the next refactoring will move this code away from cmk, so we won't have access to Version
     # so we may also disable this right now.
     # @validator("version")
-    # def parse_version(cls, v: str) -> str:  # pylint: disable=no-self-argument
+    # @classmethod
+    # def parse_version(cls, v: str) -> str:
     #     Version.from_str(v)
     #     return v
 

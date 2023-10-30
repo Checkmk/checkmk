@@ -564,7 +564,7 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write("\n%s\n" % werk.content.description)
 
 
-def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
+def main_list(args: argparse.Namespace, fmt: str) -> None:
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 

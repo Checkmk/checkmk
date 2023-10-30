@@ -212,8 +212,8 @@ class _FakeForwarder:
         self,
         method: str | tuple,
         messages: Sequence[SyslogMessage],
-    ) -> logwatch_ec.LogwatchFordwardResult:
-        return logwatch_ec.LogwatchFordwardResult(num_forwarded=len(messages))
+    ) -> logwatch_ec.LogwatchForwardedResult:
+        return logwatch_ec.LogwatchForwardedResult(num_forwarded=len(messages))
 
 
 @pytest.mark.parametrize(
@@ -565,7 +565,7 @@ class FakeTcpError(Exception):
 
 def _forward_message(
     successful: bool,
-) -> tuple[logwatch_ec.LogwatchFordwardResult, list[tuple[object, ...]],]:
+) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[object, ...]],]:
     messages_forwarded: list[tuple[object, ...]] = []
 
     class TestForwardTcpMessageForwarder(logwatch_ec.MessageForwarder):
@@ -589,7 +589,7 @@ def _forward_message(
 
 def test_forward_tcp_message_forwarded_ok() -> None:
     result, messages_forwarded = _forward_message(successful=True)
-    assert result == logwatch_ec.LogwatchFordwardResult(
+    assert result == logwatch_ec.LogwatchForwardedResult(
         num_forwarded=1,
         num_spooled=0,
         num_dropped=1,  # TODO: this is a bug!

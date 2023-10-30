@@ -243,19 +243,19 @@ def discover_logwatch_ec_common(
 
 
 @dataclass
-class LogwatchFordwardResult:
+class LogwatchForwardedResult:
     num_forwarded: int = 0
     num_spooled: int = 0
     num_dropped: int = 0
     exception: Exception | None = None
 
 
-class MessageForwaderProto(Protocol):
+class MessageForwarderProto(Protocol):
     def __call__(
         self,
         method: str | tuple,
         messages: Sequence[SyslogMessage],
-    ) -> LogwatchFordwardResult:
+    ) -> LogwatchForwardedResult:
         ...
 
 
@@ -303,7 +303,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     service_level: int,
     value_store: MutableMapping[str, Any],
     hostname: str,
-    message_forwarder: MessageForwaderProto,
+    message_forwarder: MessageForwarderProto,
 ) -> CheckResult:
     yield from logwatch.check_errors(parsed)
 
@@ -491,7 +491,7 @@ class MessageForwarder:
         self,
         method: str | tuple,
         messages: Sequence[SyslogMessage],
-    ) -> LogwatchFordwardResult:
+    ) -> LogwatchForwardedResult:
         if not method:
             method = str(cmk.utils.paths.omd_root / "tmp/run/mkeventd/eventsocket")
         elif isinstance(method, str) and method == "spool:":
@@ -520,11 +520,11 @@ class MessageForwarder:
     def _forward_pipe(
         path: Path,
         events: Sequence[SyslogMessage],
-    ) -> LogwatchFordwardResult:
+    ) -> LogwatchForwardedResult:
         if not events:
-            return LogwatchFordwardResult()
+            return LogwatchForwardedResult()
         SyslogForwarderUnixSocket(path=path).forward(events)
-        return LogwatchFordwardResult(num_forwarded=len(events))
+        return LogwatchForwardedResult(num_forwarded=len(events))
 
     # Spool the log messages to given spool directory.
     # First write a file which is not read into ec, then
@@ -533,9 +533,9 @@ class MessageForwarder:
         self,
         method: str,
         syslog_messages: Sequence[SyslogMessage],
-    ) -> LogwatchFordwardResult:
+    ) -> LogwatchForwardedResult:
         if not syslog_messages:
-            return LogwatchFordwardResult()
+            return LogwatchForwardedResult()
 
         split_files = self._split_file_messages(
             message + "\n" for message in map(repr, syslog_messages)
@@ -547,7 +547,7 @@ class MessageForwarder:
                     f.write(message)
             spool_file.rename(spool_file.parent / spool_file.name[1:])
 
-        return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
+        return LogwatchForwardedResult(num_forwarded=len(syslog_messages))
 
     @staticmethod
     def _split_file_messages(file_messages: Generator[str, None, None]) -> list[list[str]]:
@@ -586,12 +586,12 @@ class MessageForwarder:
         self,
         method: tuple,
         syslog_messages: Sequence[SyslogMessage],
-    ) -> LogwatchFordwardResult:
+    ) -> LogwatchForwardedResult:
         # Transform old format: (proto, address, port)
         if not isinstance(method[1], dict):
             method = (method[0], {"address": method[1], "port": method[2]})
 
-        result = LogwatchFordwardResult()
+        result = LogwatchForwardedResult()
 
         message_chunks = []
 
@@ -630,7 +630,7 @@ class MessageForwarder:
     def _forward_send_tcp(
         method: tuple,
         message_chunks: Iterable[tuple[float, int, list[str]]],
-        result: LogwatchFordwardResult,
+        result: LogwatchForwardedResult,
     ) -> None:
         protocol, method_params = method
 
@@ -658,7 +658,7 @@ class MessageForwarder:
     def _spool_messages(
         self,
         message_chunks: Iterable[tuple[float, int, list[str]]],
-        result: LogwatchFordwardResult,
+        result: LogwatchForwardedResult,
     ) -> None:
         self._spool_path.mkdir(parents=True, exist_ok=True)
 
@@ -685,7 +685,7 @@ class MessageForwarder:
     def _load_spooled_messages(
         self,
         method: tuple,
-        result: LogwatchFordwardResult,
+        result: LogwatchForwardedResult,
     ) -> list[tuple[float, int, list[str]]]:
         spool_params = method[1]["spool"]
 
@@ -742,7 +742,7 @@ class MessageForwarder:
         return message_chunks
 
     @staticmethod
-    def _spool_drop_messages(path: Path, result: LogwatchFordwardResult) -> int:
+    def _spool_drop_messages(path: Path, result: LogwatchForwardedResult) -> int:
         messages = ast.literal_eval(path.read_text())
         result.num_dropped += len(messages)
 

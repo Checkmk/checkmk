@@ -9,6 +9,8 @@ import jwt
 import pytest
 from fastapi.testclient import TestClient
 
+# check if we can import this or abort. Do a separate import later for mypy
+pytest.importorskip("tests.testlib.openid_oauth_provider")
 import tests.testlib.openid_oauth_provider as app
 
 

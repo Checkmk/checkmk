@@ -102,17 +102,19 @@ metric_info["jenkins_pending_tasks"] = {
 graph_info["number_of_executors"] = {
     "title": _("Executors"),
     "metrics": [
-        ("jenkins_num_executors", "area"),
-        ("jenkins_busy_executors", "area"),
-        ("jenkins_idle_executors", "area"),
+        ("jenkins_num_executors", "line"),
+        ("jenkins_busy_executors", "line"),
+        ("jenkins_idle_executors", "line"),
     ],
+    "range": (0, "jenkins_num_executors,jenkins_busy_executors,jenkins_idle_executors,MAX,MAX"),
 }
 
 graph_info["number_of_tasks"] = {
     "title": _("Tasks"),
     "metrics": [
-        ("jenkins_stuck_tasks", "area"),
-        ("jenkins_blocked_tasks", "area"),
-        ("jenkins_pending_tasks", "area"),
+        ("jenkins_stuck_tasks", "line"),
+        ("jenkins_blocked_tasks", "line"),
+        ("jenkins_pending_tasks", "line"),
     ],
+    "range": (0, "jenkins_stuck_tasks,jenkins_blocked_tasks,jenkins_pending_tasks,MAX,MAX"),
 }

@@ -16,8 +16,6 @@ from typing import Any, cast, Literal
 
 from typing_extensions import TypedDict
 
-from werks.models import Compatibility, Werk
-
 import cmk.utils.paths
 import cmk.utils.werks.werk as utils_werks_werk
 from cmk.utils.version import __version__, Edition, Version
@@ -73,6 +71,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+from cmk.werks.models import Compatibility, Werk
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 

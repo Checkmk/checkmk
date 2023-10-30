@@ -12,7 +12,7 @@ from typing import Literal
 
 from git.repo import Repo
 
-from werks import load_werk, parse_werk
+from cmk.werks import load_werk, parse_werk
 
 from .werk import WebsiteWerk
 

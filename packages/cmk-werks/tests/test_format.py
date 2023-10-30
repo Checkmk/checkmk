@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from werks import parse_werk
-from werks.format import format_as_werk_v1, format_as_werk_v2
-from werks.parse import parse_werk_v2
+from cmk.werks import parse_werk
+from cmk.werks.format import format_as_werk_v1, format_as_werk_v2
+from cmk.werks.parse import parse_werk_v2
 
 
 def test_markdown_parse_roundtrip() -> None:

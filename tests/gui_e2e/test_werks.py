@@ -7,13 +7,13 @@ import logging
 
 import pytest
 
-from werks.models import Edition
-
 from tests.testlib import repo_path
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.playwright.pom.werks import Werks
 
 import cmk.utils.werks
+
+from cmk.werks.models import Edition
 
 logger = logging.getLogger(__name__)
 

@@ -24,11 +24,11 @@ from git.objects.commit import Commit
 from git.repo import Repo
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined, Template
 
-from werks import load_werk
-from werks.models import Class, Level, Werk
-
 from cmk.utils.mail import MailString, send_mail_sendmail, set_mail_headers
 from cmk.utils.version import Version
+
+from cmk.werks import load_werk
+from cmk.werks.models import Class, Level, Werk
 
 from ..werk import WerkTranslator
 

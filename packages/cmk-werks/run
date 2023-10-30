@@ -144,13 +144,13 @@ setup_venv() {
 
 run_clean() {
     rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build
-    find werks tests -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
+    find cmk tests -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 }
 
 run_check_format() {
     setup_venv
-    isort --check-only --diff werks tests
-    black --check --diff werks tests
+    isort --check-only --diff cmk tests
+    black --check --diff cmk tests
 }
 
 run_unit_tests() {
@@ -165,7 +165,7 @@ run_mypy() {
 
 run_pylint() {
     setup_venv
-    PYTHONPATH=. pylint --jobs="${JOBS}" werks tests
+    PYTHONPATH=. pylint --jobs="${JOBS}" cmk tests
 }
 
 run_bandit() {
@@ -173,13 +173,13 @@ run_bandit() {
     # We would like to put everything into pyproject.toml, so running just "bandit" would do the
     # right thing. But bandit is totally obscure & complicated regarding configuration, see several
     # issues like https://github.com/PyCQA/bandit/issues/606.  :-/
-    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high werks tests
+    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high cmk tests
 }
 
 run_format() {
     setup_venv
-    isort werks tests
-    black werks tests
+    isort cmk tests
+    black cmk tests
 }
 
 run_documentation() {

@@ -6,10 +6,10 @@
 from collections.abc import Iterable, Sequence
 from functools import cache
 
-from werks.models import Compatibility, Werk
-
 import cmk.utils.paths
 import cmk.utils.store as store
+
+from cmk.werks.models import Compatibility, Werk
 
 from . import load
 

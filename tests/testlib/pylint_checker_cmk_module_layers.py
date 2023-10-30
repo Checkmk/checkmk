@@ -74,6 +74,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.config_generation")),
             _in_component(imported=imported, component=Component("cmk.discover_plugins")),
             _in_component(imported=imported, component=Component("cmk.agent_based")),
+            _in_component(imported=imported, component=Component("cmk.werks")),
         )
     )
 

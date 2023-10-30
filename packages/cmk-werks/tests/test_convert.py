@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from werks.convert import werkv1_to_werkv2
-from werks.format import format_as_werk_v1
-from werks.parse import parse_werk_v2
+from cmk.werks.convert import werkv1_to_werkv2
+from cmk.werks.format import format_as_werk_v1
+from cmk.werks.parse import parse_werk_v2
 
 WERK_V1_SIMPLE = """Title: Simple Title
 Class: fix

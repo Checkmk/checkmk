@@ -9,9 +9,9 @@ from typing import NamedTuple
 
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
-from werks.models import Class, Compatibility, Edition, Werk
-
 from cmk.utils.version import RType, Version
+
+from cmk.werks.models import Class, Compatibility, Edition, Werk
 
 from .. import has_content, load_raw_files
 from ..werk import sort_by_version_and_component, WerkTranslator

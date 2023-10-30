@@ -381,7 +381,6 @@ def test_dependencies_are_declared() -> None:
         "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
         "_typeshed",  # used by mypy within typing.TYPE_CHECKING
         "docker",  # optional
-        "werks",  # can not be found because it is installed editable  # TODO: FIXME!
     }
     assert (
         undeclared_dependencies_str >= known_undeclared_dependencies

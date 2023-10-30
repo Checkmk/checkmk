@@ -466,6 +466,8 @@ section_checkmk_failed_plugin() {
 section_labels() {
     echo '<<<labels:sep(0)>>>'
 
+    echo '{"cmk/os_type":"linux"}'
+
     while read -r line; do
         raw_line="${line//\"/}"
         case $line in

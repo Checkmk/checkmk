@@ -11,7 +11,8 @@ Werk #11742 introduced the agent based discovery of host labels.
 We now added the following labels for the Linux agent (example for Ubuntu):
 
 <ul>
+<li>"cmk/os_type:linux"</li>
 <li>"cmk/os_platform:ubuntu"</li>
-<li>"cmk/os_name:Ubuntu</li>
-<li>"cmk/os_version:22.04</li>
+<li>"cmk/os_name:Ubuntu"</li>
+<li>"cmk/os_version:22.04"</li>
 </ul>

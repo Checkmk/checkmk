@@ -33,6 +33,7 @@ HERE
     assertContains "$labels_section" '{"cmk/os_name":"Ubuntu"}'
     assertContains "$labels_section" '{"cmk/os_version":"11.11"}'
     assertContains "$labels_section" '{"cmk/os_platform":"ubuntu"}'
+    assertContains "$labels_section" '{"cmk/os_type":"linux"}'
 
     cat() {
         /bin/cat <<HERE
@@ -48,6 +49,7 @@ HERE
     assertContains "$labels_section" '{"cmk/os_name":"AlmaLinux"}'
     assertContains "$labels_section" '{"cmk/os_version":"9.0"}'
     assertContains "$labels_section" '{"cmk/os_platform":"almalinux"}'
+    assertContains "$labels_section" '{"cmk/os_type":"linux"}'
 }
 
 # shellcheck disable=SC1090

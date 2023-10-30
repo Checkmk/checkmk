@@ -35,7 +35,7 @@ class GeneralMailParams(BaseModel):
     connect_timeout: int | None = None
 
 
-def _get_host_address(server: str | None, host_config: HostConfig) -> str:
+def get_host_address(server: str | None, host_config: HostConfig) -> str:
     if server is None or server == "$HOSTADDRESS$":
         return host_config.address
 
@@ -54,7 +54,7 @@ def get_general_mail_arguments(
 
     args: list[str | Secret] = [
         f"--fetch-protocol={fetch_protocol}",
-        f"--fetch-server={_get_host_address(fetch_params.server, host_config)}",
+        f"--fetch-server={get_host_address(fetch_params.server, host_config)}",
     ]
 
     # NOTE: this argument will be turned into `--fetch-disable-tls` when

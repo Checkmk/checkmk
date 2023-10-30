@@ -7,9 +7,15 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from cmk.config_generation.v1 import HostConfig, IPAddressFamily, PlainTextSecret
+from cmk.plugins.mail.config_generation.mail import active_check_mail
 
-pytestmark = pytest.mark.checks
+HOST_CONFIG = HostConfig(
+    name="host",
+    address="127.0.0.1",
+    alias="host_alias",
+    ip_family=IPAddressFamily.IPv4,
+)
 
 
 @pytest.mark.parametrize(
@@ -17,49 +23,52 @@ pytestmark = pytest.mark.checks
     [
         pytest.param(
             {
+                "service_description": "Email",
                 "fetch": (
                     "IMAP",
                     {
                         "connection": {"disable_tls": False, "port": 143},
-                        "auth": ("basic", ("foo", "bar")),
+                        "auth": ("basic", ("foo", ("password", "bar"))),
                     },
                 ),
                 "connect_timeout": 15,
             },
             [
                 "--fetch-protocol=IMAP",
-                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-server=127.0.0.1",
                 "--fetch-tls",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                "--fetch-password=bar",
+                PlainTextSecret(value="bar", format="--fetch-password=%s"),
                 "--connect-timeout=15",
             ],
             id="imap",
         ),
         pytest.param(
             {
+                "service_description": "Email",
                 "fetch": (
                     "EWS",
                     {
                         "connection": {"disable_tls": True, "port": 143},
-                        "auth": ("basic", ("foo", "bar")),
+                        "auth": ("basic", ("foo", ("password", "bar"))),
                     },
                 ),
                 "connect_timeout": 15,
             },
             [
                 "--fetch-protocol=EWS",
-                "--fetch-server=$HOSTADDRESS$",
+                "--fetch-server=127.0.0.1",
                 "--fetch-port=143",
                 "--fetch-username=foo",
-                "--fetch-password=bar",
+                PlainTextSecret(value="bar", format="--fetch-password=%s"),
                 "--connect-timeout=15",
             ],
             id="ews_no_tls",
         ),
         pytest.param(
             {
+                "service_description": "Email",
                 "fetch": (
                     "EWS",
                     {
@@ -76,10 +85,10 @@ pytestmark = pytest.mark.checks
             },
             [
                 "--fetch-protocol=EWS",
-                "--fetch-server=$HOSTNAME$",
+                "--fetch-server=host",
                 "--fetch-port=143",
                 "--fetch-client-id=client_id",
-                "--fetch-client-secret=client_secret",
+                PlainTextSecret(value="client_secret", format="--fetch-client-secret=%s"),
                 "--fetch-tenant-id=tenant_id",
                 "--fetch-email-address=foo@bar.com",
                 "--connect-timeout=15",
@@ -109,7 +118,7 @@ pytestmark = pytest.mark.checks
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                "--fetch-password=p4ssw0rd",
+                PlainTextSecret(value="p4ssw0rd", format="--fetch-password=%s"),
                 "--forward-ec",
                 "--forward-facility=2",
                 "--forward-host=me.too@checkmk.com",
@@ -143,7 +152,7 @@ pytestmark = pytest.mark.checks
                 "--fetch-server=imap.gmx.de",
                 "--fetch-port=123",
                 "--fetch-username=me@gmx.de",
-                "--fetch-password=p4ssw0rd",
+                PlainTextSecret(value="p4ssw0rd", format="--fetch-password=%s"),
                 "--forward-ec",
                 "--forward-method=my_method",
                 "--match-subject=subject",
@@ -161,5 +170,9 @@ def test_check_mail_argument_parsing(
     params: Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    active_check = ActiveCheck("check_mail")
-    assert active_check.run_argument_function(params) == expected_args
+    parsed_params = active_check_mail.parameter_parser(params)
+    commands = list(active_check_mail.commands_function(parsed_params, HOST_CONFIG, {}))
+
+    assert len(commands) == 1
+    assert commands[0].command_arguments == expected_args
+    assert commands[0].service_description == "Email"

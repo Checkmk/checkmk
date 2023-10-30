@@ -20,10 +20,6 @@ def _get_omd_version(cmk_version: str, package_path: str) -> str:
     return f"{cmk_version}.{edition_short}"
 
 
-def _is_demo(package_path: str) -> bool:
-    return _edition_short_from_pkg_path(package_path) == "cfe"
-
-
 def _edition_short_from_pkg_path(package_path: str) -> str:
     file_name = os.path.basename(package_path)
     if file_name.startswith("check-mk-raw-"):
@@ -208,10 +204,7 @@ def test_cma_specific_files(package_path: str, cmk_version: str) -> None:
     cma_info = subprocess.check_output(
         ["tar", "xOvzf", package_path, "%s/cma.info" % omd_version], encoding="utf-8"
     )
-    if _is_demo(package_path):
-        assert "DEMO=1" in cma_info
-    else:
-        assert "DEMO=1" not in cma_info
+    assert "DEMO=1" not in cma_info
 
 
 def test_src_only_contains_relative_version_paths(
@@ -280,16 +273,10 @@ def test_demo_modifications(package_path: str, cmk_version: str) -> None:
 
     if _edition_short_from_pkg_path(package_path) != "cre":
         cmc_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")
-        if _is_demo(package_path):
-            assert b"THIS IS A DEMO" in cmc_bin
-        else:
-            assert b"THIS IS A DEMO" not in cmc_bin
+        assert b"THIS IS A DEMO" not in cmc_bin
 
     nagios_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/nagios")
-    if _is_demo(package_path):
-        assert b"in this demo" in nagios_bin
-    else:
-        assert b"in this demo" not in nagios_bin
+    assert b"in this demo" not in nagios_bin
 
 
 def test_not_rc_tag(package_path: str, cmk_version: str) -> None:

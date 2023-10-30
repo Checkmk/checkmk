@@ -54,7 +54,7 @@ class BaseVersions:
     # minimal version supported for an update that can merge the configuration
     MIN_VERSION = os.getenv("MIN_VERSION", "2.2.0")
 
-    with open("base_versions.json", "r") as f:
+    with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
         BASE_VERSIONS_STR = json.load(f)
 
     BASE_VERSIONS = [

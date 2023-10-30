@@ -587,7 +587,7 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
 
-UnitRenderFunc = Callable[[Any], str]
+UnitRenderFunc = Callable[[float], str]
 
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]

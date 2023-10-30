@@ -32,7 +32,7 @@ VARIABLES:
     - NAME: CHANGED_SHELL_FILES
       SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-shell-files --filter"
 
-    - NAME: CHANGED_AGENT_CONTROLLER_FILES
+    - NAME: CHANGED_CMK_AGENT_CTL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-agent-ctl/' || true"
 
     - NAME: CHANGED_CHECK_CERT_FILES
@@ -377,11 +377,11 @@ STAGES:
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
 
     - NAME: 'Agent Controller'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_AGENT_CONTROLLER_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_AGENT_CTL_FILES
       DIR: 'packages/cmk-agent-ctl'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/agent-controller.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/cmk-agent-ctl.txt"
       TEXT_ON_SKIP: 'No agent controller files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/agent-controller.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-agent-ctl.txt"
 
     - NAME: 'check-cert'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CHECK_CERT_FILES
@@ -409,7 +409,7 @@ STAGES:
     - NAME: 'CMK Werks'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_WERKS_FILES
       DIR: 'packages/cmk-werks'
-      COMMAND: "../../scripts/run-in-docker.sh ./run &> ${RESULTS}/cmk-werks.txt"
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-werks.txt"
       TEXT_ON_SKIP: 'No CMK werks package files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-werks.txt"
 

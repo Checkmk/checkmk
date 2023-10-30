@@ -143,16 +143,14 @@ setup_venv() {
 }
 
 run_clean() {
-    # shellcheck disable=SC2046
-    rm -rf .cache .mypy_cache .pytest_cache .venv $(find cmk tests -type d -name __pycache__)
+    rm -rf .cache .mypy_cache .pytest_cache .venv ./*.egg-info build
+    find cmk tests -type d -name __pycache__ -print0 | xargs --null --no-run-if-empty rm -rf
 }
 
 run_check_format() {
     setup_venv
-    # shellcheck disable=SC2086
-    isort --check-only --diff $1
-    # shellcheck disable=SC2086
-    black --quiet --check --diff $1
+    isort --check-only --diff cmk tests
+    black --check --diff cmk tests
 }
 
 run_unit_tests() {
@@ -162,52 +160,30 @@ run_unit_tests() {
 
 run_mypy() {
     setup_venv
-    # shellcheck disable=SC2086
-    mypy $1
+    mypy
 }
 
 run_pylint() {
     setup_venv
-    # shellcheck disable=SC2086
-    PYTHONPATH=. pylint --jobs="${JOBS}" $1
+    PYTHONPATH=. pylint --jobs="${JOBS}" cmk tests
 }
 
 run_bandit() {
     setup_venv
-    # shellcheck disable=SC2086
-    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high $1
+    # We would like to put everything into pyproject.toml, so running just "bandit" would do the
+    # right thing. But bandit is totally obscure & complicated regarding configuration, see several
+    # issues like https://github.com/PyCQA/bandit/issues/606.  :-/
+    bandit --configfile=pyproject.toml --quiet --recursive --severity-level=high cmk tests
 }
 
 run_format() {
     setup_venv
-    # shellcheck disable=SC2086
-    isort $1
-    # shellcheck disable=SC2086
-    black --quiet $1
+    isort cmk tests
+    black cmk tests
 }
 
 run_documentation() {
     echo "TODO: generate documentation"
-}
-
-get_candidates_from_filesystem() {
-    SEARCH="cmk/graphing tests"
-
-    # Resolve search paths to real paths before the search for performance reasons
-    # shellcheck disable=SC2086
-    REAL_SEARCH=$(realpath $SEARCH)
-
-    # shellcheck disable=SC2086
-    find -L $REAL_SEARCH \
-        -name .mypy_cache -prune -o \
-        -name .venv -prune -o \
-        -type f -print0
-}
-
-filter_for_python_files() {
-    sort --zero-terminated |
-        xargs --no-run-if-empty --null \
-            grep --binary-files=without-match --files-with-matches '^#!.*python3$'
 }
 
 main() {
@@ -216,14 +192,13 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_CLEAN} = yes && run_clean
-    python_files=$(get_candidates_from_filesystem | filter_for_python_files)
-    test ${RUN_CHECK_FORMAT} = yes && run_check_format "$python_files"
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
-    test ${RUN_MYPY} = yes && run_mypy "$python_files"
-    test ${RUN_PYLINT} = yes && run_pylint "$python_files"
-    test ${RUN_BANDIT} = yes && run_bandit "$python_files"
+    test ${RUN_MYPY} = yes && run_mypy
+    test ${RUN_PYLINT} = yes && run_pylint
+    test ${RUN_BANDIT} = yes && run_bandit
     test ${RUN_DOCUMENTATION} = yes && run_documentation
-    test ${RUN_FORMAT} = yes && run_format "$python_files"
+    test ${RUN_FORMAT} = yes && run_format
     true
 }
 

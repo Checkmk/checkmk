@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
+import json
 import logging
 import os
 import subprocess
@@ -52,20 +53,10 @@ class BaseVersions:
 
     # minimal version supported for an update that can merge the configuration
     MIN_VERSION = os.getenv("MIN_VERSION", "2.2.0")
-    BASE_VERSIONS_STR = [
-        "2.2.0",
-        "2.2.0p1",
-        "2.2.0p2",
-        "2.2.0p3",
-        "2.2.0p4",
-        "2.2.0p5",
-        "2.2.0p6",
-        "2.2.0p7",
-        "2.2.0p8",
-        "2.2.0p9",
-        "2.2.0p11",
-        "2.2.0p12",
-    ]
+
+    with open("base_versions.json", "r") as f:
+        BASE_VERSIONS_STR = json.load(f)
+
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
         for base_version_str in BASE_VERSIONS_STR

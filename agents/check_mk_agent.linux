@@ -467,10 +467,11 @@ section_labels() {
     echo '<<<labels:sep(0)>>>'
 
     while read -r line; do
+        raw_line="${line//\"/}"
         case $line in
-            ID=*) echo '{"cmk/os_platform":"'"${line##*=}"'"}' ;;
-            NAME=*) echo '{"cmk/os_name":'"${line##*=}"'}' ;;
-            VERSION_ID=*) echo '{"cmk/os_version":'"${line##*=}"'}' ;;
+            ID=*) echo '{"cmk/os_platform":"'"${raw_line##*=}"'"}' ;;
+            NAME=*) echo '{"cmk/os_name":"'"${raw_line##*=}"'"}' ;;
+            VERSION_ID=*) echo '{"cmk/os_version":"'"${raw_line##*=}"'"}' ;;
         esac
     done <<<"$(cat /etc/os-release 2>/dev/null)"
 

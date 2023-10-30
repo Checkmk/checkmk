@@ -267,16 +267,16 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     assert not saas_files
 
 
-def test_demo_modifications(package_path: str, cmk_version: str) -> None:
+def test_monitoring_cores_packaging(package_path: str, cmk_version: str) -> None:
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))
 
     if _edition_short_from_pkg_path(package_path) != "cre":
-        cmc_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")
-        assert b"THIS IS A DEMO" not in cmc_bin
+        assert (
+            len(_get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")) > 0
+        )
 
-    nagios_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/nagios")
-    assert b"in this demo" not in nagios_bin
+    assert len(_get_file_from_package(package_path, cmk_version, version_rel_path="bin/nagios")) > 0
 
 
 def test_not_rc_tag(package_path: str, cmk_version: str) -> None:

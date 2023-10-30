@@ -610,10 +610,12 @@ class MessageForwarder:
         except Exception as exc:
             result.exception = exc
 
-        if self._shall_spool_messages(method):
-            self._spool_messages(message_chunks, result)
-        else:
-            result.num_dropped = sum(len(c[2]) for c in message_chunks)
+        # result.exception may be set in the line above, or inside _forward_send_tcp
+        if result.exception:
+            if self._shall_spool_messages(method):
+                self._spool_messages(message_chunks, result)
+            else:
+                result.num_dropped = sum(len(c[2]) for c in message_chunks)
 
         return result
 

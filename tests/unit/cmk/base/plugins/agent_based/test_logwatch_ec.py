@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 
@@ -563,8 +563,12 @@ class FakeTcpError(Exception):
     pass
 
 
+class FakeTcpErrorRaised(Exception):
+    pass
+
+
 def _forward_message(
-    successful: bool,
+    tcp_result: Literal["ok", "raise exception", "set exception"],
 ) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[object, ...]],]:
     messages_forwarded: list[tuple[object, ...]] = []
 
@@ -572,12 +576,16 @@ def _forward_message(
         @staticmethod
         def _forward_send_tcp(method, message_chunks, result):
             nonlocal messages_forwarded
-            if successful:
+            if tcp_result == "ok":
                 for message in message_chunks:
                     messages_forwarded.append(message)
                     result.num_forwarded += 1
-            else:
+            elif tcp_result == "set exception":
                 result.exception = FakeTcpError("could not send messages")
+            elif tcp_result == "raise exception":
+                raise FakeTcpErrorRaised("rise and shine")
+            else:
+                raise NotImplementedError()
 
     result = TestForwardTcpMessageForwarder(item="item_name", hostname=HostName("some_host_name"))(
         ("tcp", {"address": "127.0.0.1", "port": 127001}),
@@ -588,11 +596,11 @@ def _forward_message(
 
 
 def test_forward_tcp_message_forwarded_ok() -> None:
-    result, messages_forwarded = _forward_message(successful=True)
+    result, messages_forwarded = _forward_message(tcp_result="ok")
     assert result == logwatch_ec.LogwatchForwardedResult(
         num_forwarded=1,
         num_spooled=0,
-        num_dropped=1,  # TODO: this is a bug!
+        num_dropped=0,
         exception=None,
     )
 
@@ -604,12 +612,23 @@ def test_forward_tcp_message_forwarded_ok() -> None:
     )
 
 
-def test_forward_tcp_message_forwarded_nok() -> None:
-    result, messages_forwarded = _forward_message(successful=False)
+def test_forward_tcp_message_forwarded_nok_1() -> None:
+    result, messages_forwarded = _forward_message(tcp_result="set exception")
 
     assert result.num_forwarded == 0
     assert result.num_spooled == 0
     assert result.num_dropped == 1
     assert isinstance(result.exception, FakeTcpError)
+
+    assert len(messages_forwarded) == 0
+
+
+def test_forward_tcp_message_forwarded_nok_2() -> None:
+    result, messages_forwarded = _forward_message(tcp_result="raise exception")
+
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1
+    assert isinstance(result.exception, FakeTcpErrorRaised)
 
     assert len(messages_forwarded) == 0

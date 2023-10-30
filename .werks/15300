@@ -1,0 +1,11 @@
+Title: logwatch_ec: fix reporting of dropped messages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698659949
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+logwatch_ec falsely reported messages as dropped although they were correctly
+forwarded.

@@ -546,3 +546,64 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         Metric("messages", 3.0),
     ]
     assert len(list(Path(cmk.utils.paths.omd_root, "var/mkeventd/spool").iterdir())) == 3
+
+
+class FakeTcpError(Exception):
+    pass
+
+
+def _forward_message(
+    successful: bool,
+    monkeypatch: pytest.MonkeyPatch,
+) -> tuple[logwatch_ec.LogwatchFordwardResult, list[tuple[object, ...]],]:
+    messages_forwarded: list[tuple[object, ...]] = []
+
+    def _forward_send_tcp(method, message_chunks, result):
+        nonlocal messages_forwarded
+        if successful:
+            for message in message_chunks:
+                messages_forwarded.append(message)
+                result.num_forwarded += 1
+        else:
+            result.exception = FakeTcpError("could not send messages")
+
+    monkeypatch.setattr(logwatch_ec, "logwatch_forward_send_tcp", _forward_send_tcp)
+
+    result = logwatch_ec.logwatch_forward_tcp(
+        method=("tcp", {"address": "127.0.0.1", "port": 127001}),
+        syslog_messages=[SyslogMessage(facility=1, severity=1, text="some_text")],
+        spool_path=Path(cmk.utils.paths.omd_root, "var/mkeventd/spool"),
+        hostname=HostName("some_host_name"),
+    )
+
+    return result, messages_forwarded
+
+
+def test_forward_tcp_message_forwarded_ok(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result, messages_forwarded = _forward_message(successful=True, monkeypatch=monkeypatch)
+    assert result.num_forwarded == 1
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1  # TODO: this is a bug!
+    assert result.exception is None
+
+    assert len(messages_forwarded) == 1
+    # first element of message is a timestamp!
+    assert messages_forwarded[0][1:] == (
+        0,
+        ["<9>1 - - - - - [Checkmk@18662] some_text"],
+    )
+
+
+def test_forward_tcp_message_forwarded_nok(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    result, messages_forwarded = _forward_message(successful=False, monkeypatch=monkeypatch)
+
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1
+    assert isinstance(result.exception, FakeTcpError)
+
+    assert len(messages_forwarded) == 0

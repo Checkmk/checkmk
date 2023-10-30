@@ -44,7 +44,7 @@ Seconds = int
 
 class VerticalAxisLabel(BaseModel, frozen=True):
     position: float
-    text: str | None
+    text: str
     line_width: int
 
 
@@ -780,20 +780,14 @@ def _create_vertical_axis_labels(
     while pos <= max_value:
         pos = round(pos, round_to)
 
-        if pos >= min_value:
-            f = math.modf(pos / label_distance)[0]
-            if abs(f) <= 0.00000000001 or abs(f) >= 0.99999999999:
-                if mirrored:
-                    label_value = abs(pos)
-                else:
-                    label_value = pos
-
-                line_width = 2
-            else:
-                label_value = None
-                line_width = 0
-
-            label_specs.append((pos, label_value, line_width))
+        if pos >= min_value and (
+            label_spec := _label_spec(
+                position=pos,
+                label_distance=label_distance,
+                mirrored=mirrored,
+            )
+        ):
+            label_specs.append(label_spec)
             if len(label_specs) > 1000:
                 break  # avoid memory exhaustion in case of error
 
@@ -809,70 +803,81 @@ def _create_vertical_axis_labels(
     return _render_labels_with_graph_unit(label_specs, unit)
 
 
+def _label_spec(
+    *,
+    position: float,
+    label_distance: float,
+    mirrored: bool,
+) -> tuple[float, float, int] | None:
+    f = math.modf(position / label_distance)[0]
+    if abs(f) <= 0.00000000001 or abs(f) >= 0.99999999999:
+        if mirrored:
+            label_value = abs(position)
+        else:
+            label_value = position
+
+        return (position, label_value, 2)
+    return None
+
+
 def _render_labels_with_individual_units(
-    label_specs: Sequence[tuple[float, float | None, int]], unit: UnitInfo
+    label_specs: Sequence[tuple[float, float, int]], unit: UnitInfo
 ) -> tuple[list[VerticalAxisLabel], int, None]:
-    rendered_labels, max_label_length = render_labels(label_specs, unit["render"])
+    rendered_labels, max_label_length = render_labels(
+        (
+            label_spec[0],
+            _render_label_value(
+                label_spec[1],
+                render_func=unit["render"],
+            ),
+            label_spec[2],
+        )
+        for label_spec in label_specs
+    )
     return rendered_labels, max_label_length, None
 
 
 def _render_labels_with_graph_unit(
-    label_specs: Sequence[tuple[float, float | None, int]], unit: UnitInfo
+    label_specs: Sequence[tuple[float, float, int]], unit: UnitInfo
 ) -> tuple[list[VerticalAxisLabel], int, str]:
-    # Build list of real values (not 0 or None) for the graph_unit function
-    # which is then calculating the graph global unit
-    ignored_values = (0, None)
-
-    values = [l[1] for l in label_specs if l[1] is not None and l[1] not in ignored_values]
-
-    graph_unit, scaled_labels = unit["graph_unit"](values)
+    graph_unit, scaled_labels = unit["graph_unit"]([l[1] for l in label_specs if l[1] != 0])
 
     rendered_labels, max_label_length = render_labels(
-        label_spec
-        if label_spec[1] in ignored_values
-        else (label_spec[0], scaled_labels.pop(0), label_spec[2])
+        (
+            label_spec[0],
+            _render_label_value(0) if label_spec[1] == 0 else scaled_labels.pop(0),
+            label_spec[2],
+        )
         for label_spec in label_specs
     )
     return rendered_labels, max_label_length, graph_unit
 
 
+def _render_label_value(
+    label_value: float,
+    render_func: UnitRenderFunc = str,
+) -> str:
+    return "0" if label_value == 0 else render_func(label_value)
+
+
 def render_labels(
-    label_specs: Iterable[tuple[float, None | str | float, int]],
-    render_func: UnitRenderFunc | None = None,
+    label_specs: Iterable[tuple[float, str, int]]
 ) -> tuple[list[VerticalAxisLabel], int]:
     max_label_length = 0
     rendered_labels: list[VerticalAxisLabel] = []
 
-    for pos, label_value, line_width in label_specs:
-        if label_value is not None:
-            if label_value == 0:
-                label = "0"
-            else:
-                if render_func:
-                    label = render_func(label_value)
-                else:
-                    label = str(label_value)
-
-                # Generally remove useless zeroes in fixed point numbers.
-                # This is a bit hacky. Got no idea how to make this better...
-                label = _remove_useless_zeroes(label)
-            max_label_length = max(max_label_length, len(label))
-            rendered_labels.append(
-                VerticalAxisLabel(
-                    position=pos,
-                    text=label,
-                    line_width=line_width,
-                )
+    for pos, text, line_width in label_specs:
+        # Generally remove useless zeroes in fixed point numbers.
+        # This is a bit hacky. Got no idea how to make this better...
+        text = _remove_useless_zeroes(text)
+        max_label_length = max(max_label_length, len(text))
+        rendered_labels.append(
+            VerticalAxisLabel(
+                position=pos,
+                text=text,
+                line_width=line_width,
             )
-
-        else:
-            rendered_labels.append(
-                VerticalAxisLabel(
-                    position=pos,
-                    text=None,
-                    line_width=line_width,
-                )
-            )
+        )
 
     return rendered_labels, max_label_length
 

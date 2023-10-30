@@ -108,7 +108,7 @@ type GraphRecipe = Record<string, any>;
 
 interface VerticalAxisLabel {
     position: number;
-    text: string | null;
+    text: string;
     line_width: number;
 }
 
@@ -576,10 +576,7 @@ function render_graph(graph: GraphArtwork) {
                 );
             }
 
-            if (
-                graph.render_config.show_vertical_axis &&
-                vertical_axis_label.text != null
-            )
+            if (graph.render_config.show_vertical_axis)
                 ctx.fillText(
                     vertical_axis_label.text,
                     t_orig - v_label_margin,

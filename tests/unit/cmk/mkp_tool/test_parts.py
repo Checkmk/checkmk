@@ -7,11 +7,10 @@
 from cmk.mkp_tool import PathConfig
 
 
-class TestPathConfig:
-    def test_from_toml(self) -> None:
-        assert (
-            PathConfig.from_toml(
-                """
+def test_config_from_toml() -> None:
+    assert (
+        PathConfig.from_toml(
+            """
 this = "this ignored"
 
 [paths]
@@ -38,6 +37,6 @@ pnp_templates_dir = "local_pnp_templates_dir"
 tmp_dir = "tmp_dir"
 web_dir = "local_web_dir"
 """
-            ).web_dir
-            == "local_web_dir"
-        )
+        ).web_dir
+        == "local_web_dir"
+    )

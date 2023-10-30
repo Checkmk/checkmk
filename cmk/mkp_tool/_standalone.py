@@ -15,9 +15,9 @@ _DEFAULT_PATH = Path("mkp-tool.toml")
 def read_path_config(cfg_file: Path = _DEFAULT_PATH) -> PathConfig:
     """Read a toml configration file"""
     try:
-        return PathConfig.from_toml(cfg_file.read_text())
-    except FileNotFoundError:
-        raise PackageError(f"Missing configuration file: {cfg_file}")
+        return PathConfig.from_toml(cfg_file.read_text(encoding="utf8"))
+    except FileNotFoundError as exc:
+        raise PackageError(f"Missing configuration file: {cfg_file}") from exc
 
 
 def simple_file_write(file: str, content: bytes) -> None:

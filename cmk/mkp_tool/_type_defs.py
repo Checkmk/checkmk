@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from collections.abc import Iterable
 from functools import cached_property
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, field_validator, GetCoreSchemaHandler
 from pydantic_core import core_schema
@@ -22,7 +22,8 @@ _SortKeyElement = (
     # First element makes sure
     #  a) Never compare different types
     #  b) Numeric identifiers always have lower precedence than non-numeric identifiers
-    #  c) A larger set of fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
+    #  c) A larger set of fields has a higher precedence than a smaller set,
+    #     if all of the preceding identifiers are equal.
     tuple[Literal[0], str]
     | tuple[Literal[1], int]
     | tuple[Literal[2], None]
@@ -44,7 +45,7 @@ class PackageVersion(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: Any, _handler: GetCoreSchemaHandler
+        cls, _source_type: object, _handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
@@ -95,7 +96,7 @@ class PackageName(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: Any, _handler: GetCoreSchemaHandler
+        cls, _source_type: object, _handler: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()

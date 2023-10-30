@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=too-many-return-statements,too-many-instance-attributes
+
 import tomllib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -76,7 +78,8 @@ class PathConfig:
                 return self.mib_dir
             case PackagePart.ALERT_HANDLERS:
                 return self.alert_handlers_dir
-        return assert_never(part)
+            case unreachable:
+                assert_never(unreachable)
 
     @cached_property
     def resolved_paths(self) -> Mapping[PackagePart, Path]:
@@ -138,8 +141,8 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
             return _("SNMP MIBs")
         case PackagePart.ALERT_HANDLERS:
             return _("Alert handlers")
-
-    return assert_never(part)
+        case unreachable:
+            assert_never(unreachable)
 
 
 def permissions(part: PackagePart) -> int:
@@ -176,7 +179,8 @@ def permissions(part: PackagePart) -> int:
             return 0o644
         case PackagePart.ALERT_HANDLERS:
             return 0o755
-    return assert_never(part)
+        case unreachable:
+            assert_never(unreachable)
 
 
 CONFIG_PARTS: Final = (PackagePart.EC_RULE_PACKS,)

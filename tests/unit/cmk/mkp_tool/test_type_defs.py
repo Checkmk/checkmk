@@ -48,8 +48,7 @@ class TestPackageVersion:
             _ = PackageName(raw_str)
 
 
-class TestPackageName:
-    @pytest.mark.parametrize("raw_str", ["", "foo;bar"])
-    def test_invalid_name(self, raw_str: str) -> None:
-        with pytest.raises(ValueError, match=raw_str):
-            _ = PackageName(raw_str)
+@pytest.mark.parametrize("raw_str", ["", "foo;bar"])
+def test_invalid_name(raw_str: str) -> None:
+    with pytest.raises(ValueError, match=raw_str):
+        _ = PackageName(raw_str)

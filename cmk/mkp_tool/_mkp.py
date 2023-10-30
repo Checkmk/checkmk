@@ -17,7 +17,7 @@ from functools import lru_cache
 from io import BytesIO
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
@@ -94,7 +94,9 @@ def manifest_template(
     version: PackageVersion | None = None,
     files: Mapping[PackagePart, Sequence[Path]] | None = None,
 ) -> Manifest:
-    return Manifest(
+    return Manifest(  # type: ignore[call-arg]
+        # unfortunately mypy does not understand that I can use the non-alias
+        # field names (which is the point of them) :-(
         title=f"Title of {name}",
         name=name,
         description="Please add a description here",
@@ -111,7 +113,7 @@ def manifest_template(
 def read_manifest_optionally(manifest_path: Path) -> Manifest | None:
     try:
         return Manifest.parse_python_string(manifest_path.read_text())
-    except Exception:
+    except (IOError, SyntaxError, TypeError, ValueError, ValidationError):
         _logger.error("[%s]: Failed to read package manifest", manifest_path, exc_info=True)
     return None
 
@@ -122,8 +124,8 @@ def extract_manifest(file_content: bytes) -> Manifest:
             if (extracted_file := tar.extractfile("info")) is None:
                 raise PackageError("'info' is not a regular file")
             raw_info = extracted_file.read()
-        except KeyError:
-            raise PackageError("'info' not contained in MKP")
+        except KeyError as exc:
+            raise PackageError("'info' not contained in MKP") from exc
     return Manifest.parse_python_string(raw_info.decode())
 
 
@@ -138,14 +140,14 @@ def extract_manifests(paths: Iterable[Path]) -> list[Manifest]:
 def extract_manifest_optionally(pkg_path: Path) -> Manifest | None:
     try:
         return _extract_manifest_cached(pkg_path, pkg_path.stat().st_mtime)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         # Do not make broken files / packages fail the whole mechanism
         _logger.error("[%s]: Failed to read package mainfest", pkg_path, exc_info=True)
     return None
 
 
 @lru_cache
-def _extract_manifest_cached(package_path: Path, mtime: float) -> Manifest:
+def _extract_manifest_cached(package_path: Path, _mtime: float) -> Manifest:
     return extract_manifest(package_path.read_bytes())
 
 
@@ -154,7 +156,9 @@ def create_mkp(
     site_paths: Callable[[PackagePart], Path],
     version_packaged: str,
 ) -> bytes:
-    manifest = Manifest(
+    manifest = Manifest(  # type: ignore[call-arg]
+        # unfortunately mypy does not understand that I can use the non-alias
+        # field names (which is the point of them) :-(
         title=manifest.title,
         name=manifest.name,
         description=manifest.description,
@@ -256,7 +260,7 @@ def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable
 
     tarsource = tar.extractfile(name)
     if tarsource is None:
-        raise PackageError("Failed to open %s" % name)
+        raise PackageError(f"Failed to open {name}")
 
     # Important: Do not preserve the tared timestamp.
     # Checkmk needs to know when the files have been installed for cache invalidation.

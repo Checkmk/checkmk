@@ -7,6 +7,8 @@ Everything from the packaging module that is not yet properly sorted.
 Don't add new stuff here!
 """
 
+# pylint: disable=too-many-arguments
+
 import logging
 import subprocess
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
@@ -180,7 +182,8 @@ class PackageStore:
         #  a) extend the syncing mechanism: complex and makes the code more entangled
         #  b) move the file: also requires adjustments in a lot of places
         #  c) softlink: depends on the syncing mechanisms idea of how to handle a symlink -> see a)
-        #  d) hardlink: *should* not work, see the linux kernel doc on "/proc/sys/fs/protect_hardlinks"
+        #  d) hardlink: *should* not work, see the linux kernel doc on
+        #     "/proc/sys/fs/protect_hardlinks"
         destination.write_bytes(package_path.read_bytes())
 
     def remove_enabled_mark(self, package_id: PackageID) -> None:
@@ -474,12 +477,8 @@ def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
         for fn in (set(manifest.files.get(part, ())) & set(other_manifest.files.get(part, ())))
     }:
         raise PackageError(
-            "Files already belong to %s %s: %s"
-            % (
-                other_manifest.name,
-                other_manifest.version,
-                ", ".join(f"{fn} ({part})" for part, fn in collisions),
-            )
+            f"Files already belong to {other_manifest.name} {other_manifest.version}: "
+            + ", ".join(f"{fn} ({part})" for part, fn in collisions)
         )
 
 
@@ -488,11 +487,11 @@ def _raise_for_too_old_cmk_version(
 ) -> None:
     """Raise PackageException if the site is too old for this package
 
-    If the sites version can not be parsed or is a daily build, the check is simply passing without error.
+    If the sites version can not be parsed, the check is simply passing without error.
     """
     try:
         too_old = parse_version(site_version) < parse_version(min_version)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         # Be compatible: When a version can not be parsed, then skip this check
         return
 
@@ -507,14 +506,14 @@ def _raise_for_too_new_cmk_version(
 ) -> None:
     """Raise PackageException if the site is too new for this package
 
-    If the sites version can not be parsed or is a daily build, the check is simply passing without error.
+    If the sites version can not be parsed, the check is simply passing without error.
     """
     if until_version is None:
         return
 
     try:
         too_new = parse_version(site_version) >= parse_version(until_version)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         # Be compatible: When a version can not be parsed, then skip this check
         return
 

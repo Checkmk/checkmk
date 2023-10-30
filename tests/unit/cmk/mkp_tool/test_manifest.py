@@ -12,7 +12,7 @@ import pytest
 from cmk.mkp_tool import PackageName, PackagePart, PackageVersion
 from cmk.mkp_tool._mkp import Manifest, read_manifest_optionally
 
-TEST_MANIFEST = Manifest(
+TEST_MANIFEST = Manifest(  # type: ignore[call-arg]  # mypy is wrong :-(
     title="Unit test package",
     name=PackageName("test_package"),
     description="A nice package to test with. Also I want to thank my grandma.",
@@ -97,7 +97,7 @@ def test_read_manifest_optionally_invalid(tmp_path: Path) -> None:
 
 
 def test_read_manifest_optionally_missing(tmp_path: Path) -> None:
-    assert read_manifest_optionally(tmp_path) is None
+    assert read_manifest_optionally(tmp_path / "missing") is None
 
 
 def test_field_conversion() -> None:

@@ -1,20 +1,27 @@
 [[source]]
-url = "https://devpi.lan.tribe29.com/root/pypi"
+url = "https://pypi.org/simple"
 verify_ssl = true
 name = "pypi"
 
 [dev-packages]
+bandit = "*"
 black = "*"
 isort = "*"
-flake8 = "*"
-pytest = "*"
 mypy = "*"
 pylint = "*"
-bandit = "*"
+pytest = "*"
 types-lxml = "*"
 types-markdown = "*"
+# LSP server stuff for IDEs
+pyls-isort = "*"
+pylsp-mypy = "*"
+python-lsp-black = "*"
+python-lsp-server = "*"
 
 [packages]
-pydantic = "*"
 lxml = "*"
 markdown = "*"
+pydantic = "*"
+
+[requires]
+python_version = "3.11"

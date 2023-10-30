@@ -183,7 +183,8 @@ opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
 semver = "==3.0.0"
 agent-receiver = {editable = true, path = "./agent-receiver"}
-werks = {editable = true, path = "./packages/cmk-werks"}
+cmk-werks = {editable = true, path = "./packages/cmk-werks"}
+markdown = "*"  # TODO: Only used by cmk-werks!
 pysmb = "==1.2.9.1"  # used by SMB share special agent
 google-cloud-monitoring = "~=2.11"  # used by the gcp special agent
 google-cloud-asset = "~=3.14"  # used by the gcp special agent

@@ -13,12 +13,11 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
 pipenv run pip wheel --no-deps --wheel-dir build .
 
-# Installs the cmk-graphing package to /omd/versions/VERSION/lib/python3.11/site-packages/cmk/graphing
 sudo "/omd/sites/${SITE}/bin/python3" -m pip install \
     --no-deps \
     --upgrade \
     --force-reinstall \
-    ./build/cmk_graphing-*-py3-none-any.whl
+    ./build/*-*-py3-none-any.whl
 
 if [ -z "$ONLY_COPY" ]; then
     sudo omd reload "$SITE" apache

@@ -311,11 +311,15 @@ def register_oracle_graphs():
     graph_info["oracle_pga_memory_info"] = {
         "title": _("ORACLE PGA memory statistics"),
         "metrics": [
-            ("oracle_pga_total_pga_allocated", "area"),
-            ("oracle_pga_total_pga_inuse", "area"),
-            ("oracle_pga_total_freeable_pga_memory", "area"),
+            ("oracle_pga_total_pga_allocated", "line"),
+            ("oracle_pga_total_pga_inuse", "line"),
+            ("oracle_pga_total_freeable_pga_memory", "line"),
         ],
         "optional_metrics": ["oracle_pga_total_freeable_pga_memory"],
+        "range": (
+            0,
+            "oracle_pga_total_pga_allocated,oracle_pga_total_pga_inuse,oracle_pga_total_freeable_pga_memory,MAX,MAX",
+        ),
     }
 
 

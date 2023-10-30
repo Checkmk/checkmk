@@ -244,25 +244,7 @@ def test_graph_template_with_layered_areas() -> None:
         for ident, areas in areas_by_ident.items()
         if areas.pos.count("area") > 1 or areas.neg.count("-area") > 1
     ]
-    assert sorted(templates_with_more_than_one_layer) == [
-        "active_and_inactive_memory",
-        "active_shards",
-        "cache_hit_ratio",
-        "files_notification_spool",
-        "heap_memory_usage",
-        "huge_pages",
-        "memory_committing",
-        "non-heap_memory_usage",
-        "oracle_pga_memory_info",
-        "private_and_shared_memory",
-        "ram_swap_overview",
-        "size_of_processes",
-        "size_per_process",
-        "swap",
-        "tablespace_sizes",
-        "vmalloc_address_space_1",
-        "zfs_meta_data",
-    ]
+    assert not templates_with_more_than_one_layer
 
 
 def _conditional_perfometer(
@@ -539,10 +521,11 @@ def test_non_trivial_graph_declarations() -> None:
         if _is_non_trivial(expressions):
             non_trivial_graphs.append(ident)
 
-    assert sorted(non_trivial_graphs) == [
-        "DB_connections",
+    assert set(non_trivial_graphs) == {
+        "active_shards",
         "bandwidth",
         "bandwidth_translated",
+        "cache_hit_ratio",
         "cmk_cpu_time_by_phase",
         "cmk_hosts_total",
         "cmk_services_total",
@@ -561,10 +544,13 @@ def test_non_trivial_graph_declarations() -> None:
         "cpu_utilization_numcpus",
         "cpu_utilization_simple",
         "db_connections",
+        "DB_connections",
         "disk_throughput",
+        "files_notification_spool",
         "fs_used",
         "fs_used_2",
         "growing",
+        "heap_memory_usage",
         "http_errors",
         "kube_cronjob_status",
         "livestatus_connects_and_requests",
@@ -572,22 +558,27 @@ def test_non_trivial_graph_declarations() -> None:
         "mem_growing",
         "mem_shrinking",
         "message_processing",
+        "non-heap_memory_usage",
         "number_of_executors",
         "number_of_tasks",
+        "oracle_pga_memory_info",
         "oracle_sga_pga_total",
         "qos_class_traffic",
+        "ram_swap_overview",
         "ram_swap_used",
         "round_trip_average",
         "rule_efficiency",
         "savings",
         "shrinking",
         "size_per_process",
+        "swap",
         "time_offset",
         "used_cpu_time",
         "util_average_1",
         "util_average_2",
         "util_fallback",
-    ]
+        "zfs_meta_data",
+    }
 
 
 def test_graph_templates_with_consolidation_function() -> None:

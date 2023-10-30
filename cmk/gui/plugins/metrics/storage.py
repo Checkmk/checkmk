@@ -1417,19 +1417,21 @@ graph_info["write_cache_usage"] = {
 graph_info["zfs_meta_data"] = {
     "title": _("ZFS meta data"),
     "metrics": [
-        ("zfs_metadata_max", "area"),
-        ("zfs_metadata_used", "area"),
+        ("zfs_metadata_max", "line"),
+        ("zfs_metadata_used", "line"),
         ("zfs_metadata_limit", "line"),
     ],
+    "range": (0, "zfs_metadata_max,zfs_metadata_used,zfs_metadata_limit,MAX,MAX"),
 }
 
 graph_info["cache_hit_ratio"] = {
     "title": _("Cache hit ratio"),
     "metrics": [
-        ("cache_hit_ratio", "area"),
+        ("cache_hit_ratio", "line"),
         ("prefetch_metadata_hit_ratio", "line"),
-        ("prefetch_data_hit_ratio", "area"),
+        ("prefetch_data_hit_ratio", "line"),
     ],
+    "range": (0, "cache_hit_ratio,prefetch_metadata_hit_ratio,prefetch_data_hit_ratio,MAX,MAX"),
 }
 
 graph_info["wasted_space_of_tables_and_indexes"] = {
@@ -1541,7 +1543,7 @@ graph_info["number_of_shared_and_exclusive_locks"] = {
 graph_info["tablespace_sizes"] = {
     "title": _("Tablespace sizes"),
     "metrics": [
-        ("tablespace_size", "area"),
+        ("tablespace_size", "line"),
         ("tablespace_used", "area"),
     ],
     "scalars": [
@@ -1554,7 +1556,7 @@ graph_info["tablespace_sizes"] = {
 graph_info["ram_swap_used"] = {
     "title": _("RAM + Swap used"),
     "metrics": [
-        ("mem_used", "area"),
+        ("mem_used", "stack"),
         ("swap_used", "stack"),
     ],
     "conflicting_metrics": ["swap_total"],
@@ -1617,20 +1619,22 @@ graph_info["mem_shrinking"] = {
 graph_info["ram_swap_overview"] = {
     "title": _("RAM + Swap overview"),
     "metrics": [
-        ("mem_total", "area"),
-        ("swap_total", "stack"),
-        ("mem_used", "area"),
-        ("swap_used", "stack"),
+        ("mem_total", "line"),
+        ("swap_total", "line"),
+        ("mem_used", "line"),
+        ("swap_used", "line"),
     ],
+    "range": (0, "mem_total,swap_total,MAX"),
 }
 
 graph_info["swap"] = {
     "title": _("Swap"),
     "metrics": [
-        ("swap_total", "area"),
-        ("swap_used", "area"),
+        ("swap_total", "line"),
+        ("swap_used", "stack"),
         ("swap_cached", "stack"),
     ],
+    "range": (0, "swap_total,swap_used,swap_cached,MAX,MAX"),
 }
 
 graph_info["caches"] = {
@@ -1660,8 +1664,8 @@ graph_info["active_and_inactive_memory_anon"] = {
 graph_info["active_and_inactive_memory"] = {
     "title": _("Active and Inactive Memory"),
     "metrics": [
-        ("mem_lnx_active", "area"),
-        ("mem_lnx_inactive", "area"),
+        ("mem_lnx_active", "stack"),
+        ("mem_lnx_inactive", "stack"),
     ],
     "conflicting_metrics": ["mem_lnx_active_anon"],
 }
@@ -1707,8 +1711,8 @@ graph_info["filesystem_writeback"] = {
 graph_info["memory_committing"] = {
     "title": _("Memory committing"),
     "metrics": [
-        ("mem_lnx_total_total", "area"),
-        ("mem_lnx_committed_as", "area"),
+        ("mem_lnx_total_total", "line"),
+        ("mem_lnx_committed_as", "stack"),
         ("mem_lnx_commit_limit", "stack"),
     ],
 }
@@ -1725,9 +1729,9 @@ graph_info["memory_that_cannot_be_swapped_out"] = {
 graph_info["huge_pages"] = {
     "title": _("Huge Pages"),
     "metrics": [
-        ("mem_lnx_huge_pages_total", "area"),
-        ("mem_lnx_huge_pages_free", "area"),
-        ("mem_lnx_huge_pages_rsvd", "area"),
+        ("mem_lnx_huge_pages_total", "line"),
+        ("mem_lnx_huge_pages_free", "stack"),
+        ("mem_lnx_huge_pages_rsvd", "stack"),
         ("mem_lnx_huge_pages_surp", "line"),
     ],
 }
@@ -1735,8 +1739,8 @@ graph_info["huge_pages"] = {
 graph_info["vmalloc_address_space_1"] = {
     "title": _("VMalloc Address Space"),
     "metrics": [
-        ("mem_lnx_vmalloc_total", "area"),
-        ("mem_lnx_vmalloc_used", "area"),
+        ("mem_lnx_vmalloc_total", "line"),
+        ("mem_lnx_vmalloc_used", "stack"),
         ("mem_lnx_vmalloc_chunk", "stack"),
     ],
 }
@@ -1766,33 +1770,35 @@ graph_info["heap_and_non_heap_memory"] = {
 graph_info["heap_memory_usage"] = {
     "title": _("Heap memory usage"),
     "metrics": [
-        ("mem_heap_committed", "area"),
-        ("mem_heap", "area"),
+        ("mem_heap_committed", "line"),
+        ("mem_heap", "line"),
     ],
     "scalars": [
         "mem_heap:warn",
         "mem_heap:crit",
     ],
+    "range": (0, "mem_heap_committed,mem_heap,MAX"),
 }
 
 graph_info["non-heap_memory_usage"] = {
     "title": _("Non-heap memory usage"),
     "metrics": [
-        ("mem_nonheap_committed", "area"),
-        ("mem_nonheap", "area"),
+        ("mem_nonheap_committed", "line"),
+        ("mem_nonheap", "line"),
     ],
     "scalars": [
         "mem_nonheap:warn",
         "mem_nonheap:crit",
         "mem_nonheap:max",
     ],
+    "range": (0, "mem_nonheap_committed,mem_nonheap,MAX"),
 }
 
 graph_info["private_and_shared_memory"] = {
     "title": _("Private and shared memory"),
     "metrics": [
-        ("mem_esx_shared", "area"),
-        ("mem_esx_private", "area"),
+        ("mem_esx_shared", "stack"),
+        ("mem_esx_private", "stack"),
     ],
 }
 
@@ -1830,11 +1836,12 @@ graph_info["datafile_sizes"] = {
 graph_info["files_notification_spool"] = {
     "title": _("Amount of files in notification spool"),
     "metrics": [
-        ("new_files", "area"),
-        ("deferred_files", "area"),
-        ("corrupted_files", "area"),
+        ("new_files", "line"),
+        ("deferred_files", "line"),
+        ("corrupted_files", "line"),
     ],
     "optional_metrics": ["deferred_files", "corrupted_files"],
+    "range": (0, "new_files,deferred_files,corrupted_files,MAX,MAX"),
 }
 
 # workaround for showing single metrics of multiple hosts on the same combined graph dashlet

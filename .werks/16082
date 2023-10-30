@@ -1,0 +1,17 @@
+Title: Wrong match type for "Agent controller auto-registration" ruleset
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1698680381
+Edition: cce
+Level: 1
+Version: 2.3.0b1
+
+The match type of the "Agent controller auto-registration" ruleset accidentally showed up with the information
+"Matching: Each parameter is defined by the first matching rule where that parameter is set (checked)."
+
+This is now corrected to
+"Matching: The first matching rule defines the parameter."
+
+The wrong match type had no effect to the actual ruleset evaluation, but lead to a crash when showing the effective
+rulesets for a host.

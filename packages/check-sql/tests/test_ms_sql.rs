@@ -70,3 +70,17 @@ fn test_run_remote() {
         .status
         .success());
 }
+
+#[cfg(windows)]
+#[test]
+fn test_run_local_as_plugin_fail() {
+    assert!(
+        tools::run_bin()
+            .unwrap_err()
+            .as_output()
+            .unwrap()
+            .status
+            .code()
+            == Some(1)
+    );
+}

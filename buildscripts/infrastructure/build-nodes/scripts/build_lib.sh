@@ -188,7 +188,6 @@ find_defines_make() {
     while [ ! -e defines.make ]; do
         if [ "$PWD" = / ]; then
             failure "could not find defines.make"
-            break
         fi
         cd ..
     done

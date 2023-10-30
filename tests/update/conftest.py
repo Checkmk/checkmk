@@ -46,16 +46,10 @@ class BaseVersions:
         if not os.getenv("DISTRO", "sles-15sp4") == "sles-15sp4"
         else "2.1.0p32"
     )
-    BASE_VERSIONS_STR = [
-        "2.1.0p28",
-        "2.1.0p29",
-        "2.1.0p30",
-        "2.1.0p31",
-        "2.1.0p32",
-        "2.1.0p33",
-        "2.1.0p34",
-        "2.1.0p35",
-    ]
+
+    with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
+        BASE_VERSIONS_STR = json.load(f)
+
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
         for base_version_str in BASE_VERSIONS_STR

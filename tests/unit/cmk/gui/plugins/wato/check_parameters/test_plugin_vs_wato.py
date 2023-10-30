@@ -736,7 +736,6 @@ class ErrorReporter:
             "liebert_humidity_air",
             RuleGroup.CheckgroupParameters("humidity"),
         ),
-        ("check", "logins", RuleGroup.CheckgroupParameters("logins")),
         ("check", "lvm_vgs", RuleGroup.CheckgroupParameters("volume_groups")),
         (
             "check",

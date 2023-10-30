@@ -11,4 +11,5 @@ from tests.unit.cmk.gui.conftest import (  # noqa: F401 # pylint: disable=unused
     load_config,
     load_plugins,
     ui_context,
+    with_user_login,
 )

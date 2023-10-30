@@ -557,3 +557,59 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch) -> None
         Metric("messages", 3.0),
     ]
     assert len(list(Path(cmk.utils.paths.omd_root, "var/mkeventd/spool").iterdir())) == 3
+
+
+class FakeTcpError(Exception):
+    pass
+
+
+def _forward_message(
+    successful: bool,
+) -> tuple[logwatch_ec.LogwatchFordwardResult, list[tuple[object, ...]],]:
+    messages_forwarded: list[tuple[object, ...]] = []
+
+    class TestForwardTcpMessageForwarder(logwatch_ec.MessageForwarder):
+        @staticmethod
+        def _forward_send_tcp(method, message_chunks, result):
+            nonlocal messages_forwarded
+            if successful:
+                for message in message_chunks:
+                    messages_forwarded.append(message)
+                    result.num_forwarded += 1
+            else:
+                result.exception = FakeTcpError("could not send messages")
+
+    result = TestForwardTcpMessageForwarder(item="item_name", hostname=HostName("some_host_name"))(
+        ("tcp", {"address": "127.0.0.1", "port": 127001}),
+        [SyslogMessage(facility=1, severity=1, text="some_text")],
+    )
+
+    return result, messages_forwarded
+
+
+def test_forward_tcp_message_forwarded_ok() -> None:
+    result, messages_forwarded = _forward_message(successful=True)
+    assert result == logwatch_ec.LogwatchFordwardResult(
+        num_forwarded=1,
+        num_spooled=0,
+        num_dropped=1,  # TODO: this is a bug!
+        exception=None,
+    )
+
+    assert len(messages_forwarded) == 1
+    # first element of message is a timestamp!
+    assert messages_forwarded[0][1:] == (
+        0,
+        ["<9>1 - - - - - [Checkmk@18662] some_text"],
+    )
+
+
+def test_forward_tcp_message_forwarded_nok() -> None:
+    result, messages_forwarded = _forward_message(successful=False)
+
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 0
+    assert result.num_dropped == 1
+    assert isinstance(result.exception, FakeTcpError)
+
+    assert len(messages_forwarded) == 0

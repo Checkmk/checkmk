@@ -17,7 +17,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp4 sles12sp4 \
     #   Solution 1: downgrade of libpcre1-8.45-8.7.1.x86_64 to libpcre1-8.39-8.3.1.x86_64
     #   Solution 2: do not install enchant-devel-1.6.0-21.107.x86_64
     #   Solution 3: break enchant-devel-1.6.0-21.107.x86_64 by ignoring some of its dependencies
-    && zypper -n --no-gpg-check in --replacefiles --oldpackage libpcre1-8.39-8.3.1.x86_64 \
+    && zypper -n --no-gpg-checks in --replacefiles --oldpackage libpcre1-8.39-8.3.1.x86_64 \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \
     cyrus-sasl-devel \

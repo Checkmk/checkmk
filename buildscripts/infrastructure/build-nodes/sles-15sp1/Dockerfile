@@ -10,7 +10,8 @@ ARG ARTIFACT_STORAGE
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp1 sles15sp1 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
-    && zypper -n --no-gpg-check in --replacefiles --oldpackage libkeyutils1-1.5.10-3.42.x86_64 \
+    && zypper -n --no-gpg-checks in --replacefiles --oldpackage libkeyutils1-1.5.10-3.42.x86_64 \
+    && zypper -n --no-gpg-checks in --replacefiles --oldpackage libpcre1-8.41-4.20.x86_64 \
     && zypper -n --no-gpg-checks in --replacefiles \
     curl \
     cyrus-sasl-devel \

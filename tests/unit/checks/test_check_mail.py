@@ -117,6 +117,44 @@ pytestmark = pytest.mark.checks
             ],
             id="imap_with_forward",
         ),
+        pytest.param(
+            {
+                "service_description": "Email",
+                "fetch": (
+                    "IMAP",
+                    {
+                        "server": "imap.gmx.de",
+                        "auth": ("basic", ("me@gmx.de", ("password", "p4ssw0rd"))),
+                        "connection": {"disable_tls": True, "port": 123},
+                    },
+                ),
+                "forward": {
+                    "facility": 2,
+                    "host": "me.too@checkmk.com",
+                    "method": "my_method",
+                    "match_subject": "subject",
+                    "application": "application",
+                    "body_limit": 1000,
+                    "cleanup": "archive",
+                },
+            },
+            [
+                "--fetch-protocol=IMAP",
+                "--fetch-server=imap.gmx.de",
+                "--fetch-port=123",
+                "--fetch-username=me@gmx.de",
+                "--fetch-password=p4ssw0rd",
+                "--forward-ec",
+                "--forward-method=my_method",
+                "--match-subject=subject",
+                "--forward-facility=2",
+                "--forward-host=me.too@checkmk.com",
+                "--forward-app=application",
+                "--body-limit=1000",
+                "--cleanup=archive",
+            ],
+            id="all_parameters",
+        ),
     ],
 )
 def test_check_mail_argument_parsing(

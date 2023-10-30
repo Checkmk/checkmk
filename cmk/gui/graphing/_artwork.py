@@ -41,7 +41,17 @@ from ._utils import Curve, RRDData, SizeEx
 
 Seconds = int
 
-Label = tuple[float, str | None, int]
+
+class VerticalAxisLabel(BaseModel, frozen=True):
+    position: float
+    text: str | None
+    line_width: int
+
+
+class TimeAxisLabel(BaseModel, frozen=True):
+    position: float
+    text: str | None
+    line_width: int
 
 
 class _LayoutedCurveBase(TypedDict):
@@ -70,12 +80,12 @@ class VerticalAxis(TypedDict):
     label_distance: float
     sub_distance: float
     axis_label: str | None
-    labels: list[Label]
+    labels: list[VerticalAxisLabel]
     max_label_length: int
 
 
 class TimeAxis(TypedDict):
-    labels: Sequence[Label]
+    labels: Sequence[TimeAxisLabel]
     range: tuple[int, int]
     title: str
 
@@ -752,7 +762,7 @@ def _create_vertical_axis_labels(
     label_distance: float,
     sub_distance: float,
     mirrored: bool,
-) -> tuple[list[Label], int, str | None]:
+) -> tuple[list[VerticalAxisLabel], int, str | None]:
     # round_to is the precision (number of digits after the decimal point)
     # that we round labels to.
     round_to = max(0, 3 - math.trunc(math.log10(max(abs(min_value), abs(max_value)))))
@@ -801,14 +811,14 @@ def _create_vertical_axis_labels(
 
 def _render_labels_with_individual_units(
     label_specs: Sequence[tuple[float, float | None, int]], unit: UnitInfo
-) -> tuple[list[Label], int, None]:
+) -> tuple[list[VerticalAxisLabel], int, None]:
     rendered_labels, max_label_length = render_labels(label_specs, unit["render"])
     return rendered_labels, max_label_length, None
 
 
 def _render_labels_with_graph_unit(
     label_specs: Sequence[tuple[float, float | None, int]], unit: UnitInfo
-) -> tuple[list[Label], int, str]:
+) -> tuple[list[VerticalAxisLabel], int, str]:
     # Build list of real values (not 0 or None) for the graph_unit function
     # which is then calculating the graph global unit
     ignored_values = (0, None)
@@ -829,9 +839,9 @@ def _render_labels_with_graph_unit(
 def render_labels(
     label_specs: Iterable[tuple[float, None | str | float, int]],
     render_func: UnitRenderFunc | None = None,
-) -> tuple[list[Label], int]:
+) -> tuple[list[VerticalAxisLabel], int]:
     max_label_length = 0
-    rendered_labels: list[Label] = []
+    rendered_labels: list[VerticalAxisLabel] = []
 
     for pos, label_value, line_width in label_specs:
         if label_value is not None:
@@ -847,10 +857,22 @@ def render_labels(
                 # This is a bit hacky. Got no idea how to make this better...
                 label = _remove_useless_zeroes(label)
             max_label_length = max(max_label_length, len(label))
-            rendered_labels.append((pos, label, line_width))
+            rendered_labels.append(
+                VerticalAxisLabel(
+                    position=pos,
+                    text=label,
+                    line_width=line_width,
+                )
+            )
 
         else:
-            rendered_labels.append((pos, None, line_width))
+            rendered_labels.append(
+                VerticalAxisLabel(
+                    position=pos,
+                    text=None,
+                    line_width=line_width,
+                )
+            )
 
     return rendered_labels, max_label_length
 
@@ -939,7 +961,7 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
 
     # Now iterate over all label points and compute the labels.
     # TODO: could we run into any problems with daylight saving time here?
-    labels: list[Label] = []
+    labels: list[TimeAxisLabel] = []
     seconds_per_char = time_range / (width - 7)
     for pos in dist_function(start_time, end_time):
         line_width = 2  # thick
@@ -951,14 +973,26 @@ def _compute_graph_t_axis(  # pylint: disable=too-many-branches
         # Should the label be centered within a range? Then add just
         # the line and shift the label with "no line" into the future
         if label_shift:
-            labels.append((pos, None, line_width))
+            labels.append(
+                TimeAxisLabel(
+                    position=pos,
+                    text=None,
+                    line_width=line_width,
+                )
+            )
             line_width = 0
             pos += label_shift
 
         # Do not display label if it would not fit onto the page
         if label is not None and len(label) / 3.5 * seconds_per_char > end_time - pos:
             label = None
-        labels.append((pos, label, line_width))
+        labels.append(
+            TimeAxisLabel(
+                position=pos,
+                text=label,
+                line_width=line_width,
+            )
+        )
 
     return TimeAxis(
         labels=labels,

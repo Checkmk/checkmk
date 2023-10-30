@@ -274,58 +274,58 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                 color=foreground_color,
             )
 
-    for position, label, line_width in graph_artwork.vertical_axis["labels"]:
-        if line_width > 0:
+    for v_axis_label in graph_artwork.vertical_axis["labels"]:
+        if v_axis_label.line_width > 0:
             pdf_document.render_line(
                 t_orig,
-                trans_v(position),
+                trans_v(v_axis_label.position),
                 right,
-                trans_v(position),
+                trans_v(v_axis_label.position),
                 width=label_line_width,
-                color=v_line_color[line_width],
-                dashes=v_line_dash[line_width],
+                color=v_line_color[v_axis_label.line_width],
+                dashes=v_line_dash[v_axis_label.line_width],
             )
 
-        if graph_render_config.show_vertical_axis and label:
+        if graph_render_config.show_vertical_axis:
             pdf_document.render_aligned_text(
                 t_orig - v_label_margin - left_border,
-                trans_v(position),
+                trans_v(v_axis_label.position),
                 left_border,
                 mm_per_ex,
-                label,
+                v_axis_label.text,
                 align="right",
                 valign="middle",
                 color=foreground_color,
             )
 
     # Paint time axis
-    for position, label, line_width in graph_artwork.time_axis["labels"]:
-        t_pos_mm = trans_t(position)
-        if line_width > 0 and t_pos_mm > t_orig:
+    for t_axis_label in graph_artwork.time_axis["labels"]:
+        t_pos_mm = trans_t(t_axis_label.position)
+        if t_axis_label.line_width > 0 and t_pos_mm > t_orig:
             pdf_document.render_line(
                 t_pos_mm,
                 v_orig,
                 t_pos_mm,
                 trans_v(v_range_to),
                 width=label_line_width,
-                color=t_line_color[line_width],
-                dashes=t_line_dash[line_width],
+                color=t_line_color[t_axis_label.line_width],
+                dashes=t_line_dash[t_axis_label.line_width],
             )
 
-        if graph_render_config.show_time_axis and label:
+        if graph_render_config.show_time_axis and t_axis_label.text:
             pdf_document.render_aligned_text(
                 t_pos_mm,
                 v_orig - t_label_margin - mm_per_ex,
                 0,
                 mm_per_ex,
-                label,
+                t_axis_label.text,
                 align="center",
                 color=foreground_color,
             )
 
     # Paint horizontal rules like warn and crit
     rules = graph_artwork.horizontal_rules
-    for position, label, color_from_rule, title in rules:
+    for position, _label, color_from_rule, title in rules:
         if v_range_from <= position <= v_range_to:
             pdf_document.render_line(
                 t_orig,

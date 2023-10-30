@@ -12,7 +12,6 @@ import * as utils from "utils";
 //types from cmk/utils/type_defs/_misc.py:81
 type Timestamp = number;
 type Seconds = number;
-type Label = [number, string | null, number];
 type TimeRange = [number, number];
 export type TimeSeriesValue = number | null;
 type LazyString = string; // not sure how teal with this for the moment
@@ -91,8 +90,14 @@ interface LayoutedCurveLine {
 
 export type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
 
+interface TimeAxisLabel {
+    position: number;
+    text: string | null;
+    line_width: number;
+}
+
 interface TimeAxis {
-    labels: Label[];
+    labels: TimeAxisLabel[];
     range: TimeRange;
     title: string;
     //dynamic
@@ -101,13 +106,19 @@ interface TimeAxis {
 
 type GraphRecipe = Record<string, any>;
 
+interface VerticalAxisLabel {
+    position: number;
+    text: string | null;
+    line_width: number;
+}
+
 interface VerticalAxis {
     range: [number, number];
     real_range: [number, number];
     label_distance: number;
     sub_distance: number;
     axis_label: string | null;
-    labels: Label[];
+    labels: VerticalAxisLabel[];
     max_label_length: null;
     //dynamic
     pixels_per_unit: number;
@@ -546,51 +557,49 @@ function render_graph(graph: GraphArtwork) {
         return [trans_t(t), trans_v(v)];
     };
 
-    let position, label;
     // render grid
     if (!graph.render_config.preview) {
-        let line_width;
-
         // Paint the vertical axis
-        let labels = graph["vertical_axis"]["labels"];
+        let vertical_axis_label;
+        const vertical_axis_labels = graph["vertical_axis"]["labels"];
         ctx.save();
         ctx.textAlign = "end";
         ctx.textBaseline = "middle";
         ctx.fillStyle = graph.render_config.foreground_color;
-        for (let i = 0; i < labels.length; i++) {
-            position = labels[i][0];
-            label = labels[i][1];
-            line_width = labels[i][2];
-            if (line_width > 0) {
+        for (let i = 0; i < vertical_axis_labels.length; i++) {
+            vertical_axis_label = vertical_axis_labels[i];
+            if (vertical_axis_label.line_width > 0) {
                 paint_line(
-                    trans(t_range_from, position),
-                    trans(t_range_to, position),
-                    v_line_color[line_width]
+                    trans(t_range_from, vertical_axis_label.position),
+                    trans(t_range_to, vertical_axis_label.position),
+                    v_line_color[vertical_axis_label.line_width]
                 );
             }
 
-            if (graph.render_config.show_vertical_axis && label != null)
+            if (
+                graph.render_config.show_vertical_axis &&
+                vertical_axis_label.text != null
+            )
                 ctx.fillText(
-                    label,
+                    vertical_axis_label.text,
                     t_orig - v_label_margin,
-                    trans(t_range_from, position)[1]
+                    trans(t_range_from, vertical_axis_label.position)[1]
                 );
         }
         ctx.restore();
 
         // Paint time axis
-        labels = graph["time_axis"]["labels"];
+        let time_axis_label;
+        const time_axis_labels = graph["time_axis"]["labels"];
         ctx.save();
         ctx.fillStyle = graph.render_config.foreground_color;
-        for (let i = 0; i < labels.length; i++) {
-            position = labels[i][0];
-            label = labels[i][1];
-            line_width = labels[i][2];
-            if (line_width > 0) {
+        for (let i = 0; i < time_axis_labels.length; i++) {
+            time_axis_label = time_axis_labels[i];
+            if (time_axis_label.line_width > 0) {
                 paint_line(
-                    trans(position, v_range_from),
-                    trans(position, v_range_to),
-                    v_line_color[line_width]
+                    trans(time_axis_label.position, v_range_from),
+                    trans(time_axis_label.position, v_range_to),
+                    v_line_color[time_axis_label.line_width]
                 );
             }
         }
@@ -686,12 +695,12 @@ function render_graph(graph: GraphArtwork) {
         ctx.textBaseline = "top";
         ctx.fillStyle = graph.render_config.foreground_color;
         const labels = graph["time_axis"]["labels"];
-        labels.forEach(([position, label]) => {
-            if (label != null) {
+        labels.forEach(time_axis_label => {
+            if (time_axis_label.text != null) {
                 // @ts-ignore
                 ctx.fillText(
-                    label,
-                    trans(position, 0)[0],
+                    time_axis_label.text,
+                    trans(time_axis_label.position, 0)[0],
                     v_orig + t_label_margin
                 );
             }
@@ -702,10 +711,10 @@ function render_graph(graph: GraphArtwork) {
     // Paint horizontal rules like warn and crit
     ctx.save();
     ctx.lineWidth = rule_line_width;
+    let position;
     const rules = graph["horizontal_rules"];
     for (i = 0; i < rules.length; i++) {
         position = rules[i][0];
-        label = rules[i][1];
         color = rules[i][2];
         if (position >= v_range_from && position <= v_range_to) {
             paint_line(

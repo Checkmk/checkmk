@@ -18,6 +18,7 @@ from cmk.gui.graphing._artwork import (
     _t_axis_labels_seconds,
     _t_axis_labels_week,
     TimeAxis,
+    TimeAxisLabel,
 )
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
 
@@ -115,18 +116,66 @@ def test_fringe(
             60,
             {
                 "labels": [
-                    (1668502800.0, "10:00", 2),
-                    (1668504000.0, "10:20", 2),
-                    (1668505200.0, "10:40", 2),
-                    (1668506400.0, "11:00", 2),
-                    (1668507600.0, "11:20", 2),
-                    (1668508800.0, "11:40", 2),
-                    (1668510000.0, "12:00", 2),
-                    (1668511200.0, "12:20", 2),
-                    (1668512400.0, "12:40", 2),
-                    (1668513600.0, "13:00", 2),
-                    (1668514800.0, "13:20", 2),
-                    (1668516000.0, "13:40", 2),
+                    TimeAxisLabel(
+                        position=1668502800.0,
+                        text="10:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668504000.0,
+                        text="10:20",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668505200.0,
+                        text="10:40",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668506400.0,
+                        text="11:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668507600.0,
+                        text="11:20",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668508800.0,
+                        text="11:40",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668510000.0,
+                        text="12:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668511200.0,
+                        text="12:20",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668512400.0,
+                        text="12:40",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668513600.0,
+                        text="13:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668514800.0,
+                        text="13:20",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668516000.0,
+                        text="13:40",
+                        line_width=2,
+                    ),
                 ],
                 "range": (1668502320, 1668516720),
                 "title": "2022-11-15 @ 1m",
@@ -140,12 +189,36 @@ def test_fringe(
             300,
             {
                 "labels": [
-                    (1668438000.0, "Mon 16:00", 2),
-                    (1668452400.0, "Mon 20:00", 2),
-                    (1668466800.0, "Tue 00:00", 2),
-                    (1668481200.0, "Tue 04:00", 2),
-                    (1668495600.0, "Tue 08:00", 2),
-                    (1668510000.0, "Tue 12:00", 2),
+                    TimeAxisLabel(
+                        position=1668438000.0,
+                        text="Mon 16:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668452400.0,
+                        text="Mon 20:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668466800.0,
+                        text="Tue 00:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668481200.0,
+                        text="Tue 04:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668495600.0,
+                        text="Tue 08:00",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668510000.0,
+                        text="Tue 12:00",
+                        line_width=2,
+                    ),
                 ],
                 "range": (1668426600, 1668516600),
                 "title": "2022-11-14 — 2022-11-15 @ 5m",
@@ -159,22 +232,86 @@ def test_fringe(
             1800,
             {
                 "labels": [
-                    (1667862000.0, None, 2),
-                    (1667905200.0, "08", 0),
-                    (1667948400.0, None, 2),
-                    (1667991600.0, "09", 0),
-                    (1668034800.0, None, 2),
-                    (1668078000.0, "10", 0),
-                    (1668121200.0, None, 2),
-                    (1668164400.0, "11", 0),
-                    (1668207600.0, None, 2),
-                    (1668250800.0, "12", 0),
-                    (1668294000.0, None, 2),
-                    (1668337200.0, "13", 0),
-                    (1668380400.0, None, 2),
-                    (1668423600.0, "14", 0),
-                    (1668466800.0, None, 2),
-                    (1668510000.0, None, 0),
+                    TimeAxisLabel(
+                        position=1667862000.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1667905200.0,
+                        text="08",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1667948400.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1667991600.0,
+                        text="09",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1668034800.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668078000.0,
+                        text="10",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1668121200.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668164400.0,
+                        text="11",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1668207600.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668250800.0,
+                        text="12",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1668294000.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668337200.0,
+                        text="13",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1668380400.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668423600.0,
+                        text="14",
+                        line_width=0,
+                    ),
+                    TimeAxisLabel(
+                        position=1668466800.0,
+                        text=None,
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668510000.0,
+                        text=None,
+                        line_width=0,
+                    ),
                 ],
                 "range": (1667826000, 1668517200),
                 "title": "2022-11-07 — 2022-11-15 @ 30m",
@@ -188,17 +325,61 @@ def test_fringe(
             9000,
             {
                 "labels": [
-                    (1665698400.0, "10-14", 2),
-                    (1665957600.0, "10-17", 2),
-                    (1666216800.0, "10-20", 2),
-                    (1666476000.0, "10-23", 2),
-                    (1666735200.0, "10-26", 2),
-                    (1666994400.0, "10-29", 2),
-                    (1667257200.0, "11-01", 2),
-                    (1667516400.0, "11-04", 2),
-                    (1667775600.0, "11-07", 2),
-                    (1668034800.0, "11-10", 2),
-                    (1668294000.0, "11-13", 2),
+                    TimeAxisLabel(
+                        position=1665698400.0,
+                        text="10-14",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1665957600.0,
+                        text="10-17",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1666216800.0,
+                        text="10-20",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1666476000.0,
+                        text="10-23",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1666735200.0,
+                        text="10-26",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1666994400.0,
+                        text="10-29",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1667257200.0,
+                        text="11-01",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1667516400.0,
+                        text="11-04",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1667775600.0,
+                        text="11-07",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668034800.0,
+                        text="11-10",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1668294000.0,
+                        text="11-13",
+                        line_width=2,
+                    ),
                 ],
                 "range": (1665486000, 1668519000),
                 "title": "2022-10-11 — 2022-11-15 @ 2h",
@@ -212,12 +393,36 @@ def test_fringe(
             86400,
             {
                 "labels": [
-                    (1638313200.0, "2021-12-01", 2),
-                    (1643670000.0, "2022-02-01", 2),
-                    (1648764000.0, "2022-04-01", 2),
-                    (1654034400.0, "2022-06-01", 2),
-                    (1659304800.0, "2022-08-01", 2),
-                    (1664575200.0, "2022-10-01", 2),
+                    TimeAxisLabel(
+                        position=1638313200.0,
+                        text="2021-12-01",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1643670000.0,
+                        text="2022-02-01",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1648764000.0,
+                        text="2022-04-01",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1654034400.0,
+                        text="2022-06-01",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1659304800.0,
+                        text="2022-08-01",
+                        line_width=2,
+                    ),
+                    TimeAxisLabel(
+                        position=1664575200.0,
+                        text="2022-10-01",
+                        line_width=2,
+                    ),
                 ],
                 "range": (1633910400, 1668470400),
                 "title": "2021-10-12 — 2022-11-14 @ 1d",

@@ -26,10 +26,10 @@ from typing import Literal, NamedTuple, NoReturn
 
 from pydantic import BaseModel
 
-from .. import parse_werk
-from ..convert import werkv1_metadata_to_werkv2_metadata
-from ..format import format_as_werk_v1, format_as_werk_v2
-from ..parse import WerkV2ParseResult
+from . import parse_werk
+from .convert import werkv1_metadata_to_werkv2_metadata
+from .format import format_as_werk_v1, format_as_werk_v2
+from .parse import WerkV2ParseResult
 
 
 class WerkId:

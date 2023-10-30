@@ -13,8 +13,7 @@ from pydantic import ValidationError
 
 from tests.unit.conftest import FixRegister
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlugin
 from cmk.base.plugins.agent_based import kube_pod_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable

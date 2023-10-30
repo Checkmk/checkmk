@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from collections.abc import Callable, Sequence
 from typing import Any, Literal, NamedTuple, Protocol
 
@@ -12,9 +14,22 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.agent_based.v1.type_defs import HostLabelGenerator, StringByteTable, StringTable
+from cmk.agent_based.v1 import CheckResult, DiscoveryResult
+from cmk.agent_based.v1.type_defs import (
+    HostLabelGenerator,
+    InventoryResult,
+    StringByteTable,
+    StringTable,
+)
+
+InventoryFunction = Callable[..., InventoryResult]
+
+CheckFunction = Callable[..., CheckResult]
+DiscoveryFunction = Callable[..., DiscoveryResult]
 
 RuleSetTypeName = Literal["merged", "all"]
 
@@ -78,3 +93,27 @@ class SNMPSectionPlugin(NamedTuple):
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin
+
+
+class CheckPlugin(NamedTuple):
+    name: CheckPluginName
+    sections: list[ParsedSectionName]
+    service_name: str
+    discovery_function: DiscoveryFunction
+    discovery_default_parameters: ParametersTypeAlias | None
+    discovery_ruleset_name: RuleSetName | None
+    discovery_ruleset_type: RuleSetTypeName
+    check_function: CheckFunction
+    check_default_parameters: ParametersTypeAlias | None
+    check_ruleset_name: RuleSetName | None
+    cluster_check_function: CheckFunction | None
+    full_module: str | None  # not available for auto migrated plugins.
+
+
+class InventoryPlugin(NamedTuple):
+    name: InventoryPluginName
+    sections: list[ParsedSectionName]
+    inventory_function: InventoryFunction
+    inventory_default_parameters: ParametersTypeAlias
+    inventory_ruleset_name: RuleSetName | None
+    full_module: str

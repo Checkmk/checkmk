@@ -10,7 +10,7 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
 

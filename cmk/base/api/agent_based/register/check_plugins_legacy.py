@@ -16,7 +16,7 @@ from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_paramete
 
 from cmk.checkengine.parameters import Parameters
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 
 from cmk.agent_based.v1 import CheckResult, IgnoreResults, Metric, Result, Service, State

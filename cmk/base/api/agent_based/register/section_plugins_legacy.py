@@ -7,15 +7,15 @@
 from collections.abc import Callable
 from typing import Any
 
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
-from cmk.base.api.agent_based.type_defs import (
+from cmk.base.api.agent_based.plugin_classes import (
     AgentParseFunction,
     AgentSectionPlugin,
     SNMPParseFunction,
     SNMPSectionPlugin,
+)
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
 )
 
 from cmk.agent_based.v1.type_defs import StringTable

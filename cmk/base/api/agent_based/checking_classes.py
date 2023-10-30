@@ -16,7 +16,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.type_defs import RuleSetTypeName
+from cmk.base.api.agent_based.plugin_classes import RuleSetTypeName
 
 from cmk.agent_based.v1 import CheckResult, DiscoveryResult
 

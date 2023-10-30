@@ -12,7 +12,7 @@ from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.inventory import InventoryPluginName
 
-from cmk.base.api.agent_based.inventory_classes import InventoryFunction, InventoryPlugin
+from cmk.base.api.agent_based.plugin_classes import InventoryFunction, InventoryPlugin
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     validate_default_parameters,

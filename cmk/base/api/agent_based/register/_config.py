@@ -14,12 +14,16 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentSectionPlugin,
+    CheckPlugin,
+    InventoryPlugin,
+    SectionPlugin,
+    SNMPSectionPlugin,
+)
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SectionPlugin, SNMPSectionPlugin
 
 registered_agent_sections: dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: dict[SectionName, SNMPSectionPlugin] = {}

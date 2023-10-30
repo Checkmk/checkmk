@@ -1,0 +1,13 @@
+Title: Fix "Top alerters" dashlet site filter on "Site dashboard"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1698668570
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+If the "Site dashboard" was called from, e.g. the main dashboards dashlet "Site
+overview", all sites were shown within the "Top alerters" dashlet.
+
+The dashlet filters now for the correct site.

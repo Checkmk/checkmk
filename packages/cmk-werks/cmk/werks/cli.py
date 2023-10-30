@@ -359,7 +359,7 @@ def load_werks() -> dict[WerkId, Werk]:
             try:
                 werks[WerkId(int(werk_id))] = load_werk(entry)
             except Exception as e:
-                sys.stderr.write("ERROR: Skipping invalid werk %s: %s\n" % (werk_id, e))
+                sys.stderr.write(f"ERROR: Skipping invalid werk {werk_id}: {e}\n")
     return werks
 
 
@@ -569,7 +569,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
     # in one class are orred. Multiple types are anded.
 
     werks: list[Werk] = list(load_werks().values())
-    versions = set(werk.content.metadata["version"] for werk in werks)
+    versions = {werk.content.metadata["version"] for werk in werks}
 
     filters: dict[str, list[str]] = {}
 
@@ -847,7 +847,7 @@ def main_delete(args: argparse.Namespace) -> None:
         werk_to_be_removed_title = load_werk(werk_id).content.metadata["title"]
         if os.system("git rm -f %s" % werk_id) == 0:  # nosec
             sys.stdout.write(
-                "Deleted werk {} ({}).\n".format(format_werk_id(werk_id), werk_to_be_removed_title)
+                f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n"
             )
             my_ids = get_werk_ids()
             my_ids.append(werk_id)

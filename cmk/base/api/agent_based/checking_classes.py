@@ -7,58 +7,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from typing import Iterable, NamedTuple
+from collections.abc import Callable
+from typing import NamedTuple
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.type_defs import RuleSetTypeName
 
-from cmk.agent_based.v1 import (
-    CheckResult,
-    DiscoveryResult,
-    IgnoreResults,
-    IgnoreResultsError,
-    Metric,
-    Result,
-)
+from cmk.agent_based.v1 import CheckResult, DiscoveryResult
 
 CheckFunction = Callable[..., CheckResult]
 DiscoveryFunction = Callable[..., DiscoveryResult]
-
-
-def consume_check_results(
-    # TODO(ml):  We should limit the type to `CheckResult` but that leads to
-    # layering violations.  We could also go with dependency inversion or some
-    # other slightly higher abstraction.  The code here is really concrete.
-    # Investigate and find a solution later.
-    subresults: Iterable[object],
-) -> tuple[Sequence[MetricTuple], Sequence[Result]]:
-    """Impedance matching between the Check API and the Check Engine."""
-    ignore_results: list[IgnoreResults] = []
-    results: list[Result] = []
-    perfdata: list[MetricTuple] = []
-    for subr in subresults:
-        if isinstance(subr, IgnoreResults):
-            ignore_results.append(subr)
-        elif isinstance(subr, Metric):
-            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-        elif isinstance(subr, Result):
-            results.append(subr)
-        else:
-            raise TypeError(subr)
-
-    # Consume *all* check results, and *then* raise, if we encountered
-    # an IgnoreResults instance.
-    if ignore_results:
-        raise IgnoreResultsError(str(ignore_results[-1]))
-
-    return perfdata, results
 
 
 class CheckPlugin(NamedTuple):

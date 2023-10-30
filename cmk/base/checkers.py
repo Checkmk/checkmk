@@ -70,13 +70,12 @@ import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.checking_classes import consume_check_results
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
-from cmk.agent_based.v1 import IgnoreResultsError
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
 from cmk.agent_based.v1_backend import plugin_contexts
@@ -494,6 +493,34 @@ def _aggregate_results(
         )
     all_text = [", ".join(summaries)] + details
     return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
+
+
+def consume_check_results(
+    # we need to accept `object`, in order to explicitly protect against plugins
+    # creating invalid output.
+    # Typing this as `CheckResult` will make linters complain about unreachable code.
+    subresults: Iterable[object],
+) -> tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
+    """Impedance matching between the Check API and the Check Engine."""
+    ignore_results: list[IgnoreResults] = []
+    results: list[CheckFunctionResult] = []
+    perfdata: list[MetricTuple] = []
+    for subr in subresults:
+        if isinstance(subr, IgnoreResults):
+            ignore_results.append(subr)
+        elif isinstance(subr, Metric):
+            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+        elif isinstance(subr, CheckFunctionResult):
+            results.append(subr)
+        else:
+            raise TypeError(subr)
+
+    # Consume *all* check results, and *then* raise, if we encountered
+    # an IgnoreResults instance.
+    if ignore_results:
+        raise IgnoreResultsError(str(ignore_results[-1]))
+
+    return perfdata, results
 
 
 def _get_monitoring_data_kwargs(

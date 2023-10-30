@@ -33,11 +33,10 @@ from cmk.base.api.agent_based.type_defs import (
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    StringByteTable,
-    StringTable,
 )
 
 from cmk.agent_based.v1 import HostLabel, SNMPTree
+from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 
 
 def _create_parse_annotation(

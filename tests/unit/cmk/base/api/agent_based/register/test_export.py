@@ -16,7 +16,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 
-from cmk.base.api.agent_based.inventory_classes import InventoryResult
 from cmk.base.api.agent_based.register import (
     _config,
     export,
@@ -26,9 +25,9 @@ from cmk.base.api.agent_based.register import (
     is_registered_snmp_section_plugin,
     is_stored_ruleset,
 )
-from cmk.base.api.agent_based.type_defs import HostLabelGenerator
 
 from cmk.agent_based.v1 import DiscoveryResult, SNMPTree, startswith
+from cmk.agent_based.v1.type_defs import HostLabelGenerator, InventoryResult
 
 from .test_check_plugins import dummy_function_ips
 from .test_section_plugins import parse_dummy

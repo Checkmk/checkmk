@@ -47,7 +47,7 @@ from cmk.agent_based.v1 import (
 from . import clusterize, register, render, type_defs
 
 __all__ = [
-    # the order is relevant for the shinx doc!
+    # the order is relevant for the sphinx doc!
     # begin with section stuff
     "all_of",
     "any_of",

@@ -2,12 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Type definitions
 
-Some of these are exposed in the API, some are not.
-"""
-
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, Literal, NamedTuple, Protocol
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -18,16 +14,12 @@ from cmk.snmplib import SNMPDetectBaseType
 
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.agent_based.v1 import HostLabel
+from cmk.agent_based.v1.type_defs import HostLabelGenerator, StringByteTable, StringTable
 
 RuleSetTypeName = Literal["merged", "all"]
 
-StringTable = list[list[str]]
-StringByteTable = list[list[str | list[int]]]
-
 AgentParseFunction = Callable[[StringTable], Any]
 
-HostLabelGenerator = Generator[HostLabel, None, None]
 HostLabelFunction = Callable[..., HostLabelGenerator]
 
 SNMPParseFunction = Callable[[list[StringTable]], Any] | Callable[[list[StringByteTable]], Any]

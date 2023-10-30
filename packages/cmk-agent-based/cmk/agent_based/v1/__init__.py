@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import clusterize, render
+from . import clusterize, render, type_defs
 from ._checking_classes import (
     CheckResult,
     DiscoveryResult,
@@ -77,4 +77,5 @@ __all__ = [
     "startswith",
     "State",
     "TableRow",
+    "type_defs",
 ]

@@ -6,7 +6,6 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.utils.enviromux import (
     check_enviromux_humidity,
@@ -18,6 +17,8 @@ from cmk.base.plugins.agent_based.utils.enviromux import (
     parse_enviromux,
 )
 from cmk.base.plugins.agent_based.utils.temperature import TempParamType
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     ["0", "1", "Internal Temperature", "292", "100", "500"],

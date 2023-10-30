@@ -7,8 +7,9 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringByteTable
 from cmk.base.plugins.agent_based.if_brocade_lancom import parse_if_brocade_lancom, parse_if_lancom
+
+from cmk.agent_based.v1.type_defs import StringByteTable
 
 
 @pytest.mark.parametrize(

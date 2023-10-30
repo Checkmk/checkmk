@@ -10,7 +10,6 @@ import pytest
 from tests.testlib import on_time
 
 import cmk.base.plugins.agent_based.oracle_asm_diskgroup as asm
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     Metric,
@@ -19,6 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 NOW_SIMULATED = 581792400, "UTC"
 

@@ -12,14 +12,10 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.type_defs import (
-    AgentSectionPlugin,
-    SNMPSectionPlugin,
-    StringByteTable,
-    StringTable,
-)
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 
 from cmk.agent_based.v1 import matches, OIDEnd, SNMPTree
+from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 
 
 def _generator_function():

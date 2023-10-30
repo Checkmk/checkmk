@@ -8,7 +8,6 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -23,6 +22,8 @@ from cmk.base.plugins.agent_based.oracle_crs_res import (
     Resource,
     Section,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 _STRING_TABLE_BOTH_OFFLINE = [
     ["nodename", "ezszds8q"],

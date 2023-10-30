@@ -9,7 +9,6 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
@@ -19,6 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE_SD = [
     [

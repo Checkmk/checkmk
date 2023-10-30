@@ -7,7 +7,6 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.threepar_remotecopy import (
     check_threepar_remotecopy,
@@ -15,6 +14,8 @@ from cmk.base.plugins.agent_based.threepar_remotecopy import (
     parse_threepar_remotecopy,
     THREEPAR_REMOTECOPY_DEFAULT_LEVELS,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [['{"mode":2,"status":1,"asyncEnabled":false}']]
 

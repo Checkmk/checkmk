@@ -7,7 +7,7 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.agent_based.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
 

@@ -98,8 +98,8 @@ def test_v1_type_defs() -> None:
         "StringByteTable",
         "StringTable",
     }
-    if _names(v1.type_defs) != expected:  # TODO or _names(v1_new_location.type_defs) != expected:
-        raise AssertionError(__doc__)
+    assert _names(v1.type_defs) == expected
+    assert _names(v1_new_location.type_defs) == expected
 
 
 def test_v1_register() -> None:
@@ -110,8 +110,7 @@ def test_v1_register() -> None:
         "inventory_plugin",
         "snmp_section",
     }
-    if _names(v1.register) != expected:  # TODO or _names(v1_new_location.register) != expected:
-        raise AssertionError(__doc__)
+    assert _names(v1.register) == expected
 
 
 def test_v1_clusterize() -> None:

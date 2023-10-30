@@ -9,7 +9,6 @@ from typing import Any
 import pytest
 from freezegun import freeze_time
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.fileinfo import (
@@ -27,6 +26,8 @@ from cmk.base.plugins.agent_based.utils.fileinfo import (
     MetricInfo,
     parse_fileinfo,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 pytestmark = pytest.mark.checks
 

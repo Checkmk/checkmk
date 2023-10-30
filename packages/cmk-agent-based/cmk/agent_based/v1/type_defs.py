@@ -25,15 +25,19 @@ Example:
     ...     pass
 
 """
+from typing import Generator as _Generator
+from typing import Iterable as _Iterable
 
-from cmk.agent_based.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    HostLabelGenerator,
-    InventoryResult,
-    StringByteTable,
-    StringTable,
-)
+from ._checking_classes import CheckResult, DiscoveryResult
+from ._checking_classes import HostLabel as _HostLabel
+from ._inventory_classes import Attributes as _Attributes
+from ._inventory_classes import TableRow as _TableRow
+
+InventoryResult = _Iterable[_Attributes | _TableRow]
+StringTable = list[list[str]]
+StringByteTable = list[list[str | list[int]]]
+HostLabelGenerator = _Generator[_HostLabel, None, None]
+
 
 __all__ = [
     "CheckResult",

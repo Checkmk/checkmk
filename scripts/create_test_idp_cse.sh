@@ -36,4 +36,4 @@ export URL="http://localhost:${PORT}"
 configure_cognito $URL 5000
 
 export PYTHONPATH="${REPO_PATH}/tests/testlib"
-"$REPO_PATH"/scripts/run-pipenv run uvicorn openid_oauth_provider:application --port "$PORT"
+"$REPO_PATH"/scripts/run-pipenv run uvicorn cse.openid_oauth_provider:application --port "$PORT"

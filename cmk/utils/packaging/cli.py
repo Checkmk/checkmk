@@ -774,7 +774,6 @@ def main(
 
     try:
         return args.handler(
-            site_context,
             args,
             path_config,
             persisting_function,

@@ -162,7 +162,7 @@ def test_bi_aggregation(clients: ClientRegistry) -> None:
                 "conditions": {
                     "host_choice": {"type": "all_hosts"},
                     "host_folder": "",
-                    "host_labels": {},
+                    "host_labels": [],
                     "host_tags": {"tcp": "tcp"},
                 },
                 "refer_to": "host",
@@ -483,7 +483,7 @@ def test_create_bi_aggregation_invalid_pack_id(clients: ClientRegistry) -> None:
                 "conditions": {
                     "host_choice": {"type": "all_hosts"},
                     "host_folder": "",
-                    "host_labels": {},
+                    "host_labels": [],
                     "host_tags": {"tcp": "tcp"},
                 },
                 "refer_to": "host",

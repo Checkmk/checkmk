@@ -8,12 +8,19 @@ import contextlib
 import dataclasses
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from re import Pattern
-from typing import Any, cast, Generic, Literal, NamedTuple, NotRequired, TypeAlias, TypeVar
+from typing import Any, cast, Generic, NamedTuple, NotRequired, TypeAlias, TypeVar
 
 from typing_extensions import TypedDict
 
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, HostLabel, Labels
+from cmk.utils.labels import (
+    AndOrNotLiteral,
+    BuiltinHostLabelsStore,
+    DiscoveredHostLabelsStore,
+    HostLabel,
+    LabelGroups,
+    Labels,
+)
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
 from cmk.utils.servicename import Item, ServiceName
@@ -24,8 +31,6 @@ from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")
 
-# The value of `LabelConditions` may actually be something like TagCondition.
-LabelConditions = Mapping[str, str | Mapping[Literal["$ne"], str]]
 LabelSources = dict[str, str]
 
 # The Tag* types below are *not* used in `cmk.utils.tags`
@@ -55,14 +60,15 @@ TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
 TagsOfHosts: TypeAlias = dict[HostName | HostAddress, Mapping[TagGroupID, TagID]]
 
+LabelGroupsCacheId = tuple[tuple[AndOrNotLiteral, tuple[tuple[AndOrNotLiteral, str], ...]], ...]
 
 PreprocessedPattern: TypeAlias = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset: TypeAlias = list[
     tuple[
         TRuleValue,
         set[HostName],
-        LabelConditions,
-        tuple[tuple[str, object], ...],
+        LabelGroups,
+        LabelGroupsCacheId,
         PreprocessedPattern,
     ]
 ]
@@ -85,10 +91,10 @@ class RuleOptionsSpec(TypedDict, total=False):
 # TODO: Improve this type
 class RuleConditionsSpec(TypedDict, total=False):
     host_tags: Mapping[TagGroupID, TagCondition]
-    host_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
+    host_labels: LabelGroups
     host_name: HostOrServiceConditions | None
     service_description: HostOrServiceConditions | None
-    service_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
+    service_labels: LabelGroups
     host_folder: str
 
 
@@ -368,7 +374,10 @@ class RulesetMatcher:
 
 # TODO: improve and cleanup types
 _ConditionCacheID: TypeAlias = tuple[
-    tuple[str, ...], tuple[tuple[TagGroupID, object], ...], tuple[tuple[str, object], ...], str
+    tuple[str, ...],
+    tuple[tuple[TagGroupID, object], ...],
+    LabelGroupsCacheId,
+    str,
 ]
 
 
@@ -509,10 +518,11 @@ class RulesetOptimizer:
                 hosts = self._all_matching_hosts(rule["condition"], with_foreign_hosts)
 
                 # Prepare cache id
-                service_labels_condition = rule["condition"].get("service_labels", {})
+                service_labels_condition = rule["condition"].get("service_labels", [])
+                # cast lists in label groups to tuples
                 service_labels_condition_cache_id = tuple(
-                    (label_id, _tags_or_labels_cache_id(label_spec))
-                    for label_id, label_spec in service_labels_condition.items()
+                    (operator, tuple(label_group))
+                    for operator, label_group in service_labels_condition
                 )
 
                 # And now preprocess the configured patterns in the servlist
@@ -563,7 +573,7 @@ class RulesetOptimizer:
         tags and hostlist conditions."""
         hostlist = condition.get("host_name")
         tag_conditions: Mapping[TagGroupID, TagCondition] = condition.get("host_tags", {})
-        labels = condition.get("host_labels", {})
+        labels: LabelGroups = condition.get("host_labels", [])
         rule_path = condition.get("host_folder", "/")
 
         cache_id = (
@@ -642,7 +652,7 @@ class RulesetOptimizer:
     def _condition_cache_id(
         hostlist: HostOrServiceConditions | None,
         tag_conditions: Mapping[TagGroupID, TagCondition],
-        labels: Mapping[str, str | Mapping[Literal["$ne"], str]],
+        labels: LabelGroups,
         rule_path: str,
     ) -> _ConditionCacheID:
         host_parts: list[str] = []
@@ -664,13 +674,11 @@ class RulesetOptimizer:
         return (
             tuple(sorted(host_parts)),
             tuple(
-                (taggroup_id, _tags_or_labels_cache_id(tag_condition))
+                (taggroup_id, _tags_cache_id(tag_condition))
                 for taggroup_id, tag_condition in tag_conditions.items()
             ),
-            tuple(
-                (label_id, _tags_or_labels_cache_id(label_spec))
-                for label_id, label_spec in labels.items()
-            ),
+            # cast lists in label groups to tuples
+            tuple((operator, tuple(label_group)) for operator, label_group in labels),
             rule_path,
         )
 
@@ -868,7 +876,7 @@ class RulesetOptimizer:
         return merged
 
 
-def _tags_or_labels_cache_id(tag_or_label_spec: object) -> object:
+def _tags_cache_id(tag_or_label_spec: object) -> object:
     if isinstance(tag_or_label_spec, dict):
         if "$ne" in tag_or_label_spec:
             return "!%s" % tag_or_label_spec["$ne"]
@@ -877,7 +885,7 @@ def _tags_or_labels_cache_id(tag_or_label_spec: object) -> object:
             return (
                 "$or",
                 tuple(
-                    _tags_or_labels_cache_id(sub_tag_or_label_spec)
+                    _tags_cache_id(sub_tag_or_label_spec)
                     for sub_tag_or_label_spec in tag_or_label_spec["$or"]
                 ),
             )
@@ -886,7 +894,7 @@ def _tags_or_labels_cache_id(tag_or_label_spec: object) -> object:
             return (
                 "$nor",
                 tuple(
-                    _tags_or_labels_cache_id(sub_tag_or_label_spec)
+                    _tags_cache_id(sub_tag_or_label_spec)
                     for sub_tag_or_label_spec in tag_or_label_spec["$nor"]
                 ),
             )
@@ -951,26 +959,50 @@ def matches_host_name(host_entries: HostOrServiceConditions | None, hostname: Ho
     return negate
 
 
-def matches_labels(
-    object_labels: Labels | None, required_labels: Mapping[str, str | Mapping[Literal["$ne"], str]]
+def matches_labels(object_labels: Labels | None, required_label_groups: LabelGroups) -> bool:
+    overall_match: bool = True
+
+    for group_operator, label_group in required_label_groups:
+        group_match: bool = True
+        for label_operator, label in label_group:
+            if not label:
+                continue
+
+            if object_labels is None:
+                # The first label operator in a group is always "and" or "not", it cannot be "or"
+                # -> a label group matches a host without labels only if it has no "and" operators
+                if label_operator == "and":
+                    group_match = False
+                    break
+                continue
+
+            try:
+                key, value = label.split(":")
+            except Exception:
+                raise NotImplementedError(f"HALLO DORT: wird hier zu wenig entpackt?  --  {label}")
+            label_match: bool = value == object_labels.get(key)
+            group_match = _and_or_not_group_match(group_match, label_match, label_operator)
+
+        overall_match = _and_or_not_group_match(overall_match, group_match, group_operator)
+
+    return overall_match
+
+
+def _and_or_not_group_match(
+    given_group_match: bool, new_single_match: bool, operator: AndOrNotLiteral
 ) -> bool:
-    for label_group_id, label_spec in required_labels.items():
-        is_not = isinstance(label_spec, dict)
-        if isinstance(label_spec, dict):
-            label_spec = label_spec["$ne"]
-
-        if object_labels is None:
-            return False
-
-        if (object_labels.get(label_group_id) == label_spec) is is_not:
-            return False
-
-    return True
+    match operator:
+        case "and":
+            return given_group_match and new_single_match
+        case "or":
+            return given_group_match or new_single_match
+        case "not":
+            return given_group_match and not new_single_match
 
 
 def matches_service_conditions(
     service_description_condition: tuple[bool, Pattern[str]],
-    service_labels_condition: Mapping[str, str | Mapping[Literal["$ne"], str]],
+    service_labels_condition: LabelGroups,
     match_object: RulesetMatchObject,
 ) -> bool:
     if not matches_service_description_condition(service_description_condition, match_object):

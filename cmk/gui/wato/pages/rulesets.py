@@ -31,7 +31,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
 
 import cmk.gui.forms as forms
-import cmk.gui.view_utils
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
@@ -68,6 +67,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     FixedValue,
+    LabelGroups,
     ListChoice,
     ListOfStrings,
     RegExp,
@@ -77,6 +77,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecText,
 )
+from cmk.gui.view_utils import render_label_groups
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
 from cmk.gui.watolib.config_hostname import ConfigHostname
@@ -118,7 +119,7 @@ from cmk.gui.watolib.rulespecs import (
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_eval, mk_repr
 
 from ._match_conditions import HostTagCondition
-from ._rule_conditions import DictHostTagCondition, LabelCondition
+from ._rule_conditions import DictHostTagCondition
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -2254,7 +2255,7 @@ class VSExplicitConditions(Transform):
             service_labels = (
                 explicit["service_labels"]
                 if _allow_service_label_conditions(self._rulespec.name)
-                else {}
+                else []
             )
 
         return RuleConditions(
@@ -2262,7 +2263,7 @@ class VSExplicitConditions(Transform):
             host_tags=explicit["host_tags"],
             host_labels=explicit["host_labels"]
             if _allow_host_label_conditions(self._rulespec.name)
-            else {},
+            else [],
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False
             ),
@@ -2306,18 +2307,16 @@ class VSExplicitConditions(Transform):
             encode_value=False,
         )
 
-    def _vs_host_label_condition(self) -> LabelCondition:
-        return LabelCondition(
+    def _vs_host_label_condition(self) -> LabelGroups:
+        return LabelGroups(
             title=_("Host labels"),
-            help_txt=_("Rule only applies to hosts matching the label conditions."),
+            help=_("Rule only applies to hosts matching the label conditions."),
         )
 
-    def _vs_service_label_condition(self) -> LabelCondition:
-        return LabelCondition(
+    def _vs_service_label_condition(self) -> LabelGroups:
+        return LabelGroups(
             title=_("Service labels"),
-            help_txt=_(
-                "Use this condition to select services based on the configured service labels."
-            ),
+            help=_("Use this condition to select services based on the configured service labels."),
         )
 
     def _vs_host_tag_condition(self) -> DictHostTagCondition:
@@ -2550,38 +2549,13 @@ class RuleConditionRenderer:
         if not label_conditions:
             return
 
-        labels_html = (
-            self._single_label_condition(object_type, label_id, label_spec)
-            for label_id, label_spec in label_conditions.items()
-        )
+        labels_html = render_label_groups(label_conditions, object_type)
         yield HTML(
             _("%s matching labels: %s")
             % (
                 object_title,
-                HTMLWriter.render_i(_("and"), class_="label_operator").join(labels_html),
+                labels_html,
             )
-        )
-
-    def _single_label_condition(  # type: ignore[no-untyped-def]
-        self, object_type, label_id, label_spec
-    ) -> HTML:
-        negate = False
-        label_value = label_spec
-        if isinstance(label_spec, dict):
-            if "$ne" in label_spec:
-                negate = True
-                label_value = label_spec["$ne"]
-            else:
-                raise NotImplementedError()
-
-        labels_html = cmk.gui.view_utils.render_labels(
-            {label_id: label_value}, object_type, with_links=False, label_sources={}
-        )
-        if not negate:
-            return labels_html
-
-        return HTML(
-            "{}{}".format(HTMLWriter.render_i(_("not"), class_="label_operator"), labels_html)
         )
 
     def _host_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
@@ -2834,10 +2808,10 @@ class ModeNewRule(ABCEditRuleMode):
             RuleConditions(
                 host_folder=self._folder.path(),
                 host_tags={},
-                host_labels={},
+                host_labels=[],
                 host_name=host_name_conditions,
                 service_description=service_description_conditions,
-                service_labels={},
+                service_labels=[],
             )
         )
 

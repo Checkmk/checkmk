@@ -84,9 +84,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id0",
         "value": "os_linux",
         "condition": {
-            "host_labels": {
-                "os": "linux",
-            },
+            "host_labels": [("and", [("and", "os:linux")])],
         },
         "options": {},
     },
@@ -95,10 +93,15 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id1",
         "value": "abc",
         "condition": {
-            "host_labels": {
-                "os": "linux",
-                "abc": "xä",
-            },
+            "host_labels": [
+                (
+                    "and",
+                    [
+                        ("and", "os:linux"),
+                        ("and", "abc:xä"),
+                    ],
+                )
+            ],
         },
         "options": {},
     },
@@ -106,7 +109,9 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "id2",
         "value": "hu",
-        "condition": {"host_labels": {"hu": {"$ne": "ha"}}},
+        "condition": {
+            "host_labels": [("and", [("not", "hu:ha")])],
+        },
         "options": {},
     },
     # test unconditional match
@@ -657,9 +662,7 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id0",
         "value": "os_linux",
         "condition": {
-            "service_labels": {
-                "os": "linux",
-            },
+            "service_labels": [("and", [("and", "os:linux")])],
         },
         "options": {},
     },
@@ -668,10 +671,10 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id1",
         "value": "abc",
         "condition": {
-            "service_labels": {
-                "os": "linux",
-                "abc": "xä",
-            },
+            "service_labels": [
+                ("and", [("and", "os:linux")]),
+                ("and", [("and", "abc:xä")]),
+            ],
         },
         "options": {},
     },
@@ -679,7 +682,9 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "id2",
         "value": "hu",
-        "condition": {"service_labels": {"hu": {"$ne": "ha"}}},
+        "condition": {
+            "service_labels": [("and", [("not", "hu:ha")])],
+        },
         "options": {},
     },
     # test unconditional match

@@ -329,6 +329,11 @@ def replace_macros(pattern: str, macros: MacroMapping) -> str:
 
 
 @overload
+def replace_macros(pattern: tuple[str, ...], macros: MacroMapping) -> list[str]:
+    ...
+
+
+@overload
 def replace_macros(pattern: list[str], macros: MacroMapping) -> list[str]:
     ...
 
@@ -339,15 +344,21 @@ def replace_macros(pattern: dict[str, str], macros: MacroMapping) -> dict[str, s
 
 
 def replace_macros(
-    pattern: str | list[str] | dict[str, str], macros: MacroMapping
-) -> str | list[str] | dict[str, str]:
+    pattern: str | tuple[str, ...] | list[str] | dict[str, str], macros: MacroMapping
+) -> str | tuple[str, ...] | list[str] | dict[str, str]:
     if isinstance(pattern, str):
         return replace_macros_in_str(pattern, macros)
+    if isinstance(pattern, tuple):
+        return replace_macros_in_tuple(pattern, macros)
     if isinstance(pattern, list):
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
     return NoReturn
+
+
+def replace_macros_in_tuple(elements: tuple[str, ...], macros: MacroMapping) -> tuple[str, ...]:
+    return tuple(replace_macros(element, macros) for element in elements)
 
 
 def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:

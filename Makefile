@@ -345,7 +345,74 @@ buildclean:
 
 
 setup:
-	sudo ./install-everything.sh
+# librrd-dev is still needed by the python rrd package we build in our virtual environment
+	sudo apt-get install \
+	    build-essential \
+	    clang-$(CLANG_VERSION) \
+	    clang-format-$(CLANG_VERSION) \
+	    clang-tidy-$(CLANG_VERSION) \
+	    clang-tools-$(CLANG_VERSION) \
+	    clangd-$(CLANG_VERSION) \
+	    cmake \
+	    curl \
+	    direnv \
+	    doxygen \
+	    figlet \
+	    gawk \
+	    git \
+	    ksh \
+	    libclang-$(CLANG_VERSION)-dev \
+	    libjpeg-dev \
+	    libkrb5-dev \
+	    libldap2-dev \
+	    libmariadb-dev-compat \
+	    libpango1.0-dev \
+	    libpcap-dev \
+	    librrd-dev \
+	    libsasl2-dev \
+	    libsqlite3-dev \
+	    libtool-bin \
+	    libxml2-dev \
+	    libreadline-dev \
+	    libxml2-dev \
+	    libxslt-dev \
+	    libpq-dev \
+	    libreadline-dev \
+	    lld-$(CLANG_VERSION) \
+	    lldb-$(CLANG_VERSION) \
+	    musl-tools \
+	    p7zip-full \
+	    patchelf \
+	    pngcrush \
+	    python3-pip \
+	    python3-venv \
+	    shellcheck \
+	    valgrind \
+	    zlib1g-dev
+	if type pyenv >/dev/null 2>&1 && pyenv shims --short | grep '^pipenv$$'; then \
+	    CMD="pyenv exec" ; \
+	else \
+	    CMD="" ; \
+	fi ; \
+	$$CMD pip3 install --user --upgrade \
+	    pip \
+	    pipenv=="$(PIPENV_VERSION)" \
+	    virtualenv=="$(VIRTUALENV_VERSION)" \
+	    wheel
+	if ! type rustup >/dev/null 2>&1; then \
+		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
+		source $$HOME/.cargo/env; \
+	fi ; \
+	rustup target add x86_64-unknown-linux-musl
+	$(MAKE) -C web setup
+	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+	sudo add-apt-repository \
+        "deb [arch=amd64] https://download.docker.com/linux/ubuntu $$(lsb_release -cs) stable"
+	sudo apt-get update
+	sudo apt-get install docker-ce
+	sudo bash -c 'usermod -a -G docker $$SUDO_USER'
+	$(MAKE) -C locale setup
+	$(MAKE) check-setup
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n

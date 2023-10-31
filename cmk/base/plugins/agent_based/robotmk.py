@@ -25,7 +25,6 @@ class Params(TypedDict):
 
 DEFAULT: Params = {"test_runtime": None}
 
-
 LivestatusFile = Literal["suite_last_log.html", "suite_last_error_log.html"]
 
 
@@ -120,9 +119,6 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
                         ServiceLabel("robotmk/html_last_log", "yes"),
                     ],
                 )
-        if isinstance(result, robotmk_api.ConfigFileContent):
-            for suite in result.config_file_content.suites:
-                yield Service(item=suite)
 
         if isinstance(result, robotmk_api.SuiteExecutionReport):
             yield Service(item=f"Suite {result.suite_name}")
@@ -160,12 +156,6 @@ def _check_suite_execution_result(
             yield _attempt_result(attempt)
 
 
-def _check_config_file_content(result: robotmk_api.ConfigFileContent, item: str) -> CheckResult:
-    for suite in result.config_file_content.suites:
-        if suite == item:
-            yield Result(state=State.OK, summary="This Suite was discovered!")
-
-
 def _check_result(params: Params, result: robotmk_api.Result, item: str) -> CheckResult:
     for test in result.tests:
         if _item(result, test) == item:
@@ -178,9 +168,7 @@ def _check_result(params: Params, result: robotmk_api.Result, item: str) -> Chec
 
 def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResult:
     for result in section:
-        if isinstance(result, robotmk_api.ConfigFileContent):
-            yield from _check_config_file_content(result, item)
-        elif isinstance(result, robotmk_api.Result):
+        if isinstance(result, robotmk_api.Result):
             yield from _check_result(params, result, item)
         elif isinstance(result, robotmk_api.SuiteExecutionReport):
             yield from _check_suite_execution_result(result, item)

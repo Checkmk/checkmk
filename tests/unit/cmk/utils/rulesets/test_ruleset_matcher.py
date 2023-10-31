@@ -84,7 +84,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id0",
         "value": "os_linux",
         "condition": {
-            "host_labels": [("and", [("and", "os:linux")])],
+            "host_label_groups": [("and", [("and", "os:linux")])],
         },
         "options": {},
     },
@@ -93,7 +93,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id1",
         "value": "abc",
         "condition": {
-            "host_labels": [
+            "host_label_groups": [
                 (
                     "and",
                     [
@@ -110,7 +110,7 @@ host_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id2",
         "value": "hu",
         "condition": {
-            "host_labels": [("and", [("not", "hu:ha")])],
+            "host_label_groups": [("and", [("not", "hu:ha")])],
         },
         "options": {},
     },
@@ -662,7 +662,7 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id0",
         "value": "os_linux",
         "condition": {
-            "service_labels": [("and", [("and", "os:linux")])],
+            "service_label_groups": [("and", [("and", "os:linux")])],
         },
         "options": {},
     },
@@ -671,7 +671,7 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id1",
         "value": "abc",
         "condition": {
-            "service_labels": [
+            "service_label_groups": [
                 ("and", [("and", "os:linux")]),
                 ("and", [("and", "abc:xä")]),
             ],
@@ -683,7 +683,7 @@ service_label_ruleset: Sequence[RuleSpec[str]] = [
         "id": "id2",
         "value": "hu",
         "condition": {
-            "service_labels": [("and", [("not", "hu:ha")])],
+            "service_label_groups": [("and", [("not", "hu:ha")])],
         },
         "options": {},
     },

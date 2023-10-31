@@ -439,7 +439,7 @@ class ABCBISearcher(ABC):
 
     @abstractmethod
     def filter_host_labels(
-        self, hosts: Iterable[BIHostData], required_labels: Any
+        self, hosts: Iterable[BIHostData], required_label_groups: Any
     ) -> Iterable[BIHostData]:
         ...
 

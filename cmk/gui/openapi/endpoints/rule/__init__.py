@@ -457,10 +457,10 @@ def _create_rule(
         RuleConditions(
             host_folder=folder.path(),
             host_tags=conditions.get("host_tags"),
-            host_labels=_api_to_internal(conditions.get("host_labels")),
+            host_label_groups=_api_to_internal(conditions.get("host_label_groups")),
             host_name=conditions.get("host_name"),
             service_description=conditions.get("service_description"),
-            service_labels=_api_to_internal(conditions.get("service_labels")),
+            service_label_groups=_api_to_internal(conditions.get("service_label_groups")),
         ),
         RuleOptions.from_config(properties),
         value,
@@ -503,9 +503,9 @@ def _serialize_rule(rule_entry: RuleEntry) -> DomainObject:
                 {
                     "host_name": rule.conditions.host_name,
                     "host_tags": rule.conditions.host_tags,
-                    "host_label_groups": _internal_to_api(rule.conditions.host_labels),
+                    "host_label_groups": _internal_to_api(rule.conditions.host_label_groups),
                     "service_description": rule.conditions.service_description,
-                    "service_label_groups": _internal_to_api(rule.conditions.service_labels),
+                    "service_label_groups": _internal_to_api(rule.conditions.service_label_groups),
                 }
             ),
         },

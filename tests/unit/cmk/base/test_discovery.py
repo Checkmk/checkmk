@@ -1050,7 +1050,9 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                         "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
                         "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
                     },
-                    "condition": {"host_labels": [("and", [("and", "cmk/check_mk_server:yes")])]},
+                    "condition": {
+                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
+                    },
                 }
             ]
         ),
@@ -1152,7 +1154,9 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                         "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
                         "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
                     },
-                    "condition": {"host_labels": [("and", [("and", "cmk/check_mk_server:yes")])]},
+                    "condition": {
+                        "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
+                    },
                 }
             ]
         ),

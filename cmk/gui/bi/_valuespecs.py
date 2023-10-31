@@ -98,7 +98,7 @@ def convert_from_cascading_vs_choice(value):
 #   ('host_search',
 #   ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                    'host_folder': '',
-#                    'host_labels': [],
+#                    'host_label_groups': [],
 #                    'host_tags': {}},
 #     'refer_to': 'host'},
 #    {'params': {'arguments': []},
@@ -164,7 +164,7 @@ def _get_aggregation_choices() -> CascadingDropdownChoices:
 # ('host_search',
 #  ({'conditions': {'host_choice': {'type': 'all_hosts'},
 #                   'host_folder': '',
-#                   'host_labels': [],
+#                   'host_label_groups': [],
 #                   'host_tags': {}},
 #    'refer_to': 'host'},
 #   ('call_a_rule',
@@ -407,7 +407,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
             ),
             ("host_tags", DictHostTagCondition(title=_("Host Tags"), help_txt="")),
             (
-                "host_labels",
+                "host_label_groups",
                 LabelGroups(title=_("Host Labels"), help=""),
             ),
             ("host_choice", _bi_host_choice_vs(_("Filter Host"))),
@@ -451,7 +451,7 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
                 ),
             ),
             (
-                "service_labels",
+                "service_label_groups",
                 LabelGroups(title=_("Service Labels"), help=""),
             ),
         ]

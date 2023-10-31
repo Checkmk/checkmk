@@ -88,7 +88,7 @@ class LabelGroupConditionSchema(Schema):
 
 class HostConditionsSchema(Schema):
     host_folder = ReqString(dump_default="", example="servers/groupA")
-    host_labels = ReqList(
+    host_label_groups = ReqList(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
         example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
@@ -101,7 +101,7 @@ class HostConditionsSchema(Schema):
 
 class ServiceConditionsSchema(HostConditionsSchema):
     service_regex = ReqString(dump_default="", example="Filesystem.*")
-    service_labels = ReqList(
+    service_label_groups = ReqList(
         fields.Nested(LabelGroupConditionSchema),
         dump_default=[],
         example=[{"operator": "and", "label_group": [{"operator": "and", "label": "db:mssql"}]}],
@@ -262,7 +262,9 @@ class BIHostSearch(ABCBISearch):
         )
         matched_hosts = bi_searcher.filter_host_folder(hosts, conditions["host_folder"])
         matched_hosts = bi_searcher.filter_host_tags(matched_hosts, conditions["host_tags"])
-        matched_hosts = bi_searcher.filter_host_labels(matched_hosts, conditions["host_labels"])
+        matched_hosts = bi_searcher.filter_host_labels(
+            matched_hosts, conditions["host_label_groups"]
+        )
 
         search_results = []
         for host in matched_hosts:

@@ -349,14 +349,10 @@ fn check_document_age(
 fn merge_check_results(outputs: &[CheckResult]) -> CheckResult {
     let summary = outputs
         .iter()
-        .filter_map(|output| output.summary.clone())
+        .map(|output| output.summary.clone())
+        .filter(|output| !output.is_empty())
         .collect::<Vec<String>>()
         .join(", ");
-    let summary = if summary.is_empty() {
-        None
-    } else {
-        Some(summary)
-    };
 
     let state = outputs
         .iter()

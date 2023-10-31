@@ -47,14 +47,14 @@ impl State {
 
 pub struct CheckResult {
     pub state: State,
-    pub summary: Option<String>,
+    pub summary: String,
 }
 
 impl Display for CheckResult {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(f, "HTTP {}", self.state)?;
-        if let Some(summary) = self.summary.as_ref() {
-            write!(f, " - {}", summary)?;
+        if !self.summary.is_empty() {
+            write!(f, " - {}", self.summary)?;
         }
         Ok(())
     }
@@ -63,16 +63,13 @@ impl Display for CheckResult {
 impl CheckResult {
     pub fn from_summary(state: State, summary: &str) -> Self {
         let summary = format!("{}{}", summary, state.as_marker());
-        Self {
-            state,
-            summary: Some(summary),
-        }
+        Self { state, summary }
     }
 
     pub fn from_state(state: State) -> Self {
         Self {
             state,
-            summary: None,
+            summary: String::new(),
         }
     }
 }
@@ -82,22 +79,8 @@ mod test_output_format {
     use super::*;
     use crate::merge_check_results;
 
-    fn s(s: &str) -> Option<String> {
-        Some(String::from(s))
-    }
-
-    #[test]
-    fn test_check_result_with_state_only() {
-        assert_eq!(
-            format!(
-                "{}",
-                CheckResult {
-                    state: State::Ok,
-                    summary: None,
-                }
-            ),
-            "HTTP OK"
-        );
+    fn s(s: &str) -> String {
+        String::from(s)
     }
 
     #[test]
@@ -110,8 +93,7 @@ mod test_output_format {
                     summary: s(""),
                 }
             ),
-            // Expected "HTTP OK"
-            "HTTP OK - "
+            "HTTP OK"
         );
     }
 
@@ -133,15 +115,15 @@ mod test_output_format {
     fn test_merge_check_results_with_state_only() {
         let cr1 = CheckResult {
             state: State::Ok,
-            summary: None,
+            summary: s(""),
         };
         let cr2 = CheckResult {
             state: State::Ok,
-            summary: None,
+            summary: s(""),
         };
         let cr3 = CheckResult {
             state: State::Ok,
-            summary: None,
+            summary: s(""),
         };
         assert_eq!(
             format!("{}", merge_check_results(&[cr1, cr2, cr3])),

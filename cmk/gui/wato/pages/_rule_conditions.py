@@ -12,10 +12,8 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     DropdownChoice,
     FixedValue,
-    Labels,
     ListOf,
     ListOfMultiple,
-    SingleLabel,
     Transform,
     Tuple,
 )
@@ -210,64 +208,3 @@ class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
     def _get_choices(self, api_request):
         condition = DictHostTagCondition("Dummy title", "Dummy help")
         return condition._get_tag_group_choices()
-
-
-class LabelCondition(Transform):
-    def __init__(self, title, help_txt) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(
-            valuespec=ListOf(
-                valuespec=Tuple(
-                    orientation="horizontal",
-                    elements=[
-                        DropdownChoice(
-                            choices=[
-                                ("is", _("has")),
-                                ("is_not", _("has not")),
-                            ],
-                        ),
-                        SingleLabel(
-                            world=Labels.World.CONFIG,
-                        ),
-                    ],
-                    show_titles=False,
-                ),
-                add_label=_("Add label condition"),
-                del_label=_("Remove label condition"),
-                style=ListOf.Style.FLOATING,
-                movable=False,
-            ),
-            to_valuespec=self._to_valuespec,
-            from_valuespec=self._from_valuespec,
-            title=title,
-            help=help_txt,
-        )
-
-    def _to_valuespec(self, label_conditions):
-        valuespec_value = []
-        for label_id, label_value in label_conditions.items():
-            valuespec_value.append(self._single_label_to_valuespec(label_id, label_value))
-        return valuespec_value
-
-    def _single_label_to_valuespec(self, label_id, label_value):
-        if isinstance(label_value, dict):
-            if "$ne" in label_value:
-                return ("is_not", {label_id: label_value["$ne"]})
-            raise NotImplementedError()
-        return ("is", {label_id: label_value})
-
-    def _from_valuespec(self, valuespec_value):
-        label_conditions = {}
-        for operator, label in valuespec_value:
-            if label:
-                label_id, label_value = list(label.items())[0]
-                label_conditions[label_id] = self._single_label_from_valuespec(
-                    operator, label_value
-                )
-        return label_conditions
-
-    def _single_label_from_valuespec(self, operator, label_value):
-        if operator == "is":
-            return label_value
-        if operator == "is_not":
-            return {"$ne": label_value}
-        raise NotImplementedError()

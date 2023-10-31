@@ -18,7 +18,7 @@ from typing import Any, assert_never, cast, Final
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import Labels
+from cmk.utils.labels import LabelGroups, Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
@@ -135,27 +135,27 @@ class RuleConditions:
         self,
         host_folder: str,
         host_tags: Mapping[TagGroupID, TagCondition] | None = None,
-        host_labels: Labels | None = None,
+        host_labels: LabelGroups | None = None,
         host_name: HostOrServiceConditions | None = None,
         service_description: HostOrServiceConditions | None = None,
-        service_labels: Labels | None = None,
+        service_labels: LabelGroups | None = None,
     ) -> None:
         self.host_folder: Final = host_folder
         self.host_tags: Final[Mapping[TagGroupID, TagCondition]] = host_tags or {}
-        self.host_labels: Final = host_labels or {}
+        self.host_labels: Final = host_labels or []
         self.host_name: Final = host_name
         self.service_description: Final = service_description
-        self.service_labels: Final = service_labels or {}
+        self.service_labels: Final = service_labels or []
 
     @classmethod
     def from_config(cls, host_folder: str, conditions: Mapping[str, Any]) -> RuleConditions:
         return cls(
             host_folder=conditions.get("host_folder", host_folder),
             host_tags=conditions.get("host_tags", {}),
-            host_labels=conditions.get("host_labels", {}),
+            host_labels=conditions.get("host_labels", []),
             host_name=conditions.get("host_name"),
             service_description=conditions.get("service_description"),
-            service_labels=conditions.get("service_labels", {}),
+            service_labels=conditions.get("service_labels", []),
         )
 
     def to_config(self, use_host_folder: UseHostFolder) -> RuleConditionsSpec:
@@ -272,7 +272,7 @@ class RuleConditions:
         return RuleConditions(
             host_folder=self.host_folder,
             host_tags={**self.host_tags},
-            host_labels={**self.host_labels},
+            host_labels=self.host_labels,
             host_name=self.host_name.copy()
             if isinstance(
                 self.host_name,
@@ -289,7 +289,7 @@ class RuleConditions:
             else [*self.service_description]
             if self.service_description is not None
             else None,
-            service_labels={**self.service_labels},
+            service_labels=self.service_labels,
         )
 
 

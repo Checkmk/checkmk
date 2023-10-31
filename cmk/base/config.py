@@ -4278,8 +4278,8 @@ class CEEConfigCache(ConfigCache):
             ):
                 continue
 
-            if (labels := cond.get("host_labels", {})) and not ruleset_matcher.matches_labels(
-                {}, labels
+            if (label_groups := cond.get("host_labels", [])) and not ruleset_matcher.matches_labels(
+                {}, label_groups
             ):
                 continue
 

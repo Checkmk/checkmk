@@ -168,7 +168,6 @@ from .pages._match_conditions import (
 )
 from .pages._password_store_valuespecs import PasswordFromStore as PasswordFromStore
 from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition
-from .pages._rule_conditions import LabelCondition as LabelCondition
 from .pages._simple_modes import SimpleEditMode as SimpleEditMode
 from .pages._simple_modes import SimpleListMode as SimpleListMode
 from .pages._simple_modes import SimpleModeType as SimpleModeType

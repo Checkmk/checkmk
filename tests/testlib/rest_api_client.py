@@ -241,9 +241,21 @@ class LabelMatcher(TypedDict):
     value: str
 
 
+class LabelCondition(TypedDict):
+    operator: Literal["and", "or", "not"]
+    label: str
+
+
+class LabelGroupCondition(TypedDict):
+    operator: Literal["and", "or", "not"]
+    label_group: list[LabelCondition]
+
+
 class RuleConditions(TypedDict, total=False):
     host_name: StringMatcher
     host_tags: list[HostTagMatcher]
+    host_label_groups: list[LabelGroupCondition]
+    service_label_groups: list[LabelGroupCondition]
     host_labels: list[LabelMatcher]
     service_labels: list[LabelMatcher]
     service_description: StringMatcher

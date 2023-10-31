@@ -5,7 +5,7 @@
 use anyhow::Result as AnyhowResult;
 use check_http::{
     check_http,
-    checking::{Output, State},
+    checking::{CheckResult, State},
     cli::Cli,
 };
 use clap::Parser;
@@ -61,7 +61,7 @@ async fn check_http_output(
 
     let check_http_payload = process_http(listener, http_response)?;
 
-    let Output {
+    let CheckResult {
         state,
         summary,
         details,

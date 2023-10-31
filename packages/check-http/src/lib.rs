@@ -17,7 +17,7 @@ use std::{
     time::{Duration, Instant, SystemTime},
 };
 
-use crate::checking::{Output, State};
+use crate::checking::{CheckResult, State};
 use crate::cli::OnRedirect;
 
 pub mod checking;
@@ -32,7 +32,7 @@ struct ProcessedResponse {
     pub elapsed: Duration,
 }
 
-pub async fn check_http(args: Cli) -> Output {
+pub async fn check_http(args: Cli) -> CheckResult {
     let Ok(request) = prepare_request(
         args.url,
         args.method,
@@ -45,25 +45,26 @@ pub async fn check_http(args: Cli) -> Output {
         args.max_redirs,
         args.force_ip_version,
     ) else {
-        return Output::from_summary(State::Unknown, "Error building the request");
+        return CheckResult::from_summary(State::Unknown, "Error building the request");
     };
 
     let response = match perform_request(request, args.without_body).await {
         Ok(resp) => resp,
         Err(err) => {
             if err.is_timeout() {
-                return Output::from_summary(State::Crit, "timeout");
+                return CheckResult::from_summary(State::Crit, "timeout");
             } else if err.is_connect() {
-                return Output::from_summary(State::Crit, "Failed to connect");
+                return CheckResult::from_summary(State::Crit, "Failed to connect");
             } else if err.is_redirect() {
-                return Output::from_summary(State::Crit, &err.to_string()); // Hit one of max_redirs, sticky, stickyport
+                return CheckResult::from_summary(State::Crit, &err.to_string());
+            // Hit one of max_redirs, sticky, stickyport
             } else {
-                return Output::from_summary(State::Unknown, "Error while sending request");
+                return CheckResult::from_summary(State::Unknown, "Error while sending request");
             }
         }
     };
 
-    merge_outputs(
+    merge_check_results(
         &collect_response_checks(
             response,
             args.onredirect,
@@ -228,7 +229,7 @@ async fn collect_response_checks(
     page_size_limits: Option<PageSizeLimits>,
     response_time_levels: Option<ResponseTimeLevels>,
     document_age_levels: Option<DocumentAgeLevels>,
-) -> Vec<Output> {
+) -> Vec<CheckResult> {
     vec![
         check_status(response.status, response.version, onredirect),
         check_body(response.body, page_size_limits),
@@ -237,7 +238,7 @@ async fn collect_response_checks(
     ]
 }
 
-fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> Output {
+fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> CheckResult {
     let response_state = if status.is_client_error() {
         State::Warn
     } else if status.is_server_error() {
@@ -252,44 +253,44 @@ fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) ->
         State::Ok
     };
 
-    Output::from_summary(response_state, &format!("{:?} {}", version, status))
+    CheckResult::from_summary(response_state, &format!("{:?} {}", version, status))
 }
 
 fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
     page_size_limits: Option<PageSizeLimits>,
-) -> Output {
+) -> CheckResult {
     let Some(body) = body else {
-        return Output::from_state(State::Ok);
+        return CheckResult::from_state(State::Ok);
     };
 
     match body {
         Ok(bd) => check_page_size(bd.len(), page_size_limits),
-        Err(_) => Output::from_summary(State::Crit, "Error fetching the reponse body"),
+        Err(_) => CheckResult::from_summary(State::Crit, "Error fetching the reponse body"),
     }
 }
 
-fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> Output {
+fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> CheckResult {
     let state = match page_size_limits {
         Some((lower, _)) if page_size < lower => State::Warn,
         Some((_, Some(upper))) if page_size > upper => State::Warn,
         _ => State::Ok,
     };
 
-    Output::from_summary(state, &format!("Page size: {} bytes", page_size))
+    CheckResult::from_summary(state, &format!("Page size: {} bytes", page_size))
 }
 
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<ResponseTimeLevels>,
-) -> Output {
+) -> CheckResult {
     let state = match response_time_levels {
         Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => State::Crit,
         Some((warn, _)) if response_time.as_secs_f64() >= warn => State::Warn,
         _ => State::Ok,
     };
 
-    Output::from_summary(
+    CheckResult::from_summary(
         state,
         &format!(
             "Response time: {}.{}s",
@@ -302,34 +303,34 @@ fn check_response_time(
 fn check_document_age(
     headers: &HeaderMap,
     document_age_levels: Option<DocumentAgeLevels>,
-) -> Output {
+) -> CheckResult {
     if document_age_levels.is_none() {
-        return Output::from_state(State::Ok);
+        return CheckResult::from_state(State::Ok);
     };
 
     let now = SystemTime::now();
 
     let age_header = headers.get("last-modified").or(headers.get("date"));
     let Some(document_age) = age_header else {
-        return Output::from_summary(State::Crit, "Can't determine document age");
+        return CheckResult::from_summary(State::Crit, "Can't determine document age");
     };
     let Ok(Ok(age)) = document_age.to_str().map(parse_http_date) else {
-        return Output::from_summary(State::Crit, "Can't decode document age");
+        return CheckResult::from_summary(State::Crit, "Can't decode document age");
     };
 
     //TODO(au): Specify "too old" in Output
     match document_age_levels {
         Some((_, Some(crit))) if now - Duration::from_secs(crit) > age => {
-            Output::from_summary(State::Crit, "Document age too old")
+            CheckResult::from_summary(State::Crit, "Document age too old")
         }
         Some((warn, _)) if now - Duration::from_secs(warn) > age => {
-            Output::from_summary(State::Warn, "Document age too old")
+            CheckResult::from_summary(State::Warn, "Document age too old")
         }
-        _ => Output::from_state(State::Ok),
+        _ => CheckResult::from_state(State::Ok),
     }
 }
 
-fn merge_outputs(outputs: &[Output]) -> Output {
+fn merge_check_results(outputs: &[CheckResult]) -> CheckResult {
     let summary = outputs
         .iter()
         .filter_map(|output| output.summary.clone())
@@ -357,7 +358,7 @@ fn merge_outputs(outputs: &[Output]) -> Output {
         .max()
         .unwrap();
 
-    Output {
+    CheckResult {
         state,
         summary,
         details,

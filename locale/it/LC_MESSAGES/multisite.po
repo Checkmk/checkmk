@@ -2498,9 +2498,6 @@ msgstr "APT normale e aggiornamenti di sicurezza (Linux)"
 msgid "ASCII Email"
 msgstr "Email ASCII"
 
-msgid "ASCII Email (legacy)"
-msgstr "ASCII Email (legacy)"
-
 msgid "ASM - Disk Groups"
 msgstr "ASM - Gruppi di dischi"
 
@@ -13789,6 +13786,10 @@ msgstr "Critico se a"
 
 msgid "Critical if below"
 msgstr "Critico se al di sotto di"
+
+#, fuzzy
+msgid "Critical if below or equal"
+msgstr "critico se inferiore o uguale"
 
 msgid "Critical if equal or below"
 msgstr "Critico se uguale o inferiore a"
@@ -67028,6 +67029,10 @@ msgstr "Attenzione se a"
 msgid "Warning if below"
 msgstr "Attenzione se sotto"
 
+#, fuzzy
+msgid "Warning if below or equal"
+msgstr "avviso se inferiore o uguale a"
+
 msgid "Warning if equal or below"
 msgstr "Attenzione se uguale o inferiore a"
 
@@ -73074,6 +73079,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "ASCII Email (legacy)"
+#~ msgstr "ASCII Email (legacy)"
 
 #, fuzzy, python-format
 #~| msgid "Unknown match type: %s"

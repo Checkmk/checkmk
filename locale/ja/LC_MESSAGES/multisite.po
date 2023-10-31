@@ -2432,9 +2432,6 @@ msgstr "APTの通常のアップデートとセキュリティアップデート
 msgid "ASCII Email"
 msgstr "ASCIIメール"
 
-msgid "ASCII Email (legacy)"
-msgstr "ASCIIメール(レガシー)"
-
 msgid "ASM - Disk Groups"
 msgstr "ASM-ディスクグループ"
 
@@ -13377,6 +13374,10 @@ msgstr "クリティカル"
 
 msgid "Critical if below"
 msgstr "下回る場合はクリティカル"
+
+#, fuzzy
+msgid "Critical if below or equal"
+msgstr "以下の場合はクリティカル"
 
 msgid "Critical if equal or below"
 msgstr "等しいか下回る場合はクリティカル"
@@ -64960,6 +64961,10 @@ msgstr "この場合の警告"
 msgid "Warning if below"
 msgstr "以下の場合の警告"
 
+#, fuzzy
+msgid "Warning if below or equal"
+msgstr "以下または等しい場合の警告"
+
 msgid "Warning if equal or below"
 msgstr "等しいか以下の場合の警告"
 
@@ -70774,6 +70779,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "ASCII Email (legacy)"
+#~ msgstr "ASCIIメール(レガシー)"
 
 #, python-format
 #~ msgid "Unknown graph type: %s"

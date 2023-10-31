@@ -2496,9 +2496,6 @@ msgstr "APT normaal en beveiligingsupdates (Linux)"
 msgid "ASCII Email"
 msgstr "ASCII e-mail"
 
-msgid "ASCII Email (legacy)"
-msgstr "ASCII e-mail (verouderd)"
-
 msgid "ASM - Disk Groups"
 msgstr "ASM - Schijfgroepen"
 
@@ -13745,6 +13742,10 @@ msgstr "Kritisch als op"
 
 msgid "Critical if below"
 msgstr "Kritisch indien onder"
+
+#, fuzzy
+msgid "Critical if below or equal"
+msgstr "kritisch indien lager dan of gelijk aan"
 
 msgid "Critical if equal or below"
 msgstr "Kritisch indien gelijk of lager"
@@ -66778,6 +66779,10 @@ msgstr "Waarschuwing indien bij"
 msgid "Warning if below"
 msgstr "Waarschuwing indien onder"
 
+#, fuzzy
+msgid "Warning if below or equal"
+msgstr "waarschuwing indien lager of gelijk aan"
+
 msgid "Warning if equal or below"
 msgstr "Waarschuwing indien gelijk of lager"
 
@@ -72836,6 +72841,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "ASCII Email (legacy)"
+#~ msgstr "ASCII e-mail (verouderd)"
 
 #, fuzzy, python-format
 #~| msgid "Unknown match type: %s"

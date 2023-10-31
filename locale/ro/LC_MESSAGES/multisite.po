@@ -2518,9 +2518,6 @@ msgstr "APT normal și actualizări de securitate (Linux)"
 msgid "ASCII Email"
 msgstr "ASCII Email"
 
-msgid "ASCII Email (legacy)"
-msgstr "ASCII Email (moștenire)"
-
 msgid "ASM - Disk Groups"
 msgstr "ASM - Grupuri de discuri"
 
@@ -13838,6 +13835,10 @@ msgstr "Critic dacă la"
 
 msgid "Critical if below"
 msgstr "Critic dacă este sub"
+
+#, fuzzy
+msgid "Critical if below or equal"
+msgstr "critică dacă este mai mică sau egală cu"
 
 msgid "Critical if equal or below"
 msgstr "Critic dacă este egal sau mai mic"
@@ -67232,6 +67233,10 @@ msgstr "Avertisment dacă la"
 msgid "Warning if below"
 msgstr "Avertisment dacă este sub"
 
+#, fuzzy
+msgid "Warning if below or equal"
+msgstr "avertisment dacă este mai mică sau egală cu"
+
 msgid "Warning if equal or below"
 msgstr "Avertisment dacă este egal sau mai mic"
 
@@ -73302,6 +73307,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "ASCII Email (legacy)"
+#~ msgstr "ASCII Email (moștenire)"
 
 #, python-format
 #~ msgid "Unknown graph type: %s"

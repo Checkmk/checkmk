@@ -54,8 +54,8 @@ fn to_section(name: &String) -> Section {
 
 fn get_section_separator(name: &str) -> Option<char> {
     match name {
-        "instance" | "database" | "counters" | "blocked_sessions" | "transactionlogs"
-        | "datafiles" | "cluster" => Some('|'),
+        "instance" | "databases" | "counters" | "blocked_sessions" | "transactionlogs"
+        | "datafiles" | "cluster" | "clusters" | "backup" => Some('|'),
         "jobs" | "mirroring" | "availability_groups" => Some('\t'),
         "tablespaces" | "connections" => None,
         _ => None,

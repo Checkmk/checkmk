@@ -37,10 +37,12 @@ fn init_logging_from_args(args: &Args) -> Result<()> {
 }
 
 fn get_check_config(args: &Args) -> Result<CheckConfig> {
-    match args.config_file {
-        Some(ref config_file) => Ok(CheckConfig::load_file(config_file)?),
-        None => Ok(CheckConfig::default()),
-    }
+    let file = match args.config_file {
+        Some(ref config_file) => config_file,
+        None => &constants::DEFAULT_CONFIG_FILE,
+    };
+
+    CheckConfig::load_file(file)
 }
 
 fn init_logging(

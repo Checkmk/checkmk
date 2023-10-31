@@ -2,9 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-mod tools;
-
+mod common;
 use check_sql::{config::CheckConfig, ms_sql::api};
+use common::tools;
+#[cfg(windows)]
+use tempfile::TempDir;
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
@@ -73,7 +75,7 @@ fn test_run_remote() {
 
 #[cfg(windows)]
 #[test]
-fn test_run_local_as_plugin_fail() {
+fn test_run_local_as_plugin_without_config() {
     assert!(
         tools::run_bin()
             .unwrap_err()
@@ -83,4 +85,67 @@ fn test_run_local_as_plugin_fail() {
             .code()
             == Some(1)
     );
+    assert!(
+        tools::run_bin()
+            .env("MK_CONFDIR", ".")
+            .unwrap_err()
+            .as_output()
+            .unwrap()
+            .status
+            .code()
+            == Some(1)
+    );
+}
+
+#[cfg(windows)]
+#[test]
+fn test_run_local_as_plugin_with_config() {
+    // Good config
+    let content = r#"
+---
+mssql:
+  standard:
+    authentication:
+       username: "nobody"
+       type: "integrated"
+    connection:
+       hostname: "localhost"
+"#;
+    let dir = tools::create_config_dir_with_yml(content);
+    let exec = tools::run_bin()
+        .env("MK_CONFDIR", dir.path())
+        .timeout(std::time::Duration::from_secs(5))
+        .unwrap();
+    let (stdout, code) = tools::get_good_results(&exec).unwrap();
+    assert_eq!(code, 0);
+    assert!(stdout.starts_with(
+        r"<<<mssql_instance:sep(124)>>>
+<<<mssql_databases:sep(124)>>>
+<<<mssql_counters:sep(124)>>>
+<<<mssql_blocked_sessions:sep(124)>>>
+<<<mssql_transactionlogs:sep(124)>>>
+<<<mssql_clusters:sep(124)>>>
+<<<mssql_mirroring:sep(09)>>>
+<<<mssql_availability_groups:sep(09)>>>
+<<<mssql_connections>>>
+<<<mssql_tablespaces>>>
+<<<mssql_datafiles:sep(124)>>>
+<<<mssql_backup:sep(124)>>>
+<<<mssql_jobs:sep(09)>>>"
+    ));
+
+    // Bad config
+    invalidate_config_in_dir(&dir);
+    let exec_err = tools::run_bin()
+        .env("MK_CONFDIR", dir.path())
+        .timeout(std::time::Duration::from_secs(5))
+        .unwrap_err();
+    let (stderr, code) = tools::get_bad_results(&exec_err).unwrap();
+    assert_eq!(code, 1);
+    assert_eq!(stderr, "Error: No Config\n");
+}
+
+#[cfg(windows)]
+fn invalidate_config_in_dir(dir: &TempDir) {
+    tools::create_file_with_content(dir.path(), "check-sql.yml", "---\n");
 }

@@ -82,8 +82,16 @@ impl Get for Yaml {
 }
 
 pub fn load_from_file(file_name: &Path) -> Result<Vec<Yaml>> {
-    let content = read_file(file_name)?;
-    load_from_str(&content)
+    match read_file(file_name) {
+        Ok(content) => load_from_str(&content),
+        Err(e) => anyhow::bail!(
+            "Can't read file: {}, {e} ",
+            // Use relatively complicated  method to print name of the file
+            // as it is not possible to use "{file_name:?}": produces to many backslashes
+            // in Windows. Probability to NOT decode filename as UTF-8 is nil.
+            file_name.as_os_str().to_str().unwrap_or("")
+        ),
+    }
 }
 
 fn read_file(file_name: &Path) -> Result<String> {

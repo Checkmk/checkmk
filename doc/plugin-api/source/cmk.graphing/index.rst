@@ -2,7 +2,7 @@
 Graphing API
 ============
 
-.. automodule:: cmk_graphing
+.. automodule:: cmk.graphing
    :members:
 
 Version 1

@@ -10,19 +10,20 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 from urllib.parse import quote
 
 import requests
-from agent_receiver.log import logger
-from agent_receiver.models import ConnectionMode
-from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel, UUID4
 
+from agent_receiver.log import logger
+from agent_receiver.models import ConnectionMode
+from agent_receiver.site_context import site_config_path, site_name
+
 
 class CMKEdition(Enum):
-    cre = "Raw"
-    cee = "Enterprise"
-    cme = "Managed Services"
-    cce = "Cloud"
+    cre = "Raw"  # pylint: disable=invalid-name
+    cee = "Enterprise"  # pylint: disable=invalid-name
+    cme = "Managed Services"  # pylint: disable=invalid-name
+    cce = "Cloud"  # pylint: disable=invalid-name
 
     def supports_register_new(self) -> bool:
         """
@@ -100,7 +101,7 @@ def _forward_put(
 
 
 _TEndpointParams = ParamSpec("_TEndpointParams")
-_TEndpointReturn = TypeVar("_TEndpointReturn")
+_TEndpointReturn = TypeVar("_TEndpointReturn")  # pylint: disable=invalid-name
 
 
 def log_http_exception(
@@ -289,11 +290,13 @@ def _parse_error_response_body(body: str) -> str:
     '["x", "y"]'
     >>> _parse_error_response_body('{"message": "Hands off this component!", "status": 403}')
     '{"message": "Hands off this component!", "status": 403}'
-    >>> _parse_error_response_body('{"title": "Insufficient permissions", "detail": "You need permission xyz.", "status": 403}')
+    >>> _parse_error_response_body(
+    ...  '{"title": "Insufficient permissions", '
+    ...  '"detail": "You need permission xyz.", "status": 403}')
     'Insufficient permissions - Details: You need permission xyz.'
     """
     try:
         error_descr = _RestApiErrorDescr.parse_raw(body)
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return body
     return error_descr.title + (f" - Details: {error_descr.detail}" if error_descr.detail else "")

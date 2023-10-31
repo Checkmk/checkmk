@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from fastapi import FastAPI
+
 # register endpoints
 from agent_receiver import endpoints  # pylint: disable=unused-import
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from agent_receiver.log import configure_logger
 from agent_receiver.site_context import log_path, site_name
-from fastapi import FastAPI
 
 
 def main_app() -> FastAPI:

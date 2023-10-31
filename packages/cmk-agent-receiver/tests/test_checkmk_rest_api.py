@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from agent_receiver.checkmk_rest_api import link_host_with_uuid
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 from requests import Response
+
+from agent_receiver.checkmk_rest_api import link_host_with_uuid
 
 # pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
 # pylint: disable=too-many-function-args
@@ -21,7 +22,7 @@ def test_link_host_with_uuid_unauthorized(
 ) -> None:
     response = Response()
     response.status_code = 403
-    response._content = (
+    response._content = (  # pylint: disable=protected-access
         b'{"title": "You do not have the permission for agent pairing.", "status": 403}'
     )
     mocker.patch(

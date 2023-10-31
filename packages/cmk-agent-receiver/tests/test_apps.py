@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from agent_receiver.apps_and_routers import _UUIDValidationRoute, AGENT_RECEIVER_APP
-from agent_receiver.main import main_app
 from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
+
+from agent_receiver.apps_and_routers import _UUIDValidationRoute, AGENT_RECEIVER_APP
+from agent_receiver.main import main_app
 
 
 def test_uuid_validation_route() -> None:
@@ -15,7 +16,7 @@ def test_uuid_validation_route() -> None:
     uuid_validation_router = APIRouter(route_class=_UUIDValidationRoute)
 
     @uuid_validation_router.get("/endpoint/1234")
-    def endpoint():
+    def endpoint() -> dict[str, str]:
         return {"Hello": "World"}
 
     app.include_router(uuid_validation_router)

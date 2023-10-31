@@ -37,7 +37,9 @@ def _create_400_bad_request(header_uuid: str, *, url_uuid: str) -> JSONResponse:
     return JSONResponse(
         status_code=HTTP_400_BAD_REQUEST,
         content={
-            "detail": f"Verified client UUID ({header_uuid}) does not match UUID in URL ({url_uuid})"
+            "detail": (
+                f"Verified client UUID ({header_uuid}) does not match UUID in URL ({url_uuid})"
+            )
         },
     )
 

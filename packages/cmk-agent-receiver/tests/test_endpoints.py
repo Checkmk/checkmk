@@ -12,15 +12,16 @@ from zlib import compress
 
 import httpx
 import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+from pydantic import UUID4
+from pytest_mock import MockerFixture
+
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
 from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from agent_receiver.utils import R4R
-from fastapi import HTTPException
-from fastapi.testclient import TestClient
-from pydantic import UUID4
-from pytest_mock import MockerFixture
 
 from .certs import generate_csr_pair
 
@@ -55,7 +56,9 @@ def test_register_existing_ok(
     uuid: UUID4,
     serialized_csr: str,
 ) -> None:
-    def rest_api_register_mock(*args: object, **kwargs: object) -> RegisterResponse:
+    def rest_api_register_mock(
+        *args: object, **kwargs: object  # pylint: disable=unused-argument
+    ) -> RegisterResponse:
         _symlink_push_host(tmp_path, uuid)
         return RegisterResponse(connection_mode=ConnectionMode.PULL)
 
@@ -158,7 +161,10 @@ def test_register_register_with_hostname_wrong_site(
     )
     assert response.status_code == 403
     assert response.json() == {
-        "detail": "This host is monitored on the site some-site, but you tried to register it at the site NO_SITE."
+        "detail": (
+            "This host is monitored on the site some-site, "
+            "but you tried to register it at the site NO_SITE."
+        )
     }
 
 

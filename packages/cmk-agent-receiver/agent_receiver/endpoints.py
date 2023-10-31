@@ -9,6 +9,19 @@ from functools import cache
 from pathlib import Path
 from typing import assert_never
 
+from cryptography.x509 import Certificate
+from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from pydantic import UUID4
+from starlette.status import (
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_501_NOT_IMPLEMENTED,
+)
+
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
@@ -50,18 +63,6 @@ from agent_receiver.utils import (
     R4R,
     RegisteredHost,
     uuid_from_pem_csr,
-)
-from cryptography.x509 import Certificate
-from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from pydantic import UUID4
-from starlette.status import (
-    HTTP_204_NO_CONTENT,
-    HTTP_400_BAD_REQUEST,
-    HTTP_403_FORBIDDEN,
-    HTTP_404_NOT_FOUND,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-    HTTP_501_NOT_IMPLEMENTED,
 )
 
 from .certs import (
@@ -172,7 +173,10 @@ def _validate_registration_request(host_config: HostConfiguration) -> None:
     if host_config.site != site_name():
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
-            detail=f"This host is monitored on the site {host_config.site}, but you tried to register it at the site {site_name()}.",
+            detail=(
+                f"This host is monitored on the site {host_config.site}, "
+                f"but you tried to register it at the site {site_name()}."
+            ),
         )
     if host_config.is_cluster:
         raise HTTPException(
@@ -258,12 +262,16 @@ async def register_new_ongoing(
     uuid: UUID4,
     *,
     credentials: HTTPBasicCredentials = Depends(security),
-) -> RegisterNewOngoingResponseInProgress | RegisterNewOngoingResponseDeclined | RegisterNewOngoingResponseSuccess:
+) -> (
+    RegisterNewOngoingResponseInProgress
+    | RegisterNewOngoingResponseDeclined
+    | RegisterNewOngoingResponseSuccess
+):
     _validate_is_cce(credentials, uuid)
 
     try:
         r4r = R4R.read(uuid)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
         logger.error(
             "uuid=%s No registration in progress",
             uuid,
@@ -271,7 +279,7 @@ async def register_new_ongoing(
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail="No registration with this UUID in progress",
-        )
+        ) from e
     if r4r.request.username != credentials.username:
         logger.error(
             "uuid=%s Username mismatch",
@@ -300,7 +308,7 @@ async def register_new_ongoing(
         case R4RStatus.DISCOVERABLE:
             try:
                 host = RegisteredHost(uuid)
-            except NotRegisteredException:
+            except NotRegisteredException as e:
                 logger.error(
                     "uuid=%s Not registered even though r4r says otherwise!?",
                     uuid,
@@ -309,7 +317,7 @@ async def register_new_ongoing(
                     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Registration was successful, but host is still not registered. This "
                     "should not have happend. Maybe someone removed the registration by hand?",
-                )
+                ) from e
             logger.info(
                 "uuid=%s Registration successful",
                 uuid,
@@ -335,7 +343,9 @@ def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
         )
         raise HTTPException(
             status_code=HTTP_501_NOT_IMPLEMENTED,
-            detail=f"The Checkmk {edition.value} edition does not support registration of new hosts",
+            detail=(
+                f"The Checkmk {edition.value} edition does not support registration of new hosts"
+            ),
         )
 
 
@@ -367,7 +377,7 @@ async def agent_data(
 ) -> Response:
     try:
         host = RegisteredHost(uuid)
-    except NotRegisteredException:
+    except NotRegisteredException as e:
         logger.error(
             "uuid=%s Host is not registered",
             uuid,
@@ -375,7 +385,7 @@ async def agent_data(
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Host is not registered",
-        )
+        ) from e
     if host.connection_mode is not ConnectionMode.PUSH:
         logger.error(
             "uuid=%s Host is not a push host",
@@ -388,7 +398,7 @@ async def agent_data(
 
     try:
         decompressor = Decompressor(compression)
-    except ValueError:
+    except ValueError as e:
         logger.error(
             "uuid=%s Unsupported compression algorithm: %s",
             uuid,
@@ -397,7 +407,7 @@ async def agent_data(
         raise HTTPException(
             status_code=400,
             detail=f"Unsupported compression algorithm: {compression}",
-        )
+        ) from e
 
     try:
         decompressed_agent_data = decompressor(monitoring_data.file.read())
@@ -438,13 +448,13 @@ async def registration_status(
 
     try:
         host = RegisteredHost(uuid)
-    except NotRegisteredException:
+    except NotRegisteredException as e:
         if r4r:
             return RegistrationStatus(
                 status=r4r.status,
                 message=r4r.request.rejection_notice(),
             )
-        raise HTTPException(status_code=404, detail="Host is not registered")
+        raise HTTPException(status_code=404, detail="Host is not registered") from e
 
     return RegistrationStatus(
         hostname=host.name,
@@ -489,7 +499,7 @@ async def renew_certificate(
     # Don't maintain deleted registrations.
     try:
         RegisteredHost(uuid)
-    except NotRegisteredException:
+    except NotRegisteredException as e:
         logger.error(
             "uuid=%s Host is not registered",
             uuid,
@@ -497,7 +507,7 @@ async def renew_certificate(
         raise HTTPException(
             status_code=HTTP_403_FORBIDDEN,
             detail="Host is not registered",
-        )
+        ) from e
 
     agent_cert = _sign_agent_csr(uuid, cert_renewal_body.csr)
 

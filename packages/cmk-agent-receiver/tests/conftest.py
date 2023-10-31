@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
+from fastapi.testclient import TestClient
+from pydantic import UUID4
+from pytest_mock import MockerFixture
+
 from agent_receiver import site_context
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
 from agent_receiver.checkmk_rest_api import ControllerCertSettings
 from agent_receiver.main import main_app
-from fastapi.testclient import TestClient
-from pydantic import UUID4
-from pytest_mock import MockerFixture
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -114,7 +117,26 @@ EA2I5TbsU6LAEfx6vA==
 
 
 @pytest.fixture(autouse=True)
-def setup_site_context() -> None:
+def fixture_umask():
+    """Ensure the unit tests always use the same umask"""
+    old_mask = os.umask(0o0007)
+    try:
+        yield
+    finally:
+        os.umask(old_mask)
+
+
+def site_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    site_id = "NO_SITE"
+    site_dir = tmp_path / site_id
+    site_dir.mkdir()
+    monkeypatch.setenv("OMD_ROOT", str(site_dir))
+    monkeypatch.setenv("OMD_SITE", site_id)
+
+
+@pytest.fixture(autouse=True)
+def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    site_env(monkeypatch, tmp_path)
     site_context.agent_output_dir().mkdir(parents=True)
     site_context.r4r_dir().mkdir(parents=True)
     site_context.log_path().parent.mkdir(parents=True)

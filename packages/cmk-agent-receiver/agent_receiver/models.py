@@ -27,7 +27,7 @@ class CsrField:
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, source_type: Any, _handler: GetCoreSchemaHandler
+        cls, source_type: Any, _handler: GetCoreSchemaHandler  # pylint: disable=unused-argument
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls.validate, core_schema.str_schema(), serialization=core_schema.to_string_ser_schema()
@@ -45,12 +45,12 @@ class CsrField:
             raise ValueError("Invalid CSR (signature and public key do not match)")
         try:
             cn = extract_cn_from_csr(csr)
-        except IndexError:
-            raise ValueError("CSR contains no CN")
+        except IndexError as e:
+            raise ValueError("CSR contains no CN") from e
         try:
             UUID(cn)
-        except ValueError:
-            raise ValueError(f"CN {cn} is not a valid version-4 UUID")
+        except ValueError as e:
+            raise ValueError(f"CN {cn} is not a valid version-4 UUID") from e
         return cls(csr)
 
 
@@ -153,7 +153,7 @@ class RegistrationWithHNBody(BaseModel, frozen=True):
         return v
 
 
-class RegisterExistingBody(RegistrationWithHNBody):
+class RegisterExistingBody(RegistrationWithHNBody, frozen=True):
     uuid: UUID4
     csr: CsrField
     host_name: str

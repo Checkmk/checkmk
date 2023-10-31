@@ -27,8 +27,6 @@ get_candidates_from_filesystem() {
     SEARCH=
     PRUNE=
     SEARCH+=" active_checks"
-    SEARCH+=" packages/cmk-agent-receiver"
-    PRUNE+=" -path $(realpath packages/cmk-agent-receiver/build) -prune -o"
     SEARCH+=" agents"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
@@ -78,7 +76,9 @@ get_candidates_from_filesystem() {
 }
 
 filter_for_python_files() {
-    sort --zero-terminated |
+    # Exclude files below packages: The package specific jobs deal with them
+    grep --null --null-data -v /packages/ |
+        sort --zero-terminated |
         xargs --no-run-if-empty --null \
             grep --binary-files=without-match --files-with-matches '^#!.*python3$'
 }

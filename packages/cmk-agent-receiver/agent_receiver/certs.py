@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from functools import cache
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
+from cryptography.hazmat.primitives.asymmetric.types import CertificateIssuerPrivateKeyTypes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
 from cryptography.x509 import (
@@ -41,7 +42,7 @@ def current_time_naive() -> datetime:
 def sign_agent_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
-    keypair: tuple[Certificate, RSAPrivateKey],
+    keypair: tuple[Certificate, CertificateIssuerPrivateKeyTypes],
     valid_from: datetime,
 ) -> Certificate:
     root_cert, root_key = keypair
@@ -78,10 +79,14 @@ def serialize_to_pem(certificate: Certificate | CertificateSigningRequest) -> st
 
 
 def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
-    return csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    v = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    assert isinstance(v, str)
+    return v
 
 
 @cache
 def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
     pem_bytes = agent_ca_path().read_bytes()
-    return load_pem_x509_certificate(pem_bytes), load_pem_private_key(pem_bytes, None)
+    key = load_pem_private_key(pem_bytes, None)
+    assert isinstance(key, RSAPrivateKey)
+    return load_pem_x509_certificate(pem_bytes), key

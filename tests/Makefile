@@ -21,7 +21,6 @@ PYTEST_DOC_TEST_OPTS := \
     ../cmk/special_agents \
     ../cmk/update_config \
     ../cmk/utils \
-    ../packages/cmk-agent-receiver \
     ../omd/packages/omd \
     ../cmk/active_checks
 PYTEST_UNIT_TEST_OPTS = \
@@ -357,7 +356,7 @@ test-shellcheck-docker:
 
 test-cycles:
 	$(CYCLES) \
-		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver packages/cmk-werks/werks \
+		--packages cmk omd/packages/omd/omdlib packages/cmk-agent-receiver/agent_receiver packages/cmk-werks/werks \
 		--project-path $$(realpath -L ..) \
 		--strategy johnson \
 		--verbose

@@ -1,0 +1,67 @@
+[project]
+name = "cmk-agent-receiver"
+version = "1.0.0"
+dependencies = [
+    "cryptography~=41.0",
+    "fastapi~=0.103.1",
+    "gunicorn==20.1.0",
+    "python-dateutil==2.8.2",
+    "python-multipart==0.0.*",
+    "requests~=2.28",
+    "uvicorn==0.20.0",
+]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["agent_receiver"]
+
+[tool.setuptools.package-data]
+agent_receiver = ["py.typed"]
+
+[tool.bandit]
+
+[tool.black]
+line_length = 100
+quiet = true
+
+[tool.isort]
+profile = "black"
+order_by_type = false
+line_length = 100
+py_version = 311
+
+[tool.mypy]
+explicit_package_bases = true
+packages = ["agent_receiver", "tests"]
+# TODO: Relaxed to get started with isolated package architecture
+strict = false
+# Miscellaneous stuff not in --strict
+# TODO: Relaxed to get started with isolated package architecture
+disallow_any_decorated = false
+# TODO: Relaxed to get started with isolated package architecture
+disallow_any_explicit = false
+# TODO: Relaxed to get started with isolated package architecture
+disallow_any_expr = false
+disallow_any_unimported = true
+no_implicit_optional = true
+strict_optional = true
+warn_unreachable = true
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
+
+[tool.pylint.format]
+max-line-length = 100
+persistent = "no"
+score = "no"
+
+[tool.pylint.messages_control]
+disable = "missing-docstring,fixme"
+
+[tool.pytest.ini_options]
+pythonpath = [ "." ]
+testpaths = [ "tests", "agent_receiver" ]
+addopts = "--doctest-modules"

@@ -53,7 +53,6 @@ networkx = "*" # needed for py-import-cycles
 py-import-cycles = "*"  # used in tests/Makefile
 telnetlib3 = "*"  # used by Windows Agent tests
 schemathesis = "*"  # used for openapi tests
-httpx = "*"  # used by agent receiver tests
 ruff = "*"
 types-beautifulsoup4 = "*"  # used for type checking
 types-cryptography = "*"  # used for type checking
@@ -182,7 +181,7 @@ tenacity = "==8.2.2"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
 semver = "==3.0.0"
-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
+cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-werks = {editable = true, path = "./packages/cmk-werks"}
 markdown = "*"  # TODO: Only used by cmk-werks!
 pysmb = "==1.2.9.1"  # used by SMB share special agent

@@ -1,2 +1,2 @@
 dist/*
-agent_receiver.egg-info
+*.egg-info

@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pydantic import UUID4
+
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.models import CsrField
-from pydantic import UUID4
 
 from .certs import generate_csr_pair
 

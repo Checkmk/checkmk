@@ -6,6 +6,7 @@
 #include "TableContactGroups.h"
 
 #include <memory>
+#include <variant>
 #include <vector>
 
 #include "Column.h"

@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <memory>
+#include <variant>
 #include <vector>
 
 #include "Column.h"

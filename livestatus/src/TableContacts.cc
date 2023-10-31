@@ -9,6 +9,7 @@
 #include <algorithm>  // IWYU pragma: keep
 #include <memory>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "AttributeBitmaskColumn.h"

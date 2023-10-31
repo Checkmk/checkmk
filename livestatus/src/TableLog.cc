@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <optional>
 #include <stdexcept>
+#include <variant>
 
 #include "Column.h"
 #include "IntColumn.h"

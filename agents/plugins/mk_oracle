@@ -2140,8 +2140,8 @@ sid_matches_defined_sids() {
     # first parameter is a list of coma separated values (SQLS_SIDS)
     # second parameter is a single value (current sid)
 
-    # split $1 into array on , or \n
-    IFS=',\n' read -ra sids_array <<<"$1"
+    # split $1 into array on , or newline
+    IFS=$',\n' read -d '' -ra sids_array <<<"$1"
     # check if array contains $2
     printf '%s\n' "${sids_array[@]}" | grep -F -x -- "$2"
 }

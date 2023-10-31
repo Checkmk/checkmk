@@ -107,7 +107,7 @@ idna = "==3.4"  # needed by yarl
 vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions in some special agents (only)
 pycparser = "==2.21"  # needed by cffi
 cryptography = "~=41.0"  # needed by paramiko.
-bcrypt = "==3.2.2"  # needed by paramiko.
+bcrypt = "*"  # needed by paramiko.
 paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes

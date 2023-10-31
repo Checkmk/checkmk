@@ -63,14 +63,16 @@ pub async fn check_http(args: Cli) -> Output {
         }
     };
 
-    check_response(
-        response,
-        args.onredirect,
-        args.page_size,
-        args.response_time_levels,
-        args.document_age_levels,
+    merge_outputs(
+        &collect_response_checks(
+            response,
+            args.onredirect,
+            args.page_size,
+            args.response_time_levels,
+            args.document_age_levels,
+        )
+        .await,
     )
-    .await
 }
 
 #[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
@@ -220,21 +222,19 @@ async fn perform_request(
     })
 }
 
-async fn check_response(
+async fn collect_response_checks(
     response: ProcessedResponse,
     onredirect: OnRedirect,
     page_size_limits: Option<PageSizeLimits>,
     response_time_levels: Option<ResponseTimeLevels>,
     document_age_levels: Option<DocumentAgeLevels>,
-) -> Output {
-    let outputs: Vec<Output> = vec![
+) -> Vec<Output> {
+    vec![
         check_status(response.status, response.version, onredirect),
         check_body(response.body, page_size_limits),
         check_response_time(response.elapsed, response_time_levels),
         check_document_age(&response.headers, document_age_levels),
-    ];
-
-    merge_outputs(&outputs)
+    ]
 }
 
 fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> Output {

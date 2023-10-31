@@ -24,11 +24,13 @@ import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.config.base import CREConfig
+from cmk.gui.plugins.config.base import CREConfig  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.type_defs import Key, RoleName
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.config.cee import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+        CEEConfig,
+    )
 else:
     # Stub needed for non enterprise edition
     class CEEConfig:  # type: ignore[no-redef]
@@ -36,7 +38,9 @@ else:
 
 
 if cmk_version.edition() is cmk_version.Edition.CME:
-    from cmk.gui.cme.config import CMEConfig  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.config import (  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+        CMEConfig,
+    )
 else:
     # Stub needed for non managed services edition
     class CMEConfig:  # type: ignore[no-redef]

@@ -33,7 +33,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.plugins.wato.utils import main_module_registry
 from cmk.gui.type_defs import (
     HTTPVariables,
     Icon,
@@ -55,6 +54,7 @@ from cmk.gui.utils.labels import (
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, PermissionsHandler
 
 from ._base import PageHandlers, SidebarSnapin

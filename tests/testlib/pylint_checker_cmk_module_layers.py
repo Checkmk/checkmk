@@ -174,14 +174,39 @@ def _allow_default_plus_fetchers_checkers_snmplib_and_bakery(
     )
 
 
-def _allow_default_plus_fetchers_checkers_bakery(
+def _allow_for_gui_plugins(
     *,
     imported: ModuleName,
     component: Component,
 ) -> bool:
     return any(
         (
-            _is_default_allowed_import(imported=imported, component=component),
+            _is_allowed_import(imported=imported),
+            _in_component(imported=imported, component=Component("cmk.gui")),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+        )
+    )
+
+
+def _allow_for_gui(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_allowed_import(imported=imported),
+            (
+                _in_component(imported=imported, component=Component("cmk.gui"))
+                and not (
+                    _in_component(imported=imported, component=Component("cmk.gui.plugins"))
+                    or _in_component(imported=imported, component=Component("cmk.gui.cee.plugins"))
+                    or _in_component(imported=imported, component=Component("cmk.gui.cce.plugins"))
+                    or _in_component(imported=imported, component=Component("cmk.gui.cme.plugins"))
+                )
+            ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
@@ -351,7 +376,11 @@ _COMPONENTS = (
     (Component("cmk.checkengine"), _allow_default_plus_fetchers_checkers_and_snmplib),
     (Component("cmk.automations"), _allow_default_plus_checkers),
     (Component("cmk.snmplib"), _is_default_allowed_import),
-    (Component("cmk.gui"), _allow_default_plus_fetchers_checkers_bakery),
+    (Component("cmk.gui.plugins"), _allow_for_gui_plugins),
+    (Component("cmk.gui.cee.plugins"), _allow_for_gui_plugins),
+    (Component("cmk.gui.cme.plugins"), _allow_for_gui_plugins),
+    (Component("cmk.gui.cce.plugins"), _allow_for_gui_plugins),
+    (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),

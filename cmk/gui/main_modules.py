@@ -21,24 +21,24 @@ from cmk.gui.log import logger
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plugin discovery mechanism.
 with suppress(ModuleNotFoundError):
-    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
 with suppress(ModuleNotFoundError):
-    import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
+    import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import,cmk-module-layer-violation
 
 with suppress(ModuleNotFoundError):
-    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
 with suppress(ModuleNotFoundError):
-    import cmk.gui.cme.registration  # pylint: disable=no-name-in-module
+    import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cme.registration.register()
 
 with suppress(ModuleNotFoundError):
-    import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
 with suppress(ModuleNotFoundError):
-    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
+    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
 
 def _imports() -> Iterator[str]:

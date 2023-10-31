@@ -104,10 +104,10 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.painter.v0.helpers as painter_helpers
     import cmk.gui.painter.v1.helpers as painter_v1_helpers
     import cmk.gui.painter_options as painter_options
-    import cmk.gui.plugins.views as api_module
+    import cmk.gui.plugins.views as api_module  # pylint: disable=cmk-module-layer-violation
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
-    from cmk.gui.plugins.views.icons import utils as icon_utils
+    from cmk.gui.plugins.views import icons  # pylint: disable=cmk-module-layer-violation
     from cmk.gui.views.perfometer.legacy_perfometers import utils as legacy_perfometers_utils
 
     from . import command, layout, sorter, store
@@ -243,7 +243,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "Icon",
         "IconRegistry",
     ):
-        icon_utils.__dict__[name] = icon.__dict__[name]
+        icons.__dict__[name] = icon.__dict__[name]
 
     globals().update(
         {

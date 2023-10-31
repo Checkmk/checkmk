@@ -32,7 +32,7 @@ struct ProcessedResponse {
     pub elapsed: Duration,
 }
 
-pub async fn check_http(args: Cli) -> CheckResult {
+pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
     let Ok(request) = prepare_request(
         args.url,
         args.method,
@@ -45,35 +45,48 @@ pub async fn check_http(args: Cli) -> CheckResult {
         args.max_redirs,
         args.force_ip_version,
     ) else {
-        return CheckResult::from_summary(State::Unknown, "Error building the request");
+        return vec![CheckResult {
+            state: State::Unknown,
+            summary: "Error building the request".to_string(),
+        }];
     };
 
     let response = match perform_request(request, args.without_body).await {
         Ok(resp) => resp,
         Err(err) => {
             if err.is_timeout() {
-                return CheckResult::from_summary(State::Crit, "timeout");
+                return vec![CheckResult {
+                    state: State::Crit,
+                    summary: "timeout".to_string(),
+                }];
             } else if err.is_connect() {
-                return CheckResult::from_summary(State::Crit, "Failed to connect");
+                return vec![CheckResult {
+                    state: State::Crit,
+                    summary: "Failed to connect".to_string(),
+                }];
             } else if err.is_redirect() {
-                return CheckResult::from_summary(State::Crit, &err.to_string());
+                return vec![CheckResult {
+                    state: State::Crit,
+                    summary: err.to_string(),
+                }];
             // Hit one of max_redirs, sticky, stickyport
             } else {
-                return CheckResult::from_summary(State::Unknown, "Error while sending request");
+                return vec![CheckResult {
+                    state: State::Unknown,
+                    summary: "Error while sending request".to_string(),
+                }];
             }
         }
     };
 
-    merge_check_results(
-        &collect_response_checks(
-            response,
-            args.onredirect,
-            args.page_size,
-            args.response_time_levels,
-            args.document_age_levels,
-        )
-        .await,
+    collect_response_checks(
+        response,
+        args.onredirect,
+        args.page_size,
+        args.response_time_levels,
+        args.document_age_levels,
     )
+    .await
 }
 
 #[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
@@ -246,7 +259,7 @@ fn check_status(
     version: Version,
     onredirect: OnRedirect,
 ) -> Option<CheckResult> {
-    let response_state = if status.is_client_error() {
+    let state = if status.is_client_error() {
         State::Warn
     } else if status.is_server_error() {
         State::Crit
@@ -260,10 +273,10 @@ fn check_status(
         State::Ok
     };
 
-    Some(CheckResult::from_summary(
-        response_state,
-        &format!("{:?} {}", version, status),
-    ))
+    Some(CheckResult {
+        state,
+        summary: format!("{:?} {}", version, status),
+    })
 }
 
 fn check_body(
@@ -274,10 +287,10 @@ fn check_body(
 
     match body {
         Ok(bd) => Some(check_page_size(bd.len(), page_size_limits)),
-        Err(_) => Some(CheckResult::from_summary(
-            State::Crit,
-            "Error fetching the reponse body",
-        )),
+        Err(_) => Some(CheckResult {
+            state: State::Crit,
+            summary: "Error fetching the reponse body".to_string(),
+        }),
     }
 }
 
@@ -288,7 +301,10 @@ fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -
         _ => State::Ok,
     };
 
-    CheckResult::from_summary(state, &format!("Page size: {} bytes", page_size))
+    CheckResult {
+        state,
+        summary: format!("Page size: {} bytes", page_size),
+    }
 }
 
 fn check_response_time(
@@ -301,14 +317,14 @@ fn check_response_time(
         _ => State::Ok,
     };
 
-    Some(CheckResult::from_summary(
+    Some(CheckResult {
         state,
-        &format!(
+        summary: format!(
             "Response time: {}.{}s",
             response_time.as_secs(),
             response_time.subsec_millis()
         ),
-    ))
+    })
 }
 
 fn check_document_age(
@@ -321,46 +337,30 @@ fn check_document_age(
 
     let age_header = headers.get("last-modified").or(headers.get("date"));
     let Some(document_age) = age_header else {
-        return Some(CheckResult::from_summary(
-            State::Crit,
-            "Can't determine document age",
-        ));
+        return Some(CheckResult {
+            state: State::Crit,
+            summary: "Can't determine document age".to_string(),
+        });
     };
     let Ok(Ok(age)) = document_age.to_str().map(parse_http_date) else {
-        return Some(CheckResult::from_summary(
-            State::Crit,
-            "Can't decode document age",
-        ));
+        return Some(CheckResult {
+            state: State::Crit,
+            summary: "Can't decode document age".to_string(),
+        });
     };
 
     //TODO(au): Specify "too old" in Output
     match document_age_levels {
-        (_, Some(crit)) if now - Duration::from_secs(crit) > age => Some(
-            CheckResult::from_summary(State::Crit, "Document age too old"),
-        ),
-        (warn, _) if now - Duration::from_secs(warn) > age => Some(CheckResult::from_summary(
-            State::Warn,
-            "Document age too old",
-        )),
+        (_, Some(crit)) if now - Duration::from_secs(crit) > age => Some(CheckResult {
+            state: State::Crit,
+            summary: "Document age too old".to_string(),
+        }),
+        (warn, _) if now - Duration::from_secs(warn) > age => Some(CheckResult {
+            state: State::Warn,
+            summary: "Document age too old".to_string(),
+        }),
         _ => None,
     }
-}
-
-fn merge_check_results(outputs: &[CheckResult]) -> CheckResult {
-    let summary = outputs
-        .iter()
-        .map(|output| output.summary.clone())
-        .filter(|output| !output.is_empty())
-        .collect::<Vec<String>>()
-        .join(", ");
-
-    let state = outputs
-        .iter()
-        .map(|output| output.state.clone())
-        .max()
-        .unwrap();
-
-    CheckResult { state, summary }
 }
 
 #[cfg(test)]

@@ -4,9 +4,9 @@
 
 use anyhow::Result as AnyhowResult;
 use check_http::{
-    check_http,
-    checking::{CheckResult, State},
+    checking::{Output, State},
     cli::Cli,
+    collect_checks,
 };
 use clap::Parser;
 
@@ -27,7 +27,7 @@ async fn test_basic_get() -> AnyhowResult<()> {
         "HTTP/1.1 200 OK\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Ok,
-        "HTTP/1.1 200 OK",
+        "HTTP OK - HTTP/1.1 200 OK",
     )
     .await
 }
@@ -39,7 +39,7 @@ async fn test_status_4xx() -> AnyhowResult<()> {
         "HTTP/1.1 401 nope\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Warn,
-        "HTTP/1.1 401 Unauthorized",
+        "HTTP WARNING - HTTP/1.1 401 Unauthorized",
     )
     .await
 }
@@ -57,15 +57,15 @@ async fn check_http_output(
     raw_args.extend(["-u", &url].iter());
     let args = Cli::parse_from(raw_args);
 
-    let check_http_thread = tokio::spawn(check_http(args));
+    let check_http_thread = tokio::spawn(collect_checks(args));
 
     let check_http_payload = process_http(listener, http_response)?;
 
-    let CheckResult { state, summary } = check_http_thread.await?;
+    let output = Output::from_check_results(check_http_thread.await?);
 
     assert!(check_http_payload.starts_with(expected_http_payload_start));
-    assert!(state == expected_state);
-    assert!(summary.starts_with(expected_summary_start));
+    assert!(output.worst_state == expected_state);
+    assert!(output.to_string().starts_with(expected_summary_start));
 
     Ok(())
 }

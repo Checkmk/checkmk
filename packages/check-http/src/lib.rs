@@ -432,3 +432,177 @@ mod tests {
         assert_eq!(ipv6_addrs, filter_socket_addrs(addrs, Some(ForceIP::Ipv6)));
     }
 }
+
+#[cfg(test)]
+mod test_output_format {
+    use crate::{merge_outputs, Output, State};
+
+    fn s(s: &str) -> Option<String> {
+        Some(String::from(s))
+    }
+
+    #[test]
+    fn test_output_with_state_only() {
+        assert_eq!(
+            format!(
+                "{}",
+                Output {
+                    state: State::Ok,
+                    summary: None,
+                    details: None
+                }
+            ),
+            "HTTP OK"
+        );
+    }
+
+    #[test]
+    fn test_output_with_empty_fields() {
+        assert_eq!(
+            format!(
+                "{}",
+                Output {
+                    state: State::Ok,
+                    summary: s(""),
+                    details: s("")
+                }
+            ),
+            // Expected "HTTP OK"
+            "HTTP OK - \n"
+        );
+    }
+
+    #[test]
+    fn test_output_with_summary() {
+        assert_eq!(
+            format!(
+                "{}",
+                Output {
+                    state: State::Ok,
+                    summary: s("this is the summary"),
+                    details: None
+                }
+            ),
+            "HTTP OK - this is the summary"
+        );
+    }
+
+    #[test]
+    fn test_output_with_details() {
+        assert_eq!(
+            format!(
+                "{}",
+                Output {
+                    state: State::Ok,
+                    summary: None,
+                    details: s("these are the details")
+                }
+            ),
+            "HTTP OK\nthese are the details"
+        );
+    }
+
+    #[test]
+    fn test_output_with_summary_and_details() {
+        assert_eq!(
+            format!(
+                "{}",
+                Output {
+                    state: State::Ok,
+                    summary: s("this is the summary"),
+                    details: s("these are the details")
+                }
+            ),
+            "HTTP OK - this is the summary\nthese are the details"
+        );
+    }
+
+    #[test]
+    fn test_merge_outputs_with_state_only() {
+        let o1 = Output {
+            state: State::Ok,
+            summary: None,
+            details: None,
+        };
+        let o2 = Output {
+            state: State::Ok,
+            summary: None,
+            details: None,
+        };
+        let o3 = Output {
+            state: State::Ok,
+            summary: None,
+            details: None,
+        };
+        assert_eq!(format!("{}", merge_outputs(&[o1, o2, o3])), "HTTP OK");
+    }
+
+    #[test]
+    fn test_merge_outputs_with_summary() {
+        let o1 = Output {
+            state: State::Ok,
+            summary: s("summary 1"),
+            details: None,
+        };
+        let o2 = Output {
+            state: State::Ok,
+            summary: s("summary 2"),
+            details: None,
+        };
+        let o3 = Output {
+            state: State::Ok,
+            summary: s("summary 3"),
+            details: None,
+        };
+        assert_eq!(
+            format!("{}", merge_outputs(&[o1, o2, o3])),
+            "HTTP OK - summary 1, summary 2, summary 3"
+        );
+    }
+
+    #[test]
+    fn test_merge_outputs_with_details() {
+        let o1 = Output {
+            state: State::Ok,
+            summary: None,
+            details: s("details 1"),
+        };
+        let o2 = Output {
+            state: State::Ok,
+            summary: None,
+            details: s("details 2"),
+        };
+        let o3 = Output {
+            state: State::Ok,
+            summary: None,
+            details: s("details 3"),
+        };
+        assert_eq!(
+            format!("{}", merge_outputs(&[o1, o2, o3])),
+            "HTTP OK\ndetails 1\ndetails 2\ndetails 3"
+        );
+    }
+
+    #[test]
+    fn test_merge_outputs_with_summary_and_details() {
+        let o1 = Output {
+            state: State::Ok,
+            summary: s("summary 1"),
+            details: s("details 1"),
+        };
+        let o2 = Output {
+            state: State::Ok,
+            summary: s("summary 2"),
+            details: s("details 2"),
+        };
+        let o3 = Output {
+            state: State::Ok,
+            summary: s("summary 3"),
+            details: s("details 3"),
+        };
+        assert_eq!(
+            format!("{}", merge_outputs(&[o1, o2, o3])),
+            "HTTP OK - summary 1, summary 2, summary 3\ndetails 1\ndetails 2\ndetails 3"
+        );
+    }
+}

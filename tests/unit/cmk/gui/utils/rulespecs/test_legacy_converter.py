@@ -23,6 +23,9 @@ import cmk.rulesets.v1 as api_v1
 
 
 def _v1_custom_text_validate(value: str) -> None:
+    api_v1.disallow_empty(error_msg=api_v1.Localizable("Fill this"))(value)
+    api_v1.match_regex(regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed"))(value)
+
     if value == "admin":
         raise api_v1.ValidationError(api_v1.Localizable("Forbidden"))
 
@@ -264,13 +267,28 @@ def _compare_specs(actual: object, expected: object) -> None:
             assert actual_value == expected_value
 
 
-def test_convert_validation():
+@pytest.mark.parametrize(
+    "input_value",
+    [
+        pytest.param("admin", id="custom validation"),
+        pytest.param("", id="empty validation"),
+        pytest.param(".", id="regex validation"),
+    ],
+)
+def test_convert_validation(input_value: str) -> None:
     converted_spec = _convert_to_legacy_valuespec(
         api_v1.TextInput(custom_validate=_v1_custom_text_validate), _
     )
-    expected_spec = legacy_valuespecs.TextInput(validate=_legacy_custom_text_validate)
 
-    test_args = ("admin", "var_prefix")
+    expected_spec = legacy_valuespecs.TextInput(
+        validate=_legacy_custom_text_validate,
+        regex=r"^[^.\r\n]+$",
+        regex_error=_("No dot allowed"),
+        allow_empty=False,
+        empty_text=_("Fill this"),
+    )
+
+    test_args = (input_value, "var_prefix")
     with pytest.raises(MKUserError) as expected_error:
         expected_spec.validate_value(*test_args)
 

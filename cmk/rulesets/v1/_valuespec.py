@@ -11,22 +11,6 @@ from typing import Any
 from cmk.rulesets.v1._localize import Localizable
 
 
-class ValidationError(ValueError):
-    """Raise when custom validation found invalid values
-
-    Args:
-        message: Description of why the value is invalid
-    """
-
-    def __init__(self, message: Localizable) -> None:
-        super().__init__(message)
-        self._message = message
-
-    @property
-    def message(self) -> Localizable:
-        return self._message
-
-
 @dataclass(frozen=True)
 class TextInput:
     """

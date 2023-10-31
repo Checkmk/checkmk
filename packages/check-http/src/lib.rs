@@ -231,27 +231,12 @@ async fn check_response(
     response_time_levels: Option<ResponseTimeLevels>,
     document_age_levels: Option<DocumentAgeLevels>,
 ) -> Output {
-    let mut outputs: Vec<Output> = Vec::new();
-
-    outputs.push(check_status(response.status, response.version, onredirect));
-
-    if let Some(body) = response.body {
-        match body {
-            Ok(bd) => {
-                outputs.push(check_page_size(bd.len(), page_size_limits));
-            }
-            Err(_) => {
-                outputs.push(Output::from_summary(
-                    State::Crit,
-                    "Error fetching the reponse body",
-                ));
-            }
-        };
-    };
-
-    outputs.push(check_response_time(response.elapsed, response_time_levels));
-
-    outputs.push(check_document_age(&response.headers, document_age_levels));
+    let outputs: Vec<Output> = vec![
+        check_status(response.status, response.version, onredirect),
+        check_body(response.body, page_size_limits),
+        check_response_time(response.elapsed, response_time_levels),
+        check_document_age(&response.headers, document_age_levels),
+    ];
 
     merge_outputs(&outputs)
 }
@@ -272,6 +257,20 @@ fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) ->
     };
 
     Output::from_summary(response_state, &format!("{:?} {}", version, status))
+}
+
+fn check_body(
+    body: Option<Result<Bytes, ReqwestError>>,
+    page_size_limits: Option<PageSizeLimits>,
+) -> Output {
+    let Some(body) = body else {
+        return Output::from_state(State::Ok);
+    };
+
+    match body {
+        Ok(bd) => check_page_size(bd.len(), page_size_limits),
+        Err(_) => Output::from_summary(State::Crit, "Error fetching the reponse body"),
+    }
 }
 
 fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> Output {

@@ -872,9 +872,9 @@ test_mk_oracle_sid_matches_defined_sids() {
     assertFalse 'sid_matches_defined_sids "some,hello,here" "value"'
     # documentation says, that customer may us "$SIDS" when the section should
     # be executed for all elements, but this variable contains a newline
-    # seperated list of sids:
-    assertTrue 'sid_matches_defined_sids "some\nvalue\nhere" "value"'
-    assertFalse 'sid_matches_defined_sids "some\nprefixed_value\nhere" "value"'
+    # separated list of sids:
+    assertTrue "sid_matches_defined_sids $'some\nvalue\nhere' value"
+    assertFalse "sid_matches_defined_sids $'some\nprefixed_value\nhere' value"
 }
 
 # shellcheck disable=SC1090 # Can't follow

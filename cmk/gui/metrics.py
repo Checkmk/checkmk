@@ -37,10 +37,10 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import TranslatedMetrics
 
 PerfometerExpression = str | int | float
 RequiredMetricNames = set[str]
@@ -175,7 +175,7 @@ age_human_readable = cmk.utils.render.approx_age
 
 def translate_perf_data(
     perf_data_string: str, check_command: str | None = None
-) -> TranslatedMetrics:
+) -> dict[str, TranslatedMetric]:
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
     return translate_metrics(perf_data, check_command)
 

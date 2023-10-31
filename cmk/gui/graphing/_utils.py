@@ -32,18 +32,7 @@ from cmk.gui.exceptions import MKHTTPException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue
-from cmk.gui.type_defs import (
-    Choice,
-    Choices,
-    Perfdata,
-    PerfDataTuple,
-    Row,
-    ScalarBounds,
-    TranslatedMetric,
-    TranslatedMetrics,
-    UnitInfo,
-    VisualContext,
-)
+from cmk.gui.type_defs import Choice, Choices, Perfdata, PerfDataTuple, Row, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
@@ -56,7 +45,13 @@ from ._color import (
 )
 from ._expression import CriticalOf, Metric, MetricExpression, parse_expression, WarningOf
 from ._graph_specification import MetricOperation, MetricOpRRDChoice
-from ._type_defs import GraphConsoldiationFunction, LineType
+from ._type_defs import (
+    GraphConsoldiationFunction,
+    LineType,
+    ScalarBounds,
+    TranslatedMetric,
+    UnitInfo,
+)
 from ._unit_info import unit_info
 
 
@@ -561,7 +556,7 @@ def _translated_metric_scalar(
     return scalar
 
 
-def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetrics:
+def translate_metrics(perf_data: Perfdata, check_command: str) -> dict[str, TranslatedMetric]:
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -569,7 +564,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics: TranslatedMetrics = {}
+    translated_metrics: dict[str, TranslatedMetric] = {}
     color_index = 0
     for entry in perf_data:
         metric_name: str
@@ -620,7 +615,7 @@ def available_metrics_translated(
     perf_data_string: str,
     rrd_metrics: list[MetricName_],
     check_command: str,
-) -> TranslatedMetrics:
+) -> dict[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
         return {}
@@ -643,7 +638,7 @@ def available_metrics_translated(
     return translate_metrics(perf_data, check_command)
 
 
-def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
+def translated_metrics_from_row(row: Row) -> dict[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]
@@ -724,7 +719,7 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
 
 
 def get_graph_range(
-    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics
+    graph_template: GraphTemplate, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> tuple[float | None, float | None]:
     if graph_template.range is None:
         return None, None
@@ -759,7 +754,9 @@ def get_graph_template(template_id: str) -> GraphTemplate:
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[GraphTemplate]:
+def get_graph_templates(
+    translated_metrics: Mapping[str, TranslatedMetric]
+) -> Iterator[GraphTemplate]:
     if not translated_metrics:
         yield from ()
         return
@@ -777,7 +774,9 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
     )
 
 
-def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
+def _get_explicit_graph_templates(
+    translated_metrics: Mapping[str, TranslatedMetric]
+) -> Iterable[GraphTemplate]:
     for graph_template in graph_templates_internal().values():
         if metrics := applicable_metrics(
             metrics_to_consider=graph_template.metrics,
@@ -799,7 +798,7 @@ def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iter
 
 
 def _get_implicit_graph_templates(
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     already_graphed_metrics: Container[str],
 ) -> Iterable[GraphTemplate]:
     for metric_name, metric_entry in sorted(translated_metrics.items()):
@@ -812,7 +811,7 @@ def applicable_metrics(
     metrics_to_consider: Sequence[MetricDefinition],
     conflicting_metrics: Iterable[str],
     optional_metrics: Sequence[str],
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> list[MetricDefinition]:
     # Skip early on conflicting_metrics
     for var in conflicting_metrics:
@@ -833,7 +832,7 @@ def applicable_metrics(
 
 def _filter_renderable_graph_metrics(
     metric_definitions: Sequence[MetricDefinition],
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     optional_metrics: Sequence[str],
 ) -> Iterator[MetricDefinition]:
     for metric_definition in metric_definitions:

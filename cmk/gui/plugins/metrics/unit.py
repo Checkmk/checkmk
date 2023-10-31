@@ -8,10 +8,10 @@ from collections.abc import Iterable, Mapping
 import cmk.utils.render
 
 from cmk.gui.config import active_config
+from cmk.gui.graphing._type_defs import UnitInfo
 from cmk.gui.graphing._unit_info import unit_info
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import UnitInfo
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 

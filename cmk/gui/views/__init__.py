@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Mapping
 from typing import Any
 
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.graphing import PerfometerSpec
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import painters
@@ -21,7 +22,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.type_defs import Perfdata, TranslatedMetrics, VisualLinkSpec
+from cmk.gui.type_defs import Perfdata, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.visuals.type import VisualTypeRegistry
 
@@ -230,7 +231,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "Perfdata": Perfdata,
             "PerfometerSpec": PerfometerSpec,
             "VisualLinkSpec": VisualLinkSpec,
-            "TranslatedMetrics": TranslatedMetrics,
+            "TranslatedMetrics": Mapping[str, TranslatedMetric],
             "get_labels": get_labels,
             "render_labels": render_labels,
             "render_tag_groups": render_tag_groups,

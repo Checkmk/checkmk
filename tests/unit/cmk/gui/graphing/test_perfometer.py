@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 import numpy as np
 import pytest
@@ -20,7 +20,7 @@ from cmk.gui.graphing._perfometer import (
     MetricometerRendererLinear,
     MetricRendererStack,
 )
-from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
+from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
 
 
 @pytest.mark.parametrize(
@@ -101,7 +101,7 @@ from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 )
 def test__perfometer_possible(
     perfometer: PerfometerSpec,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> None:
     assert _perfometer_possible(perfometer, translated_metrics)
 
@@ -167,7 +167,7 @@ def test__perfometer_possible(
     ],
 )
 def test_get_first_matching_perfometer(
-    translated_metrics: TranslatedMetrics, perfometer_index: int
+    translated_metrics: Mapping[str, TranslatedMetric], perfometer_index: int
 ) -> None:
     assert get_first_matching_perfometer(translated_metrics) == perfometer_info[perfometer_index]
 

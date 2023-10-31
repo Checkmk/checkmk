@@ -20,9 +20,15 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import GraphRenderOptions, TranslatedMetric, VisualContext
+from cmk.gui.type_defs import GraphRenderOptions, VisualContext
 
-from ._type_defs import GraphConsoldiationFunction, GraphPresentation, LineType, Operators
+from ._type_defs import (
+    GraphConsoldiationFunction,
+    GraphPresentation,
+    LineType,
+    Operators,
+    TranslatedMetric,
+)
 
 HorizontalRule = tuple[float, str, str, str]
 

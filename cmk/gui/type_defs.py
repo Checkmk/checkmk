@@ -587,46 +587,8 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
 
-UnitRenderFunc = Callable[[float], str]
 
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
-GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
-
-
-class UnitInfo(TypedDict):
-    title: str
-    symbol: str
-    render: UnitRenderFunc
-    js_render: str
-    id: NotRequired[str]
-    stepping: NotRequired[str]
-    color: NotRequired[str]
-    graph_unit: NotRequired[GraphUnitRenderFunc]
-    description: NotRequired[str]
-    valuespec: NotRequired[Any]  # TODO: better typing
-    conversion: NotRequired[Callable[[float], float]]
-    perfometer_render: NotRequired[UnitRenderFunc]
-
-
-class ScalarBounds(TypedDict, total=False):
-    warn: float
-    crit: float
-    min: float
-    max: float
-
-
-class TranslatedMetric(TypedDict):
-    orig_name: list[str]
-    value: float
-    scalar: ScalarBounds
-    scale: list[float]
-    auto_graph: bool
-    title: str
-    unit: UnitInfo
-    color: str
-
-
-TranslatedMetrics = dict[str, TranslatedMetric]
 
 
 class PerfDataTuple(NamedTuple):

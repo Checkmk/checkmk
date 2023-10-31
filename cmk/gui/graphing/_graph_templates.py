@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import ClassVar, Literal
 
 from livestatus import SiteId
@@ -17,7 +17,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.type_defs import Row, TranslatedMetrics
+from cmk.gui.type_defs import Row
 
 from ._expression import (
     Average,
@@ -44,7 +44,7 @@ from ._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from ._type_defs import GraphConsoldiationFunction
+from ._type_defs import GraphConsoldiationFunction, TranslatedMetric
 from ._utils import (
     get_graph_data_from_livestatus,
     get_graph_range,
@@ -100,7 +100,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         *,
         graph_template: GraphTemplate,
         row: Row,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
         index: int,
     ) -> GraphRecipe | None:
         if not (
@@ -148,7 +148,7 @@ def matching_graph_templates(
     *,
     graph_id: str | None,
     graph_index: int | None,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Iterable[tuple[int, GraphTemplate]]:
     # Single metrics
     if (
@@ -167,7 +167,7 @@ def matching_graph_templates(
     )
 
 
-def _replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
+def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
     def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
@@ -184,7 +184,7 @@ def _replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> st
 
 def _horizontal_rules_from_thresholds(
     thresholds: Iterable[ScalarDefinition],
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> list[HorizontalRule]:
     horizontal_rules = []
     for entry in thresholds:
@@ -207,7 +207,7 @@ def _horizontal_rules_from_thresholds(
 
 
 def create_graph_recipe_from_template(
-    graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
+    graph_template: GraphTemplate, translated_metrics: Mapping[str, TranslatedMetric], row: Row
 ) -> GraphRecipeBase:
     def _graph_metric(metric_definition: MetricDefinition) -> GraphMetric:
         unit_color = metric_unit_color(metric_definition.expression, translated_metrics)
@@ -259,7 +259,7 @@ def create_graph_recipe_from_template(
 
 def _to_metric_operation(
     declaration: MetricDeclaration,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
@@ -407,7 +407,7 @@ def _to_metric_operation(
 
 def metric_expression_to_graph_recipe_expression(
     metric_expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
@@ -422,7 +422,7 @@ def metric_expression_to_graph_recipe_expression(
 def metric_line_title(
     metric_definition: MetricDefinition,
     metric_expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> str:
     if metric_definition.title:
         return metric_definition.title
@@ -431,7 +431,7 @@ def metric_line_title(
 
 def metric_unit_color(
     metric_expression: MetricExpression,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     optional_metrics: Sequence[str] | None = None,
 ) -> MetricUnitColor | None:
     try:

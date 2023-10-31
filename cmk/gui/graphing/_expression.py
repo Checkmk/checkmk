@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import abc
 import contextlib
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Callable, Final, Literal
 
 from cmk.utils.metrics import MetricName
 
-from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
+from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
 
 from ._color import mix_colors, parse_color, render_color, scalar_colors
 from ._type_defs import GraphConsoldiationFunction
@@ -47,7 +47,10 @@ class MetricExpressionResult:
 
 class MetricDeclaration(abc.ABC):
     @abc.abstractmethod
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -63,7 +66,10 @@ class MetricDeclaration(abc.ABC):
 class Constant(MetricDeclaration):
     value: int | float
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             self.value,
             unit_info["count"] if isinstance(self.value, int) else unit_info[""],
@@ -82,7 +88,10 @@ class Metric(MetricDeclaration):
     name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None = None
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.name]["value"],
             translated_metrics[self.name]["unit"],
@@ -101,7 +110,10 @@ class WarningOf(MetricDeclaration):
     metric: Metric
     name: Final = "warn"
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["warn"],
             self.metric.evaluate(translated_metrics).unit_info,
@@ -120,7 +132,10 @@ class CriticalOf(MetricDeclaration):
     metric: Metric
     name: Final = "crit"
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["crit"],
             self.metric.evaluate(translated_metrics).unit_info,
@@ -139,7 +154,10 @@ class MinimumOf(MetricDeclaration):
     metric: Metric
     name: Final = "min"
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["min"],
             self.metric.evaluate(translated_metrics).unit_info,
@@ -158,7 +176,10 @@ class MaximumOf(MetricDeclaration):
     metric: Metric
     name: Final = "max"
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             translated_metrics[self.metric.name]["scalar"]["max"],
             self.metric.evaluate(translated_metrics).unit_info,
@@ -176,7 +197,10 @@ class MaximumOf(MetricDeclaration):
 class Sum(MetricDeclaration):
     summands: Sequence[MetricDeclaration]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         if len(self.summands) == 0:
             return MetricExpressionResult(0.0, unit_info[""], "#000000")
 
@@ -203,7 +227,10 @@ class Sum(MetricDeclaration):
 class Product(MetricDeclaration):
     factors: Sequence[MetricDeclaration]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         if len(self.factors) == 0:
             return MetricExpressionResult(1.0, unit_info[""], "#000000")
 
@@ -231,7 +258,10 @@ class Difference(MetricDeclaration):
     minuend: MetricDeclaration
     subtrahend: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         minuend_result = self.minuend.evaluate(translated_metrics)
         subtrahend_result = self.subtrahend.evaluate(translated_metrics)
 
@@ -260,7 +290,10 @@ class Fraction(MetricDeclaration):
     dividend: MetricDeclaration
     divisor: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         dividend_result = self.dividend.evaluate(translated_metrics)
         divisor_result = self.divisor.evaluate(translated_metrics)
 
@@ -288,7 +321,10 @@ class Fraction(MetricDeclaration):
 class Minimum(MetricDeclaration):
     operands: Sequence[MetricDeclaration]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         if len(self.operands) == 0:
             return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
 
@@ -311,7 +347,10 @@ class Minimum(MetricDeclaration):
 class Maximum(MetricDeclaration):
     operands: Sequence[MetricDeclaration]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         if len(self.operands) == 0:
             return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
 
@@ -340,7 +379,10 @@ class Percent(MetricDeclaration):
     percent_value: MetricDeclaration
     base_value: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         return MetricExpressionResult(
             (
                 Fraction(
@@ -370,7 +412,10 @@ class Percent(MetricDeclaration):
 class Average(MetricDeclaration):
     operands: Sequence[MetricDeclaration]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         if len(self.operands) == 0:
             return MetricExpressionResult(float("nan"), unit_info[""], "#000000")
 
@@ -392,7 +437,10 @@ class Average(MetricDeclaration):
 class Merge(MetricDeclaration):
     operands: Sequence[MetricDeclaration]
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         # TODO None?
         for operand in self.operands:
             if (result := operand.evaluate(translated_metrics)).value is not None:
@@ -408,7 +456,10 @@ class Merge(MetricDeclaration):
 
 class ConditionalMetricDeclaration(abc.ABC):
     @abc.abstractmethod
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> bool:
         raise NotImplementedError()
 
 
@@ -417,7 +468,10 @@ class GreaterThan(ConditionalMetricDeclaration):
     left: MetricDeclaration
     right: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> bool:
         return (
             self.left.evaluate(translated_metrics).value
             > self.right.evaluate(translated_metrics).value
@@ -429,7 +483,10 @@ class GreaterEqualThan(ConditionalMetricDeclaration):
     left: MetricDeclaration
     right: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> bool:
         return (
             self.left.evaluate(translated_metrics).value
             >= self.right.evaluate(translated_metrics).value
@@ -441,7 +498,10 @@ class LessThan(ConditionalMetricDeclaration):
     left: MetricDeclaration
     right: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> bool:
         return (
             self.left.evaluate(translated_metrics).value
             < self.right.evaluate(translated_metrics).value
@@ -453,7 +513,10 @@ class LessEqualThan(ConditionalMetricDeclaration):
     left: MetricDeclaration
     right: MetricDeclaration
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> bool:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> bool:
         return (
             self.left.evaluate(translated_metrics).value
             <= self.right.evaluate(translated_metrics).value
@@ -489,7 +552,7 @@ def _from_scalar(
 
 def _parse_single_expression(
     expression: str,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     enforced_consolidation_func_name: GraphConsoldiationFunction | None,
 ) -> MetricDeclaration:
     if expression not in translated_metrics:
@@ -517,7 +580,7 @@ RPNOperators = Literal["+", "*", "-", "/", "MIN", "MAX", "AVERAGE", "MERGE", ">"
 
 def _parse_expression(
     expression: str,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     enforced_consolidation_func_name: GraphConsoldiationFunction | None,
 ) -> tuple[Sequence[MetricDeclaration | RPNOperators], str, str]:
     # Evaluates an expression, returns a triple of value, unit and color.
@@ -629,7 +692,10 @@ class MetricExpression:
     explicit_unit_name: str = ""
     explicit_color: str = ""
 
-    def evaluate(self, translated_metrics: TranslatedMetrics) -> MetricExpressionResult:
+    def evaluate(
+        self,
+        translated_metrics: Mapping[str, TranslatedMetric],
+    ) -> MetricExpressionResult:
         result = self.declaration.evaluate(translated_metrics)
         return MetricExpressionResult(
             result.value,
@@ -646,7 +712,7 @@ class MetricExpression:
 
 def parse_expression(
     expression: str | int | float,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> MetricExpression:
     if isinstance(expression, (int, float)):
@@ -668,7 +734,7 @@ def parse_expression(
 
 def parse_conditional_expression(
     expression: str,
-    translated_metrics: TranslatedMetrics,
+    translated_metrics: Mapping[str, TranslatedMetric],
     enforced_consolidation_func_name: GraphConsoldiationFunction | None = None,
 ) -> ConditionalMetricDeclaration:
     (
@@ -686,7 +752,8 @@ def parse_conditional_expression(
 
 
 def has_required_metrics_or_scalars(
-    expressions: Sequence[MetricExpression], translated_metrics: TranslatedMetrics
+    expressions: Sequence[MetricExpression],
+    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
     for expression in expressions:
         for metric in expression.metrics():

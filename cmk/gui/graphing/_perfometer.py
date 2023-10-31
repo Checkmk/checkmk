@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Callable, Literal, NotRequired, TypeAlias, TypedDict
 
 from cmk.utils import plugin_registry
@@ -16,7 +16,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 from ._expression import (
@@ -25,6 +24,7 @@ from ._expression import (
     parse_conditional_expression,
     parse_expression,
 )
+from ._type_defs import TranslatedMetric, UnitInfo
 from ._unit_info import unit_info
 
 LegacyPerfometer = tuple[str, Any]
@@ -120,7 +120,7 @@ def parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> N
 
 
 def _perfometer_has_required_metrics_or_scalars(
-    perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
+    perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
 ) -> bool:
     if perfometer["type"] == "linear":
         expressions = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
@@ -144,7 +144,9 @@ def _perfometer_has_required_metrics_or_scalars(
     raise NotImplementedError(_("Invalid perfometer type: %s") % perfometer["type"])
 
 
-def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> bool:
+def _perfometer_possible(
+    perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
+) -> bool:
     if not translated_metrics:
         return False
 
@@ -163,7 +165,9 @@ def _perfometer_possible(perfometer: PerfometerSpec, translated_metrics: Transla
     return True
 
 
-def get_first_matching_perfometer(translated_metrics: TranslatedMetrics) -> PerfometerSpec | None:
+def get_first_matching_perfometer(
+    translated_metrics: Mapping[str, TranslatedMetric]
+) -> PerfometerSpec | None:
     for perfometer in perfometer_info:
         if not isinstance(perfometer, dict):
             continue
@@ -215,7 +219,7 @@ class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRen
         return instance.type_name()
 
     def get_renderer(
-        self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics
+        self, perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
     ) -> MetricometerRenderer:
         if perfometer["type"] == "logarithmic":
             return MetricometerRendererLogarithmic(perfometer, translated_metrics)
@@ -235,7 +239,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
     def __init__(
         self,
         perfometer: LogarithmicPerfometerSpec,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         if "metric" not in perfometer:
             raise MKGeneralException(
@@ -336,7 +340,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
     def __init__(
         self,
         perfometer: _LinearPerfometerSpec,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         self._segments = [parse_expression(s, translated_metrics) for s in perfometer["segments"]]
         self._total = parse_expression(perfometer["total"], translated_metrics)
@@ -408,7 +412,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def __init__(
         self,
         perfometer: _StackedPerfometerSpec,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(
@@ -457,7 +461,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def __init__(
         self,
         perfometer: _DualPerfometerSpec,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(

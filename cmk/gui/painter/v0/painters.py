@@ -5,7 +5,7 @@
 
 import abc
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from fnmatch import fnmatch
 from pathlib import Path
 
@@ -21,6 +21,7 @@ import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.graphing._color import render_color_icon
+from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import metric_info
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -35,14 +36,7 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import (
-    ColumnName,
-    PainterParameters,
-    Row,
-    SorterName,
-    TranslatedMetrics,
-    VisualLinkSpec,
-)
+from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel
@@ -729,7 +723,7 @@ class PainterSvcMetrics(Painter):
 
     def _show_metrics_table(
         self,
-        translated_metrics: TranslatedMetrics,
+        translated_metrics: Mapping[str, TranslatedMetric],
         host_name: str,
         service_description: str,
         show_metric_id: bool,

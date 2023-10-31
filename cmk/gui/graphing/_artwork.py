@@ -23,7 +23,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.time_series import TimeSeries, TimeSeriesValue, Timestamp
-from cmk.gui.type_defs import UnitInfo, UnitRenderFunc
 
 from ._graph_specification import (
     CombinedSingleMetricSpec,
@@ -36,7 +35,7 @@ from ._graph_specification import (
 )
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, evaluate_time_series_expression
-from ._type_defs import LineType
+from ._type_defs import LineType, UnitInfo
 from ._utils import Curve, RRDData, SizeEx
 
 Seconds = int
@@ -855,7 +854,7 @@ def _render_labels_with_graph_unit(
 
 def _render_label_value(
     label_value: float,
-    render_func: UnitRenderFunc = str,
+    render_func: Callable[[float], str] = str,
 ) -> str:
     return "0" if label_value == 0 else render_func(label_value)
 

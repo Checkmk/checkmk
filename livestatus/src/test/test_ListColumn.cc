@@ -6,6 +6,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "ListColumn.h"

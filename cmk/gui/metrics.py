@@ -17,9 +17,13 @@ import json
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from livestatus import SiteId
+
 import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
@@ -198,13 +202,10 @@ def page_host_service_graph_popup(
     ],
 ) -> None:
     """Registered as `host_service_graph_popup`."""
-    site_id = request.var("site")
-    host_name = request.var("host_name")
-    service_description = request.get_str_input("service")
     host_service_graph_popup_cmk(
-        site_id,
-        host_name,
-        service_description,
+        SiteId(raw_site_id) if (raw_site_id := request.var("site")) else None,
+        HostName(request.get_str_input_mandatory("host_name")),
+        ServiceName(request.get_str_input_mandatory("service")),
         resolve_combined_single_metric_spec,
     )
 

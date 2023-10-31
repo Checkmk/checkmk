@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from re import Match
 from typing import ClassVar, Literal
 
 from livestatus import SiteId
@@ -170,7 +171,7 @@ def matching_graph_templates(
 def _replace_expressions(text: str, translated_metrics: Mapping[str, TranslatedMetric]) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
-    def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
+    def eval_to_string(match: Match[str]) -> str:
         try:
             result = parse_expression(match.group()[2:-1], translated_metrics).evaluate(
                 translated_metrics

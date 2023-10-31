@@ -9,6 +9,8 @@ from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
+from cmk.utils.metrics import MetricName
+
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
@@ -269,12 +271,12 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(request) -> PageResult:  # type: ignore[no-untyped-def]
+    def resolve_units(metric_name: MetricName) -> PageResult:
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
         known_units = list(unit_info.keys())
-        required_unit = metric_info.get(request["metric"], {}).get("unit", "")
+        required_unit = metric_info.get(metric_name, {}).get("unit", "")
 
         try:
             index = known_units.index(required_unit)
@@ -295,4 +297,4 @@ class ValuesWithUnits(CascadingDropdown):
 
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
-        return ValuesWithUnits.resolve_units(self.webapi_request())
+        return ValuesWithUnits.resolve_units(self.webapi_request()["metric"])

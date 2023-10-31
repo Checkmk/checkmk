@@ -5,6 +5,7 @@
 
 import colorsys
 import random
+from typing import Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -184,7 +185,10 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i: int, shading="a") -> str:  # type: ignore[no-untyped-def]
+def get_palette_color_by_index(
+    i: int,
+    shading: Literal["a", "b"] = "a",
+) -> str:
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return f"{color_key}/{shading}"
 

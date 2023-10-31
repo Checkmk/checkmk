@@ -11,10 +11,12 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-import livestatus
+from livestatus import MKLivestatusNotFoundError, SiteId
 
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError
@@ -87,14 +89,14 @@ min_resize_width = 50
 min_resize_height = 6
 
 
-def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
-    site,
-    host_name,
-    service_description,
+def host_service_graph_popup_cmk(
+    site: SiteId | None,
+    host_name: HostName,
+    service_description: ServiceName,
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
-):
+) -> None:
     graph_render_config = GraphRenderConfig.from_render_options_and_context(
         GraphRenderOptions(
             size=(30, 10),
@@ -707,7 +709,7 @@ def _resolve_graph_recipe_with_error_handling(
 ) -> Sequence[GraphRecipe] | HTML:
     try:
         return graph_specification.recipes()
-    except livestatus.MKLivestatusNotFoundError:
+    except MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r"
             % (
@@ -891,7 +893,7 @@ def _render_graph_content_html(
         else:
             output += main_graph_html
 
-    except livestatus.MKLivestatusNotFoundError:
+    except MKLivestatusNotFoundError:
         output += render_graph_error_html(
             _("Cannot fetch data via Livestatus"), _("Cannot create graph")
         )

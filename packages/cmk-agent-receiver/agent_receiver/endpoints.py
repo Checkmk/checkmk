@@ -66,6 +66,7 @@ from starlette.status import (
 
 from .certs import (
     agent_root_ca,
+    current_time_naive,
     extract_cn_from_csr,
     serialize_to_pem,
     sign_agent_csr,
@@ -94,6 +95,7 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
             internal_credentials(),
         ).lifetime_in_months,
         agent_root_ca(),
+        current_time_naive(),
     )
 
 

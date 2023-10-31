@@ -10,7 +10,7 @@ from typing import NamedTuple
 
 import pytest
 import requests
-from agent_receiver.certs import serialize_to_pem, sign_agent_csr
+from agent_receiver.certs import current_time_naive, serialize_to_pem, sign_agent_csr
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 
@@ -83,7 +83,9 @@ def paired_keypair_fixture(
         )
     public_key_path = tmp_path_factory.mktemp("certs") / "public.pem"
     with public_key_path.open("w") as public_key_file:
-        public_key_file.write(serialize_to_pem(sign_agent_csr(csr, 12, root_ca)))
+        public_key_file.write(
+            serialize_to_pem(sign_agent_csr(csr, 12, root_ca, current_time_naive()))
+        )
 
     return KeyPairInfo(
         uuid_=uuid_,

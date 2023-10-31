@@ -29,7 +29,7 @@ def site_root_certificate() -> Certificate:
     return load_pem_x509_certificate(site_ca_path().read_bytes())
 
 
-def _naive_utcnow() -> datetime:
+def current_time_naive() -> datetime:
     """
     Create a not timezone aware, "naive", datetime at UTC now. This mimics the deprecated
     datetime.utcnow(), but we still need it to be naive because that's what pyca/cryptography
@@ -42,6 +42,7 @@ def sign_agent_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
     keypair: tuple[Certificate, RSAPrivateKey],
+    valid_from: datetime,
 ) -> Certificate:
     root_cert, root_key = keypair
     return (
@@ -50,8 +51,8 @@ def sign_agent_csr(
             .subject_name(csr.subject)
             .public_key(csr.public_key())
             .serial_number(random_serial_number())
-            .not_valid_before(_naive_utcnow())
-            .not_valid_after(_naive_utcnow() + relativedelta(months=lifetime_in_months))
+            .not_valid_before(valid_from)
+            .not_valid_after(valid_from + relativedelta(months=lifetime_in_months))
         )
         .issuer_name(root_cert.issuer)
         .add_extension(

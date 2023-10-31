@@ -507,7 +507,7 @@ class PrometheusServer:
             endpoint_result = self.api_client.query_static_endpoint("/status/buildinfo")
             return [json.loads(endpoint_result.content)["data"]["version"]]
         except requests.exceptions.HTTPError as e:  # This endpoint is only available from v2.14
-            if e.response.status_code not in (404, 405):
+            if e.response is None or e.response.status_code not in (404, 405):
                 raise e
 
         promql_result = self.api_client.perform_multi_result_promql("prometheus_build_info")

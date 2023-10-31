@@ -73,6 +73,7 @@ config_setting(
     }),
 ) for module, dep in [
     ("agent-receiver", "$(execpath @omd_packages//packages:cmk-agent-receiver)"),
+    ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
 ]]
 

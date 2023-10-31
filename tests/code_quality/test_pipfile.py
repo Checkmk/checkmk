@@ -36,6 +36,7 @@ IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
+    repo_path() / "packages/cmk-graphing/build",
     repo_path() / "packages/cmk-werks/build",
     # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",

@@ -764,6 +764,7 @@ class Site:
             cmk_path() + "/packages/cmk-agent-receiver",
             cmk_path() + "/active_checks",
             cmk_path() + "/packages/cmk-werks",
+            cmk_path() + "/packages/cmk-graphing",
         ]
 
         if self.version.is_raw_edition():

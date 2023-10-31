@@ -356,7 +356,7 @@ test-shellcheck-docker:
 
 test-cycles:
 	$(CYCLES) \
-		--packages cmk omd/packages/omd/omdlib packages/cmk-agent-receiver/agent_receiver packages/cmk-werks/werks \
+		--packages cmk omd/packages/omd/omdlib packages/cmk-agent-receiver/agent_receiver packages/cmk-werks/werks packages/cmk-graphing/graphing \
 		--project-path $$(realpath -L ..) \
 		--strategy johnson \
 		--verbose

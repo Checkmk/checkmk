@@ -72,7 +72,7 @@ def parse_icmp_params(raw_params: Mapping[str, object]) -> ICMPParams:
         "explicit_address": explicit_address,
         **{k: v for k, v in raw_params.items() if k != "address"},
     }
-    return ICMPParams.parse_obj(parsed_params)
+    return ICMPParams.model_validate(parsed_params)
 
 
 def get_common_arguments(params: ICMPParams) -> list[str]:

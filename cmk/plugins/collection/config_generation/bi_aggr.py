@@ -53,7 +53,7 @@ def parse_bi_aggr_params(raw_params: Mapping[str, object]) -> BiAggrParams:
         "credentials": parse_credentials(raw_params),
         **{k: v for k, v in raw_params.items() if k != "credentials"},
     }
-    return BiAggrParams.parse_obj(parsed_params)
+    return BiAggrParams.model_validate(parsed_params)
 
 
 def check_bi_aggr_services(

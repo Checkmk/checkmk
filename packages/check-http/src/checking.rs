@@ -65,13 +65,6 @@ impl CheckResult {
         let summary = format!("{}{}", summary, state.as_marker());
         Self { state, summary }
     }
-
-    pub fn from_state(state: State) -> Self {
-        Self {
-            state,
-            summary: String::new(),
-        }
-    }
 }
 
 #[cfg(test)]

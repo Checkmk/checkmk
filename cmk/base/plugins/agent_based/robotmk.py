@@ -124,9 +124,6 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
             yield Service(item=f"Suite {result.suite_name}")
             yield from _discover_tests(result)
 
-        if isinstance(result, robotmk_api.EnvironmentBuildStatuses):
-            yield Service(item=f"Build Status of {list(result.root)[0]}")
-
 
 def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)

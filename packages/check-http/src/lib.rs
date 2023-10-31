@@ -236,9 +236,16 @@ async fn collect_response_checks(
         check_response_time(response.elapsed, response_time_levels),
         check_document_age(&response.headers, document_age_levels),
     ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
-fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> CheckResult {
+fn check_status(
+    status: StatusCode,
+    version: Version,
+    onredirect: OnRedirect,
+) -> Option<CheckResult> {
     let response_state = if status.is_client_error() {
         State::Warn
     } else if status.is_server_error() {
@@ -253,20 +260,24 @@ fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) ->
         State::Ok
     };
 
-    CheckResult::from_summary(response_state, &format!("{:?} {}", version, status))
+    Some(CheckResult::from_summary(
+        response_state,
+        &format!("{:?} {}", version, status),
+    ))
 }
 
 fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
     page_size_limits: Option<PageSizeLimits>,
-) -> CheckResult {
-    let Some(body) = body else {
-        return CheckResult::from_state(State::Ok);
-    };
+) -> Option<CheckResult> {
+    let body = body?;
 
     match body {
-        Ok(bd) => check_page_size(bd.len(), page_size_limits),
-        Err(_) => CheckResult::from_summary(State::Crit, "Error fetching the reponse body"),
+        Ok(bd) => Some(check_page_size(bd.len(), page_size_limits)),
+        Err(_) => Some(CheckResult::from_summary(
+            State::Crit,
+            "Error fetching the reponse body",
+        )),
     }
 }
 
@@ -283,50 +294,55 @@ fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<ResponseTimeLevels>,
-) -> CheckResult {
+) -> Option<CheckResult> {
     let state = match response_time_levels {
         Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => State::Crit,
         Some((warn, _)) if response_time.as_secs_f64() >= warn => State::Warn,
         _ => State::Ok,
     };
 
-    CheckResult::from_summary(
+    Some(CheckResult::from_summary(
         state,
         &format!(
             "Response time: {}.{}s",
             response_time.as_secs(),
             response_time.subsec_millis()
         ),
-    )
+    ))
 }
 
 fn check_document_age(
     headers: &HeaderMap,
     document_age_levels: Option<DocumentAgeLevels>,
-) -> CheckResult {
-    if document_age_levels.is_none() {
-        return CheckResult::from_state(State::Ok);
-    };
+) -> Option<CheckResult> {
+    let document_age_levels = document_age_levels?;
 
     let now = SystemTime::now();
 
     let age_header = headers.get("last-modified").or(headers.get("date"));
     let Some(document_age) = age_header else {
-        return CheckResult::from_summary(State::Crit, "Can't determine document age");
+        return Some(CheckResult::from_summary(
+            State::Crit,
+            "Can't determine document age",
+        ));
     };
     let Ok(Ok(age)) = document_age.to_str().map(parse_http_date) else {
-        return CheckResult::from_summary(State::Crit, "Can't decode document age");
+        return Some(CheckResult::from_summary(
+            State::Crit,
+            "Can't decode document age",
+        ));
     };
 
     //TODO(au): Specify "too old" in Output
     match document_age_levels {
-        Some((_, Some(crit))) if now - Duration::from_secs(crit) > age => {
-            CheckResult::from_summary(State::Crit, "Document age too old")
-        }
-        Some((warn, _)) if now - Duration::from_secs(warn) > age => {
-            CheckResult::from_summary(State::Warn, "Document age too old")
-        }
-        _ => CheckResult::from_state(State::Ok),
+        (_, Some(crit)) if now - Duration::from_secs(crit) > age => Some(
+            CheckResult::from_summary(State::Crit, "Document age too old"),
+        ),
+        (warn, _) if now - Duration::from_secs(warn) > age => Some(CheckResult::from_summary(
+            State::Warn,
+            "Document age too old",
+        )),
+        _ => None,
     }
 }
 

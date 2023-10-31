@@ -7,6 +7,7 @@
 
 #ifdef CMC
 #include <algorithm>
+#include <unordered_map>
 
 #include "Host.h"         // IWYU pragma: keep
 #include "ObjectGroup.h"  // IWYU pragma: keep

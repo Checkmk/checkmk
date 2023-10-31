@@ -86,9 +86,10 @@ def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
         dir("${checkout_dir}") {
             return sh(script: """scripts/run-pipenv run \
                   buildscripts/scripts/get_distros.py \
-                  --edition "${edition}" \
                   --editions_file "${checkout_dir}/editions.yml" \
-                  --use_case "${use_case}" 
+                  use_cases \
+                  --edition "${edition}" \
+                  --use_case "${use_case}"
             """, returnStdout: true).trim().split();
         }
     }

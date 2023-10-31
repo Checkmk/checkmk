@@ -33,9 +33,9 @@ from .parse import WerkV2ParseResult
 
 
 class WerkId:
-    __slots__ = "__id"
+    __slots__ = ("__id",)
 
-    def __init__(self, id: int):
+    def __init__(self, id: int):  # pylint: disable=redefined-builtin
         self.__id = id
 
     def __str__(self) -> str:
@@ -293,18 +293,18 @@ def bail_out(text: str, exit_code: int = 1) -> NoReturn:
     sys.exit(exit_code)
 
 
-g_base_dir = ""
+BASE_DIR = ""
 
 
 def goto_werksdir() -> None:
-    global g_base_dir
-    g_base_dir = os.path.abspath(".")
+    global BASE_DIR  # pylint: disable=global-statement
+    BASE_DIR = os.path.abspath(".")
     while not os.path.exists(".werks") and os.path.abspath(".") != "/":
         os.chdir("..")
 
     try:
         os.chdir(".werks")
-    except Exception:
+    except OSError:
         sys.stderr.write("Cannot find directory .werks\n")
         sys.exit(1)
 
@@ -446,7 +446,7 @@ def change_werk_version(werk_path: Path, new_version: str, werk_version: WerkVer
 
 
 def git_add(werk: Werk) -> None:
-    os.system("git add %s" % werk.path)  # nosec
+    os.system(f"git add {werk.path}")  # nosec
 
 
 def git_move(source: Path, destination: Path) -> None:
@@ -460,7 +460,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
             if prefix:
                 title = f"{prefix} {title}"
 
-    title = "{} {}".format(werk.content.metadata["id"].rjust(5, "0"), title)
+    title = f"{werk.content.metadata['id'].rjust(5, '0')} {title}"
 
     if custom_files:
         files_to_commit = custom_files
@@ -468,7 +468,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
         for entry in default_files:
             files_to_commit.append(f"{git_top_level()}/{entry}")
 
-        os.chdir(g_base_dir)
+        os.chdir(BASE_DIR)
         cmd = "git commit {} -m {}".format(
             " ".join(files_to_commit),
             shlex.quote(title + "\n\n" + werk.content.description),
@@ -478,7 +478,7 @@ def git_commit(werk: Werk, custom_files: list[str]) -> None:
     else:
         if something_in_git_index():
             dash_a = ""
-            os.system("cd '%s' ; git add .werks" % git_top_level())  # nosec
+            os.system(f"cd '{git_top_level()}' ; git add .werks")  # nosec
         else:
             dash_a = "-a"
 
@@ -505,7 +505,8 @@ def next_werk_id() -> WerkId:
     my_werk_ids = get_werk_ids()
     if not my_werk_ids:
         bail_out(
-            'You have no werk IDS left. You can reserve 10 additional Werk IDS with "./werk ids 10".'
+            "You have no werk IDS left. "
+            'You can reserve 10 additional Werk IDS with "./werk ids 10".'
         )
     return my_werk_ids[0]
 
@@ -513,13 +514,9 @@ def next_werk_id() -> WerkId:
 def add_comment(werk: Werk, title: str, comment: str) -> None:
     werk.content.metadata[
         "description"
-    ] += """
-{}: {}
-{}""".format(
-        time.strftime("%F %T"),
-        title,
-        comment,
-    )
+    ] += f"""
+{time.strftime('%F %T')}: {title}
+{comment}"""
 
 
 def list_werk(werk: Werk) -> None:
@@ -561,7 +558,7 @@ def colored_class(classname: str, digits: int) -> str:
 
 def show_werk(werk: Werk) -> None:
     list_werk(werk)
-    sys.stdout.write("\n%s\n" % werk.content.description)
+    sys.stdout.write(f"\n{werk.content.description}\n")
 
 
 def main_list(args: argparse.Namespace, fmt: str) -> None:
@@ -599,7 +596,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
                 break
         if not hit:
             bail_out(
-                "No such edition, component, state, class, or target version: %s" % a,
+                f"No such edition, component, state, class, or target version: {a}",
                 0,
             )
 
@@ -632,7 +629,8 @@ def output_csv(werks: list[Werk]) -> None:
 
     nr = 1
     for entry in get_config().components:
-        # TODO: Our config has been validate, so we should be able to nuke the isinstance horror below.
+        # TODO: Our config has been validated, so we should be able to nuke the isinstance horror
+        # below.
         if isinstance(entry, tuple) and len(entry) == 2:
             name, alias = entry
         elif isinstance(entry, str):  # TODO: Hmmm...
@@ -646,7 +644,7 @@ def output_csv(werks: list[Werk]) -> None:
         for werk in werks:
             if werk.content.metadata["component"] == name:
                 total_effort += werk_effort(werk)
-        line("", "%d. %s" % (nr, alias), "", total_effort)
+        line("", f"{nr}. {alias}", "", total_effort)
         nr += 1
 
         for werk in werks:
@@ -697,7 +695,7 @@ def main_show(args: argparse.Namespace) -> None:
 
 
 def get_input(what: str, default: str = "") -> str:
-    sys.stdout.write("%s: " % what)
+    sys.stdout.write(f"{what}: ")
     sys.stdout.flush()
     value = sys.stdin.readline().strip()
     if value == "":
@@ -740,12 +738,12 @@ def input_choice(
                 break
 
         if not added:
-            ctc["%s" % next_index] = choice
-            texts.append("{}:{}".format("%s%d%s" % (TTY_BOLD, next_index, TTY_NORMAL), choice))
+            ctc[str(next_index)] = choice
+            texts.append(f"{TTY_BOLD}{next_index}{TTY_NORMAL}:{choice}")
             next_index += 1
 
     while True:
-        sys.stdout.write("{} ({}): ".format(what, ", ".join(texts)))
+        sys.stdout.write(f"{what} ({', '.join(texts)}): ")
         sys.stdout.flush()
         c = getch()
         if c in ctc:
@@ -766,7 +764,7 @@ def all_components() -> list[tuple[str, str]]:
     return c
 
 
-werk_notes = """
+WERK_NOTES = """
     .---Werk----------------------------------------------------------------------.
     |                                                                             |
     |             The werk is intended for the user/admin!!                       |
@@ -781,7 +779,7 @@ werk_notes = """
 
 
 def main_new(args: argparse.Namespace) -> None:
-    sys.stdout.write(TTY_GREEN + werk_notes + TTY_NORMAL)
+    sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     metadata: WerkMetadata = {}
     # this is the metadata format of werkv1
@@ -814,7 +812,7 @@ def main_new(args: argparse.Namespace) -> None:
     invalidate_my_werkid(werk_id)
     edit_werk(werk_path, args.custom_files)
 
-    sys.stdout.write("Werk %s saved.\n" % format_werk_id(werk_id))
+    sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
 
 
 def get_werk_arg(arg: WerkId | None) -> WerkId:
@@ -842,19 +840,17 @@ def main_delete(args: argparse.Namespace) -> None:
 
     for werk_id in werks:
         if not werk_exists(werk_id):
-            bail_out("There is no werk %s." % format_werk_id(werk_id))
+            bail_out(f"There is no werk {format_werk_id(werk_id)}.")
 
         werk_to_be_removed_title = load_werk(werk_id).content.metadata["title"]
-        if os.system("git rm -f %s" % werk_id) == 0:  # nosec
+        if os.system("git rm -f {werk_id}") == 0:  # nosec
             sys.stdout.write(
                 f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n"
             )
             my_ids = get_werk_ids()
             my_ids.append(werk_id)
             store_werk_ids(my_ids)
-            sys.stdout.write(
-                "You lucky bastard now own the werk ID %s.\n" % format_werk_id(werk_id)
-            )
+            sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
 
 
 def grep(line: str, kw: str, n: int) -> str | None:
@@ -902,7 +898,7 @@ def main_grep(args: argparse.Namespace) -> None:
             list_werk(werk)
             if args.verbose:
                 for x in sorted(list(bodylines)):
-                    sys.stdout.write("  %s\n" % lines[x])
+                    sys.stdout.write(f"  {lines[x]}\n")
 
 
 def main_edit(args: argparse.Namespace) -> None:
@@ -967,7 +963,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
     if found_werk_path is not None:
         if found_werk_path.source.exists() or found_werk_path.destination.exists():
             bail_out(
-                f"Trying to pick werk {found_werk_path.source} to {found_werk_path.destination}, but werk already present. Aborted."
+                f"Trying to pick werk {found_werk_path.source} to {found_werk_path.destination}, "
+                "but werk already present. Aborted."
             )
 
     # Cherry-pick the commit in question from the other branch
@@ -993,7 +990,8 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
         # Otherwise the dev may forget to change the version
         change_werk_version(found_werk_path.destination, get_config().current_version, werk_version)
         sys.stdout.write(
-            f"Changed version of werk {found_werk_path.destination} to {get_config().current_version}.\n"
+            f"Changed version of werk {found_werk_path.destination} "
+            f"to {get_config().current_version}.\n"
         )
 
     if pick.returncode:
@@ -1009,7 +1007,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             subprocess.run(["git", "commit", "--no-edit", "--amend"], check=True)
         else:
             sys.stdout.write("We don't commit yet. Here is the status:\n")
-            sys.stdout.write("Please commit with git commit -C '%s'\n\n" % commit_id)
+            sys.stdout.write("Please commit with git commit -C '{commit_id}'\n\n")
             subprocess.run(["git", "status"], check=True)
 
 
@@ -1044,7 +1042,7 @@ def current_repo() -> str:
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
     if args.count is None:
-        sys.stdout.write("You have %d reserved IDs.\n" % (len(get_werk_ids())))
+        sys.stdout.write(f"You have {len(get_werk_ids())} reserved IDs.\n")
         sys.exit(0)
 
     if current_branch() != "master" or current_repo() != "check_mk":
@@ -1085,11 +1083,10 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         f.write(str(new_first_free) + "\n")
 
     sys.stdout.write(
-        "Reserved %d additional IDs now. You have %d reserved IDs now.\n"
-        % (args.count, len(my_ids))
+        f"Reserved {args.count} additional IDs now. You have {len(my_ids)} reserved IDs now.\n"
     )
 
-    if os.system("git commit -m 'Reserved %d Werk IDS' ." % args.count) == 0:  # nosec
+    if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
         sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
     else:
         bail_out("Cannot commit.")

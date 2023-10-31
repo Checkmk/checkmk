@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from freezegun import freeze_time
 
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
@@ -636,19 +637,20 @@ def test_forward_tcp_message_forwarded_nok_2() -> None:
     assert len(messages_forwarded) == 0
 
 
-def test_forward_tcp_message_forwarded_spool() -> None:
-    method = (
-        "tcp",
-        {
-            "address": "127.0.0.1",
-            "port": 127001,
-            "spool": {"max_age": 60 * 60, "max_size": 1024 * 1024},
-        },
-    )
+SPOOL_METHOD = (
+    "tcp",
+    {
+        "address": "127.0.0.1",
+        "port": 127001,
+        "spool": {"max_age": 60 * 60, "max_size": 1024 * 1024},
+    },
+)
 
+
+def test_forward_tcp_message_forwarded_spool() -> None:
     # could not send message, so spool it
     result, messages_forwarded = _forward_message(
-        tcp_result="set exception", method=method, text="spooled"
+        tcp_result="set exception", method=SPOOL_METHOD, text="spooled"
     )
     assert result.num_forwarded == 0
     assert result.num_spooled == 1
@@ -658,7 +660,7 @@ def test_forward_tcp_message_forwarded_spool() -> None:
 
     # sending works again, so send both of them
     result, messages_forwarded = _forward_message(
-        tcp_result="ok", method=method, text="directly_sent_1"
+        tcp_result="ok", method=SPOOL_METHOD, text="directly_sent_1"
     )
     assert result.num_forwarded == 2
     assert result.num_spooled == 0
@@ -670,13 +672,49 @@ def test_forward_tcp_message_forwarded_spool() -> None:
 
     # sending is still working, so send only one
     result, messages_forwarded = _forward_message(
-        tcp_result="ok", method=method, text="directly_sent_2"
+        tcp_result="ok", method=SPOOL_METHOD, text="directly_sent_2"
     )
-    assert result.num_forwarded == 2  # TODO: BUG: should be 1
+    assert result.num_forwarded == 1
     assert result.num_spooled == 0
     assert result.num_dropped == 0
-    assert len(messages_forwarded) == 2  # TODO: BUG: should be 1
+    assert len(messages_forwarded) == 1
 
-    # TODO: BUG: spooled should not be sent a second time!
-    assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "spooled"
-    assert messages_forwarded[1][2][0].rsplit(" ", 1)[-1] == "directly_sent_2"
+    assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "directly_sent_2"
+
+
+def test_forward_tcp_message_forwarded_spool_twice() -> None:
+    # we delete the original spool file after reading it.
+    # here we want to make sure, that the spool file is recreated. otherwise messages from different
+    # time would land into the same spool file and may not be correctly cleaned up.
+    spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
+
+    # create a spooled message:
+    with freeze_time("2023-10-31 16:02:00"):
+        result, messages_forwarded = _forward_message(
+            tcp_result="set exception", method=SPOOL_METHOD
+        )
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 1
+    assert result.num_dropped == 0
+    assert isinstance(result.exception, FakeTcpError)
+    assert len(messages_forwarded) == 0
+
+    # we expect one spool file to be created:
+    assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
+
+    # create another spooled message:
+    with freeze_time("2023-10-31 16:03:00"):
+        result, messages_forwarded = _forward_message(
+            tcp_result="set exception", method=SPOOL_METHOD
+        )
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 2
+    assert result.num_dropped == 0
+    assert isinstance(result.exception, FakeTcpError)
+    assert len(messages_forwarded) == 0
+
+    # now let's see if we have two spool files
+    assert set(f.name for f in spool_dir.iterdir()) == {
+        "spool.1698768120.00",
+        "spool.1698768180.00",
+    }

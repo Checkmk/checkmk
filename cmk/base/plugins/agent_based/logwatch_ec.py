@@ -726,6 +726,9 @@ class MessageForwarder:
                 path.unlink()
                 continue
 
+            # TODO: this seems strange: we already added the filesize to the total_size, but now we
+            # delete the file? this way total_size is too big?!
+
             # Delete too old files by age
             if time_spooled < time.time() - spool_params["max_age"]:
                 self._spool_drop_messages(path, result)
@@ -748,6 +751,7 @@ class MessageForwarder:
 
             try:
                 messages = ast.literal_eval(path.read_text())
+                path.unlink()
             except FileNotFoundError:
                 continue
 

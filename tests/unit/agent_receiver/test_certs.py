@@ -8,7 +8,7 @@ import datetime
 from agent_receiver.certs import agent_root_ca, sign_agent_csr
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicKey
 
-from tests.testlib.certs import (
+from .certs import (
     check_certificate_against_private_key,
     check_certificate_against_public_key,
     check_cn,

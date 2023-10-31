@@ -8,7 +8,7 @@ from agent_receiver.certs import serialize_to_pem
 from agent_receiver.models import CsrField
 from pydantic import UUID4
 
-from tests.testlib.certs import generate_csr_pair
+from .certs import generate_csr_pair
 
 
 class TestCsrField:

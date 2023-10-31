@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
-from tests.testlib.certs import generate_csr_pair
+from .certs import generate_csr_pair
 
 
 @pytest.fixture(name="symlink_push_host")

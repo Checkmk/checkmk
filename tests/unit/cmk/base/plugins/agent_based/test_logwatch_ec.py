@@ -569,8 +569,10 @@ class FakeTcpErrorRaised(Exception):
 
 def _forward_message(
     tcp_result: Literal["ok", "raise exception", "set exception"],
-) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[object, ...]],]:
-    messages_forwarded: list[tuple[object, ...]] = []
+    method: tuple[str, dict[str, object]] = ("tcp", {"address": "127.0.0.1", "port": 127001}),
+    text: str = "some_text",
+) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]],]:
+    messages_forwarded: list[tuple[float, int, list[str]]] = []
 
     class TestForwardTcpMessageForwarder(logwatch_ec.MessageForwarder):
         @staticmethod
@@ -588,8 +590,8 @@ def _forward_message(
                 raise NotImplementedError()
 
     result = TestForwardTcpMessageForwarder(item="item_name", hostname=HostName("some_host_name"))(
-        ("tcp", {"address": "127.0.0.1", "port": 127001}),
-        [SyslogMessage(facility=1, severity=1, text="some_text")],
+        method,
+        [SyslogMessage(facility=1, severity=1, text=text)],
     )
 
     return result, messages_forwarded
@@ -632,3 +634,49 @@ def test_forward_tcp_message_forwarded_nok_2() -> None:
     assert isinstance(result.exception, FakeTcpErrorRaised)
 
     assert len(messages_forwarded) == 0
+
+
+def test_forward_tcp_message_forwarded_spool() -> None:
+    method = (
+        "tcp",
+        {
+            "address": "127.0.0.1",
+            "port": 127001,
+            "spool": {"max_age": 60 * 60, "max_size": 1024 * 1024},
+        },
+    )
+
+    # could not send message, so spool it
+    result, messages_forwarded = _forward_message(
+        tcp_result="set exception", method=method, text="spooled"
+    )
+    assert result.num_forwarded == 0
+    assert result.num_spooled == 1
+    assert result.num_dropped == 0
+    assert isinstance(result.exception, FakeTcpError)
+    assert len(messages_forwarded) == 0
+
+    # sending works again, so send both of them
+    result, messages_forwarded = _forward_message(
+        tcp_result="ok", method=method, text="directly_sent_1"
+    )
+    assert result.num_forwarded == 2
+    assert result.num_spooled == 0
+    assert result.num_dropped == 0
+    assert len(messages_forwarded) == 2
+
+    assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "spooled"
+    assert messages_forwarded[1][2][0].rsplit(" ", 1)[-1] == "directly_sent_1"
+
+    # sending is still working, so send only one
+    result, messages_forwarded = _forward_message(
+        tcp_result="ok", method=method, text="directly_sent_2"
+    )
+    assert result.num_forwarded == 2  # TODO: BUG: should be 1
+    assert result.num_spooled == 0
+    assert result.num_dropped == 0
+    assert len(messages_forwarded) == 2  # TODO: BUG: should be 1
+
+    # TODO: BUG: spooled should not be sent a second time!
+    assert messages_forwarded[0][2][0].rsplit(" ", 1)[-1] == "spooled"
+    assert messages_forwarded[1][2][0].rsplit(" ", 1)[-1] == "directly_sent_2"

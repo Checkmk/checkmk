@@ -71,10 +71,10 @@ def fixture_setup_rules() -> None:
             conditions=RuleConditions(
                 host_folder=root_folder.path(),
                 host_tags=None,
-                host_labels=None,
+                host_label_groups=None,
                 host_name=["host_crit_remove", "host_crit_keep", "host_ok"],
                 service_description=None,
-                service_labels=None,
+                service_label_groups=None,
             ),
             options=RuleOptions(
                 disabled=None,
@@ -97,10 +97,10 @@ def fixture_setup_rules() -> None:
             conditions=RuleConditions(
                 host_folder=root_folder.path(),
                 host_tags=None,
-                host_labels=None,
+                host_label_groups=None,
                 host_name=["host_removal_disabled"],
                 service_description=None,
-                service_labels=None,
+                service_label_groups=None,
             ),
             options=RuleOptions(
                 disabled=None,

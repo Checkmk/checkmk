@@ -91,10 +91,10 @@ class RuleOptionsSpec(TypedDict, total=False):
 # TODO: Improve this type
 class RuleConditionsSpec(TypedDict, total=False):
     host_tags: Mapping[TagGroupID, TagCondition]
-    host_labels: LabelGroups
+    host_label_groups: LabelGroups
     host_name: HostOrServiceConditions | None
     service_description: HostOrServiceConditions | None
-    service_labels: LabelGroups
+    service_label_groups: LabelGroups
     host_folder: str
 
 
@@ -337,8 +337,8 @@ class RulesetMatcher:
         for (
             value,
             hosts,
-            service_labels_condition,
-            service_labels_condition_cache_id,
+            service_label_groups,
+            service_label_groups_cache_id,
             service_description_condition,
         ) in optimized_ruleset:
             if match_object.service_description is None:
@@ -357,14 +357,14 @@ class RulesetMatcher:
                     ),
                 ),
                 service_description_condition,
-                service_labels_condition_cache_id,
+                service_label_groups_cache_id,
             )
 
             if service_cache_id in self._service_match_cache:
                 match = self._service_match_cache[service_cache_id]
             else:
                 match = matches_service_conditions(
-                    service_description_condition, service_labels_condition, match_object
+                    service_description_condition, service_label_groups, match_object
                 )
                 self._service_match_cache[service_cache_id] = match
 
@@ -518,11 +518,12 @@ class RulesetOptimizer:
                 hosts = self._all_matching_hosts(rule["condition"], with_foreign_hosts)
 
                 # Prepare cache id
-                service_labels_condition = rule["condition"].get("service_labels", [])
+                service_label_groups: LabelGroups = rule["condition"].get(
+                    "service_label_groups", []
+                )
                 # cast lists in label groups to tuples
-                service_labels_condition_cache_id = tuple(
-                    (operator, tuple(label_group))
-                    for operator, label_group in service_labels_condition
+                service_label_groups_cache_id = tuple(
+                    (operator, tuple(label_group)) for operator, label_group in service_label_groups
                 )
 
                 # And now preprocess the configured patterns in the servlist
@@ -530,8 +531,8 @@ class RulesetOptimizer:
                     (
                         rule["value"],
                         hosts,
-                        service_labels_condition,
-                        service_labels_condition_cache_id,
+                        service_label_groups,
+                        service_label_groups_cache_id,
                         RulesetOptimizer._convert_pattern_list(
                             rule["condition"].get("service_description")
                         ),
@@ -573,14 +574,14 @@ class RulesetOptimizer:
         tags and hostlist conditions."""
         hostlist = condition.get("host_name")
         tag_conditions: Mapping[TagGroupID, TagCondition] = condition.get("host_tags", {})
-        labels: LabelGroups = condition.get("host_labels", [])
+        label_groups: LabelGroups = condition.get("host_label_groups", [])
         rule_path = condition.get("host_folder", "/")
 
         cache_id = (
             RulesetOptimizer._condition_cache_id(
                 hostlist,
                 tag_conditions,
-                labels,
+                label_groups,
                 rule_path,
             ),
             with_foreign_hosts,
@@ -595,7 +596,7 @@ class RulesetOptimizer:
         # we only need the intersection of the folders hosts and the previously determined valid_hosts
         valid_hosts = self._get_hosts_within_folder(rule_path, with_foreign_hosts)
 
-        if tag_conditions and hostlist is None and not labels:
+        if tag_conditions and hostlist is None and not label_groups:
             # TODO: Labels could also be optimized like the tags
             matched_by_tags = self._match_hosts_by_tags(cache_id, valid_hosts, tag_conditions)
             if matched_by_tags is not None:
@@ -611,11 +612,13 @@ class RulesetOptimizer:
         if hostlist == []:
             pass  # Empty host list -> Nothing matches
 
-        elif not tag_conditions and not labels and not hostlist:
+        elif not tag_conditions and not label_groups and not hostlist:
             # If no tags are specified and the hostlist only include @all (all hosts)
             matching = valid_hosts
 
-        elif not tag_conditions and not labels and only_specific_hosts and hostlist is not None:
+        elif (
+            not tag_conditions and not label_groups and only_specific_hosts and hostlist is not None
+        ):
             # If no tags are specified and there are only specific hosts we already have the matches
             matching = valid_hosts.intersection(hostlist)
 
@@ -635,9 +638,9 @@ class RulesetOptimizer:
                 ):
                     continue
 
-                if labels:
+                if label_groups:
                     host_labels = self.labels_of_host(hostname)
-                    if not matches_labels(host_labels, labels):
+                    if not matches_labels(host_labels, label_groups):
                         continue
 
                 if not matches_host_name(hostlist, hostname):
@@ -652,7 +655,7 @@ class RulesetOptimizer:
     def _condition_cache_id(
         hostlist: HostOrServiceConditions | None,
         tag_conditions: Mapping[TagGroupID, TagCondition],
-        labels: LabelGroups,
+        label_groups: LabelGroups,
         rule_path: str,
     ) -> _ConditionCacheID:
         host_parts: list[str] = []
@@ -678,7 +681,7 @@ class RulesetOptimizer:
                 for taggroup_id, tag_condition in tag_conditions.items()
             ),
             # cast lists in label groups to tuples
-            tuple((operator, tuple(label_group)) for operator, label_group in labels),
+            tuple((operator, tuple(label_group)) for operator, label_group in label_groups),
             rule_path,
         )
 

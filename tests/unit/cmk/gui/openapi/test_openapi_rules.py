@@ -234,7 +234,7 @@ def test_openapi_create_rule(
     stored_condition = environ[values["ruleset"]][0]["condition"]  # type: ignore[index]
     expected_condition = {
         "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},
-        "host_labels": [("and", [("and", "os:windows")])],
+        "host_label_groups": [("and", [("and", "os:windows")])],
     }
     assert stored_condition == expected_condition
 

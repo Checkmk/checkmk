@@ -2079,8 +2079,11 @@ class ABCEditRuleMode(WatoMode):
             return
 
         conditions = self._get_predefined_rule_conditions(value)
-        if (conditions.host_labels and not _allow_host_label_conditions(self._rulespec.name)) or (
-            conditions.service_labels and not _allow_service_label_conditions(self._rulespec.name)
+        if (
+            conditions.host_label_groups and not _allow_host_label_conditions(self._rulespec.name)
+        ) or (
+            conditions.service_label_groups
+            and not _allow_service_label_conditions(self._rulespec.name)
         ):
             raise MKUserError(
                 varprefix,
@@ -2161,14 +2164,14 @@ class VSExplicitConditions(Transform):
                 headers=[
                     (_("Folder"), "condition explicit", ["folder_path"]),
                     (_("Host tags"), "condition explicit", ["host_tags"]),
-                    (_("Host labels"), "condition explicit", ["host_labels"]),
+                    (_("Host labels"), "condition explicit", ["host_label_groups"]),
                     (_("Explicit hosts"), "condition explicit", ["explicit_hosts"]),
                     (
                         self._service_title() or _("Explicit services"),
                         "condition explicit",
                         ["explicit_services"],
                     ),
-                    (_("Service labels"), "condition explicit", ["service_labels"]),
+                    (_("Service labels"), "condition explicit", ["service_label_groups"]),
                 ],
                 optional_keys=["explicit_hosts", "explicit_services"],
                 **kwargs,
@@ -2184,7 +2187,7 @@ class VSExplicitConditions(Transform):
         ]
 
         if _allow_host_label_conditions(self._rulespec.name):
-            elements.append(("host_labels", self._vs_host_label_condition()))
+            elements.append(("host_label_groups", self._vs_host_label_condition()))
 
         elements.append(("explicit_hosts", self._vs_explicit_hosts()))
         elements += self._service_elements()
@@ -2199,7 +2202,7 @@ class VSExplicitConditions(Transform):
         }
 
         if _allow_host_label_conditions(self._rulespec.name):
-            explicit["host_labels"] = conditions.host_labels
+            explicit["host_label_groups"] = conditions.host_label_groups
 
         explicit_hosts = conditions.host_list
         if explicit_hosts is not None:
@@ -2211,7 +2214,7 @@ class VSExplicitConditions(Transform):
                 explicit["explicit_services"] = explicit_services
 
             if _allow_service_label_conditions(self._rulespec.name):
-                explicit["service_labels"] = conditions.service_labels
+                explicit["service_label_groups"] = conditions.service_label_groups
 
         return explicit
 
@@ -2224,7 +2227,7 @@ class VSExplicitConditions(Transform):
         ]
 
         if _allow_service_label_conditions(self._rulespec.name):
-            elements.append(("service_labels", self._vs_service_label_condition()))
+            elements.append(("service_label_groups", self._vs_service_label_condition()))
 
         return elements
 
@@ -2246,14 +2249,19 @@ class VSExplicitConditions(Transform):
 
     # TODO: refine type
     def _from_valuespec(self, explicit: dict[str, Any]) -> RuleConditions:
+        host_label_groups = (
+            explicit["host_label_groups"]
+            if _allow_host_label_conditions(self._rulespec.name)
+            else []
+        )
         service_description = None
-        service_labels = None
+        service_label_groups = None
         if self._rulespec.item_type:
             service_description = self._condition_list_from_valuespec(
                 explicit.get("explicit_services"), is_service=True
             )
-            service_labels = (
-                explicit["service_labels"]
+            service_label_groups = (
+                explicit["service_label_groups"]
                 if _allow_service_label_conditions(self._rulespec.name)
                 else []
             )
@@ -2261,14 +2269,12 @@ class VSExplicitConditions(Transform):
         return RuleConditions(
             host_folder=explicit["folder_path"],
             host_tags=explicit["host_tags"],
-            host_labels=explicit["host_labels"]
-            if _allow_host_label_conditions(self._rulespec.name)
-            else [],
+            host_label_groups=host_label_groups,
             host_name=self._condition_list_from_valuespec(
                 explicit.get("explicit_hosts"), is_service=False
             ),
             service_description=service_description,
-            service_labels=service_labels,
+            service_label_groups=service_label_groups,
         )
 
     def _condition_list_from_valuespec(
@@ -2538,10 +2544,10 @@ class RuleConditionRenderer:
         )
 
     def _host_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
-        return self._label_conditions(conditions.host_labels, "host", _("Host"))
+        return self._label_conditions(conditions.host_label_groups, "host", _("Host"))
 
     def _service_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
-        return self._label_conditions(conditions.service_labels, "service", _("Service"))
+        return self._label_conditions(conditions.service_label_groups, "service", _("Service"))
 
     def _label_conditions(  # type: ignore[no-untyped-def]
         self, label_conditions, object_type, object_title
@@ -2808,10 +2814,10 @@ class ModeNewRule(ABCEditRuleMode):
             RuleConditions(
                 host_folder=self._folder.path(),
                 host_tags={},
-                host_labels=[],
+                host_label_groups=[],
                 host_name=host_name_conditions,
                 service_description=service_description_conditions,
-                service_labels=[],
+                service_label_groups=[],
             )
         )
 

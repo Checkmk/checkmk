@@ -109,7 +109,7 @@ def test_host_search(
     schema_config = search_class.schema()().dump(
         {
             "conditions": {
-                "host_labels": [("and", [("and", "cmk/check_mk_server:yes")])],
+                "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])],
             }
         }
     )

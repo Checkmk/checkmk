@@ -738,14 +738,15 @@ class RuleConditions(base.BaseSchema):
 
     @post_load
     def _post_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
-        """If we receive 'host_label_groups', or 'service_label_groups' swap the key
-        for 'host_labels' or 'service_labels' respectively."""
+        """To maintain backward compatibility. If we receive 'host_labels',
+        or 'service_labels' we change the key to 'host_label_groups' or
+        'service_label_groups' respectively."""
 
-        if host_label_groups := data.pop("host_label_groups", None):
-            data["host_labels"] = host_label_groups
+        if host_labels := data.pop("host_labels", None):
+            data["host_label_groups"] = host_labels
 
-        if service_label_groups := data.pop("service_label_groups", None):
-            data["service_labels"] = service_label_groups
+        if service_labels := data.pop("service_labels", None):
+            data["service_label_groups"] = service_labels
 
         return data
 
@@ -885,7 +886,15 @@ class UpdateRuleObject(base.BaseSchema):
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_labels': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
+
+        >>> s.dump(rv)
+        {'properties': {'disabled': False}, \
+'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
+'conditions': {\
+'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
+'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'and', 'label': 'os:windows'}]}]}}
 
     """
 
@@ -946,11 +955,19 @@ class InputRuleObject(UpdateRuleObject):
 'conditions': {\
 'host_name': ['example.com', 'heute'], \
 'host_tags': {'criticality': {'$ne': 'prod'}, 'foo': {'$ne': 'testing'}}, \
-'host_labels': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
 'ruleset': 'host', 'folder': Folder('', 'Main')}
-
         >>> rv['folder'].path()
         ''
+
+        >>> s.dump(rv)
+        {'properties': {'disabled': False}, \
+'value_raw': "{'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'], 'never_ignore_mountpoints': ['~.*/omd/sites/[^/]+/tmp$']}", \
+'conditions': {\
+'host_name': {'match_on': ['example.com', 'heute'], 'operator': 'one_of'}, \
+'host_tags': [{'key': 'criticality', 'operator': 'is_not', 'value': 'prod'}, {'key': 'foo', 'operator': 'is_not', 'value': 'testing'}], \
+'host_label_groups': [{'operator': 'and', 'label_group': [{'operator': 'not', 'label': 'foo:bar'}]}]}, \
+'ruleset': 'host', 'folder': '/'}
 
     """
 

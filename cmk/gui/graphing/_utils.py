@@ -587,8 +587,14 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> dict[str, Tran
         )
 
         if metric_name in translated_metrics:
-            translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
-            translated_metrics[metric_name]["scale"].extend(new_entry["scale"])
+            translated_metrics[metric_name]["orig_name"] = [
+                *translated_metrics[metric_name]["orig_name"],
+                *new_entry["orig_name"],
+            ]
+            translated_metrics[metric_name]["scale"] = [
+                *translated_metrics[metric_name]["scale"],
+                *new_entry["scale"],
+            ]
         else:
             translated_metrics[metric_name] = new_entry
     return translated_metrics

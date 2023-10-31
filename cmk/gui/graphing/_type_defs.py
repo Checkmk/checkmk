@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-from typing import Any, Literal, NotRequired, TypedDict
+from collections.abc import Callable, Sequence
+from typing import Literal, NotRequired, Type, TypedDict
+
+from cmk.gui.valuespec import ValueSpec
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
@@ -22,7 +24,7 @@ class UnitInfo(TypedDict):
     color: NotRequired[str]
     graph_unit: NotRequired[Callable[[list[float]], tuple[str, list[str]]]]
     description: NotRequired[str]
-    valuespec: NotRequired[Any]  # TODO: better typing
+    valuespec: NotRequired[Type[ValueSpec]]
     conversion: NotRequired[Callable[[float], float]]
     perfometer_render: NotRequired[Callable[[float], str]]
 
@@ -35,10 +37,10 @@ class ScalarBounds(TypedDict, total=False):
 
 
 class TranslatedMetric(TypedDict):
-    orig_name: list[str]
+    orig_name: Sequence[str]
     value: float
     scalar: ScalarBounds
-    scale: list[float]
+    scale: Sequence[float]
     auto_graph: bool
     title: str
     unit: UnitInfo

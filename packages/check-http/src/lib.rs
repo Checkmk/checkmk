@@ -274,35 +274,33 @@ fn check_body(
 }
 
 fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> Output {
-    let output_fn = |state| Output::from_summary(state, &format!("Page size: {} bytes", page_size));
+    let state = match page_size_limits {
+        Some((lower, _)) if page_size < lower => State::Warn,
+        Some((_, Some(upper))) if page_size > upper => State::Warn,
+        _ => State::Ok,
+    };
 
-    match page_size_limits {
-        Some((lower, _)) if page_size < lower => output_fn(State::Warn),
-        Some((_, Some(upper))) if page_size > upper => output_fn(State::Warn),
-        _ => output_fn(State::Ok),
-    }
+    Output::from_summary(state, &format!("Page size: {} bytes", page_size))
 }
 
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<ResponseTimeLevels>,
 ) -> Output {
-    let output_fn = |state| {
-        Output::from_summary(
-            state,
-            &format!(
-                "Response time: {}.{}s",
-                response_time.as_secs(),
-                response_time.subsec_millis()
-            ),
-        )
+    let state = match response_time_levels {
+        Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => State::Crit,
+        Some((warn, _)) if response_time.as_secs_f64() >= warn => State::Warn,
+        _ => State::Ok,
     };
 
-    match response_time_levels {
-        Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => output_fn(State::Crit),
-        Some((warn, _)) if response_time.as_secs_f64() >= warn => output_fn(State::Warn),
-        _ => output_fn(State::Ok),
-    }
+    Output::from_summary(
+        state,
+        &format!(
+            "Response time: {}.{}s",
+            response_time.as_secs(),
+            response_time.subsec_millis()
+        ),
+    )
 }
 
 fn check_document_age(

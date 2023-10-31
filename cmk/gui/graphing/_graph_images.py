@@ -121,7 +121,7 @@ def _answer_graph_image_request(
                 graph_render_config.size,
                 resolve_combined_single_metric_spec,
             )
-            graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_config)
+            graph_png = render_graph_image(graph_artwork, graph_render_config)
 
             graphs.append(base64.b64encode(graph_png).decode("ascii"))
 
@@ -163,7 +163,6 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
 
 def render_graph_image(
     graph_artwork: GraphArtwork,
-    graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfigImage,
 ) -> bytes:
     width_ex, height_ex = graph_render_config.size
@@ -180,20 +179,10 @@ def render_graph_image(
         pagesize=(width_ex * mm_per_ex, image_height),
         margins=(0, 0, 0, 0),
     )
-    instance = {
-        "document": doc,
-        "options": {},
-        # Keys not set here. Do we need them?
-        # instance["range"] = from_until
-        # instance["range_title"] = range_title
-        # instance["macros"] = create_report_macros(report, from_until, range_title)
-        # instance["report"] = report
-    }
 
     render_graph_pdf(
-        instance,
+        doc,
         graph_artwork,
-        graph_data_range,
         graph_render_config,
         pos_left=0.0,
         pos_top=0.0,

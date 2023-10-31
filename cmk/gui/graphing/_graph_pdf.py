@@ -9,6 +9,7 @@ from typing import TypeGuard
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.pdf import Document
 from cmk.gui.type_defs import RGBColor, SizeMM
 
 from ._artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
@@ -17,18 +18,15 @@ from ._graph_render_config import GraphRenderConfigImage
 from ._graph_specification import GraphDataRange
 
 
-def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
-    instance,
+def render_graph_pdf(  # pylint: disable=too-many-branches
+    pdf_document: Document,
     graph_artwork: GraphArtwork,
-    graph_data_range: GraphDataRange,
     graph_render_config: GraphRenderConfigImage,
     pos_left: SizeMM | None = None,
     pos_top: SizeMM | None = None,
     total_width: SizeMM | None = None,
     total_height: SizeMM | None = None,
 ) -> None:
-    pdf_document = instance["document"]
-
     logger.debug("  Render graph %r", graph_artwork.definition.specification)
 
     if pos_left is None:  # floating element

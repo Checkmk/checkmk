@@ -357,16 +357,6 @@ fn merge_check_results(outputs: &[CheckResult]) -> CheckResult {
     } else {
         Some(summary)
     };
-    let details = outputs
-        .iter()
-        .filter_map(|output| output.details.clone())
-        .collect::<Vec<String>>()
-        .join("\n");
-    let details = if details.is_empty() {
-        None
-    } else {
-        Some(details)
-    };
 
     let state = outputs
         .iter()
@@ -374,11 +364,7 @@ fn merge_check_results(outputs: &[CheckResult]) -> CheckResult {
         .max()
         .unwrap();
 
-    CheckResult {
-        state,
-        summary,
-        details,
-    }
+    CheckResult { state, summary }
 }
 
 #[cfg(test)]

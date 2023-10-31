@@ -48,7 +48,6 @@ impl State {
 pub struct CheckResult {
     pub state: State,
     pub summary: Option<String>,
-    pub details: Option<String>,
 }
 
 impl Display for CheckResult {
@@ -56,9 +55,6 @@ impl Display for CheckResult {
         write!(f, "HTTP {}", self.state)?;
         if let Some(summary) = self.summary.as_ref() {
             write!(f, " - {}", summary)?;
-        }
-        if let Some(details) = self.details.as_ref() {
-            write!(f, "\n{}", details)?;
         }
         Ok(())
     }
@@ -70,7 +66,6 @@ impl CheckResult {
         Self {
             state,
             summary: Some(summary),
-            details: None,
         }
     }
 
@@ -78,7 +73,6 @@ impl CheckResult {
         Self {
             state,
             summary: None,
-            details: None,
         }
     }
 }
@@ -100,7 +94,6 @@ mod test_output_format {
                 CheckResult {
                     state: State::Ok,
                     summary: None,
-                    details: None
                 }
             ),
             "HTTP OK"
@@ -108,18 +101,17 @@ mod test_output_format {
     }
 
     #[test]
-    fn test_check_result_with_empty_fields() {
+    fn test_check_result_with_empty_summary() {
         assert_eq!(
             format!(
                 "{}",
                 CheckResult {
                     state: State::Ok,
                     summary: s(""),
-                    details: s("")
                 }
             ),
             // Expected "HTTP OK"
-            "HTTP OK - \n"
+            "HTTP OK - "
         );
     }
 
@@ -131,40 +123,9 @@ mod test_output_format {
                 CheckResult {
                     state: State::Ok,
                     summary: s("this is the summary"),
-                    details: None
                 }
             ),
             "HTTP OK - this is the summary"
-        );
-    }
-
-    #[test]
-    fn test_check_result_with_details() {
-        assert_eq!(
-            format!(
-                "{}",
-                CheckResult {
-                    state: State::Ok,
-                    summary: None,
-                    details: s("these are the details")
-                }
-            ),
-            "HTTP OK\nthese are the details"
-        );
-    }
-
-    #[test]
-    fn test_check_result_with_summary_and_details() {
-        assert_eq!(
-            format!(
-                "{}",
-                CheckResult {
-                    state: State::Ok,
-                    summary: s("this is the summary"),
-                    details: s("these are the details")
-                }
-            ),
-            "HTTP OK - this is the summary\nthese are the details"
         );
     }
 
@@ -173,17 +134,14 @@ mod test_output_format {
         let cr1 = CheckResult {
             state: State::Ok,
             summary: None,
-            details: None,
         };
         let cr2 = CheckResult {
             state: State::Ok,
             summary: None,
-            details: None,
         };
         let cr3 = CheckResult {
             state: State::Ok,
             summary: None,
-            details: None,
         };
         assert_eq!(
             format!("{}", merge_check_results(&[cr1, cr2, cr3])),
@@ -196,67 +154,18 @@ mod test_output_format {
         let cr1 = CheckResult {
             state: State::Ok,
             summary: s("summary 1"),
-            details: None,
         };
         let cr2 = CheckResult {
             state: State::Ok,
             summary: s("summary 2"),
-            details: None,
         };
         let cr3 = CheckResult {
             state: State::Ok,
             summary: s("summary 3"),
-            details: None,
         };
         assert_eq!(
             format!("{}", merge_check_results(&[cr1, cr2, cr3])),
             "HTTP OK - summary 1, summary 2, summary 3"
-        );
-    }
-
-    #[test]
-    fn test_merge_check_results_with_details() {
-        let cr1 = CheckResult {
-            state: State::Ok,
-            summary: None,
-            details: s("details 1"),
-        };
-        let cr2 = CheckResult {
-            state: State::Ok,
-            summary: None,
-            details: s("details 2"),
-        };
-        let cr3 = CheckResult {
-            state: State::Ok,
-            summary: None,
-            details: s("details 3"),
-        };
-        assert_eq!(
-            format!("{}", merge_check_results(&[cr1, cr2, cr3])),
-            "HTTP OK\ndetails 1\ndetails 2\ndetails 3"
-        );
-    }
-
-    #[test]
-    fn test_merge_check_results_with_summary_and_details() {
-        let cr1 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 1"),
-            details: s("details 1"),
-        };
-        let cr2 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 2"),
-            details: s("details 2"),
-        };
-        let cr3 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 3"),
-            details: s("details 3"),
-        };
-        assert_eq!(
-            format!("{}", merge_check_results(&[cr1, cr2, cr3])),
-            "HTTP OK - summary 1, summary 2, summary 3\ndetails 1\ndetails 2\ndetails 3"
         );
     }
 }

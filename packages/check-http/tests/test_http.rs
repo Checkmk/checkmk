@@ -61,16 +61,11 @@ async fn check_http_output(
 
     let check_http_payload = process_http(listener, http_response)?;
 
-    let CheckResult {
-        state,
-        summary,
-        details,
-    } = check_http_thread.await?;
+    let CheckResult { state, summary } = check_http_thread.await?;
 
     assert!(check_http_payload.starts_with(expected_http_payload_start));
     assert!(state == expected_state);
     assert!(summary.unwrap().starts_with(expected_summary_start));
-    assert!(details.is_none());
 
     Ok(())
 }

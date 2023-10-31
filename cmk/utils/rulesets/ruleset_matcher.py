@@ -138,7 +138,7 @@ class RulesetMatcher:
         self,
         host_tags: TagsOfHosts,
         host_paths: Mapping[HostName, str],
-        labels: LabelManager,
+        label_manager: LabelManager,
         all_configured_hosts: Sequence[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
@@ -149,7 +149,7 @@ class RulesetMatcher:
             self,
             host_tags,
             host_paths,
-            labels,
+            label_manager,
             all_configured_hosts,
             clusters_of,
             nodes_of,
@@ -381,7 +381,7 @@ class RulesetOptimizer:
         ruleset_matcher: RulesetMatcher,
         host_tags: TagsOfHosts,
         host_paths: Mapping[HostName, str],
-        labels: LabelManager,
+        label_manager: LabelManager,
         all_configured_hosts: Sequence[HostName],
         clusters_of: Mapping[HostName, Sequence[HostName]],
         nodes_of: Mapping[HostName, Sequence[HostName]],
@@ -389,7 +389,7 @@ class RulesetOptimizer:
         super().__init__()
         self.__labels_of_host: dict[HostName, Labels] = {}
         self._ruleset_matcher = ruleset_matcher
-        self._labels = labels
+        self._label_manager = label_manager
         self._host_tags = {hn: set(tags_of_host.items()) for hn, tags_of_host in host_tags.items()}
         self._host_paths = host_paths
         self._clusters_of = clusters_of
@@ -784,7 +784,7 @@ class RulesetOptimizer:
         labels: dict[str, str] = {}
         labels.update(self._discovered_labels_of_host(hostname))
         labels.update(self._ruleset_labels_of_host(hostname))
-        labels.update(self._labels.explicit_host_labels.get(hostname, {}))
+        labels.update(self._label_manager.explicit_host_labels.get(hostname, {}))
         labels.update(RulesetOptimizer._builtin_labels_of_host())
         return self.__labels_of_host.setdefault(hostname, labels)
 
@@ -797,12 +797,17 @@ class RulesetOptimizer:
         labels.update({k: "discovered" for k in RulesetOptimizer._builtin_labels_of_host()})
         labels.update({k: "ruleset" for k in self._ruleset_labels_of_host(hostname)})
         labels.update(
-            {k: "explicit" for k in self._labels.explicit_host_labels.get(hostname, {}).keys()}
+            {
+                k: "explicit"
+                for k in self._label_manager.explicit_host_labels.get(hostname, {}).keys()
+            }
         )
         return labels
 
     def _ruleset_labels_of_host(self, hostname: HostName) -> Labels:
-        return self._ruleset_matcher.get_host_merged_dict(hostname, self._labels.host_label_rules)
+        return self._ruleset_matcher.get_host_merged_dict(
+            hostname, self._label_manager.host_label_rules
+        )
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
         host_labels = (
@@ -827,7 +832,7 @@ class RulesetOptimizer:
         Last one wins.
         """
         labels: dict[str, str] = {}
-        labels.update(self._labels.discovered_labels_of_service(hostname, service_desc))
+        labels.update(self._label_manager.discovered_labels_of_service(hostname, service_desc))
         labels.update(self._ruleset_labels_of_service(hostname, service_desc))
 
         return labels
@@ -842,7 +847,7 @@ class RulesetOptimizer:
         labels.update(
             {
                 k: "discovered"
-                for k in self._labels.discovered_labels_of_service(hostname, service_desc)
+                for k in self._label_manager.discovered_labels_of_service(hostname, service_desc)
             }
         )
         labels.update(
@@ -855,7 +860,7 @@ class RulesetOptimizer:
         default: Labels = {}
         merged = boil_down_parameters(
             self._ruleset_matcher.get_service_ruleset_values(
-                RulesetMatchObject(hostname, service_desc), self._labels.service_label_rules
+                RulesetMatchObject(hostname, service_desc), self._label_manager.service_label_rules
             ),
             default,
         )

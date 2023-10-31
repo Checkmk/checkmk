@@ -1944,7 +1944,7 @@ class ConfigCache:
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=host_tags,
             host_paths=self._host_paths,
-            labels=LabelManager(
+            label_manager=LabelManager(
                 host_labels,
                 host_label_rules,
                 service_label_rules,

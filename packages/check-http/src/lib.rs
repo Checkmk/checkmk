@@ -233,23 +233,7 @@ async fn check_response(
 ) -> Output {
     let mut outputs: Vec<Output> = Vec::new();
 
-    let response_state = if response.status.is_client_error() {
-        State::Warn
-    } else if response.status.is_server_error() {
-        State::Crit
-    } else if response.status.is_redirection() {
-        match onredirect {
-            OnRedirect::Warning => State::Warn,
-            OnRedirect::Critical => State::Crit,
-            _ => State::Ok, // If we reach this point, the redirect is ok
-        }
-    } else {
-        State::Ok
-    };
-    outputs.push(Output::from_summary(
-        response_state,
-        &format!("{:?} {}", response.version, response.status),
-    ));
+    outputs.push(check_status(response.status, response.version, onredirect));
 
     if let Some(body) = response.body {
         match body {
@@ -270,6 +254,24 @@ async fn check_response(
     outputs.push(check_document_age(&response.headers, document_age_levels));
 
     merge_outputs(&outputs)
+}
+
+fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> Output {
+    let response_state = if status.is_client_error() {
+        State::Warn
+    } else if status.is_server_error() {
+        State::Crit
+    } else if status.is_redirection() {
+        match onredirect {
+            OnRedirect::Warning => State::Warn,
+            OnRedirect::Critical => State::Crit,
+            _ => State::Ok, // If we reach this point, the redirect is ok
+        }
+    } else {
+        State::Ok
+    };
+
+    Output::from_summary(response_state, &format!("{:?} {}", version, status))
 }
 
 fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> Output {

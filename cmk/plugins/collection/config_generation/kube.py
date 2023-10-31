@@ -19,9 +19,11 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
+from .utils import ProxyType
+
 
 class ProxyParams(BaseModel):
-    proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None] = (
+    proxy: tuple[ProxyType, str | None] = (
         "environment",
         "environment",
     )

@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal
 
 from pydantic import BaseModel
 
@@ -18,6 +17,8 @@ from cmk.config_generation.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
+
+from .utils import ProxyType
 
 
 class Explicit(BaseModel):
@@ -36,7 +37,7 @@ class AzureParams(BaseModel):
     tenant: str
     client: str
     secret: tuple[str, str]
-    proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None] | None = None
+    proxy: tuple[ProxyType, str | None] | None = None
     services: Sequence[str]
     config: Config
     piggyback_vms: str | None = None

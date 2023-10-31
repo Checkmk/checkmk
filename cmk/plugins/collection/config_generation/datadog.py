@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal
 
 from pydantic import BaseModel
 
@@ -18,6 +17,8 @@ from cmk.config_generation.v1 import (
     SpecialAgentCommand,
     SpecialAgentConfig,
 )
+
+from .utils import ProxyType
 
 
 class Instance(BaseModel):
@@ -52,7 +53,7 @@ class Logs(BaseModel):
 
 class DatadogParams(BaseModel):
     instance: Instance
-    proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None] | None = None
+    proxy: tuple[ProxyType, str | None] | None = None
     monitors: Monitors | None = None
     events: Events | None = None
     logs: Logs | None = None

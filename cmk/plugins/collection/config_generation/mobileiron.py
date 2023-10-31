@@ -5,7 +5,6 @@
 
 
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -19,11 +18,13 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
+from .utils import ProxyType
+
 
 class MobileIronParams(BaseModel):
     username: str
     password: tuple[str, str]
-    proxy: tuple[Literal["global", "environment", "url", "no_proxy"], str | None] | None = None
+    proxy: tuple[ProxyType, str | None] | None = None
     partition: Sequence[str]
     key_fields: tuple[str] | tuple[str, str] = Field(..., alias="key-fields")
     android_regex: Sequence[str] = Field(alias="android-regex", default_factory=list)

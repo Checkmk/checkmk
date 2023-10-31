@@ -92,3 +92,42 @@ fn lookup_pw(pw_store: &str, pw_id: &str) -> AnyhowResult<String> {
         .ok_or(anyhow!("Couldn't find requested ID in password store"))
         .map(|&pw| pw.to_owned())
 }
+
+#[cfg(test)]
+mod test_pw_store {
+    use crate::pwstore::unpack_pw_store;
+    use std::num::ParseIntError;
+
+    fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
+        // https://stackoverflow.com/questions/52987181
+        (0..s.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+            .collect()
+    }
+
+    #[test]
+    fn test_decode_hex() {
+        assert_eq!(decode_hex("00090a0b0cff").unwrap(), [0, 9, 10, 11, 12, 255]);
+    }
+
+    #[test]
+    fn test_unpack_pw_store_with_test_vector() {
+        // test vector from test_password_store.py
+        let input = decode_hex(
+            "\
+        00003b1cedb92526621483f9ba140fbe\
+        55f49916ae77a11a2ac93b4db0758061\
+        71a62a8aedd3d1edd67e558385a98efe\
+        be3c4c0ca364e54ff6ad2fa7ef48a0e8\
+        8ed989283e9604e07da89301658f0370\
+        d35bba1a8abf74bc971975\
+        ",
+        )
+        .unwrap();
+        let secret = b"password-secret";
+        let output = String::from("Time is an illusion. Lunchtime doubly so.");
+
+        assert_eq!(unpack_pw_store(&input, secret).unwrap(), output);
+    }
+}

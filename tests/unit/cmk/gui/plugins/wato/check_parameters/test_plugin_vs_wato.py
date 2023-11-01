@@ -853,11 +853,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "symantec_av_updates",
-            RuleGroup.CheckgroupParameters("antivir_update_age"),
-        ),
-        (
-            "check",
             "tinkerforge_ambient",
             RuleGroup.CheckgroupParameters("brightness"),
         ),

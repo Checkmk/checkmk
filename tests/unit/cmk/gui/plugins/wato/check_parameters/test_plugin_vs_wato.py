@@ -843,11 +843,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "tinkerforge_ambient",
-            RuleGroup.CheckgroupParameters("brightness"),
-        ),
-        (
-            "check",
             "tplink_mem",
             RuleGroup.CheckgroupParameters("memory_percentage_used"),
         ),

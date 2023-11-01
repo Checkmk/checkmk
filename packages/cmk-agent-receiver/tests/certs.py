@@ -94,5 +94,5 @@ def check_certificate_against_public_key(
         cert.signature,
         cert.tbs_certificate_bytes,
         PKCS1v15(),
-        SHA256(),
+        cert.signature_hash_algorithm,
     )

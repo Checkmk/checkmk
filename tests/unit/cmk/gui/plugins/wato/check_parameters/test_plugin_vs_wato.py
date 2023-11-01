@@ -657,11 +657,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "jolokia_metrics_bea_queue",
-            RuleGroup.CheckgroupParameters("jvm_queue"),
-        ),
-        (
-            "check",
             "jolokia_metrics_bea_requests",
             RuleGroup.CheckgroupParameters("jvm_requests"),
         ),

@@ -8,7 +8,7 @@
 
 import time
 
-from cmk.base.check_api import LegacyCheckDefinition, saveint
+from cmk.base.check_api import check_levels, LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.jolokia import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
@@ -39,7 +39,6 @@ jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
 # Number of requests low crit, low warn, high warn, high crit
 jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
 
-jolokia_metrics_queue_default_levels = (20, 50)
 
 # .
 #   .--Arcane helpers------------------------------------------------------.
@@ -255,18 +254,19 @@ def check_jolokia_metrics_app_sess(item, params, info):
 def check_jolokia_metrics_bea_queue(item, params, info):
     app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "application not found")
-    if "QueueLength" not in app:
-        return (3, "data not found in agent output")
-    queuelength = int(app["QueueLength"])
+        yield 3, "application not found"
+        return
 
-    status = 0
-    warn, crit = params
-    if queuelength >= crit:
-        status = 2
-    elif queuelength >= warn:
-        status = 1
-    return (status, "queue length is %d" % queuelength, [("length", queuelength, warn, crit)])
+    if (length := app.get("QueueLength")) is None:
+        return
+
+    yield check_levels(
+        int(length),
+        "length",
+        params["levels"],
+        human_readable_func=str,
+        infoname="Queue length",
+    )
 
 
 # FIXME: This check could work with any JVM
@@ -337,10 +337,13 @@ check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
     service_name="JVM %s Queue",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
-        "queue", needed_keys={"QueueLength"}, default_params=jolokia_metrics_queue_default_levels
+        "queue", needed_keys={"QueueLength"}, default_params={}
     ),
     check_function=check_jolokia_metrics_bea_queue,
     check_ruleset_name="jvm_queue",
+    check_default_parameters={
+        "levels": (20, 50),
+    },
 )
 
 check_info["jolokia_metrics.bea_requests"] = LegacyCheckDefinition(

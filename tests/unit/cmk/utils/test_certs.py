@@ -15,24 +15,14 @@ from pytest_mock import MockerFixture
 from tests.testlib import on_time
 from tests.testlib.certs import (
     check_certificate_against_private_key,
-    check_certificate_against_public_key,
     check_cn,
-    generate_private_key,
     get_cn,
+    load_cert_and_private_key,
 )
 
 from livestatus import SiteId
 
-from cmk.utils.certs import (
-    _generate_root_cert,
-    _make_csr,
-    _make_subject_name,
-    _rsa_public_key_from_cert_or_csr,
-    _sign_csr,
-    CN_TEMPLATE,
-    load_cert_and_private_key,
-    RootCA,
-)
+from cmk.utils.certs import CN_TEMPLATE, RootCA
 from cmk.utils.crypto.certificate import (
     Certificate,
     CertificateWithPrivateKey,
@@ -251,53 +241,13 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     assert loaded.rsa.private_numbers() == ca.rsa.private_numbers()  # type:ignore[attr-defined]
 
 
-def test_make_csr() -> None:
-    csr = _make_csr(
-        _make_subject_name("abc123"),
-        generate_private_key(1024),
-    )
-    assert csr.is_signature_valid
-    assert check_cn(
-        csr,
-        "abc123",
-    )
-
-
-def test_sign_csr() -> None:
-    root_cert, root_key = _generate_root_cert("peter", relativedelta(days=1), key_size=1024)
-    key = generate_private_key(1024)
-    csr = _make_csr(
-        _make_subject_name("from_peter"),
-        key,
-    )
-    with on_time(100, "UTC"):
-        cert = _sign_csr(
-            csr,
-            relativedelta(days=2),
-            root_cert,
-            root_key,
-        )
-
-    assert check_cn(
-        cert,
-        "from_peter",
-    )
-    assert str(cert.not_valid_before) == "1970-01-01 00:01:40"
-    assert str(cert.not_valid_after) == "1970-01-03 00:01:40"
-    check_certificate_against_private_key(
-        cert,
-        key,
-    )
-    # ensure that 'from_peter' is indeed signed by 'peter'
-    check_certificate_against_public_key(
-        cert,
-        _rsa_public_key_from_cert_or_csr(root_cert),
-    )
-
-
 def test_sign_csr_with_local_ca() -> None:
-    # To test that 'sign_csr' sets the issuer correctly (regression), make a longer chain
+    # To test that 'sign_csr' sets the issuer correctly (regression), make a longer chain:
     # "peters_mom" -> "peter" (RootCA instance) -> "peters_daughter" (via sign_csr)
+    #
+    # In reality the RootCA is self-signed of course, but for testing purposes it isn't here.
+    # The regression was that RootCA set its own issuer as the issuer of signed CSRs. Thus we need
+    # RootCA's subject and issuer to not be the same.
 
     peters_mom = CertificateWithPrivateKey.generate_self_signed(
         common_name="peters_mom",
@@ -315,24 +265,20 @@ def test_sign_csr_with_local_ca() -> None:
         issuer_signing_key=peters_mom.private_key,
         issuer_name=X509Name.create(common_name=peters_mom.certificate.common_name),
     )
-    peter_root_ca = RootCA(peter_cert._cert, peter_key._key)
-
-    daughter_key = generate_private_key(1024)
-    daughter_csr = _make_csr(_make_subject_name("peters_daughter"), daughter_key)
+    peter_root_ca = RootCA(peter_cert, peter_key)
 
     with on_time(567892121, "UTC"):
-        daughter_cert = peter_root_ca.sign_csr(daughter_csr, relativedelta(days=100))
+        daughter_cert, daughter_key = peter_root_ca.issue_new_certificate(
+            "peters_daughter",
+            relativedelta(days=100),
+            1024,
+        )
 
     assert str(daughter_cert.not_valid_before) == "1987-12-30 19:48:41"
     assert str(daughter_cert.not_valid_after) == "1988-04-08 19:48:41"
 
-    check_certificate_against_private_key(daughter_cert, daughter_key)
+    daughter_cert.verify_is_signed_by(peter_cert)
+    assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"
 
-    assert check_cn(daughter_cert, "peters_daughter"), "subject CN is the daughter"
-    assert get_cn(daughter_cert.issuer) == "peter", "issuer is peter"
-
-    # ensure that 'peters_daughter' is indeed signed by 'peter'
-    check_certificate_against_public_key(
-        daughter_cert,
-        _rsa_public_key_from_cert_or_csr(peter_cert._cert),
-    )
+    assert check_cn(daughter_cert._cert, "peters_daughter"), "subject CN is the daughter"
+    assert get_cn(daughter_cert._cert.issuer) == "peter", "issuer is peter"

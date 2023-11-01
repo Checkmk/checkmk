@@ -49,4 +49,4 @@ class CertificateAuthority:
 
     def create_site_certificate(self, site_id: str) -> None:
         """Creates the key / certificate for the given Check_MK site"""
-        self.root_ca.save_new_signed_cert(self._site_certificate_path(site_id), site_id)
+        self.root_ca.issue_and_store_certificate(self._site_certificate_path(site_id), site_id)

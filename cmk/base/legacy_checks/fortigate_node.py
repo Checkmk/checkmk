@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
-from cmk.base.check_legacy_includes.fortigate_sessions import fortigate_sessions
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -158,20 +157,19 @@ check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-fortigate_node_sessions_default_levels = (100000, 150000)
-
 
 def inventory_fortigate_node_ses(parsed):
     for hostname in parsed["nodes"]:
-        yield hostname, fortigate_node_sessions_default_levels
+        yield hostname, {}
 
 
 def check_fortigate_node_ses(item, params, parsed):
-    if item in parsed["nodes"]:
-        if isinstance(params, dict):
-            params = params["levels"]
-        return fortigate_sessions(parsed["nodes"][item]["sessions"], params)
-    return None
+    if (data := parsed["nodes"].get(item)) is None:
+        return
+
+    yield check_levels(
+        data["sessions"], "session", params["levels"], human_readable_func=str, infoname="Sessions"
+    )
 
 
 check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
@@ -180,4 +178,5 @@ check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
     discovery_function=inventory_fortigate_node_ses,
     check_function=check_fortigate_node_ses,
     check_ruleset_name="fortigate_node_sessions",
+    check_default_parameters={"levels": (100000, 150000)},
 )

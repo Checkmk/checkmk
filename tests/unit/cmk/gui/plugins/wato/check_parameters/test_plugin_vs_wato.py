@@ -586,21 +586,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortigate_node_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_node_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions_base",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
             "fortimail_cpu_load",
             RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
         ),

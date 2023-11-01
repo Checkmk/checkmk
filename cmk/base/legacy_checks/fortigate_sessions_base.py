@@ -4,20 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.fortigate_sessions import fortigate_sessions
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
 
-fortigate_sessions_base_default_levels = (100000, 150000)
-
 
 def inventory_fortigate_sessions_base(info):
-    return [(None, fortigate_sessions_base_default_levels)]
+    yield None, {}
 
 
 def check_fortigate_sessions_base(item, params, info):
-    return fortigate_sessions(int(info[0][0]), params)
+    sessions = int(info[0][0])
+    yield check_levels(
+        sessions, "session", params["levels"], human_readable_func=str, infoname="Sessions"
+    )
 
 
 check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
@@ -34,4 +34,5 @@ check_info["fortigate_sessions_base"] = LegacyCheckDefinition(
     discovery_function=inventory_fortigate_sessions_base,
     check_function=check_fortigate_sessions_base,
     check_ruleset_name="fortigate_sessions",
+    check_default_parameters={"levels": (100000, 150000)},
 )

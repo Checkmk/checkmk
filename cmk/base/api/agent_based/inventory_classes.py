@@ -177,4 +177,4 @@ class InventoryPlugin(NamedTuple):
     inventory_function: InventoryFunction
     inventory_default_parameters: ParametersTypeAlias
     inventory_ruleset_name: RuleSetName | None
-    module: str
+    full_module: str

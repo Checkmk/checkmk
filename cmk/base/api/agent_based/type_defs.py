@@ -59,7 +59,7 @@ class AgentSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
-    module: str | None  # not available for auto migrated plugins.
+    full_module: str | None  # not available for auto migrated plugins.
 
 
 class SNMPSectionPlugin(NamedTuple):
@@ -73,7 +73,7 @@ class SNMPSectionPlugin(NamedTuple):
     detect_spec: SNMPDetectBaseType
     trees: Sequence[SNMPTreeTuple]
     supersedes: set[SectionName]
-    module: str | None  # not available for auto migrated plugins.
+    full_module: str | None  # not available for auto migrated plugins.
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin

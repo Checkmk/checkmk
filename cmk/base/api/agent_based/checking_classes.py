@@ -544,4 +544,4 @@ class CheckPlugin(NamedTuple):
     check_default_parameters: ParametersTypeAlias | None
     check_ruleset_name: RuleSetName | None
     cluster_check_function: CheckFunction | None
-    module: str | None  # not available for auto migrated plugins.
+    full_module: str | None  # not available for auto migrated plugins.

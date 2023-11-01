@@ -247,7 +247,7 @@ def create_agent_section_plugin(
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
-    module: str | None = None,
+    full_module: str | None = None,
     validate_creation_kwargs: bool = True,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -285,7 +285,7 @@ def create_agent_section_plugin(
             "merged" if host_label_ruleset_type is RuleSetType.MERGED else "all"
         ),
         supersedes=_create_supersedes(section_name, supersedes),
-        module=module,
+        full_module=full_module,
     )
 
 
@@ -301,7 +301,7 @@ def create_snmp_section_plugin(
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
-    module: str | None = None,
+    full_module: str | None = None,
     validate_creation_kwargs: bool = True,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
@@ -351,7 +351,7 @@ def create_snmp_section_plugin(
         supersedes=_create_supersedes(section_name, supersedes),
         detect_spec=detect_spec,
         trees=tree_list,
-        module=module,
+        full_module=full_module,
     )
 
 
@@ -391,5 +391,5 @@ def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
         host_label_ruleset_name=None,
         host_label_ruleset_type="merged",  # doesn't matter, use default.
         supersedes=set(),
-        module=None,
+        full_module=None,
     )

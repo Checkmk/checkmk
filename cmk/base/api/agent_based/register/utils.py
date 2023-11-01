@@ -32,19 +32,19 @@ def get_validated_plugin_module_name() -> str:
     full_module_name = str(sys._getframe(2).f_globals["__name__"])
 
     match full_module_name.split("."):
-        case ("cmk", "base", "plugins", "agent_based", module):
-            return module
+        case ("cmk", "base", "plugins", "agent_based", _module):
+            return full_module_name
         case (
             "cmk",
             "base",
             "plugins",
             "agent_based",
             edition,
-            module,
+            _module,
         ) if edition in _ALLOWED_EDITION_FOLDERS:
-            return f"{edition}.{module}"
+            return full_module_name
 
-    raise ImportError("do not register from %r" % full_module_name)
+    raise ImportError(f"do not register from {full_module_name!r}")
 
 
 def create_subscribed_sections(

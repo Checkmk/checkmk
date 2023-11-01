@@ -107,7 +107,7 @@ def agent_section(
         host_label_ruleset_name=host_label_ruleset_name,
         host_label_ruleset_type=host_label_ruleset_type,
         supersedes=supersedes,
-        module=get_validated_plugin_module_name(),
+        full_module=get_validated_plugin_module_name(),
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -231,7 +231,7 @@ def snmp_section(
         detect_spec=detect,
         fetch=fetch,
         supersedes=supersedes,
-        module=get_validated_plugin_module_name(),
+        full_module=get_validated_plugin_module_name(),
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -322,7 +322,7 @@ def check_plugin(
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_ruleset_name,
         cluster_check_function=cluster_check_function,
-        module=get_validated_plugin_module_name(),
+        full_module=get_validated_plugin_module_name(),
     )
 
     if is_registered_check_plugin(plugin.name):
@@ -375,7 +375,7 @@ def inventory_plugin(
         inventory_function=inventory_function,
         inventory_default_parameters=inventory_default_parameters,
         inventory_ruleset_name=inventory_ruleset_name,
-        module=get_validated_plugin_module_name(),
+        full_module=get_validated_plugin_module_name(),
     )
 
     if is_registered_inventory_plugin(plugin.name):

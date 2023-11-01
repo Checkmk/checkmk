@@ -795,11 +795,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "oracle_diva_csm_tapes",
-            RuleGroup.CheckgroupParameters("blank_tapes"),
-        ),
-        (
-            "check",
             "plesk_backups",
             RuleGroup.CheckgroupParameters("plesk_backups"),
         ),

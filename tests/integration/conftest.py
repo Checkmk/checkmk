@@ -31,7 +31,9 @@ def get_site() -> Iterator[Site]:
 @pytest.fixture(scope="session", name="web")
 def fixture_web(site: Site) -> CMKWebSession:
     web = CMKWebSession(site)
-    web.login()
+
+    if not site.version.is_saas_edition():
+        web.login()
     site.enforce_non_localized_gui(web)
     return web
 

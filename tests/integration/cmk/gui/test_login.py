@@ -4,10 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from tests.testlib import CMKWebSession
+from tests.testlib.pytest_helpers.marks import skip_if_saas_edition
 from tests.testlib.site import Site
 
 
-def test_01_login_and_logout(site: Site) -> None:
+@skip_if_saas_edition
+def test_login_and_logout(site: Site) -> None:
     web = CMKWebSession(site)
 
     r = web.get("wato.py?mode=globalvars", allow_redirect_to_login=True)
@@ -26,7 +28,9 @@ def test_01_login_and_logout(site: Site) -> None:
 def test_session_cookie(site: Site) -> None:
     web = CMKWebSession(site)
 
-    web.login()
+    if not site.version.is_saas_edition():
+        web.login()
+
     for cookie in web.session.cookies:
         if not cookie.name == f"auth_{site.id}":
             continue

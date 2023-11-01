@@ -56002,12 +56002,11 @@ msgstr ""
 "tenta encontrar um usuário de automação \"automação\"."
 
 msgid ""
-"The selected automation user needs rights for pairing all agents. TODO: "
-"Provide details (ATM: We still need such a role)"
+"The selected automation user needs rights for registering new agents. I.e., "
+"it either needs the <i>register all new hosts</i> permission, or needs to be "
+"a contact of the relevant folder/s that this rule matches on, together with "
+"the <i>register new hosts in managed folders</i> permission."
 msgstr ""
-"O utilizador de automatização seleccionado necessita de direitos para "
-"emparelhar todos os agentes. TODO: Fornecer pormenores (ATM: Ainda "
-"precisamos de uma função deste tipo)"
 
 #, python-format
 msgid ""
@@ -72662,6 +72661,14 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid ""
+#~ "The selected automation user needs rights for pairing all agents. TODO: "
+#~ "Provide details (ATM: We still need such a role)"
+#~ msgstr ""
+#~ "O utilizador de automatização seleccionado necessita de direitos para "
+#~ "emparelhar todos os agentes. TODO: Fornecer pormenores (ATM: Ainda "
+#~ "precisamos de uma função deste tipo)"
 
 #~ msgid "ASCII Email (legacy)"
 #~ msgstr "E-mail ASCII (legado)"

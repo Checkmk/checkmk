@@ -56288,12 +56288,11 @@ msgstr ""
 "l'agent bakery cerca di trovare un utente di automazione \"automazione\"."
 
 msgid ""
-"The selected automation user needs rights for pairing all agents. TODO: "
-"Provide details (ATM: We still need such a role)"
+"The selected automation user needs rights for registering new agents. I.e., "
+"it either needs the <i>register all new hosts</i> permission, or needs to be "
+"a contact of the relevant folder/s that this rule matches on, together with "
+"the <i>register new hosts in managed folders</i> permission."
 msgstr ""
-"L'utente di automazione selezionato ha bisogno dei diritti per accoppiare "
-"tutti gli agenti. TODO: Fornire dettagli (ATM: abbiamo ancora bisogno di un "
-"ruolo di questo tipo)"
 
 #, python-format
 msgid ""
@@ -73079,6 +73078,14 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid ""
+#~ "The selected automation user needs rights for pairing all agents. TODO: "
+#~ "Provide details (ATM: We still need such a role)"
+#~ msgstr ""
+#~ "L'utente di automazione selezionato ha bisogno dei diritti per accoppiare "
+#~ "tutti gli agenti. TODO: Fornire dettagli (ATM: abbiamo ancora bisogno di "
+#~ "un ruolo di questo tipo)"
 
 #~ msgid "ASCII Email (legacy)"
 #~ msgstr "ASCII Email (legacy)"

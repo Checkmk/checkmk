@@ -16,7 +16,7 @@ from typing import Any
 
 from tests.testlib import wait_until
 from tests.testlib.site import Site
-from tests.testlib.utils import execute
+from tests.testlib.utils import run
 
 from cmk.utils.hostaddress import HostName
 
@@ -42,10 +42,10 @@ def install_agent_package(package_path: Path) -> Path:
     package_type = get_package_type()
     installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
     if package_type == "linux_deb":
-        execute(["sudo", "dpkg", "-i", package_path.as_posix()])
+        run(["sudo", "dpkg", "-i", package_path.as_posix()])
         return installed_ctl_path
     if package_type == "linux_rpm":
-        execute(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
+        run(["sudo", "rpm", "-vU", "--oldpackage", "--replacepkgs", package_path.as_posix()])
         return installed_ctl_path
     raise NotImplementedError(
         f"Installation of package type {package_type} is not supported yet, please implement it"
@@ -93,7 +93,7 @@ class _CMKAgentSocketHandler(socketserver.BaseRequestHandler):
 
 
 def _clear_controller_connections(ctl_path: Path) -> None:
-    execute(["sudo", ctl_path.as_posix(), "delete-all"])
+    run(["sudo", ctl_path.as_posix(), "delete-all"])
 
 
 @contextlib.contextmanager
@@ -169,7 +169,7 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 def register_controller(
     contoller_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
-    execute(
+    run(
         [
             "sudo",
             contoller_path.as_posix(),
@@ -206,7 +206,7 @@ def wait_until_host_receives_data(
 
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
     return json.loads(  # type: ignore[no-any-return]
-        execute(
+        run(
             [
                 "sudo",
                 contoller_path.as_posix(),

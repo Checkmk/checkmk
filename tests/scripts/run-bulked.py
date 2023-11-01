@@ -11,7 +11,7 @@ import sys
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from tests.testlib.utils import execute, repo_path
+from tests.testlib.utils import repo_path, run
 
 logger = logging.getLogger("pytest-bulked")
 
@@ -42,9 +42,7 @@ def main() -> None:
         pytest_cmd.append(args.filter_expression)
 
     collection_stats = (
-        execute(pytest_cmd + ["--collect-only"])
-        .stdout.split("\ncollected ", 1)[-1]
-        .split("\n", 1)[0]
+        run(pytest_cmd + ["--collect-only"]).stdout.split("\ncollected ", 1)[-1].split("\n", 1)[0]
     )
     logger.info("Collected %s", collection_stats)
     test_count = [int(_) for _ in collection_stats.split(" ") if _.isnumeric()][-1]
@@ -63,7 +61,7 @@ def main() -> None:
     chunk_reports: list[str] = []
     for chunk_index in chunks:
         chunk_reports.append(f"/tmp/~junit.{report_suffix}.chunk{chunk_index}.xml")
-        execute(
+        run(
             pytest_cmd
             + [
                 f"--chunk-index={chunk_index}",
@@ -74,7 +72,7 @@ def main() -> None:
         )
 
     # merge chunk reports
-    execute(
+    run(
         [f"{repo_path()}/tests/scripts/merge-junit-suites.py"]
         + chunk_reports
         + [report_file, "--stats", f"--pytest-suite-name={args.test_type}"]
@@ -83,7 +81,7 @@ def main() -> None:
         os.remove(chunk_report)
 
     # generate HTML report
-    execute(["junit2html", report_file, f"{report_file.removesuffix('.xml')}.htm"], check=False)
+    run(["junit2html", report_file, f"{report_file.removesuffix('.xml')}.htm"], check=False)
 
 
 if __name__ == "__main__":

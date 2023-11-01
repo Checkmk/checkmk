@@ -19,7 +19,7 @@ import pytest
 import yaml
 
 from tests.testlib.site import Site
-from tests.testlib.utils import execute, qa_test_data_path
+from tests.testlib.utils import qa_test_data_path, run
 
 logger = logging.getLogger(__name__)
 
@@ -259,7 +259,7 @@ def _verify_check_result(
         logger.error("[%s] No data returned!", check_id)
         return False, ""
 
-    diff = execute(
+    diff = run(
         shlex.split(os.getenv("DIFF_CMD", "diff"))
         + [
             json_canon_file_path,

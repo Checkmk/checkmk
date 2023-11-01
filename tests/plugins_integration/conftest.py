@@ -9,7 +9,7 @@ from collections.abc import Iterator
 import pytest
 
 from tests.testlib.site import get_site_factory, Site
-from tests.testlib.utils import execute
+from tests.testlib.utils import run
 
 from tests.plugins_integration import checks
 
@@ -156,7 +156,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         logger.info("Injecting agent-output...")
         for dump_name in checks.get_host_names():
             assert (
-                execute(
+                run(
                     [
                         "sudo",
                         "cp",
@@ -191,7 +191,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
         if os.getenv("CLEANUP", "1") == "1" and not skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
-            assert execute(["sudo", "rm", "-rf", dump_path]).returncode == 0
+            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
 
 
 @pytest.fixture(name="bulk_setup", scope="session")

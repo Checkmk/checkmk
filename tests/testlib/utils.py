@@ -336,7 +336,7 @@ def spawn_expect_process(
     return rc
 
 
-def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+def run(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
     LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
     try:
         proc = subprocess.run(
@@ -365,7 +365,7 @@ def restart_httpd() -> None:
 
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
-        execute(["sudo", "httpd", "-k", "restart"])
+        run(["sudo", "httpd", "-k", "restart"])
 
 
 def get_services_with_status(

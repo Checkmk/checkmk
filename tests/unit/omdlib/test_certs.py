@@ -44,7 +44,7 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
     site_id = "xyz"
     assert not ca.site_certificate_exists(site_id)
 
-    ca.create_site_certificate(site_id)
+    ca.create_site_certificate(site_id, key_size=1024)
     assert ca.site_certificate_exists(site_id)
     assert _file_permissions_is_660(ca._site_certificate_path(site_id))
 

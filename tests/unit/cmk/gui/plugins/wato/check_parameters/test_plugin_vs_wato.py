@@ -616,11 +616,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "hitachi_hnas_bossock",
-            RuleGroup.CheckgroupParameters("bossock_fibers"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
         ),

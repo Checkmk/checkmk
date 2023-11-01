@@ -539,11 +539,6 @@ class ErrorReporter:
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
         (
             "check",
-            "epson_beamer_lamp",
-            RuleGroup.CheckgroupParameters("lamp_operation_time"),
-        ),
-        (
-            "check",
             "esx_vsphere_licenses",
             RuleGroup.CheckgroupParameters("esx_licenses"),
         ),

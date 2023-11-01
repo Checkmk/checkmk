@@ -322,7 +322,6 @@ CEE_UNUSED_PACKAGES = [
     "idna",
     "itsdangerous",
     "jmespath",
-    "markdown",
     "markupsafe",
     "more-itertools",
     "multidict",

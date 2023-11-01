@@ -183,7 +183,6 @@ protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/pac
 semver = "==3.0.0"
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-werks = {editable = true, path = "./packages/cmk-werks"}
-markdown = "*"  # TODO: Only used by cmk-werks!
 pysmb = "==1.2.9.1"  # used by SMB share special agent
 google-cloud-monitoring = "~=2.11"  # used by the gcp special agent
 google-cloud-asset = "~=3.14"  # used by the gcp special agent

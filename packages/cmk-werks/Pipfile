@@ -19,9 +19,7 @@ python-lsp-black = "*"
 python-lsp-server = "*"
 
 [packages]
-lxml = "*"
-markdown = "*"
-pydantic = "*"
+cmk-werks = {editable = true, path = "."}
 
 [requires]
 python_version = "3.11"

@@ -54,7 +54,7 @@ def sign_agent_csr(
             .not_valid_before(valid_from)
             .not_valid_after(valid_from + relativedelta(months=lifetime_in_months))
         )
-        .issuer_name(root_cert.issuer)
+        .issuer_name(root_cert.subject)
         .add_extension(
             SubjectAlternativeName([DNSName(extract_cn_from_csr(csr))]),
             critical=False,

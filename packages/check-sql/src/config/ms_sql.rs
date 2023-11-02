@@ -51,8 +51,10 @@ mod values {
     /// AuthType::System
     pub const SQL_SERVER: &str = "sql_server";
     /// AuthType::Windows
+    #[cfg(windows)]
     pub const WINDOWS: &str = "windows";
     /// AuthType::Integrated
+    #[cfg(windows)]
     pub const INTEGRATED: &str = "integrated";
     /// AuthType::Token
     pub const TOKEN: &str = "token";
@@ -66,7 +68,10 @@ mod values {
 
 mod defaults {
     use crate::config::ms_sql::values;
+    #[cfg(windows)]
     pub const AUTH_TYPE: &str = values::INTEGRATED;
+    #[cfg(unix)]
+    pub const AUTH_TYPE: &str = values::SQL_SERVER;
     pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
     pub const CONNECTION_PORT: u16 = 1433;
@@ -223,10 +228,12 @@ impl TryFrom<&str> for AuthType {
     fn try_from(val: &str) -> Result<Self> {
         match str::to_ascii_lowercase(val).as_ref() {
             values::SQL_SERVER => Ok(AuthType::SqlServer),
+            #[cfg(windows)]
             values::WINDOWS => Ok(AuthType::Windows),
+            #[cfg(windows)]
             values::INTEGRATED => Ok(AuthType::Integrated),
             values::TOKEN => Ok(AuthType::Token),
-            _ => Err(anyhow!("unsupported auth type")),
+            _ => Err(anyhow!("unsupported auth type `{val}`")),
         }
     }
 }
@@ -601,7 +608,7 @@ mssql:
 authentication:
   username: "foo"
   password: "bar"
-  type: "windows"
+  type: "sql_server"
   access_token: "baz"
 "#;
         pub const AUTHENTICATION_MINI: &str = r#"
@@ -706,7 +713,7 @@ piggyback:
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_FULL)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), Some(&"bar".to_owned()));
-        assert_eq!(a.auth_type(), &AuthType::Windows);
+        assert_eq!(a.auth_type(), &AuthType::SqlServer);
         assert_eq!(a.access_token(), Some(&"baz".to_owned()));
     }
 
@@ -731,7 +738,10 @@ authentication:
         let a = Authentication::from_yaml(&create_yaml(data::AUTHENTICATION_MINI)).unwrap();
         assert_eq!(a.username(), "foo");
         assert_eq!(a.password(), None);
+        #[cfg(windows)]
         assert_eq!(a.auth_type(), &AuthType::Integrated);
+        #[cfg(unix)]
+        assert_eq!(a.auth_type(), &AuthType::SqlServer);
         assert_eq!(a.access_token(), None);
     }
 

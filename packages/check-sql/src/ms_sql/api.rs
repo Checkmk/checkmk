@@ -12,15 +12,8 @@ use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
 pub enum Credentials<'a> {
-    SqlServer {
-        user: &'a str,
-        password: &'a str,
-    },
-    #[cfg(windows)]
-    Windows {
-        user: &'a str,
-        password: &'a str,
-    },
+    SqlServer { user: &'a str, password: &'a str },
+    Windows { user: &'a str, password: &'a str },
 }
 
 pub struct Section {
@@ -83,6 +76,11 @@ pub async fn create_client(
         Credentials::SqlServer { user, password } => AuthMethod::sql_server(user, password),
         #[cfg(windows)]
         Credentials::Windows { user, password } => AuthMethod::windows(user, password),
+        #[cfg(unix)]
+        Credentials::Windows {
+            user: _,
+            password: _,
+        } => anyhow::bail!("not supported"),
     });
     config.trust_cert(); // on production, it is not a good idea to do this
 

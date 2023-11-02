@@ -478,7 +478,6 @@ class ErrorReporter:
             "couchbase_buckets_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
         ),
-        ("check", "db2_backup", RuleGroup.CheckgroupParameters("db2_backup")),
         ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
         (
             "check",

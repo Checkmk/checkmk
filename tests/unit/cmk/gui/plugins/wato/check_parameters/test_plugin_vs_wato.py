@@ -585,11 +585,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "hpux_multipath",
-            RuleGroup.CheckgroupParameters("hpux_multipath"),
-        ),
-        (
-            "check",
             "huawei_osn_laser",
             RuleGroup.CheckgroupParameters("huawei_osn_laser"),
         ),

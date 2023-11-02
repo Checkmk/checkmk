@@ -45,13 +45,21 @@ pub async fn check_http(args: Cli) -> Output {
         args.max_redirs,
         args.force_ip_version,
     ) else {
-        return output_from_preparation_error();
+        return Output::from_summary(State::Unknown, "Error building the request");
     };
 
     let response = match perform_request(request, args.without_body).await {
         Ok(resp) => resp,
         Err(err) => {
-            return output_from_request_error(err);
+            if err.is_timeout() {
+                return Output::from_summary(State::Crit, "timeout");
+            } else if err.is_connect() {
+                return Output::from_summary(State::Crit, "Failed to connect");
+            } else if err.is_redirect() {
+                return Output::from_summary(State::Crit, &err.to_string()); // Hit one of max_redirs, sticky, stickyport
+            } else {
+                return Output::from_summary(State::Unknown, "Error while sending request");
+            }
         }
     };
 
@@ -63,10 +71,6 @@ pub async fn check_http(args: Cli) -> Output {
         args.document_age_levels,
     )
     .await
-}
-
-fn output_from_preparation_error() -> Output {
-    Output::from_summary(State::Unknown, "Error building the request")
 }
 
 #[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
@@ -112,18 +116,6 @@ fn prepare_request(
         Ok(req.basic_auth(user, auth_pw))
     } else {
         Ok(req)
-    }
-}
-
-fn output_from_request_error(err: ReqwestError) -> Output {
-    if err.is_timeout() {
-        Output::from_summary(State::Crit, "timeout")
-    } else if err.is_connect() {
-        Output::from_summary(State::Crit, "Failed to connect")
-    } else if err.is_redirect() {
-        Output::from_summary(State::Crit, &err.to_string()) // Hit one of max_redirs, sticky, stickyport
-    } else {
-        Output::from_summary(State::Unknown, "Error while sending request")
     }
 }
 

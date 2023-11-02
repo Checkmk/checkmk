@@ -9,16 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Integer, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Integer, Migrate
 
 
-def _parameter_valuespec_domino_transactions():
-    return Tuple(
-        title=_("Number of Transactions per Minute on a Lotus Domino Server"),
-        elements=[
-            Integer(title=_("warning at"), default_value=30000),
-            Integer(title=_("critical at"), default_value=35000),
-        ],
+def _parameter_valuespec_domino_transactions() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Integer,
+                        title=_("Number of Transactions per Minute on a Lotus Domino Server"),
+                        default_levels=(30000, 35000),
+                    ),
+                )
+            ],
+            optional_keys=[],
+        ),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

@@ -499,11 +499,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "domino_transactions",
-            RuleGroup.CheckgroupParameters("domino_transactions"),
-        ),
-        (
-            "check",
             "domino_users",
             RuleGroup.CheckgroupParameters("domino_users"),
         ),

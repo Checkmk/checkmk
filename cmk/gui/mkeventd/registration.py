@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry
@@ -32,6 +33,7 @@ from ._find_usage import (
     find_usages_of_contact_group_in_ec_rules,
     find_usages_of_contact_group_in_mkeventd_notify_contactgroup,
 )
+from ._openapi import register as openapi_register
 from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .config_domain import ConfigDomainEventConsole
@@ -63,6 +65,7 @@ def register(
     snapin_registry: SnapinRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
+    endpoint_registry: EndpointRegistry,
 ) -> None:
     views.register(
         data_source_registry,
@@ -97,3 +100,4 @@ def register(
         find_usages_of_contact_group_in_mkeventd_notify_contactgroup
     )
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_ec_rules)
+    openapi_register(endpoint_registry)

@@ -4,31 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import assert_never, Generator, Literal, TypedDict
+from typing import assert_never, Literal, TypedDict
 
 from cmk.utils.paths import robotmk_html_log_dir  # pylint: disable=cmk-module-layer-violation
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    ServiceLabel,
-    State,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-from cmk.base.plugins.agent_based.utils import robotmk_api  # Should be replaced by external package
-from cmk.base.plugins.agent_based.utils.robotmk_parse_xml import extract_tests_from_suites
 
 from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
     host_name,
     service_description,
 )
+
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import robotmk_api
+from .utils.robotmk_parse_xml import extract_tests_from_suites
 
 
 class Params(TypedDict):
@@ -63,12 +51,35 @@ def _remap_state(status: robotmk_api.Outcome) -> State:
             assert_never(status)
 
 
-def _remap_attempt_state(status: robotmk_api.AttemptOutcome) -> State:
-    match status:
+def _attempt_result(
+    attempt_outcome: robotmk_api.AttemptOutcome | robotmk_api.AttemptOutcomeOtherError,
+) -> Result:
+    state = State.OK if attempt_outcome is robotmk_api.AttemptOutcome.AllTestsPassed else State.CRIT
+
+    match attempt_outcome:
         case robotmk_api.AttemptOutcome.AllTestsPassed:
-            return State.OK
+            summary = "All tests passed"
+        case robotmk_api.AttemptOutcome.TestFailures:
+            summary = "Test failures"
+        case robotmk_api.AttemptOutcome.RobotFrameworkFailure:
+            summary = "Robot Framework failure"
+        case robotmk_api.AttemptOutcome.EnvironmentFailure:
+            summary = "Environment failure"
+        case robotmk_api.AttemptOutcome.TimedOut:
+            summary = "Timeout"
+        case robotmk_api.AttemptOutcomeOtherError():
+            summary = "Unexpected error"
         case _:
-            return State.CRIT
+            assert_never(attempt_outcome)
+
+    return (
+        Result(state=state, summary=summary, details=attempt_outcome.OtherError)
+        if isinstance(attempt_outcome, robotmk_api.AttemptOutcomeOtherError)
+        else Result(
+            state=state,
+            summary=summary,
+        )
+    )
 
 
 def parse(string_table: StringTable) -> robotmk_api.Section:
@@ -85,11 +96,15 @@ def _item(result: robotmk_api.Result, test: robotmk_api.Test) -> str:
     return f"{result.suite_name} {test.id_}"
 
 
-def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> Generator[Service, None, None]:
-    if not result.outcome.Executed.rebot.Ok:
+def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> DiscoveryResult:
+    if not isinstance(execution_report := result.outcome, robotmk_api.ExecutionReport):
+        return
+    if not isinstance(
+        rebot_result := execution_report.Executed.rebot, robotmk_api.RebotOutcomeResult
+    ):
         return
 
-    for test_name in extract_tests_from_suites(result.outcome.Executed.rebot.Ok.xml.robot.suite):
+    for test_name in extract_tests_from_suites(rebot_result.Ok.xml.robot.suite):
         yield Service(item=test_name)
 
 
@@ -113,7 +128,7 @@ def discover(section: robotmk_api.Section) -> DiscoveryResult:
             yield Service(item=f"Suite {result.suite_name}")
             yield from _discover_tests(result)
 
-        if isinstance(result, robotmk_api.EnvironmentBuild):
+        if isinstance(result, robotmk_api.EnvironmentBuildStatuses):
             yield Service(item=f"Build Status of {list(result.root)[0]}")
 
 
@@ -136,13 +151,13 @@ def _check_suite_execution_result(
     if f"Suite {result.suite_name}" != item:
         return
 
-    if result.outcome.AlreadyRunning is not None:
-        yield Result(state=State.OK, summary="It is already running")
+    if isinstance(result.outcome, robotmk_api.ExecutionReportAlreadyRunning):
+        yield Result(state=State.CRIT, summary="Suite already running, execution skipped")
+        return
+
     if isinstance(result.outcome.Executed, robotmk_api.AttemptsOutcome):
         for attempt in result.outcome.Executed.attempts:
-            yield Result(
-                state=_remap_attempt_state(attempt), summary=f"Attempt state: {attempt.value}"
-            )
+            yield _attempt_result(attempt)
 
 
 def _check_config_file_content(result: robotmk_api.ConfigFileContent, item: str) -> CheckResult:

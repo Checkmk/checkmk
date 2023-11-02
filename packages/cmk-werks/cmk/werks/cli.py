@@ -5,7 +5,7 @@
 """Checkmk development script to manage werks
 """
 
-# pylint: skip-file
+# pylint: disable=too-many-lines
 
 import argparse
 import ast
@@ -309,13 +309,13 @@ def goto_werksdir() -> None:
         sys.exit(1)
 
 
-g_last_werk: WerkId | None = None
+LAST_WERK: WerkId | None = None
 
 
 def get_last_werk() -> WerkId:
-    if g_last_werk is None:
+    if LAST_WERK is None:
         bail_out("No last werk known. Please specify id.")
-    return g_last_werk
+    return LAST_WERK
 
 
 @cache
@@ -333,8 +333,10 @@ def get_valid_choices() -> dict[str, set[str]]:
 @cache
 def get_config() -> Config:
     globals_: dict[str, object] = {}
-    with open("config") as f_config:
-        exec(f_config.read(), globals_, globals_)  # nosec B102 # BNS:aee528
+    with open("config", encoding="utf-8") as f_config:
+        exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
+            f_config.read(), globals_, globals_
+        )
 
     globals_.pop("__builtins__")
     globals_["current_version"] = load_current_version()
@@ -342,14 +344,16 @@ def get_config() -> Config:
 
 
 def load_config() -> None:
-    global g_last_werk, valid_choices
-    with open("config") as f_config:
-        exec(f_config.read(), globals(), globals())  # nosec B102 # BNS:aee528
+    global LAST_WERK  # pylint: disable=global-statement
+    with open("config", encoding="utf-8") as f_config:
+        exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
+            f_config.read(), globals(), globals()
+        )
     try:
-        with open(".last") as f_last:
-            g_last_werk = WerkId(int(f_last.read()))
-    except Exception:
-        g_last_werk = None
+        with open(".last", encoding="utf-8") as f_last:
+            LAST_WERK = WerkId(int(f_last.read()))
+    except Exception:  # pylint: disable=broad-exception-caught
+        LAST_WERK = None
 
 
 def load_werks() -> dict[WerkId, Werk]:
@@ -358,21 +362,21 @@ def load_werks() -> dict[WerkId, Werk]:
         if (werk_id := entry.name.removesuffix(".md")).isdigit():
             try:
                 werks[WerkId(int(werk_id))] = load_werk(entry)
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 sys.stderr.write(f"ERROR: Skipping invalid werk {werk_id}: {e}\n")
     return werks
 
 
 def save_last_werkid(wid: WerkId) -> None:
     try:
-        with open(".last", "w") as f:
+        with open(".last", "w", encoding="utf-8") as f:
             f.write(f"{wid}\n")
     except OSError:
         pass
 
 
 def load_current_version() -> str:
-    with open("../defines.make") as f:
+    with open("../defines.make", encoding="utf-8") as f:
         for line in f:
             if line.startswith("VERSION"):
                 version = line.split("=", 1)[1].strip()
@@ -391,7 +395,7 @@ def git_modified_files() -> set[WerkId]:
             try:
                 wid = line.rsplit("/", 1)[-1].strip()
                 modified.add(WerkId(int(wid)))
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 pass
     return modified
 
@@ -527,22 +531,15 @@ def list_werk(werk: Werk) -> None:
     _lines, cols = get_tty_size()
     title = werk.content.metadata["title"][: cols - 45]
     sys.stdout.write(
-        "%s %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n"
-        % (
-            format_werk_id(werk.id),
-            str(werk.date.date()),
-            colored_class(werk.content.metadata["class"], 8),
-            werk.content.metadata["edition"],
-            werk.content.metadata["component"],
-            werk.content.metadata["compatible"],
-            TTY_BOLD,
-            werk.content.metadata["level"],
-            TTY_NORMAL,
-            werk.content.metadata["version"],
-            bold,
-            title,
-            TTY_NORMAL,
-        )
+        f"{format_werk_id(werk.id)} "
+        f"{str(werk.date.date()):9} "
+        f"{colored_class(werk.content.metadata['class'], 8)} "
+        f"{werk.content.metadata['edition']:3} "
+        f"{werk.content.metadata['component']:13} "
+        f"{werk.content.metadata['compatible']:6} "
+        f"{TTY_BOLD}{werk.content.metadata['level']}{TTY_NORMAL} "
+        f"{werk.content.metadata['version']:8} "
+        f"{bold}{title}{TTY_NORMAL}\n"
     )
 
 
@@ -561,7 +558,7 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write(f"\n{werk.content.description}\n")
 
 
-def main_list(args: argparse.Namespace, fmt: str) -> None:
+def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
 
@@ -1013,8 +1010,11 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
 
 def get_werk_ids() -> list[WerkId]:
     try:
-        return [WerkId(i) for i in ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())]
-    except Exception:
+        return [
+            WerkId(i)
+            for i in ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text(encoding="utf-8"))
+        ]
+    except Exception:  # pylint: disable=broad-exception-caught
         return []
 
 
@@ -1027,7 +1027,7 @@ def invalidate_my_werkid(wid: WerkId) -> None:
 
 
 def store_werk_ids(l: list[WerkId]) -> None:
-    with open(RESERVED_IDS_FILE_PATH, "w") as f:
+    with open(RESERVED_IDS_FILE_PATH, "w", encoding="utf-8") as f:
         f.write(repr([i.id for i in l]) + "\n")
     sys.stdout.write(f"Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n")
 
@@ -1050,7 +1050,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     # Get the start werk_id to reserve
     try:
-        with open("first_free") as f:
+        with open("first_free", encoding="utf-8") as f:
             first_free = int(f.read().strip())
     except (OSError, ValueError):
         first_free = 0
@@ -1079,7 +1079,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
     store_werk_ids(my_ids)
 
     # Store the new reserved werk ids
-    with open("first_free", "w") as f:
+    with open("first_free", "w", encoding="utf-8") as f:
         f.write(str(new_first_free) + "\n")
 
     sys.stdout.write(

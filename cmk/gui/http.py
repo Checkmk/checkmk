@@ -279,7 +279,7 @@ class Request(
     """
 
     # TODO investigate why there are so many form_parts
-    max_form_parts = 10000
+    max_form_parts = 20000
     meta: dict[str, Any]
 
     # pylint: disable=too-many-ancestors

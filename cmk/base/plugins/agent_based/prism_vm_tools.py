@@ -33,6 +33,8 @@ def check_prism_vm_tools(params: Mapping[str, Any], section: Section) -> CheckRe
         yield Result(state=State.OK, summary="No tools installed")
     elif tool_install is not None and install_state == "installed":
         yield Result(state=State.OK, summary="Tools with version %s installed" % tool_install)
+    elif install_state == "ignored":
+        yield Result(state=State.OK, summary="Tools state are ignored")
     elif tool_install is not None and install_state == "not_installed":
         yield Result(
             state=State.WARN,
@@ -47,6 +49,8 @@ def check_prism_vm_tools(params: Mapping[str, Any], section: Section) -> CheckRe
     elif tool_enabled is None and enabled_state == "enabled":
         message = "No tools enabled, but should be enabled"
         yield Result(state=State.WARN, summary=message)
+    elif enabled_state == "ignored":
+        yield Result(state=State.OK, summary="Tools enable state ignored")
     else:
         message = "No tools enabled"
         yield Result(state=State.OK, summary=message)

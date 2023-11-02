@@ -10,12 +10,18 @@ from typing import NamedTuple
 
 import pytest
 import requests
-from agent_receiver.certs import current_time_naive, serialize_to_pem, sign_agent_csr
 from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 
 from tests.testlib.certs import generate_csr_pair
 from tests.testlib.site import Site
+
+# TODO: Integration tests are not allowed to import application code. We need to get rid of this
+from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-violation
+    current_time_naive,
+    serialize_to_pem,
+    sign_agent_csr,
+)
 
 
 @pytest.fixture(scope="session", name="agent_receiver_port")

@@ -4,9 +4,10 @@
 
 use crate::config::CheckConfig;
 use crate::emit::header;
+use crate::ms_sql::queries;
 use anyhow::Result;
 
-use tiberius::{AuthMethod, Client, Config};
+use tiberius::{AuthMethod, Client, Config, Query, Row};
 use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
@@ -127,4 +128,31 @@ pub async fn create_client_for_logged_user(
     _port: u16,
 ) -> Result<Client<Compat<TcpStream>>> {
     anyhow::bail!("not supported");
+}
+
+/// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
+pub async fn run_query(
+    client: &mut Client<Compat<TcpStream>>,
+    query: &str,
+) -> Result<Vec<Vec<Row>>> {
+    let stream = Query::new(query).query(client).await?;
+    let rows: Vec<Vec<Row>> = stream.into_results().await?;
+    Ok(rows)
+}
+
+/// return all MS SQL instances installed
+pub async fn get_all_instances(client: &mut Client<Compat<TcpStream>>) -> Result<Vec<String>> {
+    let rows = run_query(client, queries::INSTANCES_BASE_START).await?;
+    Ok(rows[0]
+        .iter()
+        .filter_map(|r| {
+            r.try_get::<&str, usize>(0)
+                .unwrap_or_else(|e| {
+                    log::error!("failed to get instance name: {e}");
+                    None
+                })
+                .map(str::to_string)
+        })
+        .collect::<Vec<String>>()
+        .to_vec())
 }

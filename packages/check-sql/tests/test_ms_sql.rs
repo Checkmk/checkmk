@@ -36,6 +36,22 @@ async fn test_remote_connection() {
     }
 }
 
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_get_all_instances() {
+    use std::vec;
+
+    let mut client = api::create_client_for_logged_user("localhost", 1433)
+        .await
+        .unwrap();
+    let mut instances = api::get_all_instances(&mut client).await.unwrap();
+    instances.sort();
+    assert_eq!(
+        instances.iter().map(String::as_str).collect::<Vec<&str>>(),
+        vec!["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"]
+    );
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_check_config_exec_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());

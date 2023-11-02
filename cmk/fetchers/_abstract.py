@@ -5,13 +5,11 @@
 
 import abc
 import enum
-import logging
 from collections.abc import Mapping
 from typing import Any, final, Generic, Literal, TypeVar
 
 import cmk.utils.resulttype as result
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
-from cmk.utils.log import VERBOSE
 
 __all__ = ["Fetcher", "Mode"]
 
@@ -34,10 +32,6 @@ _TRawData = TypeVar("_TRawData")
 
 class Fetcher(Generic[_TRawData], abc.ABC):
     """Interface to the data fetchers."""
-
-    def __init__(self, *, logger: logging.Logger) -> None:
-        super().__init__()
-        self._logger = logger
 
     @final
     @classmethod
@@ -86,8 +80,6 @@ class Fetcher(Generic[_TRawData], abc.ABC):
             return result.Error(MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__))
 
     def _fetch(self, mode: Mode) -> _TRawData:
-        self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
-
         self.open()
         return self._fetch_from_io(mode)
 

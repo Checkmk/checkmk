@@ -77,7 +77,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         encryption_handling: TCPEncryptionHandling,
         pre_shared_secret: str | None,
     ) -> None:
-        super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
+        super().__init__()
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[tuple[HostAddress, int]] = (address[0], address[1])
@@ -85,6 +85,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self.host_name: Final = host_name
         self.encryption_handling: Final = encryption_handling
         self.pre_shared_secret: Final = pre_shared_secret
+        self._logger: Final = logging.getLogger("cmk.helper.tcp")
         self._opt_socket: socket.socket | None = None
 
     @property

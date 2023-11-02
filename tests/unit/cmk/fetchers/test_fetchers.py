@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import os
 import socket
 from collections.abc import Sequence, Sized
@@ -994,8 +993,4 @@ class TestFetcherTimeout:
             raise MKTimeout()
 
     with pytest.raises(MKTimeout):
-        get_raw_data(
-            NoCache[T](HostName("")),
-            TimeoutFetcher(logger=logging.getLogger("test")),
-            Mode.CHECKING,
-        )
+        get_raw_data(NoCache[T](HostName("")), TimeoutFetcher(), Mode.CHECKING)

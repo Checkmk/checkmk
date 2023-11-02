@@ -928,23 +928,29 @@ class TestTCPFetcher:
 
 class TestFetcherCaching:
     @pytest.fixture
-    def fetcher(self, monkeypatch: MonkeyPatch) -> TCPFetcher:
-        # We use the TCPFetcher to test a general feature of the fetchers.
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=(HostAddress("1.2.3.4"), 0),
-            timeout=0.0,
-            host_name=HostName("irrelevant_for_this_test"),
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-            pre_shared_secret=None,
-        )
-        monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
-        return fetcher
+    def fetcher(self) -> Fetcher[AgentRawData]:
+        class _Fetcher(Fetcher[AgentRawData]):
+            @classmethod
+            def _from_json(cls, *args: object) -> NoReturn:
+                raise NotImplementedError()
 
-    # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
-    def test_fetch_reading_cache_in_discovery_mode(self, fetcher: TCPFetcher) -> None:
+            def to_json(self) -> NoReturn:
+                raise NotImplementedError()
+
+            def open(self) -> None:
+                pass
+
+            def close(self) -> None:
+                pass
+
+            def _fetch_from_io(self, *args: object, **kw: object) -> AgentRawData:
+                return AgentRawData(b"fetched_section")
+
+        return _Fetcher()
+
+    def test_fetch_reading_cache_in_discovery_mode(self, fetcher: Fetcher[AgentRawData]) -> None:
         file_cache = StubFileCache[AgentRawData](
-            fetcher.host_name,
+            HostName(""),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,
@@ -956,10 +962,9 @@ class TestFetcherCaching:
         assert get_raw_data(file_cache, fetcher, Mode.DISCOVERY) == result.OK(b"cached_section")
         assert file_cache.cache == b"cached_section"
 
-    # We are in fact testing a generic feature of the Fetcher and use the TCPFetcher for this
-    def test_fetch_reading_cache_in_inventory_mode(self, fetcher: TCPFetcher) -> None:
+    def test_fetch_reading_cache_in_inventory_mode(self, fetcher: Fetcher[AgentRawData]) -> None:
         file_cache = StubFileCache[AgentRawData](
-            fetcher.host_name,
+            HostName(""),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),
             simulation=False,

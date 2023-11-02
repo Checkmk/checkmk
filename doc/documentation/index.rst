@@ -19,6 +19,7 @@ Architecture
    arch-index.rst
    arch-build-chain.rst
    sec-certificates.rst
+   arch-werk.rst
 
 APIs
 ----

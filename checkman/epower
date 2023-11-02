@@ -7,9 +7,12 @@ description:
  This check monitors the output power (in Watt) of the (usually three) phases
  of an UPS.
 
- You can configure lower levels for {WARN}/{CRIT} (default: 20, 1).
+ You can configure lower and upper levels for {WARN}/{CRIT}, both optional.
+ Lower levels default to (20, 1), upper levels do not have default values for
+ compatibility reasons.
 
- The service goes {WARN}/{CRIT} if the power is less than these levels.
+ The service goes {WARN}/{CRIT} if the value for power is not in the range as
+ specified above.
 
 item:
  The index of the phase, e.g. {"1"}.

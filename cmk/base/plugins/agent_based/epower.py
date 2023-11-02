@@ -15,11 +15,11 @@ def discover_epower(section: Mapping[str, int]) -> DiscoveryResult:
 
 
 def check_epower(item: str, params: dict, section: dict[str, int]) -> CheckResult:
-    if power := section.get(item):
+    if (power := section.get(item)) is not None:
         yield from check_levels(
             power,
             levels_lower=params["levels_lower"],
-            levels_upper=params.get("levels_upper"),
+            levels_upper=params["levels_upper"],
             metric_name="power",
             label="Power",
             render_func=lambda p: f"{int(p)} W",
@@ -30,8 +30,10 @@ register.check_plugin(
     name="epower",
     service_name="Power phase %s",
     discovery_function=discover_epower,
-    # no levels_upper for compatibility reasons
-    check_default_parameters={"levels_lower": (20, 1)},
+    check_default_parameters={
+        "levels_lower": (20, 1),
+        "levels_upper": None,  # no default values for backwards compatibility
+    },
     check_ruleset_name="epower",
     check_function=check_epower,
 )

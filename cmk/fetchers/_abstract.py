@@ -80,23 +80,16 @@ class Fetcher(Generic[_TRawData], abc.ABC):
             return result.OK(self._fetch(mode))
         except MKTimeout:
             raise
+        except MKFetcherError:
+            raise MKFetcherError
         except Exception as exc:
-            return result.Error(exc)
+            return result.Error(MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__))
 
     def _fetch(self, mode: Mode) -> _TRawData:
         self._logger.log(VERBOSE, "[%s] Execute data source", self.__class__.__name__)
 
-        try:
-            self.open()
-            raw_data = self._fetch_from_io(mode)
-        except MKTimeout:
-            raise
-        except MKFetcherError:
-            raise
-        except Exception as exc:
-            raise MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__) from exc
-
-        return raw_data
+        self.open()
+        return self._fetch_from_io(mode)
 
     @abc.abstractmethod
     def _fetch_from_io(self, mode: Mode) -> _TRawData:

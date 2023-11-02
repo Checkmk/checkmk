@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Coroutine
-from typing import Any, Final
+from typing import Final
 
 from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
@@ -13,7 +13,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 
 class _UUIDValidationRoute(APIRoute):
-    def get_route_handler(self) -> Callable[[Request], Coroutine[Any, Any, Response]]:
+    def get_route_handler(self) -> Callable[[Request], Coroutine[object, object, Response]]:
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:

@@ -36,13 +36,10 @@ py_version = 311
 [tool.mypy]
 explicit_package_bases = true
 packages = ["agent_receiver", "tests"]
-# TODO: Relaxed to get started with isolated package architecture
-strict = false
+strict = true
 # Miscellaneous stuff not in --strict
-# TODO: Relaxed to get started with isolated package architecture
-disallow_any_decorated = false
-# TODO: Relaxed to get started with isolated package architecture
-disallow_any_explicit = false
+disallow_any_decorated = true
+disallow_any_explicit = true
 # TODO: Relaxed to get started with isolated package architecture
 disallow_any_expr = false
 disallow_any_unimported = true

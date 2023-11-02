@@ -6,7 +6,7 @@
 from collections.abc import Callable
 from enum import Enum
 from http import HTTPStatus
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import Concatenate, ParamSpec, TypeVar
 from urllib.parse import quote
 
 import requests
@@ -58,7 +58,7 @@ def _credentials_to_rest_api_auth(credentials: HTTPBasicCredentials) -> str:
 def _forward_post(
     endpoint: str,
     credentials: HTTPBasicCredentials,
-    json_body: Any,
+    json_body: dict[str, object],
 ) -> requests.Response:
     return requests.post(
         f"{_local_rest_api_url()}/{endpoint}",
@@ -87,7 +87,7 @@ def _forward_get(
 def _forward_put(
     endpoint: str,
     credentials: HTTPBasicCredentials,
-    json_body: Any,
+    json_body: dict[str, object],
 ) -> requests.Response:
     return requests.put(
         f"{_local_rest_api_url()}/{endpoint}",
@@ -174,7 +174,7 @@ def get_root_cert(credentials: HTTPBasicCredentials) -> str:
         credentials,
     )
     _verify_response(response, HTTPStatus.OK)
-    return response.json()["cert"]
+    return str(response.json()["cert"])
 
 
 @log_http_exception
@@ -188,7 +188,7 @@ def post_csr(
         {"csr": csr},
     )
     _verify_response(response, HTTPStatus.OK)
-    return response.json()["cert"]
+    return str(response.json()["cert"])
 
 
 class HostConfiguration(BaseModel, frozen=True):

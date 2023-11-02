@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Iterator
 from pathlib import Path
 from uuid import UUID, uuid4
 
@@ -117,7 +118,7 @@ EA2I5TbsU6LAEfx6vA==
 
 
 @pytest.fixture(autouse=True)
-def fixture_umask():
+def fixture_umask() -> Iterator[None]:
     """Ensure the unit tests always use the same umask"""
     old_mask = os.umask(0o0007)
     try:

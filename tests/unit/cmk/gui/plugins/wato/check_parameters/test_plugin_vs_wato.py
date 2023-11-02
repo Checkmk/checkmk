@@ -475,11 +475,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "citrix_serverload",
-            RuleGroup.CheckgroupParameters("citrix_load"),
-        ),
-        (
-            "check",
             "couchbase_buckets_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
         ),

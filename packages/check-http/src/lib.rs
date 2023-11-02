@@ -438,6 +438,48 @@ mod tests {
 }
 
 #[cfg(test)]
+mod test_check_functions {
+    use crate::check_page_size;
+    use crate::checking::State;
+
+    #[test]
+    fn test_check_page_size_without_limits() {
+        assert_eq!(check_page_size(42, None).state, State::Ok);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_within_bounds() {
+        assert_eq!(check_page_size(42, Some((12, None))).state, State::Ok);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_out_of_bounds() {
+        assert_eq!(check_page_size(42, Some((56, None))).state, State::Warn);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_and_higher_within_bounds() {
+        assert_eq!(check_page_size(56, Some((42, Some(100)))).state, State::Ok);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_and_higher_too_low() {
+        assert_eq!(
+            check_page_size(42, Some((56, Some(100)))).state,
+            State::Warn
+        );
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_and_higher_too_high() {
+        assert_eq!(
+            check_page_size(142, Some((56, Some(100)))).state,
+            State::Warn
+        );
+    }
+}
+
+#[cfg(test)]
 mod test_output_format {
     use crate::{merge_outputs, Output, State};
 

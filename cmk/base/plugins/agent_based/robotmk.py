@@ -16,7 +16,7 @@ from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import robotmk_api
-from .utils.robotmk_parse_xml import extract_tests_from_suites
+from .utils.robotmk_parse_xml import extract_tests_from_suites, Outcome, Test
 
 
 class Params(TypedDict):
@@ -38,13 +38,13 @@ def _transmit_to_livestatus(
     file_path.write_text(content)
 
 
-def _remap_state(status: robotmk_api.Outcome) -> State:
+def _remap_state(status: Outcome) -> State:
     match status:
-        case robotmk_api.Outcome.PASS:
+        case Outcome.PASS:
             return State.OK
-        case robotmk_api.Outcome.FAIL:
+        case Outcome.FAIL:
             return State.CRIT
-        case robotmk_api.Outcome.NOT_RUN | robotmk_api.Outcome.SKIP:
+        case Outcome.NOT_RUN | Outcome.SKIP:
             return State.WARN
         case _:
             assert_never(status)
@@ -91,10 +91,6 @@ register.agent_section(
 )
 
 
-def _item(result: robotmk_api.Result, test: robotmk_api.Test) -> str:
-    return f"{result.suite_name} {test.id_}"
-
-
 def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> DiscoveryResult:
     if not isinstance(execution_report := result.outcome, robotmk_api.ExecutionReport):
         return
@@ -104,33 +100,27 @@ def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> DiscoveryResult
         return
 
     for test_name in extract_tests_from_suites(rebot_result.Ok.xml.robot.suite):
-        yield Service(item=test_name)
+        yield Service(
+            item=test_name,
+            labels=[
+                ServiceLabel("robotmk", "true"),
+                ServiceLabel("robotmk/html_last_error_log", "yes"),
+                ServiceLabel("robotmk/html_last_log", "yes"),
+            ],
+        )
 
 
 def discover(section: robotmk_api.Section) -> DiscoveryResult:
-    for result in section:
-        if isinstance(result, robotmk_api.Result):
-            for test in result.tests:
-                yield Service(
-                    item=_item(result, test),
-                    labels=[
-                        ServiceLabel("robotmk", "true"),
-                        ServiceLabel("robotmk/html_last_error_log", "yes"),
-                        ServiceLabel("robotmk/html_last_log", "yes"),
-                    ],
-                )
-
-        if isinstance(result, robotmk_api.SuiteExecutionReport):
-            yield Service(item=f"Suite {result.suite_name}")
-            yield from _discover_tests(result)
+    for suite_execution_report in section.suite_execution_reports:
+        yield Service(item=f"Suite {suite_execution_report.suite_name}")
+        yield from _discover_tests(suite_execution_report)
 
 
-def _check_test(params: Params, test: robotmk_api.Test) -> CheckResult:
+def _check_test(params: Params, test: Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)
-    yield Result(state=_remap_state(test.status), summary=f"{test.status.value}")
-    runtime = (test.endtime - test.starttime).total_seconds()
+    yield Result(state=_remap_state(test.status.status), summary=f"{test.status.status.value}")
     yield from check_levels(
-        runtime,
+        (test.status.endtime - test.status.starttime).total_seconds(),
         label="Test runtime",
         levels_upper=params["test_runtime"],
         metric_name="test_runtime",
@@ -153,22 +143,26 @@ def _check_suite_execution_result(
             yield _attempt_result(attempt)
 
 
-def _check_result(params: Params, result: robotmk_api.Result, item: str) -> CheckResult:
-    for test in result.tests:
-        if _item(result, test) == item:
-            html = result.decode_html()
-            _transmit_to_livestatus(html, "suite_last_log.html")
-            if test.status is robotmk_api.Outcome.FAIL:
-                _transmit_to_livestatus(html, "suite_last_error_log.html")
-                yield from _check_test(params, test)
-
-
 def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResult:
-    for result in section:
-        if isinstance(result, robotmk_api.Result):
-            yield from _check_result(params, result, item)
-        elif isinstance(result, robotmk_api.SuiteExecutionReport):
-            yield from _check_suite_execution_result(result, item)
+    for suite_execution_report in section.suite_execution_reports:
+        yield from _check_suite_execution_result(suite_execution_report, item)
+
+        if not isinstance(
+            execution_report := suite_execution_report.outcome, robotmk_api.ExecutionReport
+        ):
+            continue
+        if not isinstance(
+            rebot_result := execution_report.Executed.rebot, robotmk_api.RebotOutcomeResult
+        ):
+            continue
+
+        if not (test := extract_tests_from_suites(rebot_result.Ok.xml.robot.suite).get(item)):
+            continue
+
+        _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_log.html")
+        if test.status.status is Outcome.FAIL:
+            _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_error_log.html")
+            yield from _check_test(params, test)
 
 
 register.check_plugin(

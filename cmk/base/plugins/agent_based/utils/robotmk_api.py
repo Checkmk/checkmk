@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from base64 import b64decode
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
 import xmltodict
-from pydantic import BaseModel, BeforeValidator, Field, Json, RootModel, TypeAdapter
+from pydantic import BaseModel, BeforeValidator, Field, RootModel, TypeAdapter
 from typing_extensions import Annotated
 
 from .robotmk_parse_xml import Rebot
@@ -118,31 +117,6 @@ class SuiteExecutionReport(BaseModel, frozen=True):
     outcome: ExecutionReport | ExecutionReportAlreadyRunning
 
 
-class Outcome(Enum):
-    FAIL = "FAIL"
-    PASS = "PASS"
-    SKIP = "SKIP"
-    NOT_RUN = "NOT RUN"
-
-
-class Test(BaseModel, frozen=True):
-    name: str
-    id_: str
-    status: Outcome
-    starttime: datetime
-    endtime: datetime
-
-
-class Result(BaseModel, frozen=True):
-    suite_name: str
-    tests: Sequence[Test]
-    xml: str
-    html: bytes
-
-    def decode_html(self) -> str:
-        return b64decode(self.html).decode("utf-8")
-
-
 class ConfigReadingError(BaseModel, frozen=True):
     config_reading_error: str
 
@@ -200,42 +174,49 @@ class Config(BaseModel, frozen=True):
 
 
 class ConfigFileContent(BaseModel, frozen=True):
-    config_file_content: Json[Config]
+    config_file_content: str
 
 
-Section = list[
-    Result | ConfigFileContent | SuiteExecutionReport | EnvironmentBuildStatuses | RCCSetupFailures
-]
-
-SubSection = (
-    Result
-    | ConfigReadingError
-    | ConfigFileContent
-    | SuiteExecutionReport
-    | EnvironmentBuildStatuses
-    | RCCSetupFailures
-)
-
-
-def _parse_line(line: str) -> SubSection:
-    adapter = TypeAdapter(SubSection)
-    return adapter.validate_json(line)  # type: ignore[return-value]
+@dataclass(frozen=True, kw_only=True)
+class Section:
+    config: Config | None = None
+    config_reading_error: ConfigReadingError | None = None
+    rcc_setup_failures: RCCSetupFailures | None = None
+    environment_build_statuses: EnvironmentBuildStatuses | None = None
+    suite_execution_reports: Sequence[SuiteExecutionReport] = field(default_factory=list)
 
 
 def parse(string_table: Sequence[Sequence[str]]) -> Section:
-    subsections = [_parse_line(line[0]) for line in string_table]
-    results = [
-        s
-        for s in subsections
-        if isinstance(
-            s,
-            (
-                Result,
-                ConfigFileContent,
-                SuiteExecutionReport,
-                EnvironmentBuildStatuses,
-                RCCSetupFailures,
-            ),
-        )
-    ]
-    return Section(results)
+    config: Config | None = None
+    config_reading_error: ConfigReadingError | None = None
+    rcc_setup_failures: RCCSetupFailures | None = None
+    environment_build_statuses: EnvironmentBuildStatuses | None = None
+    suite_execution_reports = []
+
+    type_adapter = TypeAdapter(
+        ConfigReadingError
+        | ConfigFileContent
+        | SuiteExecutionReport
+        | EnvironmentBuildStatuses
+        | RCCSetupFailures
+    )
+    for sub_section in (type_adapter.validate_json(line[0]) for line in string_table):
+        match sub_section:
+            case ConfigReadingError():
+                config_reading_error = sub_section
+            case ConfigFileContent():
+                config = Config.model_validate_json(sub_section.config_file_content)
+            case RCCSetupFailures():
+                rcc_setup_failures = sub_section
+            case EnvironmentBuildStatuses():
+                environment_build_statuses = sub_section
+            case SuiteExecutionReport():
+                suite_execution_reports.append(sub_section)
+
+    return Section(
+        config=config,
+        config_reading_error=config_reading_error,
+        rcc_setup_failures=rcc_setup_failures,
+        environment_build_statuses=environment_build_statuses,
+        suite_execution_reports=suite_execution_reports,
+    )

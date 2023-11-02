@@ -27,10 +27,6 @@ def _make_tests_and_suites_lists(input_value: T | list[T]) -> list[T]:
     return input_value if isinstance(input_value, list) else [input_value]
 
 
-class XML(BaseModel, frozen=True):
-    pass
-
-
 class Outcome(enum.Enum):
     FAIL = "FAIL"
     PASS = "PASS"
@@ -38,20 +34,20 @@ class Outcome(enum.Enum):
     NOT_RUN = "NOT RUN"
 
 
-class Status(XML, frozen=True):
+class Status(BaseModel, frozen=True):
     status: Outcome = Field(alias="@status")
     starttime: DateTimeFormat = Field(alias="@starttime")
     endtime: DateTimeFormat = Field(alias="@endtime")
 
 
-class Test(XML, frozen=True):
+class Test(BaseModel, frozen=True):
     id: str = Field(alias="@id")
     name: str = Field(alias="@name")
     line: int = Field(alias="@line")
     status: Status
 
 
-class Suite(XML, frozen=True):
+class Suite(BaseModel, frozen=True):
     id: str = Field(alias="@id")
     name: str = Field(alias="@name")
     suite: Annotated[list["Suite"], BeforeValidator(_make_tests_and_suites_lists)] = Field(
@@ -60,7 +56,7 @@ class Suite(XML, frozen=True):
     test: Annotated[list[Test], BeforeValidator(_make_tests_and_suites_lists)] = Field(default=[])
 
 
-class Generator(XML, frozen=True):
+class Generator(BaseModel, frozen=True):
     generator: str = Field(alias="@generator")
     generated: DateTimeFormat = Field(alias="@generated")
     rpa: bool = Field(alias="@rpa")
@@ -69,7 +65,7 @@ class Generator(XML, frozen=True):
     errors: dict | None = Field(default=None)
 
 
-class Rebot(XML, frozen=True):
+class Rebot(BaseModel, frozen=True):
     robot: Generator
 
 

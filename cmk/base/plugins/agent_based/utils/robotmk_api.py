@@ -18,15 +18,11 @@ from typing_extensions import Annotated
 from .robotmk_parse_xml import Rebot
 
 
-class JSON(BaseModel, frozen=True):
-    pass
-
-
-class EnvironmentBuildStatusSuccess(JSON, frozen=True):
+class EnvironmentBuildStatusSuccess(BaseModel, frozen=True):
     duration: int = Field(alias="Success")
 
 
-class EnvironmentBuildStatusInProgress(JSON, frozen=True):
+class EnvironmentBuildStatusInProgress(BaseModel, frozen=True):
     start_time: int = Field(alias="InProgress")
 
 
@@ -60,7 +56,7 @@ class EnvironmentBuild(RootModel, frozen=True):
     root: dict[str, EnvironmentBuildStatuses]
 
 
-class RCCSetupFailures(JSON, frozen=True):
+class RCCSetupFailures(BaseModel, frozen=True):
     telemetry_disabling: list[str]
     shared_holotree: list[str]
     holotree_init: list[str]
@@ -79,27 +75,27 @@ def _parse_xml(xml_value: str) -> Rebot:
     return Rebot.model_validate(xmltodict.parse(xml_value))
 
 
-class RebotResult(JSON, frozen=True):
+class RebotResult(BaseModel, frozen=True):
     xml: Annotated[Rebot, BeforeValidator(_parse_xml)]
     html_base64: str
 
 
-class RebotOutcome(JSON, frozen=True):
+class RebotOutcome(BaseModel, frozen=True):
     Ok: RebotResult | None = Field(default=None)
     Error: str | None = Field(default=None)
 
 
-class AttemptsOutcome(JSON, frozen=True):
+class AttemptsOutcome(BaseModel, frozen=True):
     attempts: list[AttemptOutcome]
     rebot: RebotOutcome
 
 
-class ExecutionReport(JSON, frozen=True):
+class ExecutionReport(BaseModel, frozen=True):
     Executed: AttemptsOutcome
     AlreadyRunning: Literal["AlreadyRunning"] | None = Field(default=None)
 
 
-class SuiteExecutionReport(JSON, frozen=True):
+class SuiteExecutionReport(BaseModel, frozen=True):
     suite_name: str
     outcome: ExecutionReport
 
@@ -111,7 +107,7 @@ class Outcome(enum.Enum):
     NOT_RUN = "NOT RUN"
 
 
-class Test(JSON, frozen=True):
+class Test(BaseModel, frozen=True):
     name: str
     id_: str
     status: Outcome
@@ -119,7 +115,7 @@ class Test(JSON, frozen=True):
     endtime: datetime
 
 
-class Result(JSON, frozen=True):
+class Result(BaseModel, frozen=True):
     suite_name: str
     tests: list[Test]
     xml: str
@@ -129,48 +125,48 @@ class Result(JSON, frozen=True):
         return b64decode(self.html).decode("utf-8")
 
 
-class ConfigReadingError(JSON, frozen=True):
+class ConfigReadingError(BaseModel, frozen=True):
     config_reading_error: str
 
 
-class RobotFrameworkConfig(JSON, frozen=True):
+class RobotFrameworkConfig(BaseModel, frozen=True):
     robot_target: str
     command_line_args: list[str] = Field(default=[])
 
 
-class ExecutionConfig(JSON, frozen=True):
+class ExecutionConfig(BaseModel, frozen=True):
     n_retries_max: int
     retry_strategy: str
     execution_interval_seconds: int
     timeout: int
 
 
-class EnvironmentConfig(JSON, frozen=True):
+class EnvironmentConfig(BaseModel, frozen=True):
     type: str
     robot_yaml_path: str
     build_timeout: int
     env_json_path: str | None = None
 
 
-class SessionConfig(JSON, frozen=True):
+class SessionConfig(BaseModel, frozen=True):
     type: str
 
 
-class SuiteConfig(JSON, frozen=True):
+class SuiteConfig(BaseModel, frozen=True):
     robot_framework_config: RobotFrameworkConfig
     execution_config: ExecutionConfig
     environment_config: EnvironmentConfig
     session_config: SessionConfig
 
 
-class ConfigFileValue(JSON, frozen=True):
+class ConfigFileValue(BaseModel, frozen=True):
     working_directory: str
     results_directory: str
     rcc_binary_path: str
     suites: dict[str, SuiteConfig]
 
 
-class ConfigFileContent(JSON, frozen=True):
+class ConfigFileContent(BaseModel, frozen=True):
     config_file_content: Json[ConfigFileValue]
 
 

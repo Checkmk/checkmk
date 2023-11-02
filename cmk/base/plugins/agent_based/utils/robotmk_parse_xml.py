@@ -3,14 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Should be replaced by external package
-
-
 import enum
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
+from typing import Union
 
 from pydantic import BaseModel, BeforeValidator, Field, PlainValidator
-from typing_extensions import Annotated, TypeVar
+from typing_extensions import Annotated
 
 
 def _parse_datetime(value: str) -> datetime:
@@ -20,11 +19,13 @@ def _parse_datetime(value: str) -> datetime:
 
 DateTimeFormat = Annotated[datetime, PlainValidator(_parse_datetime)]
 
-T = TypeVar("T")
+
+def _ensure_suite_sequence(raw_value: Union["Suite", Sequence["Suite"]]) -> Sequence["Suite"]:
+    return [raw_value] if isinstance(raw_value, Suite) else raw_value
 
 
-def _make_tests_and_suites_lists(input_value: T | list[T]) -> list[T]:
-    return input_value if isinstance(input_value, list) else [input_value]
+def _ensure_test_sequence(raw_value: Union["Test", Sequence["Test"]]) -> Sequence["Test"]:
+    return [raw_value] if isinstance(raw_value, Test) else raw_value
 
 
 class Outcome(enum.Enum):
@@ -50,10 +51,8 @@ class Test(BaseModel, frozen=True):
 class Suite(BaseModel, frozen=True):
     id: str = Field(alias="@id")
     name: str = Field(alias="@name")
-    suite: Annotated[list["Suite"], BeforeValidator(_make_tests_and_suites_lists)] = Field(
-        default=[]
-    )
-    test: Annotated[list[Test], BeforeValidator(_make_tests_and_suites_lists)] = Field(default=[])
+    suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_suite_sequence)] = Field(default=[])
+    test: Annotated[Sequence[Test], BeforeValidator(_ensure_test_sequence)] = Field(default=[])
 
 
 class Generator(BaseModel, frozen=True):
@@ -61,15 +60,15 @@ class Generator(BaseModel, frozen=True):
     generated: DateTimeFormat = Field(alias="@generated")
     rpa: bool = Field(alias="@rpa")
     schemaversion: int = Field(alias="@schemaversion")
-    suite: Annotated[list[Suite], BeforeValidator(_make_tests_and_suites_lists)] = Field(default=[])
-    errors: dict | None = Field(default=None)
+    errors: Mapping[str, object] | None = Field(default=None)
+    suite: Annotated[Sequence[Suite], BeforeValidator(_ensure_suite_sequence)] = Field(default=[])
 
 
 class Rebot(BaseModel, frozen=True):
     robot: Generator
 
 
-def extract_tests_from_suites(suites: list[Suite]) -> dict[str, Test]:
+def extract_tests_from_suites(suites: Iterable[Suite]) -> dict[str, Test]:
     tests_with_full_names: dict[str, Test] = {}
 
     for suite in suites:
@@ -79,11 +78,9 @@ def extract_tests_from_suites(suites: list[Suite]) -> dict[str, Test]:
 
 
 def extract_tests_with_full_names(
-    suite: Suite, parent_names: list[str] | None = None
+    suite: Suite,
+    parent_names: Sequence[str] = (),
 ) -> dict[str, Test]:
-    if parent_names is None:
-        parent_names = []
-
     tests_with_full_names = {}
 
     for test in suite.test:
@@ -92,7 +89,7 @@ def extract_tests_with_full_names(
 
     for sub_suite in suite.suite:
         tests_with_full_names |= extract_tests_with_full_names(
-            sub_suite, parent_names + [suite.name]
+            sub_suite, parent_names=[*parent_names, suite.name]
         )
 
     return tests_with_full_names

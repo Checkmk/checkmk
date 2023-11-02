@@ -623,11 +623,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "juniper_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem_modules"),
-        ),
-        (
-            "check",
             "juniper_screenos_mem",
             RuleGroup.CheckgroupParameters("juniper_mem"),
         ),

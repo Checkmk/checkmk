@@ -64,7 +64,7 @@ def check_rds_licenses(item, params, parsed):
         total += pack_total
         used += pack_issued
 
-    yield license_check_levels(total, used, params)
+    yield license_check_levels(total, used, params["levels"][1])
 
 
 def discover_rds_licenses(section):
@@ -77,4 +77,5 @@ check_info["rds_licenses"] = LegacyCheckDefinition(
     discovery_function=discover_rds_licenses,
     check_function=check_rds_licenses,
     check_ruleset_name="rds_licenses",
+    check_default_parameters={"levels": ("crit_on_all", None)},
 )

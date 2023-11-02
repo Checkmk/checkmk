@@ -475,11 +475,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "citrix_licenses",
-            RuleGroup.CheckgroupParameters("citrix_licenses"),
-        ),
-        (
-            "check",
             "citrix_serverload",
             RuleGroup.CheckgroupParameters("citrix_load"),
         ),
@@ -532,11 +527,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
-        (
-            "check",
-            "esx_vsphere_licenses",
-            RuleGroup.CheckgroupParameters("esx_licenses"),
-        ),
         (
             "check",
             "esx_vsphere_objects_count",
@@ -613,11 +603,6 @@ class ErrorReporter:
             "check",
             "ibm_imm_fan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "ibm_svc_license",
-            RuleGroup.CheckgroupParameters("ibmsvc_licenses"),
         ),
         (
             "check",
@@ -800,11 +785,6 @@ class ErrorReporter:
             "check",
             "rabbitmq_nodes_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "rds_licenses",
-            RuleGroup.CheckgroupParameters("rds_licenses"),
         ),
         (
             "check",

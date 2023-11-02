@@ -1,0 +1,15 @@
+Title: azure: adjustment of help text for App Registrations option
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698932842
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p14
+
+Prior to this werk, the help text for the Azure Datasource program
+left out the 'App Registrations' as one of the options which require
+graph API specific permissions. This is now added.
+

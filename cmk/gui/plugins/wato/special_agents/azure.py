@@ -261,9 +261,9 @@ def get_services_vs() -> tuple[str, ValueSpec]:
                 allow_empty=True,
                 help=_(
                     "Select which Azure services to monitor.\n"
-                    "In case you want to monitor 'Users in the Active Directory' or 'AD Connect Sync',"
-                    " you will need to grant the 'Directory.Read.All' graph permission to the Azure app"
-                    " and to grant admin consent to it."
+                    "In case you want to monitor 'Users in the Active Directory', 'AD Connect Sync',"
+                    " or 'App Registrations' you will need to grant the 'Directory.Read.All' graph "
+                    "permission to the Azure app and to grant admin consent to it."
                 ),
             ),
             # silently drop values that are only valid in CCE if we're CEE now.

@@ -16,5 +16,8 @@ pylsp-mypy = "*"
 python-lsp-black = "*"
 python-lsp-server = "*"
 
+[packages]
+cmk-graphing = {editable = true, path = "."}
+
 [requires]
 python_version = "3.11"

@@ -16,23 +16,23 @@ if [ -z "$FILE_PATH" ]; then
 fi
 
 if [ -z "$GPG_PASSPHRASE" ]; then
-    echo "ERROR: \$GPG_PASSPHRASE must be given via environment"
+    echo "ERROR: \$GPG_PASSPHRASE must be given via environment" >&2
     exit 1
 fi
 
 if ! type dpkg-sig >/dev/null 2>&1; then
-    echo "ERROR: dpkg-sig command is missing"
+    echo "ERROR: dpkg-sig command is missing" >&2
     exit 1
 fi
 
 if ! type rpm >/dev/null 2>&1; then
-    echo "ERROR: rpm command is missing"
+    echo "ERROR: rpm command is missing" >&2
     exit 1
 fi
 
 export GNUPGHOME=$HOME/.gnupg
 
-is_already_signed() {
+is_signed() {
     if [[ "$FILE_PATH" == *rpm ]]; then
         if rpm -qp "$FILE_PATH" --qf='%-{NAME} %{SIGPGP:pgpsig}\n' | grep -i "Key ID $KEY_ID"; then
             return 0
@@ -45,7 +45,7 @@ is_already_signed() {
         return 1
     fi
 
-    echo "ERROR: Unknown package type: $FILE_PATH"
+    echo "ERROR: Unknown package type: $FILE_PATH" >&2
     exit 1
 }
 
@@ -70,7 +70,7 @@ sign_package() {
         return 0
     fi
 
-    echo "ERROR: Unknown package type: $FILE_PATH"
+    echo "ERROR: Unknown package type: $FILE_PATH" >&2
     exit 1
 }
 
@@ -83,7 +83,7 @@ if [[ "$FILE_PATH" == *cma ]]; then
     exit 0
 fi
 
-if is_already_signed; then
+if is_signed; then
     echo "+ No need to sign $FILE_PATH, is already signed"
     exit 0
 fi
@@ -91,22 +91,17 @@ fi
 for TRY in $(seq 5); do
     echo "+ Signing $FILE_PATH (Try $TRY)..."
     if ! sign_package; then
-        echo "ERROR: Signing failed"
+        echo "ERROR: Signing failed" >&2
         sleep 1
         continue
     fi
 
     echo "+ Verify signature of $FILE_PATH..."
-    if is_already_signed; then
+    if is_signed; then
         echo "$FILE_PATH has been signed"
-        break
+        exit 0
     fi
-
-    echo "ERROR: $FILE_PATH not signed"
-    if [ "$TRY" -eq 5 ]; then
-        echo "Giving up."
-        exit 1
-    fi
-
-    sleep 1
 done
+
+echo "ERROR: $FILE_PATH not signed, Giving up." >&2
+exit 1

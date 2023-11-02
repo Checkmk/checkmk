@@ -475,11 +475,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "cisco_sys_mem",
-            RuleGroup.CheckgroupParameters("cisco_supervisor_mem"),
-        ),
-        (
-            "check",
             "citrix_licenses",
             RuleGroup.CheckgroupParameters("citrix_licenses"),
         ),

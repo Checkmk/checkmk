@@ -696,6 +696,22 @@ div.page_menu_popup {
     padding-right: $spacing;
     white-space: initial;
   }
+
+  input.number,
+  .select2-selection.select2-selection--single {
+    margin-left: 10px;
+  }
+
+  input.button.duration {
+    &:first-child {
+      margin-left: 10px !important;
+    }
+    margin: 0px;
+    &:active,
+    &:focus {
+      background-color: $input-button-hover-bg-color;
+    }
+  }
 }
 
 div#inpage_search_result_info {

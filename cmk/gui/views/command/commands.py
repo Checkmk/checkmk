@@ -18,6 +18,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
@@ -31,7 +32,7 @@ from cmk.gui.permissions import (
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import AbsoluteDate, Age
+from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, Dictionary
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
@@ -1213,6 +1214,12 @@ class CommandScheduleDowntimes(Command):
         return super().user_confirm_options(len_rows, cmdtag)
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        self._render_comment()
+        self._render_date_and_time()
+        self._render_advanced_options(what)
+        self._render_confirm_buttons(what)
+
+    def _render_comment(self) -> None:
         html.open_div(class_="group")
         html.text_input(
             "_down_comment",
@@ -1220,56 +1227,166 @@ class CommandScheduleDowntimes(Command):
             size=60,
             label=_("Comment"),
             required=not self._adhoc_downtime_configured(),
+            placeholder=_("What is the occasion?"),
+            submit="_down_custom",
         )
         html.close_div()
 
+    def _render_date_and_time(self) -> None:
         html.open_div(class_="group")
-        html.button("_down_from_now", _("From now for"), cssclass="hot")
-        html.nbsp()
-        html.text_input(
-            "_down_minutes", default_value="60", size=4, submit="_down_from_now", cssclass="number"
-        )
-        html.write_text("&nbsp; " + _("minutes"))
-        html.close_div()
+        html.br()
+        html.heading("Date and time")
+        html.br()
 
-        html.open_div(class_="group")
+        html.open_table()
+
+        # Duration section
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Duration"))
+        html.close_td()
+        html.open_td()
         for time_range in active_config.user_downtime_timeranges:
-            html.button("_downrange__%s" % time_range["end"], _u(time_range["title"]))
-        if what != "aggr" and user.may("action.remove_all_downtimes"):
-            html.write_text(" &nbsp; - &nbsp;")
-            html.button("_down_remove", _("Remove all"), formnovalidate=True)
-        html.close_div()
+            html.input(
+                name=(varname := f'_downrange__{time_range["end"]}'),
+                type_="button",
+                id_=varname,
+                class_=["button", "duration"],
+                value=_u(time_range["title"]),
+                # onclick="cmk.utils.toggle_class(this, 'active', '')",
+                onclick="",
+                submit="_down_custom",
+            )
+        html.close_td()
+        html.close_tr()
 
-        if self._adhoc_downtime_configured():
-            adhoc_duration = active_config.adhoc_downtime.get("duration")
-            adhoc_comment = active_config.adhoc_downtime.get("comment", "")
-            html.open_div(class_="group")
-            html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
-            html.nbsp()
-            html.write_text(_("with comment") + ": ")
-            html.write_text(adhoc_comment)
-            html.close_div()
+        html.open_tr()
+        html.open_td()
+        html.br()
+        html.close_td()
+        html.close_tr()
 
-        html.open_div(class_="group")
-        html.button("_down_custom", _("Custom time range"))
+        # Start section
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Start"))
+        html.close_td()
+        html.open_td()
         self._vs_down_from().render_input("_down_from", time.time())
-        html.write_text("&nbsp; " + _("to") + " &nbsp;")
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.br()
+        html.close_td()
+        html.close_tr()
+
+        # End section
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("End"))
+        html.close_td()
+        html.open_td()
         self._vs_down_to().render_input("_down_to", time.time() + 7200)
+        html.close_td()
+
+        html.open_tr()
+        html.open_td()
+        html.br()
+        html.close_td()
+        html.close_tr()
+
+        # Repeat section
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Repeat"))
+        html.close_td()
+        html.open_td()
+        self.recurring_downtimes.show_input_elements()
+        html.close_td()
+        html.close_table()
+
+        html.open_tr()
+        html.open_td()
+        html.br()
+        html.close_td()
+        html.close_tr()
         html.close_div()
 
-        html.open_div(class_="group")
-        html.checkbox("_down_flexible", False, label="%s " % _("flexible with max. duration"))
-        self._vs_duration().render_input("_down_duration", 7200)
-        html.close_div()
+    def _render_advanced_options(self, what) -> None:  # type: ignore[no-untyped-def]
+        with foldable_container(
+            treename="advanced_down_options",
+            id_="adv_down_opts",
+            isopen=False,
+            title=_("Advanced options"),
+            indent=False,
+        ):
+            # TODO this can be removed? What about the global config option?
+            # if self._adhoc_downtime_configured():
+            #    adhoc_duration = active_config.adhoc_downtime.get("duration")
+            #    adhoc_comment = active_config.adhoc_downtime.get("comment", "")
+            #    html.open_div(class_="group")
+            #    html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
+            #    html.nbsp()
+            #    html.write_text(_("with comment") + ": ")
+            #    html.write_text(adhoc_comment)
+            #    html.close_div()
 
-        if what == "host":
+            if what == "host":
+                html.open_div(class_="group")
+                self._vs_host_downtime().render_input("_include_childs", None)
+                html.close_div()
+
             html.open_div(class_="group")
-            html.checkbox("_include_childs", False, label=_("Also set downtime on child hosts"))
-            html.write_text("  ")
-            html.checkbox("_include_childs_recurse", False, label=_("Do this recursively"))
+            self._vs_flexible().render_input("_down_duration", None)
             html.close_div()
 
-        self.recurring_downtimes.show_input_elements()
+    def _render_confirm_buttons(self, what) -> None:  # type: ignore[no-untyped-def]
+        html.open_div(class_="group")
+        html.button("_down_custom", _("Schedule downtime on host"), cssclass="hot")
+        if what == "service":
+            html.button("_down_custom", _("Schedule downtime on service"))
+        html.button("_cancel", _("Cancel"), formnovalidate=True)
+        html.close_div()
+
+    def _vs_host_downtime(self) -> Dictionary:
+        return Dictionary(
+            title="Host downtime options",
+            elements=[
+                (
+                    "_include_childs",
+                    Checkbox(
+                        title=_("Only for hosts: Set child hosts in downtime"),
+                        label=_("Include indirectly connected hosts (recursively)"),
+                        help=_(
+                            "Either verify the server certificate using the site local CA or accept "
+                            "any certificate offered by the server. It is highly recommended to "
+                            "leave this enabled."
+                        ),
+                    ),
+                ),
+            ],
+        )
+
+    def _vs_flexible(self) -> Dictionary:
+        return Dictionary(
+            title=_("Flexible downtime options"),
+            elements=[
+                (
+                    "_down_duration",
+                    Age(
+                        display=["hours"],
+                        title=_(
+                            "Only start downtime if host/service goes "
+                            "DOWN/UNREACH during the defined start and end time "
+                            "(flexible)"
+                        ),
+                        cssclass="inline",
+                    ),
+                ),
+            ],
+        )
 
     def _action(
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows

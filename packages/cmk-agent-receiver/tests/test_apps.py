@@ -7,8 +7,8 @@ from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from starlette.routing import Mount
 
-from agent_receiver.apps_and_routers import _UUIDValidationRoute, AGENT_RECEIVER_APP
-from agent_receiver.main import main_app
+from cmk.agent_receiver.apps_and_routers import _UUIDValidationRoute, AGENT_RECEIVER_APP
+from cmk.agent_receiver.main import main_app
 
 
 def test_uuid_validation_route() -> None:

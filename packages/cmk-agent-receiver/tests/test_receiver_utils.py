@@ -9,9 +9,9 @@ from pathlib import Path
 import pytest
 from pydantic import UUID4
 
-from agent_receiver import site_context
-from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
-from agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
+from cmk.agent_receiver import site_context
+from cmk.agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
+from cmk.agent_receiver.utils import NotRegisteredException, R4R, RegisteredHost
 
 
 def test_host_not_registered(uuid: UUID4) -> None:

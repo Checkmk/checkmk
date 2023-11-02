@@ -6,10 +6,10 @@
 from fastapi import FastAPI
 
 # register endpoints
-from agent_receiver import endpoints  # pylint: disable=unused-import
-from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
-from agent_receiver.log import configure_logger
-from agent_receiver.site_context import log_path, site_name
+from . import endpoints  # pylint: disable=unused-import
+from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
+from .log import configure_logger
+from .site_context import log_path, site_name
 
 
 def main_app() -> FastAPI:

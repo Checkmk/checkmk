@@ -43,7 +43,7 @@ case "$1" in
                 --ca-certs "${CERT_STORE}" \
                 --cert-reqs 1 \
                 -b "${ANY_ADDRESS}:${CONFIG_AGENT_RECEIVER_PORT}" \
-                -k agent_receiver.worker.ClientCertWorker 'agent_receiver.main:main_app()'
+                -k cmk.agent_receiver.worker.ClientCertWorker 'cmk.agent_receiver.main:main_app()'
         if [ $? -eq 0 ]; then
             echo "OK"
             exit 0

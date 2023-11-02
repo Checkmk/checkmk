@@ -15,11 +15,8 @@ dependencies = [
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools.packages.find]
-include = ["agent_receiver"]
-
 [tool.setuptools.package-data]
-agent_receiver = ["py.typed"]
+cmk_agent_receiver = ["py.typed"]
 
 [tool.bandit]
 
@@ -35,7 +32,7 @@ py_version = 311
 
 [tool.mypy]
 explicit_package_bases = true
-packages = ["agent_receiver", "tests"]
+packages = ["cmk", "tests"]
 strict = true
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = true
@@ -60,5 +57,5 @@ disable = "missing-docstring,fixme"
 
 [tool.pytest.ini_options]
 pythonpath = [ "." ]
-testpaths = [ "tests", "agent_receiver" ]
-addopts = "--doctest-modules"
+testpaths = [ "tests", "cmk" ]
+addopts = "--doctest-modules --import-mode=importlib"

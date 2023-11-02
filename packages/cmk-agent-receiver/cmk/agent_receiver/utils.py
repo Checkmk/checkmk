@@ -13,8 +13,8 @@ from cryptography.x509.oid import NameOID
 from fastapi.security import HTTPBasicCredentials
 from pydantic import UUID4
 
-from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
-from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
+from .models import ConnectionMode, R4RStatus, RequestForRegistration
+from .site_context import agent_output_dir, r4r_dir, users_dir
 
 INTERNAL_REST_API_USER = "automation"
 

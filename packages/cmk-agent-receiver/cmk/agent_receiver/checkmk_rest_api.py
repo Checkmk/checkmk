@@ -14,9 +14,9 @@ from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
 from pydantic import BaseModel, UUID4
 
-from agent_receiver.log import logger
-from agent_receiver.models import ConnectionMode
-from agent_receiver.site_context import site_config_path, site_name
+from .log import logger
+from .models import ConnectionMode
+from .site_context import site_config_path, site_name
 
 
 class CMKEdition(Enum):

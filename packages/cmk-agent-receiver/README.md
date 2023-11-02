@@ -7,4 +7,4 @@ If you want to apply local changes:
 
 If you want to debug agent-receiver it's useful to run an uvicorn worker from the command line:
     omd stop agent-receiver
-    uvicorn agent_receiver.server:app
+    uvicorn cmk.agent_receiver.server:app

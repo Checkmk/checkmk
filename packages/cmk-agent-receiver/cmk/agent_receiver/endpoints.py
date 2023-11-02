@@ -22,8 +22,16 @@ from starlette.status import (
     HTTP_501_NOT_IMPLEMENTED,
 )
 
-from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
-from agent_receiver.checkmk_rest_api import (
+from .apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
+from .certs import (
+    agent_root_ca,
+    current_time_naive,
+    extract_cn_from_csr,
+    serialize_to_pem,
+    sign_agent_csr,
+    site_root_certificate,
+)
+from .checkmk_rest_api import (
     cmk_edition,
     controller_certificate_settings,
     get_root_cert,
@@ -33,9 +41,9 @@ from agent_receiver.checkmk_rest_api import (
     post_csr,
     register,
 )
-from agent_receiver.decompression import DecompressionError, Decompressor
-from agent_receiver.log import logger
-from agent_receiver.models import (
+from .decompression import DecompressionError, Decompressor
+from .log import logger
+from .models import (
     CertificateRenewalBody,
     ConnectionMode,
     CsrField,
@@ -56,22 +64,13 @@ from agent_receiver.models import (
     RenewCertResponse,
     RequestForRegistration,
 )
-from agent_receiver.site_context import site_name
-from agent_receiver.utils import (
+from .site_context import site_name
+from .utils import (
     internal_credentials,
     NotRegisteredException,
     R4R,
     RegisteredHost,
     uuid_from_pem_csr,
-)
-
-from .certs import (
-    agent_root_ca,
-    current_time_naive,
-    extract_cn_from_csr,
-    serialize_to_pem,
-    sign_agent_csr,
-    site_root_certificate,
 )
 
 # pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception

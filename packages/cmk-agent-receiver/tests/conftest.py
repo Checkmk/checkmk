@@ -13,10 +13,10 @@ from fastapi.testclient import TestClient
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
-from agent_receiver import site_context
-from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
-from agent_receiver.checkmk_rest_api import ControllerCertSettings
-from agent_receiver.main import main_app
+from cmk.agent_receiver import site_context
+from cmk.agent_receiver.apps_and_routers import AGENT_RECEIVER_APP
+from cmk.agent_receiver.checkmk_rest_api import ControllerCertSettings
+from cmk.agent_receiver.main import main_app
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM
@@ -151,9 +151,9 @@ def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 @pytest.fixture(autouse=True)
 def mock_controller_certificate_settings(mocker: MockerFixture) -> None:
-    mocker.patch("agent_receiver.endpoints.internal_credentials")
+    mocker.patch("cmk.agent_receiver.endpoints.internal_credentials")
     mocker.patch(
-        "agent_receiver.endpoints.controller_certificate_settings",
+        "cmk.agent_receiver.endpoints.controller_certificate_settings",
         return_value=ControllerCertSettings(lifetime_in_months=12),
     )
 

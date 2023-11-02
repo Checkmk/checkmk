@@ -4,16 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import io
 import json
+import logging
 import os
 import socket
 from collections.abc import Sequence
 from itertools import product as cartesian_product
 from pathlib import Path
-from types import TracebackType
-from typing import Any, Literal, NamedTuple
-from unittest import mock
+from typing import Any, NamedTuple, NoReturn, TypeAlias
 from zlib import compress
 
 import pytest
@@ -22,7 +20,7 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import TransportProtocol
-from cmk.utils.exceptions import MKFetcherError, OnError
+from cmk.utils.exceptions import MKFetcherError, MKTimeout, OnError
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result, SectionName
 
 from cmk.snmplib import snmp_table
@@ -39,6 +37,7 @@ from cmk.snmplib.type_defs import (
 
 import cmk.fetchers._snmp as snmp
 from cmk.fetchers import (
+    Fetcher,
     get_raw_data,
     IPMIFetcher,
     Mode,
@@ -863,10 +862,7 @@ class TestTCPFetcher:
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
             pre_shared_secret=None,
         ) as fetcher:
-            # TODO(ml): monkeypatch the fetcehr and check it was
-            # not called to make this test explicit and do what
-            # its name advertises.
-            assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == b"cached_section"
+            assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == result.OK(b"cached_section")
 
     def test_open_exception_becomes_fetcher_error(self) -> None:
         file_cache = StubFileCache[AgentRawData](
@@ -1042,130 +1038,29 @@ class TestFetcherCaching:
         assert file_cache.cache == b"cached_section"
 
 
-@pytest.mark.parametrize(
-    ["wait_connect", "wait_data", "timeout_connect", "exc_type"],
-    [
-        # No delay on connection and recv. No exception
-        (0, 0, 10, None),
-        # 50sec delay on connection. This times out.
-        (50, 0, 10, socket.timeout),
-        # Explicitly set timeout on connection
-        # TCP_TIMEOUT related tests
-        (0, 120, 10, None),  # will definitely run for 2 minutes without any data coming
-        # ... but will time out immediately after 151 seconds due to KEEPALIVE settings
-        (0, (120 + 3 * 10) + 1, 10, MKFetcherError),
-    ],
-)
-def test_tcp_fetcher_dead_connection_timeout(
-    wait_connect: float,
-    wait_data: float,
-    timeout_connect: float,
-    exc_type: type[Exception] | None,
-) -> None:
-    # This tests if the TCPFetcher properly times out in the event of an unresponsive agent (due to
-    # whatever reasons). We can't wait forever, else the process runs into the risk of never dying,
-    # sticking around forever, hogging important resources and blocking user interaction.
-    with FakeSocket(wait_connect=wait_connect, wait_data=wait_data, data=b"<<"):
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=("127.0.0.1", 12345),  # Will be ignored by the FakeSocket
-            timeout=timeout_connect,
-            # Boilerplate stuff to make the code not crash.
-            host_name="timeout_tcp_test",
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-            pre_shared_secret=None,
+class TestFetcherTimeout:
+    T: TypeAlias = AgentRawData
+
+    class TimeoutFetcher(Fetcher[T]):
+        @classmethod
+        def _from_json(cls, *args: object) -> NoReturn:
+            raise NotImplementedError()
+
+        def to_json(self) -> NoReturn:
+            raise NotImplementedError()
+
+        def open(self) -> None:
+            pass
+
+        def close(self) -> None:
+            pass
+
+        def _fetch_from_io(self, *args: object, **kw: object) -> NoReturn:
+            raise MKTimeout()
+
+    with pytest.raises(MKTimeout):
+        get_raw_data(
+            NoCache[T](HostName("")),
+            TimeoutFetcher(logger=logging.getLogger("test")),
+            Mode.CHECKING,
         )
-        if exc_type is not None:
-            with pytest.raises(exc_type):
-                fetcher.open()
-                fetcher._get_agent_data()
-        else:
-            fetcher.open()
-            fetcher._get_agent_data()
-
-
-class FakeSocket:
-    """A socket look-alike to test timeout behaviours
-
-    Args:
-
-        wait_connect:
-            How long the "simulated" delay will be, until a connection is established. If longer
-            than the timeout set by `settimeout`, the exception `socket.timeout` will be raised.
-
-        wait_data:
-            How long the "simulated" delay of a `recv` call will be. If the delay is longer than
-            the one registered by `settimeout`, the exception `socket.timeout` will be raised.
-
-        data:
-            The data in bytes which will be received from a `recv` call on the socket.
-
-    """
-
-    def __init__(self, wait_connect: float = 0, wait_data: float = 0, data: bytes = b"") -> None:
-        self._wait_connect = wait_connect
-        self._wait_data = wait_data
-        self._timeout: int | None = None
-        self._buffer = io.BytesIO(data)
-
-    def __enter__(self) -> None:
-        # Patch `socket.socket` to return this object
-        self._mock = mock.patch("socket.socket", new=self)
-        self._mock.__enter__()
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: TracebackType | None,
-    ) -> Literal[False]:
-        # Clean up the mock again
-        self._mock.__exit__(exc_type, exc_val, exc_tb)
-        return False
-
-    def __call__(self, family: int, flags: int) -> FakeSocket:
-        """Fake a `socket.socket` call"""
-        self._family = family
-        self._flags = flags
-        self._sock_opts: dict[int, int] = {}
-        return self
-
-    def settimeout(self, timeout: int) -> None:
-        self._timeout = timeout
-
-    def connect(self, address: tuple[str, int]) -> None:
-        """Simulate a connection to a socket
-
-        Raises:
-            socket.timeout - when `wait_connection` is larger than the timeout set by `settimeout`
-        """
-        self._check_timeout(self._wait_connect)
-
-    def recv(self, byte_count: int, flags: Any) -> bytes:
-        """Simulate a recv call on a socket
-
-        Raises:
-            socket.timeout - when `wait_data` is larger than the timeout set by `settimeout`
-        """
-        self._check_timeout(self._wait_data)
-        return self._buffer.read(byte_count)
-
-    def setsockopt(self, level: int, optname: int, value: int) -> None:
-        self._sock_opts[optname] = value
-
-    def _check_timeout(self, delay_time: float) -> None:
-        if self._timeout is not None and delay_time > self._timeout:
-            raise socket.timeout
-
-        if self._sock_opts.get(socket.SO_KEEPALIVE):
-            # defaults according to tcp(7)
-            keep_idle = self._sock_opts.get(socket.TCP_KEEPIDLE, 7200)
-            keep_interval = self._sock_opts.get(socket.TCP_KEEPINTVL, 75)
-            keep_count = self._sock_opts.get(socket.TCP_KEEPCNT, 9)
-
-            is_timed_out = delay_time > (keep_idle + keep_count * keep_interval)
-            if is_timed_out:
-                raise socket.timeout
-
-    def close(self) -> None:
-        self._buffer.close()

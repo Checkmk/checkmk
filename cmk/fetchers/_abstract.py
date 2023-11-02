@@ -61,10 +61,10 @@ class Fetcher(Generic[TRawData], abc.ABC):
         return self
 
     @final
-    def __exit__(self, *exc_info: object) -> Literal[True]:
+    def __exit__(self, *exc_info: object) -> Literal[False]:
         """Close the data source."""
         self.close()
-        return True
+        return False
 
     @abc.abstractmethod
     def open(self) -> None:

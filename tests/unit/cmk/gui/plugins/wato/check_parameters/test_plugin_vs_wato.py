@@ -618,11 +618,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "juniper_trpz_flash",
-            RuleGroup.CheckgroupParameters("general_flash_usage"),
-        ),
-        (
-            "check",
             "juniper_trpz_mem",
             RuleGroup.CheckgroupParameters("juniper_mem"),
         ),

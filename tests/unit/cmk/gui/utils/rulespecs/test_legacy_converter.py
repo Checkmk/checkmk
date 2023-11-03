@@ -123,6 +123,30 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Integer",
         ),
         pytest.param(
+            api_v1.Percentage(),
+            legacy_valuespecs.Percentage(),
+            id="minimal Percentage",
+        ),
+        pytest.param(
+            api_v1.Percentage(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help"),
+                label=api_v1.Localizable("label"),
+                display_precision=2,
+                default_value=-1.0,
+                custom_validate=lambda x: None,
+            ),
+            legacy_valuespecs.Percentage(
+                title=_("title"),
+                help=_("help"),
+                label=_("label"),
+                display_format="%.2f",
+                default_value=-1.0,
+                validate=lambda x, y: None,
+            ),
+            id="Percentage",
+        ),
+        pytest.param(
             api_v1.TextInput(),
             legacy_valuespecs.TextInput(),
             id="minimal TextInput",

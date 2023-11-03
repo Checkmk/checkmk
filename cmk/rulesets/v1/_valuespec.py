@@ -38,6 +38,34 @@ class Integer:
 
 
 @dataclass(frozen=True)
+class Percentage:
+    """Specifies an input field for percentages
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed in front of the input field
+        display_precision: How many decimal places to display
+        default_value: Default value to use if no number is entered by the user. If None, the
+                       backend will decide whether to leave the field empty or to prefill it with a
+                       canonical value.
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+
+    display_precision: int | None = None
+
+    default_value: float | None = None
+
+    custom_validate: Callable[[float], object] | None = None
+
+
+@dataclass(frozen=True)
 class TextInput:
     """
     Args:
@@ -190,4 +218,4 @@ class MonitoringState:
 
 ItemSpec = TextInput | DropdownChoice
 
-ValueSpec = Integer | TextInput | DropdownChoice | Dictionary | MonitoringState
+ValueSpec = Integer | Percentage | TextInput | DropdownChoice | Dictionary | MonitoringState

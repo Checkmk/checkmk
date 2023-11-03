@@ -21,7 +21,13 @@ def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar')
 }
 
-def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATTERN = "*", INFO = 'all packages') {
+def download_version_dir(DOWNLOAD_SOURCE,
+                         PORT,
+                         CMK_VERSION,
+                         DOWNLOAD_DEST,
+                         PATTERN = "*",
+                         INFO = 'all packages'
+) {
     println("""
         ||== download_version_dir() ================================================================
         || DOWNLOAD_SOURCE = |${DOWNLOAD_SOURCE}|

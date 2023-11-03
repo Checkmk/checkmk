@@ -10,12 +10,52 @@ from typing import Literal
 
 
 class IPAddressFamily(StrEnum):
+    """Defines an IP address family"""
+
     IPv4 = "ipv4"
+    """IPv4 address family"""
     IPv6 = "ipv6"
+    """IPv6 address family"""
 
 
 @dataclass(frozen=True)
 class HostConfig:
+    """
+    Defines a host configuration
+
+    This object encapsulates configuration parameters of the Checkmk host
+    the active check or special agent is associated with.
+    It will be created by the backend and passed to the `commands_function`.
+
+    The data is collected from the host setup configuration. If IPv4 or IPv6 address
+    isn't specified, it will be resolved using the host name.
+    If the IP family is configured as IPv4/IPv6 dual-stack, it will be resolved using the
+    `Primary IP address family of dual-stack hosts` rule.
+
+    Args:
+        name: Host name
+        address: IPv4 or IPv6 address, depending on the IP family
+        alias: Host alias
+        ip_family: Resolved IP address family
+        ipv4address: Resolved IPv4 address
+        ipv6address: Resolved IPv6 address
+        additional_ipv4addresses: Additional IPv4 addresses
+        additional_ipv6addresses: Additional IPv6 addresses
+
+    Example:
+
+        >>> from collections.abc import Iterable, Mapping
+
+        >>> from cmk.config_generation.v1 import HostConfig, HTTPProxy, SpecialAgentCommand
+
+
+        >>> def generate_example_commands(
+        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ... ) -> Iterable[SpecialAgentCommand]:
+        ...     args = ["--hostname", host_config.name, "--address", host_config.address]
+        ...     yield SpecialAgentCommand(command_arguments=args)
+    """
+
     name: str
     address: str
     alias: str
@@ -26,13 +66,19 @@ class HostConfig:
     additional_ipv6addresses: Sequence[str] = field(default_factory=list)
 
     @property
-    def all_ipv4addresses(self):
+    def all_ipv4addresses(self) -> Sequence[str]:
+        """
+        Sequence containing the IPv4 address and the additional IPv4 addresses
+        """
         if self.ipv4address:
             return [self.ipv4address, *self.additional_ipv4addresses]
         return self.additional_ipv4addresses
 
     @property
-    def all_ipv6addresses(self):
+    def all_ipv6addresses(self) -> Sequence[str]:
+        """
+        Sequence containing the IPv6 address and the additional IPv6 addresses
+        """
         if self.ipv6address:
             return [self.ipv6address, *self.additional_ipv6addresses]
         return self.additional_ipv6addresses
@@ -40,6 +86,38 @@ class HostConfig:
 
 @dataclass(frozen=True)
 class HTTPProxy:
+    """
+    Defines a HTTP proxy
+
+    This object represents a HTTP proxy configured in the global settings.
+    A mapping of HTTPProxy objects will be created by the backend and passed to the `commands_function`.
+    The mapping consists of a proxy ids as keys and HTTPProxy objects as values.
+
+    Args:
+        id: Id of the proxy
+        name: Name of the proxy
+        url: Url of the proxy
+
+    Example:
+
+        >>> from collections.abc import Iterable, Mapping
+        >>> from typing import Literal
+
+        >>> from pydantic import BaseModel
+
+        >>> from cmk.config_generation.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, get_http_proxy
+
+        >>> class ExampleParams(BaseModel):
+        ...     proxy_type: Literal["global", "environment", "url", "no_proxy"]
+        ...     proxy_value: str | None
+
+        >>> def generate_example_commands(
+        ...     params: ExampleParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ... ) -> Iterable[SpecialAgentCommand]:
+        ...     args = ["--proxy", get_http_proxy(params.proxy_type, params.proxy_value, http_proxies)]
+        ...     yield SpecialAgentCommand(command_arguments=args)
+    """
+
     id: str
     name: str
     url: str
@@ -47,23 +125,56 @@ class HTTPProxy:
 
 @dataclass(frozen=True)
 class Secret:
+    """
+    Secret base class
+
+    Should be used only for typing. When instantiating secrets use the StoredSecret or the PlainTextSecret class.
+    """
+
     value: str
     format: str = "%s"
 
 
 @dataclass(frozen=True)
 class StoredSecret(Secret):
-    pass
+    """
+    Defines a password stored in the password store
+
+    In order to avoid showing passwords in plain text in agent configuration and active check commands,
+    store the password in the password store and use a StoredSecret object to represent an argument that
+    contains a stored password.
+
+    Args:
+        value: Id of the password from the password store
+        format: printf-style format of the created argument. Should be used if active check or special agent require a secret argument in a particular format
+
+    Example:
+
+        >>> StoredSecret("stored_password_id", format="example-user:%s")
+        StoredSecret(value='stored_password_id', format='example-user:%s')
+    """
 
 
 @dataclass(frozen=True)
 class PlainTextSecret(Secret):
-    pass
+    """
+    Defines an explicit password
+
+    Args:
+        value: The password
+        format: printf-style format of the created argument. Should be used if active check or special agent require a secret argument in a particular format
+
+    Example:
+
+        >>> PlainTextSecret("password1234")
+        PlainTextSecret(value='password1234', format='%s')
+    """
 
 
 def get_secret_from_params(
     secret_type: Literal["store", "password"], secret_value: str, display_format: str = "%s"
 ) -> Secret:
+    # TODO: if we rename the valuespec in the new API, it should be changed here too
     """
     Returns a Secret object from parameters created by the IndividualOrStoredPassword valuespec
 
@@ -74,6 +185,29 @@ def get_secret_from_params(
 
     Returns:
         Object of the StoredSecret or the PlainTextSecret type
+
+    Example:
+
+        >>> from collections.abc import Iterable, Mapping
+
+        >>> from cmk.config_generation.v1 import (
+        ...     SpecialAgentCommand,
+        ...     HostConfig,
+        ...     HTTPProxy,
+        ...     get_secret_from_params,
+        ... )
+
+
+        >>> def generate_example_commands(
+        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ... ) -> Iterable[SpecialAgentCommand]:
+        ...     secret = get_secret_from_params(
+        ...         "store",
+        ...         "stored_secret_id",
+        ...         display_format="example-user:%s",
+        ...     )
+        ...     args = ["--auth", secret]
+        ...     yield SpecialAgentCommand(command_arguments=args)
     """
     match secret_type:
         case "store":
@@ -89,6 +223,33 @@ def get_http_proxy(
     proxy_value: str | None,
     http_proxies: Mapping[str, HTTPProxy],
 ) -> str:
+    # TODO: if we provide some kind of an utility function to create HTTP proxy valuespecs
+    # in the new API, it should be mentioned here too
+    """
+    Returns a proxy from parameters created by the HTTP proxy CascadingDropdown valuespec
+
+    Args:
+        proxy_type: Type of the proxy
+        proxy_value: Value of the proxy
+        http_proxies: Mapping of globally defined HTTP proxies
+
+    Returns:
+        String representing a proxy configuration
+
+    Example:
+
+        >>> from collections.abc import Iterable, Mapping
+
+        >>> from cmk.config_generation.v1 import SpecialAgentCommand, HostConfig, HTTPProxy, get_http_proxy
+
+
+        >>> def generate_example_commands(
+        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ... ) -> Iterable[SpecialAgentCommand]:
+        ...     proxy = get_http_proxy("global", "example_proxy", http_proxies)
+        ...     args = ["--proxy", proxy]
+        ...     yield SpecialAgentCommand(command_arguments=args)
+    """
     if proxy_type == "url":
         return str(proxy_value)
 
@@ -103,4 +264,32 @@ def get_http_proxy(
 
 
 def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
+    """
+    Parameter parser that doesn't perform a transformation
+
+    Use it if you don't require parameter transformation in ActiveCheckConfig or SpecialAgentConfig.
+
+    Args:
+        params: Parameters from the configuration file
+
+    Example:
+
+        >>> from collections.abc import Iterable
+
+        >>> from cmk.config_generation.v1 import noop_parser, SpecialAgentCommand, SpecialAgentConfig
+
+
+        >>> def generate_example_commands(
+        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ... ) -> Iterable[SpecialAgentCommand]:
+        ...     args = ["--service", str(params["service"])]
+        ...     yield SpecialAgentCommand(command_arguments=args)
+
+
+        >>> special_agent_example = SpecialAgentConfig(
+        ...     name="example",
+        ...     parameter_parser=noop_parser,
+        ...     commands_function=generate_example_commands,
+        ... )
+    """
     return params

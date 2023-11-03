@@ -39,7 +39,7 @@ is_signed() {
         fi
         return 1
     elif [[ "$FILE_PATH" == *deb ]]; then
-        if dpkg-sig --verify "$FILE_PATH" >/dev/null; then
+        if gpg --verify "$FILE_PATH" >/dev/null; then
             return 0
         fi
         return 1

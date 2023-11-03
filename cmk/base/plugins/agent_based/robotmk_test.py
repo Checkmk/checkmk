@@ -14,19 +14,9 @@ from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-
 )
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import robotmk_api
 from .utils.robotmk_parse_xml import extract_tests_from_suites, Outcome, Test
-
-
-def parse(string_table: StringTable) -> robotmk_api.Section:
-    return robotmk_api.parse(string_table)
-
-
-register.agent_section(
-    name="robotmk_v2",
-    parse_function=parse,
-)
 
 
 class Params(TypedDict):
@@ -112,7 +102,7 @@ def _remap_state(status: Outcome) -> State:
 
 
 register.check_plugin(
-    name="robotmk",
+    name="robotmk_test",
     sections=["robotmk_v2"],
     service_name="%s",
     discovery_function=discover,

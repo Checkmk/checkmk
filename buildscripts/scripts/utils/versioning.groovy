@@ -107,6 +107,21 @@ def configured_or_overridden_distros(edition, distro_list, use_case="daily") {
     }
 }
 
+def get_internal_distros_pattern() {
+    docker_image_from_alias("IMAGE_TESTING").inside() {
+        dir("${checkout_dir}") {
+            return sh(script: """scripts/run-pipenv run \
+                  buildscripts/scripts/get_distros.py \
+                  --editions_file "editions.yml" \
+                  internal_distros \
+                  --as-codename \
+                  --as-rsync-exclude-pattern;
+            """, returnStdout: true).trim();
+        }
+    }
+
+}
+
 def get_branch_version(String git_dir=".") {
     dir(git_dir) {
         return (cmd_output("grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'")

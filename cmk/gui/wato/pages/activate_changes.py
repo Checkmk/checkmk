@@ -982,6 +982,7 @@ class PageAjaxStartActivation(AjaxPage):
             activate_until=ensure_str(activate_until),  # pylint: disable= six-ensure-str-bin-call
             comment=comment,
             activate_foreign=activate_foreign,
+            source="GUI",
         )
 
         return {

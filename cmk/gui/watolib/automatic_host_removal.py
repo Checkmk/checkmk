@@ -192,7 +192,11 @@ def _activate_changes(sites: Iterable[SiteId]) -> None:
     manager = ActivateChangesManager()
     manager.load()
     with SuperUserContext():
-        manager.start(list(sites), activate_foreign=True)
+        manager.start(
+            list(sites),
+            source="INTERNAL",
+            activate_foreign=True,
+        )
 
 
 class AutomationHostsForAutoRemoval(AutomationCommand):

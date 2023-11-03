@@ -318,6 +318,7 @@ def main() {
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
+        def exclude_pattern = versioning.get_internal_distros_pattern()
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
                 assert_no_dirty_files(checkout_dir);
@@ -325,10 +326,13 @@ def main() {
                     upload_path,
                     INTERNAL_DEPLOY_PORT,
                     cmk_version_rc_aware,
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}"
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}",
+                    "*",
+                    "all packages",
+                    exclude_pattern,
                 )
                 artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
                 if (deploy_to_website) {
                     artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 }

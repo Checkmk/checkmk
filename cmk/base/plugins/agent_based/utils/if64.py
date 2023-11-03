@@ -302,7 +302,7 @@ def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def port_mapping(name, port_map: Mapping[str, str]) -> str | None:  # type: ignore[no-untyped-def]
+def _port_mapping(name: str, port_map: Mapping[str, str]) -> str | None:
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map
@@ -327,7 +327,7 @@ def generic_parse_if64(
                 out_qlen=interfaces.saveint(line[17]),
                 alias=str(line[18]),
                 phys_address=line[19],
-                extra_info=port_mapping(line[1], port_map) if port_map else None,
+                extra_info=_port_mapping(str(line[1]), port_map) if port_map else None,
             ),
             interfaces.Counters(
                 in_octets=interfaces.saveint(line[5]),

@@ -1,0 +1,14 @@
+Title: Activate changes now shows user and source of currently running activation
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1699016858
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If you try to activate changes and another activation is currently in progress,
+you will now see the user who has started the activation and the source of the
+activation in the shown warning message.
+
+Possible sources are "GUI", "REST API" and "INTERNAL".

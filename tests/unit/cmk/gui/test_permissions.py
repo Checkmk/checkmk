@@ -266,6 +266,7 @@ def test_registered_permissions() -> None:
         "sidesnap.views",
         "sidesnap.wato_foldertree",
         "view.aggr_all",
+        "view.aggr_all_frozen",
         "view.aggr_frozen_diff",
         "view.aggr_all_api",
         "view.aggr_group",

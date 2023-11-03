@@ -6,7 +6,7 @@ Date: 1698998718
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0p14
+Version: 2.2.0p13
 
 In previous releases, an overly stringent memory limit for the fetcher 
 process could result in frequent restarts and an excessive number of 

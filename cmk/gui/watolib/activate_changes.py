@@ -465,9 +465,11 @@ def _lock_activation(site_activation_state: SiteActivationState) -> bool:
                 site_activation_state,
                 PHASE_DONE,
                 _("Locked"),
+                # Prevent key error for existing site_activation_states after update?!
                 status_details=_(
-                    "The site is currently locked by another activation process. Please try again later"
-                ),
+                    "Activation blocked.<br>%s is currently activating changes on this site."
+                )
+                % repl_status.get("current_user_id", "UNKNOWN"),
                 state=STATE_WARNING,
             )
             return False
@@ -484,6 +486,7 @@ def _lock_activation(site_activation_state: SiteActivationState) -> bool:
                 site_activation_state["_site_id"],
                 {
                     "current_activation": site_activation_state["_activation_id"],
+                    "current_user_id": site_activation_state["_user_id"],
                 },
             )
         else:
@@ -496,6 +499,7 @@ def _unlock_activation(site_id: SiteId, activation_id: ActivationId) -> None:
         {
             "last_activation": activation_id,
             "current_activation": None,
+            "current_user_id": None,
         },
     )
 
@@ -2013,6 +2017,7 @@ def _initialize_site_activation_state(
         "_time_ended": None,
         "_expected_duration": _load_expected_duration(site_id, activate_changes),
         "_pid": os.getpid(),
+        "_user_id": user.id,
     }
     return site_activation_state
 

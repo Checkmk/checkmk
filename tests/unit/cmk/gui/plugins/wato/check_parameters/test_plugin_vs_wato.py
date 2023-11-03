@@ -515,11 +515,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "esx_vsphere_sensors",
-            RuleGroup.CheckgroupParameters("hostsystem_sensors"),
-        ),
-        (
-            "check",
             "esx_vsphere_vm_guest_tools",
             RuleGroup.CheckgroupParameters("vm_guest_tools"),
         ),

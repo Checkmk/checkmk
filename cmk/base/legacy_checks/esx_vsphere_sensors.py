@@ -19,7 +19,7 @@ from cmk.base.config import check_info
 
 
 def inventory_esx_vsphere_sensors(info):
-    yield None, []
+    yield None, {}
 
 
 def check_esx_vsphere_sensors(_no_item, params, info):
@@ -40,7 +40,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         sensor_state = {"green": 0, "yellow": 1, "red": 2, "unknown": 3}.get(health_key.lower(), 2)
         txt = f"{name}: {health_label} ({health_summary})"
 
-        for entry in params:
+        for entry in params["rules"]:
             if name.startswith(entry.get("name", "")):
                 new_state = entry.get("states", {}).get(str(sensor_state))
                 if new_state is not None:
@@ -60,4 +60,5 @@ check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
     discovery_function=inventory_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,
     check_ruleset_name="hostsystem_sensors",
+    check_default_parameters={"rules": []},
 )

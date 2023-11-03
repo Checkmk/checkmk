@@ -21,6 +21,52 @@ pub struct Section {
     pub separator: Option<char>,
 }
 
+#[derive(Clone, Debug)]
+pub struct Instance {
+    pub name: String,
+    pub id: String,
+    pub version: String,
+    pub edition: String,
+    pub cluster: Option<String>,
+    pub port: Option<u16>,
+}
+
+impl Instance {
+    /// NOTE: ignores any bad data in the row
+    fn from_row(row: &Row) -> Instance {
+        Instance {
+            name: row
+                .try_get::<&str, usize>(0)
+                .unwrap_or_default()
+                .unwrap_or_default()
+                .to_string(),
+            id: row
+                .try_get::<&str, usize>(1)
+                .unwrap_or_default()
+                .unwrap_or_default()
+                .to_string(),
+            edition: row
+                .try_get::<&str, usize>(2)
+                .unwrap_or_default()
+                .unwrap_or_default()
+                .to_string(),
+            version: row
+                .try_get::<&str, usize>(3)
+                .unwrap_or_default()
+                .unwrap_or_default()
+                .to_string(),
+            cluster: row
+                .try_get::<&str, usize>(4)
+                .unwrap_or_default()
+                .map(str::to_string),
+            port: row
+                .try_get::<&str, usize>(5)
+                .unwrap_or_default()
+                .and_then(|s| s.parse::<u16>().ok()),
+        }
+    }
+}
+
 impl CheckConfig {
     pub async fn exec(&self) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
@@ -141,25 +187,21 @@ pub async fn run_query(
 /// return all MS SQL instances installed
 pub async fn get_all_instances(
     client: &mut Client<Compat<TcpStream>>,
-) -> Result<(Vec<String>, Vec<String>)> {
+) -> Result<(Vec<Instance>, Vec<Instance>)> {
     Ok((
-        get_instances(client, queries::QUERY_64BIT_INSTANCES.as_str()).await?,
-        get_instances(client, queries::QUERY_32BIT_INSTANCES.as_str()).await?,
+        get_instances(client, &queries::get_instances_query()).await?,
+        get_instances(client, &queries::get_32bit_instances_query()).await?,
     ))
 }
 
-async fn get_instances(client: &mut Client<Compat<TcpStream>>, query: &str) -> Result<Vec<String>> {
+async fn get_instances(
+    client: &mut Client<Compat<TcpStream>>,
+    query: &str,
+) -> Result<Vec<Instance>> {
     let rows = run_query(client, query).await?;
     Ok(rows[0]
         .iter()
-        .filter_map(|r| {
-            r.try_get::<&str, usize>(0)
-                .unwrap_or_else(|e| {
-                    log::error!("failed to get instance name: {e}");
-                    None
-                })
-                .map(str::to_string)
-        })
-        .collect::<Vec<String>>()
+        .map(Instance::from_row)
+        .collect::<Vec<Instance>>()
         .to_vec())
 }

@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use check_sql::ms_sql::api::Instance;
 use check_sql::{config::CheckConfig, ms_sql::api};
 use common::tools;
 use std::vec;
@@ -42,10 +43,21 @@ async fn test_get_all_instances() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
         let instances = api::get_all_instances(&mut client).await.unwrap();
-        let mut combined = [&instances.0[..], &instances.1[..]].concat();
-        combined.sort();
+        let combined: Vec<Instance> = [&instances.0[..], &instances.1[..]].concat();
+        assert!(combined.iter().all(|i| {
+            i.edition.contains("Edition")
+                && !i.name.is_empty()
+                && i.id.contains(&i.name[..4])
+                && i.id.contains("MSSQL")
+                && i.version.chars().filter(|&c| c == '.').count() == 3
+                && i.port.is_none()
+                && i.cluster.is_none()
+        }));
+        let mut names: Vec<String> = combined.into_iter().map(|i| i.name).collect();
+        names.sort();
+
         assert_eq!(
-            combined.iter().map(String::as_str).collect::<Vec<&str>>(),
+            names.iter().map(String::as_str).collect::<Vec<&str>>(),
             vec!["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"],
             "During connecting to `{} with `{}`. {}",
             endpoint.host,

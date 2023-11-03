@@ -74,14 +74,13 @@ impl Display for Output {
 
 impl Output {
     pub fn from_check_results(check_results: Vec<CheckResult>) -> Self {
-        let state = check_results
-            .iter()
-            .map(|output| output.state.clone())
-            .max()
-            .unwrap();
+        let worst_state = match check_results.iter().map(|cr| &cr.state).max() {
+            Some(state) => state.clone(),
+            None => State::Ok,
+        };
 
         Self {
-            worst_state: state,
+            worst_state,
             check_results,
         }
     }
@@ -153,5 +152,38 @@ mod test_output_format {
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
             "HTTP CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
+    }
+
+    #[test]
+    fn test_emtpy_output() {
+        assert_eq!(format!("{}", Output::from_check_results(vec![])), "HTTP OK");
+    }
+
+    #[test]
+    fn test_worst_state() {
+        use State::Crit as C;
+        use State::Ok as O;
+        use State::Unknown as U;
+        use State::Warn as W;
+
+        fn out(states: Vec<State>) -> Output {
+            Output::from_check_results(
+                states
+                    .into_iter()
+                    .map(|state| CheckResult {
+                        state,
+                        summary: "dummy".to_string(),
+                    })
+                    .collect(),
+            )
+        }
+
+        assert_eq!(out(vec![O]).worst_state, O);
+        assert_eq!(out(vec![W]).worst_state, W);
+        assert_eq!(out(vec![W, W]).worst_state, W);
+        assert_eq!(out(vec![C]).worst_state, C);
+        assert_eq!(out(vec![O, C]).worst_state, C);
+        assert_eq!(out(vec![C, U]).worst_state, U);
+        assert_eq!(out(vec![]).worst_state, O);
     }
 }

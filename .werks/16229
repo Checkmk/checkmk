@@ -1,0 +1,17 @@
+Title: Build Checkmk for Ubuntu-23.10 (mantic minotaur)
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1699612013
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0p15
+
+With this werk, we deliver builds for Ubuntu-23.10.
+
+<b>PLEASE NOTE:</b>
+This will be the last STS Ubuntu version we will provide to the public.
+Have a look at https://docs.checkmk.com/latest/en/update_matrix.html#ossupport
+
+

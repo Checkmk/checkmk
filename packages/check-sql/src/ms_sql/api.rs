@@ -139,8 +139,17 @@ pub async fn run_query(
 }
 
 /// return all MS SQL instances installed
-pub async fn get_all_instances(client: &mut Client<Compat<TcpStream>>) -> Result<Vec<String>> {
-    let rows = run_query(client, queries::INSTANCES_BASE_START).await?;
+pub async fn get_all_instances(
+    client: &mut Client<Compat<TcpStream>>,
+) -> Result<(Vec<String>, Vec<String>)> {
+    Ok((
+        get_instances(client, queries::QUERY_64BIT_INSTANCES.as_str()).await?,
+        get_instances(client, queries::QUERY_32BIT_INSTANCES.as_str()).await?,
+    ))
+}
+
+async fn get_instances(client: &mut Client<Compat<TcpStream>>, query: &str) -> Result<Vec<String>> {
+    let rows = run_query(client, query).await?;
     Ok(rows[0]
         .iter()
         .filter_map(|r| {

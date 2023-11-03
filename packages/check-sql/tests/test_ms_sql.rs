@@ -41,10 +41,11 @@ async fn test_remote_connection() {
 async fn test_get_all_instances() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let mut instances = api::get_all_instances(&mut client).await.unwrap();
-        instances.sort();
+        let instances = api::get_all_instances(&mut client).await.unwrap();
+        let mut combined = [&instances.0[..], &instances.1[..]].concat();
+        combined.sort();
         assert_eq!(
-            instances.iter().map(String::as_str).collect::<Vec<&str>>(),
+            combined.iter().map(String::as_str).collect::<Vec<&str>>(),
             vec!["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"],
             "During connecting to `{} with `{}`. {}",
             endpoint.host,

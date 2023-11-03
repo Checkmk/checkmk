@@ -84,7 +84,9 @@ genrule(
     srcs = [
         "%s_compile" % module
         for module in all_requirements + [
+            "agent-based",
             "agent-receiver",
+            "graphing",
             "werks",
         ]
     ],

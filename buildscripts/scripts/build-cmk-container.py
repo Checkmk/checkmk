@@ -339,7 +339,7 @@ def build_tar_gz(
             LOG.info(f"{version_tag} contains rc information, do a retagging before docker save.")
             image.tag(
                 repository=f"{docker_repo_name}/check-mk-{args.edition}",
-                tag=f"check-mk-{args.edition}:{args.version}",
+                tag=f"{args.version}",
             )
 
             with gzip.open(tar_name, "wb") as tar_ball:

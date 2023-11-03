@@ -18,12 +18,12 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class MobileIronParams(BaseModel):
     username: str
-    password: tuple[str, str]
+    password: tuple[SecretType, str]
     proxy: tuple[ProxyType, str | None] | None = None
     partition: Sequence[str]
     key_fields: tuple[str] | tuple[str, str] = Field(..., alias="key-fields")

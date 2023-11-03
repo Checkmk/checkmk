@@ -21,6 +21,8 @@ from cmk.config_generation.v1 import (
     Secret,
 )
 
+from .utils import SecretType
+
 
 class Mode(Enum):
     URL = "url"
@@ -69,7 +71,7 @@ class ProxySettings:
 
     @classmethod
     def from_params(cls, params: Mapping[str, Any]) -> "ProxySettings":
-        auth: tuple[str, tuple[str, str]] | None = params.get("auth")
+        auth: tuple[str, tuple[SecretType, str]] | None = params.get("auth")
         return cls(
             address=params["address"],
             port=params.get("port"),
@@ -136,7 +138,7 @@ class URLMode(BaseModel):
     timeout: int | None = None
     user_agent: str | None = None
     add_headers: Sequence[str] = []
-    auth: tuple[str, tuple[str, str]] | None = None
+    auth: tuple[str, tuple[SecretType, str]] | None = None
     onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
     expect_response_header: str | None = None
     expect_response: Sequence[str] | None = None

@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Literal
 
 from pydantic import BaseModel
 
 from cmk.config_generation.v1 import get_secret_from_params, HostConfig, Secret
 
+SecretType = Literal["store", "password"]
+
 
 class BasicAuth(BaseModel):
-    auth: tuple[str, tuple[str, str]]
+    auth: tuple[str, tuple[SecretType, str]]
 
 
 class OAuth(BaseModel):
-    auth: tuple[str, tuple[str, str], str]
+    auth: tuple[str, tuple[SecretType, str], str]
 
 
 class Connection(BaseModel):

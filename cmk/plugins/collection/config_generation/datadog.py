@@ -18,12 +18,12 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class Instance(BaseModel):
-    api_key: tuple[str, str]
-    app_key: tuple[str, str]
+    api_key: tuple[SecretType, str]
+    app_key: tuple[SecretType, str]
     api_host: str
 
 

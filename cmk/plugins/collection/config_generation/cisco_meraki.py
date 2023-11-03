@@ -18,11 +18,11 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class Params(BaseModel):
-    api_key: tuple[str, str]
+    api_key: tuple[SecretType, str]
     proxy: tuple[ProxyType, str | None] | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None

@@ -18,7 +18,7 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class Explicit(BaseModel):
@@ -36,7 +36,7 @@ class AzureParams(BaseModel):
     subscription: str | None = None
     tenant: str
     client: str
-    secret: tuple[str, str]
+    secret: tuple[SecretType, str]
     proxy: tuple[ProxyType, str | None] | None = None
     services: Sequence[str]
     config: Config

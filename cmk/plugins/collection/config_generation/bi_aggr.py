@@ -17,11 +17,13 @@ from cmk.config_generation.v1 import (
     Secret,
 )
 
+from .utils import SecretType
+
 
 class Credentials(BaseModel):
     automation: bool = False
     user: str | None = None
-    password: tuple[str, str] | None = None
+    password: tuple[SecretType, str] | None = None
 
 
 class OptionalParams(BaseModel):

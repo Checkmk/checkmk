@@ -99,6 +99,30 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Dictionary",
         ),
         pytest.param(
+            api_v1.Integer(),
+            legacy_valuespecs.Integer(),
+            id="minimal Integer",
+        ),
+        pytest.param(
+            api_v1.Integer(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help"),
+                label=api_v1.Localizable("label"),
+                unit=api_v1.Localizable("days"),
+                default_value=-1,
+                custom_validate=lambda x: None,
+            ),
+            legacy_valuespecs.Integer(
+                title=_("title"),
+                help=_("help"),
+                label=_("label"),
+                unit=_("days"),
+                default_value=-1,
+                validate=lambda x, y: None,
+            ),
+            id="Integer",
+        ),
+        pytest.param(
             api_v1.TextInput(),
             legacy_valuespecs.TextInput(),
             id="minimal TextInput",

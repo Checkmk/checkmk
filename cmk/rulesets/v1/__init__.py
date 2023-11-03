@@ -34,6 +34,7 @@ from cmk.rulesets.v1._valuespec import (
     Dictionary,
     DropdownChoice,
     DropdownChoiceElement,
+    Integer,
     InvalidElementMode,
     InvalidElementValidator,
     ItemSpec,
@@ -78,4 +79,5 @@ __all__ = [
     "disallow_empty",
     "in_range",
     "match_regex",
+    "Integer",
 ]

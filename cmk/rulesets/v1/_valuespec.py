@@ -12,6 +12,32 @@ from cmk.rulesets.v1._localize import Localizable
 
 
 @dataclass(frozen=True)
+class Integer:
+    """Specifies an input field for whole numbers
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed as an extension to the input field
+        unit: Unit of the input (only for display)
+        default_value: Default value to use if no number is entered by the user. If None, the
+                       backend will decide whether to leave the field empty or to prefill it with a
+                       canonical value.
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+    unit: Localizable | None = None
+    default_value: int | None = None
+
+    custom_validate: Callable[[int], object] | None = None
+
+
+@dataclass(frozen=True)
 class TextInput:
     """
     Args:
@@ -19,10 +45,12 @@ class TextInput:
         label: Text displayed in front of the input field
         help_text: Description to help the user with the configuration
         input_hint: A short hint to aid the user with data entry (e.g. an example)
-        default_value: Default text
+        default_value: Default value to use if no text is entered by the user. If None, the backend
+                       will decide whether to leave the field empty or to prefill it with a
+                       canonical value.
         custom_validate: Custom validation function. Will be executed in addition to any
-                 builtin validation logic. Needs to raise a ValidationError in case
-                 validation fails, the return value of the function will not be consumed
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
     """
 
     title: Localizable | None = None
@@ -121,7 +149,7 @@ class Dictionary:
         help_text: Description to help the user with the configuration
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails, the return value of the function will not be consumed
+                         validation fails. The return value of the function will not be used.
         no_elements_text: Text to show if no elements are specified
     """
 
@@ -162,4 +190,4 @@ class MonitoringState:
 
 ItemSpec = TextInput | DropdownChoice
 
-ValueSpec = TextInput | DropdownChoice | Dictionary | MonitoringState
+ValueSpec = Integer | TextInput | DropdownChoice | Dictionary | MonitoringState

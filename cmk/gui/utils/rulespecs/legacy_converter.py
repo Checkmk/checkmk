@@ -85,6 +85,9 @@ def _extract_key_props(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.ValueSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    if isinstance(to_convert, ruleset_api_v1.Integer):
+        return _convert_to_legacy_integer(to_convert, localizer)
+
     if isinstance(to_convert, ruleset_api_v1.Dictionary):
         elements = [
             (key, _convert_to_legacy_valuespec(elem.spec, localizer))
@@ -115,6 +118,34 @@ def _convert_to_legacy_valuespec(
         return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
     raise NotImplementedError(to_convert)
+
+
+def _convert_to_legacy_integer(
+    to_convert: ruleset_api_v1.Integer, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Integer:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+    }
+    converted_kwargs["unit"] = ""
+    if to_convert.unit is not None:
+        converted_kwargs["unit"] = to_convert.unit.localize(localizer)
+
+    if to_convert.default_value is not None:
+        converted_kwargs["default_value"] = to_convert.default_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.Integer(**converted_kwargs)
 
 
 def _convert_to_legacy_monitoring_state(

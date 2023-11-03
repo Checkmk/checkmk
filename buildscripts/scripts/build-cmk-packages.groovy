@@ -317,7 +317,7 @@ def main() {
     }
     parallel package_builds;
 
-    stage("Upload") {
+    conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
         currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>

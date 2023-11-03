@@ -205,3 +205,18 @@ async fn get_instances(
         .collect::<Vec<Instance>>()
         .to_vec())
 }
+
+/// return all MS SQL instances installed
+pub async fn get_computer_name(client: &mut Client<Compat<TcpStream>>) -> Result<Option<String>> {
+    let rows = run_query(client, queries::QUERY_COMPUTER_NAME).await?;
+    if rows.is_empty() || rows[0].is_empty() {
+        log::warn!("Computer name not found");
+        return Ok(None);
+    }
+    let row = &rows[0];
+    Ok(row[0]
+        .try_get::<&str, usize>(0)
+        .ok()
+        .flatten()
+        .map(str::to_string))
+}

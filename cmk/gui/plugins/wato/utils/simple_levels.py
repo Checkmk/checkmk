@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from functools import partial
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Alternative, FixedValue, Float, Tuple, ValueSpec
@@ -26,16 +26,17 @@ class _Spec(Protocol):
 def _FixedLevels(
     value_spec: _Spec,
     default_value: tuple[float | int, float | int],
+    direction: Literal["upper", "lower"],
 ) -> Tuple:
     return Tuple(
         title=_("Fixed Levels"),
         elements=[
             value_spec(
-                title=_("Warning at"),
+                title=_("Warning at") if direction == "upper" else _("Warning below"),
                 default_value=default_value[0],
             ),
             value_spec(
-                title=_("Critical at"),
+                title=_("Critical at") if direction == "upper" else _("Critical below"),
                 default_value=default_value[1],
             ),
         ],
@@ -49,6 +50,7 @@ def SimpleLevels(
     default_value: tuple[float, float] | None = None,
     title: str | None = None,
     unit: str | None = None,
+    direction: Literal["upper", "lower"] = "upper",
 ) -> Alternative:
     """
     Internal API. Might change between versions
@@ -67,7 +69,7 @@ def SimpleLevels(
 
     elements = [
         _NoLevels(),
-        _FixedLevels(spec, default_value=default_levels),
+        _FixedLevels(spec, default_value=default_levels, direction=direction),
     ]
     return Alternative(
         title=title,

@@ -346,7 +346,9 @@ def build_tar_gz(
                 for chunk in image.save():
                     tar_ball.write(chunk)
 
-            docker_client.remove(image=f"{docker_repo_name}/check-mk-{args.edition}:{args.version}")
+            docker_client.images.remove(
+                image=f"{docker_repo_name}/check-mk-{args.edition}:{args.version}"
+            )
         else:
             with gzip.open(tar_name, "wb") as tar_ball:
                 for chunk in image.save():

@@ -120,6 +120,6 @@ def parse_lnx_bonding(string_table: StringTable) -> bonding.Section:
 
 
 register.agent_section(
-    name="lnx_bonding",
+    name="bonding",
     parse_function=parse_lnx_bonding,
 )

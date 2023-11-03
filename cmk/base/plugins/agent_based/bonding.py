@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any, get_args, Literal
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import bonding
+
+DEFAULT_PARAMS = {
+    "ieee_302_3ad_agg_id_missmatch_state": 1,
+    "expect_active": "ignore",
+}
 
 
 def _discovery_params(bond: bonding.Bond) -> dict[str, str]:
@@ -53,7 +59,38 @@ def _check_ieee_302_3ad_specific(params: Mapping[str, Any], status: bonding.Bond
             )
 
 
-def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section) -> CheckResult:
+MODE_OPTION = Literal[
+    "balance-rr",
+    "active-backup",
+    "balance-xor",
+    "broadcast",
+    "802.3ad",
+    "balance-tlb",
+    "balance-alb",
+]
+BONDING_MODE_CONFIG = tuple[MODE_OPTION, State]
+
+
+def _check_bonding_mode(current_mode: str, config: BONDING_MODE_CONFIG) -> CheckResult:
+    expected_mode, state_if_not_expected = config
+
+    for mode in get_args(MODE_OPTION):
+        if mode in current_mode.lower():
+            current_mode = mode
+            break
+
+    if expected_mode not in current_mode.lower():
+        yield Result(
+            state=State(state_if_not_expected),
+            summary=f"Mode: {current_mode} (expected mode: {expected_mode})",
+        )
+    else:
+        yield Result(state=State.OK, summary=f"Mode: {current_mode}")
+
+
+def check_bonding(  # pylint: disable=too-many-branches
+    item: str, params: Mapping[str, Any], section: bonding.Section
+) -> CheckResult:
     """
     >>> for result in check_bonding(
     ...     "bond0", {
@@ -87,7 +124,12 @@ def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section
         return
 
     mode = properties["mode"]
-    yield Result(state=State.OK, summary=f"Mode: {mode}")
+    if params.get("expected_bonding_mode_and_state") is not None:
+        config: BONDING_MODE_CONFIG = params["expected_bonding_mode_and_state"]
+        yield from _check_bonding_mode(mode, config)
+    else:
+        yield Result(state=State.OK, summary=f"Mode: {mode}")
+
     if "IEEE 802.3ad" in mode:
         yield from _check_ieee_302_3ad_specific(params, properties)
 
@@ -129,10 +171,16 @@ register.check_plugin(
     discovery_function=discover_bonding,
     check_function=check_bonding,
     check_ruleset_name="bonding",
-    check_default_parameters={
-        "ieee_302_3ad_agg_id_missmatch_state": 1,
-        "expect_active": "ignore",
-    },
+    check_default_parameters=DEFAULT_PARAMS,
+)
+
+register.check_plugin(
+    name="ovs_bonding",
+    service_name="OVS Bonding interface %s",
+    discovery_function=discover_bonding,
+    check_function=check_bonding,
+    check_ruleset_name="ovs_bonding",
+    check_default_parameters=DEFAULT_PARAMS,
 )
 
 
@@ -144,13 +192,9 @@ register.check_plugin(
     name="windows_intel_bonding",
     # unfortunately, this one is written with lower 'i' :-(
     service_name="Bonding interface %s",
-    sections=["bonding"],
     # This plugin is not discovered since version 2.2
     discovery_function=never_discover,
     check_function=check_bonding,
     check_ruleset_name="bonding",
-    check_default_parameters={
-        "ieee_302_3ad_agg_id_missmatch_state": 1,
-        "expect_active": "ignore",
-    },
+    check_default_parameters=DEFAULT_PARAMS,
 )

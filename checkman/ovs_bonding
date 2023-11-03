@@ -1,4 +1,4 @@
-title: Network interface bonds (Linux)
+title: Network interface bonds (Open vSwitch)
 agents: linux
 catalog: os/networking
 license: GPLv2
@@ -13,9 +13,6 @@ description:
  If the bonding mode is according to IEEE 802.3ad (Dynamic link
  aggregation), the aggregation IDs are compared. A mismatch
  results in the configured state (default {WARN}).
-
- If the bonding mode does not match the expected bonding mode
- then the check goes to {CRIT} by default.
 
 item:
  The team name of the bonding interface

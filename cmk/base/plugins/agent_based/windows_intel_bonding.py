@@ -91,6 +91,5 @@ def parse_windows_intel_bonding(  # pylint: disable=too-many-branches
 
 register.agent_section(
     name="windows_intel_bonding",
-    parsed_section_name="bonding",
     parse_function=parse_windows_intel_bonding,
 )

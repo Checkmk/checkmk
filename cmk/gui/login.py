@@ -52,9 +52,10 @@ def register(page_registry: PageRegistry) -> None:
     # TODO: only overwrite this in cse specific files
     if cmk_version.edition() == cmk_version.Edition.CSE:
         page_registry.register_page("login")(SaasLoginPage)
+        page_registry.register_page("logout")(SaasLogoutPage)
     else:
         page_registry.register_page("login")(LoginPage)
-    page_registry.register_page("logout")(LogoutPage)
+        page_registry.register_page("logout")(LogoutPage)
 
 
 @contextlib.contextmanager
@@ -110,6 +111,11 @@ def del_auth_cookie() -> None:
 class SaasLoginPage(Page):
     def page(self) -> None:
         raise HTTPRedirect("cognito_sso.py")
+
+
+class SaasLogoutPage(Page):
+    def page(self) -> None:
+        raise HTTPRedirect("cognito_logout.py")
 
 
 # TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not

@@ -16,11 +16,12 @@ configure_cognito() {
     well_known="$idp_url/.well-known/openid-configuration"
 
     # Create JSON object
-    JSON=$(printf '{\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s"\n}' \
+    JSON=$(printf '{\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s"\n}' \
         "client_id" "$client_id" \
         "base_url" "$base_url" \
         "saas_api_url" "$idp_url" \
         "tenant_id" "123tenant567" \
+        "logout_url" "$idp_url/logout" \
         "well_known" "$well_known")
 
     # Write JSON object to file

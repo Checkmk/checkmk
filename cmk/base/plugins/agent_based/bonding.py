@@ -4,12 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, get_args, Literal
 
 from cmk.plugins.lib import bonding
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+
+DEFAULT_PARAMS = {
+    "ieee_302_3ad_agg_id_missmatch_state": 1,
+    "expect_active": "ignore",
+}
 
 
 def _discovery_params(bond: bonding.Bond) -> dict[str, str]:
@@ -55,6 +60,33 @@ def _check_ieee_302_3ad_specific(params: Mapping[str, Any], status: bonding.Bond
             )
 
 
+def _check_bonding_mode(params: Mapping[str, Any], current_mode: str) -> CheckResult:
+    mode_option = Literal[
+        "balance-rr",
+        "active-backup",
+        "balance-xor",
+        "broadcast",
+        "802.3ad",
+        "balance-tlb",
+        "balance-alb",
+    ]
+    config: tuple[mode_option, State] | None
+    for mode in get_args(mode_option):
+        if mode in current_mode.lower():
+            current_mode = mode
+            break
+
+    if (config := params.get("expected_bonding_mode_and_state")) is not None and config[
+        0
+    ] not in current_mode.lower():
+        yield Result(
+            state=State(config[1]),
+            summary=f"Mode: {current_mode} (expected mode: {config[0]})",
+        )
+    else:
+        yield Result(state=State.OK, summary=f"Mode: {current_mode}")
+
+
 def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section) -> CheckResult:
     """
     >>> for result in check_bonding(
@@ -89,7 +121,8 @@ def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section
         return
 
     mode = properties["mode"]
-    yield Result(state=State.OK, summary=f"Mode: {mode}")
+    yield from _check_bonding_mode(params, mode)
+
     if "IEEE 802.3ad" in mode:
         yield from _check_ieee_302_3ad_specific(params, properties)
 
@@ -126,15 +159,22 @@ def check_bonding(item: str, params: Mapping[str, Any], section: bonding.Section
 
 
 register.check_plugin(
-    name="bonding",
+    name="lnx_bonding",
+    service_name="Bonding Interface %s",
+    discovery_function=discover_bonding,
+    check_function=check_bonding,
+    check_ruleset_name="lnx_bonding",
+    check_default_parameters=DEFAULT_PARAMS,
+)
+
+
+register.check_plugin(
+    name="ovs_bonding",
     service_name="Bonding Interface %s",
     discovery_function=discover_bonding,
     check_function=check_bonding,
     check_ruleset_name="bonding",
-    check_default_parameters={
-        "ieee_302_3ad_agg_id_missmatch_state": 1,
-        "expect_active": "ignore",
-    },
+    check_default_parameters=DEFAULT_PARAMS,
 )
 
 
@@ -146,13 +186,9 @@ register.check_plugin(
     name="windows_intel_bonding",
     # unfortunately, this one is written with lower 'i' :-(
     service_name="Bonding interface %s",
-    sections=["bonding"],
     # This plugin is not discovered since version 2.2
     discovery_function=never_discover,
     check_function=check_bonding,
     check_ruleset_name="bonding",
-    check_default_parameters={
-        "ieee_302_3ad_agg_id_missmatch_state": 1,
-        "expect_active": "ignore",
-    },
+    check_default_parameters=DEFAULT_PARAMS,
 )

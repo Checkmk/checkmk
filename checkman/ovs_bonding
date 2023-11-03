@@ -1,5 +1,5 @@
-title: Bonding Network Interface (Open vSwitch, Linux, Windows)
-agents: windows/linux
+title: Network interface bonds (Open vSwitch)
+agents: linux
 catalog: os/networking
 license: GPLv2
 distribution: check_mk
@@ -13,9 +13,6 @@ description:
  If the bonding mode is according to IEEE 802.3ad (Dynamic link
  aggregation), the aggregation IDs are compared. A mismatch
  results in the configured state (default {WARN}).
-
- For this check to work on Windows you may have to install the
- agent plugin windows_os_bonding.ps1 on the target machine.
 
 item:
  The team name of the bonding interface

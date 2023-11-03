@@ -27,7 +27,7 @@ class FailureMessage(BaseModel):
 class Failure(BaseModel):
     # The data model we have to deal with here is not a proper json model: the
     # error message of a failure can either be a json-encoded dict (so json
-    # inside json) or a non-json string, which is why neither parse_obj nor
+    # inside json) or a non-json string, which is why neither model_validate nor
     # parse_raw can do the job.
     timestamp: str | None
     index: str | None
@@ -47,7 +47,7 @@ class Failure(BaseModel):
                 deserialized = json.loads(message)
             except json.JSONDecodeError:
                 return
-            self.message = FailureMessage.parse_obj(deserialized)
+            self.message = FailureMessage.model_validate(deserialized)
 
     def to_human_readable(self) -> Iterable[str]:
         for field_name, field_value in dict(self).items():
@@ -72,7 +72,7 @@ class Section(BaseModel):
 
 
 def parse(string_table: StringTable) -> Section:
-    return Section.parse_obj(deserialize_and_merge_json(string_table))
+    return Section.model_validate(deserialize_and_merge_json(string_table))
 
 
 register.agent_section(

@@ -67,7 +67,7 @@ def _health_info() -> str:
 def write_section(args: Args, health_info: typing.Callable[[], str] = _health_info) -> int:
     response = health_info()
     section = AgentOutput(
-        discovery_param=DiscoveryParam.parse_obj(vars(args)),
+        discovery_param=DiscoveryParam.model_validate(vars(args)),
         health_info=response,
     )
     _health_serializer(section)

@@ -157,6 +157,6 @@ class CMKAgentUpdateSection(BaseModel):
             error = None
 
         parts = iter(non_error_part.split())
-        parsed = cls.parse_obj({k: v if v != "None" else None for k, v in zip(parts, parts)})
+        parsed = cls.model_validate({k: v if v != "None" else None for k, v in zip(parts, parts)})
         parsed.error = error.strip() if error is not None else None
         return parsed

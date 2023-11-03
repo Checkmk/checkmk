@@ -597,7 +597,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
         )
         assert isinstance(raw_response, tuple)
         response = CheckmkAutomationGetStatusResponse(
-            JobStatusSpec.parse_obj(raw_response[0]),
+            JobStatusSpec.model_validate(raw_response[0]),
             raw_response[1],
         )
         auto_logger.debug("Job status: %r", response)

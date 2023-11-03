@@ -145,7 +145,7 @@ def _parse_agent_line(line: Sequence[str]) -> InvalidData | GeneralError | Insta
         return InvalidData(sid=sid, error="Invalid data from agent")
 
     raw = ((k, v) for k, v in zip(header, line) if not k.startswith("_"))
-    instance = Instance.parse_obj(dict(raw, old_agent=length == 6))
+    instance = Instance.model_validate(dict(raw, old_agent=length == 6))
 
     if instance.pdb:
         assert instance.popenmode is not None

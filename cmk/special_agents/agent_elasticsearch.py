@@ -119,7 +119,7 @@ class _NodesReponse(pydantic.BaseModel, frozen=True):
 
 def handle_nodes(response: Mapping[str, object]) -> None:
     with SectionWriter("elasticsearch_nodes", separator=" ") as writer:
-        for node_response in _NodesReponse.parse_obj(response).nodes.values():
+        for node_response in _NodesReponse.model_validate(response).nodes.values():
             writer.append(
                 f"{node_response.name} open_file_descriptors {node_response.process.open_file_descriptors}"
             )

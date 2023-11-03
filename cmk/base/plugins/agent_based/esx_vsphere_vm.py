@@ -108,7 +108,7 @@ def _parse_esx_memory_section(vm_values: Mapping[str, Sequence[str]]) -> ESXMemo
 
         memory_values[parsed_name] = value_optional
 
-    return ESXMemory.parse_obj(memory_values)
+    return ESXMemory.model_validate(memory_values)
 
 
 def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | None:

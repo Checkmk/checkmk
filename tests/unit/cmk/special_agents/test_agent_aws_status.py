@@ -34,7 +34,7 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
         return response
 
     args = agent_aws_status.parse_arguments([])
-    discovery_param = agent_aws_status.DiscoveryParam.parse_obj(vars(args))
+    discovery_param = agent_aws_status.DiscoveryParam.model_validate(vars(args))
 
     # Act
     agent_aws_status.write_section(args, get_rss=_get_rss)

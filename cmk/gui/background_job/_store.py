@@ -79,7 +79,7 @@ class JobStatusStore:
             return initialized
 
         try:
-            data: JobStatusSpec = JobStatusSpec.parse_obj(raw_status_spec)
+            data: JobStatusSpec = JobStatusSpec.model_validate(raw_status_spec)
         finally:
             store.release_lock(str(self._jobstatus_path))
 
@@ -114,6 +114,6 @@ class JobStatusStore:
 
         if params:
             try:
-                self.write(JobStatusSpec.parse_obj({**self.read_raw(), **params}))
+                self.write(JobStatusSpec.model_validate({**self.read_raw(), **params}))
             finally:
                 store.release_lock(str(self._jobstatus_path))

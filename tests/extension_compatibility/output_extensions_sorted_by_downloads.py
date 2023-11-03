@@ -32,7 +32,7 @@ def _compatible_extensions_sorted_by_n_downloads(parsed_version: int) -> list[_E
 def _compatible_extensions(parsed_version: int) -> Iterator[_Extension]:
     response = requests.get("https://exchange.checkmk.com/api/packages/all")
     response.raise_for_status()
-    all_packages_response = _ExchangeResponseAllPackages.parse_obj(response.json())
+    all_packages_response = _ExchangeResponseAllPackages.model_validate(response.json())
     assert all_packages_response.success, "Querying packages from Checkmk exchange unsuccessful"
     for extension in all_packages_response.data.packages:
         try:

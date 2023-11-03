@@ -38,7 +38,7 @@ def _parse_metric_sample_with_labels(
     labels_string, timestamped_value = rest.rsplit("}", 1)
     value_string, *_optional_timestamp = timestamped_value.strip().split()
     labels = _parse_labels(labels_string)
-    return api.KubeletMetricSample.parse_obj(
+    return api.KubeletMetricSample.model_validate(
         {
             "metric_name": metric_name,
             "labels": labels,

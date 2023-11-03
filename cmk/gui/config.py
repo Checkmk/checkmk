@@ -189,7 +189,7 @@ def load_config() -> None:
     # to be done in make_config_object() in the next step.
     if "agent_signature_keys" in raw_config:
         raw_config["agent_signature_keys"] = {
-            key_id: Key.parse_obj(raw_key)
+            key_id: Key.model_validate(raw_key)
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 

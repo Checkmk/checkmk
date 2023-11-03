@@ -106,11 +106,11 @@ class JSONNodeList(TypedDict):
 
 
 def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData:
-    return api.MetaData.parse_obj(metadata)
+    return api.MetaData.model_validate(metadata)
 
 
 def _metadata_no_namespace_from_json(metadata: JSONNodeMetaData) -> api.NodeMetaData:
-    return api.NodeMetaData.parse_obj(metadata)
+    return api.NodeMetaData.model_validate(metadata)
 
 
 def _parse_match_expression_from_json(
@@ -165,7 +165,7 @@ def _statefulset_from_json(
     return api.StatefulSet(
         metadata=_metadata_from_json(statefulset["metadata"]),
         spec=_statefulset_spec_from_json(statefulset["spec"]),
-        status=api.StatefulSetStatus.parse_obj(statefulset["status"]),
+        status=api.StatefulSetStatus.model_validate(statefulset["status"]),
         pods=pod_uids,
     )
 
@@ -210,7 +210,7 @@ def node_list_from_json(
     return [
         api.Node(
             metadata=_metadata_no_namespace_from_json(node["metadata"]),
-            status=api.NodeStatus.parse_obj(node["status"]),
+            status=api.NodeStatus.model_validate(node["status"]),
             kubelet_health=node_to_kubelet_health[node["metadata"]["name"]],
         )
         for node in node_list_raw["items"]

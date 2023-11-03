@@ -60,7 +60,7 @@ def _get_rss() -> requests.Response:
 def write_section(args: Args, get_rss: typing.Callable[[], requests.Response] = _get_rss) -> int:
     response = get_rss()
     section = AgentOutput(
-        discovery_param=DiscoveryParam.parse_obj(vars(args)),
+        discovery_param=DiscoveryParam.model_validate(vars(args)),
         rss_str=response.text,
     )
     with agent_common.SectionWriter("aws_status") as writer:

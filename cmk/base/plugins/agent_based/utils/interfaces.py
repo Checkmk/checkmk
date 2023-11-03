@@ -1626,7 +1626,7 @@ def _parse_params(
 ) -> StateMappings:
     match state_mappings:
         case "independent_mappings", mapping:
-            return IndependentMapping.parse_obj(mapping)
+            return IndependentMapping.model_validate(mapping)
         case "combined_mappings", mapping:
             return CombinedMapping(mapping)
     raise ValueError(f"Unknown state_mappings: {state_mappings}")

@@ -30,7 +30,7 @@ def parse_volume(string_table: StringTable) -> Mapping[str, Volume] | None:
     if not (volumes := json_data.get("items")):
         return None
 
-    return {item["name"]: Volume.parse_obj(item["space"]) for item in volumes}
+    return {item["name"]: Volume.model_validate(item["space"]) for item in volumes}
 
 
 register.agent_section(

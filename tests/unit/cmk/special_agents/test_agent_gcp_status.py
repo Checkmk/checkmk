@@ -14,7 +14,7 @@ def test_health_serialization(capsys: pytest.CaptureFixture[str]) -> None:
         return '{"fake": "test"}'
 
     args = agent_gcp_status.parse_arguments(["Regions"])
-    discovery_param = agent_gcp_status.DiscoveryParam.parse_obj(vars(args))
+    discovery_param = agent_gcp_status.DiscoveryParam.model_validate(vars(args))
     output = agent_gcp_status.AgentOutput(
         discovery_param=discovery_param,
         health_info=_health_info(),

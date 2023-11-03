@@ -137,7 +137,7 @@ def controller_certificate_settings(credentials: HTTPBasicCredentials) -> Contro
         credentials,
     )
     _verify_response(response, HTTPStatus.OK)
-    return ControllerCertSettings.parse_obj(response.json())
+    return ControllerCertSettings.model_validate(response.json())
 
 
 class RegisterResponse(BaseModel, frozen=True):
@@ -164,7 +164,7 @@ def register(
             detail=f"Host {host_name} does not exist.",
         )
     _verify_response(response, HTTPStatus.OK)
-    return RegisterResponse.parse_obj(response.json())
+    return RegisterResponse.model_validate(response.json())
 
 
 @log_http_exception

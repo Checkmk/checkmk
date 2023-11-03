@@ -53,7 +53,7 @@ def parse_threepar_cpgs(string_table: StringTable) -> ThreeparCPGSection:
     if (raw_members := parse_3par(string_table).get("members")) is None:
         return {}
 
-    return {cpgs.get("name"): ThreeparCPG.parse_obj(cpgs) for cpgs in raw_members}
+    return {cpgs.get("name"): ThreeparCPG.model_validate(cpgs) for cpgs in raw_members}
 
 
 def count_threepar_vvs(cpg: ThreeparCPG) -> int:

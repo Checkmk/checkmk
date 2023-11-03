@@ -69,7 +69,7 @@ class TestAPIStatefulSets:
             "availableReplicas": 3,
         }
 
-        status = api.StatefulSetStatus.parse_obj(statefulset_data)
+        status = api.StatefulSetStatus.model_validate(statefulset_data)
         assert status.ready_replicas == 3
         assert status.updated_replicas == 3
 
@@ -84,6 +84,6 @@ class TestAPIStatefulSets:
             "collisionCount": 0,
         }
 
-        status = api.StatefulSetStatus.parse_obj(statefulset_data)
+        status = api.StatefulSetStatus.model_validate(statefulset_data)
         assert status.ready_replicas == 0
         assert status.updated_replicas == 1

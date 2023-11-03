@@ -860,7 +860,7 @@ def _get_omd_domain_background_job_result(site_id: SiteId) -> Sequence[str]:
 
             assert isinstance(raw_omd_response, tuple)
             omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
-                JobStatusSpec.parse_obj(raw_omd_response[0]),
+                JobStatusSpec.model_validate(raw_omd_response[0]),
                 raw_omd_response[1],
             )
             if not omd_response.job_status.is_active:

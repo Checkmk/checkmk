@@ -602,7 +602,7 @@ def _render_ajax_graph(
 ) -> dict[str, Any]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
     graph_render_config = GraphRenderConfig.model_validate(context["render_config"])
-    graph_recipe = GraphRecipe.parse_obj(context["definition"])
+    graph_recipe = GraphRecipe.model_validate(context["definition"])
 
     start_time_var = request.var("start_time")
     end_time_var = request.var("end_time")
@@ -838,7 +838,7 @@ def ajax_render_graph_content(
         resp = {
             "result_code": 0,
             "result": _render_graph_content_html(
-                GraphRecipe.parse_obj(api_request["graph_recipe"]),
+                GraphRecipe.model_validate(api_request["graph_recipe"]),
                 GraphDataRange.model_validate(api_request["graph_data_range"]),
                 GraphRenderConfig.model_validate(api_request["graph_render_config"]),
                 resolve_combined_single_metric_spec,
@@ -1021,7 +1021,7 @@ def __render_ajax_graph_hover(
     ],
 ) -> dict[str, object]:
     graph_data_range = GraphDataRange.model_validate(context["data_range"])
-    graph_recipe = GraphRecipe.parse_obj(context["definition"])
+    graph_recipe = GraphRecipe.model_validate(context["definition"])
 
     curves = compute_graph_artwork_curves(
         graph_recipe,

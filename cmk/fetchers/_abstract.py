@@ -76,7 +76,7 @@ class Fetcher(Generic[_TRawData], abc.ABC):
         except MKTimeout:
             raise
         except MKFetcherError:
-            raise MKFetcherError
+            raise
         except Exception as exc:
             return result.Error(MKFetcherError(repr(exc) if any(exc.args) else type(exc).__name__))
 

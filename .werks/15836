@@ -1,0 +1,20 @@
+Title: relax memory restrictions for fetcher process
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698998718
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p37
+
+In previous releases, an overly stringent memory limit for the fetcher 
+process could result in frequent restarts and an excessive number of 
+entries in the cmc.log file.
+
+With this release, we have addressed the issue by adjusting the memory 
+constraints. The fetcher process now has an increased memory limit, 
+which should significantly reduce restarts and log verbosity, leading 
+to improved stability and performance.
+

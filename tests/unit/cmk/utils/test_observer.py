@@ -10,7 +10,7 @@ from cmk.utils.observer import FetcherMemoryObserver
 
 
 def test_fetcher_memory_observer():
-    observer = FetcherMemoryObserver(170)
+    observer = FetcherMemoryObserver(200)
 
     # Phase 1. Wait for steady and ignore any problems
     try:

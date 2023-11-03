@@ -169,6 +169,41 @@ class DropdownChoice:
     custom_validate: Callable[[_DropdownChoiceElementType], object] | None = None
 
 
+_TCascadingDropdownElementIdent = TypeVar("_TCascadingDropdownElementIdent", bound=str)
+
+
+@dataclass(frozen=True)
+class CascadingDropdownElement(Generic[_TCascadingDropdownElementIdent]):
+    ident: _TCascadingDropdownElementIdent
+    value_spec: "ValueSpec"
+
+
+@dataclass(frozen=True)
+class CascadingDropdown(Generic[_TCascadingDropdownElementIdent]):
+    """Specification for a single-selection from multiple options. Selection is another spec
+
+    Args:
+        elements: Elements to choose from
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed in front of the input field
+        default_element: Default selection. If not set, the user is required to make a selection
+    """
+
+    elements: Sequence[CascadingDropdownElement]
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+
+    default_element: _TCascadingDropdownElementIdent | None = None
+
+    def __post_init__(self):
+        avail_idents = [elem.ident for elem in self.elements]
+        if self.default_element is not None and self.default_element not in avail_idents:
+            raise ValueError(Localizable("Default element is not one of the specified elements"))
+
+
 @dataclass(frozen=True)
 class DictElement:
     """
@@ -239,4 +274,13 @@ class MonitoringState:
 
 ItemSpec = TextInput | DropdownChoice
 
-ValueSpec = Integer | Percentage | TextInput | Tuple | DropdownChoice | Dictionary | MonitoringState
+ValueSpec = (
+    Integer
+    | Percentage
+    | TextInput
+    | Tuple
+    | DropdownChoice
+    | CascadingDropdown
+    | Dictionary
+    | MonitoringState
+)

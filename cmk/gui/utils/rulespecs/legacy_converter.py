@@ -121,6 +121,9 @@ def _convert_to_legacy_valuespec(
     if isinstance(to_convert, ruleset_api_v1.DropdownChoice):
         return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
+    if isinstance(to_convert, ruleset_api_v1.CascadingDropdown):
+        return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
+
     if isinstance(to_convert, ruleset_api_v1.MonitoringState):
         return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
@@ -283,6 +286,32 @@ def _convert_to_legacy_dropdown_choice(
         )
 
     return legacy_valuespecs.DropdownChoice(choices, **converted_kwargs)
+
+
+def _convert_to_legacy_cascading_dropdown(
+    to_convert: ruleset_api_v1.CascadingDropdown, localizer: Callable[[str], str]
+) -> legacy_valuespecs.CascadingDropdown:
+    legacy_choices = [
+        (
+            element.ident.value if isinstance(element.ident, enum.StrEnum) else element.ident,
+            element.value_spec.title.localize(localizer)
+            if element.value_spec.title is not None
+            else str(element.ident),
+            _convert_to_legacy_valuespec(element.value_spec, localizer),
+        )
+        for element in to_convert.elements
+    ]
+
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+    if to_convert.default_element is None:
+        converted_kwargs["no_preselect_title"] = ""
+    else:
+        converted_kwargs["default_value"] = to_convert.default_element
+    return legacy_valuespecs.CascadingDropdown(choices=legacy_choices, **converted_kwargs)
 
 
 def _convert_to_legacy_item_spec(

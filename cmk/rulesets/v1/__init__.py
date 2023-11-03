@@ -30,6 +30,8 @@ from cmk.rulesets.v1._rulespec import (
 )
 from cmk.rulesets.v1._validation import disallow_empty, in_range, match_regex, ValidationError
 from cmk.rulesets.v1._valuespec import (
+    CascadingDropdown,
+    CascadingDropdownElement,
     DictElement,
     Dictionary,
     DropdownChoice,
@@ -86,4 +88,6 @@ __all__ = [
     "Percentage",
     "Tuple",
     "Orientation",
+    "CascadingDropdown",
+    "CascadingDropdownElement",
 ]

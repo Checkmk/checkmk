@@ -134,7 +134,7 @@ def main() {
         }
     }
 
-    /// NOTE: the images referenced in the next step can only be concidered
+    /// NOTE: the images referenced in the next step can only be considered
     ///       up to date if the same node is being used as for the
     ///       `build-build-images` job. For some reasons we can't just pull the
     ///       latest image though, see

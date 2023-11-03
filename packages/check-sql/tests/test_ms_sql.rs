@@ -83,7 +83,7 @@ fn test_run_local() {
         .unwrap()
         .status
         .success();
-    assert!(result);
+    assert!(r);
 }
 
 #[cfg(unix)]

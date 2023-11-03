@@ -17,6 +17,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
     get_value_store,
+    GetRateError,
     IgnoreResultsError,
 )
 
@@ -109,44 +110,30 @@ def check_jolokia_metrics_serv_req(item, params, info):
     lo_crit, lo_warn, hi_warn, hi_crit = params
     serv = jolokia_metrics_serv(info, item.split())
     if not serv or "Requests" not in serv:
-        return (3, "data not found in agent output")
+        return
+
     req = saveint(serv["Requests"])
 
-    status = 0
-    status_txt = ""
-    if lo_crit is not None and req <= lo_crit:
-        status = 2
-        status_txt = " (Below or equal %d)" % lo_crit
-    elif lo_warn is not None and req <= lo_warn:
-        status = 1
-        status_txt = " (Below or equal %d)" % lo_warn
-    elif hi_crit is not None and req >= hi_crit:
-        status = 2
-        status_txt = " (Above or equal %d)" % hi_crit
-    elif hi_warn is not None and req >= hi_warn:
-        status = 1
-        status_txt = " (Above or equal %d)" % hi_warn
+    yield check_levels(
+        req,
+        "Requests",
+        (hi_warn, hi_crit, lo_warn, lo_crit),
+        human_readable_func=str,
+        infoname="Requests",
+    )
 
-    output = ["Requests: %d%s" % (req, status_txt)]
-    perfdata = [("Requests", req, hi_warn, hi_crit)]
-    wrapped = False
-    this_time = time.time()
     try:
-        rate = get_rate(
-            get_value_store(),
-            "jolokia_metrics.serv_req.%s" % item,
-            this_time,
-            req,
-            raise_overflow=True,
-        )
-        output.append("RequestRate: %0.2f" % rate)
-        perfdata.append(("RequestRate", rate))
-    except IgnoreResultsError:
-        wrapped = True
+        request_rate = get_rate(get_value_store(), "rate", time.time(), req, raise_overflow=True)
+    except GetRateError:
+        return
 
-    if wrapped:
-        return (status, ", ".join(output))
-    return (status, ", ".join(output), perfdata)
+    yield check_levels(
+        request_rate,
+        "RequestRate",
+        None,
+        human_readable_func=lambda x: f"{x:.2f}",
+        infoname="Request rate",
+    )
 
 
 check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(

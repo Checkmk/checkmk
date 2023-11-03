@@ -6,7 +6,7 @@
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from cmk.rulesets.v1._localize import Localizable
 
@@ -89,6 +89,27 @@ class TextInput:
     default_value: str | None = None
 
     custom_validate: Callable[[str], object] | None = None
+
+
+class Orientation(enum.Enum):
+    VERTICAL = enum.auto()
+    HORIZONTAL = enum.auto()
+    FLOAT = enum.auto()
+
+
+_TupleType = TypeVar("_TupleType", bound=tuple[object, ...])
+
+
+@dataclass(frozen=True)
+class Tuple(Generic[_TupleType]):
+    elements: Sequence["ValueSpec"]
+
+    orientation: Orientation = Orientation.VERTICAL
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    custom_validate: Callable[[_TupleType], object] | None = None
 
 
 class InvalidElementMode(enum.Enum):
@@ -218,4 +239,4 @@ class MonitoringState:
 
 ItemSpec = TextInput | DropdownChoice
 
-ValueSpec = Integer | Percentage | TextInput | DropdownChoice | Dictionary | MonitoringState
+ValueSpec = Integer | Percentage | TextInput | Tuple | DropdownChoice | Dictionary | MonitoringState

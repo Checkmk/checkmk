@@ -39,9 +39,11 @@ from cmk.rulesets.v1._valuespec import (
     InvalidElementValidator,
     ItemSpec,
     MonitoringState,
+    Orientation,
     Percentage,
     State,
     TextInput,
+    Tuple,
     ValueSpec,
 )
 
@@ -82,4 +84,6 @@ __all__ = [
     "match_regex",
     "Integer",
     "Percentage",
+    "Tuple",
+    "Orientation",
 ]

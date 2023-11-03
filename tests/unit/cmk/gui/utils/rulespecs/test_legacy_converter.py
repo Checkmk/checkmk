@@ -171,6 +171,32 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="TextInput",
         ),
         pytest.param(
+            api_v1.Tuple(elements=[]),
+            legacy_valuespecs.Tuple(elements=[]),
+            id="minimal Tuple",
+        ),
+        pytest.param(
+            api_v1.Tuple(
+                elements=[
+                    api_v1.TextInput(title=api_v1.Localizable("child title 1")),
+                    api_v1.TextInput(title=api_v1.Localizable("child title 2")),
+                ],
+                title=api_v1.Localizable("parent title"),
+                help_text=api_v1.Localizable("parent help"),
+                orientation=api_v1.Orientation.FLOAT,
+            ),
+            legacy_valuespecs.Tuple(
+                elements=[
+                    legacy_valuespecs.TextInput(title=_("child title 1")),
+                    legacy_valuespecs.TextInput(title=_("child title 2")),
+                ],
+                title=_("parent title"),
+                help=_("parent help"),
+                orientation="float",
+            ),
+            id="Tuple",
+        ),
+        pytest.param(
             api_v1.DropdownChoice(elements=[]),
             legacy_valuespecs.DropdownChoice(choices=[], invalid_choice="complain"),
             id="minimal DropdownChoice",

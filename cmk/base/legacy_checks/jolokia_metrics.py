@@ -199,40 +199,32 @@ check_info["jolokia_metrics.app_state"] = LegacyCheckDefinition(
 
 
 def check_jolokia_metrics_app_sess(item, params, info):
-    lo_crit, lo_warn, hi_warn, hi_crit = params
     if len(item.split()) == 3:
         app = jolokia_metrics_serv(info, item.split())
     elif len(item.split()) == 2:
         app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "application not found")
+        return
+
     sessions = app.get("Sessions", app.get("activeSessions", app.get("OpenSessionsCurrentCount")))
     if sessions is None:
-        return (3, "data not found in agent output")
+        return
+
     sess = saveint(sessions)
     maxActive = saveint(
         app.get("Sessions", app.get("maxActiveSessions", app.get("OpenSessionsCurrentCount")))
     )
 
-    status = 0
-    status_txt = ""
-    if lo_crit is not None and sess <= lo_crit:
-        status = 2
-        status_txt = " (Below or equal %d)" % lo_crit
-    elif lo_warn is not None and sess <= lo_warn:
-        status = 1
-        status_txt = " (Below or equal %d)" % lo_warn
-    elif hi_crit is not None and sess >= hi_crit:
-        status = 2
-        status_txt = " (Above or equal %d)" % hi_crit
-    elif hi_warn is not None and sess >= hi_warn:
-        status = 1
-        status_txt = " (Above or equal %d)" % hi_warn
+    yield check_levels(
+        sess,
+        "sessions",
+        (params["levels_upper"] or (None, None)) + (params["levels_lower"] or (None, None)),
+        human_readable_func=str,
+        infoname="Sessions",
+    )
 
     if maxActive and maxActive > 0:
-        status_txt += " (max active sessions: %d)" % maxActive
-
-    return (status, "%d Sessions%s" % (sess, status_txt), [("sessions", sess, hi_warn, hi_crit)])
+        yield 0, f"Maximum active sessions: {maxActive}"
 
 
 def check_jolokia_metrics_bea_queue(item, params, info):
@@ -299,6 +291,10 @@ check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
     ),
     check_function=check_jolokia_metrics_app_sess,
     check_ruleset_name="jvm_sessions",
+    check_default_parameters={
+        "levels_lower": None,
+        "levels_upper": None,
+    },
 )
 
 check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
@@ -350,6 +346,10 @@ check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
     ),
     check_function=check_jolokia_metrics_app_sess,
     check_ruleset_name="jvm_sessions",
+    check_default_parameters={
+        "levels_lower": None,
+        "levels_upper": None,
+    },
 )
 
 

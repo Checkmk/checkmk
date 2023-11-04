@@ -403,11 +403,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "appdynamics_sessions",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
             "aws_dynamodb_table_read_capacity",
             RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
         ),
@@ -575,16 +570,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("innovaphone_mem"),
         ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        (
-            "check",
-            "jolokia_metrics_app_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
         (
             "check",
             "jolokia_metrics_serv_req",

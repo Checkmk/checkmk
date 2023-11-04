@@ -408,11 +408,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "appdynamics_web_container",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
             "aws_dynamodb_table_read_capacity",
             RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
         ),

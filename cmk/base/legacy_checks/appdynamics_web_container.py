@@ -12,6 +12,7 @@
 
 import time
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -48,7 +49,7 @@ def discover_appdynamics_web_container(section: Section) -> DiscoveryResult:
 
 
 def check_appdynamics_web_container(
-    item: str, params: tuple | None, section: Section
+    item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     if (values := section.get(item)) is None:
         return
@@ -64,7 +65,7 @@ def check_appdynamics_web_container(
         yield check_levels(
             current_threads,
             "current_threads",
-            params,
+            params["levels"],
             human_readable_func=str,
             infoname="Current threads",
         )
@@ -109,4 +110,5 @@ check_info["appdynamics_web_container"] = LegacyCheckDefinition(
     discovery_function=discover_appdynamics_web_container,
     check_function=check_appdynamics_web_container,
     check_ruleset_name="jvm_threads",
+    check_default_parameters={"levels": None},
 )

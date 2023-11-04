@@ -245,7 +245,6 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "aix_multipath",
         "appdynamics_memory",
         "appdynamics_sessions",
-        "appdynamics_web_container",
         "arc_raid_status",
         "arcserve_backup",
         "citrix_serverload",

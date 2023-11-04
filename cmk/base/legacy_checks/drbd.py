@@ -373,7 +373,7 @@ def drbd_get_rates(list_):
     return (output, perfdata)
 
 
-def check_drbd_net(item, params, info):
+def check_drbd_net(item, _no_params, info):
     parsed = drbd_get_block(item, info, "drbd.net")
     if parsed is not None:
         if parsed["cs"] == "Unconfigured":
@@ -395,11 +395,10 @@ check_info["drbd.net"] = LegacyCheckDefinition(
     sections=["drbd"],
     discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
     check_function=check_drbd_net,
-    check_ruleset_name="drbd.net",
 )
 
 
-def check_drbd_disk(item, params, info):
+def check_drbd_disk(item, _no_params, info):
     parsed = drbd_get_block(item, info, "drbd.disk")
     if parsed is not None:
         if parsed["cs"] == "Unconfigured":
@@ -421,11 +420,10 @@ check_info["drbd.disk"] = LegacyCheckDefinition(
     sections=["drbd"],
     discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
     check_function=check_drbd_disk,
-    check_ruleset_name="drbd.disk",
 )
 
 
-def check_drbd_stats(item, params, info):
+def check_drbd_stats(item, _no_params, info):
     parsed = drbd_get_block(item, info, "drbd.stats")
     if parsed is not None:
         if parsed["cs"] == "Unconfigured":
@@ -459,5 +457,4 @@ check_info["drbd.stats"] = LegacyCheckDefinition(
     sections=["drbd"],
     discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
     check_function=check_drbd_stats,
-    check_ruleset_name="drbd.stats",
 )

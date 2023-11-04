@@ -138,7 +138,6 @@ check_info["j4p_performance.mem"] = LegacyCheckDefinition(
     sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance(i, "mem"),
     check_function=check_j4p_performance_mem,
-    check_ruleset_name="j4p_performance.mem",
 )
 
 
@@ -184,7 +183,6 @@ check_info["j4p_performance.threads"] = LegacyCheckDefinition(
     sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance(i, "threads"),
     check_function=check_j4p_performance_threads,
-    check_ruleset_name="j4p_performance.threads",
 )
 
 
@@ -213,7 +211,6 @@ check_info["j4p_performance.uptime"] = LegacyCheckDefinition(
     sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance(i, "uptime"),
     check_function=check_j4p_performance_uptime,
-    check_ruleset_name="j4p_performance.uptime",
 )
 
 
@@ -232,7 +229,6 @@ check_info["j4p_performance.app_state"] = LegacyCheckDefinition(
     sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_state"),
     check_function=check_j4p_performance_app_state,
-    check_ruleset_name="j4p_performance.app_state",
 )
 
 
@@ -270,7 +266,6 @@ check_info["j4p_performance.app_sess"] = LegacyCheckDefinition(
     sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_sess"),
     check_function=check_j4p_performance_app_sess,
-    check_ruleset_name="j4p_performance.app_sess",
 )
 
 
@@ -312,5 +307,4 @@ check_info["j4p_performance.serv_req"] = LegacyCheckDefinition(
     sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance_serv(i, "serv_req"),
     check_function=check_j4p_performance_serv_req,
-    check_ruleset_name="j4p_performance.serv_req",
 )

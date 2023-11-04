@@ -13864,9 +13864,6 @@ msgstr "Critic dacă este sub"
 msgid "Critical level for remaining"
 msgstr "Nivelul critic pentru restul"
 
-msgid "Critical level for time since last update"
-msgstr "Nivelul critic pentru timpul scurs de la ultima actualizare"
-
 msgid "Critical level is at least"
 msgstr "Nivelul critic este de cel puțin"
 
@@ -31007,6 +31004,10 @@ msgstr "Niveluri pentru contracția procentuală pe interval de timp"
 msgid "Levels for the queue length"
 msgstr "Niveluri pentru lungimea cozii de așteptare"
 
+#, fuzzy
+msgid "Levels for time since last update"
+msgstr "Nivelul de avertizare pentru timpul scurs de la ultima actualizare"
+
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
 "Niveluri pentru timpul până la repornirea forțată din cauza unor actualizări "
@@ -40538,9 +40539,6 @@ msgstr "Niveluri procentuale (în raport cu viteza politicii)"
 
 msgid "Percentual levels (in relation to port speed)"
 msgstr "Niveluri procentuale (în raport cu viteza portului)"
-
-msgid "Percentual levels ->"
-msgstr "Niveluri procentuale ->"
 
 #, python-format
 msgid "Percentual levels for %s memory"
@@ -56205,6 +56203,10 @@ msgstr "Graficul solicitat nu există"
 msgid "The requested item %s does not exist"
 msgstr "Elementul solicitat %s nu există"
 
+#, fuzzy
+msgid "The requested pack_id does not exist"
+msgstr "Pachetul de reguli solicitat nu există"
+
 msgid "The requested report does not exist."
 msgstr "Raportul solicitat nu există."
 
@@ -67260,9 +67262,6 @@ msgstr "Avertisment dacă sub"
 msgid "Warning level for remaining"
 msgstr "Nivelul de avertizare pentru restul"
 
-msgid "Warning level for time since last update"
-msgstr "Nivelul de avertizare pentru timpul scurs de la ultima actualizare"
-
 msgid "Warning level is at least"
 msgstr "Nivelul de avertizare este de cel puțin"
 
@@ -73306,6 +73305,12 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Critical level for time since last update"
+#~ msgstr "Nivelul critic pentru timpul scurs de la ultima actualizare"
+
+#~ msgid "Percentual levels ->"
+#~ msgstr "Niveluri procentuale ->"
 
 #~ msgid ""
 #~ "The selected automation user needs rights for pairing all agents. TODO: "

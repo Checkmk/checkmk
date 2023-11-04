@@ -13815,9 +13815,6 @@ msgstr "Critico se sotto"
 msgid "Critical level for remaining"
 msgstr "Livello critico per rimanere"
 
-msgid "Critical level for time since last update"
-msgstr "Livello critico per il tempo trascorso dall'ultimo aggiornamento"
-
 msgid "Critical level is at least"
 msgstr "Il livello critico è almeno"
 
@@ -30918,6 +30915,10 @@ msgstr "Livelli per la crescita percentuale per intervallo di tempo"
 msgid "Levels for the queue length"
 msgstr "Livelli per la lunghezza della coda"
 
+#, fuzzy
+msgid "Levels for time since last update"
+msgstr "Livello di attenzione per il tempo trascorso dall'ultimo aggiornamento"
+
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
 "Livelli di tempo fino al riavvio forzato a causa di aggiornamenti importanti "
@@ -40470,9 +40471,6 @@ msgstr "Livelli percentuali (in relazione alla velocità della politica)"
 
 msgid "Percentual levels (in relation to port speed)"
 msgstr "Livelli percentuali (in relazione alla velocità della porta)"
-
-msgid "Percentual levels ->"
-msgstr "Livelli percentuali ->"
 
 #, python-format
 msgid "Percentual levels for %s memory"
@@ -56057,6 +56055,10 @@ msgstr "Il grafico richiesto non esiste"
 msgid "The requested item %s does not exist"
 msgstr "L'elemento richiesto %s non esiste"
 
+#, fuzzy
+msgid "The requested pack_id does not exist"
+msgstr "Il pacchetto di regole richiesto non esiste"
+
 msgid "The requested report does not exist."
 msgstr "Il rapporto richiesto non esiste."
 
@@ -67056,9 +67058,6 @@ msgstr "Attenzione se sotto"
 msgid "Warning level for remaining"
 msgstr "Livello di avvertimento per il rimanente"
 
-msgid "Warning level for time since last update"
-msgstr "Livello di attenzione per il tempo trascorso dall'ultimo aggiornamento"
-
 msgid "Warning level is at least"
 msgstr "Il livello di attenzione è almeno"
 
@@ -73078,6 +73077,12 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Critical level for time since last update"
+#~ msgstr "Livello critico per il tempo trascorso dall'ultimo aggiornamento"
+
+#~ msgid "Percentual levels ->"
+#~ msgstr "Livelli percentuali ->"
 
 #~ msgid ""
 #~ "The selected automation user needs rights for pairing all agents. TODO: "

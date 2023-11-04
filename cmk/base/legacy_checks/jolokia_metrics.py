@@ -37,9 +37,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # Number of sessions low crit, low warn, high warn, high crit
 jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
 
-# Number of requests low crit, low warn, high warn, high crit
-jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
-
 
 # .
 #   .--Arcane helpers------------------------------------------------------.
@@ -92,9 +89,7 @@ def jolokia_metrics_serv(info, split_item):
 
 
 def inventory_jolokia_metrics_serv(info):
-    inv = []
     parsed = jolokia_metrics_parse(info)
-    levels = jolokia_metrics_serv_req_default_levels
     needed_key = "Requests"
     for inst, vals in parsed.items():
         if vals is None:
@@ -102,12 +97,10 @@ def inventory_jolokia_metrics_serv(info):
         for app, val in vals.get("apps", {}).items():
             for serv, servinfo in val.get("servlets", {}).items():
                 if needed_key in servinfo:
-                    inv.append((f"{inst} {app} {serv}", levels))
-    return inv
+                    yield f"{inst} {app} {serv}", {}
 
 
 def check_jolokia_metrics_serv_req(item, params, info):
-    lo_crit, lo_warn, hi_warn, hi_crit = params
     serv = jolokia_metrics_serv(info, item.split())
     if not serv or "Requests" not in serv:
         return
@@ -117,7 +110,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
     yield check_levels(
         req,
         "Requests",
-        (hi_warn, hi_crit, lo_warn, lo_crit),
+        (params["levels_upper"] or (None, None)) + (params["levels_lower"] or (None, None)),
         human_readable_func=str,
         infoname="Requests",
     )
@@ -142,6 +135,10 @@ check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
     discovery_function=inventory_jolokia_metrics_serv,
     check_function=check_jolokia_metrics_serv_req,
     check_ruleset_name="jvm_requests",
+    check_default_parameters={
+        "levels_lower": (-1, -1),
+        "levels_higher": (5000, 6000),
+    },
 )
 
 # .

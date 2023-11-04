@@ -13,9 +13,9 @@
 import time
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping[str, Mapping[str, int]]
@@ -60,52 +60,47 @@ def check_appdynamics_web_container(
     busy_threads = values.get("Busy Threads", None)
     max_threads = values.get("Maximum Threads", None)
 
-    if isinstance(params, tuple):
-        warn, crit = params
-    else:
-        warn, crit = (None, None)
-
     if current_threads is not None:
-        state = 0
-        if crit and current_threads >= crit:
-            state = 2
-        elif warn and current_threads >= warn:
-            state = 1
-
-        thread_levels_label = ""
-        if state > 0:
-            thread_levels_label = " (warn/crit at %d/%d)" % (warn, crit)  # type: ignore # it's fine...
-
-        if max_threads is not None:
-            perfdata = [("current_threads", current_threads, warn, crit, 0, max_threads)]
-            threads_percent = 100.0 * current_threads / max(1, max_threads)
-            max_info = " of %d (%.2f%%)" % (max_threads, threads_percent)
-        else:
-            perfdata = [("current_threads", current_threads, warn, crit)]
-            max_info = ""
-        yield state, "Current threads: %d%s%s" % (
+        yield check_levels(
             current_threads,
-            max_info,
-            thread_levels_label,
-        ), perfdata
+            "current_threads",
+            params,
+            human_readable_func=str,
+            infoname="Current threads",
+        )
+
+        if max_threads:
+            threads_percent = 100.0 * current_threads / max(1, max_threads)
+            yield 0, f"{render.percent(threads_percent)} of {max_threads}", []
 
         if busy_threads is not None:
-            perfdata = [("busy_threads", busy_threads)]
-            yield 0, "Busy threads: %d" % busy_threads, perfdata
+            yield check_levels(
+                busy_threads,
+                "busy_threads",
+                None,
+                human_readable_func=str,
+                infoname="Busy threads",
+            )
 
     now = time.time()
-
+    store = get_value_store()
     if error_count is not None:
-        rate_id = "appdynamics_web_container.%s.error" % (item.lower().replace(" ", "_"))
-        error_rate = get_rate(get_value_store(), rate_id, now, error_count, raise_overflow=True)
-        perfdata = [("error_rate", error_rate)]
-        yield 0, "Errors: %.2f/sec" % error_rate, perfdata
+        yield check_levels(
+            get_rate(store, "error", now, error_count, raise_overflow=True),
+            "error_rate",
+            None,
+            human_readable_func=lambda x: f"{x:.2f}/sec",
+            infoname="Errors",
+        )
 
     if request_count is not None:
-        rate_id = "appdynamics_web_container.%s.request" % (item.lower().replace(" ", "_"))
-        request_rate = get_rate(get_value_store(), rate_id, now, request_count, raise_overflow=True)
-        perfdata = [("request_rate", request_rate)]
-        yield 0, "Requests: %.2f/sec" % request_rate, perfdata
+        yield check_levels(
+            get_rate(store, "request", now, request_count, raise_overflow=True),
+            "request_rate",
+            None,
+            human_readable_func=lambda x: f"{x:.2f}/sec",
+            infoname="Requests",
+        )
 
 
 check_info["appdynamics_web_container"] = LegacyCheckDefinition(

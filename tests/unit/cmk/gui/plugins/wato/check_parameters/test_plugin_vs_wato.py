@@ -256,6 +256,7 @@ class ErrorReporter:
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
         ("check", RuleGroup.CheckgroupParameters("disk_temperature")),
         ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
+        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("hw_single_temperature")),
         ("check", RuleGroup.CheckgroupParameters("hw_temperature")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),

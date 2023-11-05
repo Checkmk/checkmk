@@ -21,7 +21,10 @@ from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CH
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import format_warning, UpdateActionState
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
+    "checkgroup_parameters:fileinfo-groups": "checkgroup_parameters:fileinfo_groups_checking",
+    "static_checks:fileinfo-groups": "static_checks:fileinfo_groups_checking",
+}
 
 DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
 

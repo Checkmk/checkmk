@@ -72,5 +72,5 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_sap_hana_fileinfo_groups,
     check_default_parameters={},
-    check_ruleset_name="fileinfo-groups",
+    check_ruleset_name="fileinfo_groups_checking",
 )

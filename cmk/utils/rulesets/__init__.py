@@ -9,12 +9,4 @@ from cmk.utils.validatedstr import ValidatedString
 
 
 class RuleSetName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        """
-        allow these names
-
-        Unfortunately, we had some WATO rules that contained dots or dashes.
-        In order not to break things, we allow those
-        """
-        return frozenset()
+    pass

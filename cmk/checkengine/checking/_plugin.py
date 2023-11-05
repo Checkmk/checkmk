@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, NamedTuple, Protocol
 
@@ -36,10 +36,6 @@ CheckPluginNameStr = str
 
 class CheckPluginName(ValidatedString):
     MANAGEMENT_PREFIX: Final = "mgmt_"
-
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
 
     def is_management_name(self) -> bool:
         return self._value.startswith(self.MANAGEMENT_PREFIX)

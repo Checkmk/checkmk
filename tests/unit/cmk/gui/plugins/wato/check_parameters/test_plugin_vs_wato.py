@@ -564,11 +564,6 @@ class ErrorReporter:
             "ibm_imm_fan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
-        (
-            "check",
-            "innovaphone_mem",
-            RuleGroup.CheckgroupParameters("innovaphone_mem"),
-        ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
         (
             "check",

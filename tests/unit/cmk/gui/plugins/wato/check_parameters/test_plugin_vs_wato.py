@@ -562,11 +562,6 @@ class ErrorReporter:
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
         (
             "check",
-            "jolokia_metrics_serv_req",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
             "juniper_screenos_mem",
             RuleGroup.CheckgroupParameters("juniper_mem"),
         ),

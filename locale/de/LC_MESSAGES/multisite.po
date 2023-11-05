@@ -71342,9 +71342,6 @@ msgstr "Fehler"
 msgid "faulty"
 msgstr "fehlerhaft"
 
-msgid "fibers"
-msgstr "Fasern"
-
 msgid "file IO"
 msgstr "File IO"
 
@@ -72771,6 +72768,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "fibers"
+#~ msgstr "Fasern"
 
 #~ msgid "Critical level for time since last update"
 #~ msgstr "Kritscher Schwellwert für die Zeit seit dem letzten Update"

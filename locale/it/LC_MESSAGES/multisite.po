@@ -71636,9 +71636,6 @@ msgstr "guasto"
 msgid "faulty"
 msgstr "difettoso"
 
-msgid "fibers"
-msgstr "fibre"
-
 msgid "file IO"
 msgstr "file IO"
 
@@ -73077,6 +73074,9 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "fibers"
+#~ msgstr "fibre"
 
 #~ msgid "Critical level for time since last update"
 #~ msgstr "Livello critico per il tempo trascorso dall'ultimo aggiornamento"

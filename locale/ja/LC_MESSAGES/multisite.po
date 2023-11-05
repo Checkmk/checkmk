@@ -69358,9 +69358,6 @@ msgstr "障害"
 msgid "faulty"
 msgstr "故障"
 
-msgid "fibers"
-msgstr "繊維"
-
 msgid "file IO"
 msgstr "ファイルIO"
 
@@ -70778,6 +70775,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid "fibers"
+#~ msgstr "繊維"
 
 #~ msgid "Critical level for time since last update"
 #~ msgstr "最後の更新からの時間のクリティカルレベル"

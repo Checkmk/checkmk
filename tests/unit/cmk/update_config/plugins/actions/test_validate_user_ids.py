@@ -8,6 +8,8 @@ from typing import Any
 
 import pytest
 
+from tests.testlib import mocklogger
+
 from cmk.utils.store import save_to_mk_file
 
 from cmk.gui.userdb import load_multisite_users
@@ -47,17 +49,9 @@ def fixture_with_invalid_user(with_user: Any) -> Iterator[None]:
     )
 
 
-class _MockLogger:
-    def __init__(self) -> None:
-        self.messages: list[str] = []
-
-    def error(self, msg: str) -> None:
-        self.messages.append(msg)
-
-
 def test_no_invalid_user_in_mk_files(with_user: None, run_check: ValidateUserIds) -> None:
     """Invalid users in users.mk and in contacts.mk are detected"""
-    mock_logger = _MockLogger()
+    mock_logger = mocklogger.MockLogger()
     run_check(mock_logger, {})  # type: ignore[arg-type]
 
     assert len(mock_logger.messages) == 0
@@ -65,7 +59,7 @@ def test_no_invalid_user_in_mk_files(with_user: None, run_check: ValidateUserIds
 
 def test_invalid_user_in_mk_files(with_invalid_user: None, run_check: ValidateUserIds) -> None:
     """Invalid users in users.mk and in contacts.mk are detected"""
-    mock_logger = _MockLogger()
+    mock_logger = mocklogger.MockLogger()
     with pytest.raises(ValueError, match="invalid user"):
         run_check(mock_logger, {})  # type: ignore[arg-type]
 

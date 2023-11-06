@@ -80,14 +80,15 @@ pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
         }
     };
 
-    collect_response_checks(
-        response,
-        args.onredirect,
-        args.page_size,
-        args.response_time_levels,
-        args.document_age_levels,
-    )
-    .await
+    vec![
+        check_status(response.status, response.version, args.onredirect),
+        check_body(response.body, args.page_size),
+        check_response_time(response.elapsed, args.response_time_levels),
+        check_document_age(&response.headers, args.document_age_levels),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 #[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
@@ -235,24 +236,6 @@ async fn perform_request(
         body,
         elapsed,
     })
-}
-
-async fn collect_response_checks(
-    response: ProcessedResponse,
-    onredirect: OnRedirect,
-    page_size_limits: Option<PageSizeLimits>,
-    response_time_levels: Option<ResponseTimeLevels>,
-    document_age_levels: Option<DocumentAgeLevels>,
-) -> Vec<CheckResult> {
-    vec![
-        check_status(response.status, response.version, onredirect),
-        check_body(response.body, page_size_limits),
-        check_response_time(response.elapsed, response_time_levels),
-        check_document_age(&response.headers, document_age_levels),
-    ]
-    .into_iter()
-    .flatten()
-    .collect()
 }
 
 fn check_status(

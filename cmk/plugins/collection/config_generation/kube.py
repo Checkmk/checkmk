@@ -46,11 +46,12 @@ def _usage_endpoint(
     http_proxies: Mapping[str, HTTPProxy],
 ) -> list[str]:
     proxy_params = ProxyParams.model_validate(params)
+    proxy_type, proxy_value = proxy_params.proxy
     args = [
         f"--{prefix}-endpoint",
         str(params["endpoint_v2"]),
         "--usage-proxy",
-        get_http_proxy(*proxy_params.proxy, http_proxies),
+        get_http_proxy(proxy_type, proxy_value, http_proxies),
     ]
     if params.get("verify-cert"):
         args.append("--usage-verify-cert")
@@ -64,7 +65,8 @@ def generate_kube_command(  # pylint: disable=too-many-branches
 ) -> Iterator[SpecialAgentCommand]:
     args = ["--cluster", params["cluster-name"]]
     args.extend(["--kubernetes-cluster-hostname", host_config.name])
-    args.extend(["--token", get_secret_from_params(*params["token"])])
+    secret_type, secret_value = params["token"]
+    args.extend(["--token", get_secret_from_params(secret_type, secret_value)])
 
     args.append("--monitored-objects")
     args.extend(params["monitored-objects"])
@@ -96,10 +98,11 @@ def generate_kube_command(  # pylint: disable=too-many-branches
     if api_params.get("verify-cert"):
         args.append("--verify-cert-api")
     proxy_params = ProxyParams.model_validate(api_params)
+    proxy_type, proxy_value = proxy_params.proxy
     args.extend(
         [
             "--api-server-proxy",
-            get_http_proxy(*proxy_params.proxy, http_proxies),
+            get_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
     )
     if api_timeouts := api_params.get("timeout"):

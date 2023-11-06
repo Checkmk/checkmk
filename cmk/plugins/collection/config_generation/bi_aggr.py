@@ -66,11 +66,12 @@ def check_bi_aggr_services(
         args.append("--use-automation-user")
     elif params.credentials.user and params.credentials.password:
         # configured
+        secret_type, secret_value = params.credentials.password
         args += [
             "-u",
             params.credentials.user,
             "-s",
-            get_secret_from_params(*params.credentials.password),
+            get_secret_from_params(secret_type, secret_value),
         ]
     opt_params = params.optional
     if opt_params and opt_params.auth_mode:

@@ -38,13 +38,14 @@ def agent_jenkins_config(
     _host_config: HostConfig,
     _http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
+    secret_type, secret_value = params.password
     args: list[str | Secret] = [
         "-P",
         params.protocol,
         "-u",
         params.user,
         "-s",
-        get_secret_from_params(*params.password),
+        get_secret_from_params(secret_type, secret_value),
     ]
 
     if params.sections:

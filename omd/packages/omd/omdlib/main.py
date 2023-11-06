@@ -4526,11 +4526,7 @@ def handle_global_option(
         # Switch to other version of bin/omd
         version, main_args = _opt_arg(main_args, opt)
         if version != omdlib.__version__:
-            omd_path = "/omd/versions/%s/bin/omd" % version
-            if not os.path.exists(omd_path):
-                bail_out("OMD version '%s' is not installed." % version)
-            os.execv(omd_path, sys.argv)
-            bail_out("Cannot execute %s." % omd_path)
+            exec_other_omd(version)
     elif opt in ["f", "force"]:
         force = True
         interactive = False

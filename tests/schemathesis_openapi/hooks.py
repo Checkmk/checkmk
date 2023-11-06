@@ -164,6 +164,14 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
             "CMK-TODO",
         )
 
+    update_property(
+        raw_schema,
+        "ChangesFields",
+        "user_id",
+        {"nullable": True},
+        "CMK-14995",
+    )
+
     # SCHEMA modifications: additionalProperties
     # control the creation of additionalProperties in the root level of schema object definitions:
     # * do not allow any additionalProperties by default

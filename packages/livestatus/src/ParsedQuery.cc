@@ -17,7 +17,6 @@
 
 #include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
-#include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
 #include "livestatus/ICore.h"
 #include "livestatus/NullColumn.h"

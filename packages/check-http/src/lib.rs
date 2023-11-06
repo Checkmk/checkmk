@@ -22,6 +22,7 @@ use crate::cli::OnRedirect;
 
 pub mod checking;
 pub mod cli;
+pub mod output;
 mod pwstore;
 
 struct ProcessedResponse {

@@ -2824,7 +2824,7 @@ def main_update(  # pylint: disable=too-many-branches
             )
             if not success:
                 bail_out("Aborted.")
-        exec_other_omd(site, to_version, "update")
+        exec_other_omd(site, to_version)
 
     cmk_from_version = _omd_to_check_mk_version(from_version)
     cmk_to_version = _omd_to_check_mk_version(to_version)
@@ -3451,7 +3451,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     if is_root():
         # Ensure the restore is done with the sites version
         if version != omdlib.__version__:
-            exec_other_omd(site, version, "restore")
+            exec_other_omd(site, version)
 
         # Restore site with its original name, or specify a new one
         new_sitename = new_site_name or sitename
@@ -4620,24 +4620,23 @@ def _parse_command_options(  # pylint: disable=too-many-branches
     return (args, set_options)
 
 
-def exec_other_omd(site: SiteContext, version: str, command: str) -> NoReturn:
+def exec_other_omd(site: SiteContext, version: str) -> NoReturn:
     # Rerun with omd of other version
     omd_path = "/omd/versions/%s/bin/omd" % version
     if os.path.exists(omd_path):
-        if command == "update":
-            # Prevent inheriting environment variables from this versions/site environment
-            # into the execed omd call. The OMD call must import the python version related
-            # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
-            # not already set when calling "omd update"
-            try:
-                del os.environ["PYTHONPATH"]
-            except KeyError:
-                pass
+        # Prevent inheriting environment variables from this versions/site environment
+        # into the executed omd call. The OMD call must import the python version related
+        # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+        # not already set when calling omd.
+        try:
+            del os.environ["PYTHONPATH"]
+        except KeyError:
+            pass
 
-            try:
-                del os.environ["LD_LIBRARY_PATH"]
-            except KeyError:
-                pass
+        try:
+            del os.environ["LD_LIBRARY_PATH"]
+        except KeyError:
+            pass
 
         os.execv(omd_path, sys.argv)
         bail_out("Cannot run bin/omd of version %s." % version)
@@ -4762,7 +4761,7 @@ def main() -> None:  # pylint: disable=too-many-branches
                     "then please first do an 'omd init %s'." % (3 * (site.name,))
                 )
         elif omdlib.__version__ != v:
-            exec_other_omd(site, v, command.command)
+            exec_other_omd(site, v)
 
     if isinstance(site, SiteContext):
         site.load_config(load_defaults(site))

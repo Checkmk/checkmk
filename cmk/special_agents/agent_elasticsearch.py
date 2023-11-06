@@ -24,7 +24,7 @@ def agent_elasticsearch_main(args: Args) -> None:
         sections = {
             "cluster_health": "/_cluster/health",
             "nodes": "/_nodes/_all/stats",
-            "stats": "/*-*/_stats/store,docs",
+            "stats": "/*-*/_stats/store,docs?ignore_unavailable=true",
         }
 
         try:

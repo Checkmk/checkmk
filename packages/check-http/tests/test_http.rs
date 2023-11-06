@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result as AnyhowResult;
-use check_http::{checking::State, cli::Cli, collect_checks, output::Output};
+use check_http::{checking::State, cli::Cli, output::Output, runner::collect_checks};
 use clap::Parser;
 
 use std::io::{Read, Write};

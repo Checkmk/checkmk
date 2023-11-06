@@ -4,12 +4,13 @@
 
 use check_http::cli::Cli;
 use check_http::output::Output;
+use check_http::runner::collect_checks;
 use clap::Parser;
 
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
-    let output = Output::from_check_results(check_http::collect_checks(args).await);
+    let output = Output::from_check_results(collect_checks(args).await);
     println!("{}", output);
     std::process::exit(output.worst_state.into());
 }

@@ -5,8 +5,6 @@
 
 from collections.abc import Sequence
 
-import cmk.utils.version as cmk_version
-
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -39,7 +37,7 @@ class NotificationParameterMail(NotificationParameter):
         )
 
     def _parameter_elements(self) -> list[DictionaryEntry]:
-        elements = _vs_add_common_mail_elements(
+        return _vs_add_common_mail_elements(
             [
                 (
                     "elements",
@@ -126,14 +124,6 @@ class NotificationParameterMail(NotificationParameter):
                 ),
             ]
         )
-
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
-            # Will be cleaned up soon
-            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module,cmk-module-layer-violation
-
-            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
-
-        return elements
 
 
 class NotificationParameterASCIIMail(NotificationParameter):

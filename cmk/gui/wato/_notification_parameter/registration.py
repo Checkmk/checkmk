@@ -6,7 +6,7 @@
 from ._cisco_webex_teams import NotificationParameterCiscoWebexTeams
 from ._ilert import NotificationParameterILert
 from ._jira_issues import NotificationParameterJiraIssues
-from ._mail import NotificationParameterASCIIMail, NotificationParameterMail
+from ._mail import NotificationParameterASCIIMail
 from ._ms_teams import NotificationParameterMsTeams
 from ._opsgenie_issues import NotificationParameterOpsgenie
 from ._pagerduty import NotificationParameterPagerDuty
@@ -21,7 +21,6 @@ from ._victorops import NotificationParameterVictorOPS
 
 
 def register(notification_parameter_registry: NotificationParameterRegistry) -> None:
-    notification_parameter_registry.register(NotificationParameterMail)
     notification_parameter_registry.register(NotificationParameterSlack)
     notification_parameter_registry.register(NotificationParameterCiscoWebexTeams)
     notification_parameter_registry.register(NotificationParameterVictorOPS)

@@ -21,6 +21,7 @@ from cmk.gui.painter.v0.base import Cell, painter_registry
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
+from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
 
 
 def resolve_combined_single_metric_spec(
@@ -72,6 +73,8 @@ def register_painters() -> None:
 def register() -> None:
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         return
+
+    notification_parameter_registry.register(NotificationParameterMail)
 
     register_pages()
     register_painters()

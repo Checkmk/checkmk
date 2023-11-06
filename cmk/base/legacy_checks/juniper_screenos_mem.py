@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.juniper_mem import (
     check_juniper_mem_generic,
-    inventory_juniper_mem_generic,
+    discover_juniper_mem_generic,
+    Section,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
@@ -16,10 +17,9 @@ from cmk.plugins.lib.juniper import DETECT_JUNIPER_SCREENOS
 
 
 def parse_juniper_screenos_mem(string_table):
-    new_info = []
-    for used, free in string_table:
-        new_info.append([int(used) // 1024, (int(used) + int(free)) // 1024])
-    return new_info
+    used = int(string_table[0][0])
+    free = int(string_table[0][1])
+    return Section(used, used + free)
 
 
 check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
@@ -30,7 +30,10 @@ check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
     ),
     parse_function=parse_juniper_screenos_mem,
     service_name="Memory",
-    discovery_function=inventory_juniper_mem_generic,
+    discovery_function=discover_juniper_mem_generic,
     check_function=check_juniper_mem_generic,
     check_ruleset_name="juniper_mem",
+    check_default_parameters={
+        "levels": ("perc_used", (80.0, 90.0)),
+    },
 )

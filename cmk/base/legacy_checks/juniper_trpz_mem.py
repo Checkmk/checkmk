@@ -7,12 +7,19 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.juniper_mem import (
     check_juniper_mem_generic,
-    inventory_juniper_mem_generic,
+    discover_juniper_mem_generic,
+    Section,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
+
+
+def parse_juniper_trpz_mem(string_table: StringTable) -> Section:
+    return Section(int(string_table[0][0]) * 1024, int(string_table[0][1]) * 1024)
+
 
 check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,
@@ -21,7 +28,11 @@ check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
         oids=["12.1", "6"],
     ),
     service_name="Memory",
-    discovery_function=inventory_juniper_mem_generic,
+    parse_function=parse_juniper_trpz_mem,
+    discovery_function=discover_juniper_mem_generic,
     check_function=check_juniper_mem_generic,
     check_ruleset_name="juniper_mem",
+    check_default_parameters={
+        "levels": ("perc_used", (80.0, 90.0)),
+    },
 )

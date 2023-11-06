@@ -560,16 +560,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        (
-            "check",
-            "juniper_screenos_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
-        (
-            "check",
-            "juniper_trpz_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
         (
             "check",

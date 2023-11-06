@@ -503,7 +503,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("vm_heartbeat"),
         ),
         ("check", "f5_bigip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "f5_bigip_pool", RuleGroup.CheckgroupParameters("f5_pools")),
         (
             "check",
             "fortigate_antivirus",

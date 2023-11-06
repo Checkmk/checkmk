@@ -3232,6 +3232,12 @@ msgstr "Activando"
 msgid "Activation"
 msgstr "Ativação"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Limpeza da ativação"
 
@@ -56175,13 +56181,6 @@ msgstr ""
 "A identificação do site deve consistir apenas de letras, dígitos e o "
 "sublinhado."
 
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"O site está actualmente bloqueado por outro processo de activação. Por "
-"favor, tente novamente mais tarde"
-
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "O local está marcado como morto. Não está a tentar replicar."
 
@@ -72657,6 +72656,13 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "O site está actualmente bloqueado por outro processo de activação. Por "
+#~ "favor, tente novamente mais tarde"
 
 #~ msgid "fibers"
 #~ msgstr "fibras"

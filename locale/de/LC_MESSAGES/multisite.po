@@ -3248,6 +3248,12 @@ msgstr "Aktiviere"
 msgid "Activation"
 msgstr "Aktivierung"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Aktivierung aufräumen"
 
@@ -56198,13 +56204,6 @@ msgstr "Die Instanz-ID muss mit der dem Instanznamen exakt übereinstimmen."
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr "Gültige Werte für ID der Instanz: Buchstaben, Zahlen und <tt>_</tt>."
 
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"Die Instanz ist aktuell durch einen anderen Aktivierungsvorgang gesperrt. "
-"Bitte versuchen Sie es später erneut"
-
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr ""
 "Die Instanz ist aktuell als tot markiert. Ich versuche daher keine "
@@ -72768,6 +72767,13 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "Die Instanz ist aktuell durch einen anderen Aktivierungsvorgang gesperrt. "
+#~ "Bitte versuchen Sie es später erneut"
 
 #~ msgid "fibers"
 #~ msgstr "Fasern"

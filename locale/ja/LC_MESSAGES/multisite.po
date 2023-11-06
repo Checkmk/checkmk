@@ -3150,6 +3150,12 @@ msgstr "アクティベート"
 msgid "Activation"
 msgstr "アクティベーション"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "アクティベーションのクリーンアップ"
 
@@ -54826,13 +54832,6 @@ msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
 "サイトidは、文字、数字、およびアンダースコアのみで設定する必要があります。"
 
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"現在、別のアクティベーションプロセスによりサイトがロックされています。後でも"
-"う一度お試しください"
-
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "サイトは停止としてマークされています。レプリケートはしません。"
 
@@ -70775,6 +70774,13 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "現在、別のアクティベーションプロセスによりサイトがロックされています。後で"
+#~ "もう一度お試しください"
 
 #~ msgid "fibers"
 #~ msgstr "繊維"

@@ -3230,6 +3230,12 @@ msgstr "Activeren"
 msgid "Activation"
 msgstr "Activering"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Activering opruimen"
 
@@ -56252,13 +56258,6 @@ msgstr ""
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
 
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"De site is momenteel vergrendeld door een ander activeringsproces. Probeer "
-"het later opnieuw"
-
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "De site is gemarkeerd als dood. Ik probeer niet te repliceren."
 
@@ -72836,6 +72835,13 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "De site is momenteel vergrendeld door een ander activeringsproces. "
+#~ "Probeer het later opnieuw"
 
 #~ msgid "fibers"
 #~ msgstr "vezels"

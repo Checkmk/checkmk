@@ -3252,6 +3252,12 @@ msgstr "Activarea"
 msgid "Activation"
 msgstr "Activare"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Curățarea activării"
 
@@ -56609,13 +56615,6 @@ msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
 "ID-ul site-ului trebuie să fie format numai din litere, cifre și subliniere."
 
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"În prezent, site-ul este blocat de un alt proces de activare. Vă rugăm să "
-"încercați din nou mai târziu"
-
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
 
@@ -73302,6 +73301,13 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "În prezent, site-ul este blocat de un alt proces de activare. Vă rugăm să "
+#~ "încercați din nou mai târziu"
 
 #~ msgid "fibers"
 #~ msgstr "fibre"

@@ -9,30 +9,49 @@
 # to
 # knvmsapprd:/transreorg/sap/trans /transreorg/sap/trans\040(deleted) nfs4 rw,relatime,vers=4.0,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=172.24.98.63,local_lock=none,addr=172.24.98.57 0 0
 
-#
-# (mo): This plugin is a good example for plugins that would massively benefit from a
-#       section definition (parse_function).
-#       However, I need an exapmle for a plugin without one, so for now I keep it this way.
-#
-
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
-def discovery_mounts(info):
-    devices = []
-    for dev, mountpoint, fstype, options, _dump, _fsck in info:
-        if fstype == "tmpfs":
+@dataclass(frozen=True, kw_only=True)
+class Mount:
+    mountpoint: str
+    options: Sequence[str]  # this could be improved...
+    fs_type: str
+    is_stale: bool
+
+
+def parse_mounts(string_table: StringTable) -> Mapping[str, Mount]:
+    devices = set()
+    section = {}
+    for dev, mountpoint, fs_type, options, _dump, _fsck in string_table:
+        if dev in devices:
             continue
 
-        if mountpoint in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]:
-            continue
+        devices.add(dev)
 
-        if dev not in devices:
-            devices.append(dev)
-            opts = sorted(options.split(","))
-            yield mountpoint.replace("\\040(deleted)", ""), opts
+        mountname = mountpoint.replace("\\040(deleted)", "")
+        section[mountname] = Mount(
+            mountpoint=mountname,
+            options=sorted(options.split(",")),
+            fs_type=fs_type,
+            is_stale=mountpoint.endswith("\\040(deleted)"),
+        )
+
+    return section
+
+
+def discovery_mounts(section: Mapping[str, Mount]) -> Iterable[tuple[str, Sequence[str]]]:
+    yield from (
+        (m.mountpoint, m.options)
+        for m in section.values()
+        if m.fs_type != "tmpfs"
+        and m.mountpoint not in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]
+    )
 
 
 def _should_ignore_option(option):
@@ -42,45 +61,42 @@ def _should_ignore_option(option):
     return False
 
 
-def check_mounts(item, targetopts, info):
-    # Ignore options that are allowed to change
-    for _dev, mountpoint, _fstype, options, _dump, _fsck in info:
-        if item == mountpoint.replace("\\040(deleted)", ""):
-            if mountpoint.endswith("\\040(deleted)"):
-                yield 1, "Mount point detected as stale"
-                return
+def check_mounts(
+    item: str, targetopts: Sequence[str], section: Mapping[str, Mount]
+) -> Iterable[tuple[int, str]]:
+    if (mount := section.get(item)) is None:
+        return
 
-            opts = options.split(",")
-            # Now compute the exact difference.
+    if mount.is_stale:
+        yield 1, "Mount point detected as stale"
+        return
 
-            exceeding = [
-                opt for opt in opts if opt not in targetopts and not _should_ignore_option(opt)
-            ]
+    # Now compute the exact difference.
+    exceeding = [
+        opt for opt in mount.options if opt not in targetopts and not _should_ignore_option(opt)
+    ]
 
-            missing = [
-                opt for opt in targetopts if opt not in opts and not _should_ignore_option(opt)
-            ]
+    missing = [
+        opt for opt in targetopts if opt not in mount.options and not _should_ignore_option(opt)
+    ]
 
-            if not missing and not exceeding:
-                yield 0, "Mount options exactly as expected"
-                return
+    if not missing and not exceeding:
+        yield 0, "Mount options exactly as expected"
+        return
 
-            infos = []
-            if missing:
-                infos.append("Missing: %s" % ",".join(missing))
-            if exceeding:
-                infos.append("Exceeding: %s" % ",".join(exceeding))
-            infotext = ", ".join(infos)
+    if missing:
+        yield 1, "Missing: %s" % ",".join(missing)
+    if exceeding:
+        yield 1, "Exceeding: %s" % ",".join(exceeding)
 
-            yield 1, infotext
-            if "ro" in exceeding:
-                yield 2, "Filesystem has switched to read-only and is probably corrupted"
-            return
+    if "ro" in exceeding:
+        yield 2, "Filesystem has switched to read-only and is probably corrupted"
 
 
 check_info["mounts"] = LegacyCheckDefinition(
     service_name="Mount options of %s",
-    discovery_function=discovery_mounts,
+    parse_function=parse_mounts,
+    discovery_function=discovery_mounts,  # type: ignore[typeddict-item]  # fix coming up
     check_function=check_mounts,
     check_ruleset_name="fs_mount_options",
 )

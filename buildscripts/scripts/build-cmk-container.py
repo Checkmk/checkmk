@@ -27,9 +27,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
-from typing import Iterator, Union
+from typing import Iterator, NewType, Union
 
 import docker  # type: ignore
+
+VersionRcStripped = NewType("VersionRcStripped", str)
 
 
 def strtobool(val: str | bool) -> bool:
@@ -226,20 +228,15 @@ def docker_login(registry: str, docker_username: str, docker_passphrase: str) ->
     docker_client.login(registry=registry, username=docker_username, password=docker_passphrase)
 
 
-def docker_push(args: argparse.Namespace, version_tag: str, registry: str, folder: str) -> None:
+def strip_rc_information(version_tag: str) -> VersionRcStripped:
+    return VersionRcStripped(re.sub("-rc[0-9]*", "", version_tag))
+
+
+def docker_push(
+    args: argparse.Namespace, version_tag: VersionRcStripped, registry: str, folder: str
+) -> None:
     """Push images to a registry"""
     this_repository = f"{registry}{folder}/check-mk-{args.edition}"
-
-    if "-rc" in version_tag:
-        LOG.info(f"{version_tag} was a release candidate, do a retagging before pushing")
-        version_tag = re.sub("-rc[0-9]*", "", version_tag)
-        docker_tag(
-            args=args,
-            version_tag=version_tag,
-            registry=registry,
-            folder=folder,
-            target_version=version_tag,
-        )
 
     docker_login(
         registry=registry,
@@ -462,7 +459,21 @@ def main() -> None:
                 args=args, registry=registry, folder=folder, version_tag=version_tag, suffix=suffix
             )
         case "push":
-            docker_push(args=args, registry=registry, folder=folder, version_tag=version_tag)
+            # Ensure we never push rc tags to our registries
+            version_tag_rc_stripped = strip_rc_information(version_tag)
+            if "-rc" in version_tag:
+                LOG.info(f"{version_tag} was a release candidate, do a retagging before pushing")
+                docker_tag(
+                    args=args,
+                    version_tag=version_tag,
+                    registry=registry,
+                    folder=folder,
+                    target_version=version_tag_rc_stripped,
+                )
+
+            docker_push(
+                args=args, registry=registry, folder=folder, version_tag=version_tag_rc_stripped
+            )
         case _:
             raise Exception(
                 f"Unknown action: {args.action}, should be prevented by argparse options"

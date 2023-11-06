@@ -6,8 +6,6 @@
 from . import clusterize, render, type_defs
 from ._check_levels import check_levels, check_levels_predictive
 from ._checking_classes import (
-    CheckResult,
-    DiscoveryResult,
     HostLabel,
     IgnoreResults,
     IgnoreResultsError,
@@ -39,35 +37,34 @@ from ._snmp import OIDBytes, OIDCached, OIDEnd, SNMPTree
 from ._value_store_utils import get_average, get_rate, GetRateError
 from .value_store import get_value_store
 
-# TODO: when everything is here, adjust the order to the one in cmk.base.plugins
 __all__ = [
+    # the order is relevant for the sphinx doc!
+    # begin with section stuff
     "all_of",
     "any_of",
+    "exists",
+    "equals",
+    "startswith",
+    "endswith",
+    "contains",
+    "matches",
+    "not_exists",
+    "not_equals",
+    "not_contains",
+    "not_endswith",
+    "not_matches",
+    "not_startswith",
     "Attributes",
-    "CheckResult",
     "check_levels",
     "check_levels_predictive",
     "clusterize",
-    "contains",
-    "DiscoveryResult",
-    "endswith",
-    "equals",
-    "exists",
-    "GetRateError",
     "get_average",
     "get_rate",
     "get_value_store",
     "HostLabel",
     "IgnoreResults",
     "IgnoreResultsError",
-    "matches",
     "Metric",
-    "not_contains",
-    "not_endswith",
-    "not_equals",
-    "not_exists",
-    "not_matches",
-    "not_startswith",
     "OIDBytes",
     "OIDCached",
     "OIDEnd",
@@ -77,8 +74,8 @@ __all__ = [
     "Service",
     "ServiceLabel",
     "SNMPTree",
-    "startswith",
     "State",
     "TableRow",
     "type_defs",
+    "GetRateError",
 ]

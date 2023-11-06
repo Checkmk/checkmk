@@ -12,9 +12,12 @@
 | light heartedly!                                        |
 +---------------------------------------------------------+
 """
+
+# pylint: disable=duplicate-code
+
 from types import ModuleType
 
-from cmk.base.plugins.agent_based.agent_based_api import v1
+from cmk.agent_based import v1
 
 
 def _names(space: ModuleType) -> set[str]:
@@ -23,6 +26,10 @@ def _names(space: ModuleType) -> set[str]:
 
 def test_v1() -> None:
     expected = {
+        # value_store: not explicitly exposed here,
+        # not at all exposed in the old location under cmk/base/plugins/agent_based/agent_based/api
+        "value_store",
+        # register: not moved to this package, b/c that is not how we're doing things anymore.
         "Attributes",
         "GetRateError",
         "HostLabel",
@@ -58,7 +65,6 @@ def test_v1() -> None:
         "not_matches",
         "not_startswith",
         "regex",
-        "register",
         "render",
         "startswith",
         "type_defs",
@@ -93,17 +99,6 @@ def test_v1_type_defs() -> None:
         "StringTable",
     }
     assert _names(v1.type_defs) == expected
-
-
-def test_v1_register() -> None:
-    expected = {
-        "RuleSetType",
-        "agent_section",
-        "check_plugin",
-        "inventory_plugin",
-        "snmp_section",
-    }
-    assert _names(v1.register) == expected
 
 
 def test_v1_clusterize() -> None:

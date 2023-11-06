@@ -17,7 +17,8 @@ from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin
 from cmk.base.api.agent_based.value_store._utils import ValueStoreManager
 
-from cmk.agent_based.v1 import CheckResult, IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")
 

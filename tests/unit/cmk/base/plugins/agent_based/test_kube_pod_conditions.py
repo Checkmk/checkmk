@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.kube import PodCondition, PodConditions
 
-from cmk.agent_based.v1 import CheckResult, Result, State
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 MINUTE = 60
 TIMESTAMP = 359

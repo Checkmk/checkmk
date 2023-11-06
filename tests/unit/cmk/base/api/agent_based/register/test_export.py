@@ -26,8 +26,8 @@ from cmk.base.api.agent_based.register import (
     is_stored_ruleset,
 )
 
-from cmk.agent_based.v1 import DiscoveryResult, SNMPTree, startswith
-from cmk.agent_based.v1.type_defs import HostLabelGenerator, InventoryResult
+from cmk.agent_based.v1 import SNMPTree, startswith
+from cmk.agent_based.v1.type_defs import DiscoveryResult, HostLabelGenerator, InventoryResult
 
 from .test_check_plugins import dummy_function_ips
 from .test_section_plugins import parse_dummy

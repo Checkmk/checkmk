@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.proxmox_ve_node_info import (
     Section,
 )
 
-from cmk.agent_based.v1 import CheckResult, Result, State
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 NODE_DATA = parse_proxmox_ve_node_info(
     [

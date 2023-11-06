@@ -18,8 +18,9 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.agent_based.v1 import CheckResult, DiscoveryResult
 from cmk.agent_based.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
     HostLabelGenerator,
     InventoryResult,
     StringByteTable,

@@ -18,7 +18,7 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import RuleSetTypeName
 
-from cmk.agent_based.v1 import CheckResult, DiscoveryResult
+from cmk.agent_based.v1.type_defs import CheckResult, DiscoveryResult
 
 CheckFunction = Callable[..., CheckResult]
 DiscoveryFunction = Callable[..., DiscoveryResult]

@@ -7,8 +7,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import cisco_temperature as ct
 
-from cmk.agent_based.v1 import CheckResult, Metric, Result, Service, State
-from cmk.agent_based.v1.type_defs import StringTable
+from cmk.agent_based.v1 import Metric, Result, Service, State
+from cmk.agent_based.v1.type_defs import CheckResult, StringTable
 
 
 @pytest.mark.parametrize(

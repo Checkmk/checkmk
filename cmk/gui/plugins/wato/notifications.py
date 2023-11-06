@@ -334,6 +334,52 @@ class NotificationParameterMail(NotificationParameter):
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
         elements += [
+         (
+                "amazonses",
+                Transform(
+                    Dictionary(
+                        title="Send Mails with Amazon SES API",
+                        elements=[
+                            (
+                                "sesapikey",
+                                TextInput(
+                                    title=_("Amazon API Key"),
+                                    size=70,
+                                    allow_empty=False,
+                                ),
+                            ),
+                            (
+                                "sesapipassword",
+                                TextInput(
+                                    title=_("Amazon API Password"),
+                                    size=70,
+                                    allow_empty=False,
+                                ),
+                            ),
+                            (
+                                "sesregion",
+                                TextInput(
+                                    title=_("AWS Region"),
+                                    size=20,
+                                    allow_empty=False,
+                                    default_value="eu-central-1",
+                                ),
+                            ),
+                            (
+                                "sesconfig",
+                                TextInput(
+                                    title=_("SES Configuration Set"),
+                                    size=20,
+                                    allow_empty=True,
+                                ),
+                            ),                            
+                        ],
+                        help=_(
+                            "All E-Mails will be Sent with the Amazon SES API"
+                        ),
+                    ),
+                ),
+            ),
             (
                 "graphs_per_notification",
                 Integer(

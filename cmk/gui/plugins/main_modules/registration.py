@@ -222,6 +222,7 @@ def register() -> None:
         mega_menu_registry,
         ac_test_registry,
         contact_group_usage_finder_registry,
+        notification_parameter_registry,
     )
     bi_registration.register(
         data_source_registry,

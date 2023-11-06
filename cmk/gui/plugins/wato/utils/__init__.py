@@ -226,23 +226,6 @@ from cmk.gui.watolib.translation import (
 from cmk.gui.watolib.translation import translation_elements as translation_elements
 
 
-def notification_macro_help() -> str:
-    return _(
-        "Here you are allowed to use all macros that are defined in the "
-        "notification context.<br>"
-        "The most important are:"
-        "<ul>"
-        "<li><tt>$HOSTNAME$</li>"
-        "<li><tt>$SERVICEDESC$</li>"
-        "<li><tt>$SERVICESHORTSTATE$</li>"
-        "<li><tt>$SERVICEOUTPUT$</li>"
-        "<li><tt>$LONGSERVICEOUTPUT$</li>"
-        "<li><tt>$SERVICEPERFDATA$</li>"
-        "<li><tt>$EVENT_TXT$</li>"
-        "</ul>"
-    )
-
-
 def check_icmp_params() -> list[DictionaryEntry]:
     return [
         (

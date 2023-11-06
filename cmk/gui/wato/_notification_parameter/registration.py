@@ -19,7 +19,6 @@ from cmk.utils.site import url_prefix
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import notification_macro_help
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -45,13 +44,15 @@ from cmk.gui.wato import (
     HTTPProxyReference,
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
-    notification_parameter_registry,
-    NotificationParameter,
 )
 from cmk.gui.watolib.password_store import passwordstore_choices
 
+from ._base import NotificationParameter
+from ._helpers import notification_macro_help
+from ._registry import NotificationParameterRegistry
 
-def register() -> None:
+
+def register(notification_parameter_registry: NotificationParameterRegistry) -> None:
     notification_parameter_registry.register(NotificationParameterMail)
     notification_parameter_registry.register(NotificationParameterSlack)
     notification_parameter_registry.register(NotificationParameterCiscoWebexTeams)
@@ -362,7 +363,8 @@ class NotificationParameterMail(NotificationParameter):
         )
 
         if cmk_version.edition() is not cmk_version.Edition.CRE:
-            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
+            # Will be cleaned up soon
+            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
@@ -1951,6 +1953,3 @@ class NotificationParameterMsTeams(NotificationParameter):
                 ),
             ],
         )
-
-
-register()

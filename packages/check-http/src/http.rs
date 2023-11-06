@@ -12,7 +12,7 @@ use reqwest::{
 };
 use std::{
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 use crate::cli::{ForceIP, OnRedirect};
@@ -22,7 +22,6 @@ pub struct ProcessedResponse {
     pub status: StatusCode,
     pub headers: HeaderMap, // TODO(au): use
     pub body: Option<ReqwestResult<Bytes>>,
-    pub elapsed: Duration,
 }
 
 #[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
@@ -151,7 +150,6 @@ pub async fn perform_request(
     request: RequestBuilder,
     without_body: bool,
 ) -> Result<ProcessedResponse, ReqwestError> {
-    let now = Instant::now();
     let response = request.send().await?;
 
     let headers = response.headers().to_owned();
@@ -161,14 +159,12 @@ pub async fn perform_request(
         false => Some(response.bytes().await),
         true => None,
     };
-    let elapsed = now.elapsed();
 
     Ok(ProcessedResponse {
         version,
         status,
         headers,
         body,
-        elapsed,
     })
 }
 

@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::cli::Cli;
+use std::time::Instant;
 
 use crate::checking::{CheckResult, State};
 
@@ -31,6 +32,7 @@ pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
         }];
     };
 
+    let now = Instant::now();
     let response = match http::perform_request(request, args.without_body).await {
         Ok(resp) => resp,
         Err(err) => {
@@ -58,11 +60,12 @@ pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
             }
         }
     };
+    let elapsed = now.elapsed();
 
     vec![
         checking::check_status(response.status, response.version, args.onredirect),
         checking::check_body(response.body, args.page_size),
-        checking::check_response_time(response.elapsed, args.response_time_levels),
+        checking::check_response_time(elapsed, args.response_time_levels),
         checking::check_document_age(&response.headers, args.document_age_levels),
     ]
     .into_iter()

@@ -91,8 +91,24 @@ def _multisite_dir() -> str:
     return cmk.utils.paths.default_config_dir + "/multisite.d/wato/"
 
 
+def get_authserials_lines() -> list[str]:
+    authserials_path = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
+    if not authserials_path.exists():
+        return []
+    with authserials_path.open(encoding="utf-8") as f:
+        return f.readlines()
+
+
+def load_users_uncached(lock: bool = False) -> Users:
+    return _load_users(lock)
+
+
 @request_memoize()
-def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
+def load_users(lock: bool = False) -> Users:
+    return _load_users(lock)
+
+
+def _load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branches
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.

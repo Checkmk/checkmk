@@ -1999,7 +1999,7 @@ class ABCEditRuleMode(WatoMode):
                 _(
                     "Unable to read current options of this rule. Falling back to "
                     "default values. When saving this rule now, your previous settings "
-                    "will be overwritten. Problem was: %s."
+                    "will be overwritten. The problem was: %s."
                 )
                 % e
             )
@@ -2107,7 +2107,7 @@ class ABCEditRuleMode(WatoMode):
                 _(
                     "Unable to read current conditions of this rule. Falling back to "
                     "default values. When saving this rule now, your previous settings "
-                    "will be overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>"
+                    "will be overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>"
                     "Such an issue may be caused by an inconsistent configuration, e.g. when "
                     "rules refer to tag groups or tags that do not exist anymore."
                 )

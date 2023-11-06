@@ -1245,7 +1245,7 @@ class Rule:
         only_host_conditions,
         service_labels: Labels,
     ):
-        """A generator that provides the reasons why a given folder/host/item not matches this rule"""
+        """A generator that provides the reasons why a given folder/host/item does not match this rule"""
         host = host_folder.host(hostname)
         if host is None:
             raise MKGeneralException("Failed to get host from folder %r." % host_folder.path())

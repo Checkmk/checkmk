@@ -5,11 +5,11 @@
 
 #include "livestatus/TrialManager.h"
 
-#include <endian.h>
-
 #include <compare>
 #include <cstdint>
 #include <fstream>
+#include <iterator>
+#include <ranges>
 #include <stdexcept>
 #include <system_error>
 
@@ -48,16 +48,23 @@ std::string TrialManager::state(
 
 namespace {
 uint64_t readle64(std::istream &is) {
-    // TODO(sp): Use std::endian + std::byteswap when we have C++23
-    uint64_t buffer{};
-    is.read(reinterpret_cast<char *>(&buffer), sizeof(buffer));
-    return le64toh(buffer);
+    char buffer[8];
+    is.read(buffer, sizeof(buffer));
+    uint64_t result{0};
+    for (auto ch : buffer | std::views::reverse) {
+        result <<= 8;
+        result |= static_cast<unsigned char>(ch);
+    }
+    return result;
 }
 
 void writele64(std::ostream &os, uint64_t value) {
-    // TODO(sp): Use std::endian + std::byteswap when we have C++23
-    uint64_t buffer{htole64(value)};
-    os.write(reinterpret_cast<const char *>(&buffer), sizeof(buffer));
+    char buffer[8];
+    for (auto &ch : buffer) {
+        ch = static_cast<char>(value & 0xFF);
+        value >>= 8;
+    }
+    os.write(buffer, sizeof(buffer));
 }
 }  // namespace
 

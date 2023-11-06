@@ -45,9 +45,9 @@ def parse_mounts(string_table: StringTable) -> Mapping[str, Mount]:
     return section
 
 
-def discovery_mounts(section: Mapping[str, Mount]) -> Iterable[tuple[str, Sequence[str]]]:
+def discovery_mounts(section: Mapping[str, Mount]) -> Iterable[tuple[str, Mapping]]:
     yield from (
-        (m.mountpoint, m.options)
+        (m.mountpoint, {"expected_mount_options": m.options})
         for m in section.values()
         if m.fs_type != "tmpfs"
         and m.mountpoint not in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]
@@ -99,4 +99,5 @@ check_info["mounts"] = LegacyCheckDefinition(
     discovery_function=discovery_mounts,  # type: ignore[typeddict-item]  # fix coming up
     check_function=check_mounts,
     check_ruleset_name="fs_mount_options",
+    check_default_parameters={"expected_mount_options": []},  # will be overwritten by dicsovery
 )

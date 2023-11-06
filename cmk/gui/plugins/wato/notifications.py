@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from collections.abc import Sequence
 
 import cmk.utils.version as cmk_version
 from cmk.utils.ms_teams_constants import (
@@ -25,6 +26,7 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     DEF_VALUE,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     EmailAddress,
     FixedValue,
@@ -49,7 +51,7 @@ from cmk.gui.wato import (
 from cmk.gui.watolib.password_store import passwordstore_choices
 
 
-def register():
+def register() -> None:
     notification_parameter_registry.register(NotificationParameterMail)
     notification_parameter_registry.register(NotificationParameterSlack)
     notification_parameter_registry.register(NotificationParameterCiscoWebexTeams)
@@ -90,12 +92,12 @@ def transform_to_valuespec_html_mail_url_prefix(p):
     return ("manual", v)
 
 
-def local_site_url():
+def local_site_url() -> str:
     return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
 
 
-def _vs_add_common_mail_elements(elements):
-    header = [
+def _vs_add_common_mail_elements(elements: Sequence[DictionaryEntry]) -> list[DictionaryEntry]:
+    header: list[DictionaryEntry] = [
         (
             "from",
             Dictionary(
@@ -182,7 +184,7 @@ def _vs_add_common_mail_elements(elements):
         ),
     ]
 
-    footer = [
+    footer: list[DictionaryEntry] = [
         (
             "bulk_sort_order",
             DropdownChoice(
@@ -216,7 +218,7 @@ def _vs_add_common_mail_elements(elements):
         ),
     ]
 
-    return header + elements + footer
+    return header + list(elements) + footer
 
 
 def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
@@ -263,14 +265,14 @@ class NotificationParameterMail(NotificationParameter):
         return "mail"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             # must be called at run time!!
             elements=self._parameter_elements,
         )
 
-    def _parameter_elements(self):
+    def _parameter_elements(self) -> list[DictionaryEntry]:
         elements = _vs_add_common_mail_elements(
             [
                 (
@@ -325,6 +327,37 @@ class NotificationParameterMail(NotificationParameter):
                         ),
                     ),
                 ),
+                (
+                    "graphs_per_notification",
+                    Integer(
+                        title=_("Graphs per notification (default: 5)"),
+                        label=_("Show up to"),
+                        unit=_("graphs"),
+                        help=_(
+                            "Sets a limit for the number of graphs that are displayed in a notification."
+                        ),
+                        default_value=5,
+                        minvalue=0,
+                    ),
+                ),
+                (
+                    "notifications_with_graphs",
+                    Integer(
+                        title=_("Bulk notifications with graphs (default: 5)"),
+                        label=_("Show graphs for the first"),
+                        unit=_("Notifications"),
+                        help=_(
+                            "Sets a limit for the number of notifications in a bulk for which graphs "
+                            "are displayed. If you do not use bulk notifications this option is ignored. "
+                            "Note that each graph increases the size of the mail and takes time to render"
+                            "on the monitoring server. Therefore, large bulks may exceed the maximum "
+                            "size for attachements or the plugin may run into a timeout so that a failed "
+                            "notification is produced."
+                        ),
+                        default_value=5,
+                        minvalue=0,
+                    ),
+                ),
             ]
         )
 
@@ -333,39 +366,6 @@ class NotificationParameterMail(NotificationParameter):
 
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
-        elements += [
-            (
-                "graphs_per_notification",
-                Integer(
-                    title=_("Graphs per notification (default: 5)"),
-                    label=_("Show up to"),
-                    unit=_("graphs"),
-                    help=_(
-                        "Sets a limit for the number of graphs that are displayed in a notification."
-                    ),
-                    default_value=5,
-                    minvalue=0,
-                ),
-            ),
-            (
-                "notifications_with_graphs",
-                Integer(
-                    title=_("Bulk notifications with graphs (default: 5)"),
-                    label=_("Show graphs for the first"),
-                    unit=_("Notifications"),
-                    help=_(
-                        "Sets a limit for the number of notifications in a bulk for which graphs "
-                        "are displayed. If you do not use bulk notifications this option is ignored. "
-                        "Note that each graph increases the size of the mail and takes time to render"
-                        "on the monitoring server. Therefore, large bulks may exceed the maximum "
-                        "size for attachements or the plugin may run into a timeout so that a failed "
-                        "notification is produced."
-                    ),
-                    default_value=5,
-                    minvalue=0,
-                ),
-            ),
-        ]
         return elements
 
 
@@ -429,7 +429,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
         return "cisco_webex_teams"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
@@ -477,7 +477,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
         return "victorops"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
@@ -536,7 +536,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
         return "pagerduty"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
@@ -625,7 +625,7 @@ class NotificationParameterASCIIMail(NotificationParameter):
         return "asciimail"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         elements = _vs_add_common_mail_elements(
             [
                 (
@@ -683,7 +683,7 @@ class NotificationILert(NotificationParameter):
         return "ilert"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url"],
@@ -761,7 +761,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
         return "jira_issues"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=[
@@ -950,7 +950,7 @@ class NotificationParameterServiceNow(NotificationParameter):
         return "servicenow"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             required_keys=["url", "username", "password", "mgmt_type"],

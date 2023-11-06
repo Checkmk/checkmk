@@ -7133,6 +7133,8 @@ class LabelGroup(ListOf):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
+        # ListOf
+        add_label: str | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -7148,7 +7150,7 @@ class LabelGroup(ListOf):
                 vs_label=self._first_element_label,
             ),
             magic=self._magic,
-            add_label=_("Add to query"),
+            add_label=add_label if add_label is not None else _("Add to query"),
             del_label=self.del_label,
             add_icon="plus",
             ignore_complain=True,

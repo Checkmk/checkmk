@@ -3,15 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# For an explanation of what is what see comments in __all__definition at the end
-
-from cmk.base.api.agent_based.utils import check_levels, check_levels_predictive
-
 from cmk.agent_based.v1 import (
     all_of,
     any_of,
     Attributes,
-    CheckResult,
+    check_levels,
+    check_levels_predictive,
     contains,
     endswith,
     equals,
@@ -64,7 +61,6 @@ __all__ = [
     "not_matches",
     "not_startswith",
     "Attributes",
-    "CheckResult",
     "check_levels",
     "check_levels_predictive",
     "clusterize",

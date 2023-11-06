@@ -2,21 +2,12 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Helper functions for check devolpment
-
-These are meant to be exposed in the API
-"""
 from collections.abc import Callable, Generator
-from typing import Any, overload
+from typing import Any, cast, overload
 
-from cmk.agent_based.v1 import Metric, Result, State
+from ._checking_classes import Metric, Result, State
 
-#          _               _        _                _
-#      ___| |__   ___  ___| | __   | | _____   _____| |___
-#     / __| '_ \ / _ \/ __| |/ /   | |/ _ \ \ / / _ \ / __|
-#    | (__| | | |  __/ (__|   <    | |  __/\ V /  __/ \__ \
-#     \___|_| |_|\___|\___|_|\_\___|_|\___| \_/ \___|_|___/
-#                             |_____|
+# pylint: disable=too-many-arguments
 
 
 def _do_check_levels(
@@ -49,6 +40,10 @@ def _levelsinfo_ty(
     warn_str = "never" if levels[0] is None else render_func(levels[0])
     crit_str = "never" if levels[1] is None else render_func(levels[1])
     return f" (warn/crit {preposition} {warn_str}/{crit_str})"
+
+
+def _default_rendering(x: float) -> str:
+    return f"{x:.2f}"
 
 
 @overload
@@ -126,11 +121,8 @@ def check_levels(
 
     """
 
-    def default_render_function(f: float) -> str:
-        return "%.2f" % f
-
     if render_func is None:
-        render_func = default_render_function
+        render_func = _default_rendering
 
     info_text = str(render_func(value))  # forgive wrong output type
     if label:
@@ -146,7 +138,12 @@ def check_levels(
         yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
 
 
-def check_levels_predictive(
+_LevelsCallback = Callable[
+    [str], tuple[float | None, tuple[float | None, float | None, float | None, float | None]]
+]
+
+
+def check_levels_predictive(  # type: ignore[misc]
     value: float,
     *,
     levels: dict[str, Any],
@@ -175,14 +172,15 @@ def check_levels_predictive(
 
     """
     if render_func is None:
-        render_func = "{:.2f}".format
+        render_func = _default_rendering
 
     # validate the metric name, before we can get the levels.
     _ = Metric(metric_name, value)
 
-    ref_value, levels_tuple = levels["__get_predictive_levels__"](metric_name)
+    callback = cast(_LevelsCallback, levels["__get_predictive_levels__"])  # type: ignore[misc]
+    ref_value, levels_tuple = callback(metric_name)
     if ref_value is not None:
-        predictive_levels_msg = " (predicted reference: %s)" % render_func(ref_value)
+        predictive_levels_msg = f" (predicted reference: {render_func(ref_value)})"
     else:
         predictive_levels_msg = " (no reference for prediction yet)"
 
@@ -208,4 +206,4 @@ def check_levels_predictive(
     yield Result(state=value_state, summary=info_text + levels_text)
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
     if ref_value is not None:
-        yield Metric("predict_%s" % metric_name, ref_value)
+        yield Metric(f"predict_{metric_name}", ref_value)

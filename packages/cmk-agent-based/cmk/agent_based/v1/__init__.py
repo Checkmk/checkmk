@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from . import clusterize, render, type_defs
+from ._check_levels import check_levels, check_levels_predictive
 from ._checking_classes import (
     CheckResult,
     DiscoveryResult,
@@ -44,6 +45,8 @@ __all__ = [
     "any_of",
     "Attributes",
     "CheckResult",
+    "check_levels",
+    "check_levels_predictive",
     "clusterize",
     "contains",
     "DiscoveryResult",

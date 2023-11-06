@@ -26,7 +26,6 @@ def _names(space: ModuleType) -> set[str]:
 def test_v1() -> None:
     expected = {
         "Attributes",
-        "CheckResult",
         "GetRateError",
         "HostLabel",
         "IgnoreResults",

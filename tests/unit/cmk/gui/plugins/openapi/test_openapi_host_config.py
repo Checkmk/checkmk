@@ -351,15 +351,10 @@ def test_openapi_host_update_after_move(
     )
 
 
-def test_openapi_host_move_no_contact_groups(clients: ClientRegistry) -> None:
+def test_move_host(clients: ClientRegistry) -> None:
     clients.Folder.create(
         folder_name="Folder1",
         title="folder1",
-        parent="/",
-    )
-    clients.Folder.create(
-        folder_name="Folder2",
-        title="folder2",
         parent="/",
     )
     clients.HostConfig.create(
@@ -368,7 +363,7 @@ def test_openapi_host_move_no_contact_groups(clients: ClientRegistry) -> None:
     )
     clients.HostConfig.move(
         host_name="TestHost1",
-        target_folder="/Folder2",
+        target_folder="/Folder1",
     )
 
 
@@ -1390,3 +1385,39 @@ def test_create_host_with_newline_in_the_name(
         resp.json["fields"]["host_name"][0]
         == f"{host_name!r} does not match pattern '^[-0-9a-zA-Z_.]+\\\\Z'."
     )
+
+
+@managedtest
+def test_move_host_between_nested_folders(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        folder_name="F1",
+        title="f1",
+        parent="/",
+    )
+
+    clients.Folder.create(
+        folder_name="F11",
+        title="f11",
+        parent="/F1",
+    )
+
+    clients.Folder.create(
+        folder_name="F111",
+        title="f111",
+        parent="/F1/F11",
+    )
+
+    clients.Folder.create(
+        folder_name="F1111",
+        title="f1111",
+        parent="/F1/F11/F111",
+    )
+
+    clients.HostConfig.create(host_name="host1", folder="/")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1~F11")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111~F1111")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1~F11~F111")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1~F11")
+    clients.HostConfig.move(host_name="host1", target_folder="~F1")

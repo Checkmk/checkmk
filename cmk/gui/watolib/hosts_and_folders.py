@@ -1858,7 +1858,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 get_wato_redis_client().choices_for_moving(self.path(), _MoveType(what))
             )
 
-        for folder_path, folder in Folder.all_folders().items():
+        for folder in Folder.all_folders().values():
             if not folder.may("write"):
                 continue
             if folder.is_same_as(self):
@@ -1872,8 +1872,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 if self.is_transitive_parent_of(folder):
                     continue  # we cannot be moved in our child folder
 
-            msg = "/".join(str(p) for p in folder.title_path_without_root())
-            choices.append((folder_path, msg))
+            choices.append(folder.as_choice_for_moving())
 
         return self._get_sorted_choices(choices)
 
@@ -1929,6 +1928,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def alias_path(self, show_main=True):
         tp = self.title_path() if show_main else self.title_path_without_root()
         return " / ".join(str(p) for p in tp)
+
+    def as_choice_for_moving(self) -> tuple[str, str]:
+        return self.path(), "/".join(str(p) for p in self.title_path_without_root())
 
     def effective_attributes(self):
         try:

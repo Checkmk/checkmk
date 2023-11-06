@@ -7,4 +7,5 @@ pub mod cli;
 pub mod http;
 pub mod output;
 mod pwstore;
+mod redirect;
 pub mod runner;

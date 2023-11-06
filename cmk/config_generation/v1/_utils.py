@@ -124,19 +124,7 @@ class HTTPProxy:
 
 
 @dataclass(frozen=True)
-class Secret:
-    """
-    Secret base class
-
-    Should be used only for typing. When instantiating secrets use the StoredSecret or the PlainTextSecret class.
-    """
-
-    value: str
-    format: str = "%s"
-
-
-@dataclass(frozen=True)
-class StoredSecret(Secret):
+class StoredSecret:
     """
     Defines a password stored in the password store
 
@@ -154,9 +142,12 @@ class StoredSecret(Secret):
         StoredSecret(value='stored_password_id', format='example-user:%s')
     """
 
+    value: str
+    format: str = "%s"
+
 
 @dataclass(frozen=True)
-class PlainTextSecret(Secret):
+class PlainTextSecret:
     """
     Defines an explicit password
 
@@ -170,13 +161,20 @@ class PlainTextSecret(Secret):
         PlainTextSecret(value='password1234', format='%s')
     """
 
+    value: str
+    format: str = "%s"
+
+
+Secret = StoredSecret | PlainTextSecret
+
 
 def get_secret_from_params(
     secret_type: Literal["store", "password"], secret_value: str, display_format: str = "%s"
 ) -> Secret:
     # TODO: if we rename the valuespec in the new API, it should be changed here too
     """
-    Returns a Secret object from parameters created by the IndividualOrStoredPassword valuespec
+    Parses values configured via the :class:`IndividualOrStoredPassword` into an instance
+    of one of the two appropriate classes.
 
     Args:
         secret_type: Type of the secret
@@ -184,7 +182,7 @@ def get_secret_from_params(
         display_format: Format of the argument containing the secret
 
     Returns:
-        Object of the StoredSecret or the PlainTextSecret type
+        The class of the returned instance depends on the value of `secret_type`
 
     Example:
 

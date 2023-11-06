@@ -7,14 +7,6 @@ import socket
 from collections.abc import Sequence
 
 import cmk.utils.version as cmk_version
-from cmk.utils.ms_teams_constants import (
-    ms_teams_tmpl_host_details,
-    ms_teams_tmpl_host_summary,
-    ms_teams_tmpl_host_title,
-    ms_teams_tmpl_svc_details,
-    ms_teams_tmpl_svc_summary,
-    ms_teams_tmpl_svc_title,
-)
 from cmk.utils.site import url_prefix
 
 from cmk.gui.http import request
@@ -23,7 +15,6 @@ from cmk.gui.valuespec import (
     Age,
     Alternative,
     CascadingDropdown,
-    DEF_VALUE,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
@@ -45,10 +36,11 @@ from cmk.gui.wato import (
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
 )
+from cmk.gui.wato._notification_parameter._helpers import get_url_prefix_specs, local_site_url
 from cmk.gui.watolib.password_store import passwordstore_choices
 
 from ._base import NotificationParameter
-from ._helpers import notification_macro_help
+from ._ms_teams import NotificationParameterMsTeams
 from ._registry import NotificationParameterRegistry
 
 
@@ -68,33 +60,6 @@ def register(notification_parameter_registry: NotificationParameterRegistry) -> 
     notification_parameter_registry.register(NotificationParameterPushover)
     notification_parameter_registry.register(NotificationParameterSMSviaIP)
     notification_parameter_registry.register(NotificationParameterMsTeams)
-
-
-# We have to transform because 'add_to_event_context'
-# in modules/events.py can't handle complex data structures
-def transform_from_valuespec_html_mail_url_prefix(p):
-    if isinstance(p, tuple):
-        return {p[0]: p[1]}
-    if p == "automatic_http":
-        return {"automatic": "http"}
-    if p == "automatic_https":
-        return {"automatic": "https"}
-    return {"manual": p}
-
-
-def transform_to_valuespec_html_mail_url_prefix(p):
-    if not isinstance(p, dict):
-        return ("manual", p)
-
-    k, v = list(p.items())[0]
-    if k == "automatic":
-        return f"{k}_{v}"
-
-    return ("manual", v)
-
-
-def local_site_url() -> str:
-    return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
 
 
 def _vs_add_common_mail_elements(elements: Sequence[DictionaryEntry]) -> list[DictionaryEntry]:
@@ -222,44 +187,6 @@ def _vs_add_common_mail_elements(elements: Sequence[DictionaryEntry]) -> list[Di
     return header + list(elements) + footer
 
 
-def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
-    return Transform(
-        valuespec=CascadingDropdown(
-            title=_("URL prefix for links to Checkmk"),
-            help=_(
-                "If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
-                "and service links within the notification is filled "
-                "automatically. If you specify an URL prefix here, then "
-                "several parts of the notification are armed with hyperlinks "
-                "to your Checkmk GUI. In both cases, the recipient of the "
-                "notification can directly visit the host or service in "
-                "question in Checkmk. Specify an absolute URL including the "
-                "<tt>.../check_mk/</tt>."
-            ),
-            choices=[
-                ("automatic_http", _("Automatic HTTP")),
-                ("automatic_https", _("Automatic HTTPs")),
-                (
-                    "manual",
-                    _("Specify URL prefix"),
-                    TextInput(
-                        regex="^(http|https)://.*/check_mk/$",
-                        regex_error=_(
-                            "The URL must begin with <tt>http</tt> or "
-                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."
-                        ),
-                        size=64,
-                        default_value=default_choice,
-                    ),
-                ),
-            ],
-            default_value=default_value,
-        ),
-        to_valuespec=transform_to_valuespec_html_mail_url_prefix,
-        from_valuespec=transform_from_valuespec_html_mail_url_prefix,
-    )
-
-
 class NotificationParameterMail(NotificationParameter):
     @property
     def ident(self) -> str:
@@ -310,7 +237,7 @@ class NotificationParameterMail(NotificationParameter):
                 ),
                 (
                     "url_prefix",
-                    _get_url_prefix_specs(
+                    get_url_prefix_specs(
                         "http://" + socket.gethostname() + url_prefix() + "check_mk/",
                         request.is_ssl_request and "automatic_https" or "automatic_http",
                     ),
@@ -419,7 +346,7 @@ class NotificationParameterSlack(NotificationParameter):
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
                     ),
                 ),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
                 ("proxy_url", HTTPProxyReference()),
             ],
         )
@@ -458,7 +385,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                         ],
                     ),
                 ),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
                 (
                     "ignore_ssl",
                     FixedValue(
@@ -527,7 +454,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -579,7 +506,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -616,7 +543,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -751,7 +678,7 @@ class NotificationILert(NotificationParameter):
                 ),
                 (
                     "url_prefix",
-                    _get_url_prefix_specs(local_site_url, default_value="automatic_https"),
+                    get_url_prefix_specs(local_site_url, default_value="automatic_https"),
                 ),
             ],
         )
@@ -1840,115 +1767,6 @@ class NotificationParameterSMSviaIP(NotificationParameter):
                         title=_("Set optional timeout for connections to the modem."),
                         help=_("Here you can configure timeout settings."),
                         default_value="10",
-                    ),
-                ),
-            ],
-        )
-
-
-class NotificationParameterMsTeams(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "msteams"
-
-    @property
-    def spec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            elements=[
-                (
-                    "webhook_url",
-                    CascadingDropdown(
-                        title=_("Webhook URL"),
-                        help=_(
-                            "This URL can also be collected from the Password "
-                            "Store from Checkmk."
-                        ),
-                        choices=[
-                            (
-                                "webhook_url",
-                                _("Webhook URL"),
-                                HTTPUrl(size=80, allow_empty=False),
-                            ),
-                            (
-                                "store",
-                                _("URL from password store"),
-                                DropdownChoice(
-                                    sorted=True,
-                                    choices=passwordstore_choices,
-                                ),
-                            ),
-                        ],
-                        sorted=False,
-                    ),
-                ),
-                ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
-                (
-                    "host_title",
-                    TextInput(
-                        title=_("Title for host notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_host_title(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "service_title",
-                    TextInput(
-                        title=_("Title for service notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_svc_title(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "host_summary",
-                    TextInput(
-                        title=_("Summary for host notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_host_summary(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "service_summary",
-                    TextInput(
-                        title=_("Summary for service notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_svc_summary(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "host_details",
-                    TextAreaUnicode(
-                        title=_("Details for host notifications"),
-                        help=notification_macro_help(),
-                        rows=9,
-                        cols=58,
-                        monospaced=True,
-                        default_value=ms_teams_tmpl_host_details(),
-                    ),
-                ),
-                (
-                    "service_details",
-                    TextAreaUnicode(
-                        title=_("Details for service notifications"),
-                        help=notification_macro_help(),
-                        rows=11,
-                        cols=58,
-                        monospaced=True,
-                        default_value=ms_teams_tmpl_svc_details(),
-                    ),
-                ),
-                (
-                    "affected_host_groups",
-                    FixedValue(
-                        value=True,
-                        title=_("Show affected host groups"),
-                        totext=_("Show affected host groups"),
-                        help=_("Show affected host groups in the created message."),
                     ),
                 ),
             ],

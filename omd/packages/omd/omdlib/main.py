@@ -2811,7 +2811,7 @@ def main_update(  # pylint: disable=too-many-branches
             )
             if not success:
                 bail_out("Aborted.")
-        exec_other_omd(site, to_version)
+        exec_other_omd(to_version)
 
     if (
         isinstance(
@@ -3427,7 +3427,7 @@ def _restore_backup_from_tar(  # pylint: disable=too-many-branches
     if is_root():
         # Ensure the restore is done with the sites version
         if version != omdlib.__version__:
-            exec_other_omd(site, version)
+            exec_other_omd(version)
 
         # Restore site with its original name, or specify a new one
         new_sitename = new_site_name or sitename
@@ -4596,14 +4596,11 @@ def _parse_command_options(  # pylint: disable=too-many-branches
     return (args, set_options)
 
 
-def exec_other_omd(site: SiteContext, version: str) -> NoReturn:
+def exec_other_omd(version: str) -> NoReturn:
     """Rerun current omd command with other version"""
     omd_path = "/omd/versions/%s/bin/omd" % version
     if not os.path.exists(omd_path):
-        bail_out(
-            "Site %s uses version %s which is not installed.\n"
-            "Please reinstall that version and retry this command." % (site.name, version)
-        )
+        bail_out("Version '%s' is not installed." % version)
 
     # Prevent inheriting environment variables from this versions/site environment
     # into the executed omd call. The omd call must import the python version related
@@ -4741,7 +4738,7 @@ def main() -> None:  # pylint: disable=too-many-branches
                     "then please first do an 'omd init %s'." % (3 * (site.name,))
                 )
         elif omdlib.__version__ != v:
-            exec_other_omd(site, v)
+            exec_other_omd(v)
 
     if isinstance(site, SiteContext):
         site.load_config(load_defaults(site))

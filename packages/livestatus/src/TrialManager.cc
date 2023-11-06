@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <system_error>
 
+#include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
 
 void TrialManager::validateServiceCount(
@@ -22,7 +23,7 @@ void TrialManager::validateServiceCount(
     }
 
     if (num_services > maxServicesInTrialPeriod()) {
-        auto days = mk::ticks<mk::days>(trialPeriod());
+        auto days = mk::ticks<std::chrono::days>(trialPeriod());
         throw std::runtime_error(
             "The " + std::to_string(days) +
             "-day trial is over and you are exceeding the limits of your Checkmk installation. Only max. " +

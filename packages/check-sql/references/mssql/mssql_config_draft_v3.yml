@@ -14,7 +14,7 @@ mssql:
         ca: "C:\path\to\file" # mandatory
         client_certificate: "C:\path\to\file" # mandatory
       timeout: 5 # optional, default: 5
-    sqls: # optional
+    sections: # optional
       always: # optional, default
         - "instance"
         - "databases"
@@ -46,4 +46,4 @@ mssql:
       alias: "someApplicationName" # optional , no default
       piggyback: # optional, no default
         hostname: "myPiggybackHost" # mandatory
-        sqls: # optional, no default / same as above
+        sections: # optional, no default / same as above

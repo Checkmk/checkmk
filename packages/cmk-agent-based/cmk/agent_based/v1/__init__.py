@@ -16,9 +16,12 @@ from ._checking_classes import (
     ServiceLabel,
     State,
 )
+from ._inventory_classes import Attributes, TableRow
 from ._regex import regex
 
 __all__ = [
+    "Attributes",
+    "TableRow",
     "HostLabel",
     "IgnoreResults",
     "IgnoreResultsError",

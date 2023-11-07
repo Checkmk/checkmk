@@ -4,14 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.agent_based.v1 import Attributes, TableRow
 
 
 @pytest.mark.parametrize("class_", [TableRow, Attributes])
 @pytest.mark.parametrize("path", [["a", 23], ("a", "b")])
 def test_common_raise_path_type(class_: object, path: object) -> None:
     with pytest.raises(TypeError):
-        _ = class_(path=path)  # type: ignore[operator]
+        _ = class_(path=path)  # type: ignore[operator,misc]
 
 
 def test_common_kwarg_only() -> None:
@@ -48,9 +48,11 @@ def test_attributes_instanciated() -> None:
     assert attr.path == ["software", "os"]
     assert attr.status_attributes == {"vendor": "emmentaler"}
     assert attr.inventory_attributes == {"version": "42"}
-    assert (
-        repr(attr)
-        == "Attributes(path=['software', 'os'], inventory_attributes={'version': '42'}, status_attributes={'vendor': 'emmentaler'})"
+    assert repr(attr) == (
+        "Attributes("
+        "path=['software', 'os'], "
+        "inventory_attributes={'version': '42'}, "
+        "status_attributes={'vendor': 'emmentaler'})"
     )
 
     attr2 = Attributes(
@@ -94,9 +96,12 @@ def test_tablerow_instanciated() -> None:
     assert table_row.key_columns == {"foo": "bar"}
     assert table_row.status_columns == {"packages": 42}
     assert table_row.inventory_columns == {"vendor": "emmentaler"}
-    assert (
-        repr(table_row)
-        == "TableRow(path=['software', 'os'], key_columns={'foo': 'bar'}, inventory_columns={'vendor': 'emmentaler'}, status_columns={'packages': 42})"
+    assert repr(table_row) == (
+        "TableRow("
+        "path=['software', 'os'], "
+        "key_columns={'foo': 'bar'}, "
+        "inventory_columns={'vendor': 'emmentaler'}, "
+        "status_columns={'packages': 42})"
     )
 
     table_row2 = TableRow(

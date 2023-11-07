@@ -5,7 +5,6 @@
 
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
 from cmk.base.api.agent_based.utils import (
     all_of,
@@ -31,6 +30,7 @@ from cmk.base.api.agent_based.utils import (
 from cmk.base.api.agent_based.value_store import get_value_store
 
 from cmk.agent_based.v1 import (
+    Attributes,
     CheckResult,
     HostLabel,
     IgnoreResults,
@@ -41,6 +41,7 @@ from cmk.agent_based.v1 import (
     Service,
     ServiceLabel,
     State,
+    TableRow,
 )
 
 from . import clusterize, register, render, type_defs

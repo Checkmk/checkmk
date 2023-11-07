@@ -26,7 +26,7 @@ mod keys {
     pub const CA: &str = "ca";
     pub const CLIENT_CERTIFICATE: &str = "client_certificate";
 
-    pub const SQLS: &str = "sqls";
+    pub const SECTIONS: &str = "sections";
     pub const ALWAYS: &str = "always";
     pub const CACHED: &str = "cached";
     pub const CACHE_AGE: &str = "cache_age";
@@ -76,8 +76,8 @@ mod defaults {
     pub const CONNECTION_HOST_NAME: &str = "localhost";
     pub const CONNECTION_PORT: u16 = 1433;
     pub const CONNECTION_TIMEOUT: u32 = 5;
-    pub const SQLS_CACHE_AGE: u32 = 600;
-    pub const SQLS_ALWAYS: &[&str] = &[
+    pub const SECTIONS_CACHE_AGE: u32 = 600;
+    pub const SECTIONS_ALWAYS: &[&str] = &[
         "instance",
         "databases",
         "counters",
@@ -88,7 +88,7 @@ mod defaults {
         "availability_groups",
         "connections",
     ];
-    pub const SQLS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
+    pub const SECTIONS_CACHED: &[&str] = &["tablespaces", "datafiles", "backup", "jobs"];
 
     pub const DISCOVERY_DETECT: bool = true;
     pub const DISCOVERY_ALL: bool = true;
@@ -98,7 +98,7 @@ mod defaults {
 pub struct Config {
     auth: Authentication,
     conn: Connection,
-    sqls: Sqls,
+    sections: Sections,
     discovery: Discovery,
     mode: Mode,
     instances: Vec<Instance>,
@@ -109,7 +109,7 @@ impl Default for Config {
         Self {
             auth: Authentication::default(),
             conn: Connection::default(),
-            sqls: Sqls::default(),
+            sections: Sections::default(),
             discovery: Discovery::default(),
             mode: Mode::Port,
             instances: vec![],
@@ -130,17 +130,17 @@ impl Config {
 
         let auth = Authentication::from_yaml(standard)?;
         let conn = Connection::from_yaml(standard)?.unwrap_or_default();
-        let sqls = Sqls::from_yaml(standard)?.unwrap_or_default();
+        let sections = Sections::from_yaml(standard)?.unwrap_or_default();
         let instances: Result<Vec<Instance>> = mssql
             .get_yaml_vector(keys::INSTANCES)
             .into_iter()
-            .map(|v| Instance::from_yaml(&v, &auth, &conn, &sqls))
+            .map(|v| Instance::from_yaml(&v, &auth, &conn, &sections))
             .collect();
 
         Ok(Some(Self {
             auth,
             conn,
-            sqls,
+            sections,
             discovery: Discovery::from_yaml(standard)?,
             mode: Mode::from_yaml(standard)?,
             instances: instances?,
@@ -152,8 +152,8 @@ impl Config {
     pub fn conn(&self) -> &Connection {
         &self.conn
     }
-    pub fn sqls(&self) -> &Sqls {
-        &self.sqls
+    pub fn sections(&self) -> &Sections {
+        &self.sections
     }
     pub fn discovery(&self) -> &Discovery {
         &self.discovery
@@ -326,41 +326,41 @@ impl ConnectionTls {
 }
 
 #[derive(PartialEq, Debug, Clone)]
-pub struct Sqls {
+pub struct Sections {
     always: Vec<String>,
     cached: Vec<String>,
     disabled: Vec<String>,
     cache_age: u32,
 }
 
-impl Default for Sqls {
+impl Default for Sections {
     fn default() -> Self {
         Self {
-            always: defaults::SQLS_ALWAYS
+            always: defaults::SECTIONS_ALWAYS
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
-            cached: defaults::SQLS_CACHED
+            cached: defaults::SECTIONS_CACHED
                 .iter()
                 .map(|s| s.to_string())
                 .collect(),
             disabled: vec![],
-            cache_age: defaults::SQLS_CACHE_AGE,
+            cache_age: defaults::SECTIONS_CACHE_AGE,
         }
     }
 }
 
-impl Sqls {
+impl Sections {
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let sqls = yaml.get(keys::SQLS);
-        if sqls.is_badvalue() {
+        let sections = yaml.get(keys::SECTIONS);
+        if sections.is_badvalue() {
             return Ok(None);
         }
         Ok(Some(Self {
-            always: sqls.get_string_vector(keys::ALWAYS, defaults::SQLS_ALWAYS)?,
-            cached: sqls.get_string_vector(keys::CACHED, defaults::SQLS_CACHED)?,
-            disabled: sqls.get_string_vector(keys::DISABLED, &[])?,
-            cache_age: sqls.get_int(keys::CACHE_AGE, defaults::SQLS_CACHE_AGE),
+            always: sections.get_string_vector(keys::ALWAYS, defaults::SECTIONS_ALWAYS)?,
+            cached: sections.get_string_vector(keys::CACHED, defaults::SECTIONS_CACHED)?,
+            disabled: sections.get_string_vector(keys::DISABLED, &[])?,
+            cache_age: sections.get_int(keys::CACHE_AGE, defaults::SECTIONS_CACHE_AGE),
         }))
     }
     pub fn always(&self) -> &Vec<String> {
@@ -384,8 +384,9 @@ impl Sqls {
         self.get_filtered(self.cached())
     }
 
-    fn get_filtered(&self, sqls: &[String]) -> Vec<String> {
-        sqls.iter()
+    fn get_filtered(&self, sections: &[String]) -> Vec<String> {
+        sections
+            .iter()
             .filter_map(|sql| {
                 if self.disabled().iter().any(|s| s == sql) {
                     None
@@ -487,7 +488,7 @@ impl Instance {
         yaml: &Yaml,
         auth: &Authentication,
         conn: &Connection,
-        sqls: &Sqls,
+        sections: &Sections,
     ) -> Result<Self> {
         Ok(Self {
             sid: yaml
@@ -496,7 +497,7 @@ impl Instance {
             auth: Authentication::from_yaml(yaml).unwrap_or(auth.clone()),
             conn: Connection::from_yaml(yaml)?.unwrap_or(conn.clone()),
             alias: yaml.get_string(keys::ALIAS),
-            piggyback: Piggyback::from_yaml(yaml, sqls)?,
+            piggyback: Piggyback::from_yaml(yaml, sections)?,
         })
     }
     pub fn sid(&self) -> &String {
@@ -519,11 +520,11 @@ impl Instance {
 #[derive(PartialEq, Debug)]
 pub struct Piggyback {
     hostname: String,
-    sqls: Sqls,
+    sections: Sections,
 }
 
 impl Piggyback {
-    pub fn from_yaml(yaml: &Yaml, sqls: &Sqls) -> Result<Option<Self>> {
+    pub fn from_yaml(yaml: &Yaml, sections: &Sections) -> Result<Option<Self>> {
         let piggyback = yaml.get(keys::PIGGYBACK);
         if piggyback.is_badvalue() {
             return Ok(None);
@@ -532,7 +533,7 @@ impl Piggyback {
             hostname: piggyback
                 .get_string(keys::HOSTNAME)
                 .context("Bad/Missing hostname in piggyback")?,
-            sqls: Sqls::from_yaml(piggyback)?.unwrap_or(sqls.clone()),
+            sections: Sections::from_yaml(piggyback)?.unwrap_or(sections.clone()),
         }))
     }
 
@@ -540,8 +541,8 @@ impl Piggyback {
         &self.hostname
     }
 
-    pub fn sqls(&self) -> &Sqls {
-        &self.sqls
+    pub fn sections(&self) -> &Sections {
+        &self.sections
     }
 }
 
@@ -569,7 +570,7 @@ mssql:
         ca: 'C:\path\to\file' # mandatory
         client_certificate: 'C:\path\to\file' # mandatory
       timeout: 5 # optional(default: 5)
-    sqls: # optional
+    sections: # optional
       always: # optional(default)
         - "instance"
         - "databases"
@@ -601,7 +602,7 @@ mssql:
       alias: "someApplicationName" # optional
       piggyback: # optional
         hostname: "myPiggybackHost" # mandatory
-        sqls: # optional, same as above
+        sections: # optional, same as above
     - sid: "INST2" # mandatory
 "#;
         pub const AUTHENTICATION_FULL: &str = r#"
@@ -630,8 +631,8 @@ connection:
     client_certificate: 'C:\path\to\file_client'
   timeout: 341
 "#;
-        pub const SQLS_FULL: &str = r#"
-sqls:
+        pub const SECTIONS_FULL: &str = r#"
+sections:
   always:
     - "aaa"
     - "bbb"
@@ -652,7 +653,7 @@ discovery:
         pub const PIGGYBACK_FULL: &str = r#"
 piggyback:
   hostname: "piggy_host"
-  sqls:
+  sections:
     always:
       - "alw1"
       - "alw2"
@@ -672,19 +673,19 @@ connection:
 alias: "a1"
 piggyback:
   hostname: "piggy"
-  sqls:
+  sections:
     cache_age: 123
 "#;
         pub const PIGGYBACK_NO_HOSTNAME: &str = r#"
 piggyback:
   _hostname: "piggy_host"
-  sqls:
+  sections:
     cache_age: 111
 "#;
-        pub const PIGGYBACK_NO_SQLS: &str = r#"
+        pub const PIGGYBACK_NO_SECTIONS: &str = r#"
 piggyback:
   hostname: "piggy_host"
-  _sqls:
+  _sections:
     cache_age: 111
 "#;
     }
@@ -700,7 +701,7 @@ piggyback:
             Config {
                 auth: Authentication::default(),
                 conn: Connection::default(),
-                sqls: Sqls::default(),
+                sections: Sections::default(),
                 discovery: Discovery::default(),
                 mode: Mode::Port,
                 instances: vec![],
@@ -785,8 +786,8 @@ connection:
         create_yaml(SOURCE)
     }
     #[test]
-    fn test_sqls_from_yaml_full() {
-        let s = Sqls::from_yaml(&create_yaml(data::SQLS_FULL))
+    fn test_sections_from_yaml_full() {
+        let s = Sections::from_yaml(&create_yaml(data::SECTIONS_FULL))
             .unwrap()
             .unwrap();
         assert_eq!(s.always(), &vec!["aaa".to_string(), "bbb".to_string()]);
@@ -796,8 +797,8 @@ connection:
     }
 
     #[test]
-    fn test_sqls_filtered() {
-        let s = Sqls {
+    fn test_sections_filtered() {
+        let s = Sections {
             always: vec!["eee".to_string(), "aaa".to_string()],
             cached: vec!["ccc".to_string(), "eee".to_string()],
             disabled: vec!["eee".to_string()],
@@ -808,20 +809,22 @@ connection:
     }
 
     #[test]
-    fn test_sqls_from_yaml_default() {
-        let s = Sqls::from_yaml(&create_sqls_yaml_default())
+    fn test_sections_from_yaml_default() {
+        let s = Sections::from_yaml(&create_sections_yaml_default())
             .unwrap()
             .unwrap();
-        assert_eq!(s.always(), defaults::SQLS_ALWAYS.clone());
-        assert_eq!(s.cached(), defaults::SQLS_CACHED.clone());
+        assert_eq!(s.always(), defaults::SECTIONS_ALWAYS.clone());
+        assert_eq!(s.cached(), defaults::SECTIONS_CACHED.clone());
         assert!(s.disabled().is_empty());
-        assert_eq!(s.cache_age(), defaults::SQLS_CACHE_AGE);
-        assert!(Sqls::from_yaml(&create_yaml("_sqls:\n")).unwrap().is_none());
+        assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
+        assert!(Sections::from_yaml(&create_yaml("_sections:\n"))
+            .unwrap()
+            .is_none());
     }
 
-    fn create_sqls_yaml_default() -> Yaml {
+    fn create_sections_yaml_default() -> Yaml {
         const SOURCE: &str = r#"
-sqls:
+sections:
   _nothing: "nothing"
 "#;
         create_yaml(SOURCE)
@@ -872,42 +875,50 @@ discovery:
 
     #[test]
     fn test_piggyback() {
-        let piggyback = Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_FULL), &Sqls::default())
-            .unwrap()
-            .unwrap();
+        let piggyback =
+            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_FULL), &Sections::default())
+                .unwrap()
+                .unwrap();
         assert_eq!(piggyback.hostname(), "piggy_host");
-        let sqls = piggyback.sqls();
+        let sections = piggyback.sections();
         assert_eq!(
-            sqls.always(),
+            sections.always(),
             &["alw1", "alw2"].map(str::to_string).to_vec()
         );
         assert_eq!(
-            sqls.cached(),
+            sections.cached(),
             &["cache1", "cache2"].map(str::to_string).to_vec()
         );
-        assert_eq!(sqls.disabled(), &["disabled"].map(str::to_string).to_vec());
-        assert_eq!(sqls.cache_age(), 111);
+        assert_eq!(
+            sections.disabled(),
+            &["disabled"].map(str::to_string).to_vec()
+        );
+        assert_eq!(sections.cache_age(), 111);
     }
 
     #[test]
     fn test_piggyback_error() {
-        assert!(
-            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_NO_HOSTNAME), &Sqls::default())
-                .is_err()
-        );
+        assert!(Piggyback::from_yaml(
+            &create_yaml(data::PIGGYBACK_NO_HOSTNAME),
+            &Sections::default()
+        )
+        .is_err());
         assert_eq!(
-            Piggyback::from_yaml(&create_yaml(data::PIGGYBACK_NO_SQLS), &Sqls::default())
-                .unwrap()
-                .unwrap()
-                .sqls(),
-            &Sqls::default()
+            Piggyback::from_yaml(
+                &create_yaml(data::PIGGYBACK_NO_SECTIONS),
+                &Sections::default()
+            )
+            .unwrap()
+            .unwrap()
+            .sections(),
+            &Sections::default()
         );
     }
 
     #[test]
     fn test_piggyback_none() {
         assert_eq!(
-            Piggyback::from_yaml(&create_yaml("source:\n  xxx"), &Sqls::default()).unwrap(),
+            Piggyback::from_yaml(&create_yaml("source:\n  xxx"), &Sections::default()).unwrap(),
             None
         );
     }
@@ -917,7 +928,7 @@ discovery:
             &create_yaml(data::INSTANCE),
             &Authentication::default(),
             &Connection::default(),
-            &Sqls::default(),
+            &Sections::default(),
         )
         .unwrap();
         assert_eq!(instance.sid(), "INST1");
@@ -925,7 +936,7 @@ discovery:
         assert_eq!(instance.conn().hostname(), "h1");
         assert_eq!(instance.alias().unwrap(), "a1");
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
-        assert_eq!(instance.piggyback().unwrap().sqls().cache_age(), 123);
+        assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
     }
 
     #[test]
@@ -966,9 +977,9 @@ discovery:
             Path::new(r"C:\path\to\file")
         );
         assert_eq!(c.conn().timeout(), defaults::CONNECTION_TIMEOUT);
-        assert_eq!(c.sqls().always(), defaults::SQLS_ALWAYS);
-        assert_eq!(c.sqls().cached(), defaults::SQLS_CACHED);
-        assert_eq!(c.sqls().disabled(), &vec!["someOtherSQL".to_string()]);
-        assert_eq!(c.sqls().cache_age(), defaults::SQLS_CACHE_AGE);
+        assert_eq!(c.sections().always(), defaults::SECTIONS_ALWAYS);
+        assert_eq!(c.sections().cached(), defaults::SECTIONS_CACHED);
+        assert_eq!(c.sections().disabled(), &vec!["someOtherSQL".to_string()]);
+        assert_eq!(c.sections().cache_age(), defaults::SECTIONS_CACHE_AGE);
     }
 }

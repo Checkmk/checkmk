@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::CheckConfig;
+use crate::config::{self, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
 use anyhow::Result;
@@ -77,18 +77,32 @@ impl InstanceEngine {
 impl CheckConfig {
     pub async fn exec(&self) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
-            let sqls = ms_sql.sqls();
-            let always: Vec<Section> = sqls.get_filtered_always().iter().map(to_section).collect();
-            let cached: Vec<Section> = sqls.get_filtered_cached().iter().map(to_section).collect();
-            Ok(always
-                .iter()
-                .chain(cached.iter())
-                .map(|s| header(&s.name, s.separator))
-                .collect::<Vec<String>>()
-                .join(""))
+            let empty_header = Self::generate_dumb_header(ms_sql);
+            Ok(empty_header)
         } else {
             anyhow::bail!("No Config")
         }
+    }
+
+    /// Generate header for each section without any data
+    fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
+        let sections = ms_sql.sections();
+        let always: Vec<Section> = sections
+            .get_filtered_always()
+            .iter()
+            .map(to_section)
+            .collect();
+        let cached: Vec<Section> = sections
+            .get_filtered_cached()
+            .iter()
+            .map(to_section)
+            .collect();
+        always
+            .iter()
+            .chain(cached.iter())
+            .map(|s| header(&s.name, s.separator))
+            .collect::<Vec<String>>()
+            .join("")
     }
 }
 

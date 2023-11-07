@@ -26,6 +26,11 @@ pub struct Section {
     pub separator: Option<char>,
 }
 
+pub trait Column {
+    fn get_string(&self, idx: usize) -> String;
+    fn get_optional_string(&self, idx: usize) -> Option<String>;
+}
+
 #[derive(Clone, Debug)]
 pub struct InstanceEngine {
     pub name: String,
@@ -37,37 +42,33 @@ pub struct InstanceEngine {
     pub available: Option<bool>,
 }
 
-impl InstanceEngine {
+impl Column for Row {
+    fn get_string(&self, idx: usize) -> String {
+        self.try_get::<&str, usize>(idx)
+            .unwrap_or_default()
+            .unwrap_or_default()
+            .to_string()
+    }
+
+    fn get_optional_string(&self, idx: usize) -> Option<String> {
+        self.try_get::<&str, usize>(idx)
+            .unwrap_or_default()
+            .map(str::to_string)
+    }
+}
+
+impl From<&Row> for InstanceEngine {
     /// NOTE: ignores any bad data in the row
-    fn from_row(row: &Row) -> InstanceEngine {
+    /// try_get is used to not panic
+    fn from(row: &Row) -> Self {
         InstanceEngine {
-            name: row
-                .try_get::<&str, usize>(0)
-                .unwrap_or_default()
-                .unwrap_or_default()
-                .to_string(),
-            id: row
-                .try_get::<&str, usize>(1)
-                .unwrap_or_default()
-                .unwrap_or_default()
-                .to_string(),
-            edition: row
-                .try_get::<&str, usize>(2)
-                .unwrap_or_default()
-                .unwrap_or_default()
-                .to_string(),
-            version: row
-                .try_get::<&str, usize>(3)
-                .unwrap_or_default()
-                .unwrap_or_default()
-                .to_string(),
-            cluster: row
-                .try_get::<&str, usize>(4)
-                .unwrap_or_default()
-                .map(str::to_string),
+            name: row.get_string(0),
+            id: row.get_string(1),
+            edition: row.get_string(2),
+            version: row.get_string(3),
+            cluster: row.get_optional_string(4),
             port: row
-                .try_get::<&str, usize>(5)
-                .unwrap_or_default()
+                .get_optional_string(5)
                 .and_then(|s| s.parse::<u16>().ok()),
             available: None,
         }
@@ -276,7 +277,7 @@ async fn get_engines(
     let rows = run_query(client, query).await?;
     Ok(rows[0]
         .iter()
-        .map(InstanceEngine::from_row)
+        .map(InstanceEngine::from)
         .collect::<Vec<InstanceEngine>>()
         .to_vec())
 }

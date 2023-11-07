@@ -11,14 +11,18 @@ import pytest
 
 from tests.testlib.certs import (
     check_certificate_against_private_key,
+    check_certificate_against_public_key,
     check_cn,
-    load_cert_and_private_key,
 )
 
 from omdlib.certs import CertificateAuthority  # pylint: disable=wrong-import-order
 
-from cmk.utils.certs import root_cert_path, RootCA
-from cmk.utils.crypto.certificate import Certificate
+from cmk.utils.certs import (
+    _rsa_public_key_from_cert_or_csr,
+    load_cert_and_private_key,
+    root_cert_path,
+    RootCA,
+)
 
 CA_NAME = "test-ca"
 
@@ -64,4 +68,7 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
         cert,
         key,
     )
-    Certificate(cert).verify_is_signed_by(ca.root_ca.certificate)
+    check_certificate_against_public_key(
+        cert,
+        _rsa_public_key_from_cert_or_csr(ca.root_ca.cert),
+    )

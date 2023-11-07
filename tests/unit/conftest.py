@@ -15,7 +15,6 @@ from fakeredis import FakeRedis
 from pytest import MonkeyPatch
 
 # Import this fixture to not clutter this file, but it's unused here...
-from tests.testlib.certs import fixture_rsa_key  # pylint: disable=unused-import # noqa: F401
 from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
 from tests.testlib.utils import (
     is_cloud_repo,

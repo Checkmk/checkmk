@@ -12,11 +12,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import cryptography.x509 as x509
+from cryptography.hazmat.primitives.serialization import Encoding
+from cryptography.x509 import CertificateSigningRequest
 from dateutil.relativedelta import relativedelta
 
 from cmk.utils.certs import cert_dir, root_cert_path, RootCA
-from cmk.utils.crypto.certificate import CertificateSigningRequest
 from cmk.utils.paths import omd_root
 
 import cmk.gui.config as config
@@ -64,20 +64,20 @@ def _get_agent_ca() -> RootCA:
 
 
 def _serialized_root_cert() -> str:
-    return _get_root_ca().certificate.dump_pem().str
+    return _get_root_ca().cert.public_bytes(Encoding.PEM).decode()
 
 
-def _serialized_signed_cert(csr: x509.CertificateSigningRequest) -> str:
+def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
     return (
         _get_agent_ca()
         .sign_csr(
-            CertificateSigningRequest(csr),
-            expiry=relativedelta(
+            csr,
+            validity=relativedelta(
                 months=config.active_config.agent_controller_certificates["lifetime_in_months"]
             ),
         )
-        .dump_pem()
-        .str
+        .public_bytes(Encoding.PEM)
+        .decode()
     )
 
 

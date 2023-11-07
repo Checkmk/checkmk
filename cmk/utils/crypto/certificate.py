@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import contextlib
 import re
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import NamedTuple, NewType, overload
@@ -193,29 +192,6 @@ class CertificateWithPrivateKey(NamedTuple):
             private_key=key,
         )
 
-    def sign_csr(self, csr: CertificateSigningRequest, expiry: relativedelta) -> Certificate:
-        """Create a certificate by signing a certificate signing request"""
-        if not self.certificate.may_sign_certificates():
-            raise ValueError("This certificate is not suitable for signing CSRs")
-
-        if not csr.is_signature_valid:
-            raise ValueError("CSR signature is not valid")
-
-        # Add the DNS name of the subject CN as alternative name.
-        # Our root CA has always done this, so for now this behavior is hardcoded.
-        sans = x509.DNSName(csr.subject.common_name).value
-
-        return Certificate._create(
-            subject_public_key=csr.public_key,
-            subject_name=csr.subject,
-            subject_alt_dns_names=[sans],
-            issuer_signing_key=self.private_key,
-            issuer_name=self.certificate.subject,
-            expiry=expiry,
-            start_date=Certificate._naive_utcnow(),
-            is_ca=False,
-        )
-
 
 class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
     """
@@ -336,8 +312,8 @@ class Certificate:
 
         builder = (
             x509.CertificateBuilder()
-            .subject_name(subject_name.name)
-            .issuer_name(issuer_name.name)
+            .subject_name(subject_name._name)
+            .issuer_name(issuer_name._name)
             .not_valid_before(start_date)
             .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
@@ -420,28 +396,16 @@ class Certificate:
         return RsaPublicKey(pk)
 
     @property
-    def subject(self) -> X509Name:
-        return X509Name(self._cert.subject)
-
-    @property
-    def issuer(self) -> X509Name:
-        return X509Name(self._cert.issuer)
-
-    @property
     def common_name(self) -> str:
-        return self.subject.common_name
+        return self._get_name_attribute(self._cert.subject, x509.oid.NameOID.COMMON_NAME)
 
     @property
-    def organization_name(self) -> str | None:
-        return self.subject.organization_name
+    def organization_name(self) -> str:
+        return self._get_name_attribute(self._cert.subject, x509.oid.NameOID.ORGANIZATION_NAME)
 
     @property
     def not_valid_before(self) -> datetime:
         return self._cert.not_valid_before
-
-    @property
-    def not_valid_after(self) -> datetime:
-        return self._cert.not_valid_after
 
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
@@ -588,6 +552,15 @@ class Certificate:
         assert all(isinstance(x, str) for x in sans)
         # Well look at that assert...
         return sans  # type: ignore[no-any-return]
+
+    @staticmethod
+    def _get_name_attribute(name: x509.Name, attribute: x509.ObjectIdentifier) -> str:
+        attr = name.get_attributes_for_oid(attribute)
+        if (count := len(attr)) != 1:
+            raise ValueError(
+                f"Expected to find exactly one attribute for identifier {attribute}, found {count}"
+            )
+        return attr[0].value
 
     @staticmethod
     def _is_timezone_aware(dt: datetime) -> bool:
@@ -788,11 +761,11 @@ class RsaPublicKey:
             raise InvalidSignatureError(e) from e
 
 
-@dataclass
 class X509Name:
     """Thin wrapper for X509 Name objects"""
 
-    name: x509.Name
+    def __init__(self, name: x509.Name) -> None:
+        self._name = name
 
     @classmethod
     def create(
@@ -815,100 +788,4 @@ class X509Name:
                 x509.NameAttribute(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
             )
 
-        return cls(x509.Name(attributes))
-
-    def _get_name_attributes(self, attribute: x509.ObjectIdentifier) -> list[str]:
-        return [attr.value for attr in self.name.get_attributes_for_oid(attribute)]
-
-    @property
-    def common_name(self) -> str:
-        """Get the common name
-        >>> print(X509Name.create(common_name="john", organizational_unit="corp").common_name)
-        john
-        """
-        name = self._get_name_attributes(x509.oid.NameOID.COMMON_NAME)
-        if (count := len(name)) != 1:
-            raise ValueError(f"Expected to find exactly one common name, found {count}")
-        return name[0]
-
-    @property
-    def organization_name(self) -> str | None:
-        """Get the organization name, if set
-        >>> print(X509Name.create(common_name="john", organizational_unit="unit").organization_name)
-        None
-        >>> print(
-        ...     X509Name.create(
-        ...         common_name="john", organization_name="corp", organizational_unit="unit"
-        ...     ).organization_name
-        ... )
-        corp
-        """
-        name = self._get_name_attributes(x509.oid.NameOID.ORGANIZATION_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one organization name, found {count}")
-
-    @property
-    def organizational_unit(self) -> str | None:
-        """Get the organizational unit name, if set
-        >>> print(
-        ...     X509Name.create(
-        ...         common_name="john", organization_name="corp"
-        ...     ).organizational_unit
-        ... )
-        None
-        >>> print(
-        ...     X509Name.create(
-        ...         common_name="john", organization_name="corp", organizational_unit="unit"
-        ...     ).organizational_unit
-        ... )
-        unit
-        """
-        name = self._get_name_attributes(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one organizational unit name, found {count}")
-
-
-@dataclass
-class CertificateSigningRequest:
-    """A request for some certificate authority to create and sign a certifiate for the requesting
-    party. The requesting party is identified by its subject name and public key, and signs the CSR
-    to prove its ownership of that public key.
-    """
-
-    csr: x509.CertificateSigningRequest
-
-    @classmethod
-    def create(
-        cls, subject_name: X509Name, subject_private_key: RsaPrivateKey
-    ) -> CertificateSigningRequest:
-        """Create a new Certificate Signing Request
-
-        Args:
-            subject_name: The X509 name object of the requesting party as it will appear in the
-                certificate. The common name must not be empty.
-            subject_private_key: The RSA key whose public key should appear in the certificate.
-                The private key is needed to sign the CSR and prove ownership of the public key.
-        """
-
-        builder = x509.CertificateSigningRequestBuilder().subject_name(subject_name.name)
-        return cls(builder.sign(subject_private_key._key, HashAlgorithm.Sha512.value))
-
-    @property
-    def subject(self) -> X509Name:
-        return X509Name(self.csr.subject)
-
-    @property
-    def public_key(self) -> RsaPublicKey:
-        pk = self.csr.public_key()
-        assert isinstance(pk, rsa.RSAPublicKey)
-        return RsaPublicKey(pk)
-
-    @property
-    def is_signature_valid(self) -> bool:
-        return self.csr.is_signature_valid
+        return X509Name(x509.Name(attributes))

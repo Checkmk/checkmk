@@ -16,7 +16,6 @@ from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import (
     Certificate,
     CertificatePEM,
-    CertificateSigningRequest,
     CertificateWithPrivateKey,
     InvalidExpiryError,
     InvalidPEMError,
@@ -28,6 +27,9 @@ from cmk.utils.crypto.certificate import (
     X509Name,
 )
 from cmk.utils.crypto.password import Password
+
+# this is the same as in testlib.certs
+FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
 
 
 def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> None:
@@ -41,7 +43,6 @@ def test_generate_self_signed(self_signed_cert: CertificateWithPrivateKey) -> No
     self_signed_cert.certificate.verify_is_signed_by(self_signed_cert.certificate)
 
     assert "TestGenerateSelfSigned" == self_signed_cert.certificate.common_name
-    assert self_signed_cert.certificate.organization_name is not None
     assert "Checkmk Site" in self_signed_cert.certificate.organization_name
 
 
@@ -72,9 +73,9 @@ def test_verify_expiry(
     # time_offset is the time difference to (mocked) certificate creation
     # allowed_drift is the tolerance parameter of verify_expiry (defaults to 2 hours for None)
     #
-    # We assume self_signed_cert is valid for 2 hours. Otherwise the test will not work.
+    # We assume the cert is valid from FROZEN_NOW til FROZEN_NOW + 2 hours.
     #
-    with freeze_time(self_signed_cert.certificate.not_valid_before + time_offset):
+    with freeze_time(FROZEN_NOW + time_offset):
         with expectation:
             self_signed_cert.certificate.verify_expiry(allowed_drift)
 
@@ -94,7 +95,7 @@ def test_days_til_expiry(
     when: relativedelta,
     expected_days_remaining: relativedelta,
 ) -> None:
-    with freeze_time(self_signed_cert.certificate.not_valid_before + when):
+    with freeze_time(FROZEN_NOW + when):
         assert self_signed_cert.certificate.days_til_expiry() == expected_days_remaining
 
 
@@ -118,14 +119,16 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
     assert loaded_nums == orig_nums
 
 
-def test_serialize_rsa_key(tmp_path: Path, rsa_key: RsaPrivateKey) -> None:
-    pem_plain = rsa_key.dump_pem(None)
+def test_serialize_rsa_key(tmp_path: Path) -> None:
+    key = RsaPrivateKey.generate(512)
+
+    pem_plain = key.dump_pem(None)
     assert pem_plain.str.startswith("-----BEGIN PRIVATE KEY-----")
 
     loaded_plain = RsaPrivateKey.load_pem(pem_plain)
-    assert loaded_plain._key.private_numbers() == rsa_key._key.private_numbers()  # type: ignore[attr-defined]
+    assert loaded_plain._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
 
-    pem_enc = rsa_key.dump_pem(Password("verysecure"))
+    pem_enc = key.dump_pem(Password("verysecure"))
     assert pem_enc.str.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----")
 
     with pytest.raises((WrongPasswordError, InvalidPEMError)):
@@ -135,26 +138,27 @@ def test_serialize_rsa_key(tmp_path: Path, rsa_key: RsaPrivateKey) -> None:
         RsaPrivateKey.load_pem(pem_enc, Password("wrong"))
 
     loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))
-    assert loaded_enc._key.private_numbers() == rsa_key._key.private_numbers()  # type: ignore[attr-defined]
+    assert loaded_enc._key.private_numbers() == key._key.private_numbers()  # type: ignore[attr-defined]
 
-    pem_pkcs1 = rsa_key.dump_legacy_pkcs1()
+    pem_pkcs1 = key.dump_legacy_pkcs1()
     assert pem_pkcs1.str.startswith("-----BEGIN RSA PRIVATE KEY-----")
 
-    pubkey_pem = rsa_key.public_key.dump_pem()
+    pubkey_pem = key.public_key.dump_pem()
     assert pubkey_pem.str.startswith("-----BEGIN RSA PUBLIC KEY-----")
 
-    pubkey_openssh = rsa_key.public_key.dump_openssh()
+    pubkey_openssh = key.public_key.dump_openssh()
     assert pubkey_openssh.startswith("ssh-rsa ")
 
 
 @pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode()])
-def test_verify_rsa_key(data: bytes, rsa_key: RsaPrivateKey) -> None:
-    signed = rsa_key.sign_data(data)
+def test_verify_rsa_key(data: bytes) -> None:
+    private_key = RsaPrivateKey.generate(1024)
+    signed = private_key.sign_data(data)
 
-    rsa_key.public_key.verify(signed, data, HashAlgorithm.Sha512)
+    private_key.public_key.verify(signed, data, HashAlgorithm.Sha512)
 
     with pytest.raises(InvalidSignatureError):
-        rsa_key.public_key.verify(Signature(b"nope"), data, HashAlgorithm.Sha512)
+        private_key.public_key.verify(Signature(b"nope"), data, HashAlgorithm.Sha512)
 
 
 def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
@@ -284,27 +288,3 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
         ).get_subject_alt_names()
         == sans
     )
-
-
-def test_sign_csr(self_signed_cert: CertificateWithPrivateKey, rsa_key: RsaPrivateKey) -> None:
-    csr = CertificateSigningRequest.create(
-        subject_name=X509Name.create(common_name="csr_test", organization_name="csr_test_org"),
-        subject_private_key=rsa_key,
-    )
-
-    with freeze_time(self_signed_cert.certificate.not_valid_before):
-        new_cert = self_signed_cert.sign_csr(csr, expiry=relativedelta(days=1))
-
-    assert new_cert.not_valid_before == self_signed_cert.certificate.not_valid_before
-    assert (
-        new_cert.not_valid_after
-        == self_signed_cert.certificate.not_valid_before + relativedelta(days=1)
-    )
-
-    new_cert.verify_is_signed_by(self_signed_cert.certificate)
-    assert (
-        new_cert.public_key == rsa_key.public_key
-    ), "The public key in the certificate matches the private key in the CSR"
-    assert (
-        new_cert.issuer == self_signed_cert.certificate.subject
-    ), "The issuer of the new certificate is the self_signed_cert"

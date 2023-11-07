@@ -155,4 +155,4 @@ class EndpointRegistry:
 
 
 # This registry is used to allow endpoints to link to each other without knowing the exact URL.
-ENDPOINT_REGISTRY = EndpointRegistry()
+endpoint_registry = EndpointRegistry()

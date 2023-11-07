@@ -21,7 +21,7 @@ from cmk.gui import hooks
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
-from cmk.gui.openapi.restful_objects.registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
@@ -98,11 +98,11 @@ def install_endpoint(fresh_app_instance):
         hooks.call("permission-checked", param["body"]["permission"])
         return Response(status=204)
 
-    ENDPOINT_REGISTRY.register(test)
+    endpoint_registry.register(test)
 
     yield test
 
-    ENDPOINT_REGISTRY.unregister(test)
+    endpoint_registry.unregister(test)
 
 
 def test_openapi_endpoint_decorator_resets_used_permissions(
@@ -157,10 +157,10 @@ def install_endpoint_raise(fresh_app_instance):
         """Smth"""
         raise ProblemException(418, "short", "long")
 
-    ENDPOINT_REGISTRY.register(test)
+    endpoint_registry.register(test)
     yield test
 
-    ENDPOINT_REGISTRY.unregister(test)
+    endpoint_registry.unregister(test)
 
 
 def test_openapi_endpoint_decorator_catches_status_code_exceptions(

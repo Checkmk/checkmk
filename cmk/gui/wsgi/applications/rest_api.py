@@ -31,7 +31,7 @@ from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
-from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
+from cmk.gui.openapi import add_once, endpoint_registry, generate_data
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.parameters import (
     HEADER_CHECKMK_EDITION,
@@ -360,7 +360,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
         )
 
         endpoint: Endpoint
-        for endpoint in ENDPOINT_REGISTRY:
+        for endpoint in endpoint_registry:
             if self.debug:
                 # This helps us to make sure we can always generate a valid OpenAPI yaml file.
                 _ = endpoint.to_operation_dict()

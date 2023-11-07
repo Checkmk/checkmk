@@ -12,7 +12,7 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.openapi.restful_objects import SPEC
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
-from cmk.gui.openapi.restful_objects.registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 # TODO
@@ -38,7 +38,7 @@ def generate_data(target: EndpointTarget, validate: bool = True) -> dict[str, An
     seen_paths = dict[Ident, Any]()
 
     ident: Ident
-    for endpoint in sorted(ENDPOINT_REGISTRY, key=sort_key):
+    for endpoint in sorted(endpoint_registry, key=sort_key):
         if target in endpoint.blacklist_in:
             continue
 
@@ -120,4 +120,4 @@ def _add_cookie_auth(check_dict):
     }
 
 
-__all__ = ["ENDPOINT_REGISTRY", "generate_data", "add_once"]
+__all__ = ["endpoint_registry", "generate_data", "add_once"]

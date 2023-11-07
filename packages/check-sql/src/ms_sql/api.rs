@@ -86,9 +86,17 @@ impl CheckConfig {
 
     /// Generate header for each section without any data
     fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
-        let sqls = ms_sql.sqls();
-        let always: Vec<Section> = sqls.get_filtered_always().iter().map(to_section).collect();
-        let cached: Vec<Section> = sqls.get_filtered_cached().iter().map(to_section).collect();
+        let sections = ms_sql.sections();
+        let always: Vec<Section> = sections
+            .get_filtered_always()
+            .iter()
+            .map(to_section)
+            .collect();
+        let cached: Vec<Section> = sections
+            .get_filtered_cached()
+            .iter()
+            .map(to_section)
+            .collect();
         always
             .iter()
             .chain(cached.iter())

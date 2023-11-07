@@ -4,13 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import inspect
-import pathlib
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn, Union
 
 from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.paths import agent_based_plugins_dir
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.version import Edition
 
@@ -31,20 +29,22 @@ def get_validated_plugin_module_name() -> str:
     """Find out which module registered the plugin and make sure its in the right place"""
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
-    calling_from = sys._getframe(2).f_code.co_filename
+    full_module_name = str(sys._getframe(2).f_globals["__name__"])
 
-    path = pathlib.Path(calling_from)
+    match full_module_name.split("."):
+        case ("cmk", "base", "plugins", "agent_based", _module):
+            return full_module_name
+        case (
+            "cmk",
+            "base",
+            "plugins",
+            "agent_based",
+            edition,
+            _module,
+        ) if edition in _ALLOWED_EDITION_FOLDERS:
+            return full_module_name
 
-    # watch out: this has to work in the git repo!
-    allowed_path_segment = agent_based_plugins_dir.parts[-3:]
-    if path.parent.parts[-len(allowed_path_segment) :] == allowed_path_segment:
-        return path.stem
-
-    if path.parent.parts[-len(allowed_path_segment) - 1 : -1] == allowed_path_segment:
-        if (edition := path.parent.parts[-1]) in _ALLOWED_EDITION_FOLDERS:
-            return f"{edition}.{path.stem}"
-
-    raise ImportError("do not register from %r" % path)
+    raise ImportError(f"do not register from {full_module_name!r}")
 
 
 def create_subscribed_sections(

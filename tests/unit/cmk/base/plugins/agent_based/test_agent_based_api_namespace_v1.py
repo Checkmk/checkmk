@@ -12,16 +12,21 @@
 | light heartedly!                                        |
 +---------------------------------------------------------+
 """
+from types import ModuleType
+
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
+from cmk.agent_based import v1 as v1_new_location
 
-def _names(space):
-    return sorted(n for n in dir(space) if not n.startswith("_"))
+
+def _names(space: ModuleType) -> set[str]:
+    return {n for n in dir(space) if not n.startswith("_")}
 
 
 def test_v1() -> None:
-    if _names(v1) != [
+    expected = {
         "Attributes",
+        "CheckResult",
         "GetRateError",
         "HostLabel",
         "IgnoreResults",
@@ -60,13 +65,14 @@ def test_v1() -> None:
         "render",
         "startswith",
         "type_defs",
-    ]:
+    }
+    if _names(v1) != expected:  # TODO or _names(v1_new_location) != expected:
         # do not output actual names. Changing this is meant to hurt!
         raise AssertionError(__doc__)
 
 
 def test_v1_render() -> None:
-    if _names(v1.render) != [
+    expected = {
         "bytes",
         "date",
         "datetime",
@@ -78,33 +84,37 @@ def test_v1_render() -> None:
         "nicspeed",
         "percent",
         "timespan",
-    ]:
-        raise AssertionError(__doc__)
+    }
+    assert _names(v1.render) == expected
+    assert _names(v1_new_location.render) == expected
 
 
 def test_v1_type_defs() -> None:
-    if _names(v1.type_defs) != [
+    expected = {
         "CheckResult",
         "DiscoveryResult",
         "HostLabelGenerator",
         "InventoryResult",
         "StringByteTable",
         "StringTable",
-    ]:
+    }
+    if _names(v1.type_defs) != expected:  # TODO or _names(v1_new_location.type_defs) != expected:
         raise AssertionError(__doc__)
 
 
 def test_v1_register() -> None:
-    if _names(v1.register) != [
+    expected = {
         "RuleSetType",
         "agent_section",
         "check_plugin",
         "inventory_plugin",
         "snmp_section",
-    ]:
+    }
+    if _names(v1.register) != expected:  # TODO or _names(v1_new_location.register) != expected:
         raise AssertionError(__doc__)
 
 
 def test_v1_clusterize() -> None:
-    if _names(v1.clusterize) != ["make_node_notice_results"]:
+    expected = {"make_node_notice_results"}
+    if _names(v1.clusterize) != expected:  # TODO or _names(v1_new_location.clusterize) != expected:
         raise AssertionError(__doc__)

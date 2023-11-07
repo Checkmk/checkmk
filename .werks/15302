@@ -1,0 +1,12 @@
+Title: dell_poweredge_status: crash on unknown state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1698738832
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If the device returned an unknown state for 
+
+The new behavior is, that the service will be cirital and report 

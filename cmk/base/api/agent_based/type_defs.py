@@ -16,8 +16,9 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import SNMPDetectBaseType
 
-from cmk.checkengine.discovery import HostLabel
 from cmk.checkengine.sectionparser import ParsedSectionName
+
+from cmk.agent_based.v1 import HostLabel
 
 
 class OIDSpecTuple(NamedTuple):
@@ -59,7 +60,7 @@ class AgentSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
-    module: str | None  # not available for auto migrated plugins.
+    full_module: str | None  # not available for auto migrated plugins.
 
 
 class SNMPSectionPlugin(NamedTuple):
@@ -73,7 +74,7 @@ class SNMPSectionPlugin(NamedTuple):
     detect_spec: SNMPDetectBaseType
     trees: Sequence[SNMPTreeTuple]
     supersedes: set[SectionName]
-    module: str | None  # not available for auto migrated plugins.
+    full_module: str | None  # not available for auto migrated plugins.
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin

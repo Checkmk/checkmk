@@ -10,7 +10,7 @@ from pathlib import Path
 
 import xmltodict
 from pydantic import BaseModel, BeforeValidator, Field, RootModel, TypeAdapter
-from typing_extensions import Annotated
+from typing_extensions import Annotated, Literal
 
 from .robotmk_parse_xml import Rebot
 
@@ -91,11 +91,11 @@ class RebotResult(BaseModel, frozen=True):
     html_base64: str
 
 
-class RebotOutcomeResult(Enum):
+class RebotOutcomeResult(BaseModel, frozen=True):
     Ok: RebotResult
 
 
-class RebotOutcomeError(Enum):
+class RebotOutcomeError(BaseModel, frozen=True):
     Error: str
 
 
@@ -137,18 +137,19 @@ class EnvironmentConfigSystem(Enum):
     System = "System"
 
 
-class RCCEnvironmentConfig(BaseModel, frozen=True):
+class EnvironmentConfigRcc(BaseModel, frozen=True):
+    type: Literal["Rcc"]
     robot_yaml_path: Path
     build_timeout: int
     env_json_path: Path | None
 
 
-class EnvironmentConfigRcc(BaseModel, frozen=True):
-    Rcc: RCCEnvironmentConfig
-
-
-class SessionConfigCurrent(Enum):
+class SessionConfigCurrentEnum(Enum):
     Current = "Current"
+
+
+class SessionConfigCurrent(BaseModel, frozen=True):
+    type: SessionConfigCurrentEnum
 
 
 class UserSessionConfig(BaseModel, frozen=True):

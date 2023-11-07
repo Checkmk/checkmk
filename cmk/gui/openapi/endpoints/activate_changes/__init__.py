@@ -122,7 +122,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
         MKLicensingError, status=403
     ):
         activation_response = activate_changes_start(
-            sites, force_foreign_changes=body["force_foreign_changes"]
+            sites, "REST API", force_foreign_changes=body["force_foreign_changes"]
         )
 
     if body["redirect"]:

@@ -3230,6 +3230,12 @@ msgstr "Activeren"
 msgid "Activation"
 msgstr "Activering"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Activering opruimen"
 
@@ -13770,9 +13776,6 @@ msgstr "Kritisch indien onder"
 
 msgid "Critical level for remaining"
 msgstr "Kritisch niveau voor resterende"
-
-msgid "Critical level for time since last update"
-msgstr "Kritisch niveau voor tijd sinds laatste bijwerking"
 
 msgid "Critical level is at least"
 msgstr "Kritisch niveau is ten minste"
@@ -30825,6 +30828,10 @@ msgstr "Niveaus voor de procentuele inkrimping per tijdspanne"
 msgid "Levels for the queue length"
 msgstr "Niveaus voor de lengte van de wachtrij"
 
+#, fuzzy
+msgid "Levels for time since last update"
+msgstr "Waarschuwingsniveau voor tijd sinds laatste bijwerking"
+
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
 "Niveaus voor tijd tot gedwongen herstart wegens hangende belangrijke updates"
@@ -40323,9 +40330,6 @@ msgstr "Percentuele niveaus (in verhouding tot beleidssnelheid)"
 
 msgid "Percentual levels (in relation to port speed)"
 msgstr "Percentuele niveaus (in verhouding tot de snelheid van de haven)"
-
-msgid "Percentual levels ->"
-msgstr "Percentuele niveaus ->"
 
 #, python-format
 msgid "Percentual levels for %s memory"
@@ -55849,6 +55853,10 @@ msgstr "De gevraagde grafiek bestaat niet"
 msgid "The requested item %s does not exist"
 msgstr "Het gevraagde item %s bestaat niet"
 
+#, fuzzy
+msgid "The requested pack_id does not exist"
+msgstr "Het gevraagde regelpakket bestaat niet"
+
 msgid "The requested report does not exist."
 msgstr "Het gevraagde rapport bestaat niet."
 
@@ -56249,13 +56257,6 @@ msgstr ""
 
 msgid "The site id must consist only of letters, digit and the underscore."
 msgstr "De site-id mag alleen bestaan uit letters, cijfers en de underscore."
-
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"De site is momenteel vergrendeld door een ander activeringsproces. Probeer "
-"het later opnieuw"
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "De site is gemarkeerd als dood. Ik probeer niet te repliceren."
@@ -66806,9 +66807,6 @@ msgstr "Waarschuwing indien onder"
 msgid "Warning level for remaining"
 msgstr "Waarschuwingsniveau voor resterende"
 
-msgid "Warning level for time since last update"
-msgstr "Waarschuwingsniveau voor tijd sinds laatste bijwerking"
-
 msgid "Warning level is at least"
 msgstr "Waarschuwingsniveau is ten minste"
 
@@ -71401,9 +71399,6 @@ msgstr "fout"
 msgid "faulty"
 msgstr "defect"
 
-msgid "fibers"
-msgstr "vezels"
-
 msgid "file IO"
 msgstr "bestand IO"
 
@@ -72840,6 +72835,22 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "De site is momenteel vergrendeld door een ander activeringsproces. "
+#~ "Probeer het later opnieuw"
+
+#~ msgid "fibers"
+#~ msgstr "vezels"
+
+#~ msgid "Critical level for time since last update"
+#~ msgstr "Kritisch niveau voor tijd sinds laatste bijwerking"
+
+#~ msgid "Percentual levels ->"
+#~ msgstr "Percentuele niveaus ->"
 
 #~ msgid ""
 #~ "The selected automation user needs rights for pairing all agents. TODO: "

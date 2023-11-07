@@ -541,6 +541,12 @@ CheckmkFileInfoByRelFilePathMap: dict[str, CheckmkFileInfo] = {
         description="Contains GUI related user properties.",
         encryption=CheckmkFileEncryption.none,
     ),
+    "multisite.d/wato/user_connections.mk": CheckmkFileInfo(
+        components=[],
+        sensitivity=CheckmkFileSensitivity.high_sensitive,
+        description="Contains GUI related user properties.",
+        encryption=CheckmkFileEncryption.none,
+    ),
     # Core files
     "core/config.pb": CheckmkFileInfo(
         components=[

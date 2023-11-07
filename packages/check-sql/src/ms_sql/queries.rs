@@ -2,6 +2,16 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+pub const QUERY_COMPUTER_NAME: &str = r"DECLARE @ComputerName NVARCHAR(200);
+DECLARE @main_key NVARCHAR(200) = 'SYSTEM\CurrentControlSet\Control\ComputerName\ComputerName';
+EXECUTE xp_regread
+    @rootkey = 'HKEY_LOCAL_MACHINE',
+    @key = @main_key,
+    @value_name = 'ComputerName',
+    @value = @ComputerName OUTPUT;
+  Select @ComputerName as 'ComputerName'
+";
+
 /// Script to be run in SQL instance
 const QUERY_ALL_BASE: &str = r"
 DECLARE @GetInstances TABLE

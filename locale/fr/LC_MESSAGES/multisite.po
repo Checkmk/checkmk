@@ -3274,6 +3274,12 @@ msgstr "Activation de"
 msgid "Activation"
 msgstr "Activation"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Nettoyage de l'activation"
 
@@ -13951,9 +13957,6 @@ msgstr "Critique si sous"
 
 msgid "Critical level for remaining"
 msgstr "Niveau critique pour rester"
-
-msgid "Critical level for time since last update"
-msgstr "Niveau critique pour le temps écoulé depuis la dernière mise à jour"
 
 msgid "Critical level is at least"
 msgstr "Le niveau critique est d'au moins"
@@ -31201,6 +31204,10 @@ msgstr "Niveaux pour le rétrécissement en pourcentage par tranche de temps"
 msgid "Levels for the queue length"
 msgstr "Niveaux pour la longueur de la file d'attente"
 
+#, fuzzy
+msgid "Levels for time since last update"
+msgstr "Niveau d'alerte pour le temps écoulé depuis la dernière mise à jour"
+
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
 "Niveaux de temps jusqu'au redémarrage forcé en raison de l'attente de mises "
@@ -40812,9 +40819,6 @@ msgstr "Niveaux de pourcentage (par rapport à la vitesse de la politique)"
 
 msgid "Percentual levels (in relation to port speed)"
 msgstr "Niveaux de pourcentage (par rapport à la vitesse du port)"
-
-msgid "Percentual levels ->"
-msgstr "Niveaux de pourcentage ->"
 
 #, python-format
 msgid "Percentual levels for %s memory"
@@ -56574,6 +56578,10 @@ msgstr "Le graphique demandé n'existe pas"
 msgid "The requested item %s does not exist"
 msgstr "L'élément demandé %s n'existe pas"
 
+#, fuzzy
+msgid "The requested pack_id does not exist"
+msgstr "Le pack de règles demandé n'existe pas"
+
 msgid "The requested report does not exist."
 msgstr "Le rapport demandé n'existe pas."
 
@@ -56979,13 +56987,6 @@ msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
 "L'identifiant du site ne doit être composé que de lettres, de chiffres et de "
 "l'underscore."
-
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"Le site est actuellement verrouillé par un autre processus d'activation. "
-"Veuillez réessayer plus tard"
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "Le site est marqué comme mort. Je n'essaie pas de le répliquer."
@@ -67698,9 +67699,6 @@ msgstr "Attention si sous"
 msgid "Warning level for remaining"
 msgstr "Niveau d'alerte pour le reste"
 
-msgid "Warning level for time since last update"
-msgstr "Niveau d'alerte pour le temps écoulé depuis la dernière mise à jour"
-
 msgid "Warning level is at least"
 msgstr "Le niveau d'alerte est d'au moins"
 
@@ -72377,9 +72375,6 @@ msgstr "défaut"
 msgid "faulty"
 msgstr "défectueux"
 
-msgid "fibers"
-msgstr "fibres"
-
 msgid "file IO"
 msgstr "fichier IO"
 
@@ -73816,6 +73811,22 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "Le site est actuellement verrouillé par un autre processus d'activation. "
+#~ "Veuillez réessayer plus tard"
+
+#~ msgid "fibers"
+#~ msgstr "fibres"
+
+#~ msgid "Critical level for time since last update"
+#~ msgstr "Niveau critique pour le temps écoulé depuis la dernière mise à jour"
+
+#~ msgid "Percentual levels ->"
+#~ msgstr "Niveaux de pourcentage ->"
 
 #~ msgid ""
 #~ "The selected automation user needs rights for pairing all agents. TODO: "

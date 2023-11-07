@@ -7,54 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.checkengine.parameters import Parameters
-
-from cmk.base.api.agent_based.checking_classes import (
-    _EvalableFloat,
-    IgnoreResults,
-    Metric,
-    Result,
-    Service,
-    ServiceLabel,
-    State,
-)
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, ServiceLabel, State
+from cmk.agent_based.v1._checking_classes import _EvalableFloat
 
 
 def test_evalable_float() -> None:
     inf = _EvalableFloat("inf")
-    assert literal_eval("%r" % inf) == float("inf")
-
-
-def test_parameters_features() -> None:
-    par0 = Parameters({})
-    par1 = Parameters({"olaf": "schneemann"})
-
-    assert repr(par1) == "Parameters({'olaf': 'schneemann'})"
-
-    assert len(par0) == 0
-    assert len(par1) == 1
-
-    assert not par0
-    assert par1
-
-    assert "olaf" not in par0
-    assert "olaf" in par1
-
-    assert par0.get("olaf") is None
-    assert par1.get("olaf") == "schneemann"
-
-    with pytest.raises(KeyError):
-        _ = par0["olaf"]
-    assert par1["olaf"] == "schneemann"
-
-    assert not list(par0)
-    assert not list(par0.keys())
-    assert not list(par0.values())
-    assert not list(par0.items())
-
-    assert list(par1) == list(par1.keys()) == ["olaf"]
-    assert list(par1.values()) == ["schneemann"]
-    assert list(par1.items()) == [("olaf", "schneemann")]
+    assert literal_eval(f"{inf!r}") == float("inf")  # type: ignore[misc]
 
 
 def test_service_label() -> None:
@@ -132,7 +91,7 @@ def test_state() -> None:
     assert State["UNKNOWN"] is State.UNKNOWN
 
     with pytest.raises(TypeError):
-        _ = State.OK < State.WARN  # type: ignore[operator]
+        _ = State.OK < State.WARN  # type: ignore[operator,misc]
 
 
 @pytest.mark.parametrize(
@@ -205,7 +164,7 @@ def test_metric() -> None:
 )
 def test_result_invalid(state_: object, summary: object, notice: object, details: object) -> None:
     with pytest.raises((TypeError, ValueError)):
-        _ = Result(
+        _: Result = Result(
             state=state_,
             summary=summary,
             notice=notice,
@@ -233,7 +192,7 @@ def test_result(
     details: str | None,
     expected_triple: tuple[State, str, str],
 ) -> None:
-    result = Result(
+    result: Result = Result(
         state=state_,
         summary=summary,
         notice=notice,

@@ -69,9 +69,6 @@ class PInventoryResult(Protocol):
     def path(self) -> Sequence[str]:
         ...
 
-    def collect(self, collection: ItemDataCollection) -> None:
-        ...
-
 
 @dataclass(frozen=True)
 class InventoryPlugin:
@@ -408,7 +405,9 @@ def _create_trees_from_inventory_plugin_items(
     collection_by_path: dict[SDPath, ItemDataCollection] = {}
     for items_of_inventory_plugin in items_of_inventory_plugins:
         for item in items_of_inventory_plugin.items:
-            item.collect(collection_by_path.setdefault(tuple(item.path), ItemDataCollection()))
+            _collect_item(
+                item, collection_by_path.setdefault(tuple(item.path), ItemDataCollection())
+            )
 
     inventory_tree = MutableTree()
     status_data_tree = MutableTree()
@@ -428,6 +427,31 @@ def _create_trees_from_inventory_plugin_items(
         )
 
     return MutableTrees(inventory_tree, status_data_tree)
+
+
+def _collect_item(item: PInventoryResult, collection: ItemDataCollection) -> None:
+    # PInventoryResult can either be `Attribtes` or `TableRow`.
+    # Once we've moved them to the dependency-free cmk.agent_based.v1 namespace
+    # we can use the Union type and do a simple type dispatch here.
+    if hasattr(item, "inventory_attributes") and hasattr(item, "status_attributes"):
+        if item.inventory_attributes:
+            collection.inventory_pairs.append(item.inventory_attributes)
+        if item.status_attributes:
+            collection.status_data_pairs.append(item.status_attributes)
+        return
+
+    if (
+        hasattr(item, "key_columns")
+        and hasattr(item, "status_columns")
+        and hasattr(item, "inventory_columns")
+    ):
+        # TableRow provides:
+        #   - key_columns: {"kc": "kc-val", ...}
+        #   - rows: [{"c": "c-val", ...}, ...]
+        collection.key_columns.extend(item.key_columns)
+        collection.inventory_rows.append({**item.key_columns, **item.inventory_columns})
+        if item.status_columns:
+            collection.status_data_rows.append({**item.key_columns, **item.status_columns})
 
 
 # Data for the HW/SW Inventory has a validity period (live data or persisted).

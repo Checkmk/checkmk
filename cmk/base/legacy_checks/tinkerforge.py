@@ -101,9 +101,9 @@ def check_tinkerforge_temperature(item, params, parsed):
 def check_tinkerforge_ambient(item, params, parsed):
     if "ambient" in parsed and item in parsed["ambient"]:
         reading = float(parsed["ambient"][item][0]) / 100.0
-        if not params:
-            params = None
-        return check_levels(reading, "brightness", params, unit="lx", infoname="Brightness")
+        return check_levels(
+            reading, "brightness", params["levels"], unit="lx", infoname="Brightness"
+        )
     return None
 
 
@@ -158,6 +158,7 @@ check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
     discovery_function=lambda parsed: inventory_tinkerforge("ambient", parsed),
     check_function=check_tinkerforge_ambient,
     check_ruleset_name="brightness",
+    check_default_parameters={"levels": None},
 )
 
 check_info["tinkerforge.humidity"] = LegacyCheckDefinition(

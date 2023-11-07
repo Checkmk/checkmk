@@ -3,8 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from . import render
+from ._checking_classes import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabel,
+    IgnoreResults,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    ServiceLabel,
+    State,
+)
 from ._regex import regex
 
 __all__ = [
+    "HostLabel",
+    "IgnoreResults",
+    "IgnoreResultsError",
+    "Metric",
+    "Result",
+    "Service",
+    "ServiceLabel",
+    "State",
     "regex",
+    "render",
+    "CheckResult",
+    "DiscoveryResult",
 ]

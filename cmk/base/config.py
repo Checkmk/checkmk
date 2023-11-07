@@ -1642,7 +1642,7 @@ def _extract_check_plugins(
             present_plugin = agent_based_register.get_check_plugin(
                 CheckPluginName(maincheckify(check_plugin_name))
             )
-            if present_plugin is not None and present_plugin.module is not None:
+            if present_plugin is not None and present_plugin.full_module is not None:
                 # module is not None => it's a new plugin
                 # (allow loading multiple times, e.g. update-config)
                 # implemented here instead of the agent based register so that new API code does not
@@ -1944,7 +1944,7 @@ class ConfigCache:
         self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
             host_tags=host_tags,
             host_paths=self._host_paths,
-            labels=LabelManager(
+            label_manager=LabelManager(
                 host_labels,
                 host_label_rules,
                 service_label_rules,

@@ -3232,6 +3232,12 @@ msgstr "Activando"
 msgid "Activation"
 msgstr "Ativação"
 
+#, python-format
+msgid ""
+"Activation blocked.<br>%s is currently activating changes on this site."
+"<br>Ongoing activation has been executed from Checkmk %s."
+msgstr ""
+
 msgid "Activation cleanup"
 msgstr "Limpeza da ativação"
 
@@ -13765,9 +13771,6 @@ msgstr "Crítico se sob"
 
 msgid "Critical level for remaining"
 msgstr "Nível crítico para permanecer"
-
-msgid "Critical level for time since last update"
-msgstr "Nível crítico para o tempo desde a última actualização"
 
 msgid "Critical level is at least"
 msgstr "O nível crítico é pelo menos"
@@ -30774,6 +30777,10 @@ msgstr "Níveis para a percentagem de contracção por intervalo de tempo"
 msgid "Levels for the queue length"
 msgstr "Níveis para o comprimento da fila"
 
+#, fuzzy
+msgid "Levels for time since last update"
+msgstr "Nível de aviso para o tempo desde a última actualização"
+
 msgid "Levels for time until forced reboot due to pending important updates"
 msgstr ""
 "Níveis de tempo até à reinicialização forçada devido a actualizações "
@@ -40251,9 +40258,6 @@ msgstr "Níveis percentuais (em relação à velocidade da apólice)"
 
 msgid "Percentual levels (in relation to port speed)"
 msgstr "Níveis percentuais (em relação à velocidade da porta)"
-
-msgid "Percentual levels ->"
-msgstr "Níveis percentuais ->"
 
 #, python-format
 msgid "Percentual levels for %s memory"
@@ -55772,6 +55776,10 @@ msgstr "O gráfico solicitado não existe"
 msgid "The requested item %s does not exist"
 msgstr "O item solicitado %s não existe"
 
+#, fuzzy
+msgid "The requested pack_id does not exist"
+msgstr "O pacote de regras solicitado não existe"
+
 msgid "The requested report does not exist."
 msgstr "O relatório solicitado não existe."
 
@@ -56172,13 +56180,6 @@ msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
 "A identificação do site deve consistir apenas de letras, dígitos e o "
 "sublinhado."
-
-msgid ""
-"The site is currently locked by another activation process. Please try again "
-"later"
-msgstr ""
-"O site está actualmente bloqueado por outro processo de activação. Por "
-"favor, tente novamente mais tarde"
 
 msgid "The site is marked as dead. Not trying to replicate."
 msgstr "O local está marcado como morto. Não está a tentar replicar."
@@ -66674,9 +66675,6 @@ msgstr "Alerta se sob"
 msgid "Warning level for remaining"
 msgstr "Nível de aviso para permanecer"
 
-msgid "Warning level for time since last update"
-msgstr "Nível de aviso para o tempo desde a última actualização"
-
 msgid "Warning level is at least"
 msgstr "O nível de aviso é pelo menos"
 
@@ -71232,9 +71230,6 @@ msgstr "falha"
 msgid "faulty"
 msgstr "defeituoso"
 
-msgid "fibers"
-msgstr "fibras"
-
 msgid "file IO"
 msgstr "arquivo IO"
 
@@ -72661,6 +72656,22 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid ""
+#~ "The site is currently locked by another activation process. Please try "
+#~ "again later"
+#~ msgstr ""
+#~ "O site está actualmente bloqueado por outro processo de activação. Por "
+#~ "favor, tente novamente mais tarde"
+
+#~ msgid "fibers"
+#~ msgstr "fibras"
+
+#~ msgid "Critical level for time since last update"
+#~ msgstr "Nível crítico para o tempo desde a última actualização"
+
+#~ msgid "Percentual levels ->"
+#~ msgstr "Níveis percentuais ->"
 
 #~ msgid ""
 #~ "The selected automation user needs rights for pairing all agents. TODO: "

@@ -1248,11 +1248,10 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("from cmk.checkengine.submitters import get_submitter\n")
     output.write("\n")
-    for module in _get_needed_agent_based_modules(
+    for full_mod_name in _get_needed_agent_based_modules(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
     ):
-        full_mod_name = "cmk.base.plugins.agent_based.%s" % module
         output.write("import %s\n" % full_mod_name)
         console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
 
@@ -1432,7 +1431,7 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPlug
     # A management plugin *could have been* created on the fly, from a 'regular' legacy
     # check plugin. In this case, we must load that.
     plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if not plugin or plugin.module is not None:
+    if not plugin or plugin.full_module is not None:
         # it does *not* result from a legacy plugin, if module is not None
         return None
 
@@ -1465,22 +1464,22 @@ def _get_needed_agent_based_modules(
     inventory_plugin_names: set[InventoryPluginName],
 ) -> list[str]:
     modules = {
-        plugin.module
+        plugin.full_module
         for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]
-        if plugin is not None and plugin.module is not None
+        if plugin is not None and plugin.full_module is not None
     }
     modules.update(
-        plugin.module
+        plugin.full_module
         for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
-        if plugin is not None and plugin.module is not None
+        if plugin is not None and plugin.full_module is not None
     )
     modules.update(
-        section.module
+        section.full_module
         for section in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=check_plugin_names,
             inventory_plugin_names=inventory_plugin_names,
         ).values()
-        if section.module is not None
+        if section.full_module is not None
     )
 
     return sorted(modules)
@@ -1498,6 +1497,6 @@ def _get_required_legacy_check_sections(
         check_plugin_names=check_plugin_names,
         inventory_plugin_names=inventory_plugin_names,
     ).values():
-        if section.module is None:
+        if section.full_module is None:
             required_legacy_check_sections.add(str(section.name))
     return required_legacy_check_sections

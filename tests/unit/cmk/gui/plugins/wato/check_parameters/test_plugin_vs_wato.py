@@ -475,11 +475,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "cisco_sys_mem",
-            RuleGroup.CheckgroupParameters("cisco_supervisor_mem"),
-        ),
-        (
-            "check",
             "citrix_licenses",
             RuleGroup.CheckgroupParameters("citrix_licenses"),
         ),
@@ -586,21 +581,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "fortigate_node_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_node_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions_base",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
-            "fortigate_sessions",
-            RuleGroup.CheckgroupParameters("fortigate_sessions"),
-        ),
-        (
-            "check",
             "fortimail_cpu_load",
             RuleGroup.CheckgroupParameters("fortimail_cpu_load"),
         ),
@@ -613,11 +593,6 @@ class ErrorReporter:
             "check",
             "genua_pfstate",
             RuleGroup.CheckgroupParameters("pf_used_states"),
-        ),
-        (
-            "check",
-            "hitachi_hnas_bossock",
-            RuleGroup.CheckgroupParameters("bossock_fibers"),
         ),
         (
             "check",
@@ -845,11 +820,6 @@ class ErrorReporter:
             "check",
             "skype_sip_stack",
             RuleGroup.CheckgroupParameters("skype_sip"),
-        ),
-        (
-            "check",
-            "tinkerforge_ambient",
-            RuleGroup.CheckgroupParameters("brightness"),
         ),
         (
             "check",

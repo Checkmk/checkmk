@@ -13,6 +13,7 @@ from typing import Literal
 
 import livestatus
 
+from cmk.utils.labels import LabelGroups
 from cmk.utils.tags import TagGroupID
 
 import cmk.gui.site_config as site_config
@@ -27,7 +28,6 @@ from cmk.gui.utils.labels import (
     encode_label_groups_for_livestatus,
     encode_labels_for_livestatus,
     Label,
-    LabelGroups,
     Labels,
     parse_labels_value,
 )

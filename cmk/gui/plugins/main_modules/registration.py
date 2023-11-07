@@ -51,6 +51,7 @@ from cmk.gui.dashboard import registration as dashboard_registration
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
+from cmk.gui.openapi import ENDPOINT_REGISTRY
 from cmk.gui.openapi import registration as openapi_registration
 from cmk.gui.pages import page_registry
 from cmk.gui.painter.v0.base import painter_registry
@@ -183,6 +184,7 @@ def register() -> None:
             snapin_registry,
             contact_group_usage_finder_registry,
             timeperiod_usage_finder_registry,
+            ENDPOINT_REGISTRY,
         )
         custom_icons_register(
             mode_registry,
@@ -220,6 +222,7 @@ def register() -> None:
         mega_menu_registry,
         ac_test_registry,
         contact_group_usage_finder_registry,
+        notification_parameter_registry,
     )
     bi_registration.register(
         data_source_registry,

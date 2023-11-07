@@ -37,33 +37,26 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
 
     # SCHEMA modifications
     require_properties(raw_schema, "InputRuleObject", ["raw_value", "conditions"], "CMK-TODO")
-    require_properties(raw_schema, "LicenseSettings", ["settings"], "CMK-14100")
-
-    require_properties(raw_schema, "UpdateContactGroup", ["attributes"], "CMK-14291")
-    require_properties(raw_schema, "UpdateHostGroup", ["attributes"], "CMK-14291")
-    require_properties(raw_schema, "UpdateServiceGroup", ["attributes"], "CMK-14291")
-
     require_properties(raw_schema, "CheckboxWithStrValue", ["state"], "CMK-TODO", merge=False)
     require_properties(
         raw_schema, "NotificationBulkingCheckbox", ["state"], "CMK-TODO", merge=False
     )
 
-    update_property(raw_schema, "BulkDeleteHost", "entries", {"minItems": 1}, "CMK-14259")
-
     update_property(
         raw_schema,
-        "TimeAllowedRange",
-        "start",
-        {"pattern": "^\\d\\d:\\d\\d(:\\d\\d)?$"},
-        "CMK-14314",
+        "HostOrServiceCondition",
+        "match_on",
+        {"items": {"type": "string", "minLength": 1}},
+        "CMK-15035",
     )
-    update_property(
-        raw_schema,
-        "TimeAllowedRange",
-        "end",
-        {"pattern": "^\\d\\d:\\d\\d(:\\d\\d)?$"},
-        "CMK-14314",
+    require_properties(raw_schema, "HostOrServiceCondition", ["operator", "match_on"], "CMK-15035")
+    require_properties(
+        raw_schema, "TagConditionScalarSchemaBase", ["key", "operator", "value"], "CMK-15035"
     )
+    require_properties(
+        raw_schema, "TagConditionConditionSchemaBase", ["key", "operator", "value"], "CMK-15035"
+    )
+    require_properties(raw_schema, "LabelCondition", ["operator"], "CMK-15035")
 
     # NOTE: CMK-12182 is mostly done, but fixing InputPassword was apparently overlooked
     update_property(
@@ -72,14 +65,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         "ident",
         {"pattern": "^[a-zA-Z0-9][a-zA-Z0-9_-]+$"},
         "CMK-12182",
-    )
-
-    update_property(
-        raw_schema,
-        "InputHostTagGroup",
-        "ident",
-        {"pattern": "^[a-zA-Z_]+[-0-9a-zA-Z_]$"},
-        "CMK-14263",
     )
 
     update_property(
@@ -95,28 +80,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         "snmp_community",
         {"nullable": True},
         "CMK-TODO",
-    )
-
-    update_property(
-        raw_schema,
-        "HostExtensions",
-        "effective_attributes",
-        {"nullable": True},
-        "CMK-14110",
-    )
-    update_property(
-        raw_schema,
-        "NetworkScanResult",
-        "start",
-        {"nullable": True},
-        "CMK-14261",
-    )
-    update_property(
-        raw_schema,
-        "NetworkScanResult",
-        "end",
-        {"nullable": True},
-        "CMK-14261",
     )
 
     update_property(
@@ -269,10 +232,6 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
                 path,
             )
             responses.update(problem_response("404", "Not found"))
-    if "CMK-12421" in settings.suppressed_issues:
-        paths["/domain-types/activation_run/actions/activate-changes/invoke"]["post"][
-            "responses"
-        ].update(problem_response("204", "No Content"))
 
     # ignore some endpoints (via deprecating them) to avoid failures during parametrization
     for path, methods in {
@@ -332,7 +291,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
                 valid_body=False,
                 body={},
                 set_body={"links": []},
-                ticket_id="CMK-14101",
             )
         else:
             fix_response(
@@ -348,15 +306,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
                 },
                 ticket_id="INVALID-JSON",
             )
-    fix_response(
-        case,
-        response,
-        method="GET",
-        path="/domain-types/audit_log/collections/all",
-        status_code=200,
-        set_body={"links": []},
-        ticket_id="CMK-14403",
-    )
 
     # generic: empty response Content-Type
     fix_response(
@@ -417,19 +366,6 @@ def hook_after_call(  # pylint: disable=too-many-branches
     fix_response(
         case,
         response,
-        method="POST|PUT",
-        path="/objects/bi_aggregation/{aggregation_id}",
-        status_code=500,
-        traceback=".*\nKeyError:.*",
-        valid_body=True,
-        set_status_code=400,
-        update_headers={"Content-Type": "{problem}"},
-        set_body={"title": "Bad Request", "status": 400, "detail": "Bad Request"},
-        ticket_id="CMK-14416",
-    )
-    fix_response(
-        case,
-        response,
         method="POST",
         path="/domain-types/metric/actions/filter/invoke",
         status_code=500,
@@ -485,5 +421,16 @@ def hook_after_call(  # pylint: disable=too-many-branches
     )
 
     # invalid status: 500 instead of 404
+    fix_response(
+        case,
+        response,
+        method="DELETE",
+        path="/objects/bi_pack/{pack_id}",
+        status_code=500,
+        body={"detail": "The requested pack_id does not exist"},
+        set_status_code=400,
+        update_body={"title": "Bad Request", "status": 404},
+        ticket_id="CMK-14991",
+    )
 
     # invalid status: 500 instead of 409

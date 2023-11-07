@@ -70,6 +70,21 @@ async fn test_get_all_instances() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn test_get_computer_name() {
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
+        let name = api::get_computer_name(&mut client).await.unwrap();
+        assert!(name
+            .clone()
+            .unwrap()
+            .to_lowercase()
+            .starts_with("agentbuild"),);
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn test_check_config_exec_remote() {
     let file = tools::create_remote_config(&tools::get_remote_sql_from_env_var().unwrap());
     let check_config = CheckConfig::load_file(file.path()).unwrap();

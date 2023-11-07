@@ -54,6 +54,7 @@ API_DOMAIN = Literal[
     "bi_pack",
     "bi_aggregation",
     "bi_rule",
+    "user_role",
 ]
 
 
@@ -2324,6 +2325,47 @@ class BiRuleClient(RestApiClient):
         )
 
 
+class UserRoleClient(RestApiClient):
+    domain: API_DOMAIN = "user_role"
+
+    def get(self, role_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{role_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def clone(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(self, role_id: str, body: dict[str, Any], expect_ok: bool = True) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{role_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, role_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{role_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2352,6 +2394,7 @@ class ClientRegistry:
     BiPack: BiPackClient
     BiAggregation: BiAggregationClient
     BiRule: BiRuleClient
+    UserRole: UserRoleClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2382,4 +2425,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         BiPack=BiPackClient(request_handler, url_prefix),
         BiAggregation=BiAggregationClient(request_handler, url_prefix),
         BiRule=BiRuleClient(request_handler, url_prefix),
+        UserRole=UserRoleClient(request_handler, url_prefix),
     )

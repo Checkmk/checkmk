@@ -50,6 +50,13 @@ from . import (
     user_profile,
     users,
 )
+from ._password_store_valuespecs import IndividualOrStoredPassword as IndividualOrStoredPassword
+from ._password_store_valuespecs import (
+    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
+)
+from ._password_store_valuespecs import (
+    MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword,
+)
 
 
 def register(

@@ -132,7 +132,7 @@ def test_ruleset_matcher_get_host_values_labels(
     matcher = RulesetMatcher(
         host_tags={HostName("host1"): {}, HostName("host2"): {}},
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={
                 HostName("host1"): {"os": "linux", "abc": "xä", "hu": "ha"},
                 HostName("host2"): {},
@@ -155,7 +155,7 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
     ruleset_matcher = RulesetMatcher(
         host_tags={test_host: {TagGroupID("agent"): TagID("no-agent")}, xyz_host: {}},
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=[
@@ -202,7 +202,7 @@ def test_labels_of_service_discovered_labels() -> None:
     ruleset_matcher = RulesetMatcher(
         host_tags={test_host: {}},
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -235,7 +235,7 @@ def test_basic_get_host_values() -> None:
             HostName("host2"): {},
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -274,7 +274,7 @@ def test_basic_get_host_values_subfolders() -> None:
             HostName("lvl2"): "/lvl1/lvl2/hosts.mk",
             HostName("lvl1a"): "/lvl1_a/hosts.mk",
         },
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -350,7 +350,7 @@ def test_basic_host_ruleset_get_merged_dict_values() -> None:
             HostName("host2"): {},
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -425,7 +425,7 @@ def test_basic_host_ruleset_get_host_bool_value() -> None:
             HostName("host2"): {},
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),
@@ -548,7 +548,7 @@ def test_ruleset_matcher_get_host_values_tags(
             },
         },
         host_paths={},
-        labels=LabelManager(
+        label_manager=LabelManager(
             explicit_host_labels={},
             host_label_rules=(),
             service_label_rules=(),

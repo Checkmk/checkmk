@@ -80,6 +80,7 @@ std::optional<SocketPair> SocketPair::make(Mode mode, Direction direction,
         case Mode::blocking:
             break;
         case Mode::local_non_blocking:
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
             if (::fcntl(sp.local(), F_SETFL, O_NONBLOCK) == -1) {
                 return fail("cannot make socket non-blocking", logger, sp);
             }
@@ -141,6 +142,7 @@ void setThreadName(std::string name) {
 std::string getThreadName() { return thread_name; }
 
 file_lock::file_lock(const std::filesystem::path &name)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     : fd_{::open(name.c_str(), O_RDWR)} {
     if (fd_ == -1) {
         throw generic_error("could not open lock file");
@@ -160,6 +162,7 @@ bool file_lock::fcntl_impl(short l_type, int cmd, const char *msg,
         .l_type = l_type, .l_whence = SEEK_SET, .l_start = 0, .l_len = 0,
         .l_pid = 0,
     };
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg)
     if (::fcntl(fd_, cmd, &fl) != -1) {
         return true;
     }

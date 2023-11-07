@@ -12,6 +12,8 @@ from typing import Literal, NamedTuple
 
 from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
 
+from cmk.utils.labels import AndOrNotLiteral, LabelGroups
+
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -32,11 +34,6 @@ class LabelType(enum.StrEnum):
 
 
 Labels = Iterable[Label]
-
-# Label group specific types
-AndOrNotLiteral = Literal["and", "or", "not"]
-LabelGroup = Sequence[tuple[AndOrNotLiteral, str]]
-LabelGroups = Sequence[tuple[AndOrNotLiteral, LabelGroup]]
 
 # Labels need to be in the format "<key>:<value>", e.g. "os:windows"
 LABEL_REGEX = r"^[^:]+:[^:]+$"

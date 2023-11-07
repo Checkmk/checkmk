@@ -2,7 +2,15 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::cli::{DocumentAgeLevels, PageSizeLimits, ResponseTimeLevels};
+use bytes::Bytes;
+use http::HeaderMap;
+use httpdate::parse_http_date;
+use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
+use std::time::{Duration, SystemTime};
+
+use crate::cli::OnRedirect;
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum State {
@@ -34,156 +42,158 @@ impl From<State> for i32 {
     }
 }
 
-impl State {
-    fn as_marker(&self) -> &'static str {
-        match self {
-            State::Ok => "",
-            State::Warn => " (!)",
-            State::Crit => " (!!)",
-            State::Unknown => " (?)",
-        }
-    }
-}
-
 pub struct CheckResult {
     pub state: State,
     pub summary: String,
 }
 
-pub struct Output {
-    pub worst_state: State,
-    check_results: Vec<CheckResult>,
+pub fn check_status(
+    status: StatusCode,
+    version: Version,
+    onredirect: OnRedirect,
+) -> Option<CheckResult> {
+    let state = if status.is_client_error() {
+        State::Warn
+    } else if status.is_server_error() {
+        State::Crit
+    } else if status.is_redirection() {
+        match onredirect {
+            OnRedirect::Warning => State::Warn,
+            OnRedirect::Critical => State::Crit,
+            _ => State::Ok, // If we reach this point, the redirect is ok
+        }
+    } else {
+        State::Ok
+    };
+
+    Some(CheckResult {
+        state,
+        summary: format!("{:?} {}", version, status),
+    })
 }
 
-impl Display for Output {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(f, "HTTP {}", self.worst_state)?;
-        let mut crs_iter = self
-            .check_results
-            .iter()
-            .filter(|cr| !cr.summary.is_empty());
-        if let Some(item) = crs_iter.next() {
-            write!(f, " - {}{}", item.summary, item.state.as_marker())?;
-        }
-        for item in crs_iter {
-            write!(f, ", {}{}", item.summary, item.state.as_marker())?;
-        }
-        Ok(())
+pub fn check_body(
+    body: Option<Result<Bytes, ReqwestError>>,
+    page_size_limits: Option<PageSizeLimits>,
+) -> Option<CheckResult> {
+    let body = body?;
+
+    match body {
+        Ok(bd) => Some(check_page_size(bd.len(), page_size_limits)),
+        Err(_) => Some(CheckResult {
+            state: State::Crit,
+            summary: "Error fetching the reponse body".to_string(),
+        }),
     }
 }
 
-impl Output {
-    pub fn from_check_results(check_results: Vec<CheckResult>) -> Self {
-        let worst_state = match check_results.iter().map(|cr| &cr.state).max() {
-            Some(state) => state.clone(),
-            None => State::Ok,
-        };
+pub fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> CheckResult {
+    let state = match page_size_limits {
+        Some((lower, _)) if page_size < lower => State::Warn,
+        Some((_, Some(upper))) if page_size > upper => State::Warn,
+        _ => State::Ok,
+    };
 
-        Self {
-            worst_state,
-            check_results,
-        }
+    CheckResult {
+        state,
+        summary: format!("Page size: {} bytes", page_size),
+    }
+}
+
+pub fn check_response_time(
+    response_time: Duration,
+    response_time_levels: Option<ResponseTimeLevels>,
+) -> Option<CheckResult> {
+    let state = match response_time_levels {
+        Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => State::Crit,
+        Some((warn, _)) if response_time.as_secs_f64() >= warn => State::Warn,
+        _ => State::Ok,
+    };
+
+    Some(CheckResult {
+        state,
+        summary: format!(
+            "Response time: {}.{}s",
+            response_time.as_secs(),
+            response_time.subsec_millis()
+        ),
+    })
+}
+
+pub fn check_document_age(
+    headers: &HeaderMap,
+    document_age_levels: Option<DocumentAgeLevels>,
+) -> Option<CheckResult> {
+    let document_age_levels = document_age_levels?;
+
+    let now = SystemTime::now();
+
+    let age_header = headers.get("last-modified").or(headers.get("date"));
+    let Some(document_age) = age_header else {
+        return Some(CheckResult {
+            state: State::Crit,
+            summary: "Can't determine document age".to_string(),
+        });
+    };
+    let Ok(Ok(age)) = document_age.to_str().map(parse_http_date) else {
+        return Some(CheckResult {
+            state: State::Crit,
+            summary: "Can't decode document age".to_string(),
+        });
+    };
+
+    //TODO(au): Specify "too old" in Output
+    match document_age_levels {
+        (_, Some(crit)) if now - Duration::from_secs(crit) > age => Some(CheckResult {
+            state: State::Crit,
+            summary: "Document age too old".to_string(),
+        }),
+        (warn, _) if now - Duration::from_secs(warn) > age => Some(CheckResult {
+            state: State::Warn,
+            summary: "Document age too old".to_string(),
+        }),
+        _ => None,
     }
 }
 
 #[cfg(test)]
-mod test_output_format {
-    use super::*;
+mod test_check_functions {
+    use crate::checking::check_page_size;
+    use crate::checking::State;
 
-    fn s(s: &str) -> String {
-        String::from(s)
+    #[test]
+    fn test_check_page_size_without_limits() {
+        assert_eq!(check_page_size(42, None).state, State::Ok);
     }
 
     #[test]
-    fn test_merge_check_results_with_state_only() {
-        let cr1 = CheckResult {
-            state: State::Ok,
-            summary: s(""),
-        };
-        let cr2 = CheckResult {
-            state: State::Ok,
-            summary: s(""),
-        };
-        let cr3 = CheckResult {
-            state: State::Ok,
-            summary: s(""),
-        };
+    fn test_check_page_size_with_lower_within_bounds() {
+        assert_eq!(check_page_size(42, Some((12, None))).state, State::Ok);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_out_of_bounds() {
+        assert_eq!(check_page_size(42, Some((56, None))).state, State::Warn);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_and_higher_within_bounds() {
+        assert_eq!(check_page_size(56, Some((42, Some(100)))).state, State::Ok);
+    }
+
+    #[test]
+    fn test_check_page_size_with_lower_and_higher_too_low() {
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK"
+            check_page_size(42, Some((56, Some(100)))).state,
+            State::Warn
         );
     }
 
     #[test]
-    fn test_merge_check_results_ok() {
-        let cr1 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 1"),
-        };
-        let cr2 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 2"),
-        };
-        let cr3 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 3"),
-        };
+    fn test_check_page_size_with_lower_and_higher_too_high() {
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK - summary 1, summary 2, summary 3"
+            check_page_size(142, Some((56, Some(100)))).state,
+            State::Warn
         );
-    }
-
-    #[test]
-    fn test_merge_check_results_crit() {
-        let cr1 = CheckResult {
-            state: State::Ok,
-            summary: s("summary 1"),
-        };
-        let cr2 = CheckResult {
-            state: State::Warn,
-            summary: s("summary 2"),
-        };
-        let cr3 = CheckResult {
-            state: State::Crit,
-            summary: s("summary 3"),
-        };
-        assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
-        );
-    }
-
-    #[test]
-    fn test_emtpy_output() {
-        assert_eq!(format!("{}", Output::from_check_results(vec![])), "HTTP OK");
-    }
-
-    #[test]
-    fn test_worst_state() {
-        use State::Crit as C;
-        use State::Ok as O;
-        use State::Unknown as U;
-        use State::Warn as W;
-
-        fn out(states: Vec<State>) -> Output {
-            Output::from_check_results(
-                states
-                    .into_iter()
-                    .map(|state| CheckResult {
-                        state,
-                        summary: "dummy".to_string(),
-                    })
-                    .collect(),
-            )
-        }
-
-        assert_eq!(out(vec![O]).worst_state, O);
-        assert_eq!(out(vec![W]).worst_state, W);
-        assert_eq!(out(vec![W, W]).worst_state, W);
-        assert_eq!(out(vec![C]).worst_state, C);
-        assert_eq!(out(vec![O, C]).worst_state, C);
-        assert_eq!(out(vec![C, U]).worst_state, U);
-        assert_eq!(out(vec![]).worst_state, O);
     }
 }

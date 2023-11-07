@@ -70,14 +70,15 @@ import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import CheckPlugin as CheckPluginAPI
-from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
-from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
-from cmk.base.api.agent_based.checking_classes import State
+from cmk.base.api.agent_based.checking_classes import consume_check_results
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import make_parser, make_sources, Source
 
+from cmk.agent_based.v1 import IgnoreResultsError
+from cmk.agent_based.v1 import Result as CheckFunctionResult
+from cmk.agent_based.v1 import State
 from cmk.agent_based.v1_backend import plugin_contexts
 
 __all__ = [

@@ -19,8 +19,10 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 
 import cmk.base.checkers as checkers
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
+from cmk.base.api.agent_based.checking_classes import consume_check_results
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+
+from cmk.agent_based.v1 import Metric, Result, State
 
 
 def make_timespecific_params_list(

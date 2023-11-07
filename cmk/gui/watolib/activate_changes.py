@@ -33,7 +33,7 @@ from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from setproctitle import setthreadtitle
 from typing_extensions import TypedDict
@@ -158,6 +158,7 @@ ActivationId = str
 SiteActivationState = dict[str, Any]
 ActivationState = dict[str, SiteActivationState]
 FileFilterFunc = Callable[[str], bool] | None
+ActivationSource = Literal["GUI", "REST API", "INTERNAL"]
 
 
 class MKLicensingError(Exception):
@@ -317,7 +318,12 @@ def sync_changes_before_remote_automation(site_id):
 
     logger.info("Syncing %s", site_id)
 
-    manager.start([site_id], activate_foreign=True, prevent_activate=True)
+    manager.start(
+        [site_id],
+        activate_foreign=True,
+        prevent_activate=True,
+        source="INTERNAL",
+    )
 
     # Wait maximum 30 seconds for sync to finish
     timeout = 30.0
@@ -465,8 +471,15 @@ def _lock_activation(site_activation_state: SiteActivationState) -> bool:
                 site_activation_state,
                 PHASE_DONE,
                 _("Locked"),
+                # Prevent key error for existing site_activation_states after update?!
                 status_details=_(
-                    "The site is currently locked by another activation process. Please try again later"
+                    "Activation blocked.<br>%s is currently activating "
+                    "changes on this site.<br>Ongoing activation has been "
+                    "executed from Checkmk %s."
+                )
+                % (
+                    repl_status.get("current_user_id", "UNKNOWN"),
+                    repl_status.get("current_source", "UNKNOWN"),
                 ),
                 state=STATE_WARNING,
             )
@@ -484,18 +497,26 @@ def _lock_activation(site_activation_state: SiteActivationState) -> bool:
                 site_activation_state["_site_id"],
                 {
                     "current_activation": site_activation_state["_activation_id"],
+                    "current_source": site_activation_state["_source"],
+                    "current_user_id": site_activation_state["_user_id"],
                 },
             )
         else:
             store.release_lock(_site_replication_status_path(site_activation_state["_site_id"]))
 
 
-def _unlock_activation(site_id: SiteId, activation_id: ActivationId) -> None:
+def _unlock_activation(
+    site_id: SiteId,
+    activation_id: ActivationId,
+    source: ActivationSource,
+) -> None:
     _update_replication_status(
         site_id,
         {
             "last_activation": activation_id,
             "current_activation": None,
+            "current_source": None,
+            "current_user_id": None,
         },
     )
 
@@ -1258,6 +1279,7 @@ class ActivateChangesManager(ActivateChanges):
     def start(
         self,
         sites: list[SiteId],
+        source: ActivationSource,
         activate_until: str | None = None,
         comment: str | None = None,
         activate_foreign: bool = False,
@@ -1272,6 +1294,9 @@ class ActivateChangesManager(ActivateChanges):
         Args:
             sites:
                 The sites for which activation should be started.
+
+            source:
+                The source of the activation. Possible sources: "GUI", "REST API", "INTERNAL"
 
             activate_until:
                 The most current change-id which shall be activated. If newer changes are present
@@ -1299,6 +1324,7 @@ class ActivateChangesManager(ActivateChanges):
         self._activate_foreign = activate_foreign
 
         self._sites = self._get_sites(sites)
+        self._source = source
         self._activation_id = self._new_activation_id()
 
         self._site_snapshot_settings = self._get_site_snapshot_settings(
@@ -1593,7 +1619,7 @@ class ActivateChangesManager(ActivateChanges):
         self._log_activation()
         assert self._activation_id is not None
         job = ActivateChangesSchedulerBackgroundJob(
-            self._activation_id, self._site_snapshot_settings, self._prevent_activate
+            self._activation_id, self._site_snapshot_settings, self._prevent_activate, self._source
         )
         job.start(job.schedule_sites)
 
@@ -2000,6 +2026,7 @@ def _initialize_site_activation_state(
     activation_id: ActivationId,
     activate_changes: ActivateChanges,
     time_started: float,
+    source: ActivationSource,
 ) -> SiteActivationState:
     site_activation_state = {
         "_site_id": site_id,
@@ -2013,6 +2040,8 @@ def _initialize_site_activation_state(
         "_time_ended": None,
         "_expected_duration": _load_expected_duration(site_id, activate_changes),
         "_pid": os.getpid(),
+        "_user_id": user.id,
+        "_source": source,
     }
     return site_activation_state
 
@@ -2078,6 +2107,7 @@ def _prepare_for_activation_tasks(
     activation_id: ActivationId,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     time_started: float,
+    source: ActivationSource,
 ) -> tuple[Mapping[SiteId, ConfigSyncFileInfos], Mapping[SiteId, SiteActivationState]]:
     config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
         get_replication_paths()
@@ -2086,7 +2116,7 @@ def _prepare_for_activation_tasks(
     site_activation_states_per_site = {}
     for site_id, snapshot_settings in sorted(site_snapshot_settings.items(), key=lambda e: e[0]):
         site_activation_state = _initialize_site_activation_state(
-            site_id, activation_id, activate_changes, time_started
+            site_id, activation_id, activate_changes, time_started, source
         )
         try:
             if not _lock_activation(site_activation_state):
@@ -2104,7 +2134,7 @@ def _prepare_for_activation_tasks(
             _handle_activation_changes_exception(
                 logger.getChild(f"site[{site_id}]"), str(e), site_activation_state
             )
-            _cleanup_activation(site_id, activation_id)
+            _cleanup_activation(site_id, activation_id, source)
     return central_file_infos_per_site, site_activation_states_per_site
 
 
@@ -2147,6 +2177,7 @@ def sync_and_activate(
     activation_id: str,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     file_filter_func: FileFilterFunc,
+    source: ActivationSource,
     prevent_activate: bool = False,
 ) -> None:
     """
@@ -2184,7 +2215,7 @@ def sync_and_activate(
                 return
 
         (site_central_file_infos, site_activation_states) = _prepare_for_activation_tasks(
-            activate_changes, activation_id, site_snapshot_settings, time_started
+            activate_changes, activation_id, site_snapshot_settings, time_started, source
         )
 
         task_pool = ThreadPool(processes=len(site_snapshot_settings))
@@ -2242,11 +2273,13 @@ def sync_and_activate(
         logger.exception("error activating changes")
     finally:
         for activation_site_id in site_activation_states:
-            _cleanup_activation(activation_site_id, activation_id)
+            _cleanup_activation(activation_site_id, activation_id, source)
 
 
-def _cleanup_activation(site_id: SiteId, activation_id: ActivationId) -> None:
-    _unlock_activation(site_id, activation_id)
+def _cleanup_activation(
+    site_id: SiteId, activation_id: ActivationId, source: ActivationSource
+) -> None:
+    _unlock_activation(site_id, activation_id, source)
     # Create a copy of last result in the persisted dir
     shutil.copy(
         ActivateChangesManager.site_state_path(activation_id, site_id),
@@ -2337,6 +2370,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         activation_id: str,
         site_snapshot_settings: dict[SiteId, SnapshotSettings],
         prevent_activate: bool,
+        source: ActivationSource,
     ) -> None:
         super().__init__(
             f"{self.job_prefix}-{activation_id}",
@@ -2348,6 +2382,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         self._activation_id = activation_id
         self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate
+        self._source = source
 
     def schedule_sites(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(
@@ -2362,6 +2397,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
             self._activation_id,
             self._site_snapshot_settings,
             self.file_filter_func,
+            self._source,
             self._prevent_activate,
         )
         job_interface.send_result_message(_("Activate changes finished"))
@@ -3168,6 +3204,7 @@ def _raise_for_license_block() -> None:
 
 def activate_changes_start(
     sites: list[SiteId],
+    source: ActivationSource,
     comment: str | None = None,
     force_foreign_changes: bool = False,
 ) -> ActivationRestAPIResponseExtensions:
@@ -3241,7 +3278,7 @@ def activate_changes_start(
                 status=409,
             )
 
-    manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
+    manager.start(sites, comment=comment, activate_foreign=force_foreign_changes, source=source)
     return activation_attributes_for_rest_api_response(manager)
 
 

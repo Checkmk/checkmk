@@ -39,6 +39,7 @@ class Status(BaseModel, frozen=True):
     status: Outcome = Field(alias="@status")
     starttime: DateTimeFormat = Field(alias="@starttime")
     endtime: DateTimeFormat = Field(alias="@endtime")
+    text: str | None = Field(default=None, alias="#text")
 
 
 class Test(BaseModel, frozen=True):
@@ -46,6 +47,7 @@ class Test(BaseModel, frozen=True):
     name: str = Field(alias="@name")
     line: int = Field(alias="@line")
     status: Status
+    tag: str | None = None
 
 
 class Suite(BaseModel, frozen=True):

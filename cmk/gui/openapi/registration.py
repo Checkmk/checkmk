@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.version import edition, Edition
-
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
@@ -17,7 +15,6 @@ from cmk.gui.openapi.endpoints import (
     comment,
     contact_group_config,
     downtime,
-    event_console,
     host,
     host_group_config,
     host_internal,
@@ -84,6 +81,3 @@ def register() -> None:
     user_config.register(ENDPOINT_REGISTRY)
     user_role.register(ENDPOINT_REGISTRY)
     version.register(ENDPOINT_REGISTRY)
-
-    if edition() is not Edition.CSE:
-        event_console.register(ENDPOINT_REGISTRY)

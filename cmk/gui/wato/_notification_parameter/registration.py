@@ -4,52 +4,46 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from collections.abc import Sequence
 
 import cmk.utils.version as cmk_version
-from cmk.utils.ms_teams_constants import (
-    ms_teams_tmpl_host_details,
-    ms_teams_tmpl_host_summary,
-    ms_teams_tmpl_host_title,
-    ms_teams_tmpl_svc_details,
-    ms_teams_tmpl_svc_summary,
-    ms_teams_tmpl_svc_title,
-)
 from cmk.utils.site import url_prefix
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import notification_macro_help
 from cmk.gui.valuespec import (
-    Age,
     Alternative,
     CascadingDropdown,
-    DEF_VALUE,
     Dictionary,
+    DictionaryEntry,
     DropdownChoice,
     EmailAddress,
     FixedValue,
     HTTPUrl,
     Integer,
-    IPv4Address,
     ListChoice,
-    ListOfStrings,
     Password,
     TextAreaUnicode,
     TextInput,
-    Transform,
-    Tuple,
 )
 from cmk.gui.wato import (
     HTTPProxyReference,
     IndividualOrStoredPassword,
     MigrateToIndividualOrStoredPassword,
-    notification_parameter_registry,
-    NotificationParameter,
 )
+from cmk.gui.wato._notification_parameter._helpers import get_url_prefix_specs, local_site_url
 from cmk.gui.watolib.password_store import passwordstore_choices
 
+from ._base import NotificationParameter
+from ._ms_teams import NotificationParameterMsTeams
+from ._opsgenie_issues import NotificationParameterOpsgenie
+from ._pushover import NotificationParameterPushover
+from ._registry import NotificationParameterRegistry
+from ._sms_api import NotificationParameterSMSviaIP
+from ._spectrum import NotificationParameterSpectrum
 
-def register():
+
+def register(notification_parameter_registry: NotificationParameterRegistry) -> None:
     notification_parameter_registry.register(NotificationParameterMail)
     notification_parameter_registry.register(NotificationParameterSlack)
     notification_parameter_registry.register(NotificationParameterCiscoWebexTeams)
@@ -67,35 +61,8 @@ def register():
     notification_parameter_registry.register(NotificationParameterMsTeams)
 
 
-# We have to transform because 'add_to_event_context'
-# in modules/events.py can't handle complex data structures
-def transform_from_valuespec_html_mail_url_prefix(p):
-    if isinstance(p, tuple):
-        return {p[0]: p[1]}
-    if p == "automatic_http":
-        return {"automatic": "http"}
-    if p == "automatic_https":
-        return {"automatic": "https"}
-    return {"manual": p}
-
-
-def transform_to_valuespec_html_mail_url_prefix(p):
-    if not isinstance(p, dict):
-        return ("manual", p)
-
-    k, v = list(p.items())[0]
-    if k == "automatic":
-        return f"{k}_{v}"
-
-    return ("manual", v)
-
-
-def local_site_url():
-    return "http://" + socket.gethostname() + url_prefix() + "check_mk/"
-
-
-def _vs_add_common_mail_elements(elements):
-    header = [
+def _vs_add_common_mail_elements(elements: Sequence[DictionaryEntry]) -> list[DictionaryEntry]:
+    header: list[DictionaryEntry] = [
         (
             "from",
             Dictionary(
@@ -182,7 +149,7 @@ def _vs_add_common_mail_elements(elements):
         ),
     ]
 
-    footer = [
+    footer: list[DictionaryEntry] = [
         (
             "bulk_sort_order",
             DropdownChoice(
@@ -216,45 +183,7 @@ def _vs_add_common_mail_elements(elements):
         ),
     ]
 
-    return header + elements + footer
-
-
-def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
-    return Transform(
-        valuespec=CascadingDropdown(
-            title=_("URL prefix for links to Checkmk"),
-            help=_(
-                "If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
-                "and service links within the notification is filled "
-                "automatically. If you specify an URL prefix here, then "
-                "several parts of the notification are armed with hyperlinks "
-                "to your Checkmk GUI. In both cases, the recipient of the "
-                "notification can directly visit the host or service in "
-                "question in Checkmk. Specify an absolute URL including the "
-                "<tt>.../check_mk/</tt>."
-            ),
-            choices=[
-                ("automatic_http", _("Automatic HTTP")),
-                ("automatic_https", _("Automatic HTTPs")),
-                (
-                    "manual",
-                    _("Specify URL prefix"),
-                    TextInput(
-                        regex="^(http|https)://.*/check_mk/$",
-                        regex_error=_(
-                            "The URL must begin with <tt>http</tt> or "
-                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."
-                        ),
-                        size=64,
-                        default_value=default_choice,
-                    ),
-                ),
-            ],
-            default_value=default_value,
-        ),
-        to_valuespec=transform_to_valuespec_html_mail_url_prefix,
-        from_valuespec=transform_from_valuespec_html_mail_url_prefix,
-    )
+    return header + list(elements) + footer
 
 
 class NotificationParameterMail(NotificationParameter):
@@ -263,14 +192,14 @@ class NotificationParameterMail(NotificationParameter):
         return "mail"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             # must be called at run time!!
             elements=self._parameter_elements,
         )
 
-    def _parameter_elements(self):
+    def _parameter_elements(self) -> list[DictionaryEntry]:
         elements = _vs_add_common_mail_elements(
             [
                 (
@@ -307,7 +236,7 @@ class NotificationParameterMail(NotificationParameter):
                 ),
                 (
                     "url_prefix",
-                    _get_url_prefix_specs(
+                    get_url_prefix_specs(
                         "http://" + socket.gethostname() + url_prefix() + "check_mk/",
                         request.is_ssl_request and "automatic_https" or "automatic_http",
                     ),
@@ -325,47 +254,46 @@ class NotificationParameterMail(NotificationParameter):
                         ),
                     ),
                 ),
+                (
+                    "graphs_per_notification",
+                    Integer(
+                        title=_("Graphs per notification (default: 5)"),
+                        label=_("Show up to"),
+                        unit=_("graphs"),
+                        help=_(
+                            "Sets a limit for the number of graphs that are displayed in a notification."
+                        ),
+                        default_value=5,
+                        minvalue=0,
+                    ),
+                ),
+                (
+                    "notifications_with_graphs",
+                    Integer(
+                        title=_("Bulk notifications with graphs (default: 5)"),
+                        label=_("Show graphs for the first"),
+                        unit=_("Notifications"),
+                        help=_(
+                            "Sets a limit for the number of notifications in a bulk for which graphs "
+                            "are displayed. If you do not use bulk notifications this option is ignored. "
+                            "Note that each graph increases the size of the mail and takes time to render"
+                            "on the monitoring server. Therefore, large bulks may exceed the maximum "
+                            "size for attachements or the plugin may run into a timeout so that a failed "
+                            "notification is produced."
+                        ),
+                        default_value=5,
+                        minvalue=0,
+                    ),
+                ),
             ]
         )
 
         if cmk_version.edition() is not cmk_version.Edition.CRE:
-            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
+            # Will be cleaned up soon
+            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
-        elements += [
-            (
-                "graphs_per_notification",
-                Integer(
-                    title=_("Graphs per notification (default: 5)"),
-                    label=_("Show up to"),
-                    unit=_("graphs"),
-                    help=_(
-                        "Sets a limit for the number of graphs that are displayed in a notification."
-                    ),
-                    default_value=5,
-                    minvalue=0,
-                ),
-            ),
-            (
-                "notifications_with_graphs",
-                Integer(
-                    title=_("Bulk notifications with graphs (default: 5)"),
-                    label=_("Show graphs for the first"),
-                    unit=_("Notifications"),
-                    help=_(
-                        "Sets a limit for the number of notifications in a bulk for which graphs "
-                        "are displayed. If you do not use bulk notifications this option is ignored. "
-                        "Note that each graph increases the size of the mail and takes time to render"
-                        "on the monitoring server. Therefore, large bulks may exceed the maximum "
-                        "size for attachements or the plugin may run into a timeout so that a failed "
-                        "notification is produced."
-                    ),
-                    default_value=5,
-                    minvalue=0,
-                ),
-            ),
-        ]
         return elements
 
 
@@ -417,7 +345,7 @@ class NotificationParameterSlack(NotificationParameter):
                         help=_("Ignore unverified HTTPS request warnings. Use with caution."),
                     ),
                 ),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
                 ("proxy_url", HTTPProxyReference()),
             ],
         )
@@ -429,7 +357,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
         return "cisco_webex_teams"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "url_prefix", "proxy_url"],
@@ -456,7 +384,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                         ],
                     ),
                 ),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
                 (
                     "ignore_ssl",
                     FixedValue(
@@ -477,7 +405,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
         return "victorops"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
@@ -525,7 +453,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -536,7 +464,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
         return "pagerduty"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url", "url_prefix"],
@@ -577,7 +505,7 @@ class NotificationParameterPagerDuty(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -614,7 +542,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
                     ),
                 ),
                 ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix", get_url_prefix_specs(local_site_url)),
             ],
         )
 
@@ -625,7 +553,7 @@ class NotificationParameterASCIIMail(NotificationParameter):
         return "asciimail"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         elements = _vs_add_common_mail_elements(
             [
                 (
@@ -683,7 +611,7 @@ class NotificationILert(NotificationParameter):
         return "ilert"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=["ignore_ssl", "proxy_url"],
@@ -749,7 +677,7 @@ class NotificationILert(NotificationParameter):
                 ),
                 (
                     "url_prefix",
-                    _get_url_prefix_specs(local_site_url, default_value="automatic_https"),
+                    get_url_prefix_specs(local_site_url, default_value="automatic_https"),
                 ),
             ],
         )
@@ -761,7 +689,7 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
         return "jira_issues"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             optional_keys=[
@@ -950,7 +878,7 @@ class NotificationParameterServiceNow(NotificationParameter):
         return "servicenow"
 
     @property
-    def spec(self):
+    def spec(self) -> Dictionary:
         return Dictionary(
             title=_("Create notification with the following parameters"),
             required_keys=["url", "username", "password", "mgmt_type"],
@@ -1381,576 +1309,3 @@ $LONGSERVICEOUTPUT$
             ("open", _("Open")),
             ("awaiting_info", _("Awaiting info")),
         ]
-
-
-class NotificationParameterOpsgenie(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "opsgenie_issues"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            required_keys=[
-                "password",
-            ],
-            elements=[
-                (
-                    "password",
-                    IndividualOrStoredPassword(
-                        title=_(
-                            "API Key to use. Depending on your opsgenie "
-                            "subscription you can use global or team integration api "
-                            "keys."
-                        ),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "url",
-                    TextInput(
-                        title=_("Domain (only used for european accounts)"),
-                        help=_(
-                            "If you have an european account, please set the "
-                            "domain of your opsgenie. Specify an absolute URL like "
-                            "https://api.eu.opsgenie.com."
-                        ),
-                        regex="^https://.*",
-                        regex_error=_("The URL must begin with <tt>https</tt>."),
-                        size=64,
-                    ),
-                ),
-                ("proxy_url", HTTPProxyReference()),
-                (
-                    "owner",
-                    TextInput(
-                        title=_("Owner"),
-                        help=("Sets the user of the alert. " "Display name of the request owner."),
-                        size=100,
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "source",
-                    TextInput(
-                        title=_("Source"),
-                        help=_(
-                            "Source field of the alert. Default value is IP "
-                            "address of the incoming request."
-                        ),
-                        size=16,
-                    ),
-                ),
-                (
-                    "priority",
-                    DropdownChoice(
-                        title=_("Priority"),
-                        choices=[
-                            ("P1", _("P1 - Critical")),
-                            ("P2", _("P2 - High")),
-                            ("P3", _("P3 - Moderate")),
-                            ("P4", _("P4 - Low")),
-                            ("P5", _("P5 - Informational")),
-                        ],
-                        default_value="P3",
-                    ),
-                ),
-                (
-                    "note_created",
-                    TextInput(
-                        title=_("Note while creating"),
-                        help=_("Additional note that will be added while creating the alert."),
-                        default_value="Alert created by Check_MK",
-                    ),
-                ),
-                (
-                    "note_closed",
-                    TextInput(
-                        title=_("Note while closing"),
-                        help=_("Additional note that will be added while closing the alert."),
-                        default_value="Alert closed by Check_MK",
-                    ),
-                ),
-                (
-                    "host_msg",
-                    TextInput(
-                        title=_("Description for host alerts"),
-                        help=_(
-                            "Description field of host alert that is generally "
-                            "used to provide a detailed information about the "
-                            "alert."
-                        ),
-                        default_value="Check_MK: $HOSTNAME$ - $HOSTSHORTSTATE$",
-                        size=64,
-                    ),
-                ),
-                (
-                    "svc_msg",
-                    TextInput(
-                        title=_("Description for service alerts"),
-                        help=_(
-                            "Description field of service alert that is generally "
-                            "used to provide a detailed information about the "
-                            "alert."
-                        ),
-                        default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $SERVICESHORTSTATE$",
-                        size=68,
-                    ),
-                ),
-                (
-                    "host_desc",
-                    TextAreaUnicode(
-                        title=_("Message for host alerts"),
-                        rows=7,
-                        cols=58,
-                        monospaced=True,
-                        default_value="""Host: $HOSTNAME$
-Event:    $EVENT_TXT$
-Output:   $HOSTOUTPUT$
-Perfdata: $HOSTPERFDATA$
-$LONGHOSTOUTPUT$
-""",
-                    ),
-                ),
-                (
-                    "svc_desc",
-                    TextAreaUnicode(
-                        title=_("Message for service alerts"),
-                        rows=11,
-                        cols=58,
-                        monospaced=True,
-                        default_value="""Host: $HOSTNAME$
-Service:  $SERVICEDESC$
-Event:    $EVENT_TXT$
-Output:   $SERVICEOUTPUT$
-Perfdata: $SERVICEPERFDATA$
-$LONGSERVICEOUTPUT$
-""",
-                    ),
-                ),
-                (
-                    "teams",
-                    ListOfStrings(
-                        title=_("Responsible teams"),
-                        help=_(
-                            "Team names which will be responsible for the alert. "
-                            "If the API Key belongs to a team integration, "
-                            "this field will be overwritten with the owner "
-                            "team."
-                        ),
-                        allow_empty=False,
-                        orientation="horizontal",
-                    ),
-                ),
-                (
-                    "actions",
-                    ListOfStrings(
-                        title=_("Actions"),
-                        help=_("Custom actions that will be available for the alert."),
-                        allow_empty=False,
-                        orientation="horizontal",
-                    ),
-                ),
-                (
-                    "tags",
-                    ListOfStrings(
-                        title=_("Tags"),
-                        help=_("Tags of the alert."),
-                        allow_empty=False,
-                        orientation="horizontal",
-                    ),
-                ),
-                (
-                    "entity",
-                    TextInput(
-                        title=_("Entity"),
-                        help=_("Is used to specify which domain the alert is related to."),
-                        allow_empty=False,
-                        size=68,
-                    ),
-                ),
-            ],
-        )
-
-
-class NotificationParameterSpectrum(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "spectrum"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=False,
-            elements=[
-                (
-                    "destination",
-                    IPv4Address(
-                        title=_("Destination IP"),
-                        help=_("IP Address of the Spectrum server receiving the SNMP trap"),
-                    ),
-                ),
-                (
-                    "community",
-                    Password(
-                        title=_("SNMP Community"),
-                        help=_("SNMP Community for the SNMP trap"),
-                    ),
-                ),
-                (
-                    "baseoid",
-                    TextInput(
-                        title=_("Base OID"),
-                        help=_("The base OID for the trap content"),
-                        default_value="1.3.6.1.4.1.1234",
-                    ),
-                ),
-            ],
-        )
-
-
-class NotificationParameterPushover(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "pushover"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix", "proxy_url", "priority", "sound"],
-            elements=[
-                (
-                    "api_key",
-                    TextInput(
-                        title=_("API Key"),
-                        help=_(
-                            "You need to provide a valid API key to be able to send push notifications "
-                            'using Pushover. Register and login to <a href="https://www.pushover.net" '
-                            'target="_blank">Pushover</a>, thn create your Checkmk installation as '
-                            "application and obtain your API key."
-                        ),
-                        size=40,
-                        allow_empty=False,
-                        regex="^[a-zA-Z0-9]{30,40}$",
-                    ),
-                ),
-                (
-                    "recipient_key",
-                    TextInput(
-                        title=_("User / Group Key"),
-                        help=_(
-                            "Configure the user or group to receive the notifications by providing "
-                            "the user or group key here. The key can be obtained from the Pushover "
-                            "website."
-                        ),
-                        size=40,
-                        allow_empty=False,
-                        regex="^[a-zA-Z0-9]{30,40}$",
-                    ),
-                ),
-                (
-                    "url_prefix",
-                    TextInput(
-                        title=_("URL prefix for links to Checkmk"),
-                        help=_(
-                            "If you specify an URL prefix here, then several parts of the "
-                            "email body are armed with hyperlinks to your Checkmk GUI, so "
-                            "that the recipient of the email can directly visit the host or "
-                            "service in question in Checkmk. Specify an absolute URL including "
-                            "the <tt>.../check_mk/</tt>"
-                        ),
-                        regex="^(http|https)://.*/check_mk/$",
-                        regex_error=_(
-                            "The URL must begin with <tt>http</tt> or "
-                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."
-                        ),
-                        size=64,
-                        default_value=local_site_url,
-                    ),
-                ),
-                (
-                    "proxy_url",
-                    HTTPProxyReference(),
-                ),
-                (
-                    "priority",
-                    Transform(
-                        valuespec=CascadingDropdown(
-                            title=_("Priority"),
-                            choices=[
-                                (
-                                    "2",
-                                    _(
-                                        "Emergency: Repeat push notification in intervalls till expire time."
-                                    ),
-                                    Tuple(
-                                        elements=[
-                                            Age(title=_("Retry time")),
-                                            Age(title=_("Expire time")),
-                                            TextInput(
-                                                title=_("Receipt"),
-                                                help=_(
-                                                    "The receipt can be used to periodically poll receipts API to get "
-                                                    "the status of the notification. "
-                                                    'See <a href="https://pushover.net/api#receipt" target="_blank">'
-                                                    "Pushover receipts and callbacks</a> for more information."
-                                                ),
-                                                size=40,
-                                                regex="[a-zA-Z0-9]{0,30}",
-                                            ),
-                                        ]
-                                    ),
-                                ),
-                                ("1", _("High: Push notification alerts bypass quiet hours")),
-                                ("0", _("Normal: Regular push notification (default)")),
-                                ("-1", _("Low: No sound/vibration but show popup")),
-                                ("-2", _("Lowest: No notification, update badge number")),
-                            ],
-                            default_value="0",
-                        ),
-                        to_valuespec=self._transform_to_pushover_priority,
-                        from_valuespec=self._transform_from_pushover_priority,
-                    ),
-                ),
-                (
-                    "sound",
-                    DropdownChoice(
-                        title=_("Select sound"),
-                        help=_(
-                            'See <a href="https://pushover.net/api#sounds" target="_blank">'
-                            "Pushover sounds</a> for more information and trying out available sounds."
-                        ),
-                        choices=[
-                            ("none", _("None (silent)")),
-                            ("alien", _("Alien Alarm (long)")),
-                            ("bike", _("Bike")),
-                            ("bugle", _("Bugle")),
-                            ("cashregister", _("Cash Register")),
-                            ("classical", _("Classical")),
-                            ("climb", _("Climb (long)")),
-                            ("cosmic", _("Cosmic")),
-                            ("echo", _("Pushover Echo (long)")),
-                            ("falling", _("Falling")),
-                            ("gamelan", _("Gamelan")),
-                            ("incoming", _("Incoming")),
-                            ("intermission", _("Intermission")),
-                            ("magic", _("Magic")),
-                            ("mechanical", _("Mechanical")),
-                            ("persistent", _("Persistent (long)")),
-                            ("pianobar", _("Piano Bar")),
-                            ("pushover", _("Pushover")),
-                            ("siren", _("Siren")),
-                            ("spacealarm", _("Space Alarm")),
-                            ("tugboat", _("Tug Boat")),
-                            ("updown", _("Up Down (long)")),
-                            ("vibrate", _("Vibrate only")),
-                        ],
-                        default_value="none",
-                    ),
-                ),
-            ],
-        )
-
-    # We have to transform because 'add_to_event_context'
-    # in modules/events.py can't handle complex data structures
-    def _transform_from_pushover_priority(self, params):
-        if isinstance(params, tuple):
-            return {
-                "priority": "2",
-                "retry": params[1][0],
-                "expire": params[1][1],
-                "receipts": params[1][2],
-            }
-        return params
-
-    def _transform_to_pushover_priority(self, params):
-        if isinstance(params, dict):
-            return (params["priority"], (params["retry"], params["expire"], params["receipts"]))
-        return params
-
-
-class NotificationParameterSMSviaIP(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "sms_api"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["ignore_ssl"],
-            elements=[
-                (
-                    "modem_type",
-                    CascadingDropdown(
-                        title=_("Modem type"),
-                        help=_(
-                            "Choose what modem is used. Currently supported "
-                            "is only Teltonika-TRB140."
-                        ),
-                        choices=[
-                            ("trb140", _("Teltonika-TRB140")),
-                        ],
-                    ),
-                ),
-                (
-                    "url",
-                    HTTPUrl(
-                        title=_("Modem URL"),
-                        help=_(
-                            "Configure your modem URL here (eg. https://mymodem.mydomain.example)."
-                        ),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "ignore_ssl",
-                    FixedValue(
-                        value=True,
-                        title=_("Disable SSL certificate verification"),
-                        totext=_("Disable SSL certificate verification"),
-                        help=_("Ignore unverified HTTPS request warnings. Use with caution."),
-                    ),
-                ),
-                ("proxy_url", HTTPProxyReference()),
-                (
-                    "username",
-                    TextInput(
-                        title=_("Username"),
-                        help=_("The user, used for login."),
-                        size=40,
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "password",
-                    MigrateToIndividualOrStoredPassword(
-                        title=_("Password of the user"),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "timeout",
-                    TextInput(
-                        title=_("Set optional timeout for connections to the modem."),
-                        help=_("Here you can configure timeout settings."),
-                        default_value="10",
-                    ),
-                ),
-            ],
-        )
-
-
-class NotificationParameterMsTeams(NotificationParameter):
-    @property
-    def ident(self) -> str:
-        return "msteams"
-
-    @property
-    def spec(self) -> Dictionary:
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            elements=[
-                (
-                    "webhook_url",
-                    CascadingDropdown(
-                        title=_("Webhook URL"),
-                        help=_(
-                            "This URL can also be collected from the Password "
-                            "Store from Checkmk."
-                        ),
-                        choices=[
-                            (
-                                "webhook_url",
-                                _("Webhook URL"),
-                                HTTPUrl(size=80, allow_empty=False),
-                            ),
-                            (
-                                "store",
-                                _("URL from password store"),
-                                DropdownChoice(
-                                    sorted=True,
-                                    choices=passwordstore_choices,
-                                ),
-                            ),
-                        ],
-                        sorted=False,
-                    ),
-                ),
-                ("proxy_url", HTTPProxyReference()),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
-                (
-                    "host_title",
-                    TextInput(
-                        title=_("Title for host notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_host_title(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "service_title",
-                    TextInput(
-                        title=_("Title for service notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_svc_title(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "host_summary",
-                    TextInput(
-                        title=_("Summary for host notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_host_summary(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "service_summary",
-                    TextInput(
-                        title=_("Summary for service notifications"),
-                        help=notification_macro_help(),
-                        default_value=ms_teams_tmpl_svc_summary(),
-                        size=64,
-                    ),
-                ),
-                (
-                    "host_details",
-                    TextAreaUnicode(
-                        title=_("Details for host notifications"),
-                        help=notification_macro_help(),
-                        rows=9,
-                        cols=58,
-                        monospaced=True,
-                        default_value=ms_teams_tmpl_host_details(),
-                    ),
-                ),
-                (
-                    "service_details",
-                    TextAreaUnicode(
-                        title=_("Details for service notifications"),
-                        help=notification_macro_help(),
-                        rows=11,
-                        cols=58,
-                        monospaced=True,
-                        default_value=ms_teams_tmpl_svc_details(),
-                    ),
-                ),
-                (
-                    "affected_host_groups",
-                    FixedValue(
-                        value=True,
-                        title=_("Show affected host groups"),
-                        totext=_("Show affected host groups"),
-                        help=_("Show affected host groups in the created message."),
-                    ),
-                ),
-            ],
-        )
-
-
-register()

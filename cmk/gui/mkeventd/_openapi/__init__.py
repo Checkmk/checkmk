@@ -40,28 +40,20 @@ from cmk.gui.livestatus_utils.commands.event_console import (
     update_and_acknowledge,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.event_console.common_fields import (
-    ApplicationField,
-    EventIDField,
-    HostNameField,
-    PhaseField,
-    StateField,
-)
-from cmk.gui.openapi.endpoints.event_console.request_schemas import (
+from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.openapi.utils import problem, serve_json
+
+from .common_fields import ApplicationField, EventIDField, HostNameField, PhaseField, StateField
+from .request_schemas import (
     ChangeEventState,
     ChangeEventStateSelector,
     DeleteECEvents,
     UpdateAndAcknowledeEventSiteIDRequired,
     UpdateAndAcknowledgeSelector,
 )
-from cmk.gui.openapi.endpoints.event_console.response_schemas import (
-    ECEventResponse,
-    EventConsoleResponseCollection,
-)
-from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import problem, serve_json
+from .response_schemas import ECEventResponse, EventConsoleResponseCollection
 
 IGNORE_PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(

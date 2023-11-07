@@ -62,11 +62,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, make_confirm_delete_link, makeuri, makeuri_contextless
-from cmk.gui.validation.visitors.vue_repr import (
-    create_vue_visitor,
-    process_validation_errors,
-    render_vue,
-)
+from cmk.gui.validation.visitors.vue_repr import parse_and_validate_vue, render_vue
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -1903,17 +1899,16 @@ class ABCEditRuleMode(WatoMode):
         self._rule.update_conditions(self._get_rule_conditions_from_vars())
 
         # VALUE
-        value = self._ruleset.valuespec().from_html_vars("ve")
-
         if use_vue_rendering() and request.has_var(self._vue_field_id()):
-            value_from_frontend = json.loads(request.get_str_input_mandatory(self._vue_field_id()))
-            vue_visitor = create_vue_visitor(
-                self._ruleset.valuespec(), value_from_frontend, do_validate=True
-            )
-            process_validation_errors(vue_visitor)
-            value = vue_visitor.raw_value
+            value = parse_and_validate_vue(self._ruleset.valuespec(), self._vue_field_id())
+            # For testing, validate this datatype/value again within legacy valuespec
+            # This should not throw any errors
+            self._ruleset.valuespec().validate_datatype(value, "ve")
+            self._ruleset.valuespec().validate_value(value, "ve")
+        else:
+            value = self._ruleset.valuespec().from_html_vars("ve")
+            self._ruleset.valuespec().validate_value(value, "ve")
 
-        self._ruleset.valuespec().validate_value(value, "ve")
         self._rule.value = value
 
     def _get_condition_type_from_vars(self) -> str | None:
@@ -1983,24 +1978,11 @@ class ABCEditRuleMode(WatoMode):
         forms.section()
         html.prevent_password_auto_completion()
         try:
-            valuespec.validate_datatype(self._rule.value, "ve")
             if use_vue_rendering():
-                if request.has_var(self._vue_field_id()):
-                    visitor_value = json.loads(
-                        request.get_str_input_mandatory(self._vue_field_id())
-                    )
-                    do_validate = True
-                else:
-                    visitor_value = self._rule.value
-                    do_validate = False
                 forms.section(_("Current setting as VUE"))
-                render_vue(
-                    self._ruleset.valuespec(),
-                    self._vue_field_id(),
-                    visitor_value,
-                    do_validate=do_validate,
-                )
+                render_vue(self._ruleset.valuespec(), self._vue_field_id(), self._rule.value)
 
+            valuespec.validate_datatype(self._rule.value, "ve")
             valuespec.render_input("ve", self._rule.value)
         except Exception as e:
             if active_config.debug:

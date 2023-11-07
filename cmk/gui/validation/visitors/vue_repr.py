@@ -4,12 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 import pprint
-import traceback
 import typing
 import uuid
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 from typing import Any
+
+from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -249,7 +250,7 @@ def create_vue_visitor(
     return vue_visitor
 
 
-def process_validation_errors(vue_visitor: VueGeneratingVisitor) -> None:
+def _process_validation_errors(vue_visitor: VueGeneratingVisitor) -> None:
     """This functions introduces validation errors from the vue-world into the CheckMK-GUI-world
     The CheckMK-GUI works with a global parameter user_errors.
     These user_errors include the field_id of the broken input field and the error text
@@ -270,13 +271,31 @@ def create_vue_app_config(vue_visitor: VueGeneratingVisitor, app_id: str) -> dic
     )
 
 
-def render_vue(valuespec, field_id, value, do_validate=False):
+def render_vue(valuespec, field_id, default_value):
+    """Renders the valuespec via vue within a div
+    The value to be rendered
+    - might be taken from the request, which also enables validation
+    - might be the default value, which is not validated since some mandatory fields might be empty
+    """
     logger.warning("RENDER APP CONFIG")
-    try:
-        vue_visitor = create_vue_visitor(valuespec, value, do_validate=do_validate)
-        vue_app_config = create_vue_app_config(vue_visitor, field_id)
-        logger.warning("%s", pprint.pformat(vue_app_config, width=180))
-        html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
-    except Exception:
-        # Debug only. This block will vanish
-        logger.warning("".join(traceback.format_exc()))
+    if request.has_var(field_id):
+        value = json.loads(request.get_str_input_mandatory(field_id))
+        do_validate = True
+    else:
+        value = default_value
+        do_validate = False
+
+    vue_visitor = create_vue_visitor(valuespec, value, do_validate=do_validate)
+    vue_app_config = create_vue_app_config(vue_visitor, field_id)
+    logger.warning("%s", pprint.pformat(vue_app_config, width=180))
+    html.div("", data_cmk_vue_app=json.dumps(vue_app_config))
+
+
+def parse_and_validate_vue(valuespec: ValueSpec, field_id: str) -> Any:
+    """Computes/validates the value from a vue formular field"""
+    if not request.has_var(field_id):
+        raise MKGeneralException("Formular data is missing in request")
+    value_from_frontend = json.loads(request.get_str_input_mandatory(field_id))
+    vue_visitor = create_vue_visitor(valuespec, value_from_frontend, do_validate=True)
+    _process_validation_errors(vue_visitor)
+    return vue_visitor.raw_value

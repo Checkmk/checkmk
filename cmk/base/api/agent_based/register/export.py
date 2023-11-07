@@ -5,6 +5,7 @@
 """All objects defined here are intended to be exposed in the API
 """
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import overload
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -47,6 +48,18 @@ __all__ = [
     "inventory_plugin",
     "RuleSetType",
 ]
+
+
+@dataclass(frozen=True, kw_only=True)
+class _V2AgentSection:
+    name: str
+    parse_function: AgentParseFunction | None = None
+    parsed_section_name: str | None = None
+    host_label_function: HostLabelFunction | None = None
+    host_label_default_parameters: ParametersTypeAlias | None = None
+    host_label_ruleset_name: str | None = None
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
+    supersedes: list[str] | None = None
 
 
 def agent_section(
@@ -102,16 +115,32 @@ def agent_section(
                            superseded section will not be considered at all.
 
     """
+    return register_agent_section(
+        _V2AgentSection(
+            name=name,
+            parse_function=parse_function,
+            parsed_section_name=parsed_section_name,
+            host_label_function=host_label_function,
+            host_label_default_parameters=host_label_default_parameters,
+            host_label_ruleset_name=host_label_ruleset_name,
+            host_label_ruleset_type=host_label_ruleset_type,
+            supersedes=supersedes,
+        ),
+        get_validated_plugin_module_name(),
+    )
+
+
+def register_agent_section(section: _V2AgentSection, full_module: str) -> None:
     section_plugin = create_agent_section_plugin(
-        name=name,
-        parsed_section_name=parsed_section_name,
-        parse_function=parse_function,
-        host_label_function=host_label_function,
-        host_label_default_parameters=host_label_default_parameters,
-        host_label_ruleset_name=host_label_ruleset_name,
-        host_label_ruleset_type=host_label_ruleset_type,
-        supersedes=supersedes,
-        full_module=get_validated_plugin_module_name(),
+        name=section.name,
+        parsed_section_name=section.parsed_section_name,
+        parse_function=section.parse_function,
+        host_label_function=section.host_label_function,
+        host_label_default_parameters=section.host_label_default_parameters,
+        host_label_ruleset_name=section.host_label_ruleset_name,
+        host_label_ruleset_type=section.host_label_ruleset_type,
+        supersedes=section.supersedes,
+        full_module=full_module,
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -120,6 +149,34 @@ def agent_section(
     add_section_plugin(section_plugin)
     if section_plugin.host_label_ruleset_name is not None:
         add_host_label_ruleset(section_plugin.host_label_ruleset_name)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _V2SimpleSnmpSection:
+    name: str
+    detect: SNMPDetectBaseType
+    fetch: SNMPTree
+    parse_function: SimpleSNMPParseFunction | None = None
+    parsed_section_name: str | None = None
+    host_label_function: HostLabelFunction | None = None
+    host_label_default_parameters: ParametersTypeAlias | None = None
+    host_label_ruleset_name: str | None = None
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
+    supersedes: list[str] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class _V2SnmpSection:
+    name: str
+    detect: SNMPDetectBaseType
+    fetch: list[SNMPTree]
+    parse_function: SNMPParseFunction | None = None
+    parsed_section_name: str | None = None
+    host_label_function: HostLabelFunction | None = None
+    host_label_default_parameters: ParametersTypeAlias | None = None
+    host_label_ruleset_name: str | None = None
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
+    supersedes: list[str] | None = None
 
 
 @overload  # no List of trees -> SimpleSNMPParseFunction
@@ -224,18 +281,49 @@ def snmp_section(
                            superseded section will not be considered at all.
 
     """
+    return register_snmp_section(
+        _V2SnmpSection(
+            name=name,
+            detect=detect,
+            fetch=fetch,
+            parse_function=parse_function,  # type: ignore[arg-type]
+            parsed_section_name=parsed_section_name,
+            host_label_function=host_label_function,
+            host_label_default_parameters=host_label_default_parameters,
+            host_label_ruleset_name=host_label_ruleset_name,
+            host_label_ruleset_type=host_label_ruleset_type,
+            supersedes=supersedes,
+        )
+        if isinstance(fetch, list)
+        else _V2SimpleSnmpSection(
+            name=name,
+            detect=detect,
+            fetch=fetch,
+            parse_function=parse_function,  # type: ignore[arg-type]
+            parsed_section_name=parsed_section_name,
+            host_label_function=host_label_function,
+            host_label_default_parameters=host_label_default_parameters,
+            host_label_ruleset_name=host_label_ruleset_name,
+            host_label_ruleset_type=host_label_ruleset_type,
+            supersedes=supersedes,
+        ),
+        get_validated_plugin_module_name(),
+    )
+
+
+def register_snmp_section(section: _V2SimpleSnmpSection | _V2SnmpSection, full_module: str) -> None:
     section_plugin = create_snmp_section_plugin(
-        name=name,
-        parsed_section_name=parsed_section_name,
-        parse_function=parse_function,
-        host_label_function=host_label_function,
-        host_label_default_parameters=host_label_default_parameters,
-        host_label_ruleset_name=host_label_ruleset_name,
-        host_label_ruleset_type=host_label_ruleset_type,
-        detect_spec=detect,
-        fetch=fetch,
-        supersedes=supersedes,
-        full_module=get_validated_plugin_module_name(),
+        name=section.name,
+        parsed_section_name=section.parsed_section_name,
+        parse_function=section.parse_function,
+        host_label_function=section.host_label_function,
+        host_label_default_parameters=section.host_label_default_parameters,
+        host_label_ruleset_name=section.host_label_ruleset_name,
+        host_label_ruleset_type=section.host_label_ruleset_type,
+        detect_spec=section.detect,
+        fetch=section.fetch,
+        supersedes=section.supersedes,
+        full_module=full_module,
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -244,6 +332,21 @@ def snmp_section(
     add_section_plugin(section_plugin)
     if section_plugin.host_label_ruleset_name is not None:
         add_host_label_ruleset(section_plugin.host_label_ruleset_name)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _V2CheckPlugin:
+    name: str
+    sections: list[str] | None = None
+    service_name: str
+    discovery_function: DiscoveryFunction
+    discovery_default_parameters: ParametersTypeAlias | None = None
+    discovery_ruleset_name: str | None = None
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED
+    check_function: CheckFunction
+    check_default_parameters: ParametersTypeAlias | None = None
+    check_ruleset_name: str | None = None
+    cluster_check_function: Callable | None = None
 
 
 def check_plugin(
@@ -314,19 +417,38 @@ def check_plugin(
                                 except that the sections are dicts (node name -> node section).
 
     """
+    return register_check_plugin(
+        _V2CheckPlugin(
+            name=name,
+            sections=sections,
+            service_name=service_name,
+            discovery_function=discovery_function,
+            discovery_default_parameters=discovery_default_parameters,
+            discovery_ruleset_name=discovery_ruleset_name,
+            discovery_ruleset_type=discovery_ruleset_type,
+            check_function=check_function,
+            check_default_parameters=check_default_parameters,
+            check_ruleset_name=check_ruleset_name,
+            cluster_check_function=cluster_check_function,
+        ),
+        get_validated_plugin_module_name(),
+    )
+
+
+def register_check_plugin(check: _V2CheckPlugin, full_module: str) -> None:
     plugin = create_check_plugin(
-        name=name,
-        sections=sections,
-        service_name=service_name,
-        discovery_function=discovery_function,
-        discovery_default_parameters=discovery_default_parameters,
-        discovery_ruleset_name=discovery_ruleset_name,
-        discovery_ruleset_type=discovery_ruleset_type,
-        check_function=check_function,
-        check_default_parameters=check_default_parameters,
-        check_ruleset_name=check_ruleset_name,
-        cluster_check_function=cluster_check_function,
-        full_module=get_validated_plugin_module_name(),
+        name=check.name,
+        sections=check.sections,
+        service_name=check.service_name,
+        discovery_function=check.discovery_function,
+        discovery_default_parameters=check.discovery_default_parameters,
+        discovery_ruleset_name=check.discovery_ruleset_name,
+        discovery_ruleset_type=check.discovery_ruleset_type,
+        check_function=check.check_function,
+        check_default_parameters=check.check_default_parameters,
+        check_ruleset_name=check.check_ruleset_name,
+        cluster_check_function=check.cluster_check_function,
+        full_module=full_module,
     )
 
     if is_registered_check_plugin(plugin.name):
@@ -335,6 +457,15 @@ def check_plugin(
     add_check_plugin(plugin)
     if plugin.discovery_ruleset_name is not None:
         add_discovery_ruleset(plugin.discovery_ruleset_name)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _V2InventoryPlugin:
+    name: str
+    sections: list[str] | None = None
+    inventory_function: InventoryFunction
+    inventory_default_parameters: ParametersTypeAlias | None = None
+    inventory_ruleset_name: str | None = None
 
 
 def inventory_plugin(
@@ -373,13 +504,26 @@ def inventory_plugin(
       inventory_ruleset_name:   The name of the inventory ruleset.
 
     """
+    return register_inventory_plugin(
+        _V2InventoryPlugin(
+            name=name,
+            sections=sections,
+            inventory_function=inventory_function,
+            inventory_default_parameters=inventory_default_parameters,
+            inventory_ruleset_name=inventory_ruleset_name,
+        ),
+        get_validated_plugin_module_name(),
+    )
+
+
+def register_inventory_plugin(inventory: _V2InventoryPlugin, full_module: str) -> None:
     plugin = create_inventory_plugin(
-        name=name,
-        sections=sections,
-        inventory_function=inventory_function,
-        inventory_default_parameters=inventory_default_parameters,
-        inventory_ruleset_name=inventory_ruleset_name,
-        full_module=get_validated_plugin_module_name(),
+        name=inventory.name,
+        sections=inventory.sections,
+        inventory_function=inventory.inventory_function,
+        inventory_default_parameters=inventory.inventory_default_parameters,
+        inventory_ruleset_name=inventory.inventory_ruleset_name,
+        full_module=full_module,
     )
 
     if is_registered_inventory_plugin(plugin.name):

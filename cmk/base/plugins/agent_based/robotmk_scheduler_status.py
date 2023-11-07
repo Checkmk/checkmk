@@ -98,18 +98,43 @@ register.agent_section(
 )
 
 
-def discover_scheduler_status(section: Config | ConfigReadingError) -> DiscoveryResult:
-    yield Service()
+class RCCSetupFailures(BaseModel, frozen=True):
+    telemetry_disabling: Sequence[str]
+    shared_holotree: Sequence[str]
+    holotree_init: Sequence[str]
 
 
-def check_scheduler_status(section: Config | ConfigReadingError) -> CheckResult:
+def parse_robotmk_rcc_setup_failures(string_table: StringTable) -> RCCSetupFailures | None:
+    return RCCSetupFailures.model_validate_json(string_table[0][0]) if string_table else None
+
+
+register.agent_section(
+    name="robotmk_rcc_setup_failures",
+    parse_function=parse_robotmk_rcc_setup_failures,
+)
+
+
+def discover_scheduler_status(
+    section_robotmk_config: Config | ConfigReadingError | None,
+    section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
+) -> DiscoveryResult:
+    if section_robotmk_config:
+        yield Service()
+
+
+def check_scheduler_status(
+    section_robotmk_config: Config | ConfigReadingError | None,
+    section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
+) -> CheckResult:
+    if not section_robotmk_config:
+        return
     # TODO: Determine the conditions for the status
     yield Result(state=State.OK, summary="The Scheduler status is OK")
 
 
 register.check_plugin(
     name="robotmk_scheduler_status",
-    sections=["robotmk_config"],
+    sections=["robotmk_config", "robotmk_rcc_setup_failures"],
     service_name="Robotmk Scheduler Status",
     discovery_function=discover_scheduler_status,
     check_function=check_scheduler_status,

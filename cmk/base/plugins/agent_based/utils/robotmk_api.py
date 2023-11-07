@@ -63,12 +63,6 @@ class EnvironmentBuildStatuses(RootModel, frozen=True):
     ]
 
 
-class RCCSetupFailures(BaseModel, frozen=True):
-    telemetry_disabling: Sequence[str]
-    shared_holotree: Sequence[str]
-    holotree_init: Sequence[str]
-
-
 class AttemptOutcome(Enum):
     AllTestsPassed = "AllTestsPassed"
     TestFailures = "TestFailures"
@@ -118,28 +112,23 @@ class SuiteExecutionReport(BaseModel, frozen=True):
 
 @dataclass(frozen=True, kw_only=True)
 class Section:
-    rcc_setup_failures: RCCSetupFailures | None = None
     environment_build_statuses: EnvironmentBuildStatuses | None = None
     suite_execution_reports: Sequence[SuiteExecutionReport] = field(default_factory=list)
 
 
 def parse(string_table: Sequence[Sequence[str]]) -> Section:
-    rcc_setup_failures: RCCSetupFailures | None = None
     environment_build_statuses: EnvironmentBuildStatuses | None = None
     suite_execution_reports = []
 
-    type_adapter = TypeAdapter(SuiteExecutionReport | EnvironmentBuildStatuses | RCCSetupFailures)
+    type_adapter = TypeAdapter(SuiteExecutionReport | EnvironmentBuildStatuses)
     for sub_section in (type_adapter.validate_json(line[0]) for line in string_table):
         match sub_section:
-            case RCCSetupFailures():
-                rcc_setup_failures = sub_section
             case EnvironmentBuildStatuses():
                 environment_build_statuses = sub_section
             case SuiteExecutionReport():
                 suite_execution_reports.append(sub_section)
 
     return Section(
-        rcc_setup_failures=rcc_setup_failures,
         environment_build_statuses=environment_build_statuses,
         suite_execution_reports=suite_execution_reports,
     )

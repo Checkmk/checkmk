@@ -26,7 +26,13 @@ from typing import Final, Generic, Protocol, TypeVar
 PLUGIN_NAMESPACES = ("cmk.plugins",)
 
 
-_PluginType = TypeVar("_PluginType")
+class _PluginProtocol(Protocol):
+    @property
+    def name(self) -> str:
+        ...
+
+
+_PluginType = TypeVar("_PluginType", bound=_PluginProtocol)
 
 
 class ImporterProtocol(Protocol):
@@ -137,7 +143,13 @@ class Collector(Generic[_PluginType]):
         self.raise_errors: Final = raise_errors
 
         self.errors: list[Exception] = []
-        self.plugins: dict[PluginLocation, _PluginType] = {}
+        self._unique_plugins: dict[
+            tuple[type[_PluginType], str], tuple[PluginLocation, _PluginType]
+        ] = {}
+
+    @property
+    def plugins(self) -> Mapping[PluginLocation, _PluginType]:
+        return dict(self._unique_plugins.values())
 
     def add_from_module(self, mod_name: str, importer: ImporterProtocol) -> None:
         try:
@@ -162,11 +174,19 @@ class Collector(Generic[_PluginType]):
                 continue
 
             location = PluginLocation(module_name, name)
-            if isinstance(value, self.plugin_type):
-                self.plugins[location] = value
+            if not isinstance(value, self.plugin_type):
+                self._handle_error(TypeError(f"{location}: {value!r}"))
                 continue
 
-            self._handle_error(TypeError(f"{location}: {value!r}"))
+            key = (value.__class__, value.name)
+            if (existing := self._unique_plugins.get(key)) is not None:
+                self._handle_error(
+                    ValueError(
+                        f"{location}: plugin '{value.name}' already defined at {existing[0]}"
+                    )
+                )
+
+            self._unique_plugins[key] = (location, value)
 
     def _handle_error(self, exc: Exception) -> None:
         if self.raise_errors:

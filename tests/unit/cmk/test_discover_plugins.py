@@ -101,13 +101,16 @@ def test_find_namespaces_deduplicate_preserving_order() -> None:
 
 
 @dataclass
-class MyTestPlugin:
+class MyPluginBase:
     name: str
 
 
-@dataclass
-class MyOtherPlugin:
-    name: str
+class MyTestPlugin(MyPluginBase):
+    pass
+
+
+class MyOtherPlugin(MyPluginBase):
+    pass
 
 
 class TestCollector:
@@ -165,18 +168,21 @@ class TestCollector:
         assert not collector.plugins
 
     def test_name_collision_same_type(self) -> None:
-        collector = Collector(MyTestPlugin, "my_", raise_errors=False)
+        collector = Collector(MyTestPlugin, "my_", raise_errors=True)
         collector.add_from_module("my_module", self._importer)
-        collector.add_from_module("my_collision", self._importer)
-        # FIXME: colliding name should yield an error.
+
+        with pytest.raises(ValueError, match="already defined"):
+            collector.add_from_module("my_collision", self._importer)
+
+        # error not recorded, b/c we raised it:
         assert not collector.errors
         assert collector.plugins == {
-            PluginLocation("my_collision", "my_plugin_3"): MyTestPlugin("herta"),
             PluginLocation("my_module", "my_plugin_1"): MyTestPlugin("herta"),
         }
 
     def test_name_collision_different_type(self) -> None:
-        collector = Collector(object, "my_", raise_errors=False)
+        """Plugins with same name but different type is ok"""
+        collector = Collector(MyPluginBase, "my_", raise_errors=False)
         collector.add_from_module("my_module", self._importer)
         collector.add_from_module("my_other_type", self._importer)
         assert not collector.errors

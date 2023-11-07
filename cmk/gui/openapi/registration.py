@@ -14,7 +14,9 @@ from cmk.gui.openapi.endpoints import (
     comment,
     contact_group_config,
     downtime,
+    folder_config,
     host,
+    host_config,
     host_group_config,
     host_internal,
     host_tag_group,
@@ -24,6 +26,7 @@ from cmk.gui.openapi.endpoints import (
     rule,
     ruleset,
     service,
+    service_discovery,
     service_group_config,
     site_management,
     time_periods,
@@ -32,25 +35,9 @@ from cmk.gui.openapi.endpoints import (
     version,
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
-    # This is a hack to make all host attributes available before loading the openapi plugins. The
-    # modules would be loaded later on by cmk.gui.cee.agent_bakery.registration.register(), but the
-    # openapi code imported here requires all host_attributes to be present before loading it.
-    # This can be cleaned up once we have refactored the registration here.
-    try:
-        from cmk.gui.cee.agent_bakery._host_attribute import (
-            HostAttributeBakeAgentPackage,  # pylint: disable=no-name-in-module
-        )
-
-        host_attribute_registry.register(HostAttributeBakeAgentPackage)
-    except ImportError:
-        pass
-
-    from cmk.gui.openapi.endpoints import folder_config, host_config, service_discovery
-
     acknowledgement.register(endpoint_registry)
     activate_changes.register(endpoint_registry)
     agent.register(endpoint_registry)

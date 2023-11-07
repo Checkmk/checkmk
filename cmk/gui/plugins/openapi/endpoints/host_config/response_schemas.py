@@ -82,15 +82,18 @@ class FolderCollection(DomainObjectCollection):
 # <------------------------------------ Hosts ------------------------------------>
 
 
-class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
-    @post_dump(pass_original=True)
-    def add_tags_and_custom_attributes_back(
-        self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
-    ) -> dict[str, Any]:
-        # Custom attributes and tags are thrown away during validation as they have no field in the schema.
-        # So we dump them back in here.
-        original_data.update(dump_data)
-        return original_data
+def _effective_attributes_schema():
+    class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
+        @post_dump(pass_original=True)
+        def add_tags_and_custom_attributes_back(
+            self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
+        ) -> dict[str, Any]:
+            # Custom attributes and tags are thrown away during validation as they have no field in the schema.
+            # So we dump them back in here.
+            original_data.update(dump_data)
+            return original_data
+
+    return HostExtensionsEffectiveAttributesSchema
 
 
 class HostExtensions(BaseSchema):
@@ -105,7 +108,7 @@ class HostExtensions(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
     )
     effective_attributes = fields.Nested(
-        HostExtensionsEffectiveAttributesSchema,
+        _effective_attributes_schema,
         required=False,
         description="All attributes of this host and all parent folders.",
         example={"tag_snmp_ds": None},

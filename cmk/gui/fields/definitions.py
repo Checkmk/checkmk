@@ -983,7 +983,7 @@ def host_attributes_field(
 
     return MultiNested(
         [
-            attr_openapi_schema(object_type, object_context),
+            lambda: attr_openapi_schema(object_type, object_context),
             CustomHostAttributes,
             TagGroupAttributes,
         ],

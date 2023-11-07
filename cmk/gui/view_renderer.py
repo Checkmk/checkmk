@@ -41,15 +41,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import toggle_page_menu_entries
-from cmk.gui.page_menu_utils import (
-    collect_context_links,
-    get_context_page_menu_dropdowns,
-    get_ntop_page_menu_dropdown,
-)
+from cmk.gui.page_menu_utils import collect_context_links, get_context_page_menu_dropdowns
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
@@ -58,9 +53,6 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.visuals import view_title
 from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-if cmk_version.edition() is not cmk_version.Edition.CRE:
-    from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: list[str]) -> Rows:
@@ -628,24 +620,3 @@ def _add_command_doc_references(menu: PageMenu) -> None:
         menu.add_doc_reference(_("Acknowledging problems"), DocReference.COMMANDS_ACK)
     if user.may("action.downtimes") or user.may("action.remove_all_downtimes"):
         menu.add_doc_reference(_("Scheduled downtimes"), DocReference.COMMANDS_DOWNTIME)
-
-
-def page_menu_dropdowns_hook(
-    view: View, rows: Rows, page_menu_dropdowns: list[PageMenuDropdown]
-) -> None:
-    if not rows:
-        return
-
-    if not is_ntop_configured():
-        return
-
-    host_address = rows[0].get("host_address")
-    ntop_connection = get_ntop_connection()
-    assert ntop_connection
-    ntop_instance = ntop_connection["hostaddress"]
-    if (
-        host_address is not None
-        and get_cache().is_instance_up(ntop_instance)
-        and get_cache().is_ntop_host(host_address)
-    ):
-        page_menu_dropdowns.insert(3, get_ntop_page_menu_dropdown(view, host_address))

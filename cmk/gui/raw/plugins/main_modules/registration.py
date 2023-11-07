@@ -19,6 +19,7 @@ from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import Cell, painter_registry
 from cmk.gui.type_defs import Row
+from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
 from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
@@ -75,6 +76,7 @@ def register() -> None:
         return
 
     notification_parameter_registry.register(NotificationParameterMail)
+    GUIViewRenderer.page_menu_dropdowns_hook = lambda v, r, p: None
 
     register_pages()
     register_painters()

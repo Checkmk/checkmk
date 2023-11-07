@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from types import ModuleType
 from typing import Final, Generic, Protocol, TypeVar
 
-PLUGIN_NAMESPACES = ("cmk.plugins",)
+PLUGIN_NAMESPACES = ("cmk.plugins", "cmk_addons.plugins")
 
 
 class _PluginProtocol(Protocol):

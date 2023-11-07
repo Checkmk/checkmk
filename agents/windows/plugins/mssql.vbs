@@ -707,7 +707,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
-    Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
+    Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
     sqlString = "SELECT CONVERT(VARCHAR, MAX(backup_finish_date), 120) AS last_backup_date, type, database_name " & _
                 "FROM msdb.dbo.backupset " & _

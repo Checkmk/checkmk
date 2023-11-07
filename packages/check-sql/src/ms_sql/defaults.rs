@@ -2,6 +2,5 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-pub mod api;
-pub mod defaults;
-pub mod queries;
+pub const STANDARD_PORT: u16 = 1433;
+pub const BROWSER_PORT: u16 = 1434;

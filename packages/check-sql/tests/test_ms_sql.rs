@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
-use check_sql::ms_sql::api::Instance;
+use check_sql::ms_sql::api::InstanceEngine;
 use check_sql::{config::CheckConfig, ms_sql::api};
 use common::tools;
 use std::vec;
@@ -12,7 +12,7 @@ use tempfile::TempDir;
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    assert!(api::create_client_for_logged_user("localhost", 1433)
+    assert!(api::create_client_for_logged_user("localhost", 1433, None)
         .await
         .is_ok());
 }
@@ -22,11 +22,11 @@ async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         assert!(api::create_client(
             &endpoint.host,
-            1433,
+            check_sql::ms_sql::defaults::STANDARD_PORT,
             api::Credentials::SqlServer {
                 user: &endpoint.user,
                 password: &endpoint.pwd,
-            },
+            }
         )
         .await
         .is_ok());
@@ -42,8 +42,8 @@ async fn test_remote_connection() {
 async fn test_get_all_instances() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let instances = api::get_all_instances(&mut client).await.unwrap();
-        let combined: Vec<Instance> = [&instances.0[..], &instances.1[..]].concat();
+        let instances = api::find_instance_engines(&mut client).await.unwrap();
+        let combined: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
         assert!(combined.iter().all(|i| {
             i.edition.contains("Edition")
                 && !i.name.is_empty()
@@ -64,6 +64,46 @@ async fn test_get_all_instances() {
             endpoint.user,
             "Check, please, the database is accessible and use has sysadmin rights"
         );
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn test_validate_all_instances() {
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
+        let instances = api::find_instance_engines(&mut client).await.unwrap();
+        let names: Vec<String> = [&instances.0[..], &instances.1[..]]
+            .concat()
+            .into_iter()
+            .map(|i| i.name)
+            .collect();
+
+        for name in names {
+            let c = api::create_client_for_instance(
+                &endpoint.host,
+                None,
+                api::Credentials::SqlServer {
+                    user: &endpoint.user,
+                    password: &endpoint.pwd,
+                },
+                &name,
+            )
+            .await;
+            match c {
+                Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
+                Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
+                    // we may not have valid credentials to connect - it's normal
+                }
+                Err(e) if e.to_string().starts_with(api::SQL_TCP_ERROR_TAG) => {
+                    panic!("Unexpected CONNECTION error: `{:?}`", e);
+                }
+                Err(e) => {
+                    panic!("Unexpected error: `{:?}`", e);
+                }
+            }
+        }
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
     }

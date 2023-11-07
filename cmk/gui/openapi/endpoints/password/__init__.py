@@ -21,8 +21,8 @@ from cmk.gui.openapi.endpoints.password.request_schemas import InputPassword, Up
 from cmk.gui.openapi.endpoints.password.response_schemas import PasswordCollection, PasswordObject
 from cmk.gui.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import NAME_ID_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.watolib.passwords import (
     load_password,

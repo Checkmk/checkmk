@@ -35,7 +35,7 @@ from cmk.gui.openapi.endpoints.acknowledgement.request_schemas import (
     AcknowledgeServiceRelatedProblem,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException
 
 from cmk import fields

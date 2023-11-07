@@ -21,7 +21,7 @@ from cmk.gui import hooks
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import ENDPOINT_REGISTRY
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from cmk.gui.wsgi.blueprints import checkmk, rest_api

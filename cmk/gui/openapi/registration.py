@@ -32,7 +32,7 @@ from cmk.gui.openapi.endpoints import (
     user_role,
     version,
 )
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 

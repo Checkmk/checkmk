@@ -16,7 +16,7 @@ from cmk.utils.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
 from cmk.gui.livestatus_utils.testing import mock_site
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import ENDPOINT_REGISTRY
 from cmk.gui.openapi.restful_objects.type_defs import (
     CollectionItem,
     CollectionObject,

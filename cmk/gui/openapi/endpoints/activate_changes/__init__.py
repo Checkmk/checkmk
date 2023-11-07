@@ -30,7 +30,7 @@ from cmk.gui.openapi.endpoints.activate_changes.response_schemas import (
 )
 from cmk.gui.openapi.endpoints.utils import may_fail
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject, LinkType
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.activate_changes import (

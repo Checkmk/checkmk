@@ -12,7 +12,7 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.openapi.restful_objects import SPEC
 from cmk.gui.openapi.restful_objects.decorators import Endpoint
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import ENDPOINT_REGISTRY
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
 
 # TODO

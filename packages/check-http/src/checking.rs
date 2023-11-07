@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::cli::{DocumentAgeLevels, PageSizeLimits, ResponseTimeLevels};
+use crate::cli::{DocumentAgeLevels, PageSizeLimits};
 use bytes::Bytes;
 use http::HeaderMap;
 use httpdate::parse_http_date;
@@ -11,6 +11,12 @@ use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
 use crate::cli::OnRedirect;
+
+pub enum Limits<T> {
+    None,
+    Warn(T),
+    WarnCrit(T, T),
+}
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum State {
@@ -102,12 +108,26 @@ pub fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits
 
 pub fn check_response_time(
     response_time: Duration,
-    response_time_levels: Option<ResponseTimeLevels>,
+    response_time_levels: Limits<Duration>,
 ) -> Option<CheckResult> {
     let state = match response_time_levels {
-        Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => State::Crit,
-        Some((warn, _)) if response_time.as_secs_f64() >= warn => State::Warn,
-        _ => State::Ok,
+        Limits::None => State::Ok,
+        Limits::Warn(warn) => {
+            if response_time >= warn {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        }
+        Limits::WarnCrit(warn, crit) => {
+            if response_time >= crit {
+                State::Crit
+            } else if response_time >= warn {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        }
     };
 
     Some(CheckResult {
@@ -201,13 +221,13 @@ mod test_check_page_size {
 #[cfg(test)]
 mod test_check_response_time {
     use crate::checking::check_response_time;
-    use crate::checking::State;
+    use crate::checking::{Limits, State};
     use std::time::Duration;
 
     #[test]
     fn test_unbounded() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), None)
+            check_response_time(Duration::new(5, 0), Limits::None)
                 .unwrap()
                 .state,
             State::Ok
@@ -217,12 +237,9 @@ mod test_check_response_time {
     #[test]
     fn test_warn_within_bounds() {
         assert_eq!(
-            check_response_time(
-                Duration::new(5, 0),
-                Some((Duration::new(6, 0).as_secs_f64(), None))
-            )
-            .unwrap()
-            .state,
+            check_response_time(Duration::new(5, 0), Limits::Warn(Duration::new(6, 0)))
+                .unwrap()
+                .state,
             State::Ok
         );
     }
@@ -230,12 +247,9 @@ mod test_check_response_time {
     #[test]
     fn test_warn_is_warn() {
         assert_eq!(
-            check_response_time(
-                Duration::new(5, 0),
-                Some((Duration::new(4, 0).as_secs_f64(), None))
-            )
-            .unwrap()
-            .state,
+            check_response_time(Duration::new(5, 0), Limits::Warn(Duration::new(4, 0)))
+                .unwrap()
+                .state,
             State::Warn
         );
     }
@@ -245,10 +259,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Some((
-                    Duration::new(6, 0).as_secs_f64(),
-                    Some(Duration::new(7, 0).as_secs_f64())
-                ))
+                Limits::WarnCrit(Duration::new(6, 0), Duration::new(7, 0))
             )
             .unwrap()
             .state,
@@ -261,10 +272,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Some((
-                    Duration::new(4, 0).as_secs_f64(),
-                    Some(Duration::new(6, 0).as_secs_f64())
-                ))
+                Limits::WarnCrit(Duration::new(4, 0), Duration::new(6, 0))
             )
             .unwrap()
             .state,
@@ -277,10 +285,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Some((
-                    Duration::new(2, 0).as_secs_f64(),
-                    Some(Duration::new(3, 0).as_secs_f64())
-                ))
+                Limits::WarnCrit(Duration::new(2, 0), Duration::new(3, 0))
             )
             .unwrap()
             .state,

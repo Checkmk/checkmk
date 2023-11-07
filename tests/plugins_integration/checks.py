@@ -416,7 +416,7 @@ def setup_site(site: Site, dump_path: str) -> None:
 
 
 @contextmanager
-def setup_host(site: Site, host_name: str) -> Iterator:
+def setup_host(site: Site, host_name: str, skip_cleanup: bool = False) -> Iterator:
     logger.info('Creating host "%s"...', host_name)
     host_attributes = {
         "ipaddress": "127.0.0.1",
@@ -466,7 +466,7 @@ def setup_host(site: Site, host_name: str) -> Iterator:
     try:
         yield
     finally:
-        if not config.skip_cleanup:
+        if not (config.skip_cleanup or skip_cleanup):
             logger.info('Deleting host "%s"...', host_name)
             site.openapi.delete_host(host_name)
 

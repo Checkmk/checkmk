@@ -7,8 +7,10 @@ from collections.abc import Iterator
 
 import pytest
 
-from tests.testlib.site import get_site_factory, Site
+from tests.testlib.site import get_site_factory, Site, SiteFactory
 from tests.testlib.utils import run
+from tests.testlib.version import CMKVersion, Edition
+from tests.testlib.utils import current_base_branch_name, current_branch_version
 
 from tests.plugins_integration import checks
 
@@ -144,6 +146,35 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     skip_cleanup = request.config.getoption("--skip-cleanup")
     for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
+        dump_path = site.path("var/check_mk/dumps")
+        checks.setup_site(site, dump_path)
+
+        yield site
+
+        if not skip_cleanup:
+            # cleanup existing agent-output folder in the test site
+            logger.info('Removing folder "%s"...', dump_path)
+            assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0
+
+
+@pytest.fixture(name="site_factory_update", scope="session")
+def _get_sf_update():
+    base_version = CMKVersion(
+        "2.2.0p8",  # todo: retrieve this version number from a common utils module
+        branch=current_base_branch_name(),
+        branch_version=current_branch_version(),
+        edition=Edition.CEE,
+    )
+    return get_site_factory(prefix="plugins_", version=base_version)
+
+
+@pytest.fixture(name="test_site_update", scope="session")
+def _get_site_update(
+    site_factory_update: SiteFactory, request: pytest.FixtureRequest
+) -> Iterator[Site]:
+    """Setup test-site and perform cleanup after test execution."""
+    skip_cleanup = request.config.getoption("--skip-cleanup")
+    for site in site_factory_update.get_test_site(auto_cleanup=not skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
         checks.setup_site(site, dump_path)
 

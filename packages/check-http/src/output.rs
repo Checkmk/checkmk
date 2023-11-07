@@ -59,6 +59,11 @@ mod test_output_format {
     }
 
     #[test]
+    fn test_no_check_results_is_ok() {
+        assert_eq!(format!("{}", Output::from_check_results(vec![])), "HTTP OK");
+    }
+
+    #[test]
     fn test_merge_check_results_with_state_only() {
         let cr1 = CheckResult {
             state: State::Ok,
@@ -99,6 +104,26 @@ mod test_output_format {
     }
 
     #[test]
+    fn test_merge_check_results_warn() {
+        let cr1 = CheckResult {
+            state: State::Ok,
+            summary: s("summary 1"),
+        };
+        let cr2 = CheckResult {
+            state: State::Warn,
+            summary: s("summary 2"),
+        };
+        let cr3 = CheckResult {
+            state: State::Ok,
+            summary: s("summary 3"),
+        };
+        assert_eq!(
+            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
+            "HTTP WARNING - summary 1, summary 2 (!), summary 3"
+        );
+    }
+
+    #[test]
     fn test_merge_check_results_crit() {
         let cr1 = CheckResult {
             state: State::Ok,
@@ -119,35 +144,26 @@ mod test_output_format {
     }
 
     #[test]
-    fn test_emtpy_output() {
-        assert_eq!(format!("{}", Output::from_check_results(vec![])), "HTTP OK");
-    }
-
-    #[test]
-    fn test_worst_state() {
-        use State::Crit as C;
-        use State::Ok as O;
-        use State::Unknown as U;
-        use State::Warn as W;
-
-        fn out(states: Vec<State>) -> Output {
-            Output::from_check_results(
-                states
-                    .into_iter()
-                    .map(|state| CheckResult {
-                        state,
-                        summary: "dummy".to_string(),
-                    })
-                    .collect(),
-            )
-        }
-
-        assert_eq!(out(vec![O]).worst_state, O);
-        assert_eq!(out(vec![W]).worst_state, W);
-        assert_eq!(out(vec![W, W]).worst_state, W);
-        assert_eq!(out(vec![C]).worst_state, C);
-        assert_eq!(out(vec![O, C]).worst_state, C);
-        assert_eq!(out(vec![C, U]).worst_state, U);
-        assert_eq!(out(vec![]).worst_state, O);
+    fn test_merge_check_results_unknown() {
+        let cr1 = CheckResult {
+            state: State::Ok,
+            summary: s("summary 1"),
+        };
+        let cr2 = CheckResult {
+            state: State::Warn,
+            summary: s("summary 2"),
+        };
+        let cr3 = CheckResult {
+            state: State::Crit,
+            summary: s("summary 3"),
+        };
+        let cr4 = CheckResult {
+            state: State::Unknown,
+            summary: s("summary 4"),
+        };
+        assert_eq!(
+            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3, cr4])),
+            "HTTP UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+        );
     }
 }

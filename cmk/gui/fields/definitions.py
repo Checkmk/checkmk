@@ -700,6 +700,28 @@ class CustomAttributes(ValueTypedDictSchema):
             return validate_custom_host_attributes(data, "raise")
 
 
+class CustomHostAttributes(ValueTypedDictSchema):
+    value_type = ValueTypedDictSchema.field(
+        base.String(
+            description="Each tag is a mapping of string to string",
+            validate=ensure_string,
+        )
+    )
+
+    @post_load
+    def _valid(  # type:ignore[no-untyped-def]
+        self, data: dict[str, Any], **kwargs
+    ) -> dict[str, Any]:
+        # NOTE
+        # If an attribute gets deleted AFTER it has already been set to a host or a folder,
+        # then this would break here. We therefore can't validate outbound data as thoroughly
+        # because our own data can be inherently inconsistent.
+        if self.context["direction"] == "outbound":  # pylint: disable=no-else-return
+            return validate_custom_host_attributes(data, "warn")
+        else:
+            return validate_custom_host_attributes(data, "raise")
+
+
 class TagGroupAttributes(ValueTypedDictSchema):
     """Schema to validate tag groups
 
@@ -839,8 +861,8 @@ def attributes_field(
 
     return MultiNested(
         [
-            attr_openapi_schema(object_type, object_context),
-            CustomAttributes,
+            lambda: attr_openapi_schema(object_type, object_context),
+            CustomHostAttributes,
             TagGroupAttributes,
         ],
         metadata={"context": {"object_context": object_context, "direction": direction}},

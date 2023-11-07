@@ -9,7 +9,7 @@ import logging
 from typing import Any, Optional
 
 from marshmallow import fields as _fields
-from marshmallow import post_load, Schema
+from marshmallow import post_dump, post_load, Schema
 from marshmallow_oneofschema import OneOfSchema  # type:ignore[import]
 
 import cmk.gui.userdb as userdb
@@ -17,7 +17,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.definitions import ensure_string
-from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.fields.utils import attr_openapi_schema, BaseSchema
 
 from cmk import fields
 from cmk.fields import base
@@ -339,6 +339,20 @@ class DomainObject(Linkable):
     )
 
 
+def _effective_attributes_schema():
+    class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
+        @post_dump(pass_original=True)
+        def add_tags_and_custom_attributes_back(
+            self, dump_data: dict[str, Any], original_data: dict[str, Any], **_kwargs: Any
+        ) -> dict[str, Any]:
+            # Custom attributes and tags are thrown away during validation as they have no field in the schema.
+            # So we dump them back in here.
+            original_data.update(dump_data)
+            return original_data
+
+    return HostExtensionsEffectiveAttributesSchema
+
+
 class HostExtensions(BaseSchema):
     folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
@@ -350,7 +364,8 @@ class HostExtensions(BaseSchema):
         description="Attributes of this host.",
         example={"ipaddress": "192.168.0.123"},
     )
-    effective_attributes = fields.Dict(
+    effective_attributes = fields.Nested(
+        _effective_attributes_schema,
         description="All attributes of this host and all parent folders. Format may change!",
         allow_none=True,
         example={"tag_snmp_ds": None},

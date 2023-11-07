@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Iterator, Sequence
+from itertools import islice
 from pathlib import Path
 
 import requests
@@ -15,9 +16,15 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cmk.utils.version import __version__, parse_check_mk_version
 
+NUMBER_OF_EXTENSION_TESTED = 10
+
 
 def main(parsed_version: int) -> None:
-    for extension in _compatible_extensions_sorted_by_n_downloads(parsed_version):
+    most_popular = islice(
+        _compatible_extensions_sorted_by_n_downloads(parsed_version), NUMBER_OF_EXTENSION_TESTED
+    )
+    # do not output them sorted by downloads -- this breaks the test more often than necessary.
+    for extension in sorted(most_popular, key=lambda e: e.latest_version.link):
         print(extension.latest_version.link)
 
 

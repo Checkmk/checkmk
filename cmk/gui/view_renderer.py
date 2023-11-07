@@ -7,6 +7,7 @@ import abc
 import collections
 import json
 from collections.abc import Iterator
+from typing import Callable
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -101,6 +102,10 @@ class ABCViewRenderer(abc.ABC):
 
 
 class GUIViewRenderer(ABCViewRenderer):
+    page_menu_dropdowns_hook: Callable[
+        [View, Rows, list[PageMenuDropdown]], None
+    ] = lambda v, r, p: None
+
     def __init__(self, view: View, show_buttons: bool) -> None:
         super().__init__(view)
         self._show_buttons = show_buttons
@@ -354,18 +359,7 @@ class GUIViewRenderer(ABCViewRenderer):
             + export_dropdown
         )
 
-        if rows:
-            host_address = rows[0].get("host_address")
-            if is_ntop_configured():
-                ntop_connection = get_ntop_connection()
-                assert ntop_connection
-                ntop_instance = ntop_connection["hostaddress"]
-                if (
-                    host_address is not None
-                    and get_cache().is_instance_up(ntop_instance)
-                    and get_cache().is_ntop_host(host_address)
-                ):
-                    page_menu_dropdowns.insert(3, self._page_menu_dropdowns_ntop(host_address))
+        GUIViewRenderer.page_menu_dropdowns_hook(self.view, rows, page_menu_dropdowns)
 
         menu = PageMenu(
             dropdowns=page_menu_dropdowns,
@@ -426,9 +420,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
     def _page_menu_dropdowns_context(self, rows: Rows) -> list[PageMenuDropdown]:
         return get_context_page_menu_dropdowns(self.view, rows, mobile=False)
-
-    def _page_menu_dropdowns_ntop(self, host_address) -> PageMenuDropdown:  # type: ignore[no-untyped-def]
-        return get_ntop_page_menu_dropdown(self.view, host_address)
 
     def _page_menu_entries_export_data(self) -> Iterator[PageMenuEntry]:
         if not user.may("general.csv_export"):
@@ -637,3 +628,24 @@ def _add_command_doc_references(menu: PageMenu) -> None:
         menu.add_doc_reference(_("Acknowledging problems"), DocReference.COMMANDS_ACK)
     if user.may("action.downtimes") or user.may("action.remove_all_downtimes"):
         menu.add_doc_reference(_("Scheduled downtimes"), DocReference.COMMANDS_DOWNTIME)
+
+
+def page_menu_dropdowns_hook(
+    view: View, rows: Rows, page_menu_dropdowns: list[PageMenuDropdown]
+) -> None:
+    if not rows:
+        return
+
+    if not is_ntop_configured():
+        return
+
+    host_address = rows[0].get("host_address")
+    ntop_connection = get_ntop_connection()
+    assert ntop_connection
+    ntop_instance = ntop_connection["hostaddress"]
+    if (
+        host_address is not None
+        and get_cache().is_instance_up(ntop_instance)
+        and get_cache().is_ntop_host(host_address)
+    ):
+        page_menu_dropdowns.insert(3, get_ntop_page_menu_dropdown(view, host_address))

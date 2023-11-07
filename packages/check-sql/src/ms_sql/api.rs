@@ -124,7 +124,7 @@ fn get_section_separator(name: &str) -> Option<char> {
     }
 }
 
-/// Create connection to MS SQL
+/// Create connection to remote MS SQL
 ///
 /// # Arguments
 ///
@@ -132,7 +132,7 @@ fn get_section_separator(name: &str) -> Option<char> {
 /// * `port` - Port of MS SQL server
 /// * `credentials` - defines connection type and credentials itself
 /// * `instance_name` - name of the instance to connect to
-pub async fn create_client(
+pub async fn create_remote_client(
     host: &str,
     port: u16,
     credentials: Credentials<'_>,
@@ -162,7 +162,7 @@ pub async fn create_client(
     Ok(Client::connect(config, tcp.compat_write()).await?)
 }
 
-/// Create connection to MS SQL
+/// Create `remote` connection to MS SQL `instance`
 ///
 /// # Arguments
 ///
@@ -170,7 +170,7 @@ pub async fn create_client(
 /// * `port` - Port of MS SQL server BROWSER,  1434 - default
 /// * `credentials` - defines connection type and credentials itself
 /// * `instance_name` - name of the instance to connect to
-pub async fn create_client_for_instance(
+pub async fn create_remote_instance_client(
     host: &str,
     port: Option<u16>,
     credentials: Credentials<'_>,
@@ -211,27 +211,64 @@ pub async fn create_client_for_instance(
     Ok(s)
 }
 
-/// Check Integrated connection to MS SQL
+/// Create `local` connection to MS SQL `instance`
 ///
 /// # Arguments
 ///
-/// * `host` - Hostname of MS SQL server
-/// * `port` - Port of MS SQL server
+/// * `port` - Port of MS SQL server BROWSER,  1434 - default
+/// * `instance_name` - name of the instance to connect to
 #[cfg(windows)]
-pub async fn create_client_for_logged_user(
-    host: &str,
-    port: u16,
-    instance_name: Option<String>,
-) -> Result<Client<Compat<TcpStream>>> {
+pub async fn create_local_instance_client(
+    port: Option<u16>,
+    instance_name: &str,
+) -> anyhow::Result<Client<Compat<TcpStream>>> {
     let mut config = Config::new();
 
-    config.host(host);
-    config.port(port);
+    config.host("localhost");
+    // The default port of SQL Browser
+    config.port(port.unwrap_or(defaults::BROWSER_PORT));
+    config.authentication(AuthMethod::Integrated);
+
+    // The name of the database server instance.
+    config.instance_name(instance_name);
+
+    // on production, it is not a good idea to do this
+    config.trust_cert();
+
+    // This will create a new `TcpStream` from `async-std`, connected to the
+    // right port of the named instance.
+    let tcp = TcpStream::connect_named(&config)
+        .await
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_TCP_ERROR_TAG, e))?;
+
+    // And from here on continue the connection process in a normal way.
+    let s = Client::connect(config, tcp.compat_write())
+        .await
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))?;
+    Ok(s)
+}
+
+/// Create `local` connection to MS SQL `instance`
+///
+/// # Arguments
+///
+/// * `port` - Port of MS SQL server BROWSER,  1434 - default
+/// * `instance_name` - name of the instance to connect to
+#[cfg(unix)]
+pub async fn create_local_instance_client(
+    _port: Option<u16>,
+    _instance_name: &str,
+) -> anyhow::Result<Client<Compat<TcpStream>>> {
+    anyhow::bail!("not supported");
+}
+
+/// Check Integrated connection to MS SQL
+#[cfg(windows)]
+pub async fn create_local_client() -> Result<Client<Compat<TcpStream>>> {
+    let mut config = Config::new();
+
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
-    if let Some(name) = instance_name {
-        config.instance_name(name);
-    }
 
     let tcp = TcpStream::connect(config.get_addr()).await?;
     tcp.set_nodelay(true)?;
@@ -243,10 +280,7 @@ pub async fn create_client_for_logged_user(
 }
 
 #[cfg(unix)]
-pub async fn create_client_for_logged_user(
-    _host: &str,
-    _port: u16,
-) -> Result<Client<Compat<TcpStream>>> {
+pub async fn create_local_client() -> Result<Client<Compat<TcpStream>>> {
     anyhow::bail!("not supported");
 }
 

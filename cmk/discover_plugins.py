@@ -20,10 +20,9 @@ import importlib
 import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from types import ModuleType
-from typing import Generic, TypeVar
+from typing import Final, Generic, LiteralString, TypeVar
 
-PLUGIN_BASE = "cmk.plugins"
+SHIPPED_PLUGINS = "cmk.plugins"
 
 
 _PluginType = TypeVar("_PluginType")
@@ -51,38 +50,26 @@ def discover_plugins(
     *,
     raise_errors: bool,
 ) -> DiscoveredPlugins[_PluginType]:
-    """Load all specified packages"""
+    """Collect all plugins from well-known locations"""
 
+    collector = _Collector(plugin_type, name_prefix, raise_errors)
+
+    for mod_name in _find_namespaces(SHIPPED_PLUGINS, plugin_group, raise_errors):
+        collector.add_from_module(mod_name)
+
+    return DiscoveredPlugins(collector.errors, collector.plugins)
+
+
+def _find_namespaces(
+    base_namespace: LiteralString, plugin_group: str, raise_errors: bool
+) -> set[str]:
     try:
-        plugin_base = importlib.import_module(PLUGIN_BASE)
-    except Exception as exc:
+        plugin_base = importlib.import_module(base_namespace)
+    except Exception as _exc:
         if raise_errors:
             raise
-        return DiscoveredPlugins((exc,), {})
+        return set()
 
-    errors = []
-    plugins: dict[PluginLocation, _PluginType] = {}
-    for pkg_name in _find_namespaces(plugin_base, plugin_group):
-        try:
-            module = importlib.import_module(pkg_name)
-        except ModuleNotFoundError:
-            pass  # don't choke upon empty folders.
-        except Exception as exc:
-            if raise_errors:
-                raise
-            errors.append(exc)
-            continue
-
-        module_errors, module_plugins = _collect_module_plugins(
-            pkg_name, vars(module), name_prefix, plugin_type, raise_errors
-        )
-        errors.extend(module_errors)
-        plugins.update(module_plugins)
-
-    return DiscoveredPlugins(errors, plugins)
-
-
-def _find_namespaces(plugin_base: ModuleType, plugin_group: str) -> set[str]:
     return {
         f"{plugin_base.__name__}.{family}.{plugin_group}.{fname.removesuffix('.py')}"
         for path in plugin_base.__path__
@@ -99,36 +86,64 @@ def _ls_defensive(path: str) -> Sequence[str]:
         return []
 
 
-def _collect_module_plugins(
-    module_name: str,
-    objects: Mapping[str, object],
-    name_prefix: str,
-    plugin_type: type[_PluginType],
-    raise_errors: bool,
-) -> tuple[Sequence[Exception], Mapping[PluginLocation, _PluginType]]:
-    """Dispatch valid and invalid well-known objects
+class _Collector(Generic[_PluginType]):
+    def __init__(
+        self,
+        plugin_type: type[_PluginType],
+        name_prefix: str,
+        raise_errors: bool,
+    ) -> None:
+        self.plugin_type: Final = plugin_type
+        self.name_prefix: Final = name_prefix
+        self.raise_errors: Final = raise_errors
 
-    >>> errors, plugins = _collect_module_plugins("my_module", {"my_plugin": 1, "my_b": "two", "some_c": "ignored"}, "my_", int, False)
-    >>> errors[0]
-    TypeError("my_module:my_b: 'two'")
-    >>> plugins
-    {PluginLocation(module='my_module', name='my_plugin'): 1}
-    """
-    errors = []
-    plugins = {}
+        self.errors: list[Exception] = []
+        self.plugins: dict[PluginLocation, _PluginType] = {}
 
-    for name, value in objects.items():
-        if not name.startswith(name_prefix):
-            continue
+    def add_from_module(self, mod_name: str) -> None:
+        try:
+            module = importlib.import_module(mod_name)
+        except ModuleNotFoundError:
+            pass  # don't choke upon empty folders.
+        except Exception as exc:
+            if self.raise_errors:
+                raise
+            self.errors.append(exc)
+            return
 
-        location = PluginLocation(module_name, name)
-        if isinstance(value, plugin_type):
-            plugins[location] = value
-            continue
+        self._collect_module_plugins(mod_name, vars(module))
 
-        if raise_errors:
-            raise TypeError(f"{location}: {value!r}")
+    def _collect_module_plugins(
+        self,
+        module_name: str,
+        objects: Mapping[str, object],
+    ) -> None:
+        """Dispatch valid and invalid well-known objects
 
-        errors.append(TypeError(f"{location}: {value!r}"))
+        >>> collector = _Collector(plugin_type=int, name_prefix="my_", raise_errors=False)
+        >>> collector._collect_module_plugins(
+        ...     "my_module",
+        ...     {
+        ...         "my_plugin": 1,
+        ...         "my_b": "two",
+        ...         "some_c": "ignored",
+        ...     },
+        ... )
+        >>> collector.errors[0]
+        TypeError("my_module:my_b: 'two'")
+        >>> collector.plugins
+        {PluginLocation(module='my_module', name='my_plugin'): 1}
+        """
+        for name, value in objects.items():
+            if not name.startswith(self.name_prefix):
+                continue
 
-    return errors, plugins
+            location = PluginLocation(module_name, name)
+            if isinstance(value, self.plugin_type):
+                self.plugins[location] = value
+                continue
+
+            if self.raise_errors:
+                raise TypeError(f"{location}: {value!r}")
+
+            self.errors.append(TypeError(f"{location}: {value!r}"))

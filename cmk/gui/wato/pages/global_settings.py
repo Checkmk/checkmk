@@ -397,8 +397,9 @@ class ABCEditGlobalSettingMode(WatoMode):
         if use_vue_rendering():
             forms.section(_("Current setting as VUE"))
             render_vue(self._valuespec, self._vue_field_id(), value)
-
-        forms.section(_("Current setting"))
+            forms.section(_("Legacy valuespec (input data is ignored)"))
+        else:
+            forms.section(_("Current setting"))
         self._valuespec.render_input("ve", value)
         self._valuespec.set_focus("ve")
         html.help(self._valuespec.help())

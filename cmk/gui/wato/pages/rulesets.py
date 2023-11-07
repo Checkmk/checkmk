@@ -1981,6 +1981,7 @@ class ABCEditRuleMode(WatoMode):
             if use_vue_rendering():
                 forms.section(_("Current setting as VUE"))
                 render_vue(self._ruleset.valuespec(), self._vue_field_id(), self._rule.value)
+                forms.section(_("Legacy valuespec (input data is ignored"))
 
             valuespec.validate_datatype(self._rule.value, "ve")
             valuespec.render_input("ve", self._rule.value)

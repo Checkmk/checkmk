@@ -33,6 +33,7 @@ import typing
 from cmk.gui import valuespec
 from cmk.gui.validation.ir import elements
 from cmk.gui.validation.ir.elements import DictionaryKeySpec, LegacyValueSpecDetails
+from cmk.gui.validation.visitors.vue_lib import GenericComponent
 
 Stack = list[str]
 T = typing.TypeVar("T")
@@ -129,9 +130,14 @@ def get_validator(vs_instance: valuespec.ValueSpec | None) -> list[elements.Vali
     if vs_instance is None:
         return None
 
-    def validator(value: typing.Any, _all_values: typing.Any) -> None:
-        vs_instance.validate_datatype(value, varprefix="")
-        vs_instance.validate_value(value, varprefix="")
+    def validator(value: typing.Any, component: GenericComponent) -> None:
+        # This code does not belong here. GenericComponent is part of vue
+        # valuespec_to_ir.py is part of FormElement
+        # Since elements.py/valuespec_to_ir.py are currently part of a major restructuring
+        # -> I do not care
+        varprefix = component.config.get("varprefix", "")
+        vs_instance.validate_datatype(value, varprefix=varprefix)
+        vs_instance.validate_value(value, varprefix=varprefix)
 
     return [validator]
 

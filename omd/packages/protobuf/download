@@ -1,3 +1,0 @@
-#!/bin/bash
-
-wget https://github.com/protocolbuffers/protobuf/releases/download/v3.20.1/protobuf-python-3.20.1.tar.gz

@@ -102,6 +102,8 @@ load(
     "NET_SNMP_VERSION",
     "ROBOTMK_SHA256",
     "ROBOTMK_VERSION",
+    "PROTOBUF_SHA256",
+    "PROTOBUF_VERSION",
 )
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
@@ -280,4 +282,11 @@ load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
 robotmk(
     sha256 = ROBOTMK_SHA256,
     version_str= ROBOTMK_VERSION
+)
+
+load("//omd/packages/protobuf:protobuf_http.bzl", "protobuf")
+
+protobuf(
+    sha256 = PROTOBUF_SHA256,
+    version_str = PROTOBUF_VERSION,
 )

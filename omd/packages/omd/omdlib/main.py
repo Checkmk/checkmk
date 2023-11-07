@@ -4621,30 +4621,30 @@ def _parse_command_options(  # pylint: disable=too-many-branches
 
 
 def exec_other_omd(site: SiteContext, version: str) -> NoReturn:
-    # Rerun with omd of other version
+    """Rerun current omd command with other version"""
     omd_path = "/omd/versions/%s/bin/omd" % version
-    if os.path.exists(omd_path):
-        # Prevent inheriting environment variables from this versions/site environment
-        # into the executed omd call. The OMD call must import the python version related
-        # modules and libaries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
-        # not already set when calling omd.
-        try:
-            del os.environ["PYTHONPATH"]
-        except KeyError:
-            pass
-
-        try:
-            del os.environ["LD_LIBRARY_PATH"]
-        except KeyError:
-            pass
-
-        os.execv(omd_path, sys.argv)
-        bail_out("Cannot run bin/omd of version %s." % version)
-    else:
+    if not os.path.exists(omd_path):
         bail_out(
             "Site %s uses version %s which is not installed.\n"
             "Please reinstall that version and retry this command." % (site.name, version)
         )
+
+    # Prevent inheriting environment variables from this versions/site environment
+    # into the executed omd call. The omd call must import the python version related
+    # modules and libraries. This only works when PYTHONPATH and LD_LIBRARY_PATH are
+    # not already set when calling omd.
+    try:
+        del os.environ["PYTHONPATH"]
+    except KeyError:
+        pass
+
+    try:
+        del os.environ["LD_LIBRARY_PATH"]
+    except KeyError:
+        pass
+
+    os.execv(omd_path, sys.argv)
+    bail_out("Cannot run bin/omd of version %s." % version)
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:

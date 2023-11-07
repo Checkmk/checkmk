@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import assert_never
 
 from .agent_based_api.v1 import register, Result, Service, State
@@ -10,15 +11,15 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import robotmk_api
 
 
-def discover(section: robotmk_api.Section) -> DiscoveryResult:
+def discover(section: Sequence[robotmk_api.SuiteExecutionReport]) -> DiscoveryResult:
     yield from (
         Service(item=f"Suite {suite_execution_report.suite_name}")
-        for suite_execution_report in section.suite_execution_reports
+        for suite_execution_report in section
     )
 
 
-def check(item: str, section: robotmk_api.Section) -> CheckResult:
-    for suite_execution_report in section.suite_execution_reports:
+def check(item: str, section: Sequence[robotmk_api.SuiteExecutionReport]) -> CheckResult:
+    for suite_execution_report in section:
         yield from _check_suite_execution_result(suite_execution_report, item)
 
 

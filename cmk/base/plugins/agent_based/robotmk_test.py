@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import assert_never, Literal, TypedDict
 
@@ -23,8 +24,8 @@ class Params(TypedDict):
     test_runtime: tuple[int, int] | None
 
 
-def discover(section: robotmk_api.Section) -> DiscoveryResult:
-    for suite_execution_report in section.suite_execution_reports:
+def discover(section: Sequence[robotmk_api.SuiteExecutionReport]) -> DiscoveryResult:
+    for suite_execution_report in section:
         yield from _discover_tests(suite_execution_report)
 
 
@@ -47,8 +48,10 @@ def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> DiscoveryResult
         )
 
 
-def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResult:
-    for suite_execution_report in section.suite_execution_reports:
+def check(
+    item: str, params: Params, section: Sequence[robotmk_api.SuiteExecutionReport]
+) -> CheckResult:
+    for suite_execution_report in section:
         if not isinstance(
             execution_report := suite_execution_report.outcome, robotmk_api.ExecutionReport
         ):

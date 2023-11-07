@@ -3,64 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from collections.abc import Sequence
 from enum import Enum
 
 import xmltodict
-from pydantic import BaseModel, BeforeValidator, Field, RootModel, TypeAdapter
+from pydantic import BaseModel, BeforeValidator
 from typing_extensions import Annotated
 
 from .robotmk_parse_xml import Rebot
-
-
-class EnvironmentBuildStatusSuccess(BaseModel, frozen=True):
-    duration: int = Field(alias="Success")
-
-
-class EnvironmentBuildStatusInProgress(BaseModel, frozen=True):
-    start_time: int = Field(alias="InProgress")
-
-
-class EnvironmentBuildStatusErrorNonZeroExit(Enum):
-    NonZeroExit = "NonZeroExit"
-
-
-class EnvironmentBuildStatusErrorTimeout(Enum):
-    Timeout = "Timeout"
-
-
-class EnviromentBuildStatusErrorMessage(BaseModel):
-    Error: str
-
-
-class EnvironmentBuildStatusFailure(BaseModel):
-    Failure: (
-        EnvironmentBuildStatusErrorNonZeroExit
-        | EnvironmentBuildStatusErrorTimeout
-        | EnviromentBuildStatusErrorMessage
-    )
-
-
-class EnvironmentBuildStatusNotNeeded(Enum):
-    NotNeeded = "NotNeeded"
-
-
-class EnvironmentBuildStatusPending(Enum):
-    Pending = "Pending"
-
-
-class EnvironmentBuildStatuses(RootModel, frozen=True):
-    root: Mapping[
-        str,
-        (
-            EnvironmentBuildStatusNotNeeded
-            | EnvironmentBuildStatusPending
-            | EnvironmentBuildStatusSuccess
-            | EnvironmentBuildStatusInProgress
-            | EnvironmentBuildStatusFailure
-        ),
-    ]
 
 
 class AttemptOutcome(Enum):
@@ -110,25 +60,5 @@ class SuiteExecutionReport(BaseModel, frozen=True):
     outcome: ExecutionReport | ExecutionReportAlreadyRunning
 
 
-@dataclass(frozen=True, kw_only=True)
-class Section:
-    environment_build_statuses: EnvironmentBuildStatuses | None = None
-    suite_execution_reports: Sequence[SuiteExecutionReport] = field(default_factory=list)
-
-
-def parse(string_table: Sequence[Sequence[str]]) -> Section:
-    environment_build_statuses: EnvironmentBuildStatuses | None = None
-    suite_execution_reports = []
-
-    type_adapter = TypeAdapter(SuiteExecutionReport | EnvironmentBuildStatuses)
-    for sub_section in (type_adapter.validate_json(line[0]) for line in string_table):
-        match sub_section:
-            case EnvironmentBuildStatuses():
-                environment_build_statuses = sub_section
-            case SuiteExecutionReport():
-                suite_execution_reports.append(sub_section)
-
-    return Section(
-        environment_build_statuses=environment_build_statuses,
-        suite_execution_reports=suite_execution_reports,
-    )
+def parse(string_table: Sequence[Sequence[str]]) -> Sequence[SuiteExecutionReport]:
+    return [SuiteExecutionReport.model_validate_json(line[0]) for line in string_table]

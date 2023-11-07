@@ -8,7 +8,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, Field, RootModel, TypeAdapter
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -114,9 +114,73 @@ register.agent_section(
 )
 
 
+class EnvironmentBuildStatusSuccess(BaseModel, frozen=True):
+    duration: int = Field(alias="Success")
+
+
+class EnvironmentBuildStatusInProgress(BaseModel, frozen=True):
+    start_time: int = Field(alias="InProgress")
+
+
+class EnvironmentBuildStatusErrorNonZeroExit(Enum):
+    NonZeroExit = "NonZeroExit"
+
+
+class EnvironmentBuildStatusErrorTimeout(Enum):
+    Timeout = "Timeout"
+
+
+class EnviromentBuildStatusErrorMessage(BaseModel):
+    Error: str
+
+
+class EnvironmentBuildStatusFailure(BaseModel):
+    Failure: (
+        EnvironmentBuildStatusErrorNonZeroExit
+        | EnvironmentBuildStatusErrorTimeout
+        | EnviromentBuildStatusErrorMessage
+    )
+
+
+class EnvironmentBuildStatusNotNeeded(Enum):
+    NotNeeded = "NotNeeded"
+
+
+class EnvironmentBuildStatusPending(Enum):
+    Pending = "Pending"
+
+
+class EnvironmentBuildStatuses(RootModel, frozen=True):
+    root: Mapping[
+        str,
+        (
+            EnvironmentBuildStatusNotNeeded
+            | EnvironmentBuildStatusPending
+            | EnvironmentBuildStatusSuccess
+            | EnvironmentBuildStatusInProgress
+            | EnvironmentBuildStatusFailure
+        ),
+    ]
+
+
+def parse_robotmk_environment_build_states(
+    string_table: StringTable,
+) -> EnvironmentBuildStatuses | None:
+    return (
+        EnvironmentBuildStatuses.model_validate_json(string_table[0][0]) if string_table else None
+    )
+
+
+register.agent_section(
+    name="robotmk_environment_build_states",
+    parse_function=parse_robotmk_environment_build_states,
+)
+
+
 def discover_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
 ) -> DiscoveryResult:
     if section_robotmk_config:
         yield Service()
@@ -125,6 +189,7 @@ def discover_scheduler_status(
 def check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
 ) -> CheckResult:
     if not section_robotmk_config:
         return
@@ -134,7 +199,11 @@ def check_scheduler_status(
 
 register.check_plugin(
     name="robotmk_scheduler_status",
-    sections=["robotmk_config", "robotmk_rcc_setup_failures"],
+    sections=[
+        "robotmk_config",
+        "robotmk_rcc_setup_failures",
+        "robotmk_environment_build_states",
+    ],
     service_name="Robotmk Scheduler Status",
     discovery_function=discover_scheduler_status,
     check_function=check_scheduler_status,

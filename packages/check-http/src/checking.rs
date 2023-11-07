@@ -197,3 +197,94 @@ mod test_check_page_size {
         );
     }
 }
+
+#[cfg(test)]
+mod test_check_response_time {
+    use crate::checking::check_response_time;
+    use crate::checking::State;
+    use std::time::Duration;
+
+    #[test]
+    fn test_unbounded() {
+        assert_eq!(
+            check_response_time(Duration::new(5, 0), None)
+                .unwrap()
+                .state,
+            State::Ok
+        );
+    }
+
+    #[test]
+    fn test_warn_within_bounds() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some((Duration::new(6, 0).as_secs_f64(), None))
+            )
+            .unwrap()
+            .state,
+            State::Ok
+        );
+    }
+
+    #[test]
+    fn test_warn_is_warn() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some((Duration::new(4, 0).as_secs_f64(), None))
+            )
+            .unwrap()
+            .state,
+            State::Warn
+        );
+    }
+
+    #[test]
+    fn test_warncrit_within_bounds() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some((
+                    Duration::new(6, 0).as_secs_f64(),
+                    Some(Duration::new(7, 0).as_secs_f64())
+                ))
+            )
+            .unwrap()
+            .state,
+            State::Ok
+        );
+    }
+
+    #[test]
+    fn test_warncrit_is_warn() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some((
+                    Duration::new(4, 0).as_secs_f64(),
+                    Some(Duration::new(6, 0).as_secs_f64())
+                ))
+            )
+            .unwrap()
+            .state,
+            State::Warn
+        );
+    }
+
+    #[test]
+    fn test_warncrit_is_crit() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some((
+                    Duration::new(2, 0).as_secs_f64(),
+                    Some(Duration::new(3, 0).as_secs_f64())
+                ))
+            )
+            .unwrap()
+            .state,
+            State::Crit
+        );
+    }
+}

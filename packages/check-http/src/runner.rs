@@ -6,7 +6,7 @@ use crate::cli::Cli;
 use std::time::Instant;
 
 use crate::checking;
-use crate::checking::{CheckResult, Limits, State};
+use crate::checking::{Bounds, CheckResult, Limits, State};
 use crate::http;
 use std::time::Duration;
 
@@ -61,7 +61,14 @@ pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
 
     vec![
         checking::check_status(response.status, response.version, args.onredirect),
-        checking::check_body(response.body, args.page_size),
+        checking::check_body(
+            response.body,
+            match args.page_size {
+                None => Bounds::None,
+                Some((x, None)) => Bounds::Lower(x),
+                Some((x, Some(y))) => Bounds::LowerUpper(x, y),
+            },
+        ),
         checking::check_response_time(
             elapsed,
             match args.response_time_levels {

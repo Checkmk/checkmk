@@ -193,11 +193,24 @@ class CMKWebSession:
 
         return urls
 
-    def login(self, username: str = "cmkadmin", password: str = "cmk") -> None:
-        login_page = self.get("", allow_redirect_to_login=True).text
-        assert "_username" in login_page, "_username not found on login page - page broken?"
-        assert "_password" in login_page
-        assert "_login" in login_page
+    def login(
+        self,
+        username: str = "cmkadmin",
+        password: str = "cmk",
+    ) -> None:
+        r = self.get("", allow_redirect_to_login=True)
+
+        login_page_patterns = ("_username", "_password", "_login")
+        main_page_patterns = ("sidebar", "dashboard.py")
+        logged_in = all(_ in r.text for _ in main_page_patterns) and not any(
+            _ in r.text for _ in login_page_patterns
+        )
+
+        assert not logged_in, "Logged in unexpectedly!"
+
+        login_page = r.text
+        for pattern in login_page_patterns:
+            assert pattern in login_page, f"{pattern} not found in login page - page broken?"
 
         r = self.post(
             "login.py",
@@ -212,8 +225,9 @@ class CMKWebSession:
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 
-        assert "sidebar" in r.text
-        assert "dashboard.py" in r.text
+        main_page = r.text
+        for pattern in main_page_patterns:
+            assert pattern in main_page, f"{pattern} not found in main page - page broken?"
 
     def logout(self) -> None:
         r = self.get("logout.py", allow_redirect_to_login=True)

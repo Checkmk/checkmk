@@ -14,21 +14,7 @@ class RuleSetName(ValidatedString):
         """
         allow these names
 
-        Unfortunately, we have some WATO rules that contain dots or dashes.
+        Unfortunately, we had some WATO rules that contained dots or dashes.
         In order not to break things, we allow those
         """
-        return frozenset(
-            (
-                "drbd.net",
-                "drbd.disk",
-                "drbd.stats",
-                "fileinfo-groups",
-                "hpux_snmp_cs.cpu",
-                "j4p_performance.mem",
-                "j4p_performance.threads",
-                "j4p_performance.uptime",
-                "j4p_performance.app_state",
-                "j4p_performance.app_sess",
-                "j4p_performance.serv_req",
-            )
-        )
+        return frozenset()

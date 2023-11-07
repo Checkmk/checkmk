@@ -9,6 +9,7 @@ import dataclasses
 import logging
 import os
 import re
+import shlex
 import subprocess
 import sys
 import textwrap
@@ -17,10 +18,20 @@ from pathlib import Path
 from pprint import pformat
 
 import pexpect  # type: ignore[import-untyped]
+import pytest
 
 from cmk.utils.version import Edition
 
 LOGGER = logging.getLogger()
+
+
+class UtilCalledProcessError(subprocess.CalledProcessError):
+    def __str__(self) -> str:
+        return (
+            super().__str__()
+            if self.stderr is None
+            else f"{super().__str__()[:-1]} ({self.stderr!r})."
+        )
 
 
 @dataclasses.dataclass
@@ -336,7 +347,8 @@ def spawn_expect_process(
     return rc
 
 
-def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+def run(args: Sequence[str], check: bool = True) -> subprocess.CompletedProcess:
+    """Run a process and return a CompletedProcess object."""
     LOGGER.info("Executing: %s", subprocess.list2cmdline(args))
     try:
         proc = subprocess.run(
@@ -354,6 +366,97 @@ def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProc
     return proc
 
 
+def execute(  # type: ignore[no-untyped-def]
+    cmd: list[str],
+    *args,
+    preserve_env: list[str] | None = None,
+    sudo: bool = True,
+    substitute_user: str | None = None,
+    **kwargs,
+) -> subprocess.Popen:
+    """Run a process as root or a different user and return a Popen object."""
+    sudo_cmd = ["sudo"] if sudo else []
+    su_cmd = ["su", "-l", substitute_user] if substitute_user else []
+    if preserve_env:
+        # Skip the test cases calling this for some distros
+        if os.environ.get("DISTRO") == "centos-8":
+            pytest.skip("preserve env not possible in this environment")
+        if sudo:
+            sudo_cmd += [f"--preserve-env={','.join(preserve_env)}"]
+        if substitute_user:
+            su_cmd += ["--whitelist-environment", ",".join(preserve_env)]
+
+    kwargs.setdefault("encoding", "utf-8")
+    cmd = sudo_cmd + (su_cmd + ["-c", shlex.quote(shlex.join(cmd))] if substitute_user else cmd)
+    cmd_txt = " ".join(cmd)
+    LOGGER.info("Executing: %s", cmd_txt)
+    kwargs["shell"] = kwargs.get("shell", True)
+    return subprocess.Popen(cmd_txt if kwargs.get("shell") else cmd, *args, **kwargs)
+
+
+def check_output(
+    cmd: list[str],
+    input: str | None = None,  # pylint: disable=redefined-builtin
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> str:
+    """Mimics subprocess.check_output while running a process as root or a different user.
+
+    Returns the stdout of the process.
+    """
+    p = execute(
+        cmd,
+        sudo=sudo,
+        substitute_user=substitute_user,
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE if input else None,
+    )
+    stdout, stderr = p.communicate(input)
+    if p.returncode != 0:
+        raise UtilCalledProcessError(p.returncode, p.args, stdout, stderr)
+    assert isinstance(stdout, str)
+    return stdout
+
+
+def write_file(
+    path: str,
+    content: bytes | str,
+    sudo: bool = True,
+    substitute_user: str | None = None,
+) -> None:
+    """Write a file as root or another user."""
+    with execute(
+        ["tee", path],
+        sudo=sudo,
+        substitute_user=substitute_user,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+        encoding=None
+        if isinstance(
+            content,
+            bytes,
+        )
+        else "utf-8",
+    ) as p:
+        p.communicate(content)
+    if p.returncode != 0:
+        raise Exception(
+            "Failed to write file %s. Exit-Code: %d"
+            % (
+                path,
+                p.returncode,
+            )
+        )
+
+
+def makedirs(path: str, sudo: bool = True, substitute_user: str | None = None) -> bool:
+    """Make directory path (including parents) as root or another user."""
+    p = execute(["mkdir", "-p", path], sudo=sudo, substitute_user=substitute_user)
+    return p.wait() == 0
+
+
 def restart_httpd() -> None:
     """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
     creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
@@ -365,7 +468,7 @@ def restart_httpd() -> None:
 
     # When executed locally and un-dockerized, DISTRO may not be set
     if os.environ.get("DISTRO") in {"centos-8", "almalinux-9"}:
-        execute(["sudo", "httpd", "-k", "restart"])
+        run(["sudo", "httpd", "-k", "restart"])
 
 
 def get_services_with_status(

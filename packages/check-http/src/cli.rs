@@ -70,7 +70,7 @@ pub struct Cli {
 }
 
 pub type PageSizeLimits = (usize, Option<usize>);
-pub type ResponseTimeLevels = (f64, Option<f64>);
+type ResponseTimeLevels = (f64, Option<f64>);
 pub type DocumentAgeLevels = (u64, Option<u64>);
 
 #[derive(Clone, Debug, ValueEnum)]

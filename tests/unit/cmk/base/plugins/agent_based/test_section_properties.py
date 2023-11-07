@@ -263,7 +263,6 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "hivemanager_devices",
         "hpux_fchba",
         "hpux_lvm",
-        "hpux_multipath",
         "hpux_serviceguard",
         "hyperv_checkpoints",
         "ibm_svc_eventlog",

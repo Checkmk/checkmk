@@ -28,14 +28,18 @@ from cmk.rulesets.v1._rulespec import (
     ServiceRuleSpec,
     SpecialAgentRuleSpec,
 )
+from cmk.rulesets.v1._validation import disallow_empty, in_range, match_regex, ValidationError
 from cmk.rulesets.v1._valuespec import (
     DictElement,
     Dictionary,
+    DropdownChoice,
+    DropdownChoiceElement,
+    InvalidElementMode,
+    InvalidElementValidator,
     ItemSpec,
     MonitoringState,
     State,
     TextInput,
-    ValidationError,
     ValueSpec,
 )
 
@@ -67,4 +71,11 @@ __all__ = [
     "MonitoringState",
     "State",
     "ValidationError",
+    "DropdownChoice",
+    "DropdownChoiceElement",
+    "InvalidElementValidator",
+    "InvalidElementMode",
+    "disallow_empty",
+    "in_range",
+    "match_regex",
 ]

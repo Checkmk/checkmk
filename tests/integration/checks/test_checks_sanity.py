@@ -59,7 +59,6 @@ def _host_services(site: Site, agent_ctl: Path) -> Iterator[dict]:
         site.activate_changes_and_wait_for_core_reload()
 
 
-@pytest.mark.enable_socket
 def test_checks_sanity(host_services: dict) -> None:
     """Assert sanity of the discovered checks."""
     ok_services = get_services_with_status(host_services, 0)

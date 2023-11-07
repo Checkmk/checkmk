@@ -6,8 +6,9 @@ use crate::cli::Cli;
 use std::time::Instant;
 
 use crate::checking;
-use crate::checking::{CheckResult, State};
+use crate::checking::{Bounds, CheckResult, Limits, State};
 use crate::http;
+use std::time::Duration;
 
 pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
     let Ok(request) = http::prepare_request(
@@ -60,8 +61,24 @@ pub async fn collect_checks(args: Cli) -> Vec<CheckResult> {
 
     vec![
         checking::check_status(response.status, response.version, args.onredirect),
-        checking::check_body(response.body, args.page_size),
-        checking::check_response_time(elapsed, args.response_time_levels),
+        checking::check_body(
+            response.body,
+            match args.page_size {
+                None => Bounds::None,
+                Some((x, None)) => Bounds::Lower(x),
+                Some((x, Some(y))) => Bounds::LowerUpper(x, y),
+            },
+        ),
+        checking::check_response_time(
+            elapsed,
+            match args.response_time_levels {
+                None => Limits::None,
+                Some((x, None)) => Limits::Warn(Duration::from_secs_f64(x)),
+                Some((x, Some(y))) => {
+                    Limits::WarnCrit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
+                }
+            },
+        ),
         checking::check_document_age(&response.headers, args.document_age_levels),
     ]
     .into_iter()

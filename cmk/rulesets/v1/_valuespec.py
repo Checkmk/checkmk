@@ -6,29 +6,9 @@
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Any
 
 from cmk.rulesets.v1._localize import Localizable
-
-
-class ValidationError(ValueError):
-    """Raise when custom validation found invalid values
-
-    Args:
-        message: Description of why the value is invalid
-    """
-
-    def __init__(self, message: Localizable) -> None:
-        super().__init__(message)
-        self._message = message
-
-    @property
-    def message(self) -> Localizable:
-        return self._message
-
-
-@dataclass
-class DropdownChoice:
-    ...
 
 
 @dataclass(frozen=True)
@@ -53,6 +33,63 @@ class TextInput:
     default_value: str | None = None
 
     custom_validate: Callable[[str], object] | None = None
+
+
+class InvalidElementMode(enum.Enum):
+    KEEP = enum.auto()
+    COMPLAIN = enum.auto()
+
+
+@dataclass
+class InvalidElementValidator:
+    mode: InvalidElementMode = InvalidElementMode.COMPLAIN
+    display: Localizable | None = None
+    error_msg: Localizable | None = None
+
+
+_DropdownChoiceElementType = str | int | float | bool | enum.Enum | None
+
+
+@dataclass(frozen=True)
+class DropdownChoiceElement:
+    choice: _DropdownChoiceElementType
+    display: Localizable
+
+
+@dataclass(frozen=True)
+class DropdownChoice:
+    """Specification for a (single-)selection from multiple options
+
+    Args:
+        elements: Elements to choose from
+        no_elements_text: Text to show if no elements are given
+        deprecated_elements: Elements that can still be present in stored user configurations, but
+                             are no longer offered
+        frozen: If the value can be changed after initial configuration, e.g. for identifiers
+        title: Human readable title
+        label: Text displayed in front of the input field
+        help_text: Description to help the user with the configuration
+        default_element: Default selection
+        invalid_element_validation: Validate if the selected value is still offered as a choice
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    elements: Sequence[DropdownChoiceElement]
+    no_elements_text: Localizable | None = None
+
+    frozen: bool = False
+
+    title: Localizable | None = None
+    label: Localizable | None = None
+    help_text: Localizable | None = None
+
+    default_element: _DropdownChoiceElementType = None
+
+    deprecated_elements: Sequence[Any] | None = None
+    invalid_element_validation: InvalidElementValidator | None = None
+    custom_validate: Callable[[_DropdownChoiceElementType], object] | None = None
 
 
 @dataclass(frozen=True)
@@ -110,11 +147,17 @@ class State(enum.Enum):
 
 @dataclass(frozen=True)
 class MonitoringState:
-    title: Localizable
-    default_value: State = State.OK
-    elements: Sequence[tuple[State, str]] = field(
-        default_factory=lambda: [(state, state.name) for state in State]
+    elements: Sequence[DropdownChoiceElement] = field(
+        default_factory=lambda: [
+            DropdownChoiceElement(choice=state, display=Localizable(state.name)) for state in State
+        ]
     )
+
+    title: Localizable | None = None
+    label: Localizable | None = None
+    help_text: Localizable | None = None
+
+    default_value: State = State.OK
 
 
 ItemSpec = TextInput | DropdownChoice

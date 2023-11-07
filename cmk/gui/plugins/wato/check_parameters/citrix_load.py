@@ -9,20 +9,26 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Percentage, Transform, Tuple
+from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
+from cmk.gui.valuespec import Dictionary, Migrate, Percentage
 
 
 def _parameter_valuespec_citrix_load():
-    return Transform(
-        valuespec=Tuple(
-            title=_("Citrix Server load"),
+    return Migrate(
+        valuespec=Dictionary(
             elements=[
-                Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
-                Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
+                (
+                    "levels",
+                    SimpleLevels(
+                        spec=Percentage,
+                        title=_("Citrix Server load"),
+                        default_levels=(85.0, 95.0),
+                    ),
+                )
             ],
+            optional_keys=[],
         ),
-        to_valuespec=lambda x: (x[0] / 100.0, x[1] / 100.0),
-        from_valuespec=lambda x: (int(x[0] * 100), int(x[1] * 100)),
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": (p[0] / 100.0, p[1] / 100.0)},
     )
 
 

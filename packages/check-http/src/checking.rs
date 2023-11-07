@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::cli::{DocumentAgeLevels, PageSizeLimits, ResponseTimeLevels};
+use crate::cli::DocumentAgeLevels;
 use bytes::Bytes;
 use http::HeaderMap;
 use httpdate::parse_http_date;
@@ -11,6 +11,18 @@ use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
 use crate::cli::OnRedirect;
+
+pub enum Limits<T> {
+    None,
+    Warn(T),
+    WarnCrit(T, T),
+}
+
+pub enum Bounds<T> {
+    None,
+    Lower(T),
+    LowerUpper(T, T),
+}
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum State {
@@ -74,7 +86,7 @@ pub fn check_status(
 
 pub fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
-    page_size_limits: Option<PageSizeLimits>,
+    page_size_limits: Bounds<usize>,
 ) -> Option<CheckResult> {
     let body = body?;
 
@@ -87,11 +99,23 @@ pub fn check_body(
     }
 }
 
-pub fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits>) -> CheckResult {
+pub fn check_page_size(page_size: usize, page_size_limits: Bounds<usize>) -> CheckResult {
     let state = match page_size_limits {
-        Some((lower, _)) if page_size < lower => State::Warn,
-        Some((_, Some(upper))) if page_size > upper => State::Warn,
-        _ => State::Ok,
+        Bounds::None => State::Ok,
+        Bounds::Lower(lower) => {
+            if page_size < lower {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        }
+        Bounds::LowerUpper(lower, upper) => {
+            if page_size < lower || page_size > upper {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        }
     };
 
     CheckResult {
@@ -102,12 +126,26 @@ pub fn check_page_size(page_size: usize, page_size_limits: Option<PageSizeLimits
 
 pub fn check_response_time(
     response_time: Duration,
-    response_time_levels: Option<ResponseTimeLevels>,
+    response_time_levels: Limits<Duration>,
 ) -> Option<CheckResult> {
     let state = match response_time_levels {
-        Some((_, Some(crit))) if response_time.as_secs_f64() >= crit => State::Crit,
-        Some((warn, _)) if response_time.as_secs_f64() >= warn => State::Warn,
-        _ => State::Ok,
+        Limits::None => State::Ok,
+        Limits::Warn(warn) => {
+            if response_time >= warn {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        }
+        Limits::WarnCrit(warn, crit) => {
+            if response_time >= crit {
+                State::Crit
+            } else if response_time >= warn {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        }
     };
 
     Some(CheckResult {
@@ -159,32 +197,36 @@ pub fn check_document_age(
 #[cfg(test)]
 mod test_check_page_size {
     use crate::checking::check_page_size;
+    use crate::checking::Bounds;
     use crate::checking::State;
 
     #[test]
-    fn test_without_limits() {
-        assert_eq!(check_page_size(42, None).state, State::Ok);
+    fn test_without_bounds() {
+        assert_eq!(check_page_size(42, Bounds::None).state, State::Ok);
     }
 
     #[test]
     fn test_lower_within_bounds() {
-        assert_eq!(check_page_size(42, Some((12, None))).state, State::Ok);
+        assert_eq!(check_page_size(42, Bounds::Lower(12)).state, State::Ok);
     }
 
     #[test]
     fn test_lower_out_of_bounds() {
-        assert_eq!(check_page_size(42, Some((56, None))).state, State::Warn);
+        assert_eq!(check_page_size(42, Bounds::Lower(56)).state, State::Warn);
     }
 
     #[test]
     fn test_lower_and_higher_within_bounds() {
-        assert_eq!(check_page_size(56, Some((42, Some(100)))).state, State::Ok);
+        assert_eq!(
+            check_page_size(56, Bounds::LowerUpper(42, 100)).state,
+            State::Ok
+        );
     }
 
     #[test]
     fn test_lower_and_higher_too_low() {
         assert_eq!(
-            check_page_size(42, Some((56, Some(100)))).state,
+            check_page_size(42, Bounds::LowerUpper(56, 100)).state,
             State::Warn
         );
     }
@@ -192,8 +234,84 @@ mod test_check_page_size {
     #[test]
     fn test_lower_and_higher_too_high() {
         assert_eq!(
-            check_page_size(142, Some((56, Some(100)))).state,
+            check_page_size(142, Bounds::LowerUpper(56, 100)).state,
             State::Warn
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_check_response_time {
+    use crate::checking::check_response_time;
+    use crate::checking::{Limits, State};
+    use std::time::Duration;
+
+    #[test]
+    fn test_unbounded() {
+        assert_eq!(
+            check_response_time(Duration::new(5, 0), Limits::None)
+                .unwrap()
+                .state,
+            State::Ok
+        );
+    }
+
+    #[test]
+    fn test_warn_within_bounds() {
+        assert_eq!(
+            check_response_time(Duration::new(5, 0), Limits::Warn(Duration::new(6, 0)))
+                .unwrap()
+                .state,
+            State::Ok
+        );
+    }
+
+    #[test]
+    fn test_warn_is_warn() {
+        assert_eq!(
+            check_response_time(Duration::new(5, 0), Limits::Warn(Duration::new(4, 0)))
+                .unwrap()
+                .state,
+            State::Warn
+        );
+    }
+
+    #[test]
+    fn test_warncrit_within_bounds() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Limits::WarnCrit(Duration::new(6, 0), Duration::new(7, 0))
+            )
+            .unwrap()
+            .state,
+            State::Ok
+        );
+    }
+
+    #[test]
+    fn test_warncrit_is_warn() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Limits::WarnCrit(Duration::new(4, 0), Duration::new(6, 0))
+            )
+            .unwrap()
+            .state,
+            State::Warn
+        );
+    }
+
+    #[test]
+    fn test_warncrit_is_crit() {
+        assert_eq!(
+            check_response_time(
+                Duration::new(5, 0),
+                Limits::WarnCrit(Duration::new(2, 0), Duration::new(3, 0))
+            )
+            .unwrap()
+            .state,
+            State::Crit
         );
     }
 }

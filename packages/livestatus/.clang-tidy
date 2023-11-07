@@ -40,4 +40,3 @@ WarningsAsErrors: '*'
 ExtraArgs:
 - -Wno-unknown-pragmas  # TODO: remove this after switch to clang-tidy-18
 ...
-

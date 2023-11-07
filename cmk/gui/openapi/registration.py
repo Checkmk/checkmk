@@ -32,11 +32,11 @@ from cmk.gui.openapi.endpoints import (
     user_role,
     version,
 )
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
-def register() -> None:
+def register(endpoint_registry: EndpointRegistry) -> None:
     # This is a hack to make all host attributes available before loading the openapi plugins. The
     # modules would be loaded later on by cmk.gui.cee.agent_bakery.registration.register(), but the
     # openapi code imported here requires all host_attributes to be present before loading it.
@@ -52,32 +52,32 @@ def register() -> None:
 
     from cmk.gui.openapi.endpoints import folder_config, host_config, service_discovery
 
-    acknowledgement.register(ENDPOINT_REGISTRY)
-    activate_changes.register(ENDPOINT_REGISTRY)
-    agent.register(ENDPOINT_REGISTRY)
-    audit_log.register(ENDPOINT_REGISTRY)
-    aux_tags.register(ENDPOINT_REGISTRY)
-    bi.register(ENDPOINT_REGISTRY)
-    cert.register(ENDPOINT_REGISTRY)
-    comment.register(ENDPOINT_REGISTRY)
-    contact_group_config.register(ENDPOINT_REGISTRY)
-    downtime.register(ENDPOINT_REGISTRY)
-    folder_config.register(ENDPOINT_REGISTRY)
-    host.register(ENDPOINT_REGISTRY)
-    host_config.register(ENDPOINT_REGISTRY)
-    host_group_config.register(ENDPOINT_REGISTRY)
-    host_internal.register(ENDPOINT_REGISTRY)
-    host_tag_group.register(ENDPOINT_REGISTRY)
-    metric.register(ENDPOINT_REGISTRY)
-    notification_rules.register(ENDPOINT_REGISTRY)
-    password.register(ENDPOINT_REGISTRY)
-    rule.register(ENDPOINT_REGISTRY)
-    ruleset.register(ENDPOINT_REGISTRY)
-    service.register(ENDPOINT_REGISTRY)
-    service_discovery.register(ENDPOINT_REGISTRY)
-    service_group_config.register(ENDPOINT_REGISTRY)
-    site_management.register(ENDPOINT_REGISTRY)
-    time_periods.register(ENDPOINT_REGISTRY)
-    user_config.register(ENDPOINT_REGISTRY)
-    user_role.register(ENDPOINT_REGISTRY)
-    version.register(ENDPOINT_REGISTRY)
+    acknowledgement.register(endpoint_registry)
+    activate_changes.register(endpoint_registry)
+    agent.register(endpoint_registry)
+    audit_log.register(endpoint_registry)
+    aux_tags.register(endpoint_registry)
+    bi.register(endpoint_registry)
+    cert.register(endpoint_registry)
+    comment.register(endpoint_registry)
+    contact_group_config.register(endpoint_registry)
+    downtime.register(endpoint_registry)
+    folder_config.register(endpoint_registry)
+    host.register(endpoint_registry)
+    host_config.register(endpoint_registry)
+    host_group_config.register(endpoint_registry)
+    host_internal.register(endpoint_registry)
+    host_tag_group.register(endpoint_registry)
+    metric.register(endpoint_registry)
+    notification_rules.register(endpoint_registry)
+    password.register(endpoint_registry)
+    rule.register(endpoint_registry)
+    ruleset.register(endpoint_registry)
+    service.register(endpoint_registry)
+    service_discovery.register(endpoint_registry)
+    service_group_config.register(endpoint_registry)
+    site_management.register(endpoint_registry)
+    time_periods.register(endpoint_registry)
+    user_config.register(endpoint_registry)
+    user_role.register(endpoint_registry)
+    version.register(endpoint_registry)

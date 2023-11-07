@@ -7,33 +7,32 @@
 # 100
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-
-citrix_serverload_default_levels = (8500, 9500)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def inventory_citrix_serverload(info):
-    return [(None, citrix_serverload_default_levels)]
+    yield None, {}
 
 
 def check_citrix_serverload(_no_item, params, info):
     try:
         load = int(info[0][0])
-    except Exception:
-        yield 3, "Load information not found"
+    except (IndexError, ValueError):
         return
 
-    warn, crit = params
-    state = 0
     if load == 20000:
         yield 1, "License error"
         load = 10000
-    if load >= crit:
-        state = 2
-    elif load >= warn:
-        state = 1
-    yield state, "Current Citrix Load is: %.2f%%" % (load / 100.0), [("perf", load, warn, crit)]
+
+    yield check_levels(
+        load / 100.0,
+        "citrix_load",
+        params["levels"],
+        human_readable_func=render.percent,
+        infoname="Current Citrix Load",
+    )
 
 
 check_info["citrix_serverload"] = LegacyCheckDefinition(
@@ -41,4 +40,7 @@ check_info["citrix_serverload"] = LegacyCheckDefinition(
     discovery_function=inventory_citrix_serverload,
     check_function=check_citrix_serverload,
     check_ruleset_name="citrix_load",
+    check_default_parameters={
+        "levels": (85.0, 95.0),
+    },
 )

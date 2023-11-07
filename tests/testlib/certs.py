@@ -4,15 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
-from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.hashes import SHA512
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.x509 import (
     Certificate,
     CertificateSigningRequest,
     CertificateSigningRequestBuilder,
+    load_pem_x509_certificate,
     Name,
     NameAttribute,
 )
@@ -20,8 +22,7 @@ from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from cmk.utils.certs import _rsa_public_key_from_cert_or_csr
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey, RsaPrivateKey
 
 
 def check_certificate_against_private_key(
@@ -30,23 +31,9 @@ def check_certificate_against_private_key(
 ) -> None:
     # Check if the public key of certificate matches the public key corresponding to the given
     # private one
-    assert (
-        _rsa_public_key_from_cert_or_csr(cert).public_numbers()
-        == private_key.public_key().public_numbers()
-    )
-
-
-def check_certificate_against_public_key(
-    cert: Certificate,
-    public_key: rsa.RSAPublicKey,
-) -> None:
-    # Check if the signature of the certificate matches the public key
-    public_key.verify(
-        cert.signature,
-        cert.tbs_certificate_bytes,
-        PKCS1v15(),
-        SHA256(),
-    )
+    pubkey = cert.public_key()
+    assert isinstance(pubkey, rsa.RSAPublicKey)
+    assert pubkey.public_numbers() == private_key.public_key().public_numbers()
 
 
 def get_cn(name: Name) -> str | bytes:
@@ -62,7 +49,10 @@ def check_cn(cert_or_csr: Certificate | CertificateSigningRequest, expected_cn: 
 def generate_csr_pair(
     cn: str, private_key_size: int = 2048
 ) -> tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
-    private_key = generate_private_key(private_key_size)
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=private_key_size,
+    )
     return (
         private_key,
         CertificateSigningRequestBuilder()
@@ -75,19 +65,21 @@ def generate_csr_pair(
         )
         .sign(
             private_key,
-            SHA256(),
+            SHA512(),
         ),
     )
 
 
-def generate_private_key(size: int) -> rsa.RSAPrivateKey:
-    return rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=size,
+def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, rsa.RSAPrivateKey]:
+    return (
+        load_pem_x509_certificate(
+            pem_bytes := path_pem.read_bytes(),
+        ),
+        load_pem_private_key(
+            pem_bytes,
+            None,
+        ),
     )
-
-
-FROZEN_NOW = datetime(2023, 1, 1, 8, 0, 0)
 
 
 @pytest.fixture(name="self_signed_cert", scope="module")
@@ -97,10 +89,15 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
     Valid from 2023-01-01 08:00:00 til 2023-01-01 10:00:00.
     """
-    with freeze_time(FROZEN_NOW):
+    with freeze_time(datetime(2023, 1, 1, 8, 0, 0)):
         return CertificateWithPrivateKey.generate_self_signed(
             common_name="TestGenerateSelfSigned",
             expiry=relativedelta(hours=2),
             key_size=1024,
             is_ca=True,
         )
+
+
+@pytest.fixture(name="rsa_key", scope="module")
+def fixture_rsa_key() -> RsaPrivateKey:
+    return RsaPrivateKey.generate(1024)

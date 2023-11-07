@@ -23,6 +23,9 @@ import cmk.rulesets.v1 as api_v1
 
 
 def _v1_custom_text_validate(value: str) -> None:
+    api_v1.disallow_empty(error_msg=api_v1.Localizable("Fill this"))(value)
+    api_v1.match_regex(regex=r"^[^.\r\n]+$", error_msg=api_v1.Localizable("No dot allowed"))(value)
+
     if value == "admin":
         raise api_v1.ValidationError(api_v1.Localizable("Forbidden"))
 
@@ -36,10 +39,22 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ["new_valuespec", "expected"],
     [
         pytest.param(
+            api_v1.MonitoringState(),
+            legacy_valuespecs.MonitoringState(),
+            id="minimal MonitoringState",
+        ),
+        pytest.param(
             api_v1.MonitoringState(
-                title=api_v1.Localizable("title"), default_value=api_v1.State.OK
+                title=api_v1.Localizable("title"),
+                label=api_v1.Localizable("label"),
+                help_text=api_v1.Localizable("help text"),
             ),
-            legacy_valuespecs.MonitoringState(title=_("title"), default_value=0),
+            legacy_valuespecs.MonitoringState(
+                title=_("title"),
+                label=_("label"),
+                help=_("help text"),
+                default_value=0,
+            ),
             id="MonitoringState",
         ),
         pytest.param(
@@ -106,6 +121,49 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 validate=_legacy_custom_text_validate,
             ),
             id="TextInput",
+        ),
+        pytest.param(
+            api_v1.DropdownChoice(elements=[]),
+            legacy_valuespecs.DropdownChoice(choices=[], invalid_choice="complain"),
+            id="minimal DropdownChoice",
+        ),
+        pytest.param(
+            api_v1.DropdownChoice(
+                elements=[
+                    api_v1.DropdownChoiceElement(
+                        choice=True, display=api_v1.Localizable("Enabled")
+                    ),
+                    api_v1.DropdownChoiceElement(
+                        choice=False, display=api_v1.Localizable("Disabled")
+                    ),
+                ],
+                no_elements_text=api_v1.Localizable("No elements"),
+                deprecated_elements=[],
+                frozen=True,
+                title=api_v1.Localizable("title"),
+                label=api_v1.Localizable("label"),
+                help_text=api_v1.Localizable("help text"),
+                default_element=True,
+                invalid_element_validation=api_v1.InvalidElementValidator(
+                    mode=api_v1.InvalidElementMode.KEEP,
+                    display=api_v1.Localizable("invalid choice title"),
+                    error_msg=api_v1.Localizable("invalid choice msg"),
+                ),
+            ),
+            legacy_valuespecs.DropdownChoice(
+                choices=[(True, _("Enabled")), (False, _("Disabled"))],
+                empty_text=_("No elements"),
+                deprecated_choices=[],
+                read_only=True,
+                title=_("title"),
+                label=_("label"),
+                help=_("help text"),
+                default_value=True,
+                invalid_choice=None,
+                invalid_choice_title=_("invalid choice title"),
+                invalid_choice_error=_("invalid choice msg"),
+            ),
+            id="DropdownChoice",
         ),
     ],
 )
@@ -174,6 +232,8 @@ def test_convert_to_legacy_rulespec(
 
 
 def _compare_specs(actual: object, expected: object) -> None:
+    ignored_attrs = {"__orig_class__"}
+
     if isinstance(expected, Iterable) and not isinstance(expected, str):
         assert isinstance(actual, Iterable) and not isinstance(actual, str)
         for actual_elem, expected_elem in zip(actual, expected):
@@ -184,8 +244,13 @@ def _compare_specs(actual: object, expected: object) -> None:
         assert actual == expected
         return
 
-    assert expected.__dict__.keys() == actual.__dict__.keys()
+    expected_keys = expected.__dict__.keys() - ignored_attrs
+    actual_keys = actual.__dict__.keys() - ignored_attrs
+    assert expected_keys == actual_keys
+
     for attr, expected_value in expected.__dict__.items():
+        if attr in ignored_attrs:
+            continue
         actual_value = getattr(actual, attr)
         if attr in ["_custom_validate", "_validate"]:
             # testing the equality of the validation in a generic way seems very difficult
@@ -202,13 +267,28 @@ def _compare_specs(actual: object, expected: object) -> None:
             assert actual_value == expected_value
 
 
-def test_convert_validation():
+@pytest.mark.parametrize(
+    "input_value",
+    [
+        pytest.param("admin", id="custom validation"),
+        pytest.param("", id="empty validation"),
+        pytest.param(".", id="regex validation"),
+    ],
+)
+def test_convert_validation(input_value: str) -> None:
     converted_spec = _convert_to_legacy_valuespec(
         api_v1.TextInput(custom_validate=_v1_custom_text_validate), _
     )
-    expected_spec = legacy_valuespecs.TextInput(validate=_legacy_custom_text_validate)
 
-    test_args = ("admin", "var_prefix")
+    expected_spec = legacy_valuespecs.TextInput(
+        validate=_legacy_custom_text_validate,
+        regex=r"^[^.\r\n]+$",
+        regex_error=_("No dot allowed"),
+        allow_empty=False,
+        empty_text=_("Fill this"),
+    )
+
+    test_args = (input_value, "var_prefix")
     with pytest.raises(MKUserError) as expected_error:
         expected_spec.validate_value(*test_args)
 

@@ -47,12 +47,12 @@ def inventory_ibm_svc_license(parsed):
     for item, data in parsed.items():
         if data != [0.0, 0.0]:
             # Omit unused svc features
-            yield item, None
+            yield item, {}
 
 
 def check_ibm_svc_license(item, params, parsed):
     licensed, used = parsed[item]
-    return license_check_levels(licensed, used, params)
+    return license_check_levels(licensed, used, params["levels"][1])
 
 
 check_info["ibm_svc_license"] = LegacyCheckDefinition(
@@ -61,4 +61,5 @@ check_info["ibm_svc_license"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_svc_license,
     check_function=check_ibm_svc_license,
     check_ruleset_name="ibmsvc_licenses",
+    check_default_parameters={"levels": ("crit_on_all", None)},
 )

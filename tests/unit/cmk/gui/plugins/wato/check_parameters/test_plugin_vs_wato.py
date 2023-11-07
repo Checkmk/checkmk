@@ -256,6 +256,7 @@ class ErrorReporter:
         ("check", RuleGroup.CheckgroupParameters("ceph_status")),
         ("check", RuleGroup.CheckgroupParameters("disk_temperature")),
         ("check", RuleGroup.CheckgroupParameters("entersekt_soaprrors")),
+        ("check", RuleGroup.CheckgroupParameters("fileinfo-groups")),
         ("check", RuleGroup.CheckgroupParameters("hw_single_temperature")),
         ("check", RuleGroup.CheckgroupParameters("hw_temperature")),
         ("check", RuleGroup.CheckgroupParameters("mailqueue_length")),
@@ -353,18 +354,9 @@ class ErrorReporter:
         ("check", "brocade_tm", "brocade_tm"),
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "domino_tasks", "domino_tasks"),
-        ("check", "drbd_disk", "drbd.disk"),
-        ("check", "drbd_net", "drbd.net"),
-        ("check", "drbd_stats", "drbd.stats"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
         ("check", "innovaphone_channels", "hw_single_channelserature"),
         ("check", "ironport_misc", "obsolete"),
-        ("check", "j4p_performance_app_sess", "j4p_performance.app_sess"),
-        ("check", "j4p_performance_app_state", "j4p_performance.app_state"),
-        ("check", "j4p_performance_mem", "j4p_performance.mem"),
-        ("check", "j4p_performance_serv_req", "j4p_performance.serv_req"),
-        ("check", "j4p_performance_threads", "j4p_performance.threads"),
-        ("check", "j4p_performance_uptime", "j4p_performance.uptime"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),
         ("check", "mongodb_replication_info", "mongodb_replication_info"),
@@ -475,20 +467,9 @@ class ErrorReporter:
         ),
         (
             "check",
-            "citrix_licenses",
-            RuleGroup.CheckgroupParameters("citrix_licenses"),
-        ),
-        (
-            "check",
-            "citrix_serverload",
-            RuleGroup.CheckgroupParameters("citrix_load"),
-        ),
-        (
-            "check",
             "couchbase_buckets_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
         ),
-        ("check", "db2_backup", RuleGroup.CheckgroupParameters("db2_backup")),
         ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
         (
             "check",
@@ -532,11 +513,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "enterasys_lsnat", RuleGroup.CheckgroupParameters("lsnat")),
-        (
-            "check",
-            "esx_vsphere_licenses",
-            RuleGroup.CheckgroupParameters("esx_licenses"),
-        ),
         (
             "check",
             "esx_vsphere_objects_count",
@@ -601,11 +577,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "hpux_multipath",
-            RuleGroup.CheckgroupParameters("hpux_multipath"),
-        ),
-        (
-            "check",
             "huawei_osn_laser",
             RuleGroup.CheckgroupParameters("huawei_osn_laser"),
         ),
@@ -613,11 +584,6 @@ class ErrorReporter:
             "check",
             "ibm_imm_fan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
-        ),
-        (
-            "check",
-            "ibm_svc_license",
-            RuleGroup.CheckgroupParameters("ibmsvc_licenses"),
         ),
         (
             "check",
@@ -800,11 +766,6 @@ class ErrorReporter:
             "check",
             "rabbitmq_nodes_mem",
             RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
-        (
-            "check",
-            "rds_licenses",
-            RuleGroup.CheckgroupParameters("rds_licenses"),
         ),
         (
             "check",

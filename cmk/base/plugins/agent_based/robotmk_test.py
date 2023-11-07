@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import assert_never, Literal, TypedDict
 
@@ -15,25 +16,28 @@ from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import robotmk_api
 from .utils.robotmk_parse_xml import extract_tests_from_suites, Outcome, Test
+from .utils.robotmk_suite_execution_report import (
+    ExecutionReport,
+    ExecutionReportAlreadyRunning,
+    RebotOutcomeResult,
+)
 
 
 class Params(TypedDict):
     test_runtime: tuple[int, int] | None
 
 
-def discover(section: robotmk_api.Section) -> DiscoveryResult:
-    for suite_execution_report in section.suite_execution_reports:
-        yield from _discover_tests(suite_execution_report)
+def discover(
+    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
+) -> DiscoveryResult:
+    for execution_report in section.values():
+        if isinstance(execution_report, ExecutionReport):
+            yield from _discover_tests(execution_report)
 
 
-def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> DiscoveryResult:
-    if not isinstance(execution_report := result.outcome, robotmk_api.ExecutionReport):
-        return
-    if not isinstance(
-        rebot_result := execution_report.Executed.rebot, robotmk_api.RebotOutcomeResult
-    ):
+def _discover_tests(report: ExecutionReport) -> DiscoveryResult:
+    if not isinstance(rebot_result := report.Executed.rebot, RebotOutcomeResult):
         return
 
     for test_name in extract_tests_from_suites(rebot_result.Ok.xml.robot.suite):
@@ -47,15 +51,15 @@ def _discover_tests(result: robotmk_api.SuiteExecutionReport) -> DiscoveryResult
         )
 
 
-def check(item: str, params: Params, section: robotmk_api.Section) -> CheckResult:
-    for suite_execution_report in section.suite_execution_reports:
-        if not isinstance(
-            execution_report := suite_execution_report.outcome, robotmk_api.ExecutionReport
-        ):
+def check(
+    item: str,
+    params: Params,
+    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning],
+) -> CheckResult:
+    for execution_report in section.values():
+        if not isinstance(execution_report, ExecutionReport):
             continue
-        if not isinstance(
-            rebot_result := execution_report.Executed.rebot, robotmk_api.RebotOutcomeResult
-        ):
+        if not isinstance(rebot_result := execution_report.Executed.rebot, RebotOutcomeResult):
             continue
 
         if not (test := extract_tests_from_suites(rebot_result.Ok.xml.robot.suite).get(item)):
@@ -103,7 +107,7 @@ def _remap_state(status: Outcome) -> State:
 
 register.check_plugin(
     name="robotmk_test",
-    sections=["robotmk_v2"],
+    sections=["robotmk_suite_execution_report"],
     service_name="%s",
     discovery_function=discover,
     check_function=check,

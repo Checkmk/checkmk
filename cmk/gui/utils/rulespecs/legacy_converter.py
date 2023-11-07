@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import enum
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Callable, TypeVar
+from typing import Any, assert_never, Callable, TypeVar
 
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
@@ -18,7 +19,8 @@ from cmk.rulesets import v1 as ruleset_api_v1
 from cmk.rulesets.v1 import RuleSpecSubGroup
 
 _RULESPEC_SUB_GROUP_LEGACY_MAPPING = {
-    RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS: wato.RulespecGroupCheckParametersApplications
+    RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS: wato.RulespecGroupCheckParametersApplications,
+    RuleSpecSubGroup.CHECK_PARAMETERS_VIRTUALIZATION: wato.RulespecGroupCheckParametersVirtualization,
 }
 
 
@@ -106,13 +108,78 @@ def _convert_to_legacy_valuespec(
     if isinstance(to_convert, ruleset_api_v1.TextInput):
         return _convert_to_legacy_text_input(to_convert, localizer)
 
+    if isinstance(to_convert, ruleset_api_v1.DropdownChoice):
+        return _convert_to_legacy_dropdown_choice(to_convert, localizer)
+
     if isinstance(to_convert, ruleset_api_v1.MonitoringState):
-        return legacy_valuespecs.MonitoringState(
-            title=to_convert.title.localize(localizer),
-            default_value=to_convert.default_value.value,
-        )
+        return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
     raise NotImplementedError(to_convert)
+
+
+def _convert_to_legacy_monitoring_state(
+    to_convert: ruleset_api_v1.MonitoringState, localizer: Callable[[str], str]
+) -> legacy_valuespecs.DropdownChoice:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+    if to_convert.default_value is not None:
+        converted_kwargs["default_value"] = (
+            to_convert.default_value.value
+            if isinstance(to_convert.default_value, enum.Enum)
+            else to_convert.default_value
+        )
+    return legacy_valuespecs.MonitoringState(**converted_kwargs)
+
+
+def _convert_to_legacy_dropdown_choice(
+    to_convert: ruleset_api_v1.DropdownChoice, localizer: Callable[[str], str]
+) -> legacy_valuespecs.DropdownChoice:
+    choices = [
+        (
+            element.choice.value if isinstance(element.choice, enum.Enum) else element.choice,
+            element.display.localize(localizer),
+        )
+        for element in to_convert.elements
+    ]
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "empty_text": _localize_optional(to_convert.no_elements_text, localizer),
+        "read_only": to_convert.frozen,
+    }
+    if to_convert.invalid_element_validation is not None:
+        match to_convert.invalid_element_validation.mode:
+            case ruleset_api_v1.InvalidElementMode.COMPLAIN:
+                converted_kwargs["invalid_choice"] = "complain"
+            case ruleset_api_v1.InvalidElementMode.KEEP:
+                converted_kwargs["invalid_choice"] = None
+            case _:
+                assert_never(to_convert.invalid_element_validation.mode)
+
+        converted_kwargs["invalid_choice_title"] = _localize_optional(
+            to_convert.invalid_element_validation.display, localizer
+        )
+        converted_kwargs["invalid_choice_error"] = _localize_optional(
+            to_convert.invalid_element_validation.error_msg, localizer
+        )
+    if to_convert.deprecated_elements is not None:
+        converted_kwargs["deprecated_choices"] = to_convert.deprecated_elements
+    if to_convert.default_element is not None:
+        converted_kwargs["default_value"] = (
+            to_convert.default_element.value
+            if isinstance(to_convert.default_element, enum.Enum)
+            else to_convert.default_element
+        )
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.DropdownChoice(choices, **converted_kwargs)
 
 
 def _convert_to_legacy_text_input(
@@ -143,7 +210,10 @@ def _convert_to_legacy_item_spec(
 ) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
     if isinstance(to_convert, ruleset_api_v1.TextInput):
         return _convert_to_legacy_text_input(to_convert, localizer)
-    raise NotImplementedError(to_convert)
+    if isinstance(to_convert, ruleset_api_v1.DropdownChoice):
+        return _convert_to_legacy_dropdown_choice(to_convert, localizer)
+
+    raise ValueError(to_convert)
 
 
 _ValidateFuncType = TypeVar("_ValidateFuncType")

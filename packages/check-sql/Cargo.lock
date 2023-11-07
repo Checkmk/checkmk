@@ -1116,6 +1116,8 @@ dependencies = [
  "pin-project-lite",
  "pretty-hex",
  "thiserror",
+ "tokio",
+ "tokio-util",
  "tracing",
  "uuid",
  "winauth",

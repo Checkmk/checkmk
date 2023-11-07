@@ -8,8 +8,10 @@ edition = "2021"
 [dependencies]
 tiberius = { version = "0.12.2", features = [
     "winauth",
+    "sql-browser-tokio",
     # "integrated-auth-gssapi",
 ] } # MS SQL
+
 
 # need to compile OpenSSL. See:
 # https://stackoverflow.com/questions/68871193/pkg-config-error-during-rust-cross-compilation

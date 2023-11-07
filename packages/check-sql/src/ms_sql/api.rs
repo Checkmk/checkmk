@@ -7,9 +7,14 @@ use crate::emit::header;
 use crate::ms_sql::queries;
 use anyhow::Result;
 
-use tiberius::{AuthMethod, Client, Config, Query, Row};
+use tiberius::{AuthMethod, Client, Config, Query, Row, SqlBrowser};
 use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
+
+use super::defaults;
+
+pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
+pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -22,19 +27,20 @@ pub struct Section {
 }
 
 #[derive(Clone, Debug)]
-pub struct Instance {
+pub struct InstanceEngine {
     pub name: String,
     pub id: String,
     pub version: String,
     pub edition: String,
     pub cluster: Option<String>,
     pub port: Option<u16>,
+    pub available: Option<bool>,
 }
 
-impl Instance {
+impl InstanceEngine {
     /// NOTE: ignores any bad data in the row
-    fn from_row(row: &Row) -> Instance {
-        Instance {
+    fn from_row(row: &Row) -> InstanceEngine {
+        InstanceEngine {
             name: row
                 .try_get::<&str, usize>(0)
                 .unwrap_or_default()
@@ -63,6 +69,7 @@ impl Instance {
                 .try_get::<&str, usize>(5)
                 .unwrap_or_default()
                 .and_then(|s| s.parse::<u16>().ok()),
+            available: None,
         }
     }
 }
@@ -102,13 +109,14 @@ fn get_section_separator(name: &str) -> Option<char> {
     }
 }
 
-/// Check SQL connection to MS SQL
+/// Create connection to MS SQL
 ///
 /// # Arguments
 ///
 /// * `host` - Hostname of MS SQL server
 /// * `port` - Port of MS SQL server
 /// * `credentials` - defines connection type and credentials itself
+/// * `instance_name` - name of the instance to connect to
 pub async fn create_client(
     host: &str,
     port: u16,
@@ -139,6 +147,55 @@ pub async fn create_client(
     Ok(Client::connect(config, tcp.compat_write()).await?)
 }
 
+/// Create connection to MS SQL
+///
+/// # Arguments
+///
+/// * `host` - Hostname of MS SQL server
+/// * `port` - Port of MS SQL server BROWSER,  1434 - default
+/// * `credentials` - defines connection type and credentials itself
+/// * `instance_name` - name of the instance to connect to
+pub async fn create_client_for_instance(
+    host: &str,
+    port: Option<u16>,
+    credentials: Credentials<'_>,
+    instance_name: &str,
+) -> anyhow::Result<Client<Compat<TcpStream>>> {
+    let mut config = Config::new();
+
+    config.host(host);
+    // The default port of SQL Browser
+    config.port(port.unwrap_or(defaults::BROWSER_PORT));
+    config.authentication(match credentials {
+        Credentials::SqlServer { user, password } => AuthMethod::sql_server(user, password),
+        #[cfg(windows)]
+        Credentials::Windows { user, password } => AuthMethod::windows(user, password),
+        #[cfg(unix)]
+        Credentials::Windows {
+            user: _,
+            password: _,
+        } => anyhow::bail!("not supported"),
+    });
+
+    // The name of the database server instance.
+    config.instance_name(instance_name);
+
+    // on production, it is not a good idea to do this
+    config.trust_cert();
+
+    // This will create a new `TcpStream` from `async-std`, connected to the
+    // right port of the named instance.
+    let tcp = TcpStream::connect_named(&config)
+        .await
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_TCP_ERROR_TAG, e))?;
+
+    // And from here on continue the connection process in a normal way.
+    let s = Client::connect(config, tcp.compat_write())
+        .await
+        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))?;
+    Ok(s)
+}
+
 /// Check Integrated connection to MS SQL
 ///
 /// # Arguments
@@ -149,6 +206,7 @@ pub async fn create_client(
 pub async fn create_client_for_logged_user(
     host: &str,
     port: u16,
+    instance_name: Option<String>,
 ) -> Result<Client<Compat<TcpStream>>> {
     let mut config = Config::new();
 
@@ -156,6 +214,9 @@ pub async fn create_client_for_logged_user(
     config.port(port);
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
+    if let Some(name) = instance_name {
+        config.instance_name(name);
+    }
 
     let tcp = TcpStream::connect(config.get_addr()).await?;
     tcp.set_nodelay(true)?;
@@ -185,24 +246,24 @@ pub async fn run_query(
 }
 
 /// return all MS SQL instances installed
-pub async fn get_all_instances(
+pub async fn find_instance_engines(
     client: &mut Client<Compat<TcpStream>>,
-) -> Result<(Vec<Instance>, Vec<Instance>)> {
+) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
     Ok((
-        get_instances(client, &queries::get_instances_query()).await?,
-        get_instances(client, &queries::get_32bit_instances_query()).await?,
+        get_engines(client, &queries::get_instances_query()).await?,
+        get_engines(client, &queries::get_32bit_instances_query()).await?,
     ))
 }
 
-async fn get_instances(
+async fn get_engines(
     client: &mut Client<Compat<TcpStream>>,
     query: &str,
-) -> Result<Vec<Instance>> {
+) -> Result<Vec<InstanceEngine>> {
     let rows = run_query(client, query).await?;
     Ok(rows[0]
         .iter()
-        .map(Instance::from_row)
-        .collect::<Vec<Instance>>()
+        .map(InstanceEngine::from_row)
+        .collect::<Vec<InstanceEngine>>()
         .to_vec())
 }
 

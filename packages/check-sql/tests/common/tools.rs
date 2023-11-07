@@ -135,3 +135,14 @@ pub fn skip_on_lack_of_ms_sql_endpoint() {
     )
     .unwrap();
 }
+
+pub async fn run_get_version(client: &mut Client<Compat<TcpStream>>) -> Option<String> {
+    let rows = crate::api::run_query(client, "select @@VERSION")
+        .await
+        .unwrap();
+    let row = &rows[0];
+    row[0]
+        .try_get::<&str, usize>(0)
+        .unwrap()
+        .map(str::to_string)
+}

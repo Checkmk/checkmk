@@ -11,6 +11,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.version as cmk_version
 from cmk.utils.licensing.registry import get_license_state
 
+from cmk.gui.http import request
+
 
 class AutomationCommand(abc.ABC):
     """Abstract base class for all automation commands"""
@@ -44,10 +46,17 @@ class AutomationPing(AutomationCommand):
     def command_name(self) -> str:
         return "ping"
 
-    def get_request(self) -> None:
-        return None
+    def get_request(self) -> str | None:
+        return request.headers.get("x-checkmk-version")
 
-    def execute(self, _unused_request: None) -> dict[str, str]:
+    def execute(self, api_request: str | None) -> dict[str, str]:
+        # versions before 2.2 cannot deal with additional ping result fields
+        if api_request is None or api_request.startswith("2.1."):
+            return {
+                "version": cmk_version.__version__,
+                "edition": cmk_version.edition().short,
+            }
+
         return {
             "version": cmk_version.__version__,
             "edition": cmk_version.edition().short,

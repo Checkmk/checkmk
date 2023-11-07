@@ -8,60 +8,64 @@ from typing import assert_never
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import robotmk_api
+from .utils.robotmk_suite_execution_report import (
+    AttemptOutcome,
+    AttemptOutcomeOtherError,
+    AttemptsOutcome,
+    ExecutionReportAlreadyRunning,
+    SuiteExecutionReport,
+)
 
 
-def discover(section: Sequence[robotmk_api.SuiteExecutionReport]) -> DiscoveryResult:
+def discover(section: Sequence[SuiteExecutionReport]) -> DiscoveryResult:
     yield from (
         Service(item=f"Suite {suite_execution_report.suite_name}")
         for suite_execution_report in section
     )
 
 
-def check(item: str, section: Sequence[robotmk_api.SuiteExecutionReport]) -> CheckResult:
+def check(item: str, section: Sequence[SuiteExecutionReport]) -> CheckResult:
     for suite_execution_report in section:
         yield from _check_suite_execution_result(suite_execution_report, item)
 
 
-def _check_suite_execution_result(
-    result: robotmk_api.SuiteExecutionReport, item: str
-) -> CheckResult:
+def _check_suite_execution_result(result: SuiteExecutionReport, item: str) -> CheckResult:
     if f"Suite {result.suite_name}" != item:
         return
 
-    if isinstance(result.outcome, robotmk_api.ExecutionReportAlreadyRunning):
+    if isinstance(result.outcome, ExecutionReportAlreadyRunning):
         yield Result(state=State.CRIT, summary="Suite already running, execution skipped")
         return
 
-    if isinstance(result.outcome.Executed, robotmk_api.AttemptsOutcome):
+    if isinstance(result.outcome.Executed, AttemptsOutcome):
         for attempt in result.outcome.Executed.attempts:
             yield _attempt_result(attempt)
 
 
 def _attempt_result(
-    attempt_outcome: robotmk_api.AttemptOutcome | robotmk_api.AttemptOutcomeOtherError,
+    attempt_outcome: AttemptOutcome | AttemptOutcomeOtherError,
 ) -> Result:
-    state = State.OK if attempt_outcome is robotmk_api.AttemptOutcome.AllTestsPassed else State.CRIT
+    state = State.OK if attempt_outcome is AttemptOutcome.AllTestsPassed else State.CRIT
 
     match attempt_outcome:
-        case robotmk_api.AttemptOutcome.AllTestsPassed:
+        case AttemptOutcome.AllTestsPassed:
             summary = "All tests passed"
-        case robotmk_api.AttemptOutcome.TestFailures:
+        case AttemptOutcome.TestFailures:
             summary = "Test failures"
-        case robotmk_api.AttemptOutcome.RobotFrameworkFailure:
+        case AttemptOutcome.RobotFrameworkFailure:
             summary = "Robot Framework failure"
-        case robotmk_api.AttemptOutcome.EnvironmentFailure:
+        case AttemptOutcome.EnvironmentFailure:
             summary = "Environment failure"
-        case robotmk_api.AttemptOutcome.TimedOut:
+        case AttemptOutcome.TimedOut:
             summary = "Timeout"
-        case robotmk_api.AttemptOutcomeOtherError():
+        case AttemptOutcomeOtherError():
             summary = "Unexpected error"
         case _:
             assert_never(attempt_outcome)
 
     return (
         Result(state=state, summary=summary, details=attempt_outcome.OtherError)
-        if isinstance(attempt_outcome, robotmk_api.AttemptOutcomeOtherError)
+        if isinstance(attempt_outcome, AttemptOutcomeOtherError)
         else Result(
             state=state,
             summary=summary,
@@ -71,7 +75,7 @@ def _attempt_result(
 
 register.check_plugin(
     name="robotmk_suite",
-    sections=["robotmk_v2"],
+    sections=["robotmk_suite_execution_report"],
     service_name="%s",
     discovery_function=discover,
     check_function=check,

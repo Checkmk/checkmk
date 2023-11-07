@@ -58,7 +58,3 @@ class ExecutionReportAlreadyRunning(Enum):
 class SuiteExecutionReport(BaseModel, frozen=True):
     suite_name: str
     outcome: ExecutionReport | ExecutionReportAlreadyRunning
-
-
-def parse(string_table: Sequence[Sequence[str]]) -> Sequence[SuiteExecutionReport]:
-    return [SuiteExecutionReport.model_validate_json(line[0]) for line in string_table]

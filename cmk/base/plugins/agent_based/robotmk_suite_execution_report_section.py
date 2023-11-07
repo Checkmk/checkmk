@@ -7,14 +7,14 @@ from collections.abc import Sequence
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import robotmk_api
+from .utils.robotmk_suite_execution_report import SuiteExecutionReport
 
 
-def parse(string_table: StringTable) -> Sequence[robotmk_api.SuiteExecutionReport]:
-    return robotmk_api.parse(string_table)
+def parse(string_table: StringTable) -> Sequence[SuiteExecutionReport]:
+    return [SuiteExecutionReport.model_validate_json(line[0]) for line in string_table]
 
 
 register.agent_section(
-    name="robotmk_v2",
+    name="robotmk_suite_execution_report",
     parse_function=parse,
 )

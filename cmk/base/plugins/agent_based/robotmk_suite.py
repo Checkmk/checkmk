@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping
 from typing import assert_never
 
 from .agent_based_api.v1 import register, Result, Service, State
@@ -11,35 +11,34 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
-    AttemptsOutcome,
+    ExecutionReport,
     ExecutionReportAlreadyRunning,
-    SuiteExecutionReport,
 )
 
 
-def discover(section: Sequence[SuiteExecutionReport]) -> DiscoveryResult:
-    yield from (
-        Service(item=f"Suite {suite_execution_report.suite_name}")
-        for suite_execution_report in section
-    )
+def discover(
+    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
+) -> DiscoveryResult:
+    yield from (Service(item=suite_name) for suite_name in section)
 
 
-def check(item: str, section: Sequence[SuiteExecutionReport]) -> CheckResult:
-    for suite_execution_report in section:
-        yield from _check_suite_execution_result(suite_execution_report, item)
-
-
-def _check_suite_execution_result(result: SuiteExecutionReport, item: str) -> CheckResult:
-    if f"Suite {result.suite_name}" != item:
+def check(
+    item: str, section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
+) -> CheckResult:
+    if not (execution_report := section.get(item)):
         return
+    yield from _check_suite_execution_report(execution_report)
 
-    if isinstance(result.outcome, ExecutionReportAlreadyRunning):
+
+def _check_suite_execution_report(
+    report: ExecutionReport | ExecutionReportAlreadyRunning,
+) -> CheckResult:
+    if isinstance(report, ExecutionReportAlreadyRunning):
         yield Result(state=State.CRIT, summary="Suite already running, execution skipped")
         return
 
-    if isinstance(result.outcome.Executed, AttemptsOutcome):
-        for attempt in result.outcome.Executed.attempts:
-            yield _attempt_result(attempt)
+    for attempt in report.Executed.attempts:
+        yield _attempt_result(attempt)
 
 
 def _attempt_result(
@@ -76,7 +75,7 @@ def _attempt_result(
 register.check_plugin(
     name="robotmk_suite",
     sections=["robotmk_suite_execution_report"],
-    service_name="%s",
+    service_name="Suite %s",
     discovery_function=discover,
     check_function=check,
 )

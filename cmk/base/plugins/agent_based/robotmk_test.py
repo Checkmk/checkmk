@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping
 from pathlib import Path
 from typing import assert_never, Literal, TypedDict
 
@@ -19,8 +19,8 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.robotmk_parse_xml import extract_tests_from_suites, Outcome, Test
 from .utils.robotmk_suite_execution_report import (
     ExecutionReport,
+    ExecutionReportAlreadyRunning,
     RebotOutcomeResult,
-    SuiteExecutionReport,
 )
 
 
@@ -28,15 +28,16 @@ class Params(TypedDict):
     test_runtime: tuple[int, int] | None
 
 
-def discover(section: Sequence[SuiteExecutionReport]) -> DiscoveryResult:
-    for suite_execution_report in section:
-        yield from _discover_tests(suite_execution_report)
+def discover(
+    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
+) -> DiscoveryResult:
+    for execution_report in section.values():
+        if isinstance(execution_report, ExecutionReport):
+            yield from _discover_tests(execution_report)
 
 
-def _discover_tests(result: SuiteExecutionReport) -> DiscoveryResult:
-    if not isinstance(execution_report := result.outcome, ExecutionReport):
-        return
-    if not isinstance(rebot_result := execution_report.Executed.rebot, RebotOutcomeResult):
+def _discover_tests(report: ExecutionReport) -> DiscoveryResult:
+    if not isinstance(rebot_result := report.Executed.rebot, RebotOutcomeResult):
         return
 
     for test_name in extract_tests_from_suites(rebot_result.Ok.xml.robot.suite):
@@ -50,9 +51,13 @@ def _discover_tests(result: SuiteExecutionReport) -> DiscoveryResult:
         )
 
 
-def check(item: str, params: Params, section: Sequence[SuiteExecutionReport]) -> CheckResult:
-    for suite_execution_report in section:
-        if not isinstance(execution_report := suite_execution_report.outcome, ExecutionReport):
+def check(
+    item: str,
+    params: Params,
+    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning],
+) -> CheckResult:
+    for execution_report in section.values():
+        if not isinstance(execution_report, ExecutionReport):
             continue
         if not isinstance(rebot_result := execution_report.Executed.rebot, RebotOutcomeResult):
             continue

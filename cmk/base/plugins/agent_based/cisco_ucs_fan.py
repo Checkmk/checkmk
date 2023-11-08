@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import Result, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cisco_ucs import DETECT, Operability
 
 
@@ -27,4 +30,26 @@ register.snmp_section(
         ],
     ),
     detect=DETECT,
+)
+
+
+def discover_cisco_ucs_fan(section: Mapping[str, Operability]) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section)
+
+
+def check_cisco_ucs_fan(item: str, section: Mapping[str, Operability]) -> CheckResult:
+    if not (operability := section.get(item)):
+        return
+
+    yield Result(
+        state=operability.monitoring_state(),
+        summary=f"Status: {operability.name}",
+    )
+
+
+register.check_plugin(
+    name="cisco_ucs_fan",
+    service_name="Fan %s",
+    discovery_function=discover_cisco_ucs_fan,
+    check_function=check_cisco_ucs_fan,
 )

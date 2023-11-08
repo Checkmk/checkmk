@@ -7,8 +7,12 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.cisco_ucs_fan import check_cisco_ucs_fan, inventory_cisco_ucs_fan
-from cmk.base.plugins.agent_based.cisco_ucs_fan import parse_cisco_ucs_fan
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.cisco_ucs_fan import (
+    check_cisco_ucs_fan,
+    discover_cisco_ucs_fan,
+    parse_cisco_ucs_fan,
+)
 from cmk.base.plugins.agent_based.utils.cisco_ucs import Operability
 
 
@@ -35,31 +39,31 @@ def fixture_section() -> dict[str, Operability]:
 
 
 def test_discover_cisco_ucs_mem(section: Mapping[str, Operability]) -> None:
-    assert list(inventory_cisco_ucs_fan(section)) == [
-        ("fan-module-1-1 fan-1", None),
-        ("fan-module-1-1 fan-2", None),
-        ("fan-module-1-2 fan-1", None),
-        ("fan-module-1-2 fan-2", None),
-        ("fan-module-1-3 fan-1", None),
-        ("fan-module-1-3 fan-2", None),
-        ("fan-module-1-4 fan-1", None),
-        ("fan-module-1-4 fan-2", None),
-        ("fan-module-1-5 fan-1", None),
-        ("fan-module-1-5 fan-2", None),
-        ("fan-module-1-6 fan-1", None),
-        ("fan-module-1-6 fan-2", None),
-        ("fan-module-1-7 fan-1", None),
-        ("fan-module-1-7 fan-2", None),
+    assert list(discover_cisco_ucs_fan(section)) == [
+        Service(item="fan-module-1-1 fan-1"),
+        Service(item="fan-module-1-1 fan-2"),
+        Service(item="fan-module-1-2 fan-1"),
+        Service(item="fan-module-1-2 fan-2"),
+        Service(item="fan-module-1-3 fan-1"),
+        Service(item="fan-module-1-3 fan-2"),
+        Service(item="fan-module-1-4 fan-1"),
+        Service(item="fan-module-1-4 fan-2"),
+        Service(item="fan-module-1-5 fan-1"),
+        Service(item="fan-module-1-5 fan-2"),
+        Service(item="fan-module-1-6 fan-1"),
+        Service(item="fan-module-1-6 fan-2"),
+        Service(item="fan-module-1-7 fan-1"),
+        Service(item="fan-module-1-7 fan-2"),
     ]
 
 
 @pytest.mark.parametrize(
     "item, expected_output",
     [
-        pytest.param("missing", None, id="Item missing in data"),
+        pytest.param("missing", [], id="Item missing in data"),
         pytest.param(
             "fan-module-1-7 fan-2",
-            (0, "Status: operable"),
+            [Result(state=State.OK, summary="Status: operable")],
             id="Last item in data",
         ),
     ],
@@ -67,4 +71,4 @@ def test_discover_cisco_ucs_mem(section: Mapping[str, Operability]) -> None:
 def test_check_cisco_ucs_mem(
     section: Mapping[str, Operability], item: str, expected_output: Sequence[object]
 ) -> None:
-    assert check_cisco_ucs_fan(item, None, section) == expected_output
+    assert list(check_cisco_ucs_fan(item, section)) == expected_output

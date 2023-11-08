@@ -358,7 +358,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cisco_temp",
         "cisco_temp_sensor",
         "cisco_ucs_cpu",
-        "cisco_ucs_fan",
         "cisco_ucs_hdd",
         "cisco_ucs_lun",
         "cisco_ucs_mem_total",

@@ -100,6 +100,8 @@ load(
     "MOD_WSGI_VERSION",
     "NET_SNMP_SHA256",
     "NET_SNMP_VERSION",
+    "PROTOBUF_SHA256",
+    "PROTOBUF_VERSION",
 )
 load("//omd/packages/patch:patch_http.bzl", "patch")
 
@@ -271,4 +273,11 @@ load("//omd/packages/net-snmp:net-snmp_http.bzl", "netsnmp")
 netsnmp(
     sha256 = NET_SNMP_SHA256,
     version_str = NET_SNMP_VERSION,
+)
+
+load("//omd/packages/protobuf:protobuf_http.bzl", "protobuf")
+
+protobuf(
+    sha256 = PROTOBUF_SHA256,
+    version_str = PROTOBUF_VERSION,
 )

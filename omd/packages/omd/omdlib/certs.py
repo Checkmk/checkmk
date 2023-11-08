@@ -47,6 +47,10 @@ class CertificateAuthority:
     def site_certificate_exists(self, site_id: str) -> bool:
         return self._site_certificate_path(site_id).exists()
 
-    def create_site_certificate(self, site_id: str) -> None:
+    def create_site_certificate(self, site_id: str, key_size: int = 4096) -> None:
         """Creates the key / certificate for the given Check_MK site"""
-        self.root_ca.issue_and_store_certificate(self._site_certificate_path(site_id), site_id)
+        self.root_ca.issue_and_store_certificate(
+            path=self._site_certificate_path(site_id),
+            common_name=site_id,
+            key_size=key_size,
+        )

@@ -18,12 +18,12 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class MobileIronParams(BaseModel):
     username: str
-    password: tuple[str, str]
+    password: tuple[SecretType, str]
     proxy: tuple[ProxyType, str | None] | None = None
     partition: Sequence[str]
     key_fields: tuple[str] | tuple[str, str] = Field(..., alias="key-fields")
@@ -35,20 +35,22 @@ class MobileIronParams(BaseModel):
 def generate_mobileiron_command(
     params: MobileIronParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
+    secret_type, secret_value = params.password
     args: list[str | Secret] = [
         "-u",
         params.username,
         "-p",
-        get_secret_from_params(*params.password),
+        get_secret_from_params(secret_type, secret_value),
         "--partition",
         ",".join(params.partition),
         "--hostname",
         host_config.name,
     ]
     if params.proxy:
+        proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            get_http_proxy(*params.proxy, http_proxies),
+            get_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
 
     for expression in params.android_regex:

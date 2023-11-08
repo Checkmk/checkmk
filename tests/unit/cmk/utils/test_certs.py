@@ -7,18 +7,9 @@ from datetime import datetime
 from pathlib import Path
 
 import cryptography.x509 as x509
-import pytest
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 from dateutil.relativedelta import relativedelta
-from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
-from tests.testlib.certs import (
-    check_certificate_against_private_key,
-    check_cn,
-    get_cn,
-    load_cert_and_private_key,
-)
 
 from livestatus import SiteId
 
@@ -157,59 +148,16 @@ class Test_CNTemplate:
         assert CN_TEMPLATE.format(SiteId("hurz")) == "Site 'hurz' local CA"
 
 
-@pytest.mark.parametrize(
-    "cert_bytes, expected_cn",
-    [
-        pytest.param(
-            _CA,
-            "Site 'heute' local CA",
-            id="ca",
-        ),
-        pytest.param(
-            _SITE_CERT,
-            "heute",
-            id="site certificate",
-        ),
-    ],
-)
-def test_load_cert_and_private_key(
-    mocker: MockerFixture,
-    cert_bytes: bytes,
-    expected_cn: str,
-) -> None:
-    mocker.patch(
-        "cmk.utils.certs.Path.read_bytes",
-        return_value=cert_bytes,
-    )
-    cert, priv_key = load_cert_and_private_key(Path("whatever"))
-    assert check_cn(
-        cert,
-        expected_cn,
-    )
-    assert isinstance(
-        cert.public_key(),
-        RSAPublicKey,
-    )
-    assert isinstance(
-        priv_key,
-        RSAPrivateKey,
-    )
-    check_certificate_against_private_key(
-        cert,
-        priv_key,
-    )
-
-
 def test_create_root_ca_and_key(tmp_path: Path) -> None:
     filename = tmp_path / "test_certs_testCA"
     with on_time(100, "UTC"):
         ca = RootCA.load_or_create(filename, "peter", key_size=1024)
 
     assert ca.rsa.key_size == 1024
-    assert check_cn(ca.cert, "peter")
+    assert ca.certificate.common_name == "peter"
     assert str(ca.cert.not_valid_before) == "1970-01-01 00:01:40", "creation time is respected"
     assert str(ca.cert.not_valid_after) == "1980-01-01 00:01:40", "is valid for 10 years"
-    check_certificate_against_private_key(ca.cert, ca.rsa)
+    assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
     assert ca.cert.extensions.get_extension_for_class(
@@ -280,5 +228,5 @@ def test_sign_csr_with_local_ca() -> None:
     daughter_cert.verify_is_signed_by(peter_cert)
     assert daughter_cert.public_key == daughter_key.public_key, "correct public key in the cert"
 
-    assert check_cn(daughter_cert._cert, "peters_daughter"), "subject CN is the daughter"
-    assert get_cn(daughter_cert._cert.issuer) == "peter", "issuer is peter"
+    assert daughter_cert.common_name == "peters_daughter", "subject CN is the daughter"
+    assert daughter_cert.issuer == peter_cert.subject, "issuer is peter"

@@ -5,7 +5,20 @@
 use reqwest::redirect::{Action, Attempt, Policy};
 use std::net::SocketAddr;
 
-use crate::cli::{ForceIP, OnRedirect};
+pub enum OnRedirect {
+    Ok,
+    Warning,
+    Critical,
+    Follow,
+    Sticky,
+    Stickyport,
+}
+
+#[derive(Clone)]
+pub enum ForceIP {
+    Ipv4,
+    Ipv6,
+}
 
 pub fn get_policy(onredirect: OnRedirect, force_ip: Option<ForceIP>, max_redirs: usize) -> Policy {
     match onredirect {

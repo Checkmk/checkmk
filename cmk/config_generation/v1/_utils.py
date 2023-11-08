@@ -45,11 +45,6 @@ class HTTPProxy:
     url: str
 
 
-class SecretType(StrEnum):
-    STORE = "store"
-    PASSWORD = "password"
-
-
 @dataclass(frozen=True)
 class Secret:
     value: str
@@ -67,15 +62,26 @@ class PlainTextSecret(Secret):
 
 
 def get_secret_from_params(
-    secret_type: str, secret_value: str, display_format: str = "%s"
+    secret_type: Literal["store", "password"], secret_value: str, display_format: str = "%s"
 ) -> Secret:
-    if secret_type == SecretType.STORE:
-        return StoredSecret(secret_value, format=display_format)
+    """
+    Returns a Secret object from parameters created by the IndividualOrStoredPassword valuespec
 
-    if secret_type == SecretType.PASSWORD:
-        return PlainTextSecret(secret_value, format=display_format)
+    Args:
+        secret_type: Type of the secret
+        secret_value: Value of the secret. Can either be an id of the secret from the password store or an explicit value.
+        display_format: Format of the argument containing the secret
 
-    raise ValueError(f"{secret_type} is not a valid secret type")
+    Returns:
+        Object of the StoredSecret or the PlainTextSecret type
+    """
+    match secret_type:
+        case "store":
+            return StoredSecret(secret_value, format=display_format)
+        case "password":
+            return PlainTextSecret(secret_value, format=display_format)
+        case _:
+            raise ValueError(f"{secret_type} is not a valid secret type")
 
 
 def get_http_proxy(

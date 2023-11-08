@@ -10,7 +10,7 @@ use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
-use crate::cli::OnRedirect;
+use crate::redirect::OnRedirect;
 
 pub enum Limits<T> {
     None,

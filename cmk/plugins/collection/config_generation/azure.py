@@ -18,7 +18,7 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class Explicit(BaseModel):
@@ -36,7 +36,7 @@ class AzureParams(BaseModel):
     subscription: str | None = None
     tenant: str
     client: str
-    secret: tuple[str, str]
+    secret: tuple[SecretType, str]
     proxy: tuple[ProxyType, str | None] | None = None
     services: Sequence[str]
     config: Config
@@ -47,13 +47,14 @@ class AzureParams(BaseModel):
 def generate_azure_command(  # pylint: disable=too-many-branches
     params: AzureParams, _host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
+    secret_type, secret_value = params.secret
     args: list[str | Secret] = [
         "--tenant",
         params.tenant,
         "--client",
         params.client,
         "--secret",
-        get_secret_from_params(*params.secret),
+        get_secret_from_params(secret_type, secret_value),
     ]
 
     args += ["--authority", params.authority]
@@ -68,7 +69,8 @@ def generate_azure_command(  # pylint: disable=too-many-branches
         args.append("--sequential")
 
     if params.proxy:
-        args += ["--proxy", get_http_proxy(*params.proxy, http_proxies)]
+        proxy_type, proxy_value = params.proxy
+        args += ["--proxy", get_http_proxy(proxy_type, proxy_value, http_proxies)]
 
     if params.services:
         args += ["--services", *params.services]

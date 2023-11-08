@@ -11,9 +11,17 @@ from typing import NamedTuple
 import pytest
 import requests
 from cryptography.hazmat.primitives import serialization
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.x509 import (
+    CertificateSigningRequest,
+    CertificateSigningRequestBuilder,
+    load_pem_x509_certificate,
+    Name,
+    NameAttribute,
+)
+from cryptography.x509.oid import NameOID
 
-from tests.testlib.certs import generate_csr_pair
 from tests.testlib.site import Site
 
 # TODO: Integration tests are not allowed to import application code. We need to get rid of this
@@ -22,6 +30,29 @@ from cmk.agent_receiver.certs import (  # pylint: disable=cmk-module-layer-viola
     serialize_to_pem,
     sign_agent_csr,
 )
+
+
+# Copied from tests/unit/agent_receiver/certs.py to make cmk-agent-receiver/tests self contained
+def generate_csr_pair(cn: str) -> tuple[rsa.RSAPrivateKey, CertificateSigningRequest]:
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+    return (
+        private_key,
+        CertificateSigningRequestBuilder()
+        .subject_name(
+            Name(
+                [
+                    NameAttribute(NameOID.COMMON_NAME, cn),
+                ]
+            )
+        )
+        .sign(
+            private_key,
+            SHA256(),
+        ),
+    )
 
 
 @pytest.fixture(scope="session", name="agent_receiver_port")

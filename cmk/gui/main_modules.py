@@ -7,7 +7,7 @@ import importlib
 import sys
 import traceback
 from collections.abc import Iterator
-from contextlib import suppress
+from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
 
@@ -17,27 +17,38 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
+
+@contextmanager
+def suppress_module_not_found(name: str) -> Iterator[None]:
+    """Specialised to contextlib.supress with additional module name matching"""
+    try:
+        yield
+    except ModuleNotFoundError as e:
+        if e.name != name:
+            raise
+
+
 # The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plugin discovery mechanism.
-with suppress(ModuleNotFoundError):
+with suppress_module_not_found("cmk.gui.plugins.main_modules"):
     import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
-with suppress(ModuleNotFoundError):
+with suppress_module_not_found("cmk.gui.raw.plugins.main_modules"):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import,cmk-module-layer-violation
 
-with suppress(ModuleNotFoundError):
+with suppress_module_not_found("cmk.gui.cee.plugins.main_modules"):
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
-with suppress(ModuleNotFoundError):
+with suppress_module_not_found("cmk.gui.cme.registration"):
     import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cme.registration.register()
 
-with suppress(ModuleNotFoundError):
+with suppress_module_not_found("cmk.gui.cce.plugins.main_modules"):
     import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
-with suppress(ModuleNotFoundError):
+with suppress_module_not_found("cmk.gui.cse.plugins.main_modules"):
     import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
 

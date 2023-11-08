@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.data_source import DataSourceRegistry
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.sidebar import SnapinRegistry

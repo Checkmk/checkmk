@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.packaging import PathConfig
+from cmk.mkp_tool import PathConfig
 
 
 class TestPathConfig:

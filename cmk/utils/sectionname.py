@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping
 from typing import TypeAlias, TypeVar
 
 from cmk.utils.validatedstr import ValidatedString
@@ -14,9 +14,7 @@ __all__ = ["SectionName", "SectionMap"]
 
 
 class SectionName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
+    pass
 
 
 _T_co = TypeVar("_T_co", covariant=True)

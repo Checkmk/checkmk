@@ -40,15 +40,7 @@ from typing_extensions import TypedDict
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils import (
-    agent_registration,
-    packaging,
-    paths,
-    render,
-    setup_search_index,
-    store,
-    version,
-)
+from cmk.utils import agent_registration, paths, render, setup_search_index, store, version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
@@ -117,6 +109,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
+from cmk import mkp_tool
 from cmk.bi.type_defs import frozen_aggregations_dir
 
 # TODO: Make private
@@ -2568,9 +2561,9 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # configuration compatible with the local Checkmk version.
         if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
-            uninstalled, installed = packaging.update_active_packages(
-                packaging.Installer(paths.installed_packages_dir),
-                packaging.PathConfig(
+            uninstalled, installed = mkp_tool.update_active_packages(
+                mkp_tool.Installer(paths.installed_packages_dir),
+                mkp_tool.PathConfig(
                     agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
                     agents_dir=paths.local_agents_dir,
                     alert_handlers_dir=paths.local_alert_handlers_dir,
@@ -2595,7 +2588,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     web_dir=paths.local_web_dir,
                 ),
                 {
-                    packaging.PackagePart.EC_RULE_PACKS: packaging.PackageOperationCallbacks(
+                    mkp_tool.PackagePart.EC_RULE_PACKS: mkp_tool.PackageOperationCallbacks(
                         install=ec.install_packaged_rule_packs,
                         release=ec.release_packaged_rule_packs,
                         uninstall=ec.uninstall_packaged_rule_packs,
@@ -2604,17 +2597,17 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                 version.__version__,
                 parse_version=version.parse_check_mk_version,
             )
-            packaging.make_post_package_change_actions(
-                ((packaging.PackagePart.GUI, packaging.PackagePart.WEB), packaging.reload_apache),
+            mkp_tool.make_post_package_change_actions(
+                ((mkp_tool.PackagePart.GUI, mkp_tool.PackagePart.WEB), mkp_tool.reload_apache),
                 (
-                    (packaging.PackagePart.GUI, packaging.PackagePart.WEB),
+                    (mkp_tool.PackagePart.GUI, mkp_tool.PackagePart.WEB),
                     invalidate_visuals_cache,
                 ),
                 (
                     (
-                        packaging.PackagePart.GUI,
-                        packaging.PackagePart.WEB,
-                        packaging.PackagePart.EC_RULE_PACKS,
+                        mkp_tool.PackagePart.GUI,
+                        mkp_tool.PackagePart.WEB,
+                        mkp_tool.PackagePart.EC_RULE_PACKS,
                     ),
                     setup_search_index.request_index_rebuild,
                 ),

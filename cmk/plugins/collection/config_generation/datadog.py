@@ -18,12 +18,12 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class Instance(BaseModel):
-    api_key: tuple[str, str]
-    app_key: tuple[str, str]
+    api_key: tuple[SecretType, str]
+    app_key: tuple[SecretType, str]
     api_host: str
 
 
@@ -66,17 +66,20 @@ def _to_text_args(pairs: Sequence[tuple[str, str]]) -> list[str]:
 def generate_datadog_command(
     params: DatadogParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[SpecialAgentCommand]:
+    api_key_type, api_key_value = params.instance.api_key
+    app_key_type, app_key_value = params.instance.app_key
     args: list[str | Secret] = [
         host_config.name,
-        get_secret_from_params(*params.instance.api_key),
-        get_secret_from_params(*params.instance.app_key),
+        get_secret_from_params(api_key_type, api_key_value),
+        get_secret_from_params(app_key_type, app_key_value),
         params.instance.api_host,
     ]
 
     if params.proxy is not None:
+        proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            get_http_proxy(*params.proxy, http_proxies),
+            get_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
 
     sections = []

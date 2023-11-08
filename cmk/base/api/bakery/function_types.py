@@ -5,7 +5,7 @@
 
 import functools
 import inspect
-from collections.abc import Callable, Container, Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from typing import NamedTuple
 
 from cmk.utils.validatedstr import ValidatedString
@@ -46,9 +46,7 @@ _PossibleFunctionType = FilesFunction | ScriptletsFunction | WindowsConfigFuncti
 
 
 class BakeryPluginName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
+    pass
 
 
 class BakeryPlugin(NamedTuple):

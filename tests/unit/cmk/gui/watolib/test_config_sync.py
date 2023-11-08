@@ -16,7 +16,6 @@ from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
-import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.user import UserId

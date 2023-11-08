@@ -19,7 +19,7 @@ from typing import Any
 
 from cmk.gui.http import ContentDispositionType, Response
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.utils import agent
 
 from cmk import fields

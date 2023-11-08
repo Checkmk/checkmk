@@ -6,7 +6,6 @@
 settings"""
 
 import abc
-import json
 from collections.abc import Collection, Iterable, Iterator
 from typing import Any, Callable, Final
 
@@ -43,11 +42,7 @@ from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
-from cmk.gui.validation.visitors.vue_repr import (
-    create_vue_visitor,
-    process_validation_errors,
-    render_vue,
-)
+from cmk.gui.validation.visitors.vue_repr import parse_and_validate_vue, render_vue
 from cmk.gui.valuespec import Checkbox, Transform
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -333,16 +328,8 @@ class ABCEditGlobalSettingMode(WatoMode):
             )
         else:
             new_value = self._valuespec.from_html_vars("ve")
-            if use_vue_rendering() and request.has_var(self._vue_field_id()):
-                logger.warning("ACTION PHASE")
-                value_from_frontend = json.loads(
-                    request.get_str_input_mandatory(self._vue_field_id())
-                )
-                vue_visitor = create_vue_visitor(
-                    self._valuespec, value_from_frontend, do_validate=True
-                )
-                process_validation_errors(vue_visitor)
-                new_value = vue_visitor.raw_value
+            if use_vue_rendering():
+                new_value = parse_and_validate_vue(self._valuespec, self._vue_field_id())
 
             self._valuespec.validate_value(new_value, "ve")
             self._current_settings[self._varname] = new_value
@@ -408,18 +395,11 @@ class ABCEditGlobalSettingMode(WatoMode):
             html.tt(self._varname)
 
         if use_vue_rendering():
-            if request.has_var(self._vue_field_id()):
-                visitor_value = json.loads(request.get_str_input_mandatory(self._vue_field_id()))
-                do_validate = True
-            else:
-                visitor_value = value
-                do_validate = False
             forms.section(_("Current setting as VUE"))
-            render_vue(
-                self._valuespec, self._vue_field_id(), visitor_value, do_validate=do_validate
-            )
-
-        forms.section(_("Current setting"))
+            render_vue(self._valuespec, self._vue_field_id(), value)
+            forms.section(_("Legacy valuespec (input data is ignored)"))
+        else:
+            forms.section(_("Current setting"))
         self._valuespec.render_input("ve", value)
         self._valuespec.set_focus("ve")
         html.help(self._valuespec.help())

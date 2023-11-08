@@ -25,7 +25,7 @@ from cmk.gui.openapi.endpoints.rule.fields import (
     UpdateRuleObject,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import (
     problem,

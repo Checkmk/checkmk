@@ -76,8 +76,8 @@ from cmk.gui.openapi.restful_objects import (
     permissions,
     response_schemas,
 )
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
@@ -653,10 +653,7 @@ def move(params: Mapping[str, Any]) -> Response:
             detail="The host is already part of the specified target folder",
         )
     try:
-        if (
-            target_folder.name(),
-            target_folder.title(),
-        ) not in current_folder.choices_for_moving_host():
+        if target_folder.as_choice_for_moving() not in current_folder.choices_for_moving_host():
             raise MKAuthException
         current_folder.move_hosts([host_name], target_folder)
     except MKAuthException:

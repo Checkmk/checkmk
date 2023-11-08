@@ -6,9 +6,63 @@
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from cmk.rulesets.v1._localize import Localizable
+
+
+@dataclass(frozen=True)
+class Integer:
+    """Specifies an input field for whole numbers
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed as an extension to the input field
+        unit: Unit of the input (only for display)
+        default_value: Default value to use if no number is entered by the user. If None, the
+                       backend will decide whether to leave the field empty or to prefill it with a
+                       canonical value.
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+    unit: Localizable | None = None
+    default_value: int | None = None
+
+    custom_validate: Callable[[int], object] | None = None
+
+
+@dataclass(frozen=True)
+class Percentage:
+    """Specifies an input field for percentages
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed in front of the input field
+        display_precision: How many decimal places to display
+        default_value: Default value to use if no number is entered by the user. If None, the
+                       backend will decide whether to leave the field empty or to prefill it with a
+                       canonical value.
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+
+    display_precision: int | None = None
+
+    default_value: float | None = None
+
+    custom_validate: Callable[[float], object] | None = None
 
 
 @dataclass(frozen=True)
@@ -19,10 +73,12 @@ class TextInput:
         label: Text displayed in front of the input field
         help_text: Description to help the user with the configuration
         input_hint: A short hint to aid the user with data entry (e.g. an example)
-        default_value: Default text
+        default_value: Default value to use if no text is entered by the user. If None, the backend
+                       will decide whether to leave the field empty or to prefill it with a
+                       canonical value.
         custom_validate: Custom validation function. Will be executed in addition to any
-                 builtin validation logic. Needs to raise a ValidationError in case
-                 validation fails, the return value of the function will not be consumed
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
     """
 
     title: Localizable | None = None
@@ -33,6 +89,27 @@ class TextInput:
     default_value: str | None = None
 
     custom_validate: Callable[[str], object] | None = None
+
+
+class Orientation(enum.Enum):
+    VERTICAL = enum.auto()
+    HORIZONTAL = enum.auto()
+    FLOAT = enum.auto()
+
+
+_TupleType = TypeVar("_TupleType", bound=tuple[object, ...])
+
+
+@dataclass(frozen=True)
+class Tuple(Generic[_TupleType]):
+    elements: Sequence["ValueSpec"]
+
+    orientation: Orientation = Orientation.VERTICAL
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    custom_validate: Callable[[_TupleType], object] | None = None
 
 
 class InvalidElementMode(enum.Enum):
@@ -121,7 +198,7 @@ class Dictionary:
         help_text: Description to help the user with the configuration
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
-                         validation fails, the return value of the function will not be consumed
+                         validation fails. The return value of the function will not be used.
         no_elements_text: Text to show if no elements are specified
     """
 
@@ -162,4 +239,4 @@ class MonitoringState:
 
 ItemSpec = TextInput | DropdownChoice
 
-ValueSpec = TextInput | DropdownChoice | Dictionary | MonitoringState
+ValueSpec = Integer | Percentage | TextInput | Tuple | DropdownChoice | Dictionary | MonitoringState

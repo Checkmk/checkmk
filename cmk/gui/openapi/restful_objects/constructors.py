@@ -16,7 +16,7 @@ from cmk.utils.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.http import HTTPMethod, request, Response
 from cmk.gui.livestatus_utils.testing import mock_site
-from cmk.gui.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.restful_objects.type_defs import (
     CollectionItem,
     CollectionObject,
@@ -822,7 +822,7 @@ def link_endpoint(
             "/foo/{baz}" rendered to "/foo/bar", this mapping should be {'baz': 'bar'}.
 
     """
-    endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
+    endpoint = endpoint_registry.lookup(module_name, rel, parameters)
     return link_rel(
         href=endpoint["endpoint"].make_url(parameters),
         rel=endpoint["rel"],

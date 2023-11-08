@@ -18,11 +18,11 @@ from cmk.config_generation.v1 import (
     SpecialAgentConfig,
 )
 
-from .utils import ProxyType
+from .utils import ProxyType, SecretType
 
 
 class Params(BaseModel):
-    api_key: tuple[str, str]
+    api_key: tuple[SecretType, str]
     proxy: tuple[ProxyType, str | None] | None = None
     sections: Sequence[str] | None = None
     orgs: Sequence[str] | None = None
@@ -33,15 +33,17 @@ def agent_cisco_meraki_arguments(
     host_config: HostConfig,
     http_proxies: Mapping[str, HTTPProxy],
 ) -> Iterator[SpecialAgentCommand]:
+    secret_type, secret_value = params.api_key
     args: list[str | Secret] = [
         host_config.name,
-        get_secret_from_params(*params.api_key),
+        get_secret_from_params(secret_type, secret_value),
     ]
 
     if params.proxy is not None:
+        proxy_type, proxy_value = params.proxy
         args += [
             "--proxy",
-            get_http_proxy(*params.proxy, http_proxies),
+            get_http_proxy(proxy_type, proxy_value, http_proxies),
         ]
 
     if params.sections is not None:

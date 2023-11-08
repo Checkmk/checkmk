@@ -85,6 +85,18 @@ def _extract_key_props(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.ValueSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
+    if isinstance(to_convert, ruleset_api_v1.Integer):
+        return _convert_to_legacy_integer(to_convert, localizer)
+
+    if isinstance(to_convert, ruleset_api_v1.Percentage):
+        return _convert_to_legacy_percentage(to_convert, localizer)
+
+    if isinstance(to_convert, ruleset_api_v1.TextInput):
+        return _convert_to_legacy_text_input(to_convert, localizer)
+
+    if isinstance(to_convert, ruleset_api_v1.Tuple):
+        return _convert_to_legacy_tuple(to_convert, localizer)
+
     if isinstance(to_convert, ruleset_api_v1.Dictionary):
         elements = [
             (key, _convert_to_legacy_valuespec(elem.spec, localizer))
@@ -105,8 +117,6 @@ def _convert_to_legacy_valuespec(
             if to_convert.custom_validate is not None
             else None,
         )
-    if isinstance(to_convert, ruleset_api_v1.TextInput):
-        return _convert_to_legacy_text_input(to_convert, localizer)
 
     if isinstance(to_convert, ruleset_api_v1.DropdownChoice):
         return _convert_to_legacy_dropdown_choice(to_convert, localizer)
@@ -115,6 +125,99 @@ def _convert_to_legacy_valuespec(
         return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
     raise NotImplementedError(to_convert)
+
+
+def _convert_to_legacy_integer(
+    to_convert: ruleset_api_v1.Integer, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Integer:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+    }
+    converted_kwargs["unit"] = ""
+    if to_convert.unit is not None:
+        converted_kwargs["unit"] = to_convert.unit.localize(localizer)
+
+    if to_convert.default_value is not None:
+        converted_kwargs["default_value"] = to_convert.default_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.Integer(**converted_kwargs)
+
+
+def _convert_to_legacy_percentage(
+    to_convert: ruleset_api_v1.Percentage, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Percentage:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+    }
+
+    if to_convert.display_precision is not None:
+        converted_kwargs["display_format"] = f"%.{to_convert.display_precision}f"
+
+    if to_convert.default_value is not None:
+        converted_kwargs["default_value"] = to_convert.default_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.Percentage(**converted_kwargs)
+
+
+def _convert_to_legacy_text_input(
+    to_convert: ruleset_api_v1.TextInput, localizer: Callable[[str], str]
+) -> legacy_valuespecs.TextInput:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+    }
+
+    if to_convert.input_hint is not None:
+        converted_kwargs["placeholder"] = to_convert.input_hint
+
+    if to_convert.default_value is not None:
+        converted_kwargs["default_value"] = to_convert.default_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.TextInput(**converted_kwargs)
+
+
+def _convert_to_legacy_tuple(
+    to_convert: ruleset_api_v1.Tuple, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Tuple:
+    legacy_elements = [
+        _convert_to_legacy_valuespec(element, localizer) for element in to_convert.elements
+    ]
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "orientation": to_convert.orientation.name.lower(),
+    }
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+    return legacy_valuespecs.Tuple(elements=legacy_elements, **converted_kwargs)
 
 
 def _convert_to_legacy_monitoring_state(
@@ -180,29 +283,6 @@ def _convert_to_legacy_dropdown_choice(
         )
 
     return legacy_valuespecs.DropdownChoice(choices, **converted_kwargs)
-
-
-def _convert_to_legacy_text_input(
-    to_convert: ruleset_api_v1.TextInput, localizer: Callable[[str], str]
-) -> legacy_valuespecs.TextInput:
-    converted_kwargs: MutableMapping[str, Any] = {
-        "title": _localize_optional(to_convert.title, localizer),
-        "label": _localize_optional(to_convert.label, localizer),
-        "help": _localize_optional(to_convert.help_text, localizer),
-    }
-
-    if to_convert.input_hint is not None:
-        converted_kwargs["placeholder"] = to_convert.input_hint
-
-    if to_convert.default_value is not None:
-        converted_kwargs["default_value"] = to_convert.default_value
-
-    if to_convert.custom_validate is not None:
-        converted_kwargs["validate"] = _convert_to_legacy_validation(
-            to_convert.custom_validate, localizer
-        )
-
-    return legacy_valuespecs.TextInput(**converted_kwargs)
 
 
 def _convert_to_legacy_item_spec(

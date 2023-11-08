@@ -37,6 +37,7 @@ IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
     repo_path() / "packages/cmk-graphing/build",
+    repo_path() / "packages/cmk-server-side-calls/build",
     repo_path() / "packages/cmk-werks/build",
     repo_path() / "packages/cmk-agent-based/build",
     # This directory needs to be ignored for a few days (until all workspaces were cleared)

@@ -47,8 +47,9 @@ void open_syslog(int syslog_fd) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = INADDR_ANY;
-        if (bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -74,8 +75,9 @@ void open_syslog(int syslog_fd) {
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(SYSLOG_PORT);
         addr.sin6_addr = in6addr_any;
-        if (bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -118,9 +120,11 @@ void open_syslog_tcp(int syslog_tcp_fd) {
             addr.sin_family = AF_INET;
             addr.sin_port = htons(SYSLOG_PORT);
             addr.sin_addr.s_addr = INADDR_ANY;
-            if (bind(syslog_tcp_sock,
-                     reinterpret_cast<struct sockaddr *>(&addr),
-                     sizeof(addr)) != 0) {
+            if (::bind(
+                    syslog_tcp_sock,
+                    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+                    reinterpret_cast<struct sockaddr *>(&addr),
+                    sizeof(addr)) != 0) {
                 perror(
                     "Cannot bind UDP socket for syslog to port "
                     "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -146,8 +150,9 @@ void open_syslog_tcp(int syslog_tcp_fd) {
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(SYSLOG_PORT);
         addr.sin6_addr = in6addr_any;
-        if (bind(syslog_tcp_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(syslog_tcp_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -189,8 +194,8 @@ void open_snmptrap(int snmptrap_fd) {
             addr.sin_family = AF_INET;
             addr.sin_port = htons(SNMPTRAP_PORT);
             addr.sin_addr.s_addr = INADDR_ANY;
-            if (bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                     sizeof(addr)) != 0) {
+            if (::bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                       sizeof(addr)) != 0) {
                 perror(
                     "Cannot bind UDP socket for syslog to port "
                     "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -216,8 +221,9 @@ void open_snmptrap(int snmptrap_fd) {
         addr.sin6_family = AF_INET6;
         addr.sin6_port = htons(SNMPTRAP_PORT);
         addr.sin6_addr = in6addr_any;
-        if (bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                 sizeof(addr)) != 0) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                   sizeof(addr)) != 0) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");

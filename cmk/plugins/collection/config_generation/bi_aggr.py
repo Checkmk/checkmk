@@ -17,11 +17,13 @@ from cmk.config_generation.v1 import (
     Secret,
 )
 
+from .utils import SecretType
+
 
 class Credentials(BaseModel):
     automation: bool = False
     user: str | None = None
-    password: tuple[str, str] | None = None
+    password: tuple[SecretType, str] | None = None
 
 
 class OptionalParams(BaseModel):
@@ -64,11 +66,12 @@ def check_bi_aggr_services(
         args.append("--use-automation-user")
     elif params.credentials.user and params.credentials.password:
         # configured
+        secret_type, secret_value = params.credentials.password
         args += [
             "-u",
             params.credentials.user,
             "-s",
-            get_secret_from_params(*params.credentials.password),
+            get_secret_from_params(secret_type, secret_value),
         ]
     opt_params = params.optional
     if opt_params and opt_params.auth_mode:

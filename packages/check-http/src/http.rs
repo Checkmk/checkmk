@@ -14,8 +14,8 @@ use std::{
     time::Duration,
 };
 
-use crate::cli::{ForceIP, OnRedirect};
 use crate::redirect;
+use crate::redirect::{ForceIP, OnRedirect};
 
 pub struct ProcessedResponse {
     pub version: Version,

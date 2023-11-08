@@ -21,6 +21,8 @@ from cmk.config_generation.v1 import (
     Secret,
 )
 
+from .utils import SecretType
+
 
 class Mode(Enum):
     URL = "url"
@@ -69,11 +71,11 @@ class ProxySettings:
 
     @classmethod
     def from_params(cls, params: Mapping[str, Any]) -> "ProxySettings":
-        auth: tuple[str, tuple[str, str]] | None = params.get("auth")
+        auth: tuple[str, tuple[SecretType, str]] | None = params.get("auth")
         return cls(
             address=params["address"],
             port=params.get("port"),
-            auth=get_secret_from_params(*auth[1], display_format="%s:%%s" % auth[0])
+            auth=get_secret_from_params(auth[1][0], auth[1][1], display_format="%s:%%s" % auth[0])
             if auth
             else None,
         )
@@ -136,7 +138,7 @@ class URLMode(BaseModel):
     timeout: int | None = None
     user_agent: str | None = None
     add_headers: Sequence[str] = []
-    auth: tuple[str, tuple[str, str]] | None = None
+    auth: tuple[str, tuple[SecretType, str]] | None = None
     onredirect: Literal["ok", "warning", "critical", "follow", "sticky", "stickyport"] | None = None
     expect_response_header: str | None = None
     expect_response: Sequence[str] | None = None
@@ -267,7 +269,11 @@ def _url_args(  # pylint: disable=too-many-branches
 
     if settings.auth is not None:
         username, password = settings.auth
-        args += ["-a", get_secret_from_params(*password, display_format="%s:%%s" % username)]
+        secret_type, secret_value = password
+        args += [
+            "-a",
+            get_secret_from_params(secret_type, secret_value, display_format="%s:%%s" % username),
+        ]
 
     if settings.onredirect is not None:
         args.append("--onredirect=%s" % settings.onredirect)

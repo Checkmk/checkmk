@@ -51,8 +51,8 @@ from cmk.gui.openapi.endpoints.utils import (
 )
 from cmk.gui.openapi.permission_tracking import disable_permission_tracking
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions, response_schemas
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.groups import (

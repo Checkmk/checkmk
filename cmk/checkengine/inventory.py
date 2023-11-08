@@ -60,9 +60,7 @@ __all__ = [
 
 
 class InventoryPluginName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
+    pass
 
 
 @dataclass(frozen=True)

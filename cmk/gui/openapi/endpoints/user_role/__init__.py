@@ -42,7 +42,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
 from cmk.gui.openapi.endpoints.user_role.response_schemas import UserRoleCollection, UserRoleObject
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.type_defs import UserRole

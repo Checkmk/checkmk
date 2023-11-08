@@ -22,11 +22,6 @@ from .conftest import get_site_status, update_config, update_site
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.skipif(
-    os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
-    reason="Test currently failing for missing `php7`. "
-    "This will be fixed  starting from  base-version 2.2.0p8",
-)
 def test_update(  # pylint: disable=too-many-branches
     test_site: Site,
     agent_ctl: Path,

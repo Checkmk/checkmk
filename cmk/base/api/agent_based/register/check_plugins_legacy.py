@@ -19,7 +19,7 @@ from cmk.checkengine.parameters import Parameters
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
 
-from cmk.agent_based.v1 import CheckResult, Metric, Result, Service, State
+from cmk.agent_based.v1 import CheckResult, IgnoreResults, Metric, Result, Service, State
 
 from .utils_legacy import LegacyCheckDefinition
 
@@ -150,7 +150,7 @@ def _create_check_function(name: str, check_info_element: LegacyCheckDefinition)
         subresults = _normalize_check_function_return_value(sig_function(**kwargs))
 
         for idx, subresult in enumerate(subresults):
-            if isinstance(subresult, (Result, Metric)):
+            if isinstance(subresult, (Result, Metric, IgnoreResults)):
                 yield subresult
                 continue
 

@@ -32,7 +32,7 @@ def build(Map args) {
             (args.TARGET == "cached") ? [
                 "agents/modules/windows", 
                 "call build_the_module.cmd cached ${args.CREDS} ${args.CACHE_URL}", 
-                "python-3.cab"] :
+                "python-3.cab,python-3.4.cab"] :
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
                 "call run.cmd --all --sign tribe29.pfx ${args.PASSWORD}",

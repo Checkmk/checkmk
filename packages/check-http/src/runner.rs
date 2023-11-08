@@ -5,8 +5,7 @@
 use crate::cli;
 use std::time::Instant;
 
-use crate::checking;
-use crate::checking::{Bounds, CheckResult, State, UpperLevels};
+use crate::checking::{self, Bounds, CheckParameters, CheckResult, State, UpperLevels};
 use crate::http::{self, RequestConfig};
 use crate::redirect::{self, ConnectionConfig};
 use std::time::Duration;
@@ -75,11 +74,11 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
     };
     let elapsed = now.elapsed();
 
-    vec![
-        checking::check_status(
-            response.status,
-            response.version,
-            match args.onredirect {
+    checking::collect_response_checks(
+        response,
+        elapsed,
+        CheckParameters {
+            onredirect: match args.onredirect {
                 cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
                 cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
                 cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
@@ -87,34 +86,22 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
                 cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
                 cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
             },
-        ),
-        checking::check_body(
-            response.body,
-            args.page_size.map(|val| match val {
+            page_size: args.page_size.map(|val| match val {
                 (x, None) => Bounds::lower(x),
                 (x, Some(y)) => Bounds::lower_upper(x, y),
             }),
-        ),
-        checking::check_response_time(
-            elapsed,
-            args.response_time_levels.map(|val| match val {
+            response_time_levels: args.response_time_levels.map(|val| match val {
                 (x, None) => UpperLevels::warn(Duration::from_secs_f64(x)),
                 (x, Some(y)) => {
                     UpperLevels::warn_crit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
                 }
             }),
-        ),
-        checking::check_document_age(
-            &response.headers,
-            args.document_age_levels.map(|val| match val {
+            document_age_levels: args.document_age_levels.map(|val| match val {
                 (x, None) => UpperLevels::warn(Duration::from_secs(x)),
                 (x, Some(y)) => {
                     UpperLevels::warn_crit(Duration::from_secs(x), Duration::from_secs(y))
                 }
             }),
-        ),
-    ]
-    .into_iter()
-    .flatten()
-    .collect()
+        },
+    )
 }

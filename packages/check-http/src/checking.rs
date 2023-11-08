@@ -9,6 +9,7 @@ use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
+use crate::http::ProcessedResponse;
 use crate::redirect::OnRedirect;
 
 // TODO(au): We're missing requirements for the new check_http here:
@@ -133,7 +134,30 @@ impl Display for CheckResult {
     }
 }
 
-pub fn check_status(
+pub struct CheckParameters {
+    pub onredirect: OnRedirect,
+    pub page_size: Option<Bounds<usize>>,
+    pub response_time_levels: Option<UpperLevels<Duration>>,
+    pub document_age_levels: Option<UpperLevels<Duration>>,
+}
+
+pub fn collect_response_checks(
+    response: ProcessedResponse,
+    response_time: Duration,
+    params: CheckParameters,
+) -> Vec<CheckResult> {
+    vec![
+        check_status(response.status, response.version, params.onredirect),
+        check_body(response.body, params.page_size),
+        check_response_time(response_time, params.response_time_levels),
+        check_document_age(&response.headers, params.document_age_levels),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
+}
+
+fn check_status(
     status: StatusCode,
     version: Version,
     onredirect: OnRedirect,
@@ -158,7 +182,7 @@ pub fn check_status(
     })
 }
 
-pub fn check_body(
+fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
     page_size_limits: Option<Bounds<usize>>,
 ) -> Option<CheckResult> {
@@ -184,7 +208,7 @@ fn check_page_size(page_size: usize, page_size_limits: Option<Bounds<usize>>) ->
     }
 }
 
-pub fn check_response_time(
+fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<UpperLevels<Duration>>,
 ) -> Option<CheckResult> {
@@ -202,7 +226,7 @@ pub fn check_response_time(
     })
 }
 
-pub fn check_document_age(
+fn check_document_age(
     headers: &HeaderMap,
     document_age_levels: Option<UpperLevels<Duration>>,
 ) -> Option<CheckResult> {

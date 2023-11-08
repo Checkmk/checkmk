@@ -51,6 +51,7 @@ config_setting(
         "@omd_packages//packages:cmk-agent-based",
         "@omd_packages//packages:cmk-agent-receiver",
         "@omd_packages//packages:cmk-graphing",
+        "@omd_packages//packages:cmk-server-side-calls",
         "@omd_packages//packages:cmk-werks",
         "@openssl",
         "@python",
@@ -75,6 +76,7 @@ config_setting(
 ) for module, dep in [
     ("agent-receiver", "$(execpath @omd_packages//packages:cmk-agent-receiver)"),
     ("graphing", "$(execpath @omd_packages//packages:cmk-graphing)"),
+    ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
     ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
 ]]
@@ -87,6 +89,7 @@ genrule(
             "agent-based",
             "agent-receiver",
             "graphing",
+            "server-side-calls"
             "werks",
         ]
     ],

@@ -2,5 +2,6 @@ exports_files([
     "cmk-agent-based",
     "cmk-agent-receiver",
     "cmk-graphing",
+    "cmk-server-side-calls",
     "cmk-werks",
 ])

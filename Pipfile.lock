@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9db49beed2a3f7667aca939f3a6b3abdff53b38007d24c15c12ae699f2968ad0"
+            "sha256": "aa18fe8f36ebdf17ee5439a2d49cfde214c5e88cf2fea6def2053c74dbb007ba"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -585,6 +585,10 @@
         "cmk-graphing": {
             "editable": true,
             "path": "./packages/cmk-graphing"
+        },
+        "cmk-server-side-calls": {
+            "editable": true,
+            "path": "./packages/cmk-server-side-calls"
         },
         "cmk-werks": {
             "editable": true,

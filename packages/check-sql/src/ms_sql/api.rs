@@ -86,13 +86,17 @@ impl CheckConfig {
     pub async fn exec(&self) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
             let dumb_header = Self::generate_dumb_header(ms_sql);
-            Ok(dumb_header)
+            let instances_data = generate_instances_data(ms_sql).await.unwrap_or_else(|e| {
+                log::error!("Error generating instances data: {e}");
+                format!("{e}\n")
+            });
+            Ok(dumb_header + &instances_data)
         } else {
             anyhow::bail!("No Config")
         }
     }
 
-    /// Generate header for each section without any data
+    /// Generate header for each section without any data, see vbs plugin
     fn generate_dumb_header(ms_sql: &config::ms_sql::Config) -> String {
         let sections = get_work_sections(ms_sql);
         sections
@@ -100,6 +104,49 @@ impl CheckConfig {
             .map(Section::to_header)
             .collect::<Vec<String>>()
             .join("")
+    }
+}
+
+/// Generate header for each section without any data
+async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
+    let start = to_section("instance").to_header(); // as in old plugin
+    let _sections = get_work_sections(ms_sql);
+    let mut client = create_client_from_config(ms_sql).await?;
+    let _instances = find_instance_engines(&mut client).await?;
+    Ok(start)
+}
+
+async fn create_client_from_config(ms_sql: &config::ms_sql::Config) -> Result<Client> {
+    let client = match ms_sql.auth().auth_type() {
+        config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
+            if let Some(credentials) = obtain_config_credentials(ms_sql) {
+                create_remote_client(ms_sql.conn().hostname(), ms_sql.conn().port(), credentials)
+                    .await?
+            } else {
+                anyhow::bail!("Not provided credentials")
+            }
+        }
+
+        #[cfg(windows)]
+        config::ms_sql::AuthType::Integrated => create_local_client().await?,
+
+        _ => anyhow::bail!("Not supported authorization type"),
+    };
+    Ok(client)
+}
+
+fn obtain_config_credentials(ms_sql: &config::ms_sql::Config) -> Option<Credentials> {
+    match ms_sql.auth().auth_type() {
+        config::ms_sql::AuthType::SqlServer => Some(Credentials::SqlServer {
+            user: ms_sql.auth().username(),
+            password: ms_sql.auth().password().map(|s| s.as_str()).unwrap_or(""),
+        }),
+        #[cfg(windows)]
+        config::ms_sql::AuthType::Windows => Some(Credentials::Windows {
+            user: ms_sql.auth().username(),
+            password: ms_sql.auth().password().map(|s| s.as_str()).unwrap_or(""),
+        }),
+        _ => None,
     }
 }
 
@@ -329,4 +376,50 @@ pub async fn get_computer_name(client: &mut Client) -> Result<Option<String>> {
         .ok()
         .flatten()
         .map(str::to_string))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::ms_sql::Config;
+    use yaml_rust::YamlLoader;
+
+    fn make_config_with_auth_type(auth_type: &str) -> Config {
+        const BASE: &str = r#"
+---
+mssql:
+  standard:
+    authentication:
+       username: "bad_user"
+       password: "bad_password"
+       type: type_tag
+    connection:
+       hostname: "bad_host"
+"#;
+        Config::from_yaml(
+            &YamlLoader::load_from_str(&BASE.replace("type_tag", auth_type))
+                .expect("fix test string!")[0]
+                .clone(),
+        )
+        .unwrap()
+        .unwrap()
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_create_client_from_config_for_error() {
+        assert!(
+            create_client_from_config(&make_config_with_auth_type("token"))
+                .await
+                .unwrap_err()
+                .to_string()
+                .contains("Not supported authorization type")
+        );
+    }
+
+    #[test]
+    fn test_obtain_credentials_from_config() {
+        #[cfg(windows)]
+        assert!(obtain_config_credentials(&make_config_with_auth_type("windows")).is_some());
+        assert!(obtain_config_credentials(&make_config_with_auth_type("sql_server")).is_some());
+    }
 }

@@ -3,4 +3,4 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub const STANDARD_PORT: u16 = 1433;
-pub const BROWSER_PORT: u16 = 1434;
+pub const SQL_BROWSER_PORT: u16 = 1434;

@@ -58,7 +58,7 @@ async fn test_validate_all_instances_local() {
         .collect();
 
     for name in names {
-        let c = api::create_local_instance_client(None, &name).await;
+        let c = api::create_local_instance_client(&name, None).await;
         match c {
             Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
             Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
@@ -131,13 +131,13 @@ async fn test_validate_all_instances_remote() {
 
         for name in names {
             let c = api::create_remote_instance_client(
+                &name,
                 &endpoint.host,
                 None,
                 api::Credentials::SqlServer {
                     user: &endpoint.user,
                     password: &endpoint.pwd,
                 },
-                &name,
             )
             .await;
             match c {

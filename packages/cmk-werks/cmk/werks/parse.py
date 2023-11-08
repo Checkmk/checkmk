@@ -104,18 +104,21 @@ def parse_werk_v1(content: str, werk_id: int) -> WerkV1ParseResult:
     description = []
     in_header = True
     for line in content.split("\n"):
-        if in_header and not line.strip():
-            in_header = False
-        elif in_header:
-            key, text = line.split(":", 1)
-            try:
-                value = str(int(text.strip()))
-            except ValueError:
-                value = text.strip()
-            field = key.lower()
-            werk[field] = value
-        else:
-            description.append(line)
+        try:
+            if in_header and not line.strip():
+                in_header = False
+            elif in_header:
+                key, text = line.split(":", 1)
+                try:
+                    value = str(int(text.strip()))
+                except ValueError:
+                    value = text.strip()
+                field = key.lower()
+                werk[field] = value
+            else:
+                description.append(line)
+        except Exception as e:
+            raise RuntimeError(f"Can not parse line {line!r} of werk {werk_id}") from e
 
     while description and description[-1] == "":
         description.pop()

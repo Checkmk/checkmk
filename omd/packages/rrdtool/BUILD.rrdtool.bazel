@@ -1,0 +1,92 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR", "RRDLIB_MAJOR", "RRDLIB_MAJOR_DOT_MINOR")
+
+MAKE_PARALLEL = "-j4"
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "rrdtool",
+    args = ["%s" % MAKE_PARALLEL],
+    build_data = [
+        "@omd_packages//omd/packages/perl-modules:perl-modules",
+        "@omd_packages//omd/packages/python3-modules:python3-modules",
+    ],
+    configure_in_place = True,
+    configure_options = [
+        "--verbose",
+        "--disable-ruby",
+        "--disable-libwrap",
+        "--enable-perl-site-install",
+        "--disable-tcl",
+        "--disable-lua",
+        "--disable-rrdcgi",
+        "--disable-libdbi",
+        "--with-systemdsystemunitdir=no",
+        "--with-perl-options='LIB=$(execpath @omd_packages//omd/packages/perl-modules:perl-modules)/lib/perl5/lib/perl5'",
+        "CFLAGS='-Dredacted=\"redacted\"'",
+    ],
+    copts = [
+        "-I$BUILD_TMPDIR/include",
+        "-Wno-stringop-overflow",
+    ],
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+        "RANLIB": "ranlib",
+        "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
+        "PERL_DIR": "$(execpath @omd_packages//omd/packages/perl-modules:perl-modules)",
+        "HOME": "/home/\\$$\\$${USER}/",
+        "CFLAGS": "'-Dredacted=\"redacted\"' -I$$EXT_BUILD_DEPS/python/python/include/python%s" % PYTHON_MAJOR_DOT_MINOR,
+        "PYTHONPATH": "$(execpath @omd_packages//omd/packages/python3-modules:python3-modules)/lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "PATH": "$$EXT_BUILD_DEPS/python/bin/:$$PATH",
+        "top_builddir": ".",
+    },
+    install_prefix = "$INSTALLDIR",
+    lib_source = ":all_srcs",
+    out_binaries = [
+        "rrdcached",
+        "rrdcreate",
+        "rrdinfo",
+        "rrdtool",
+        "rrdupdate",
+    ],
+    out_data_dirs = [
+        "share",
+        "lib/perl5/lib/perl5/",
+        "lib/python%s/site-packages/" % PYTHON_MAJOR_DOT_MINOR,
+        "lib/pkgconfig",
+    ],
+    out_shared_libs = [
+        "librrd.so",
+        "librrd.so.%s" % RRDLIB_MAJOR,
+        "librrd.so.%s" % RRDLIB_MAJOR_DOT_MINOR,
+    ],
+    out_static_libs = [
+        "librrd.a",
+    ],
+    postfix_script = """
+        # Python binding configure make is not setting prefix correctly.
+        # Prefix is prefixed with $BUILD_TMPDIR and
+        # variables inside DESTDIR are not resolved.
+        cp -r $BUILD_TMPDIR/$INSTALLDIR $INSTALLDIR
+    """,
+    targets = [
+        "-C po all",
+        "-C src all",
+        "-C tests all",
+        "-C etc all",
+        "-C bindings all",
+        "-C po install",
+        "-C src install",
+        "-C tests install",
+        "-C etc install",
+        "DESTDIR=/ -C bindings install",
+    ],
+    deps = ["@python"],
+)

@@ -175,10 +175,29 @@ register.agent_section(
 )
 
 
+class SchedulerState(Enum):
+    Setup = "Setup"
+    EnvironmentBuilding = "EnvironmentBuilding"
+    Scheduling = "Scheduling"
+
+
+def parse_robotmk_scheduler_state(
+    string_table: StringTable,
+) -> SchedulerState | None:
+    return SchedulerState(string_table[0][0].strip('"'))
+
+
+register.agent_section(
+    name="robotmk_scheduler_state",
+    parse_function=parse_robotmk_scheduler_state,
+)
+
+
 def discover_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
     section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
+    section_robotmk_scheduler_state: SchedulerState | None,
 ) -> DiscoveryResult:
     if section_robotmk_config:
         yield Service()
@@ -188,6 +207,7 @@ def check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
     section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
+    section_robotmk_scheduler_state: SchedulerState | None,
 ) -> CheckResult:
     if not section_robotmk_config:
         return
@@ -201,6 +221,7 @@ register.check_plugin(
         "robotmk_config",
         "robotmk_rcc_setup_failures",
         "robotmk_environment_build_states",
+        "robotmk_scheduler_state",
     ],
     service_name="Robotmk Scheduler Status",
     discovery_function=discover_scheduler_status,

@@ -690,10 +690,12 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
         Informational(_logger_livestatus) << "Forcing logfile rotation";
         rotate_log_file(std::chrono::system_clock::to_time_t(
             std::chrono::system_clock::now()));
-        schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
-                           0, 0,
-                           reinterpret_cast<void *>(get_next_log_rotation_time),
-                           1, nullptr, nullptr, 0);
+        schedule_new_event(
+            EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(), 0, 0,
+            // Nagios uses "void *" for a function pointer! :-P
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            reinterpret_cast<void *>(get_next_log_rotation_time), 1, nullptr,
+            nullptr, 0);
         return false;
     }
     logRequest(_logger_livestatus, line, {});

@@ -306,7 +306,8 @@ private:
     void publish(const LogRecord &record) override {
         std::ostringstream os;
         getFormatter()->format(os, record);
-        // TODO(sp) The Nagios headers are (once again) not const-correct...
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         write_to_all_logs(const_cast<char *>(os.str().c_str()),
                           NSLOG_INFO_MESSAGE);
     }

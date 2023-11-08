@@ -12,6 +12,8 @@
 
 #include "neb/nagios.h"
 
+// Older Nagios headers are not const-correct... :-P
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
 char *cc(const char *str) { return const_cast<char *>(str); }
 
 CustomVariables::CustomVariables(Attributes attrs) : attrs_(std::move(attrs)) {

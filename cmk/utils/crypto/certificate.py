@@ -35,7 +35,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, TypeAlias
 
 import cryptography
 import cryptography.hazmat.primitives.asymmetric as asym
@@ -267,7 +267,7 @@ class Certificate:
     """An X.509 RSA certificate"""
 
     def __init__(self, certificate: x509.Certificate) -> None:
-        """Wrap an cryptography.x509.Certificate (RSA keys only)"""
+        """Wrap a cryptography.x509.Certificate"""
         self._cert = certificate
 
     @classmethod
@@ -546,6 +546,9 @@ class Certificate:
         return datetime.now(tz=timezone.utc).replace(tzinfo=None)
 
 
+X509NameOid: TypeAlias = x509.oid.NameOID
+
+
 @dataclass
 class X509Name:
     """Thin wrapper for X509 Name objects"""
@@ -563,19 +566,25 @@ class X509Name:
         if common_name == "":
             raise ValueError("common name must not be empty")
 
-        attributes = [x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name)]
+        attributes = [x509.NameAttribute(X509NameOid.COMMON_NAME, common_name)]
         if organization_name is not None:
-            attributes.append(
-                x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization_name)
-            )
+            attributes.append(x509.NameAttribute(X509NameOid.ORGANIZATION_NAME, organization_name))
         if organizational_unit is not None:
             attributes.append(
-                x509.NameAttribute(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
+                x509.NameAttribute(X509NameOid.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
             )
 
         return cls(x509.Name(attributes))
 
-    def _get_name_attributes(self, attribute: x509.ObjectIdentifier) -> list[str]:
+    def get_single_name_attribute(self, attribute: x509.oid.ObjectIdentifier) -> str | None:
+        """
+        Get an attribute, returning only the first if multiple are found.
+
+        Use an OID from X509NameOid.
+        """
+        return attrs[0] if (attrs := self._get_name_attributes(attribute)) else None
+
+    def _get_name_attributes(self, attribute: x509.oid.ObjectIdentifier) -> list[str]:
         return [
             val.decode("utf-8") if isinstance(val := attr.value, bytes) else val
             for attr in self.name.get_attributes_for_oid(attribute)
@@ -587,12 +596,7 @@ class X509Name:
         >>> print(X509Name.create(common_name="john", organizational_unit="corp").common_name)
         john
         """
-        name = self._get_name_attributes(x509.oid.NameOID.COMMON_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one common name, found {count}")
+        return self.get_single_name_attribute(X509NameOid.COMMON_NAME)
 
     @property
     def organization_name(self) -> str | None:
@@ -606,12 +610,7 @@ class X509Name:
         ... )
         corp
         """
-        name = self._get_name_attributes(x509.oid.NameOID.ORGANIZATION_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one organization name, found {count}")
+        return self.get_single_name_attribute(X509NameOid.ORGANIZATION_NAME)
 
     @property
     def organizational_unit(self) -> str | None:
@@ -629,12 +628,7 @@ class X509Name:
         ... )
         unit
         """
-        name = self._get_name_attributes(x509.oid.NameOID.ORGANIZATIONAL_UNIT_NAME)
-        if (count := len(name)) == 1:
-            return name[0]
-        if count == 0:
-            return None
-        raise ValueError(f"Expected to find at most one organizational unit name, found {count}")
+        return self.get_single_name_attribute(X509NameOid.ORGANIZATIONAL_UNIT_NAME)
 
 
 @dataclass

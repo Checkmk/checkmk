@@ -58,9 +58,8 @@ from typing import (
 import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-from OpenSSL import crypto
 from PIL import Image
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 from livestatus import SiteId
 
@@ -7968,39 +7967,6 @@ class AjaxFetchCA(AjaxPage):
         raise MKUserError(None, _("Found no CA"))
 
 
-def analyse_cert(value: Any) -> dict[str, dict[str, str]]:
-    # ? type of the value argument is unclear
-    # TODO(hannes): use utils.crypto.certificate instead
-    cert = crypto.load_certificate(
-        crypto.FILETYPE_PEM, ensure_binary(value)  # pylint: disable= six-ensure-str-bin-call
-    )
-    titles = {
-        "C": _("Country"),
-        "ST": _("State or Province Name"),
-        "L": _("Locality Name"),
-        "O": _("Organization Name"),
-        "CN": _("Common Name"),
-    }
-    cert_info: dict[str, dict[str, str]] = {}
-    for what, x509 in [
-        ("issuer", cert.get_issuer()),
-        ("subject", cert.get_subject()),
-    ]:
-        cert_info[what] = {}
-        for raw_key, raw_val in x509.get_components():
-            key = raw_key.decode("utf-8")
-            if key in titles:
-                cert_info[what][titles[key]] = raw_val.decode("utf-8")
-    return cert_info
-
-
-def validate_certificate(value: Any, varprefix: str) -> None:
-    try:
-        analyse_cert(value)
-    except Exception as e:
-        raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
-
-
 def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
     *,
     title: str | None = None,
@@ -8041,7 +8007,7 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
     )
 
 
-class CAorCAChain(UploadOrPasteTextFile):
+class _CAorCAChain(UploadOrPasteTextFile):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         # UploadOrPasteTextFile
@@ -8081,11 +8047,57 @@ class CAorCAChain(UploadOrPasteTextFile):
             validate=validate,
         )
 
+    @staticmethod
+    def _analyse_cert(cert: certificate.Certificate) -> dict[str, dict[str, str]]:
+        """
+        Inspect the certificate and place selected info in a dict.
+
+        Depending on which info is specified in the certificate, the resulting dict may contain
+        - common name; organization name; locality name; state or province name; country name
+        and will look something like this:
+        {
+            "issuer": {
+                "Common Name": ...,
+                "Organization Name": ...,
+                ...
+            },
+            "subject": {
+                "Common Name": ...,
+                "Organization Name": ...,
+                ...
+            },
+        }
+        """
+        attributes = {
+            certificate.X509NameOid.COUNTRY_NAME: _("Country"),
+            certificate.X509NameOid.STATE_OR_PROVINCE_NAME: _("State or Province Name"),
+            certificate.X509NameOid.LOCALITY_NAME: _("Locality Name"),
+            certificate.X509NameOid.ORGANIZATION_NAME: _("Organization Name"),
+            certificate.X509NameOid.COMMON_NAME: _("Common Name"),
+        }
+
+        return {
+            entity: {
+                attributes[attr_name]: attr_value
+                for attr_name in attributes
+                if (attr_value := info.get_single_name_attribute(attr_name)) is not None
+            }
+            for (entity, info) in [("issuer", cert.issuer), ("subject", cert.subject)]
+        }
+
     def _validate_value(self, value: Any, varprefix: str) -> None:
-        validate_certificate(value, varprefix)
+        # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
+        try:
+            # make sure the PEM can be loaded
+            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
+        except Exception as e:
+            raise MKUserError(varprefix, _("Invalid certificate file: %s") % e)
 
     def value_to_html(self, value: Any) -> ValueSpecText:
-        cert_info = analyse_cert(value)
+        # value is really str | bytes, but UploadOrPasteTextFile doesn't know this
+        cert_info = self._analyse_cert(
+            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
+        )
 
         rows = []
         for what, title in [
@@ -8123,7 +8135,7 @@ def ListOfCAs(  # pylint: disable=redefined-builtin
     validate: ValueSpecValidateFunc[ListOfModel[T]] | None = None,
 ) -> ListOf:
     return ListOf(
-        valuespec=CAorCAChain(),
+        valuespec=_CAorCAChain(),
         magic=magic,
         add_label=_("Add new CA certificate or chain") if add_label is None else add_label,
         del_label=del_label,

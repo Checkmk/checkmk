@@ -89,7 +89,7 @@ genrule(
             "agent-based",
             "agent-receiver",
             "graphing",
-            "server-side-calls"
+            "server-side-calls",
             "werks",
         ]
     ],

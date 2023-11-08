@@ -44,7 +44,6 @@ SOURCE_BUILT_EXT := $(REPO_PATH)/agents/windows/robotmk_ext.exe
 SOURCE_BUILT_CHECK_SQL := $(REPO_PATH)/agents/windows/check-sql.exe 
 SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
-	$(REPO_PATH)/agents/windows/python-3.4.cab \
 	$(REPO_PATH)/agents/windows/python-3.cab \
 	$(REPO_PATH)/agents/windows/unsign-msi.patch
 SOURCE_BUILT_AGENTS := \

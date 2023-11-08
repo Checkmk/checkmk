@@ -10,8 +10,7 @@ PY_SUBVER          ?= $(PYTHON_VERSION_PATCH)
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 
 # Pythons for deploy
-PYTHON_1		:= ..\..\..\..\artefacts\python-3.cab
-PYTHON_2		:= ..\..\..\..\artefacts\python-3.4.cab
+PYTHON			:= ..\..\..\..\artefacts\python-3.cab
 
 # Scripts to be compatible with pythons
 SCRIPT_1		:= ..\..\..\..\enterprise\agents\plugins\cmk_update_agent.py
@@ -20,7 +19,7 @@ SCRIPT_3		:= ..\..\..\plugins\mk_jolokia.py
 
 .PHONY: test-integration test-integration-force
 
-$(INTEGRATION_TIMESTAMP): $(PYTHON_1) $(PYTHON_2) $(SCRIPT_1) $(SCRIPT_2) $(SCRIPT_3)
+$(INTEGRATION_TIMESTAMP): $(PYTHON) $(SCRIPT_1) $(SCRIPT_2) $(SCRIPT_3)
 	@powershell Write-Host "Integration tests starting" -foreground cyan
 	@cd integration && pytest.exe --expected_version $(PY_VER).$(PY_SUBVER)
 	@powershell Write-Host "success" -foreground green

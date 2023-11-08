@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
-from .agent_based_api.v1 import State
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cisco_ucs import DETECT, Operability, Presence
 
 
@@ -81,4 +82,38 @@ register.snmp_section(
         ],
     ),
     detect=DETECT,
+)
+
+
+def discover_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> DiscoveryResult:
+    yield from (
+        Service(item=name)
+        for name, memory_module in section.items()
+        if memory_module.presence is not Presence.missing
+    )
+
+
+def check_cisco_ucs_mem(item: str, section: Mapping[str, MemoryModule]) -> CheckResult:
+    if not (memory_module := section.get(item)):
+        return
+
+    yield Result(
+        state=memory_module.operability.monitoring_state(),
+        summary=f"Status: {memory_module.operability.name}",
+    )
+    yield Result(
+        state=memory_module.presence.monitoring_state(),
+        summary=f"Presence: {memory_module.presence.name}",
+    )
+    yield Result(state=State.OK, summary=f"Type: {memory_module.memtype.name}")
+    yield Result(
+        state=State.OK, summary=f"Size: {memory_module.capacity} MB, SN: {memory_module.serial}"
+    )
+
+
+register.check_plugin(
+    name="cisco_ucs_mem",
+    service_name="Memory %s",
+    discovery_function=discover_cisco_ucs_mem,
+    check_function=check_cisco_ucs_mem,
 )

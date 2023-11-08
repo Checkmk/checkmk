@@ -7,8 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.cisco_ucs_mem import check_cisco_ucs_mem, inventory_cisco_ucs_mem
-from cmk.base.plugins.agent_based.cisco_ucs_mem import MemoryModule, parse_cisco_ucs_mem
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.cisco_ucs_mem import (
+    check_cisco_ucs_mem,
+    discover_cisco_ucs_mem,
+    MemoryModule,
+    parse_cisco_ucs_mem,
+)
 
 
 @pytest.fixture(name="section", scope="module")
@@ -43,26 +48,26 @@ def fixture_section() -> dict[str, MemoryModule]:
     )
 
 
-def test_inventory_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
-    assert list(inventory_cisco_ucs_mem(section)) == [
-        ("mem-1", None),
-        ("mem-2", None),
-        ("mem-3", None),
-        ("mem-4", None),
-        ("mem-5", None),
-        ("mem-7", None),
-        ("mem-8", None),
-        ("mem-9", None),
-        ("mem-10", None),
-        ("mem-11", None),
-        ("mem-15", None),
-        ("mem-16", None),
-        ("mem-17", None),
-        ("mem-19", None),
-        ("mem-20", None),
-        ("mem-21", None),
-        ("mem-22", None),
-        ("mem-23", None),
+def test_discover_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
+    assert list(discover_cisco_ucs_mem(section)) == [
+        Service(item="mem-1"),
+        Service(item="mem-2"),
+        Service(item="mem-3"),
+        Service(item="mem-4"),
+        Service(item="mem-5"),
+        Service(item="mem-7"),
+        Service(item="mem-8"),
+        Service(item="mem-9"),
+        Service(item="mem-10"),
+        Service(item="mem-11"),
+        Service(item="mem-15"),
+        Service(item="mem-16"),
+        Service(item="mem-17"),
+        Service(item="mem-19"),
+        Service(item="mem-20"),
+        Service(item="mem-21"),
+        Service(item="mem-22"),
+        Service(item="mem-23"),
     ]
 
 
@@ -73,10 +78,10 @@ def test_inventory_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
         pytest.param(
             "mem-1",
             [
-                (0, "Status: operable"),
-                (0, "Presence: equipped"),
-                (0, "Type: ddr4"),
-                (0, "Size: 32768 MB, SN: 0357CDB9"),
+                Result(state=State.OK, summary="Status: operable"),
+                Result(state=State.OK, summary="Presence: equipped"),
+                Result(state=State.OK, summary="Type: ddr4"),
+                Result(state=State.OK, summary="Size: 32768 MB, SN: 0357CDB9"),
             ],
             id="Item in data",
         ),
@@ -85,4 +90,4 @@ def test_inventory_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
 def test_check_cisco_ucs_mem(
     section: Mapping[str, MemoryModule], item: str, expected_output: Sequence[object]
 ) -> None:
-    assert list(check_cisco_ucs_mem(item, None, section)) == expected_output
+    assert list(check_cisco_ucs_mem(item, section)) == expected_output

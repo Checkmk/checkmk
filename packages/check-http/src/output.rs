@@ -12,25 +12,16 @@ pub struct Output {
 
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        let state_marker = |s: &State| -> &str {
-            match s {
-                State::Ok => "",
-                State::Warn => " (!)",
-                State::Crit => " (!!)",
-                State::Unknown => " (?)",
-            }
-        };
-
         write!(f, "HTTP {}", self.worst_state)?;
         let mut crs_iter = self
             .check_results
             .iter()
             .filter(|cr| !cr.summary.is_empty());
         if let Some(item) = crs_iter.next() {
-            write!(f, " - {}{}", item.summary, state_marker(&item.state))?;
+            write!(f, " - {}", item)?;
         }
         for item in crs_iter {
-            write!(f, ", {}{}", item.summary, state_marker(&item.state))?;
+            write!(f, ", {}", item)?;
         }
         Ok(())
     }

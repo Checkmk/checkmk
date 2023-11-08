@@ -118,6 +118,22 @@ pub struct CheckResult {
     pub summary: String,
 }
 
+impl Display for CheckResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+        write!(
+            f,
+            "{}{}",
+            self.summary,
+            match self.state {
+                State::Ok => "",
+                State::Warn => " (!)",
+                State::Crit => " (!!)",
+                State::Unknown => " (?)",
+            }
+        )
+    }
+}
+
 pub fn check_status(
     status: StatusCode,
     version: Version,

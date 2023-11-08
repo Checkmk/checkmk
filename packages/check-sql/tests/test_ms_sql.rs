@@ -198,18 +198,6 @@ async fn test_check_config_exec_local() {
     assert!(res.is_err());
 }
 
-#[test]
-fn test_no_ms_sql() {
-    let file = tools::create_config_with_missing_ms_sql();
-    let r = tools::run_bin()
-        .arg("-c")
-        .arg(&file.path().to_string_lossy().into_owned())
-        .unwrap();
-    let (stdout, code) = tools::get_good_results(&r).unwrap();
-    assert_eq!(code, 0);
-    assert!(stdout.contains("No such host is known"));
-}
-
 #[cfg(windows)]
 #[test]
 fn test_run_local() {

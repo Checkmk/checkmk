@@ -49,6 +49,22 @@ pub struct InstanceEngine {
     pub available: Option<bool>,
 }
 
+impl InstanceEngine {
+    pub fn generate_leading_entry(&self, sep: char) -> String {
+        format!(
+            "MSSQL_{}{sep}config{sep}{}{sep}{}{sep}{}\n",
+            self.name,
+            self.version,
+            self.edition,
+            self.cluster.as_deref().unwrap_or_default()
+        )
+    }
+    pub async fn generate_section(&self, _client: &Client, section: &Section) -> String {
+        let result = section.to_header();
+        result + format!("{} not implemented\n", section.name).as_str()
+    }
+}
+
 impl Column for Row {
     fn get_string(&self, idx: usize) -> String {
         self.try_get::<&str, usize>(idx)
@@ -109,11 +125,50 @@ impl CheckConfig {
 
 /// Generate header for each section without any data
 async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
-    let start = to_section("instance").to_header(); // as in old plugin
-    let _sections = get_work_sections(ms_sql);
+    const INSTANCE_SECTION_NAME: &str = "instance";
+
+    let mut result = to_section("instance").to_header(); // as in old plugin
+    let sections = get_work_sections(ms_sql);
     let mut client = create_client_from_config(ms_sql).await?;
-    let _instances = find_instance_engines(&mut client).await?;
-    Ok(start)
+    let all = find_instance_engines(&mut client).await?;
+    let instances: Vec<InstanceEngine> = [&all.0[..], &all.1[..]].concat();
+
+    for instance in &instances {
+        result += &to_section(INSTANCE_SECTION_NAME).to_header();
+        result += &instance
+            .generate_leading_entry(get_section_separator(INSTANCE_SECTION_NAME).unwrap_or(' '));
+    }
+    // TODO(sk): remove this reference code after fucntionality of [futures] will be verified
+    //for instance in &instances {
+    //    for section in &sections {
+    //        result += &instance.generate_section(&client, section).await;
+    //    }
+    //}
+    Ok(result + &generate_result(&instances, &sections, &client).await?)
+}
+
+use futures::stream::{self, StreamExt}; // Make sure to include this crate in your `Cargo.toml`
+
+/// Intelligent async processing of the data
+async fn generate_result(
+    instances: &[InstanceEngine],
+    sections: &[Section],
+    client: &Client,
+) -> Result<String> {
+    // place all futures now in vector for future asynchronous processing
+    let tasks = instances.iter().flat_map(|instance| {
+        sections
+            .iter()
+            .map(move |section| instance.generate_section(client, section))
+    });
+
+    // processing here
+    let results = stream::iter(tasks)
+        .buffer_unordered(6) // MAX_CONCURRENT is the limit of concurrent tasks you want to allow.
+        .collect::<Vec<_>>()
+        .await;
+
+    Ok(results.join(""))
 }
 
 async fn create_client_from_config(ms_sql: &config::ms_sql::Config) -> Result<Client> {

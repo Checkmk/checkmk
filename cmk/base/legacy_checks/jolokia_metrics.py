@@ -262,21 +262,14 @@ def check_jolokia_metrics_bea_queue(item, params, info):
 def check_jolokia_metrics_bea_requests(item, _no_params, info):
     app = jolokia_metrics_app(info, item.split())
     if not app:
-        return (3, "application not found")
+        return
 
-    for nk in ["CompletedRequestCount", "requestCount"]:
-        if nk in app:
-            requests = int(app[nk])
-            rate = get_rate(
-                get_value_store(),
-                "j4p.bea.requests.%s" % item,
-                time.time(),
-                requests,
-                raise_overflow=True,
-            )
-            return (0, "%.2f requests/sec" % rate, [("rate", rate)])
+    raw_requests = app.get("CompletedRequestCount") or app.get("requestCount")
+    if not raw_requests:
+        return
 
-    return (3, "data not found in agent output")
+    rate = get_rate(get_value_store(), item, time.time(), int(raw_requests), raise_overflow=True)
+    yield check_levels(rate, "rate", None, human_readable_func=lambda x: f"{x:.2f} requests/sec")
 
 
 def check_jolokia_metrics_bea_threads(item, _no_params, info):

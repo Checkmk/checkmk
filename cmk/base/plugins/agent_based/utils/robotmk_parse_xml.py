@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from typing import Union
 
@@ -63,11 +63,20 @@ class Generator(BaseModel, frozen=True):
     rpa: bool = Field(alias="@rpa")
     schemaversion: int = Field(alias="@schemaversion")
     errors: Mapping[str, object] | None = Field(default=None)
-    suite: Suite
+    suite: Annotated[Sequence[Suite], BeforeValidator(_ensure_suite_sequence)] = Field(default=[])
 
 
 class Rebot(BaseModel, frozen=True):
     robot: Generator
+
+
+def extract_tests_from_suites(suites: Iterable[Suite]) -> dict[str, Test]:
+    tests_with_full_names: dict[str, Test] = {}
+
+    for suite in suites:
+        tests_with_full_names |= extract_tests_with_full_names(suite)
+
+    return tests_with_full_names
 
 
 def extract_tests_with_full_names(

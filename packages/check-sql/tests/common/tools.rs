@@ -122,6 +122,23 @@ mssql:
     l
 }
 
+pub fn create_config_with_missing_ms_sql() -> NamedTempFile {
+    let mut l = NamedTempFile::new().unwrap();
+    let config = r#"
+---
+mssql:
+  standard:
+    authentication:
+       username: "nobody"
+       password: "doesnt_matter"
+       type: "windows"
+    connection:
+       hostname: "no_host"
+"#;
+    l.write_all(config.as_bytes()).unwrap();
+    l
+}
+
 /// write non captured message to stdout
 pub fn skip_on_lack_of_ms_sql_endpoint() {
     #[allow(clippy::explicit_write)]

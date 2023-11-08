@@ -19,12 +19,12 @@ use crate::redirect::OnRedirect;
 // * warn/lower and crit/upper
 // So we're modelling exactly this.
 
-pub struct Limits<T> {
+pub struct UpperLevels<T> {
     warn: T,
     crit: Option<T>,
 }
 
-impl<T> Limits<T>
+impl<T> UpperLevels<T>
 where
     T: Ord + PartialOrd,
 {
@@ -171,7 +171,7 @@ fn check_page_size(page_size: usize, page_size_limits: Option<Bounds<usize>>) ->
 
 pub fn check_response_time(
     response_time: Duration,
-    response_time_levels: Option<Limits<Duration>>,
+    response_time_levels: Option<UpperLevels<Duration>>,
 ) -> Option<CheckResult> {
     let state = response_time_levels
         .and_then(|levels| levels.evaluate(&response_time))
@@ -278,7 +278,7 @@ mod test_check_page_size {
 #[cfg(test)]
 mod test_check_response_time {
     use crate::checking::check_response_time;
-    use crate::checking::{Limits, State};
+    use crate::checking::{State, UpperLevels};
     use std::time::Duration;
 
     #[test]
@@ -294,9 +294,12 @@ mod test_check_response_time {
     #[test]
     fn test_warn_within_bounds() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(Limits::warn(Duration::new(6, 0))))
-                .unwrap()
-                .state,
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn(Duration::new(6, 0)))
+            )
+            .unwrap()
+            .state,
             State::Ok
         );
     }
@@ -304,9 +307,12 @@ mod test_check_response_time {
     #[test]
     fn test_warn_is_warn() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(Limits::warn(Duration::new(4, 0))))
-                .unwrap()
-                .state,
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn(Duration::new(4, 0)))
+            )
+            .unwrap()
+            .state,
             State::Warn
         );
     }
@@ -316,7 +322,10 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Some(Limits::warn_crit(Duration::new(6, 0), Duration::new(7, 0)))
+                Some(UpperLevels::warn_crit(
+                    Duration::new(6, 0),
+                    Duration::new(7, 0)
+                ))
             )
             .unwrap()
             .state,
@@ -329,7 +338,10 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Some(Limits::warn_crit(Duration::new(4, 0), Duration::new(6, 0)))
+                Some(UpperLevels::warn_crit(
+                    Duration::new(4, 0),
+                    Duration::new(6, 0)
+                ))
             )
             .unwrap()
             .state,
@@ -342,7 +354,10 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Some(Limits::warn_crit(Duration::new(2, 0), Duration::new(3, 0)))
+                Some(UpperLevels::warn_crit(
+                    Duration::new(2, 0),
+                    Duration::new(3, 0)
+                ))
             )
             .unwrap()
             .state,

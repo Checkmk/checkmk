@@ -21,8 +21,17 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         super().__init__(name=name, title=title, sort_index=sort_index)
         self._audit_log_path: Path = wato_var_dir() / "log" / "wato_audit.log"
         self._audit_log_backup_path: Path = wato_var_dir() / "log" / "wato_audit.log-backup"
+        self._audit_log_target_size: int = 400 * 1024 * 1024  # 300MB in bytes
 
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
+        if not self._audit_log_path.exists():
+            logger.debug("No audit log found. Skipping...")
+            return
+
+        if self._audit_log_path.stat().st_size <= self._audit_log_target_size:
+            logger.debug("Audit log small enough. Skipping...")
+            return
+
         logger.debug("Start backup of existing audit log")
         self._backup_source_log()
         logger.debug("Finished backup of existing audit log")
@@ -60,16 +69,20 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
         current_lines: list[Buffer] = []
 
         for line in lines:
-            line_size = len(line) + 1  # Wir fügen 1 für das Trennzeichen hinzu
+            line_size = len(line) + 1
 
-            if current_size + line_size > 300 * 1024 * 1024:  # 300MB in bytes
+            if current_size + line_size > self._audit_log_target_size:
                 output_file_path = output_dir / f"wato_audit.log.{suffix}"
                 with open(output_file_path, "wb") as output_file:
                     output_file.write(b"\0".join(current_lines))
                 current_file += 1
                 current_lines = []
                 current_size = 0
-                suffix += f"-{current_file}"
+                suffix = (
+                    f"{suffix[:-1]}{current_file}"
+                    if suffix[-2] == "-"
+                    else f"{suffix}-{current_file}"
+                )
 
             current_lines.append(line)
             current_size += line_size
@@ -86,7 +99,7 @@ class UpdateAuditLog(UpdateAction):  # pylint: disable=too-few-public-methods
 update_action_registry.register(
     UpdateAuditLog(
         name="update_audit_log",
-        title="Update audit log",
+        title="Split large audit logs",
         sort_index=130,
     )
 )

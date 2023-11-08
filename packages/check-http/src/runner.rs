@@ -86,21 +86,19 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
         ),
         checking::check_body(
             response.body,
-            match args.page_size {
-                None => Bounds::None,
-                Some((x, None)) => Bounds::Lower(x),
-                Some((x, Some(y))) => Bounds::LowerUpper(x, y),
-            },
+            args.page_size.map(|val| match val {
+                (x, None) => Bounds::lower(x),
+                (x, Some(y)) => Bounds::lower_upper(x, y),
+            }),
         ),
         checking::check_response_time(
             elapsed,
-            match args.response_time_levels {
-                None => Limits::None,
-                Some((x, None)) => Limits::Warn(Duration::from_secs_f64(x)),
-                Some((x, Some(y))) => {
-                    Limits::WarnCrit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
+            args.response_time_levels.map(|val| match val {
+                (x, None) => Limits::warn(Duration::from_secs_f64(x)),
+                (x, Some(y)) => {
+                    Limits::warn_crit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
                 }
-            },
+            }),
         ),
         checking::check_document_age(&response.headers, args.document_age_levels),
     ]

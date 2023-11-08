@@ -12,16 +12,75 @@ use std::time::{Duration, SystemTime};
 
 use crate::redirect::OnRedirect;
 
-pub enum Limits<T> {
-    None,
-    Warn(T),
-    WarnCrit(T, T),
+// TODO(au): We're missing requirements for the new check_http here:
+// The old check_http allows specification of
+// * no levels/bounds
+// * warn/lower
+// * warn/lower and crit/upper
+// So we're modelling exactly this.
+
+pub struct Limits<T> {
+    warn: T,
+    crit: Option<T>,
 }
 
-pub enum Bounds<T> {
-    None,
-    Lower(T),
-    LowerUpper(T, T),
+impl<T> Limits<T>
+where
+    T: Ord + PartialOrd,
+{
+    pub fn warn(warn: T) -> Self {
+        Self { warn, crit: None }
+    }
+
+    pub fn warn_crit(warn: T, crit: T) -> Self {
+        Self {
+            warn,
+            crit: Some(crit),
+        }
+    }
+
+    pub fn evaluate(&self, value: &T) -> Option<State> {
+        match self {
+            Self {
+                warn: _,
+                crit: Some(crit),
+            } if value >= crit => Some(State::Crit),
+            Self { warn, crit: _ } if value >= warn => Some(State::Warn),
+            _ => None,
+        }
+    }
+}
+
+pub struct Bounds<T> {
+    lower: T,
+    upper: Option<T>,
+}
+
+impl<T> Bounds<T>
+where
+    T: Ord + PartialOrd,
+{
+    pub fn lower(lower: T) -> Self {
+        Self { lower, upper: None }
+    }
+
+    pub fn lower_upper(lower: T, upper: T) -> Self {
+        Self {
+            lower,
+            upper: Some(upper),
+        }
+    }
+
+    pub fn evaluate(&self, value: &T, severity: State) -> Option<State> {
+        match self {
+            Self {
+                lower: _,
+                upper: Some(upper),
+            } if value > upper => Some(severity),
+            Self { lower, upper: _ } if value < lower => Some(severity),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
@@ -86,7 +145,7 @@ pub fn check_status(
 
 pub fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
-    page_size_limits: Bounds<usize>,
+    page_size_limits: Option<Bounds<usize>>,
 ) -> Option<CheckResult> {
     let body = body?;
 
@@ -99,24 +158,10 @@ pub fn check_body(
     }
 }
 
-pub fn check_page_size(page_size: usize, page_size_limits: Bounds<usize>) -> CheckResult {
-    let state = match page_size_limits {
-        Bounds::None => State::Ok,
-        Bounds::Lower(lower) => {
-            if page_size < lower {
-                State::Warn
-            } else {
-                State::Ok
-            }
-        }
-        Bounds::LowerUpper(lower, upper) => {
-            if page_size < lower || page_size > upper {
-                State::Warn
-            } else {
-                State::Ok
-            }
-        }
-    };
+fn check_page_size(page_size: usize, page_size_limits: Option<Bounds<usize>>) -> CheckResult {
+    let state = page_size_limits
+        .and_then(|bounds| bounds.evaluate(&page_size, State::Warn))
+        .unwrap_or(State::Ok);
 
     CheckResult {
         state,
@@ -126,27 +171,11 @@ pub fn check_page_size(page_size: usize, page_size_limits: Bounds<usize>) -> Che
 
 pub fn check_response_time(
     response_time: Duration,
-    response_time_levels: Limits<Duration>,
+    response_time_levels: Option<Limits<Duration>>,
 ) -> Option<CheckResult> {
-    let state = match response_time_levels {
-        Limits::None => State::Ok,
-        Limits::Warn(warn) => {
-            if response_time >= warn {
-                State::Warn
-            } else {
-                State::Ok
-            }
-        }
-        Limits::WarnCrit(warn, crit) => {
-            if response_time >= crit {
-                State::Crit
-            } else if response_time >= warn {
-                State::Warn
-            } else {
-                State::Ok
-            }
-        }
-    };
+    let state = response_time_levels
+        .and_then(|levels| levels.evaluate(&response_time))
+        .unwrap_or(State::Ok);
 
     Some(CheckResult {
         state,
@@ -202,23 +231,29 @@ mod test_check_page_size {
 
     #[test]
     fn test_without_bounds() {
-        assert_eq!(check_page_size(42, Bounds::None).state, State::Ok);
+        assert_eq!(check_page_size(42, None).state, State::Ok);
     }
 
     #[test]
     fn test_lower_within_bounds() {
-        assert_eq!(check_page_size(42, Bounds::Lower(12)).state, State::Ok);
+        assert_eq!(
+            check_page_size(42, Some(Bounds::lower(12))).state,
+            State::Ok
+        );
     }
 
     #[test]
     fn test_lower_out_of_bounds() {
-        assert_eq!(check_page_size(42, Bounds::Lower(56)).state, State::Warn);
+        assert_eq!(
+            check_page_size(42, Some(Bounds::lower(56))).state,
+            State::Warn
+        );
     }
 
     #[test]
     fn test_lower_and_higher_within_bounds() {
         assert_eq!(
-            check_page_size(56, Bounds::LowerUpper(42, 100)).state,
+            check_page_size(56, Some(Bounds::lower_upper(42, 100))).state,
             State::Ok
         );
     }
@@ -226,7 +261,7 @@ mod test_check_page_size {
     #[test]
     fn test_lower_and_higher_too_low() {
         assert_eq!(
-            check_page_size(42, Bounds::LowerUpper(56, 100)).state,
+            check_page_size(42, Some(Bounds::lower_upper(56, 100))).state,
             State::Warn
         );
     }
@@ -234,7 +269,7 @@ mod test_check_page_size {
     #[test]
     fn test_lower_and_higher_too_high() {
         assert_eq!(
-            check_page_size(142, Bounds::LowerUpper(56, 100)).state,
+            check_page_size(142, Some(Bounds::lower_upper(56, 100))).state,
             State::Warn
         );
     }
@@ -249,7 +284,7 @@ mod test_check_response_time {
     #[test]
     fn test_unbounded() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), Limits::None)
+            check_response_time(Duration::new(5, 0), None)
                 .unwrap()
                 .state,
             State::Ok
@@ -259,7 +294,7 @@ mod test_check_response_time {
     #[test]
     fn test_warn_within_bounds() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), Limits::Warn(Duration::new(6, 0)))
+            check_response_time(Duration::new(5, 0), Some(Limits::warn(Duration::new(6, 0))))
                 .unwrap()
                 .state,
             State::Ok
@@ -269,7 +304,7 @@ mod test_check_response_time {
     #[test]
     fn test_warn_is_warn() {
         assert_eq!(
-            check_response_time(Duration::new(5, 0), Limits::Warn(Duration::new(4, 0)))
+            check_response_time(Duration::new(5, 0), Some(Limits::warn(Duration::new(4, 0))))
                 .unwrap()
                 .state,
             State::Warn
@@ -281,7 +316,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Limits::WarnCrit(Duration::new(6, 0), Duration::new(7, 0))
+                Some(Limits::warn_crit(Duration::new(6, 0), Duration::new(7, 0)))
             )
             .unwrap()
             .state,
@@ -294,7 +329,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Limits::WarnCrit(Duration::new(4, 0), Duration::new(6, 0))
+                Some(Limits::warn_crit(Duration::new(4, 0), Duration::new(6, 0)))
             )
             .unwrap()
             .state,
@@ -307,7 +342,7 @@ mod test_check_response_time {
         assert_eq!(
             check_response_time(
                 Duration::new(5, 0),
-                Limits::WarnCrit(Duration::new(2, 0), Duration::new(3, 0))
+                Some(Limits::warn_crit(Duration::new(2, 0), Duration::new(3, 0)))
             )
             .unwrap()
             .state,

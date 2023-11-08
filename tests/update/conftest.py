@@ -202,11 +202,21 @@ def version_supported(version: str) -> bool:
 def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     """Install the test site with the base version."""
     base_version = request.param
+
     if (
         request.config.getoption(name="--latest-base-version")
         and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
     ):
         pytest.skip("Only latest base-version selected")
+
+    if os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5") and not version_gte(
+        base_version.version, "2.2.0p8"
+    ):
+        pytest.skip(
+            "Checkmk installation failing for missing `php7`. This is fixed starting from "
+            "base-version 2.2.0p8"
+        )
+
     interactive_mode_off = request.config.getoption(name="--disable-interactive-mode")
     logger.info("Setting up test-site (interactive-mode=%s) ...", not interactive_mode_off)
     test_site = _get_site(base_version, interactive=not interactive_mode_off)

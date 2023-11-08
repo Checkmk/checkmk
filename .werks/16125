@@ -1,0 +1,17 @@
+Title: Remove Python 3.4 as an option for Windows Agent
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1694165426
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Older windows versions (e.g. Windows Server 2008 RC2) do not support Python versions newer than 3.4.
+For these systems we offered the option to install Python 3.4.4 as a Python environment.
+This environment was then used for various agent plugins.
+
+Since Python 3.4 reached its end-of-life in 2019 and Windows Server 2008 RC2 its end-of-life in 2020 this support is now removed.
+
+If you want to continue to run and monitor these systems you can still do that but if you use agent plugins that require Python you are now responsible for providing that environment.

@@ -32,7 +32,6 @@ from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
 from livestatus import LocalConnection, MKLivestatusSocketError, SiteId
 
 import cmk.utils.log
-import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.store as store
@@ -60,6 +59,8 @@ from cmk.gui.watolib.mkeventd import (
     get_rule_stats_from_ec,
     save_mkeventd_rules,
 )
+
+import cmk.mkp_tool
 
 if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -1572,10 +1573,10 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         return (
             {}
             if edition() is Edition.CRE
-            else cmk.utils.packaging.id_to_mkp(
-                cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.utils.packaging.all_rule_pack_files(ec.mkp_rule_pack_dir()),
-                cmk.utils.packaging.PackagePart.EC_RULE_PACKS,
+            else cmk.mkp_tool.id_to_mkp(
+                cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
+                cmk.mkp_tool.all_rule_pack_files(ec.mkp_rule_pack_dir()),
+                cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
             )
         )
 

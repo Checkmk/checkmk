@@ -3,24 +3,81 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+
 use check_sql::ms_sql::api::InstanceEngine;
 use check_sql::{config::CheckConfig, ms_sql::api};
 use common::tools;
-use std::vec;
 use tempfile::TempDir;
+
+fn expected_instances() -> Vec<String> {
+    const EXPECTED_INSTANCES: [&str; 3] = ["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"];
+
+    EXPECTED_INSTANCES
+        .iter()
+        .map(|&s| str::to_string(s))
+        .collect()
+}
 
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    assert!(api::create_client_for_logged_user("localhost", 1433, None)
-        .await
-        .is_ok());
+    assert!(api::create_local_client().await.is_ok());
+}
+
+fn is_instance_good(i: &InstanceEngine) -> bool {
+    !i.name.is_empty()
+        && i.id.contains(&i.name[..4])
+        && i.id.contains("MSSQL")
+        && i.version.chars().filter(|&c| c == '.').count() == 3
+        && i.port.is_none()
+        && i.cluster.is_none()
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_find_all_instances_local() {
+    let mut client = api::create_local_client().await.unwrap();
+    let instances = api::find_instance_engines(&mut client).await.unwrap();
+    let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
+    assert!(all.iter().all(is_instance_good), "{:?}", all);
+    let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
+    names.sort();
+
+    assert_eq!(names, expected_instances(), "During connecting to `local`");
+}
+
+#[cfg(windows)]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_validate_all_instances_local() {
+    let mut client = api::create_local_client().await.unwrap();
+    let instances = api::find_instance_engines(&mut client).await.unwrap();
+    let names: Vec<String> = [&instances.0[..], &instances.1[..]]
+        .concat()
+        .into_iter()
+        .map(|i| i.name)
+        .collect();
+
+    for name in names {
+        let c = api::create_local_instance_client(None, &name).await;
+        match c {
+            Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
+            Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
+                // we may not have valid credentials to connect - it's normal
+            }
+            Err(e) if e.to_string().starts_with(api::SQL_TCP_ERROR_TAG) => {
+                panic!("Unexpected CONNECTION error: `{:?}`", e);
+            }
+            Err(e) => {
+                panic!("Unexpected error: `{:?}`", e);
+            }
+        }
+    }
 }
 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        assert!(api::create_client(
+        assert!(api::create_remote_client(
             &endpoint.host,
             check_sql::ms_sql::defaults::STANDARD_PORT,
             api::Credentials::SqlServer {
@@ -39,26 +96,18 @@ async fn test_remote_connection() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_get_all_instances() {
+async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
         let instances = api::find_instance_engines(&mut client).await.unwrap();
-        let combined: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
-        assert!(combined.iter().all(|i| {
-            i.edition.contains("Edition")
-                && !i.name.is_empty()
-                && i.id.contains(&i.name[..4])
-                && i.id.contains("MSSQL")
-                && i.version.chars().filter(|&c| c == '.').count() == 3
-                && i.port.is_none()
-                && i.cluster.is_none()
-        }));
-        let mut names: Vec<String> = combined.into_iter().map(|i| i.name).collect();
+        let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
+        assert!(all.iter().all(is_instance_good));
+        let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
         names.sort();
 
         assert_eq!(
-            names.iter().map(String::as_str).collect::<Vec<&str>>(),
-            vec!["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"],
+            names,
+            expected_instances(),
             "During connecting to `{} with `{}`. {}",
             endpoint.host,
             endpoint.user,
@@ -70,7 +119,7 @@ async fn test_get_all_instances() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
-async fn test_validate_all_instances() {
+async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
         let instances = api::find_instance_engines(&mut client).await.unwrap();
@@ -81,7 +130,7 @@ async fn test_validate_all_instances() {
             .collect();
 
         for name in names {
-            let c = api::create_client_for_instance(
+            let c = api::create_remote_instance_client(
                 &endpoint.host,
                 None,
                 api::Credentials::SqlServer {
@@ -92,7 +141,15 @@ async fn test_validate_all_instances() {
             )
             .await;
             match c {
-                Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
+                Ok(mut c) => assert!(
+                    tools::run_get_version(&mut c).await.is_some()
+                        && api::get_computer_name(&mut c)
+                            .await
+                            .unwrap()
+                            .unwrap()
+                            .to_lowercase()
+                            .starts_with("agentbuild")
+                ),
                 Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
                     // we may not have valid credentials to connect - it's normal
                 }

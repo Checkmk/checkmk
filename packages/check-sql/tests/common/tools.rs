@@ -78,7 +78,7 @@ pub fn create_temp_process_dir() -> TempDir {
 }
 
 pub async fn create_remote_client(endpoint: &SqlDbEndpoint) -> Result<Client<Compat<TcpStream>>> {
-    crate::api::create_client(
+    crate::api::create_remote_client(
         &endpoint.host,
         1433,
         crate::api::Credentials::SqlServer {

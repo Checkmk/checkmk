@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Container, Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple, TypeVar
 
@@ -25,9 +25,7 @@ _TSeq = TypeVar("_TSeq", bound=Sequence)
 
 
 class ParsedSectionName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()
+    pass
 
 
 @dataclass(frozen=True)

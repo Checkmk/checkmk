@@ -10,7 +10,13 @@ from pathlib import Path
 from typing import Final
 
 from cmk.utils import paths
-from cmk.utils.packaging import (
+from cmk.utils.setup_search_index import request_index_rebuild
+from cmk.utils.visuals import invalidate_visuals_cache
+
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+from cmk.mkp_tool import (
     disable,
     Installer,
     make_post_package_change_actions,
@@ -22,11 +28,6 @@ from cmk.utils.packaging import (
     PathConfig,
     reload_apache,
 )
-from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.visuals import invalidate_visuals_cache
-
-# It's OK to import centralized config load logic
-import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 _PATH_CONFIG = PathConfig(
     agent_based_plugins_dir=paths.local_agent_based_plugins_dir,

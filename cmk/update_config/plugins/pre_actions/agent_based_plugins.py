@@ -6,11 +6,11 @@
 import traceback
 from pathlib import Path
 
-from cmk.utils.packaging import PackageID
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 from cmk.gui.exceptions import MKUserError
 
+from cmk.mkp_tool import PackageID
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     continue_on_incomp_local_file,

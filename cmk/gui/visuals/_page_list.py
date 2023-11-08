@@ -7,7 +7,6 @@
 
 from collections.abc import Callable, Iterable
 
-from cmk.utils.packaging import PackageName
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -41,6 +40,8 @@ from cmk.gui.utils.urls import (
     urlencode,
 )
 from cmk.gui.visuals.type import visual_type_registry
+
+from cmk.mkp_tool import PackageName
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._store import available, get_installed_packages, local_file_exists, save, TVisual

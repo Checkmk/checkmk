@@ -587,23 +587,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "jolokia_metrics_bea_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
             "jolokia_metrics_bea_sess",
             RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_threads",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
         ),
         (
             "check",

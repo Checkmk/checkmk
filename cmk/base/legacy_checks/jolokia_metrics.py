@@ -155,7 +155,7 @@ check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_jolokia_metrics_app_state(item, _unused, info):
+def check_jolokia_metrics_app_state(item, _no_params, info):
     app_state = 3
     app = jolokia_metrics_app(info, item.split())
 
@@ -316,7 +316,6 @@ check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps("requests", needed_keys={"requestCount"}),
     check_function=check_jolokia_metrics_bea_requests,
-    check_ruleset_name="jvm_requests",
 )
 
 # Stuff found on BEA Weblogic
@@ -340,7 +339,6 @@ check_info["jolokia_metrics.bea_requests"] = LegacyCheckDefinition(
         "bea_requests", needed_keys={"CompletedRequestCount"}
     ),
     check_function=check_jolokia_metrics_bea_requests,
-    check_ruleset_name="jvm_requests",
 )
 
 check_info["jolokia_metrics.bea_threads"] = LegacyCheckDefinition(
@@ -350,7 +348,6 @@ check_info["jolokia_metrics.bea_threads"] = LegacyCheckDefinition(
         "threads", needed_keys={"StandbyThreadCount"}
     ),
     check_function=check_jolokia_metrics_bea_threads,
-    check_ruleset_name="jvm_threads",
 )
 
 check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
@@ -375,7 +372,7 @@ def inventory_jolokia_metrics_cache(metrics, info):
                 yield f"{inst} {cache}", {}
 
 
-def check_jolokia_metrics_cache(metrics, totals, item, params, info):
+def check_jolokia_metrics_cache(metrics, totals, item, info):
     type_map = {
         "CacheHitPercentage": (float, 100.0, "%.1f%%"),
         "InMemoryHitPercentage": (float, 100.0, "%.1f%%"),
@@ -420,8 +417,8 @@ check_info["jolokia_metrics.cache_hits"] = LegacyCheckDefinition(
     discovery_function=lambda info: inventory_jolokia_metrics_cache(
         ["CacheHitPercentage", "ObjectCount", "CacheHits", "CacheMisses"], info
     ),
-    check_function=lambda item, params, parsed: check_jolokia_metrics_cache(
-        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed
+    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+        ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, parsed
     ),
 )
 
@@ -432,11 +429,10 @@ check_info["jolokia_metrics.in_memory"] = LegacyCheckDefinition(
         ["InMemoryHitPercentage", "MemoryStoreObjectCount", "InMemoryHits", "InMemoryMisses"],
         info,
     ),
-    check_function=lambda item, params, parsed: check_jolokia_metrics_cache(
+    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
         ["InMemoryHitPercentage", "MemoryStoreObjectCount"],
         ["InMemoryHits", "InMemoryMisses"],
         item,
-        params,
         parsed,
     ),
 )
@@ -448,11 +444,10 @@ check_info["jolokia_metrics.on_disk"] = LegacyCheckDefinition(
         ["OnDiskHitPercentage", "DiskStoreObjectCount", "OnDiskHits", "OnDiskMisses"],
         info,
     ),
-    check_function=lambda item, params, parsed: check_jolokia_metrics_cache(
+    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
         ["OnDiskHitPercentage", "DiskStoreObjectCount"],
         ["OnDiskHits", "OnDiskMisses"],
         item,
-        params,
         parsed,
     ),
 )
@@ -464,11 +459,10 @@ check_info["jolokia_metrics.off_heap"] = LegacyCheckDefinition(
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount", "OffHeapHits", "OffHeapMisses"],
         info,
     ),
-    check_function=lambda item, params, parsed: check_jolokia_metrics_cache(
+    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
         ["OffHeapHitPercentage", "OffHeapStoreObjectCount"],
         ["OffHeapHits", "OffHeapMisses"],
         item,
-        params,
         parsed,
     ),
 )
@@ -479,7 +473,7 @@ check_info["jolokia_metrics.writer"] = LegacyCheckDefinition(
     discovery_function=lambda info: inventory_jolokia_metrics_cache(
         ["WriterQueueLength", "WriterMaxQueueSize"], info
     ),
-    check_function=lambda item, params, parsed: check_jolokia_metrics_cache(
-        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed
+    check_function=lambda item, _no_params, parsed: check_jolokia_metrics_cache(
+        ["WriterQueueLength", "WriterMaxQueueSize"], [], item, parsed
     ),
 )

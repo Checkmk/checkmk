@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0p15
+Version: 2.2.0p14
 
 There is a special error case which arises when trying to request the
 indices stats from Elasticsearch which has at least one alias

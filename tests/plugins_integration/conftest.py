@@ -3,7 +3,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import os
-import re
 from collections.abc import Iterator
 
 import pytest
@@ -146,45 +145,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     skip_cleanup = request.config.getoption("--skip-cleanup")
     for site in get_site_factory(prefix="plugins_").get_test_site(auto_cleanup=not skip_cleanup):
         dump_path = site.path("var/check_mk/dumps")
-        # NOTE: the snmpwalks folder cannot be changed!
-        walk_path = site.path("var/check_mk/snmpwalks")
-        # create dump folder in the test site
-        logger.info('Creating folder "%s"...', dump_path)
-        rc = site.execute(["mkdir", "-p", dump_path]).wait()
-        assert rc == 0
-
-        logger.info("Injecting agent-output...")
-        for dump_name in checks.get_host_names():
-            assert (
-                run(
-                    [
-                        "sudo",
-                        "cp",
-                        "-f",
-                        f"{checks.config.dump_dir}/{dump_name}",
-                        f"{walk_path}/{dump_name}"
-                        if re.search(r"\bsnmp\b", dump_name)
-                        else f"{dump_path}/{dump_name}",
-                    ]
-                ).returncode
-                == 0
-            )
-
-        for dump_type in checks.config.dump_types:  # type: ignore
-            host_folder = f"/{dump_type}"
-            if site.openapi.get_folder(host_folder):
-                logger.info('Host folder "%s" already exists!', host_folder)
-            else:
-                logger.info('Creating host folder "%s"...', host_folder)
-                site.openapi.create_folder(host_folder)
-            ruleset_name = "usewalk_hosts" if dump_type == "snmp" else "datasource_programs"
-            logger.info('Creating rule "%s"...', ruleset_name)
-            site.openapi.create_rule(
-                ruleset_name=ruleset_name,
-                value=(True if dump_type == "snmp" else f"cat {dump_path}/<HOST>"),
-                folder=host_folder,
-            )
-            logger.info('Rule "%s" created!', ruleset_name)
+        checks.setup_site(site, dump_path)
 
         yield site
 

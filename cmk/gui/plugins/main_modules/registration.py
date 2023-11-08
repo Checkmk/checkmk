@@ -238,6 +238,7 @@ def register() -> None:
         mode_registry,
         icon_and_action_registry,
         snapin_registry,
+        endpoint_registry,
     )
     robotmk.register(page_registry)
     cron.register(page_registry)

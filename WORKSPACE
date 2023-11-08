@@ -104,6 +104,8 @@ load(
     "NET_SNMP_VERSION",
     "ROBOTMK_SHA256",
     "ROBOTMK_VERSION",
+    "RRDTOOL_SHA256",
+    "RRDTOOL_VERSION",
 )
 
 
@@ -285,4 +287,11 @@ load("//omd/packages/robotmk:robotmk_http.bzl", "robotmk")
 robotmk(
     sha256 = ROBOTMK_SHA256,
     version_str= ROBOTMK_VERSION
+)
+
+load("//omd/packages/rrdtool:rrdtool_http.bzl", "rrdtool")
+
+rrdtool(
+    sha256 = RRDTOOL_SHA256,
+    version_str = RRDTOOL_VERSION,
 )

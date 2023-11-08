@@ -41,10 +41,18 @@ from ..v1 import (
     State,
     TableRow,
 )
+from ..v1._detection import SNMPDetectSpecification  # sorry
 from . import clusterize, render, type_defs
+from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
 
 __all__ = [
     # the order is relevant for the sphinx doc!
+    "AgentSection",
+    "CheckPlugin",
+    "SNMPSection",
+    "SimpleSNMPSection",
+    "SNMPDetectSpecification",
+    "InventoryPlugin",
     # begin with section stuff
     "all_of",
     "any_of",

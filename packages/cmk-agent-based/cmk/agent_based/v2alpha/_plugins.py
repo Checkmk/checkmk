@@ -4,12 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from collections.abc import Callable, Mapping
-from typing import Any, overload
 
-from cmk.agent_based.v1 import SNMPTree
-from cmk.agent_based.v1.register import RuleSetType
-from cmk.agent_based.v1.type_defs import (
+# pylint: disable=too-many-instance-attributes
+
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+
+from ..v1 import SNMPTree
+from ..v1._detection import SNMPDetectSpecification  # sorry
+from ..v1.register import RuleSetType
+from ..v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
@@ -17,57 +21,26 @@ from cmk.agent_based.v1.type_defs import (
     StringByteTable,
     StringTable,
 )
-from cmk.agent_based.v2alpha import (
-    AgentSection,
-    CheckPlugin,
-    InventoryPlugin,
-    SimpleSNMPSection,
-    SNMPDetectSpecification,
-    SNMPSection,
-)
 
-from ._discover import (
-    register_agent_section,
-    register_check_plugin,
-    register_inventory_plugin,
-    register_snmp_section,
-)
-from .utils import get_validated_plugin_module_name
+InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]
 
-_ParametersTypeAlias = Mapping[str, Any]
+CheckFunction = Callable[..., CheckResult]  # type: ignore[misc]
+DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]
 
-# This is slightly duplcated, but I don't want to expose v2 stuff in v1, not even as part of the signature.
-_HostLabelFunction = Callable[..., HostLabelGenerator]
+AgentParseFunction = Callable[[StringTable], object]
 
-_SNMPParseFunction = (
+HostLabelFunction = Callable[..., HostLabelGenerator]  # type: ignore[misc]
+
+SNMPParseFunction = (
     Callable[[list[StringTable]], object] | Callable[[list[StringByteTable]], object]
 )
 
-_SimpleSNMPParseFunction = Callable[[StringTable], object] | Callable[[StringByteTable], object]
+SimpleSNMPParseFunction = Callable[[StringTable], object] | Callable[[StringByteTable], object]
 
 
-__all__ = [
-    "agent_section",
-    "snmp_section",
-    "check_plugin",
-    "inventory_plugin",
-    "RuleSetType",
-]
-
-
-def agent_section(
-    *,
-    name: str,
-    # Note: the type is left for compatibility. It actually *is* object.
-    parse_function: Callable[[StringTable], Any] | None = None,
-    parsed_section_name: str | None = None,
-    host_label_function: _HostLabelFunction | None = None,
-    host_label_default_parameters: _ParametersTypeAlias | None = None,
-    host_label_ruleset_name: str | None = None,
-    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: list[str] | None = None,
-) -> None:
-    """Register an agent section to checkmk
+@dataclass(frozen=True, kw_only=True)
+class AgentSection:
+    """An AgentSection to plug into Checkmk
 
     The section marked by '<<<name>>>' in the raw agent output will be processed
     according to the functions and options given to this function:
@@ -109,69 +82,20 @@ def agent_section(
                            superseded section will not be considered at all.
 
     """
-    return register_agent_section(
-        AgentSection(
-            name=name,
-            parse_function=parse_function,
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,
-            host_label_ruleset_name=host_label_ruleset_name,
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
-        ),
-        get_validated_plugin_module_name(),
-    )
+
+    name: str
+    parse_function: AgentParseFunction | None = None
+    parsed_section_name: str | None = None
+    host_label_function: HostLabelFunction | None = None
+    host_label_default_parameters: Mapping[str, object] | None = None
+    host_label_ruleset_name: str | None = None
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
+    supersedes: list[str] | None = None
 
 
-@overload  # no List of trees -> SimpleSNMPParseFunction
-def snmp_section(
-    *,
-    name: str,
-    detect: SNMPDetectSpecification,
-    fetch: SNMPTree,
-    parse_function: _SimpleSNMPParseFunction | None = None,
-    parsed_section_name: str | None = None,
-    host_label_function: _HostLabelFunction | None = None,
-    host_label_default_parameters: _ParametersTypeAlias | None = None,
-    host_label_ruleset_name: str | None = None,
-    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: list[str] | None = None,
-) -> None:
-    pass
-
-
-@overload
-def snmp_section(
-    *,
-    name: str,
-    detect: SNMPDetectSpecification,
-    fetch: list[SNMPTree],
-    parse_function: _SNMPParseFunction | None = None,
-    parsed_section_name: str | None = None,
-    host_label_function: _HostLabelFunction | None = None,
-    host_label_default_parameters: _ParametersTypeAlias | None = None,
-    host_label_ruleset_name: str | None = None,
-    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: list[str] | None = None,
-) -> None:
-    pass
-
-
-def snmp_section(
-    *,
-    name: str,
-    detect: SNMPDetectSpecification,
-    fetch: SNMPTree | list[SNMPTree],
-    parse_function: _SimpleSNMPParseFunction | _SNMPParseFunction | None = None,
-    parsed_section_name: str | None = None,
-    host_label_function: _HostLabelFunction | None = None,
-    host_label_default_parameters: _ParametersTypeAlias | None = None,
-    host_label_ruleset_name: str | None = None,
-    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: list[str] | None = None,
-) -> None:
-    """Register an snmp section to checkmk
+@dataclass(frozen=True, kw_only=True)
+class SimpleSNMPSection:
+    """A SimpleSNMPSection to plug into Checkmk
 
     The snmp information will be gathered and parsed according to the functions and
     options given to this function:
@@ -188,14 +112,12 @@ def snmp_section(
                            less resources.
 
       fetch:               The specification of snmp data that should be fetched from the device.
-                           It must be an :class:`SNMPTree` object, or a non-empty list of them.
-                           The parse function will be passed a single :class:`StringTable` or a
-                           list of them accordingly.
+                           It must be an :class:`SNMPTree` object.
+                           The parse function will be passed a single :class:`StringTable`.
 
       parse_function:      The function responsible for parsing the raw snmp data.
                            It must accept exactly one argument by the name 'string_table'.
-                           It will be passed either a single :class:`StringTable`, or a list
-                           of them, depending on the value type of the `fetch` argument.
+                           It will be passed a :class:`StringTable`.
                            It may return an arbitrary object. Note that if the return value is
                            `None`, no further processing will take place (just as if the agent had
                            not sent any data).
@@ -226,51 +148,92 @@ def snmp_section(
                            superseded section will not be considered at all.
 
     """
-    return register_snmp_section(
-        SNMPSection(
-            name=name,
-            detect=detect,
-            fetch=fetch,
-            parse_function=parse_function,  # type: ignore[arg-type]
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,
-            host_label_ruleset_name=host_label_ruleset_name,
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
-        )
-        if isinstance(fetch, list)
-        else SimpleSNMPSection(
-            name=name,
-            detect=detect,
-            fetch=fetch,
-            parse_function=parse_function,  # type: ignore[arg-type]
-            parsed_section_name=parsed_section_name,
-            host_label_function=host_label_function,
-            host_label_default_parameters=host_label_default_parameters,
-            host_label_ruleset_name=host_label_ruleset_name,
-            host_label_ruleset_type=host_label_ruleset_type,
-            supersedes=supersedes,
-        ),
-        get_validated_plugin_module_name(),
-    )
+
+    name: str
+    detect: SNMPDetectSpecification
+    fetch: SNMPTree
+    parse_function: SimpleSNMPParseFunction | None = None
+    parsed_section_name: str | None = None
+    host_label_function: HostLabelFunction | None = None
+    host_label_default_parameters: Mapping[str, object] | None = None
+    host_label_ruleset_name: str | None = None
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
+    supersedes: list[str] | None = None
 
 
-def check_plugin(
-    *,
-    name: str,
-    sections: list[str] | None = None,
-    service_name: str,
-    discovery_function: Callable[..., DiscoveryResult],
-    discovery_default_parameters: _ParametersTypeAlias | None = None,
-    discovery_ruleset_name: str | None = None,
-    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    check_function: Callable[..., CheckResult],
-    check_default_parameters: _ParametersTypeAlias | None = None,
-    check_ruleset_name: str | None = None,
-    cluster_check_function: Callable | None = None,
-) -> None:
-    """Register a check plugin to checkmk.
+@dataclass(frozen=True, kw_only=True)
+class SNMPSection:
+    """An SNMPSection to plug into Checkmk
+
+    The snmp information will be gathered and parsed according to the functions and
+    options given to this function:
+
+    Args:
+
+      name:                The unique name of the section to be registered.
+
+      detect:              The conditions on single OIDs that will result in the attempt to
+                           fetch snmp data and discover services.
+                           This should only match devices to which the section is applicable.
+                           It is highly recommended to check the system description OID at the very
+                           first, as this will make the discovery much more responsive and consume
+                           less resources.
+
+      fetch:               The specification of snmp data that should be fetched from the device.
+                           It must be a non-empty list of :class:`SNMPTree` objects.
+                           The parse function will be passed a non-empty list of
+                           :class:`StringTable`s accordingly.
+
+      parse_function:      The function responsible for parsing the raw snmp data.
+                           It must accept exactly one argument by the name 'string_table'.
+                           It will be passed either a list of :class:`StringTable`s, matching
+                           the length of the value of the `fetch` argument.
+                           It may return an arbitrary object. Note that if the return value is
+                           `None`, no further processing will take place (just as if the agent had
+                           not sent any data).
+                           This function may raise arbitrary exceptions, which will be dealt with
+                           by the checking engine. You should expect well formatted data.
+
+      parsed_section_name: The name under which the parsed section will be available to the plugins.
+                           Defaults to the original name.
+
+      host_label_function: The function responsible for extracting host labels from the parsed data.
+                           It must accept exactly one argument by the name 'section'.
+                           When the function is called, it will be passed the parsed data as
+                           returned by the parse function.
+                           It is expected to yield objects of type :class:`HostLabel`.
+
+      host_label_default_parameters: Default parameters for the host label function. Must match
+                           the ValueSpec of the corresponding WATO ruleset, if it exists.
+
+      host_label_ruleset_name: The name of the host label ruleset.
+
+      host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
+                           :class:`RuleSetType.MERGED`.
+                           It describes whether this plugin needs the merged result of the
+                           effective rules, or every individual rule matching for the current host.
+
+      supersedes:          A list of section names which are superseded by this section. If this
+                           section will be parsed to something that is not `None` (see above) all
+                           superseded section will not be considered at all.
+
+    """
+
+    name: str
+    detect: SNMPDetectSpecification
+    fetch: list[SNMPTree]
+    parse_function: SNMPParseFunction | None = None
+    parsed_section_name: str | None = None
+    host_label_function: HostLabelFunction | None = None
+    host_label_default_parameters: Mapping[str, object] | None = None
+    host_label_ruleset_name: str | None = None
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
+    supersedes: list[str] | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class CheckPlugin:
+    """A CheckPlugin to plug into Checkmk.
 
     Args:
 
@@ -324,37 +287,27 @@ def check_plugin(
                                 except that the sections are dicts (node name -> node section).
 
     """
-    return register_check_plugin(
-        CheckPlugin(
-            name=name,
-            sections=sections,
-            service_name=service_name,
-            discovery_function=discovery_function,
-            discovery_default_parameters=discovery_default_parameters,
-            discovery_ruleset_name=discovery_ruleset_name,
-            discovery_ruleset_type=discovery_ruleset_type,
-            check_function=check_function,
-            check_default_parameters=check_default_parameters,
-            check_ruleset_name=check_ruleset_name,
-            cluster_check_function=cluster_check_function,
-        ),
-        get_validated_plugin_module_name(),
-    )
+
+    name: str
+    sections: list[str] | None = None
+    service_name: str
+    discovery_function: DiscoveryFunction
+    discovery_default_parameters: Mapping[str, object] | None = None
+    discovery_ruleset_name: str | None = None
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED
+    check_function: CheckFunction
+    check_default_parameters: Mapping[str, object] | None = None
+    check_ruleset_name: str | None = None
+    cluster_check_function: CheckFunction | None = None
 
 
-def inventory_plugin(
-    *,
-    name: str,
-    sections: list[str] | None = None,
-    inventory_function: Callable[..., InventoryResult],
-    inventory_default_parameters: _ParametersTypeAlias | None = None,
-    inventory_ruleset_name: str | None = None,
-) -> None:
-    """Register an inventory plugin to checkmk.
+@dataclass(frozen=True, kw_only=True)
+class InventoryPlugin:
+    """An InventoryPlugin to plug into Checkmk.
 
     Args:
 
-      name:                     The unique name of the check plugin. It must only contain the
+      name:                     The unique name of the plugin. It must only contain the
                                 characters 'A-Z', 'a-z', '0-9' and the underscore.
 
       sections:                 An optional list of section names that this plugin subscribes to.
@@ -378,13 +331,9 @@ def inventory_plugin(
       inventory_ruleset_name:   The name of the inventory ruleset.
 
     """
-    return register_inventory_plugin(
-        InventoryPlugin(
-            name=name,
-            sections=sections,
-            inventory_function=inventory_function,
-            inventory_default_parameters=inventory_default_parameters,
-            inventory_ruleset_name=inventory_ruleset_name,
-        ),
-        get_validated_plugin_module_name(),
-    )
+
+    name: str
+    sections: list[str] | None = None
+    inventory_function: InventoryFunction
+    inventory_default_parameters: Mapping[str, object] | None = None
+    inventory_ruleset_name: str | None = None

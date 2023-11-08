@@ -10,9 +10,10 @@ from cmk.base.api.agent_based.register.export import (
     agent_section,
     check_plugin,
     inventory_plugin,
-    RuleSetType,
     snmp_section,
 )
+
+from cmk.agent_based.v1.register import RuleSetType
 
 __all__ = [
     "RuleSetType",

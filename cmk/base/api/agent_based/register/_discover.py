@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+import cmk.utils.debug
+from cmk.utils.plugin_loader import load_plugins_with_exceptions
+
+from cmk.agent_based.v2alpha import (
+    AgentSection,
+    CheckPlugin,
+    InventoryPlugin,
+    SimpleSNMPSection,
+    SNMPSection,
+)
+
+from ._config import (
+    add_check_plugin,
+    add_discovery_ruleset,
+    add_host_label_ruleset,
+    add_inventory_plugin,
+    add_section_plugin,
+    is_registered_check_plugin,
+    is_registered_inventory_plugin,
+    is_registered_section_plugin,
+)
+from .check_plugins import create_check_plugin
+from .inventory_plugins import create_inventory_plugin
+from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
+
+
+def load_all_plugins() -> list[str]:
+    errors = []
+    for plugin, exception in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):
+        errors.append(f"Error in agent based plugin {plugin}: {exception}\n")
+        if cmk.utils.debug.enabled():
+            raise exception
+    return errors
+
+
+def register_agent_section(section: AgentSection, full_module: str) -> None:
+    section_plugin = create_agent_section_plugin(
+        name=section.name,
+        parsed_section_name=section.parsed_section_name,
+        parse_function=section.parse_function,
+        host_label_function=section.host_label_function,
+        host_label_default_parameters=section.host_label_default_parameters,
+        host_label_ruleset_name=section.host_label_ruleset_name,
+        host_label_ruleset_type=section.host_label_ruleset_type,
+        supersedes=section.supersedes,
+        full_module=full_module,
+    )
+
+    if is_registered_section_plugin(section_plugin.name):
+        raise ValueError(f"duplicate section definition: {section_plugin.name}")
+
+    add_section_plugin(section_plugin)
+    if section_plugin.host_label_ruleset_name is not None:
+        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
+
+
+def register_snmp_section(section: SimpleSNMPSection | SNMPSection, full_module: str) -> None:
+    section_plugin = create_snmp_section_plugin(
+        name=section.name,
+        parsed_section_name=section.parsed_section_name,
+        parse_function=section.parse_function,
+        host_label_function=section.host_label_function,
+        host_label_default_parameters=section.host_label_default_parameters,
+        host_label_ruleset_name=section.host_label_ruleset_name,
+        host_label_ruleset_type=section.host_label_ruleset_type,
+        detect_spec=section.detect,
+        fetch=section.fetch,
+        supersedes=section.supersedes,
+        full_module=full_module,
+    )
+
+    if is_registered_section_plugin(section_plugin.name):
+        raise ValueError(f"duplicate section definition: {section_plugin.name}")
+
+    add_section_plugin(section_plugin)
+    if section_plugin.host_label_ruleset_name is not None:
+        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
+
+
+def register_check_plugin(check: CheckPlugin, full_module: str) -> None:
+    plugin = create_check_plugin(
+        name=check.name,
+        sections=check.sections,
+        service_name=check.service_name,
+        discovery_function=check.discovery_function,
+        discovery_default_parameters=check.discovery_default_parameters,
+        discovery_ruleset_name=check.discovery_ruleset_name,
+        discovery_ruleset_type=check.discovery_ruleset_type,
+        check_function=check.check_function,
+        check_default_parameters=check.check_default_parameters,
+        check_ruleset_name=check.check_ruleset_name,
+        cluster_check_function=check.cluster_check_function,
+        full_module=full_module,
+    )
+
+    if is_registered_check_plugin(plugin.name):
+        raise ValueError(f"duplicate check plugin definition: {plugin.name}")
+
+    add_check_plugin(plugin)
+    if plugin.discovery_ruleset_name is not None:
+        add_discovery_ruleset(plugin.discovery_ruleset_name)
+
+
+def register_inventory_plugin(inventory: InventoryPlugin, full_module: str) -> None:
+    plugin = create_inventory_plugin(
+        name=inventory.name,
+        sections=inventory.sections,
+        inventory_function=inventory.inventory_function,
+        inventory_default_parameters=inventory.inventory_default_parameters,
+        inventory_ruleset_name=inventory.inventory_ruleset_name,
+        full_module=full_module,
+    )
+
+    if is_registered_inventory_plugin(plugin.name):
+        raise ValueError(f"duplicate inventory plugin definition: {plugin.name}")
+
+    add_inventory_plugin(plugin)

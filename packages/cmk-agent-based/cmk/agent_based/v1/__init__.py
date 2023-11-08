@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import clusterize, render, type_defs
+from . import clusterize, register, render, type_defs
 from ._check_levels import check_levels, check_levels_predictive
 from ._checking_classes import (
     HostLabel,

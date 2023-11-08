@@ -18,13 +18,13 @@ from cmk.base.api.agent_based.plugin_classes import CheckFunction, CheckPlugin, 
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
-    RuleSetType,
     validate_default_parameters,
     validate_function_arguments,
     validate_ruleset_type,
 )
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
+from cmk.agent_based.v1.register import RuleSetType
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

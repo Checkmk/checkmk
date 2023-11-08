@@ -29,13 +29,13 @@ from cmk.base.api.agent_based.plugin_classes import (
     SNMPSectionPlugin,
 )
 from cmk.base.api.agent_based.register.utils import (
-    RuleSetType,
     validate_default_parameters,
     validate_function_arguments,
     validate_ruleset_type,
 )
 
 from cmk.agent_based.v1 import HostLabel, SNMPTree
+from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 
 

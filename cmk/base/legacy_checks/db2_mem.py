@@ -8,18 +8,14 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
-db2_mem_default_levels = (10.0, 5.0)
-
 
 def inventory_db2_mem(info):
-    return [(x[1], db2_mem_default_levels) for x in info if x[0] == "Instance"]
+    return [(x[1], {}) for x in info if x[0] == "Instance"]
 
 
 def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     if not info:
         raise IgnoreResultsError("Login into database failed")
-
-    warn, crit = params
 
     in_block = False
     limit, usage = None, None
@@ -51,7 +47,7 @@ def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
     yield check_levels(
         perc_free,
         None,
-        (None, None, warn, crit),
+        (None, None) + (params["levels_lower"] or (None, None)),
         human_readable_func=render.percent,
         infoname="Free",
     )
@@ -62,4 +58,5 @@ check_info["db2_mem"] = LegacyCheckDefinition(
     discovery_function=inventory_db2_mem,
     check_function=check_db2_mem,
     check_ruleset_name="db2_mem",
+    check_default_parameters={"levels_lower": (10.0, 5.0)},
 )

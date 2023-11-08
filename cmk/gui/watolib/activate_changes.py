@@ -756,6 +756,11 @@ class ActivateChangesManager(ActivateChanges):
         return sites
 
     def _info_path(self, activation_id):
+        if not re.match(r"^[\d\-a-fA-F]+$", activation_id):
+            raise MKUserError(
+                None,
+                _("Invalid activation_id"),
+            )
         return "%s/%s/info.mk" % (self.activation_tmp_base_dir, activation_id)
 
     def activations(self):

@@ -1,4 +1,7 @@
-/*.egg-info/
+*.pyc
+/.cache/
 /.mypy_cache/
 /.pytest_cache/
+/.venv/
+/*.egg-info/
 /build/

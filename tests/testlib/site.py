@@ -1076,7 +1076,8 @@ class Site:
 
         if self.enforce_english_gui:
             web = CMKWebSession(self)
-            web.login()
+            if not self.version.is_saas_edition():
+                web.login()
             self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
 

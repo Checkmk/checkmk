@@ -1,0 +1,18 @@
+Title: Ignore piggybacked host names starting with a period
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1699602114
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p15
+
+We now skip piggybacked data for hosts names starting
+with a period.  Examples of such invalid names are ".",
+".hostname", and ".hostname.domain.com".
+
+Users must rename such hosts if they should remain
+in the monitoring.
+

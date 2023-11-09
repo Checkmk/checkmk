@@ -80,7 +80,7 @@ class FileHistory(History):
             ).open(mode="ab") as f:
                 f.write(b"\t".join(columns) + b"\n")
 
-    def get(self, query: QueryGET) -> Iterable[Any]:
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         if not self._settings.paths.history_dir.value.exists():
             return []
 

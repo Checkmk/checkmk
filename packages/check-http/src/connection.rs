@@ -2,8 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use reqwest::redirect::{Action, Attempt, Policy};
-use std::net::SocketAddr;
+use reqwest::{
+    redirect::{Action, Attempt, Policy},
+    ClientBuilder,
+};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 pub enum OnRedirect {
     Ok,
@@ -26,16 +29,28 @@ pub struct ConnectionConfig {
     pub force_ip: Option<ForceIP>,
 }
 
-pub fn get_policy(cfg: ConnectionConfig) -> Policy {
-    match cfg.onredirect {
+pub fn apply_connection_settings(cfg: ConnectionConfig, client: ClientBuilder) -> ClientBuilder {
+    let client = match &cfg.force_ip {
+        None => client,
+        Some(ipv) => match ipv {
+            ForceIP::Ipv4 => client.local_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
+            ForceIP::Ipv6 => client.local_address(IpAddr::V6(Ipv6Addr::UNSPECIFIED)),
+        },
+    };
+
+    client.redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+}
+
+fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {
+    match onredirect {
         OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::none(),
-        OnRedirect::Follow => Policy::limited(cfg.max_redirs),
-        OnRedirect::Sticky => Policy::custom(move |att| {
-            policy_sticky(att, cfg.force_ip.clone(), cfg.max_redirs, false)
-        }),
-        OnRedirect::Stickyport => Policy::custom(move |att| {
-            policy_sticky(att, cfg.force_ip.clone(), cfg.max_redirs, true)
-        }),
+        OnRedirect::Follow => Policy::limited(max_redirs),
+        OnRedirect::Sticky => {
+            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, false))
+        }
+        OnRedirect::Stickyport => {
+            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, true))
+        }
     }
 }
 
@@ -102,7 +117,7 @@ fn contains_unchanged_addr(old: &[SocketAddr], new: &[SocketAddr]) -> bool {
 mod tests {
     use std::net::SocketAddr;
 
-    use crate::redirect::{
+    use crate::connection::{
         contains_unchanged_addr, contains_unchanged_ip, filter_socket_addrs, ForceIP,
     };
 

@@ -9,8 +9,8 @@ use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
+use crate::connection::OnRedirect;
 use crate::http::ProcessedResponse;
-use crate::redirect::OnRedirect;
 
 // TODO(au): We're missing requirements for the new check_http here:
 // The old check_http allows specification of

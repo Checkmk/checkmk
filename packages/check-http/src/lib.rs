@@ -4,8 +4,8 @@
 
 pub mod checking;
 pub mod cli;
+mod connection;
 pub mod http;
 pub mod output;
 mod pwstore;
-mod redirect;
 pub mod runner;

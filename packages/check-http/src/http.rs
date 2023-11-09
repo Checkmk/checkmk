@@ -9,12 +9,9 @@ use reqwest::{
     header::USER_AGENT, Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult,
     StatusCode, Version,
 };
-use std::{
-    net::{IpAddr, Ipv4Addr, Ipv6Addr},
-    time::Duration,
-};
+use std::time::Duration;
 
-use crate::redirect::{self, ConnectionConfig, ForceIP};
+use crate::connection::{apply_connection_settings, ConnectionConfig};
 
 pub struct RequestConfig {
     pub url: String,
@@ -35,7 +32,7 @@ pub struct ProcessedResponse {
 
 pub fn prepare_request(
     cfg: RequestConfig,
-    redir_cfg: ConnectionConfig,
+    conn_cfg: ConnectionConfig,
 ) -> AnyhowResult<RequestBuilder> {
     let mut headers = HeaderMap::new();
     if let Some(ua) = cfg.user_agent {
@@ -46,18 +43,8 @@ pub fn prepare_request(
     }
 
     let client = reqwest::Client::builder();
-
-    let client = match &redir_cfg.force_ip {
-        None => client,
-        Some(ipv) => match ipv {
-            ForceIP::Ipv4 => client.local_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
-            ForceIP::Ipv6 => client.local_address(IpAddr::V6(Ipv6Addr::UNSPECIFIED)),
-        },
-    };
-
-    let redirect_policy = redirect::get_policy(redir_cfg);
+    let client = apply_connection_settings(conn_cfg, client);
     let client = client
-        .redirect(redirect_policy)
         .timeout(cfg.timeout)
         .default_headers(headers)
         .build()?;

@@ -6,8 +6,8 @@ use crate::cli;
 use std::time::Instant;
 
 use crate::checking::{self, Bounds, CheckParameters, CheckResult, State, UpperLevels};
+use crate::connection::{self, ConnectionConfig};
 use crate::http::{self, RequestConfig};
-use crate::redirect::{self, ConnectionConfig};
 use std::time::Duration;
 
 pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
@@ -23,18 +23,18 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
         },
         ConnectionConfig {
             onredirect: match args.onredirect {
-                cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
-                cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
-                cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
-                cli::OnRedirect::Follow => redirect::OnRedirect::Follow,
-                cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
-                cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
+                cli::OnRedirect::Ok => connection::OnRedirect::Ok,
+                cli::OnRedirect::Warning => connection::OnRedirect::Warning,
+                cli::OnRedirect::Critical => connection::OnRedirect::Critical,
+                cli::OnRedirect::Follow => connection::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => connection::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => connection::OnRedirect::Stickyport,
             },
             max_redirs: args.max_redirs,
             force_ip: match args.force_ip_version {
                 None => None,
-                Some(cli::ForceIP::Ipv4) => Some(redirect::ForceIP::Ipv4),
-                Some(cli::ForceIP::Ipv6) => Some(redirect::ForceIP::Ipv6),
+                Some(cli::ForceIP::Ipv4) => Some(connection::ForceIP::Ipv4),
+                Some(cli::ForceIP::Ipv6) => Some(connection::ForceIP::Ipv6),
             },
         },
     ) else {
@@ -79,12 +79,12 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
         elapsed,
         CheckParameters {
             onredirect: match args.onredirect {
-                cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
-                cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
-                cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
-                cli::OnRedirect::Follow => redirect::OnRedirect::Follow,
-                cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
-                cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
+                cli::OnRedirect::Ok => connection::OnRedirect::Ok,
+                cli::OnRedirect::Warning => connection::OnRedirect::Warning,
+                cli::OnRedirect::Critical => connection::OnRedirect::Critical,
+                cli::OnRedirect::Follow => connection::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => connection::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => connection::OnRedirect::Stickyport,
             },
             page_size: args.page_size.map(|val| match val {
                 (x, None) => Bounds::lower(x),

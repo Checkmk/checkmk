@@ -148,6 +148,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_SERVER_SIDE_CALLS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-server-side-calls/' || true"
 
+    - NAME: CHANGED_CMK_MKP_TOOL_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-mkp-tool/' || true"
+
     - NAME: CHANGED_CMK_WERKS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-werks/' || true"
 
@@ -417,6 +420,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-server-side-calls.txt"
       TEXT_ON_SKIP: 'No cmk-server-side-calls files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-server-side-calls.txt"
+
+    - NAME: 'Package cmk-mkp-tool'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_MKP_TOOL_FILES
+      DIR: 'packages/cmk-mkp-tool'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
+      TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
 
     - NAME: 'Package cmk-werks'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_WERKS_FILES

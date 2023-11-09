@@ -51,6 +51,7 @@ config_setting(
         "@omd_packages//packages:cmk-agent-based",
         "@omd_packages//packages:cmk-agent-receiver",
         "@omd_packages//packages:cmk-graphing",
+        "@omd_packages//packages:cmk-mkp-tool",
         "@omd_packages//packages:cmk-server-side-calls",
         "@omd_packages//packages:cmk-werks",
         "@openssl",
@@ -89,6 +90,7 @@ genrule(
             "agent-based",
             "agent-receiver",
             "graphing",
+            "mkp-tool",
             "server-side-calls",
             "werks",
         ]

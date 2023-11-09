@@ -21,7 +21,8 @@ class TestPackageVersion:
         assert PackageVersion("1.2.3-alpha").sort_key < PackageVersion("1.2.3-beta").sort_key
         # Numeric identifiers always have lower precedence than non-numeric identifiers.
         assert PackageVersion("1.2.3-alpha").sort_key < PackageVersion("1.2.3-1").sort_key
-        # A larger set of pre-release fields has a higher precedence than a smaller set, if all of the preceding identifiers are equal.
+        # A larger set of pre-release fields has a higher precedence than a smaller set,
+        # if all of the preceding identifiers are equal.
         assert (
             PackageVersion("1.2.3-alpha.beta.wurstbrot").sort_key
             < PackageVersion("1.2.3-alpha.beta").sort_key

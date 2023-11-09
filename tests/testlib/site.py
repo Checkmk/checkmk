@@ -761,12 +761,13 @@ class Site:
             cmk_path() + "/inventory",
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
-            cmk_path() + "/packages/cmk-agent-receiver",
             cmk_path() + "/active_checks",
             cmk_path() + "/packages/cmk-agent-based",
-            cmk_path() + "/packages/cmk-werks",
+            cmk_path() + "/packages/cmk-agent-receiver",
             cmk_path() + "/packages/cmk-graphing",
             cmk_path() + "/packages/cmk-server-side-calls",
+            cmk_path() + "/packages/cmk-mkp-tool",
+            cmk_path() + "/packages/cmk-werks",
         ]
 
         if self.version.is_raw_edition():

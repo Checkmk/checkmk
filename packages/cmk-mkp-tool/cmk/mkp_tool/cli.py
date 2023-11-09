@@ -12,6 +12,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
+from .__version__ import __version__
 from ._installed import Installer
 from ._mkp import (
     create_mkp,
@@ -39,6 +40,8 @@ from ._unsorted import (
 )
 
 _logger = logging.getLogger(__name__)
+
+_VERSION_STR = f"cmk-mkp-tool {__version__}"
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,30 @@ _SiteExclusiveHandlerFunction = Callable[
 
 
 def partial(wrappee: _SiteExclusiveHandlerFunction, site_context: SiteContext) -> _HandlerFunction:
+    def wrapped(
+        args: argparse.Namespace,
+        path_config: PathConfig | None,
+        persisting_function: Callable[[str, bytes], None],
+    ) -> int:
+        return wrappee(site_context, args, path_config, persisting_function)
+
+    return wrapped
+
+
+_SiteOptionalHandlerFunction = Callable[
+    [
+        SiteContext | None,
+        argparse.Namespace,
+        PathConfig | None,
+        Callable[[str, bytes], None],
+    ],
+    int,
+]
+
+
+def partial_opt(
+    wrappee: _SiteOptionalHandlerFunction, site_context: SiteContext | None
+) -> _HandlerFunction:
     def wrapped(
         args: argparse.Namespace,
         path_config: PathConfig | None,
@@ -594,7 +621,6 @@ def _args_template(
 
 
 def _command_template(
-    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -609,7 +635,7 @@ def _command_template(
 
     package = manifest_template(
         name=args.name,
-        version_packaged=site_context.version,
+        version_packaged=_VERSION_STR,
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 
@@ -634,7 +660,7 @@ def _args_package(
 
 
 def _command_package(
-    site_context: SiteContext,
+    site_context: SiteContext | None,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
@@ -662,13 +688,16 @@ def _command_package(
     )
     try:
         manifest = store.store(
-            create_mkp(package, path_config.get_path, version_packaged=site_context.version),
+            create_mkp(package, path_config.get_path, version_packaged=_VERSION_STR),
             persisting_function,
         )
     except PackageError as exc:
         sys.stderr.write(f"{exc}\n")
         return 1
     _logger.info("Successfully created %s %s", manifest.name, manifest.version)
+
+    if site_context is None:
+        return 0
 
     installer = Installer(path_config.installed_packages_dir)
     try:
@@ -731,6 +760,8 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     _add_command(subparsers, "list", _args_list, _command_list)
     _add_command(subparsers, "add", _args_add, _command_add)
     _add_command(subparsers, "remove", _args_package_id, _command_remove)
+    _add_command(subparsers, "template", _args_template, _command_template)
+    _add_command(subparsers, "package", _args_package, partial_opt(_command_package, site_context))
 
     if site_context is None:
         return parser.parse_args(argv)
@@ -745,8 +776,6 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     _add_command(subparsers, "release", _args_release, partial(_command_release, site_context))
     _add_command(subparsers, "enable", _args_package_id, partial(_command_enable, site_context))
     _add_command(subparsers, "disable", _args_package_id, partial(_command_disable, site_context))
-    _add_command(subparsers, "template", _args_template, partial(_command_template, site_context))
-    _add_command(subparsers, "package", _args_package, partial(_command_package, site_context))
     _add_command(
         subparsers, "disable-outdated", _no_args, partial(_command_disable_outdated, site_context)
     )

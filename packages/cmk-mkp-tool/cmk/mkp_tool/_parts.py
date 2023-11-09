@@ -17,6 +17,10 @@ from ._mkp import PackagePart
 
 @dataclass(frozen=True)
 class PathConfig:
+    # This is very confusing.
+    # Those paths describe both where to put things when installing,
+    # and where to look for things when packaging.
+    # There are also paths that have different purposes :-(
     agent_based_plugins_dir: Path
     agents_dir: Path
     alert_handlers_dir: Path

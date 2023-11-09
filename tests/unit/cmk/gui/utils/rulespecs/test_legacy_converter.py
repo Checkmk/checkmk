@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Sequence
 from functools import partial
 
 import pytest
@@ -92,7 +92,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help=_("Helpful description"),
                 empty_text=_("No elements specified"),
                 required_keys=["key_req"],
-                default_keys=["key_req"],
                 show_more_keys=["key_opt"],
                 ignored_keys=["key_ignored"],
             ),
@@ -366,8 +365,9 @@ def test_convert_to_legacy_rulespec(
 def _compare_specs(actual: object, expected: object) -> None:
     ignored_attrs = {"__orig_class__"}
 
-    if isinstance(expected, Iterable) and not isinstance(expected, str):
-        assert isinstance(actual, Iterable) and not isinstance(actual, str)
+    if isinstance(expected, Sequence) and not isinstance(expected, str):
+        assert isinstance(actual, Sequence) and not isinstance(actual, str)
+        assert len(actual) == len(expected)
         for actual_elem, expected_elem in zip(actual, expected):
             _compare_specs(actual_elem, expected_elem)
         return

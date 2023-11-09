@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::cli::DocumentAgeLevels;
 use bytes::Bytes;
 use http::HeaderMap;
 use httpdate::parse_http_date;
@@ -205,38 +204,42 @@ pub fn check_response_time(
 
 pub fn check_document_age(
     headers: &HeaderMap,
-    document_age_levels: Option<DocumentAgeLevels>,
+    document_age_levels: Option<UpperLevels<Duration>>,
 ) -> Option<CheckResult> {
     let document_age_levels = document_age_levels?;
 
     let now = SystemTime::now();
 
+    let cr_no_document_age = Some(CheckResult {
+        state: State::Crit,
+        summary: "Can't determine document age".to_string(),
+    });
+    let cr_document_age_error = Some(CheckResult {
+        state: State::Crit,
+        summary: "Can't decode document age".to_string(),
+    });
+
     let age_header = headers.get("last-modified").or(headers.get("date"));
-    let Some(document_age) = age_header else {
-        return Some(CheckResult {
-            state: State::Crit,
-            summary: "Can't determine document age".to_string(),
-        });
+    let Some(age) = age_header else {
+        return cr_no_document_age;
     };
-    let Ok(Ok(age)) = document_age.to_str().map(parse_http_date) else {
-        return Some(CheckResult {
-            state: State::Crit,
-            summary: "Can't decode document age".to_string(),
-        });
+    let Ok(age) = age.to_str() else {
+        return cr_document_age_error;
+    };
+    let Ok(age) = parse_http_date(age) else {
+        return cr_document_age_error;
+    };
+    let Ok(age) = now.duration_since(age) else {
+        return cr_document_age_error;
     };
 
+    let state = document_age_levels.evaluate(&age)?;
+
     //TODO(au): Specify "too old" in Output
-    match document_age_levels {
-        (_, Some(crit)) if now - Duration::from_secs(crit) > age => Some(CheckResult {
-            state: State::Crit,
-            summary: "Document age too old".to_string(),
-        }),
-        (warn, _) if now - Duration::from_secs(warn) > age => Some(CheckResult {
-            state: State::Warn,
-            summary: "Document age too old".to_string(),
-        }),
-        _ => None,
-    }
+    Some(CheckResult {
+        state,
+        summary: "Document age too old".to_string(),
+    })
 }
 
 #[cfg(test)]

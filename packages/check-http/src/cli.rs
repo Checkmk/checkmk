@@ -69,9 +69,9 @@ pub struct Cli {
     pub document_age_levels: Option<DocumentAgeLevels>,
 }
 
-pub type PageSizeLimits = (usize, Option<usize>);
+type PageSizeLimits = (usize, Option<usize>);
 type ResponseTimeLevels = (f64, Option<f64>);
-pub type DocumentAgeLevels = (u64, Option<u64>);
+type DocumentAgeLevels = (u64, Option<u64>);
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum OnRedirect {

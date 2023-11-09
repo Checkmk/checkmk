@@ -104,7 +104,15 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
                 }
             }),
         ),
-        checking::check_document_age(&response.headers, args.document_age_levels),
+        checking::check_document_age(
+            &response.headers,
+            args.document_age_levels.map(|val| match val {
+                (x, None) => UpperLevels::warn(Duration::from_secs(x)),
+                (x, Some(y)) => {
+                    UpperLevels::warn_crit(Duration::from_secs(x), Duration::from_secs(y))
+                }
+            }),
+        ),
     ]
     .into_iter()
     .flatten()

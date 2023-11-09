@@ -80,6 +80,11 @@ def notify_error(error) {
                 notify_emails.addAll(TEAM_NILE_MAIL.split(","))
             }
 
+            /// Inform werk workers if something's wrong with the werk jobs
+            if (projectname.startsWith("werks/")) {
+                notify_emails += "benedikt.seidl@checkmk.com"
+            }
+
             /// fallback - for investigation
             notify_emails = notify_emails ?: [
                 "timotheus.bachinger@checkmk.com",

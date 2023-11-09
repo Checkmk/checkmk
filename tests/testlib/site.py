@@ -9,7 +9,6 @@ import glob
 import inspect
 import logging
 import os
-import shlex
 import shutil
 import subprocess
 import sys
@@ -25,13 +24,17 @@ import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
 from tests.testlib.utils import (
+    check_output,
     cmc_path,
     cme_path,
     cmk_path,
+    execute,
     is_containerized,
+    makedirs,
     PExpectDialog,
     restart_httpd,
     spawn_expect_process,
+    write_file,
 )
 from tests.testlib.version import CMKVersion, version_from_env, version_gte
 from tests.testlib.web_session import CMKWebSession
@@ -44,15 +47,6 @@ from cmk.utils.version import Edition, Version
 logger = logging.getLogger(__name__)
 
 PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version_info.minor
-
-
-class SiteCalledProcessError(subprocess.CalledProcessError):
-    def __str__(self) -> str:
-        return (
-            super().__str__()
-            if self.stderr is None
-            else f"{super().__str__()[:-1]} ({self.stderr!r})."
-        )
 
 
 class Site:
@@ -410,52 +404,24 @@ class Site:
         return state
 
     def execute(  # type: ignore[no-untyped-def]
-        self, cmd: list[str], *args, preserve_env: list[str] | None = None, **kwargs
+        self,
+        cmd: list[str],
+        *args,
+        preserve_env: list[str] | None = None,
+        **kwargs,
     ) -> subprocess.Popen:
-        assert isinstance(cmd, list), "The command must be given as list"
-
-        if preserve_env:
-            # Skip the test cases calling this for some distros
-            if os.environ.get("DISTRO") in ("centos-8",):
-                pytest.skip("preserve env not possible in this environment")
-            sudo_env_args = [f"--preserve-env={','.join(preserve_env)}"]
-            su_env_args = ["--whitelist-environment", ",".join(preserve_env)]
-        else:
-            sudo_env_args = []
-            su_env_args = []
-
-        kwargs.setdefault("encoding", "utf-8")
-        cmd_txt = " ".join(
-            ["sudo"]
-            + sudo_env_args
-            + ["su", "-l", self.id]
-            + su_env_args
-            + ["-c", shlex.quote(shlex.join(cmd))]
+        return execute(
+            cmd, *args, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs
         )
-        logger.info("Executing: %s", cmd_txt)
-        kwargs["shell"] = True
-        return subprocess.Popen(cmd_txt, *args, **kwargs)
 
     def check_output(
         self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
     ) -> str:
-        """Mimics behavior of subprocess.check_output
+        """Mimics subprocess.check_output while running a process as the site user.
 
-        Seems to be OK for now but we should find a better abstraction than just
-        wrapping self.execute().
+        Returns the stdout of the process.
         """
-        p = self.execute(
-            cmd,
-            encoding="utf-8",
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.PIPE if input else None,
-        )
-        stdout, stderr = p.communicate(input)
-        if p.returncode != 0:
-            raise SiteCalledProcessError(p.returncode, p.args, stdout, stderr)
-        assert isinstance(stdout, str)
-        return stdout
+        return check_output(cmd=cmd, input=input, sudo=True, substitute_user=self.id)
 
     @contextmanager
     def copy_file(self, name: str, target: str) -> Iterator[None]:
@@ -522,33 +488,11 @@ class Site:
         if p.wait() != 0:
             raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
 
-    def _call_tee(self, rel_target_path: str, content: bytes | str) -> None:
-        with self.execute(
-            ["tee", self.path(rel_target_path)],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.DEVNULL,
-            encoding=None
-            if isinstance(
-                content,
-                bytes,
-            )
-            else "utf-8",
-        ) as p:
-            p.communicate(content)
-        if p.returncode != 0:
-            raise Exception(
-                "Failed to write file %s. Exit-Code: %d"
-                % (
-                    rel_target_path,
-                    p.returncode,
-                )
-            )
-
     def write_text_file(self, rel_path: str, content: str) -> None:
-        self._call_tee(rel_path, content)
+        write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
 
     def write_binary_file(self, rel_path: str, content: bytes) -> None:
-        self._call_tee(rel_path, content)
+        write_file(self.path(str(rel_path)), content, sudo=True, substitute_user=self.id)
 
     def create_rel_symlink(self, link_rel_target: str, rel_link_name: str) -> None:
         with self.execute(
@@ -588,8 +532,7 @@ class Site:
         return int(self.check_output(["stat", "-c", "%i", self.path(rel_path)]).rstrip())
 
     def makedirs(self, rel_path: str) -> bool:
-        p = self.execute(["mkdir", "-p", self.path(rel_path)])
-        return p.wait() == 0
+        return makedirs(self.path(rel_path), sudo=True, substitute_user=self.id)
 
     def reset_admin_password(self, new_password: str | None = None) -> None:
         self.check_output(

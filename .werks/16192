@@ -8,7 +8,5 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0p14
 
-When updating a distributed setup from version 2.1, the site status on the Distributed Monitoring page will display the error <tt>"<lambda>() got an unexpected keyword argument 'license_state'"</tt> if the remote site has already been updated to version 2.2, but the central site is still version 2.1.
+When updating a distributed setup from version 2.1, the site status on the Distributed Monitoring page will display the error <tt>"&lt;lambda&gt;() got an unexpected keyword argument 'license_state'"</tt> if the remote site has already been updated to version 2.2, but the central site is still version 2.1.
 The site status will now display correctly.
-
-

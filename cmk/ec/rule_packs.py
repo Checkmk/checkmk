@@ -32,7 +32,7 @@ from .settings import Settings
 from .settings import settings as create_settings
 
 
-class RulePackType(Enum):  # pylint: disable=too-few-public-methods
+class RulePackType(Enum):
     """
     A class to distinguish the four kinds of rule pack types:
 

@@ -1195,9 +1195,7 @@ class EventServer(ECServerThread):
             is_active_time_period=self._time_period.active,
         )
 
-    def compile_rules(  # pylint: disable=too-many-branches
-        self, rule_packs: Sequence[ECRulePack]
-    ) -> None:
+    def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
         self._rules = []
         self._rule_by_id = {}
@@ -3517,7 +3515,7 @@ def reload_configuration(
 #   '----------------------------------------------------------------------'
 
 
-def main() -> None:  # pylint: disable=too-many-branches
+def main() -> None:
     """Main entry and option parsing"""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")

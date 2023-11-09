@@ -12,8 +12,7 @@ use std::time::{Duration, SystemTime};
 use crate::connection::OnRedirect;
 use crate::http::ProcessedResponse;
 
-// TODO(au): We're missing requirements for the new check_http here:
-// The old check_http allows specification of
+// check_http allows specification of
 // * no levels/bounds
 // * warn/lower
 // * warn/lower and crit/upper

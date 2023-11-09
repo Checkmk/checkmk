@@ -96,12 +96,9 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
                     UpperLevels::warn_crit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
                 }
             }),
-            document_age_levels: args.document_age_levels.map(|val| match val {
-                (x, None) => UpperLevels::warn(Duration::from_secs(x)),
-                (x, Some(y)) => {
-                    UpperLevels::warn_crit(Duration::from_secs(x), Duration::from_secs(y))
-                }
-            }),
+            document_age_levels: args
+                .document_age_levels
+                .map(|val| UpperLevels::warn(Duration::from_secs(val))),
         },
     )
 }

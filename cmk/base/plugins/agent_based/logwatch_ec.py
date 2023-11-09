@@ -739,9 +739,7 @@ class MessageForwarder:
             target_size = int(spool_params["max_size"] / 2.0)
 
             for filename in spool_files:
-                path = self._spool_path / filename
-
-                total_size -= self._spool_drop_messages(path, result)
+                total_size -= self._spool_drop_messages(filename, result)
                 if target_size >= total_size:
                     break  # cleaned up enough
 

@@ -82,7 +82,6 @@ package-definitions:
   ordereddict: [ordereddict]
   paho: [paho]
   paramiko: [paramiko]
-  passlib: [passlib]
   Pillow: [PIL]
   pipfile: [pipfile]
   playwright: [playwright]
@@ -347,7 +346,6 @@ allowed-package-relationships:
     deepdiff,
     exchangelib,
     jinja2,
-    passlib,
     pycryptodomex,
     pyopenssl,
     python-dateutil,

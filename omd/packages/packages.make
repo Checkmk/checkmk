@@ -156,7 +156,8 @@ include \
     packages/livestatus/livestatus.make \
     packages/neb/neb.make \
     packages/unixcat/unixcat.make \
-    packages/xmlsec1/xmlsec1.make
+    packages/xmlsec1/xmlsec1.make \
+    packages/robotmk/robotmk.make
 
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make

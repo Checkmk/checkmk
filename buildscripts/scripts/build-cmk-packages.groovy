@@ -331,7 +331,9 @@ def main() {
                     INTERNAL_DEPLOY_PORT,
                     cmk_version_rc_aware,
                     "${WORKSPACE}/versions/${cmk_version_rc_aware}",
-                    EXCLUDE_PATTERN=exclude_pattern,
+                    "*",
+                    "all packages",
+                    exclude_pattern,
                 )
                 artifacts_helper.upload_version_dir(
                     "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);

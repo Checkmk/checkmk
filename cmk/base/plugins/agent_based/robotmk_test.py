@@ -68,7 +68,8 @@ def check(
         _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_log.html")
         if test.status.status is Outcome.FAIL:
             _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_error_log.html")
-            yield from _check_test(params, test)
+
+        yield from _check_test(params, test)
 
 
 def _check_test(params: Params, test: Test) -> CheckResult:

@@ -26,9 +26,43 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers.cache import SectionStore
 
 from cmk.checkengine.parser import AgentParser, AgentRawDataSectionElem, NO_SELECTION, SNMPParser
+from cmk.checkengine.parser._agent import is_valid_hostname
 from cmk.checkengine.parser._markers import PiggybackMarker, SectionMarker
 
 StringTable = list[list[str]]
+
+
+@pytest.mark.parametrize(
+    "hostname",
+    [
+        HostName("ec2-11-111-222-333.cd-blahblah-1.compute.amazonaws.com"),
+        HostName("subdomain.domain.com"),
+        HostName("domain.com"),
+        HostName("domain"),
+        # I don't think the next two are correct but REGEX_HOST_NAME
+        # would match them as well.
+        HostName("_"),
+        HostName("dom_ain.com"),
+    ],
+)
+def test_is_valid_hostname_positive(hostname: HostName) -> None:
+    assert is_valid_hostname(hostname)
+
+
+@pytest.mark.parametrize(
+    "hostname",
+    [
+        HostName("."),
+        HostName(".."),
+        HostName(".domain"),
+        HostName(".domain.com"),
+        HostName("-subdomain.domain.com"),
+        HostName("email@domain.com"),
+        HostName("@subdomain.domain.com"),
+    ],
+)
+def test_is_valid_hostname_negative(hostname: HostName) -> None:
+    assert not is_valid_hostname(hostname)
 
 
 @pytest.fixture(autouse=True)
@@ -285,7 +319,7 @@ class TestAgentParser:
         raw_data = AgentRawData(
             b"\n".join(
                 (
-                    b"<<<<piggyback header>>>>",
+                    b"<<<<piggyback_header>>>>",
                     b"<<<a_section>>>",
                     b"a first line",
                     b"a second line",
@@ -315,6 +349,45 @@ class TestAgentParser:
                 b"<<<b_section:cached(1000,900)>>>",
                 b"b first line",
                 b"b second line",
+            ]
+        }
+        assert not store.load()
+
+    def test_invalid_piggyback_hostnames_are_skipped(
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSectionElem]],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
+        monkeypatch.setattr(parser, "cache_piggybacked_data_for", 900)
+
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<<.>>>>",  # <- invalid hostname "."
+                    b"<<<ignored_section>>>",
+                    b"a first line",
+                    b"a second line",
+                    b"<<<ignored_section_2>>>",
+                    b"a third line",
+                    b"a forth line",
+                    b"<<<<>>>>",
+                    b"<<<<piggyback>>>>",
+                    b"<<<keep>>>",
+                    b"first line kept",
+                    b"second line kept",
+                )
+            )
+        )
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {}
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {
+            "piggyback": [
+                b"<<<keep:cached(1000,900)>>>",
+                b"first line kept",
+                b"second line kept",
             ]
         }
         assert not store.load()
@@ -364,7 +437,7 @@ class TestAgentParser:
         raw_data = AgentRawData(
             b"\n".join(
                 (
-                    b"<<<<piggyback header>>>>",  # <- space is OK
+                    b"<<<<piggyback_header>>>>",
                     b"<<<section>>>",
                     b"first line",
                     b"second line",
@@ -377,9 +450,6 @@ class TestAgentParser:
                     b"third line",
                     b"forth line",
                     b"<<<<>>>>",
-                    b"<<<<../b:l*a../>>>>",
-                    b"<<<section>>>",
-                    b"first line",
                     b"<<<</b_l-u/>>>>",
                     b"<<<section>>>",
                     b"first line",
@@ -404,10 +474,6 @@ class TestAgentParser:
                 b"<<<other_other_section:cached(1000,900)>>>",
                 b"third line",
                 b"forth line",
-            ],
-            ".._b_l_a.._": [
-                b"<<<section:cached(1000,900)>>>",
-                b"first line",
             ],
             "_b_l-u_": [
                 b"<<<section:cached(1000,900)>>>",

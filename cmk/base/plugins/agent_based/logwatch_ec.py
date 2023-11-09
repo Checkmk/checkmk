@@ -21,6 +21,7 @@ from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequen
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, Protocol
+from urllib.parse import quote as url_quote
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -41,6 +42,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
+from cmk.ec.event import (  # pylint: disable=cmk-module-layer-violation
+    create_event_from_syslog_message,
+)
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
@@ -696,12 +700,35 @@ class MessageForwarder:
                 if num_already_spooled == 0:
                     result.num_dropped += len(message_chunk)
 
+    def _update_logwatch_spoolfiles(
+        self,
+        old_location: Path,
+    ) -> None:
+        # can be removed with checkmk 2.4.0
+        if self.item is None:
+            # no need to update the spoolfiles if separate_checks = False
+            return
+        for path in old_location.glob("spool.*"):
+            time_spooled = float(path.name[6:])
+            messages = ast.literal_eval(path.read_text())
+            if len(messages) == 0:
+                continue
+            event = create_event_from_syslog_message(messages[0].encode("utf-8"), None, None)
+            if event["application"] == self.item:
+                result = LogwatchForwardedResult()
+                self._spool_messages([(time_spooled, 0, messages)], result)
+                path.unlink()
+
     def _load_spooled_messages(
         self,
         method: tuple,
         result: LogwatchForwardedResult,
     ) -> list[tuple[float, int, list[str]]]:
         spool_params = method[1]["spool"]
+
+        self._update_logwatch_spoolfiles(
+            old_location=self._get_spool_path(self.hostname, None),
+        )
 
         try:
             spool_files = sorted(self._spool_path.iterdir())
@@ -768,4 +795,11 @@ class MessageForwarder:
 
     @property
     def _spool_path(self) -> Path:
-        return Path(cmk.utils.paths.var_dir, "logwatch_spool", self.hostname)
+        return self._get_spool_path(self.hostname, self.item)
+
+    @staticmethod
+    def _get_spool_path(hostname: str, item: str | None) -> Path:
+        result = Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
+        if item is not None:
+            result = result / "item_{}".format(url_quote(item, safe=""))
+        return result

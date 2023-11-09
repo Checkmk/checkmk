@@ -572,6 +572,8 @@ def _forward_message(
     tcp_result: Literal["ok", "raise exception", "set exception"],
     method: tuple[str, dict[str, object]] = ("tcp", {"address": "127.0.0.1", "port": 127001}),
     text: str = "some_text",
+    item: str | None = None,
+    application: str = "-",
 ) -> tuple[logwatch_ec.LogwatchForwardedResult, list[tuple[float, int, list[str]]],]:
     messages_forwarded: list[tuple[float, int, list[str]]] = []
 
@@ -590,9 +592,11 @@ def _forward_message(
             else:
                 raise NotImplementedError()
 
-    result = TestForwardTcpMessageForwarder(item="item_name", hostname=HostName("some_host_name"))(
-        method,
-        [SyslogMessage(facility=1, severity=1, text=text)],
+    result = TestForwardTcpMessageForwarder(item=item, hostname=HostName("some_host_name"))(
+        method=method,
+        messages=[
+            SyslogMessage(facility=1, severity=1, timestamp=0.0, text=text, application=application)
+        ],
     )
 
     return result, messages_forwarded
@@ -611,7 +615,7 @@ def test_forward_tcp_message_forwarded_ok() -> None:
     # first element of message is a timestamp!
     assert messages_forwarded[0][1:] == (
         0,
-        ["<9>1 - - - - - [Checkmk@18662] some_text"],
+        ["<9>1 1970-01-01T00:00:00+00:00 - - - - [Checkmk@18662] some_text"],
     )
 
 
@@ -718,3 +722,76 @@ def test_forward_tcp_message_forwarded_spool_twice() -> None:
         "spool.1698768120.00",
         "spool.1698768180.00",
     }
+
+
+def test_forward_tcp_message_update_old_spoolfiles() -> None:
+    # can be removed with checkmk 2.4.0
+    spool_dir = Path(cmk.utils.paths.var_dir, "logwatch_spool", "some_host_name")
+    # logwatch_ec with separate_checks = True creates one service per syslog application, but they
+    # shared one folder for their spool files. this led to problems when writing spool-files
+    # (overwriting each other) and reading spool-files (all items read all spool-files).
+    # with werk 15307 it was introduced that each service get its own subfolder for spool-files.
+    # here we want to check the update process: spool-files from the host-folder should be
+    # read and moved to the correct subfolder.
+
+    # first we create a spooled message for a logwatch_ec service with "separate_checks" = False
+    # this is the same as the old behaviour, before werk 15397 with "seperate_checks" = True
+    with freeze_time("2023-10-31 16:02:00"):
+        _result, messages_forwarded = _forward_message(
+            tcp_result="set exception",
+            method=SPOOL_METHOD,
+            application="item_name_1",
+        )
+    # we expect one spool file to be created:
+    assert list(f.name for f in spool_dir.iterdir()) == ["spool.1698768120.00"]
+
+    # now we do the same, but for a different item:
+    with freeze_time("2023-10-31 16:03:00"):
+        _result, messages_forwarded = _forward_message(
+            tcp_result="set exception",
+            method=SPOOL_METHOD,
+            application="another_item",
+        )
+    # we expect two spool files in the host folder:
+    assert set(f.name for f in spool_dir.iterdir()) == {
+        "spool.1698768120.00",
+        "spool.1698768180.00",
+    }
+
+    # this was the old behaviour. now we image the customer installed the new version of checkmk.
+    # their logwatch_ec services had separate_checks = True from the beginning.
+
+    with freeze_time("2023-10-31 16:04:00"):
+        _result, messages_forwarded = _forward_message(
+            tcp_result="ok",
+            method=SPOOL_METHOD,
+            item="item_name_1",
+            application="item_name_1",
+        )
+
+    # we now expect, that the item_name_1 message was found (although in the old directory) and the
+    # new message was also sent:
+    assert len(messages_forwarded) == 2
+
+    # and we also expect, the spool-file of another_item to be left alone:
+    assert list(f.name for f in spool_dir.iterdir() if f.is_file()) == [
+        "spool.1698768180.00",
+    ]
+    # and a folder which held the spooled message for a short time
+    assert list(f.name for f in spool_dir.iterdir() if f.is_dir()) == [
+        "item_item_name_1",
+    ]
+    # but is should now be empty as we sent both messages successfully:
+    assert not list(f.name for f in (spool_dir / "item_item_name_1").iterdir())
+
+
+def test_logwatch_spool_path_is_escaped():
+    # item may contain slashes or other stuff, we want to make sure
+    # that this is transformed to a single folder name:
+    get_spool_path = logwatch_ec.MessageForwarder._get_spool_path
+    result = get_spool_path(HostName("some_host_name"), "some/log/path")
+    assert result.name == "item_some%2Flog%2Fpath"
+    assert result.parent.name == "some_host_name"
+
+    assert get_spool_path(HostName("short"), ".").name == "item_."
+    assert get_spool_path(HostName("short"), "..").name == "item_.."

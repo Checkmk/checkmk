@@ -20,12 +20,10 @@ def _parse_datetime(value: str) -> datetime:
 DateTimeFormat = Annotated[datetime, PlainValidator(_parse_datetime)]
 
 
-def _ensure_suite_sequence(raw_value: Union["Suite", Sequence["Suite"]]) -> Sequence["Suite"]:
-    return [raw_value] if isinstance(raw_value, Suite) else raw_value
-
-
-def _ensure_test_sequence(raw_value: Union["Test", Sequence["Test"]]) -> Sequence["Test"]:
-    return [raw_value] if isinstance(raw_value, Test) else raw_value
+def _ensure_sequence(
+    raw_value: Union[Mapping[str, object], Sequence[Mapping[str, object]]]
+) -> Sequence[Mapping[str, object]]:
+    return [raw_value] if isinstance(raw_value, Mapping) else raw_value
 
 
 class Outcome(enum.Enum):
@@ -53,8 +51,8 @@ class Test(BaseModel, frozen=True):
 class Suite(BaseModel, frozen=True):
     id: str = Field(alias="@id")
     name: str = Field(alias="@name")
-    suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_suite_sequence)] = Field(default=[])
-    test: Annotated[Sequence[Test], BeforeValidator(_ensure_test_sequence)] = Field(default=[])
+    suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_sequence)] = Field(default=[])
+    test: Annotated[Sequence[Test], BeforeValidator(_ensure_sequence)] = Field(default=[])
 
 
 class Generator(BaseModel, frozen=True):

@@ -755,9 +755,7 @@ def logwatch_load_spooled_messages(
         target_size = int(spool_params["max_size"] / 2.0)
 
         for filename in spool_files:
-            path = logwatch_spool_path(hostname) / filename
-
-            total_size -= logwatch_spool_drop_messages(path, result)
+            total_size -= logwatch_spool_drop_messages(filename, result)
             if target_size >= total_size:
                 break  # cleaned up enough
 

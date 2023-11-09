@@ -20,16 +20,22 @@ pub enum ForceIP {
     Ipv6,
 }
 
-pub fn get_policy(onredirect: OnRedirect, force_ip: Option<ForceIP>, max_redirs: usize) -> Policy {
-    match onredirect {
+pub struct ConnectionConfig {
+    pub onredirect: OnRedirect,
+    pub max_redirs: usize,
+    pub force_ip: Option<ForceIP>,
+}
+
+pub fn get_policy(cfg: ConnectionConfig) -> Policy {
+    match cfg.onredirect {
         OnRedirect::Ok | OnRedirect::Warning | OnRedirect::Critical => Policy::none(),
-        OnRedirect::Follow => Policy::limited(max_redirs),
-        OnRedirect::Sticky => {
-            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, false))
-        }
-        OnRedirect::Stickyport => {
-            Policy::custom(move |att| policy_sticky(att, force_ip.clone(), max_redirs, true))
-        }
+        OnRedirect::Follow => Policy::limited(cfg.max_redirs),
+        OnRedirect::Sticky => Policy::custom(move |att| {
+            policy_sticky(att, cfg.force_ip.clone(), cfg.max_redirs, false)
+        }),
+        OnRedirect::Stickyport => Policy::custom(move |att| {
+            policy_sticky(att, cfg.force_ip.clone(), cfg.max_redirs, true)
+        }),
     }
 }
 

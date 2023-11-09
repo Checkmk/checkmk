@@ -14,41 +14,40 @@ use std::{
     time::Duration,
 };
 
-use crate::redirect;
-use crate::redirect::{ForceIP, OnRedirect};
+use crate::redirect::{self, ConnectionConfig, ForceIP};
+
+pub struct RequestConfig {
+    pub url: String,
+    pub method: Method,
+    pub user_agent: Option<HeaderValue>,
+    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
+    pub timeout: Duration,
+    pub auth_user: Option<String>,
+    pub auth_pw: Option<String>,
+}
 
 pub struct ProcessedResponse {
     pub version: Version,
     pub status: StatusCode,
-    pub headers: HeaderMap, // TODO(au): use
+    pub headers: HeaderMap,
     pub body: Option<ReqwestResult<Bytes>>,
 }
 
-#[allow(clippy::too_many_arguments)] //TODO(au): Fix - Introduce separate configs/options for each function
 pub fn prepare_request(
-    url: String,
-    method: Method,
-    user_agent: Option<HeaderValue>,
-    headers: Option<Vec<(HeaderName, HeaderValue)>>,
-    timeout: Duration,
-    auth_user: Option<String>,
-    auth_pw: Option<String>,
-    onredirect: OnRedirect,
-    max_redirs: usize,
-    force_ip: Option<ForceIP>,
+    cfg: RequestConfig,
+    redir_cfg: ConnectionConfig,
 ) -> AnyhowResult<RequestBuilder> {
-    let mut cli_headers = HeaderMap::new();
-    if let Some(ua) = user_agent {
-        cli_headers.insert(USER_AGENT, ua);
+    let mut headers = HeaderMap::new();
+    if let Some(ua) = cfg.user_agent {
+        headers.insert(USER_AGENT, ua);
     }
-    if let Some(hds) = headers {
-        cli_headers.extend(hds);
+    if let Some(hds) = cfg.headers {
+        headers.extend(hds);
     }
 
-    let redirect_policy = redirect::get_policy(onredirect, force_ip.clone(), max_redirs);
     let client = reqwest::Client::builder();
 
-    let client = match force_ip {
+    let client = match &redir_cfg.force_ip {
         None => client,
         Some(ipv) => match ipv {
             ForceIP::Ipv4 => client.local_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
@@ -56,15 +55,16 @@ pub fn prepare_request(
         },
     };
 
+    let redirect_policy = redirect::get_policy(redir_cfg);
     let client = client
         .redirect(redirect_policy)
-        .timeout(timeout)
-        .default_headers(cli_headers)
+        .timeout(cfg.timeout)
+        .default_headers(headers)
         .build()?;
 
-    let req = client.request(method, url);
-    if let Some(user) = auth_user {
-        Ok(req.basic_auth(user, auth_pw))
+    let req = client.request(cfg.method, cfg.url);
+    if let Some(user) = cfg.auth_user {
+        Ok(req.basic_auth(user, cfg.auth_pw))
     } else {
         Ok(req)
     }

@@ -7,32 +7,36 @@ use std::time::Instant;
 
 use crate::checking;
 use crate::checking::{Bounds, CheckResult, State, UpperLevels};
-use crate::http;
-use crate::redirect;
+use crate::http::{self, RequestConfig};
+use crate::redirect::{self, ConnectionConfig};
 use std::time::Duration;
 
 pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
     let Ok(request) = http::prepare_request(
-        args.url,
-        args.method,
-        args.user_agent,
-        args.headers,
-        args.timeout,
-        args.auth_user,
-        args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
-        match args.onredirect {
-            cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
-            cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
-            cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
-            cli::OnRedirect::Follow => redirect::OnRedirect::Follow,
-            cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
-            cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
+        RequestConfig {
+            url: args.url,
+            method: args.method,
+            user_agent: args.user_agent,
+            headers: args.headers,
+            timeout: args.timeout,
+            auth_user: args.auth_user,
+            auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
         },
-        args.max_redirs,
-        match args.force_ip_version {
-            None => None,
-            Some(cli::ForceIP::Ipv4) => Some(redirect::ForceIP::Ipv4),
-            Some(cli::ForceIP::Ipv6) => Some(redirect::ForceIP::Ipv6),
+        ConnectionConfig {
+            onredirect: match args.onredirect {
+                cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
+                cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
+                cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
+                cli::OnRedirect::Follow => redirect::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
+            },
+            max_redirs: args.max_redirs,
+            force_ip: match args.force_ip_version {
+                None => None,
+                Some(cli::ForceIP::Ipv4) => Some(redirect::ForceIP::Ipv4),
+                Some(cli::ForceIP::Ipv6) => Some(redirect::ForceIP::Ipv6),
+            },
         },
     ) else {
         return vec![CheckResult {

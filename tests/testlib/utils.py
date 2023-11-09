@@ -6,6 +6,7 @@
 # pylint: disable=redefined-outer-name
 
 import dataclasses
+import json
 import logging
 import os
 import re
@@ -13,9 +14,11 @@ import shlex
 import subprocess
 import sys
 import textwrap
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from pprint import pformat
+from urllib.parse import urlparse
 
 import pexpect  # type: ignore[import-untyped]
 import pytest
@@ -500,3 +503,70 @@ def get_services_with_status(
         pformat(services_list),
     )
     return services_list
+
+
+@contextmanager
+def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
+    idp_url = "http://localhost:5551"
+    makedirs("/etc/cse", sudo=True)
+    cognito_config = "/etc/cse/cognito-cmk.json"
+    write_cognito_config = not os.path.exists(cognito_config)
+    global_config = "/etc/cse/global-config.json"
+    write_global_config = not os.path.exists(global_config)
+    if write_cognito_config:
+        write_file(
+            cognito_config,
+            json.dumps(
+                {
+                    "client_id": "notused",
+                    "base_url": site_url,
+                    "saas_api_url": idp_url,
+                    "tenant_id": "123tenant567",
+                    "logout_url": f"{idp_url}/logout",
+                    "well_known": f"{idp_url}/.well-known/openid-configuration",
+                },
+                indent=2,
+            )
+            + "\n",
+            sudo=True,
+        )
+    else:
+        LOGGER.warning('Skipped writing "%s": File exists!', cognito_config)
+    if write_global_config:
+        with open(f"{cmk_path()}/tests/etc/cse/global-config.json") as f:
+            write_file(
+                global_config,
+                f.read(),
+                sudo=True,
+            )
+    else:
+        LOGGER.warning('Skipped writing "%s": File exists!', global_config)
+    idp = urlparse(idp_url)
+    auth_provider_proc = execute(
+        [
+            f"{cmk_path()}/scripts/run-pipenv",
+            "run",
+            "uvicorn",
+            "tests.testlib.cse.openid_oauth_provider:application",
+            "--host",
+            f"{idp.hostname}",
+            "--port",
+            f"{idp.port}",
+        ],
+        sudo=False,
+        cwd=cmk_path(),
+        env=dict(os.environ, URL=idp_url),
+        shell=False,
+    )
+    assert (
+        auth_provider_proc.poll() is None
+    ), f"Error while starting auth provider! (RC: {auth_provider_proc.returncode})"
+    try:
+        yield auth_provider_proc
+    finally:
+        if auth_provider_proc:
+            auth_provider_proc.kill()
+        if write_cognito_config:
+            execute(["rm", cognito_config])
+        if write_global_config:
+            execute(["rm", global_config])

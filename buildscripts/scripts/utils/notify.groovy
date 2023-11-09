@@ -33,14 +33,15 @@ def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure
     // So ensure here we only notify internal addresses.
+    def projectname = currentBuild.fullProjectName
     try {
-        def isChangeValidation = currentBuild.fullProjectName.contains("cv");
+        def isChangeValidation = projectname.contains("cv");
         print("|| error-reporting: isChangeValidation=${isChangeValidation}");
 
-        def isTesting = currentBuild.fullProjectName.contains("Testing");
+        def isTesting = projectname.contains("Testing");
         print("|| error-reporting: isTesting=${isTesting}");
 
-        def isTriggerJob = currentBuild.fullProjectName.contains("trigger");
+        def isTriggerJob = projectname.contains("trigger");
         print("|| error-reporting: isTriggerJob=${isTriggerJob}");
 
         /// for now we assume this build to be in state "FAILURE"
@@ -70,12 +71,12 @@ def notify_error(error) {
             });
 
             /// Inform cloud devs if cloud burns
-            if (currentBuild.fullProjectName.contains("build-cmk-cloud-images")) {
+            if (projectname.contains("build-cmk-cloud-images")) {
                 notify_emails += "max.linke@checkmk.com"
             }
 
             /// Inform nile devs if our extensions fail
-            if (currentBuild.fullProjectName.contains("test-extension-compatibility")) {
+            if (projectname.contains("test-extension-compatibility")) {
                 notify_emails.addAll(TEAM_NILE_MAIL.split(","))
             }
 

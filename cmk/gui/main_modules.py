@@ -20,7 +20,7 @@ from cmk.gui.log import logger
 
 @contextmanager
 def suppress_module_not_found(name: str) -> Iterator[None]:
-    """Specialised to contextlib.supress with additional module name matching"""
+    """Specialized to contextlib.supress with additional module name matching"""
     try:
         yield
     except ModuleNotFoundError as e:
@@ -31,24 +31,23 @@ def suppress_module_not_found(name: str) -> Iterator[None]:
 # The following imports trigger loading of built-in main modules.
 # Note: They are loaded once more in `_import_main_module_plugins()` and
 # possibly a third time over the plugin discovery mechanism.
-with suppress_module_not_found("cmk.gui.plugins.main_modules"):
-    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
+import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
-with suppress_module_not_found("cmk.gui.raw.plugins.main_modules"):
+with suppress_module_not_found("cmk.gui.raw"):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import,cmk-module-layer-violation
 
-with suppress_module_not_found("cmk.gui.cee.plugins.main_modules"):
+with suppress_module_not_found("cmk.gui.cee"):
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
-with suppress_module_not_found("cmk.gui.cme.registration"):
+with suppress_module_not_found("cmk.gui.cme"):
     import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
 
     cmk.gui.cme.registration.register()
 
-with suppress_module_not_found("cmk.gui.cce.plugins.main_modules"):
+with suppress_module_not_found("cmk.gui.cce"):
     import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
-with suppress_module_not_found("cmk.gui.cse.plugins.main_modules"):
+with suppress_module_not_found("cmk.gui.cse"):
     import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
 
 

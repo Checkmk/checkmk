@@ -2,15 +2,17 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import pytest
 
-from cmk.base.legacy_checks.cisco_ucs_temp_cpu import (
-    check_cisco_ucs_temp_cpu,
-    inventory_cisco_ucs_temp_cpu,
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.cisco_ucs_temp_cpu import (
+    _check_cisco_ucs_temp_cpu,
+    discover_cisco_ucs_temp_cpu,
+    parse_cisco_ucs_temp_cpu,
 )
-from cmk.base.plugins.agent_based.cisco_ucs_temp_cpu import parse_cisco_ucs_temp_cpu
 from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
 
 
@@ -24,8 +26,11 @@ def fixture_section() -> dict[str, int]:
     )
 
 
-def test_inventory_cisco_ucs_temp_cpu(section: Mapping[str, int]) -> None:
-    assert list(inventory_cisco_ucs_temp_cpu(section)) == [("cpu-1", {}), ("cpu-2", {})]
+def test_discover_cisco_ucs_temp_cpu(section: Mapping[str, int]) -> None:
+    assert list(discover_cisco_ucs_temp_cpu(section)) == [
+        Service(item="cpu-1"),
+        Service(item="cpu-2"),
+    ]
 
 
 @pytest.mark.parametrize(
@@ -34,18 +39,37 @@ def test_inventory_cisco_ucs_temp_cpu(section: Mapping[str, int]) -> None:
         pytest.param(
             "cpu-2",
             {"input_unit": "c", "levels": (75.0, 85.0)},
-            (0, "57 °C", [("temp", 57, 75.0, 85.0)]),
+            [
+                Metric("temp", 57.0, levels=(75.0, 85.0)),
+                Result(state=State.OK, summary="Temperature: 57 °C"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used user levels)",
+                ),
+            ],
             id="OK thresholds",
         ),
         pytest.param(
             "cpu-2",
             {"input_unit": "c", "levels": (20.0, 55.0)},
-            (2, "57 °C (warn/crit at 20.0/55.0 °C)", [("temp", 57, 20.0, 55.0)]),
+            [
+                Metric("temp", 57.0, levels=(20.0, 55.0)),
+                Result(
+                    state=State.CRIT, summary="Temperature: 57 °C (warn/crit at 20.0 °C/55.0 °C)"
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used user levels)",
+                ),
+            ],
             id="CRIT thresholds",
         ),
     ],
 )
 def test_check_cisco_ucs_temp_cpu(
-    item: str, params: TempParamType, expected_result: Sequence[object], section: Mapping[str, int]
+    item: str,
+    params: TempParamType,
+    expected_result: CheckResult,
+    section: Mapping[str, int],
 ) -> None:
-    assert check_cisco_ucs_temp_cpu(item, params, section) == expected_result
+    assert list(_check_cisco_ucs_temp_cpu(item, params, section, {})) == expected_result

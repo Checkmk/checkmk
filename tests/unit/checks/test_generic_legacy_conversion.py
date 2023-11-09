@@ -364,7 +364,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cisco_ucs_psu",
         "cisco_ucs_raid",
         "cisco_ucs_system",
-        "cisco_ucs_temp_cpu",
         "cisco_ucs_temp_env",
         "cisco_ucs_temp_mem",
         "cisco_vpn_sessions",

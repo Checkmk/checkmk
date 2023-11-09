@@ -1354,14 +1354,20 @@ class SiteFactory:
         logger.debug("Created site %s", site.id)
         return site
 
-    def get_existing_site(self, name: str, init_livestatus: bool = True) -> Site:
+    def get_existing_site(
+        self,
+        name: str,
+        start: bool = True,
+        init_livestatus: bool = True,
+    ) -> Site:
         site = self._site_obj(name)
 
-        if not site.exists():
+        if not (site.exists() and start):
             return site
 
         if init_livestatus:
             site.gather_livestatus_port(from_config=True)
+
         site.start()
         logger.debug("Reused site %s", site.id)
         return site
@@ -1581,7 +1587,7 @@ class SiteFactory:
             if os.environ.get("CLEANUP") is None
             else os.environ.get("CLEANUP") == "1"
         )
-        site = self.get_existing_site(name)
+        site = self.get_existing_site(name, start=reuse_site)
         if site.exists():
             if reuse_site:
                 logger.info('Reusing existing site "%s" (REUSE=1)', site.id)

@@ -15,6 +15,7 @@
 
 import ast
 import errno
+import hashlib
 import socket
 import time
 from collections import defaultdict
@@ -62,6 +63,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils import logwatch
 
+from cmk.ec.event import parse_message  # pylint: disable=cmk-module-layer-violation
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
@@ -518,8 +520,8 @@ class MessageForwarder:
             return logwatch_forward_tcp(
                 method,
                 messages,
-                logwatch_spool_path(self.hostname),
                 self.hostname,
+                self.item,
             )
 
         if not method.startswith("spool:"):
@@ -607,8 +609,8 @@ def get_new_spool_file(
 def logwatch_forward_tcp(
     method: Tuple,
     syslog_messages: Sequence[SyslogMessage],
-    spool_path: Path,
     hostname: HostName,
+    item: Union[str, None],
 ) -> LogwatchFordwardResult:
     # Transform old format: (proto, address, port)
     if not isinstance(method[1], dict):
@@ -619,7 +621,7 @@ def logwatch_forward_tcp(
     message_chunks = []
 
     if logwatch_shall_spool_messages(method):
-        message_chunks += logwatch_load_spooled_messages(method, result, spool_path, hostname)
+        message_chunks += logwatch_load_spooled_messages(method, result, hostname, item)
 
     # Add chunk of new messages (when there are new ones)
     if syslog_messages:
@@ -636,6 +638,7 @@ def logwatch_forward_tcp(
     # result.exception may be set in the line above, or inside _forward_send_tcp
     if result.exception:
         if logwatch_shall_spool_messages(method):
+            spool_path = logwatch_spool_path(hostname, item)
             logwatch_spool_messages(message_chunks, result, spool_path)
         else:
             result.num_dropped = sum(len(c[2]) for c in message_chunks)
@@ -709,13 +712,37 @@ def logwatch_spool_messages(
                 result.num_dropped += len(message_chunk)
 
 
+def _update_logwatch_spoolfiles(
+    old_location: Path, new_location: Path, item: Optional[str]
+) -> None:
+    # can be removed with checkmk 2.4.0
+    if item is None:
+        # no need to update the spoolfiles if separate_checks = False
+        return
+    for path in old_location.glob("spool.*"):
+        time_spooled = float(path.name[6:])
+        messages = ast.literal_eval(path.read_text())
+        if len(messages) == 0:
+            continue
+        event = parse_message(messages[0], "127.0.0.1")
+        if event["application"] == item:
+            result = LogwatchFordwardResult()
+            logwatch_spool_messages([(time_spooled, 0, messages)], result, new_location)
+            path.unlink()
+
+
 def logwatch_load_spooled_messages(
     method: Tuple,
     result,
-    spool_path: Path,
     hostname: HostName,
+    item: Union[str, None],
 ) -> List[Tuple[float, int, List[str]]]:
     spool_params = method[1]["spool"]
+
+    spool_path = logwatch_spool_path(hostname, item)
+    _update_logwatch_spoolfiles(
+        old_location=logwatch_spool_path(hostname, None), new_location=spool_path, item=item
+    )
 
     try:
         spool_files = sorted(spool_path.iterdir())
@@ -785,5 +812,11 @@ def logwatch_spool_drop_messages(path: Path, result) -> int:
     return file_size
 
 
-def logwatch_spool_path(hostname: HostName) -> Path:
-    return Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
+def logwatch_spool_path(hostname: HostName, item: Union[str, None]) -> Path:
+    result = Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
+    if item is not None:
+        # hash the item, so we don't have to worry about file path escapes and special characters.
+        h = hashlib.new("sha1")
+        h.update(item.encode("utf-8"))
+        result = result / h.hexdigest()
+    return result

@@ -18,14 +18,20 @@ Please keep this in mind when trying to consolidate.
 """
 import importlib
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Final, Generic, LiteralString, TypeVar
+from types import ModuleType
+from typing import Final, Generic, Protocol, TypeVar
 
-SHIPPED_PLUGINS = "cmk.plugins"
+PLUGIN_NAMESPACES = ("cmk.plugins",)
 
 
 _PluginType = TypeVar("_PluginType")
+
+
+class ImporterProtocol(Protocol):
+    def __call__(self, module_name: str, raise_errors: bool) -> ModuleType | None:
+        ...
 
 
 @dataclass(frozen=True)
@@ -52,31 +58,63 @@ def discover_plugins(
 ) -> DiscoveredPlugins[_PluginType]:
     """Collect all plugins from well-known locations"""
 
-    collector = _Collector(plugin_type, name_prefix, raise_errors)
+    modules = (
+        m
+        for p_namespace in PLUGIN_NAMESPACES
+        if (m := _import_optionally(p_namespace, raise_errors)) is not None
+    )
+    namespaces_by_priority = find_namespaces(modules, plugin_group, ls=_ls_defensive)
 
-    for mod_name in _find_namespaces(SHIPPED_PLUGINS, plugin_group, raise_errors):
-        collector.add_from_module(mod_name)
+    collector = Collector(plugin_type, name_prefix, raise_errors=raise_errors)
+    for mod_name in namespaces_by_priority:
+        collector.add_from_module(mod_name, _import_optionally)
 
     return DiscoveredPlugins(collector.errors, collector.plugins)
 
 
-def _find_namespaces(
-    base_namespace: LiteralString, plugin_group: str, raise_errors: bool
-) -> set[str]:
+def find_namespaces(
+    modules: Iterable[ModuleType],
+    plugin_group: str,
+    *,
+    ls: Callable[[str], Iterable[str]],
+) -> Iterable[str]:
+    """Find all potetial namespaces implied by the passed modules.
+
+    Returned iterable should be deduplicated.
+    """
+    return _deduplicate(
+        (
+            f"{module.__name__}.{family}.{plugin_group}.{fname.removesuffix('.py')}"
+            for module in modules
+            for path in module.__path__
+            for family in ls(path)
+            for fname in ls(f"{path}/{family}/{plugin_group}")
+            if fname not in {"__pycache__", "__init__.py"}
+        )
+    )
+
+
+_T = TypeVar("_T")
+
+
+def _deduplicate(iterable: Iterable[_T]) -> Iterable[_T]:
+    """Deduplicate preserving order
+
+    >>> list(_deduplicate([2, 1, 2, 3, 3, 1]))
+    [2, 1, 3]
+    """
+    return dict.fromkeys(iterable)
+
+
+def _import_optionally(module_name: str, raise_errors: bool) -> ModuleType | None:
     try:
-        plugin_base = importlib.import_module(base_namespace)
+        return importlib.import_module(module_name)
+    except ModuleNotFoundError:
+        return None  # never choke upon empty/non-existing folders.
     except Exception as _exc:
         if raise_errors:
             raise
-        return set()
-
-    return {
-        f"{plugin_base.__name__}.{family}.{plugin_group}.{fname.removesuffix('.py')}"
-        for path in plugin_base.__path__
-        for family in _ls_defensive(path)
-        for fname in _ls_defensive(f"{path}/{family}/{plugin_group}")
-        if fname not in {"__pycache__", "__init__.py"}
-    }
+        return None
 
 
 def _ls_defensive(path: str) -> Sequence[str]:
@@ -86,11 +124,12 @@ def _ls_defensive(path: str) -> Sequence[str]:
         return []
 
 
-class _Collector(Generic[_PluginType]):
+class Collector(Generic[_PluginType]):
     def __init__(
         self,
         plugin_type: type[_PluginType],
         name_prefix: str,
+        *,
         raise_errors: bool,
     ) -> None:
         self.plugin_type: Final = plugin_type
@@ -100,15 +139,14 @@ class _Collector(Generic[_PluginType]):
         self.errors: list[Exception] = []
         self.plugins: dict[PluginLocation, _PluginType] = {}
 
-    def add_from_module(self, mod_name: str) -> None:
+    def add_from_module(self, mod_name: str, importer: ImporterProtocol) -> None:
         try:
-            module = importlib.import_module(mod_name)
-        except ModuleNotFoundError:
-            pass  # don't choke upon empty folders.
+            module = importer(mod_name, raise_errors=True)
         except Exception as exc:
-            if self.raise_errors:
-                raise
-            self.errors.append(exc)
+            self._handle_error(exc)
+            return
+
+        if module is None:
             return
 
         self._collect_module_plugins(mod_name, vars(module))
@@ -118,22 +156,7 @@ class _Collector(Generic[_PluginType]):
         module_name: str,
         objects: Mapping[str, object],
     ) -> None:
-        """Dispatch valid and invalid well-known objects
-
-        >>> collector = _Collector(plugin_type=int, name_prefix="my_", raise_errors=False)
-        >>> collector._collect_module_plugins(
-        ...     "my_module",
-        ...     {
-        ...         "my_plugin": 1,
-        ...         "my_b": "two",
-        ...         "some_c": "ignored",
-        ...     },
-        ... )
-        >>> collector.errors[0]
-        TypeError("my_module:my_b: 'two'")
-        >>> collector.plugins
-        {PluginLocation(module='my_module', name='my_plugin'): 1}
-        """
+        """Dispatch valid and invalid well-known objects"""
         for name, value in objects.items():
             if not name.startswith(self.name_prefix):
                 continue
@@ -143,7 +166,9 @@ class _Collector(Generic[_PluginType]):
                 self.plugins[location] = value
                 continue
 
-            if self.raise_errors:
-                raise TypeError(f"{location}: {value!r}")
+            self._handle_error(TypeError(f"{location}: {value!r}"))
 
-            self.errors.append(TypeError(f"{location}: {value!r}"))
+    def _handle_error(self, exc: Exception) -> None:
+        if self.raise_errors:
+            raise exc
+        self.errors.append(exc)

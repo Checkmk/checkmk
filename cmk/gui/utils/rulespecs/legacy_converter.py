@@ -16,11 +16,16 @@ from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem
 
 from cmk.rulesets import v1 as ruleset_api_v1
-from cmk.rulesets.v1 import RuleSpecSubGroup
 
-_RULESPEC_SUB_GROUP_LEGACY_MAPPING = {
-    RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS: wato.RulespecGroupCheckParametersApplications,
-    RuleSpecSubGroup.CHECK_PARAMETERS_VIRTUALIZATION: wato.RulespecGroupCheckParametersVirtualization,
+_RULESPEC_GROUP_LEGACY_MAPPING = {
+    (
+        ruleset_api_v1.Functionality.MONITORING_CONFIGURATION,
+        ruleset_api_v1.Topic.APPLICATIONS,
+    ): wato.RulespecGroupCheckParametersApplications,
+    (
+        ruleset_api_v1.Functionality.MONITORING_CONFIGURATION,
+        ruleset_api_v1.Topic.VIRTUALIZATION,
+    ): wato.RulespecGroupCheckParametersVirtualization,
 }
 
 
@@ -39,7 +44,7 @@ def convert_to_legacy_rulespec(
             title=None
             if to_convert.title is None
             else partial(to_convert.title.localize, localizer),
-            group=_convert_to_legacy_rulespec_group(to_convert.group),
+            group=_convert_to_legacy_rulespec_group(to_convert.functionality, to_convert.topic),
             item_spec=partial(_convert_to_legacy_item_spec, to_convert.item, localizer),
             match_type="dict",
             parameter_valuespec=partial(
@@ -52,11 +57,15 @@ def convert_to_legacy_rulespec(
 
 
 def _convert_to_legacy_rulespec_group(
-    to_convert: ruleset_api_v1.RuleSpecCustomSubGroup | ruleset_api_v1.RuleSpecSubGroup,
+    functionality_to_convert: ruleset_api_v1.Functionality
+    | ruleset_api_v1.RuleSpecCustomFunctionality,
+    topic_to_convert: ruleset_api_v1.Topic | ruleset_api_v1.RuleSpecCustomTopic,
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
-    if isinstance(to_convert, ruleset_api_v1.RuleSpecSubGroup):
-        return _RULESPEC_SUB_GROUP_LEGACY_MAPPING[to_convert]
-    raise ValueError(to_convert)
+    if not isinstance(functionality_to_convert, ruleset_api_v1.Functionality):
+        raise ValueError(functionality_to_convert)
+    if not isinstance(topic_to_convert, ruleset_api_v1.Topic):
+        raise ValueError(topic_to_convert)
+    return _RULESPEC_GROUP_LEGACY_MAPPING[(functionality_to_convert, topic_to_convert)]
 
 
 @dataclass(frozen=True)

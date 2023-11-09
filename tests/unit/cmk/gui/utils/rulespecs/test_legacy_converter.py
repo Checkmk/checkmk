@@ -305,19 +305,22 @@ def test_convert_to_legacy_valuespec(
 
 
 @pytest.mark.parametrize(
-    ["new_group", "expected"],
+    ["new_functionality", "new_topic", "expected"],
     [
         pytest.param(
-            api_v1.RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS,
+            api_v1.Functionality.MONITORING_CONFIGURATION,
+            api_v1.Topic.APPLICATIONS,
             wato.RulespecGroupCheckParametersApplications,
             id="CheckParametersApplications",
-        )
+        ),
     ],
 )
 def test_convert_to_legacy_rulespec_group(
-    new_group: api_v1.RuleSpecSubGroup, expected: type[watolib.rulespecs.RulespecSubGroup]
+    new_functionality: api_v1.Functionality,
+    new_topic: api_v1.Topic,
+    expected: type[watolib.rulespecs.RulespecSubGroup],
 ) -> None:
-    assert _convert_to_legacy_rulespec_group(new_group) == expected
+    assert _convert_to_legacy_rulespec_group(new_functionality, new_topic) == expected
 
 
 @pytest.mark.parametrize(
@@ -327,7 +330,7 @@ def test_convert_to_legacy_rulespec_group(
             api_v1.CheckParameterRuleSpecWithItem(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
-                group=api_v1.RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS,
+                topic=api_v1.Topic.APPLICATIONS,
                 item=api_v1.TextInput(title=api_v1.Localizable("item title")),
                 value_spec=partial(
                     api_v1.Dictionary,

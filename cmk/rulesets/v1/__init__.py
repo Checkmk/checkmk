@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.rulesets.v1._groups import (
-    RuleSpecCustomMainGroup,
-    RuleSpecCustomSubGroup,
-    RuleSpecMainGroup,
-    RuleSpecSubGroup,
+    Functionality,
+    RuleSpecCustomFunctionality,
+    RuleSpecCustomTopic,
+    Topic,
 )
 
 # TODO localize will probably not stay here, but we want to find a consistent solution for all apis
@@ -63,10 +63,10 @@ __all__ = [
     "RuleSpec",
     "ServiceRuleSpec",
     "SpecialAgentRuleSpec",
-    "RuleSpecCustomMainGroup",
-    "RuleSpecCustomSubGroup",
-    "RuleSpecMainGroup",
-    "RuleSpecSubGroup",
+    "RuleSpecCustomFunctionality",
+    "RuleSpecCustomTopic",
+    "Functionality",
+    "Topic",
     "Dictionary",
     "DictElement",
     "ItemSpec",

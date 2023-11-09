@@ -196,3 +196,26 @@ class BuiltinHostLabelsStore:
 AndOrNotLiteral = Literal["and", "or", "not"]
 LabelGroup = Sequence[tuple[AndOrNotLiteral, str]]
 LabelGroups = Sequence[tuple[AndOrNotLiteral, LabelGroup]]
+
+
+def single_label_group_from_labels(
+    labels: Sequence[str] | dict[str, Any], operator: AndOrNotLiteral = "and"
+) -> LabelGroups:
+    if isinstance(labels, dict):
+        # Convert the old condition labels to a label group
+        # e.g.: labels = {"os": "linux", "foo": {"$ne": "bar"}}
+        #           ->   [("and", [("and", "os:linux"), ("not", "foo:bar")])]
+        andornot_labels: list[tuple[AndOrNotLiteral, str]] = []
+        for key, value in labels.items():
+            if isinstance(value, dict):
+                andornot_labels.append(("not", f"{key}:{value['$ne']}"))
+            else:
+                andornot_labels.append(("and", f"{key}:{value}"))
+        return [("and", andornot_labels)]
+
+    return [
+        (
+            "and",
+            [(operator, label) for label in labels],
+        )
+    ]

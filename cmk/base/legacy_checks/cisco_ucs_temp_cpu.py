@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterator, Mapping
+from typing import Any
+
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.cisco_ucs import DETECT
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
 
 # comNET GmbH, Fabian Binder - 2018-05-30
 
@@ -16,27 +18,20 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # .1.3.6.1.4.1.9.9.719.1.41.2.1.10 cucsProcessorEnvStatsTemperature
 
 
-def inventory_cisco_ucs_temp_cpu(info):
-    for name, _value in info:
-        name = name.split("/")[3]
-        yield name, {}
+def inventory_cisco_ucs_temp_cpu(section: Mapping[str, int]) -> Iterator[Any]:
+    yield from ((name, {}) for name in section)
 
 
-def check_cisco_ucs_temp_cpu(item, params, info):
-    for name, value in info:
-        name = name.split("/")[3]
-        if name == item:
-            temp = int(value)
-            return check_temperature(temp, params, "cisco_temp_%s" % item)
-    return None
+def check_cisco_ucs_temp_cpu(
+    item: str, params: TempParamType, section: Mapping[str, int]
+) -> tuple | None:
+    if (temperature := section.get(item)) is None:
+        return None
+
+    return check_temperature(temperature, params, f"cisco_temp_{item}")
 
 
 check_info["cisco_ucs_temp_cpu"] = LegacyCheckDefinition(
-    detect=DETECT,
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.9.9.719.1.41.2.1",
-        oids=["2", "10"],
-    ),
     service_name="Temperature CPU %s",
     discovery_function=inventory_cisco_ucs_temp_cpu,
     check_function=check_cisco_ucs_temp_cpu,

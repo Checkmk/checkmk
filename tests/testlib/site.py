@@ -15,7 +15,7 @@ import sys
 import time
 import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager, nullcontext, suppress
 from pathlib import Path
 from pprint import pformat
 from typing import Final, Literal
@@ -28,6 +28,7 @@ from tests.testlib.utils import (
     cmc_path,
     cme_path,
     cmk_path,
+    cse_openid_oauth_provider,
     execute,
     is_containerized,
     makedirs,
@@ -1529,33 +1530,33 @@ class SiteFactory:
             else os.environ.get("CLEANUP") == "1"
         )
         site = self.get_existing_site(name, start=reuse_site)
-        if site.exists():
-            if reuse_site:
-                logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
-            else:
-                logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
-                site.rm()
-        if not site.exists():
-            site = self.get_site(name, init_livestatus)
-
-        if auto_restart_httpd:
-            restart_httpd()
-
-        logger.info(
-            'Site "%s" is ready!%s',
-            site.id,
-            f" [{description}]" if description else "",
-        )
-
-        try:
-            yield site
-        finally:
-            # teardown: saving results and removing site
-            if save_results:
-                site.save_results()
-            if auto_cleanup and cleanup_site:
-                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
-                site.rm()
+        with cse_openid_oauth_provider(
+            f"http://localhost:{site.apache_port}"
+        ) if self.version.is_saas_edition() else nullcontext():
+            if site.exists():
+                if reuse_site:
+                    logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
+                else:
+                    logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
+                    site.rm()
+            if not site.exists():
+                site = self.get_site(name, init_livestatus)
+            if auto_restart_httpd:
+                restart_httpd()
+            logger.info(
+                'Site "%s" is ready!%s',
+                site.id,
+                f" [{description}]" if description else "",
+            )
+            try:
+                yield site
+            finally:
+                # teardown: saving results and removing site
+                if save_results:
+                    site.save_results()
+                if auto_cleanup and cleanup_site:
+                    logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                    site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:

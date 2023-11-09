@@ -10,7 +10,6 @@ from typing import Any
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     Metric,
@@ -50,6 +49,8 @@ from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     discovery_mssql_counters_transactions,
 )
 from cmk.base.plugins.agent_based.utils.mssql_counters import Section
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 ValueStore = dict[str, Any]
 

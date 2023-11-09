@@ -1,0 +1,11 @@
+Title: prism_vm_tools: tools state and enable state can now be ignored
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1698910390
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Dropdowns "Tools install state" and "VMTools activation state" of rule "Nutanix
+Prism VM Tools" not contain the option "ignored".

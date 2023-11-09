@@ -38,12 +38,6 @@ warn_unreachable = true
 disable_bytearray_promotion = true
 disable_memoryview_promotion = true
 
-[tool.pydantic-mypy]
-init_forbid_extra = true
-init_typed = true
-warn_required_dynamic_aliases = true
-
-
 [tool.pylint.format]
 max-line-length = 100
 persistent = "no"

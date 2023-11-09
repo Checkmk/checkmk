@@ -36,6 +36,7 @@ webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before committing changes
 flake8 = "*"
 autoflake = "*"  # used to remove unused import statements
+semver = "*"
 sphinx = "==6.2.1"  # used for the plugin API documentation, pinned for now  see https://github.com/kivy/kivy/issues/8230)
 sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
 sphinx-rtd-theme = "*"  # used for the plugin API documentation
@@ -180,10 +181,11 @@ fido2 = "*"  # used for GUI 2fa webauthn
 tenacity = "==8.2.2"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
-semver = "==3.0.0"
 cmk-agent-based = {editable = true, path = "./packages/cmk-agent-based"}
 cmk-agent-receiver = {editable = true, path = "./packages/cmk-agent-receiver"}
 cmk-graphing = {editable = true, path = "./packages/cmk-graphing"}
+cmk-server-side-calls = {editable = true, path = "./packages/cmk-server-side-calls"}
+cmk-mkp-tool = {editable = true, path = "./packages/cmk-mkp-tool"}
 cmk-werks = {editable = true, path = "./packages/cmk-werks"}
 pysmb = "==1.2.9.1"  # used by SMB share special agent
 google-cloud-monitoring = "~=2.11"  # used by the gcp special agent

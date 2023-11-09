@@ -20,25 +20,23 @@ from cmk.snmplib import SNMPDetectBaseType
 
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.register.utils import (
-    RuleSetType,
-    validate_default_parameters,
-    validate_function_arguments,
-    validate_ruleset_type,
-)
-from cmk.base.api.agent_based.section_classes import SNMPTree
-from cmk.base.api.agent_based.type_defs import (
+from cmk.base.api.agent_based.plugin_classes import (
     AgentParseFunction,
     AgentSectionPlugin,
     HostLabelFunction,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    StringByteTable,
-    StringTable,
+)
+from cmk.base.api.agent_based.register.utils import (
+    RuleSetType,
+    validate_default_parameters,
+    validate_function_arguments,
+    validate_ruleset_type,
 )
 
-from cmk.agent_based.v1 import HostLabel
+from cmk.agent_based.v1 import HostLabel, SNMPTree
+from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 
 
 def _create_parse_annotation(

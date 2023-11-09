@@ -181,8 +181,9 @@ int main(int argc, char **argv) {
         inet_aton(remote_hostipaddress, &addr.sin_addr);
         addr.sin_port = htons(remote_port);
 
-        if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                    sizeof(struct sockaddr_in)) == -1) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                      sizeof(struct sockaddr_in)) == -1) {
             ioError("Cannot connect to event console at " +
                     std::string(remote_hostipaddress) + ":" +
                     std::to_string(remote_port));
@@ -220,8 +221,9 @@ int main(int argc, char **argv) {
                 sizeof(addr.sun_path) - 1);
         addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
 
-        if (connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
-                    sizeof(addr)) == -1) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
+                      sizeof(addr)) == -1) {
             ioError("Cannot connect to event daemon via UNIX socket " +
                     unixsocket_path);
         }

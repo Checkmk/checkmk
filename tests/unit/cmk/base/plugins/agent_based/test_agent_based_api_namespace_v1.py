@@ -16,8 +16,6 @@ from types import ModuleType
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
-from cmk.agent_based import v1 as v1_new_location
-
 
 def _names(space: ModuleType) -> set[str]:
     return {n for n in dir(space) if not n.startswith("_")}
@@ -26,7 +24,6 @@ def _names(space: ModuleType) -> set[str]:
 def test_v1() -> None:
     expected = {
         "Attributes",
-        "CheckResult",
         "GetRateError",
         "HostLabel",
         "IgnoreResults",
@@ -66,9 +63,7 @@ def test_v1() -> None:
         "startswith",
         "type_defs",
     }
-    if _names(v1) != expected:  # TODO or _names(v1_new_location) != expected:
-        # do not output actual names. Changing this is meant to hurt!
-        raise AssertionError(__doc__)
+    assert _names(v1) == expected
 
 
 def test_v1_render() -> None:
@@ -86,7 +81,6 @@ def test_v1_render() -> None:
         "timespan",
     }
     assert _names(v1.render) == expected
-    assert _names(v1_new_location.render) == expected
 
 
 def test_v1_type_defs() -> None:
@@ -98,8 +92,7 @@ def test_v1_type_defs() -> None:
         "StringByteTable",
         "StringTable",
     }
-    if _names(v1.type_defs) != expected:  # TODO or _names(v1_new_location.type_defs) != expected:
-        raise AssertionError(__doc__)
+    assert _names(v1.type_defs) == expected
 
 
 def test_v1_register() -> None:
@@ -110,11 +103,9 @@ def test_v1_register() -> None:
         "inventory_plugin",
         "snmp_section",
     }
-    if _names(v1.register) != expected:  # TODO or _names(v1_new_location.register) != expected:
-        raise AssertionError(__doc__)
+    assert _names(v1.register) == expected
 
 
 def test_v1_clusterize() -> None:
     expected = {"make_node_notice_results"}
-    if _names(v1.clusterize) != expected:  # TODO or _names(v1_new_location.clusterize) != expected:
-        raise AssertionError(__doc__)
+    assert _names(v1.clusterize) == expected

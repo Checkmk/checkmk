@@ -131,7 +131,7 @@ def main() {
         }
     }
 
-    /// NOTE: the images referenced in the next step can only be concidered
+    /// NOTE: the images referenced in the next step can only be considered
     ///       up to date if the same node is being used as for the
     ///       `build-build-images` job. For some reasons we can't just pull the
     ///       latest image though, see
@@ -317,19 +317,24 @@ def main() {
     }
     parallel package_builds;
 
-    stage("Upload") {
+    conditional_stage('Upload', !jenkins_base_folder.startsWith("Testing")) {
         currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
+        def exclude_pattern = versioning.get_internal_distros_pattern()
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             docker_image_from_alias("IMAGE_TESTING").inside("${docker_args} ${mount_reference_repo_dir}") {
                 assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,
-                    INTERNAL_DEPLOY_PORT, cmk_version_rc_aware, "${WORKSPACE}/versions/${cmk_version_rc_aware}")
+                    INTERNAL_DEPLOY_PORT,
+                    cmk_version_rc_aware,
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}",
+                    EXCLUDE_PATTERN=exclude_pattern,
+                )
                 artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT, EXCLUDE_PATTERN=exclude_pattern);
                 if (deploy_to_website) {
                     artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 }

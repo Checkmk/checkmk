@@ -21,7 +21,14 @@ def download_source_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
     download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, FILE_PATTERN, 'source tar')
 }
 
-def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATTERN = "*", INFO = 'all packages') {
+def download_version_dir(DOWNLOAD_SOURCE,
+                         PORT,
+                         CMK_VERSION,
+                         DOWNLOAD_DEST,
+                         PATTERN = "*",
+                         INFO = 'all packages',
+                         EXCLUDE_PATTERN = ""
+) {
     println("""
         ||== download_version_dir() ================================================================
         || DOWNLOAD_SOURCE = |${DOWNLOAD_SOURCE}|
@@ -29,6 +36,7 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
         || CMK_VERSION =     |${CMK_VERSION}|
         || DOWNLOAD_DEST =   |${DOWNLOAD_DEST}|
         || PATTERN =         |${PATTERN}|
+        || EXCLUDE_PATTERN = |${EXCLUDE_PATTERN}|
         || INFO =            |${INFO}|
         ||==========================================================================================
         """.stripMargin());
@@ -37,6 +45,7 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
             sh("mkdir -p ${DOWNLOAD_DEST}")
             sh """
                 rsync --recursive --links --perms --times --verbose \
+                    --exclude="${EXCLUDE_PATTERN}" \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
                     ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
                     ${DOWNLOAD_DEST}/
@@ -45,12 +54,13 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
     }
 }
 
-def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT) {
+def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
     println("""
         ||== upload_version_dir ================================================================
-        || SOURCE_PATH = |${SOURCE_PATH}|
-        || UPLOAD_DEST = |${UPLOAD_DEST}|
-        || PORT =        |${PORT}|
+        || SOURCE_PATH      = |${SOURCE_PATH}|
+        || UPLOAD_DEST      = |${UPLOAD_DEST}|
+        || PORT             = |${PORT}|
+        || EXCLUDE_PATTERN  = |${EXCLUDE_PATTERN}|
         ||==========================================================================================
         """.stripMargin());
     stage('Upload to download server') {
@@ -58,6 +68,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT) {
             sh """
                 rsync -av \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+                    --exclude="${EXCLUDE_PATTERN}" \
                     ${SOURCE_PATH} \
                     ${UPLOAD_DEST}
             """

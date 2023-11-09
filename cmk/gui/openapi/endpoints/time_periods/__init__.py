@@ -30,8 +30,8 @@ from cmk.gui.openapi.endpoints.time_periods.response_schemas import (
     TimePeriodResponseCollection,
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import TIMEPERIOD_NAME_FIELD
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.timeperiods import create_timeperiod as _create_timeperiod

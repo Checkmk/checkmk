@@ -9,41 +9,54 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
+from cmk.gui.valuespec import Dictionary, ListOf, Migrate, MonitoringState, TextInput
 
 
 def _parameter_valuespec_hostsystem_sensors():
-    return ListOf(
+    return Migrate(
         valuespec=Dictionary(
-            help=_("This rule allows to override alert levels for the given sensor names."),
             elements=[
-                ("name", TextInput(title=_("Sensor name"))),
                 (
-                    "states",
-                    Dictionary(
-                        title=_("Custom states"),
-                        elements=[
-                            (
-                                element,
-                                MonitoringState(
-                                    title="Sensor %s" % description,
-                                    label=_("Set state to"),
-                                    default_value=int(element),
+                    "rules",
+                    ListOf(
+                        valuespec=Dictionary(
+                            help=_(
+                                "This rule allows to override alert levels for the given sensor names."
+                            ),
+                            elements=[
+                                ("name", TextInput(title=_("Sensor name"))),
+                                (
+                                    "states",
+                                    Dictionary(
+                                        title=_("Custom states"),
+                                        elements=[
+                                            (
+                                                element,
+                                                MonitoringState(
+                                                    title="Sensor %s" % description,
+                                                    label=_("Set state to"),
+                                                    default_value=int(element),
+                                                ),
+                                            )
+                                            for (element, description) in [
+                                                ("0", _("OK")),
+                                                ("1", _("WARNING")),
+                                                ("2", _("CRITICAL")),
+                                                ("3", _("UNKNOWN")),
+                                            ]
+                                        ],
+                                    ),
                                 ),
-                            )
-                            for (element, description) in [
-                                ("0", _("OK")),
-                                ("1", _("WARNING")),
-                                ("2", _("CRITICAL")),
-                                ("3", _("UNKNOWN")),
-                            ]
-                        ],
+                            ],
+                            optional_keys=False,
+                        ),
+                        add_label=_("Add sensor name"),
                     ),
                 ),
             ],
-            optional_keys=False,
+            optional_keys=[],
         ),
-        add_label=_("Add sensor name"),
+        migrate=lambda p: p if isinstance(p, dict) else {"rules": []},
     )
 
 

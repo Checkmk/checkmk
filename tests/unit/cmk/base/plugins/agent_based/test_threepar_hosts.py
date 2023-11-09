@@ -7,13 +7,14 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.threepar_hosts import (
     check_threepar_hosts,
     discover_threepar_hosts,
     parse_threepar_hosts,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     [

@@ -21,7 +21,7 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.config import FilterMode, HostCheckTable
 
 

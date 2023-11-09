@@ -11,7 +11,8 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
 
-from cmk.agent_based.v1 import CheckResult, Result, State
+from cmk.agent_based.v1 import Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 
 @pytest.mark.parametrize(

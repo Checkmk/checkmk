@@ -8,7 +8,7 @@ from pytest import MonkeyPatch
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 
 
 def test_get_registered_check_plugins(monkeypatch: MonkeyPatch) -> None:

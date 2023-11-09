@@ -14,10 +14,11 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.checking import ServiceID
 from cmk.checkengine.checkresults import state_markers
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 
-from cmk.agent_based.v1 import CheckResult, IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v1.type_defs import CheckResult
 
 _Kwargs = Mapping[str, Any]
 

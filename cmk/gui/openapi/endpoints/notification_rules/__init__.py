@@ -30,7 +30,7 @@ from cmk.gui.openapi.endpoints.notification_rules.response_schemas import (
 )
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.openapi.restful_objects.constructors import domain_object
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.rest_api_types.notifications_rule_types import APINotificationRule

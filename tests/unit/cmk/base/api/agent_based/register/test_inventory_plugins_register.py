@@ -9,7 +9,7 @@ from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.inventory_plugins as inventory_plugins
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
+from cmk.base.api.agent_based.plugin_classes import InventoryPlugin
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument

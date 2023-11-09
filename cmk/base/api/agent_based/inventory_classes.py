@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from typing import NamedTuple
 
 from cmk.utils.check_utils import ParametersTypeAlias
@@ -13,9 +13,8 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.agent_based.v1 import Attributes, TableRow
+from cmk.agent_based.v1.type_defs import InventoryResult
 
-InventoryResult = Iterable[Attributes | TableRow]
 InventoryFunction = Callable[..., InventoryResult]
 
 

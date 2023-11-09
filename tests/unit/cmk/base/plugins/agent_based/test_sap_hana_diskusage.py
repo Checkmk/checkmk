@@ -16,7 +16,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -25,6 +24,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 LAST_TIME_EPOCH = (
@@ -98,8 +99,8 @@ def test_inventory_sap_hana_diskusage(
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "HXE 90 HXE - Log.delta": [2000000, 30000000],
-        "HXE 90 HXE - Log.trend": [LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989],
+        "HXE 90 HXE - Log.delta": (2000000, 30000000),
+        "HXE 90 HXE - Log.trend": (LAST_TIME_EPOCH, LAST_TIME_EPOCH, 8989),
     }
     monkeypatch.setattr(sap_hana_diskusage, "get_value_store", lambda: value_store_patched)
     yield value_store_patched

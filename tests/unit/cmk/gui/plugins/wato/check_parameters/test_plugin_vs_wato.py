@@ -11,8 +11,7 @@ from tests.unit.cmk.conftest import import_plugins
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets.definition import RuleGroup
 
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
+from cmk.base.api.agent_based.plugin_classes import CheckPlugin, InventoryPlugin
 
 from cmk.gui.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery
@@ -409,11 +408,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "appdynamics_web_container",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
             "aws_dynamodb_table_read_capacity",
             RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
         ),
@@ -499,11 +493,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "domino_transactions",
-            RuleGroup.CheckgroupParameters("domino_transactions"),
-        ),
-        (
-            "check",
             "domino_users",
             RuleGroup.CheckgroupParameters("domino_users"),
         ),
@@ -517,11 +506,6 @@ class ErrorReporter:
             "check",
             "esx_vsphere_objects_count",
             RuleGroup.CheckgroupParameters("esx_vsphere_objects_count"),
-        ),
-        (
-            "check",
-            "esx_vsphere_sensors",
-            RuleGroup.CheckgroupParameters("hostsystem_sensors"),
         ),
         (
             "check",
@@ -598,23 +582,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "jolokia_metrics_bea_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
             "jolokia_metrics_bea_sess",
             RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_threads",
-            RuleGroup.CheckgroupParameters("jvm_threads"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_requests",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
         ),
         (
             "check",
@@ -623,18 +592,8 @@ class ErrorReporter:
         ),
         (
             "check",
-            "juniper_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem_modules"),
-        ),
-        (
-            "check",
             "juniper_screenos_mem",
             RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
-        (
-            "check",
-            "juniper_trpz_flash",
-            RuleGroup.CheckgroupParameters("general_flash_usage"),
         ),
         (
             "check",

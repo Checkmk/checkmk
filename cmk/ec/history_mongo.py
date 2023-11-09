@@ -78,7 +78,9 @@ class MongoDBHistory(History):
             }
         )
 
-    def get(self, query: QueryGET) -> Iterable[Any]:  # pylint: disable=too-many-branches
+    def get(  # pylint: disable=too-many-branches
+        self, query: QueryGET
+    ) -> Iterable[Sequence[object]]:
         filters, limit = query.filters, query.limit
 
         history_entries = []

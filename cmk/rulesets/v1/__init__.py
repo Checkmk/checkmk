@@ -30,16 +30,22 @@ from cmk.rulesets.v1._rulespec import (
 )
 from cmk.rulesets.v1._validation import disallow_empty, in_range, match_regex, ValidationError
 from cmk.rulesets.v1._valuespec import (
+    CascadingDropdown,
+    CascadingDropdownElement,
     DictElement,
     Dictionary,
     DropdownChoice,
     DropdownChoiceElement,
+    Integer,
     InvalidElementMode,
     InvalidElementValidator,
     ItemSpec,
     MonitoringState,
+    Orientation,
+    Percentage,
     State,
     TextInput,
+    Tuple,
     ValueSpec,
 )
 
@@ -78,4 +84,10 @@ __all__ = [
     "disallow_empty",
     "in_range",
     "match_regex",
+    "Integer",
+    "Percentage",
+    "Tuple",
+    "Orientation",
+    "CascadingDropdown",
+    "CascadingDropdownElement",
 ]

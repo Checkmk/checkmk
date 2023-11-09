@@ -58,7 +58,7 @@ async fn test_validate_all_instances_local() {
         .collect();
 
     for name in names {
-        let c = api::create_local_instance_client(None, &name).await;
+        let c = api::create_local_instance_client(&name, None).await;
         match c {
             Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
             Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
@@ -131,13 +131,13 @@ async fn test_validate_all_instances_remote() {
 
         for name in names {
             let c = api::create_remote_instance_client(
+                &name,
                 &endpoint.host,
                 None,
                 api::Credentials::SqlServer {
                     user: &endpoint.user,
                     password: &endpoint.pwd,
                 },
-                &name,
             )
             .await;
             match c {
@@ -196,6 +196,23 @@ async fn test_check_config_exec_local() {
     assert!(res.unwrap().exec().await.is_ok());
     #[cfg(unix)]
     assert!(res.is_err());
+}
+
+#[test]
+fn test_no_ms_sql() {
+    #[cfg(windows)]
+    const EXPECTED_ERROR: &str = "No such host is known";
+    #[cfg(unix)]
+    const EXPECTED_ERROR: &str = "failed to lookup address information";
+
+    let file = tools::create_config_with_missing_ms_sql();
+    let r = tools::run_bin()
+        .arg("-c")
+        .arg(&file.path().to_string_lossy().into_owned())
+        .unwrap();
+    let (stdout, code) = tools::get_good_results(&r).unwrap();
+    assert_eq!(code, 0);
+    assert!(stdout.contains(EXPECTED_ERROR));
 }
 
 #[cfg(windows)]

@@ -10,7 +10,6 @@ from cmk.gui.openapi.endpoints import (
     agent,
     audit_log,
     aux_tags,
-    bi,
     cert,
     comment,
     contact_group_config,
@@ -32,7 +31,7 @@ from cmk.gui.openapi.endpoints import (
     user_role,
     version,
 )
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
@@ -57,7 +56,6 @@ def register(endpoint_registry: EndpointRegistry) -> None:
     agent.register(endpoint_registry)
     audit_log.register(endpoint_registry)
     aux_tags.register(endpoint_registry)
-    bi.register(endpoint_registry)
     cert.register(endpoint_registry)
     comment.register(endpoint_registry)
     contact_group_config.register(endpoint_registry)

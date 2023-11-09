@@ -16,7 +16,7 @@ from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.robotmk_parse_xml import extract_tests_from_suites, Outcome, Test
+from .utils.robotmk_parse_xml import extract_tests_with_full_names, Outcome, Test
 from .utils.robotmk_suite_execution_report import (
     ExecutionReport,
     ExecutionReportAlreadyRunning,
@@ -40,7 +40,7 @@ def _discover_tests(report: ExecutionReport) -> DiscoveryResult:
     if not isinstance(rebot_result := report.Executed.rebot, RebotOutcomeResult):
         return
 
-    for test_name in extract_tests_from_suites(rebot_result.Ok.xml.robot.suite):
+    for test_name in extract_tests_with_full_names(rebot_result.Ok.xml.robot.suite):
         yield Service(
             item=test_name,
             labels=[
@@ -62,13 +62,14 @@ def check(
         if not isinstance(rebot_result := execution_report.Executed.rebot, RebotOutcomeResult):
             continue
 
-        if not (test := extract_tests_from_suites(rebot_result.Ok.xml.robot.suite).get(item)):
+        if not (test := extract_tests_with_full_names(rebot_result.Ok.xml.robot.suite).get(item)):
             continue
 
         _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_log.html")
         if test.status.status is Outcome.FAIL:
             _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_error_log.html")
-            yield from _check_test(params, test)
+
+        yield from _check_test(params, test)
 
 
 def _check_test(params: Params, test: Test) -> CheckResult:

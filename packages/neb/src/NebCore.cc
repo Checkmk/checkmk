@@ -145,12 +145,14 @@ const IHostGroup *NebCore::ihostgroup(const ::hostgroup *handle) const {
 
 const IHost *NebCore::find_host(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto *handle = ::find_host(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihost(handle);
 }
 
 const IHostGroup *NebCore::find_hostgroup(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto *handle = ::find_hostgroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihostgroup(handle);
 }
@@ -191,27 +193,34 @@ const IServiceGroup *NebCore::iservicegroup(
 const IService *NebCore::find_service(
     const std::string &host_name,
     const std::string &service_description) const {
-    // Older Nagios headers are not const-correct... :-P
-    const auto *handle =
-        ::find_service(const_cast<char *>(host_name.c_str()),
-                       const_cast<char *>(service_description.c_str()));
+    const auto *handle = ::find_service(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<char *>(host_name.c_str()),
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+        const_cast<char *>(service_description.c_str()));
     return handle == nullptr ? nullptr : iservice(handle);
 }
 
 const IContactGroup *NebCore::find_contactgroup(const std::string &name) const {
-    // Older Nagios headers are not const-correct... :-P
     auto it = icontactgroups_.find(
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         ::find_contactgroup(const_cast<char *>(name.c_str())));
     return it == icontactgroups_.end() ? nullptr : it->second.get();
 }
 
 const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
+    // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     const auto *handle = ::find_servicegroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : iservicegroup(handle);
 }
 
 const IContact *NebCore::find_contact(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     auto it = icontacts_.find(::find_contact(const_cast<char *>(name.c_str())));
     return it == icontacts_.end() ? nullptr : it->second.get();
 }
@@ -249,6 +258,7 @@ size_t NebCore::maxLinesPerLogFile() const {
 
 Command NebCore::find_command(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
         return Command{._name = cmd->name, ._command_line = cmd->command_line};
     }
@@ -680,10 +690,12 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
         Informational(_logger_livestatus) << "Forcing logfile rotation";
         rotate_log_file(std::chrono::system_clock::to_time_t(
             std::chrono::system_clock::now()));
-        schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
-                           0, 0,
-                           reinterpret_cast<void *>(get_next_log_rotation_time),
-                           1, nullptr, nullptr, 0);
+        schedule_new_event(
+            EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(), 0, 0,
+            // Nagios uses "void *" for a function pointer! :-P
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            reinterpret_cast<void *>(get_next_log_rotation_time), 1, nullptr,
+            nullptr, 0);
         return false;
     }
     logRequest(_logger_livestatus, line, {});

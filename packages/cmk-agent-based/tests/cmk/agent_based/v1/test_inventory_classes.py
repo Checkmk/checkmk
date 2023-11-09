@@ -7,11 +7,12 @@ import pytest
 from cmk.agent_based.v1 import Attributes, TableRow
 
 
-@pytest.mark.parametrize("class_", [TableRow, Attributes])
 @pytest.mark.parametrize("path", [["a", 23], ("a", "b")])
-def test_common_raise_path_type(class_: object, path: object) -> None:
+def test_common_raise_path_type(path: object) -> None:
     with pytest.raises(TypeError):
-        _ = class_(path=path)  # type: ignore[operator,misc]
+        _ = TableRow(path=path, key_columns={})  # type: ignore[arg-type]
+    with pytest.raises(TypeError):
+        _ = Attributes(path=path)  # type: ignore[arg-type]
 
 
 def test_common_kwarg_only() -> None:

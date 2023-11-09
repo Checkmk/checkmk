@@ -7,7 +7,6 @@ from collections.abc import Iterable, Mapping
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_mem import (
@@ -16,6 +15,8 @@ from cmk.base.plugins.agent_based.cisco_mem import (
     parse_cisco_mem,
     Section,
 )
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,7 @@ import pytest
 
 from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPDetectSpec, SpecialColumn
 
-from cmk.base.api.agent_based.type_defs import OIDSpecTuple
+from cmk.agent_based.v1 import OIDBytes, OIDCached, OIDEnd, SNMPTree
 
 
 class TestSNMPDetectSpec:
@@ -30,18 +30,18 @@ class TestSNMPDetectSpec:
 
 
 def test_snmptree_from_frontend() -> None:
-    base = "1.2"
-    tree = BackendSNMPTree.from_frontend(
-        base=base,
+    frontend_tree = SNMPTree(
+        base="1.2",
         oids=[
-            OIDSpecTuple("2", "string", False),
-            OIDSpecTuple("2", "string", True),
-            OIDSpecTuple("2", "binary", False),
-            OIDSpecTuple(SpecialColumn.END, "string", False),
+            "2",
+            OIDCached("2"),
+            OIDBytes("2"),
+            OIDEnd(),
         ],
     )
+    tree = BackendSNMPTree.from_frontend(base=frontend_tree.base, oids=frontend_tree.oids)
 
-    assert tree.base == base
+    assert tree.base == frontend_tree.base
     assert tree.oids == [
         BackendOIDSpec("2", "string", False),
         BackendOIDSpec("2", "string", True),

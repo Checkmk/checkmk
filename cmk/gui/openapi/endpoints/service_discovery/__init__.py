@@ -33,8 +33,8 @@ from cmk.gui.openapi.restful_objects.constructors import (
     link_rel,
     object_property,
 )
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.bulk_discovery import (

@@ -104,8 +104,8 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.api.agent_based.value_store import set_value_store_manager, ValueStoreManager
+from cmk.base.api.agent_based.plugin_classes import SNMPSectionPlugin
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.checkers import (
     CheckPluginMapper,
     CMKFetcher,
@@ -123,6 +123,7 @@ from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.plugins.config_generation import load_active_checks
 from cmk.base.sources import make_parser
 
+from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.agent_based.v1_backend import plugin_contexts
 
 from ._localize import do_localize

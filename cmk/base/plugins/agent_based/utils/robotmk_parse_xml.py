@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Union
 
@@ -20,12 +20,10 @@ def _parse_datetime(value: str) -> datetime:
 DateTimeFormat = Annotated[datetime, PlainValidator(_parse_datetime)]
 
 
-def _ensure_suite_sequence(raw_value: Union["Suite", Sequence["Suite"]]) -> Sequence["Suite"]:
-    return [raw_value] if isinstance(raw_value, Suite) else raw_value
-
-
-def _ensure_test_sequence(raw_value: Union["Test", Sequence["Test"]]) -> Sequence["Test"]:
-    return [raw_value] if isinstance(raw_value, Test) else raw_value
+def _ensure_sequence(
+    raw_value: Union[Mapping[str, object], Sequence[Mapping[str, object]]]
+) -> Sequence[Mapping[str, object]]:
+    return [raw_value] if isinstance(raw_value, Mapping) else raw_value
 
 
 class Outcome(enum.Enum):
@@ -53,8 +51,8 @@ class Test(BaseModel, frozen=True):
 class Suite(BaseModel, frozen=True):
     id: str = Field(alias="@id")
     name: str = Field(alias="@name")
-    suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_suite_sequence)] = Field(default=[])
-    test: Annotated[Sequence[Test], BeforeValidator(_ensure_test_sequence)] = Field(default=[])
+    suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_sequence)] = Field(default=[])
+    test: Annotated[Sequence[Test], BeforeValidator(_ensure_sequence)] = Field(default=[])
 
 
 class Generator(BaseModel, frozen=True):
@@ -63,20 +61,11 @@ class Generator(BaseModel, frozen=True):
     rpa: bool = Field(alias="@rpa")
     schemaversion: int = Field(alias="@schemaversion")
     errors: Mapping[str, object] | None = Field(default=None)
-    suite: Annotated[Sequence[Suite], BeforeValidator(_ensure_suite_sequence)] = Field(default=[])
+    suite: Suite
 
 
 class Rebot(BaseModel, frozen=True):
     robot: Generator
-
-
-def extract_tests_from_suites(suites: Iterable[Suite]) -> dict[str, Test]:
-    tests_with_full_names: dict[str, Test] = {}
-
-    for suite in suites:
-        tests_with_full_names |= extract_tests_with_full_names(suite)
-
-    return tests_with_full_names
 
 
 def extract_tests_with_full_names(

@@ -205,7 +205,7 @@ class RuleMatcher:
                 self._log_rule_matching(result.reason)
         return result
 
-    def _check_match_outcome(  # pylint: disable=too-many-branches
+    def _check_match_outcome(
         self, rule: Rule, match_groups: MatchGroups, match_priority: MatchPriority
     ) -> MatchResult:
         """Decide or not a event is created, canceled or nothing is done"""

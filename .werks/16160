@@ -1,0 +1,14 @@
+Title: host_config: can now move host between nested folders
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1699258683
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk addresses an issue discovered when moving hosts to folders
+that were more than one folder deep. Previously, the possible target
+folders for the given host were incorrectly checked. We now have
+a fix which will correctly check first if the target folder is
+permitted.

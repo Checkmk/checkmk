@@ -11,15 +11,13 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
 
-juniper_trpz_flash_default_levels = (90.0, 95.0)
-
 
 def inventory_juniper_trpz_flash(info):
-    return [(None, juniper_trpz_flash_default_levels)]
+    yield None, {}
 
 
 def check_juniper_trpz_flash(_no_item, params, info):
-    warn, crit = params
+    warn, crit = params["levels"]
     used, total = map(savefloat, info[0])
     message = f"Used: {get_bytes_human_readable(used)} of {get_bytes_human_readable(total)} "
     perc_used = (used / total) * 100  # fixed: true-division
@@ -55,4 +53,5 @@ check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
     discovery_function=inventory_juniper_trpz_flash,
     check_function=check_juniper_trpz_flash,
     check_ruleset_name="general_flash_usage",
+    check_default_parameters={"levels": (90.0, 95.0)},
 )

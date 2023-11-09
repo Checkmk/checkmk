@@ -45,7 +45,7 @@ class History(ABC):
         ...
 
     @abstractmethod
-    def get(self, query: QueryGET) -> Iterable[Any]:
+    def get(self, query: QueryGET) -> Iterable[Sequence[object]]:
         ...
 
     @abstractmethod

@@ -5,15 +5,12 @@
 use anyhow::Result;
 use assert_cmd::output::OutputError;
 use assert_cmd::Command;
+use check_sql::ms_sql::api::Client;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Output;
 use tempfile::NamedTempFile;
 use tempfile::{Builder, TempDir};
-use tokio::net::TcpStream;
-use tokio_util::compat::Compat;
-
-use tiberius::Client;
 
 pub fn run_bin() -> Command {
     Command::cargo_bin("check-sql").unwrap()
@@ -77,7 +74,7 @@ pub fn create_temp_process_dir() -> TempDir {
     dir
 }
 
-pub async fn create_remote_client(endpoint: &SqlDbEndpoint) -> Result<Client<Compat<TcpStream>>> {
+pub async fn create_remote_client(endpoint: &SqlDbEndpoint) -> Result<Client> {
     crate::api::create_remote_client(
         &endpoint.host,
         1433,
@@ -125,6 +122,23 @@ mssql:
     l
 }
 
+pub fn create_config_with_missing_ms_sql() -> NamedTempFile {
+    let mut l = NamedTempFile::new().unwrap();
+    let config = r#"
+---
+mssql:
+  standard:
+    authentication:
+       username: "nobody"
+       password: "doesnt_matter"
+       type: "sql_server"
+    connection:
+       hostname: "no_host"
+"#;
+    l.write_all(config.as_bytes()).unwrap();
+    l
+}
+
 /// write non captured message to stdout
 pub fn skip_on_lack_of_ms_sql_endpoint() {
     #[allow(clippy::explicit_write)]
@@ -136,7 +150,7 @@ pub fn skip_on_lack_of_ms_sql_endpoint() {
     .unwrap();
 }
 
-pub async fn run_get_version(client: &mut Client<Compat<TcpStream>>) -> Option<String> {
+pub async fn run_get_version(client: &mut Client) -> Option<String> {
     let rows = crate::api::run_query(client, "select @@VERSION")
         .await
         .unwrap();

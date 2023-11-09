@@ -9,8 +9,17 @@ from typing import overload
 
 from cmk.utils.check_utils import ParametersTypeAlias
 
-from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
-from cmk.base.api.agent_based.inventory_classes import InventoryFunction
+from cmk.snmplib import SNMPDetectBaseType
+
+from cmk.base.api.agent_based.plugin_classes import (
+    AgentParseFunction,
+    CheckFunction,
+    DiscoveryFunction,
+    HostLabelFunction,
+    InventoryFunction,
+    SimpleSNMPParseFunction,
+    SNMPParseFunction,
+)
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
     add_discovery_ruleset,
@@ -28,13 +37,8 @@ from cmk.base.api.agent_based.register.section_plugins import (
     create_snmp_section_plugin,
 )
 from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
-from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SNMPTree
-from cmk.base.api.agent_based.type_defs import (
-    AgentParseFunction,
-    HostLabelFunction,
-    SimpleSNMPParseFunction,
-    SNMPParseFunction,
-)
+
+from cmk.agent_based.v1 import SNMPTree
 
 __all__ = [
     "agent_section",
@@ -122,7 +126,7 @@ def agent_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpecification,
+    detect: SNMPDetectBaseType,
     fetch: SNMPTree,
     parse_function: SimpleSNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
@@ -139,7 +143,7 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpecification,
+    detect: SNMPDetectBaseType,
     fetch: list[SNMPTree],
     parse_function: SNMPParseFunction | None = None,
     parsed_section_name: str | None = None,
@@ -155,7 +159,7 @@ def snmp_section(
 def snmp_section(
     *,
     name: str,
-    detect: SNMPDetectSpecification,
+    detect: SNMPDetectBaseType,
     fetch: SNMPTree | list[SNMPTree],
     parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None = None,
     parsed_section_name: str | None = None,

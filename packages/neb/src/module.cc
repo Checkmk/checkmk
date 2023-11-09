@@ -306,7 +306,8 @@ private:
     void publish(const LogRecord &record) override {
         std::ostringstream os;
         getFormatter()->format(os, record);
-        // TODO(sp) The Nagios headers are (once again) not const-correct...
+        // Older Nagios headers are not const-correct... :-P
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         write_to_all_logs(const_cast<char *>(os.str().c_str()),
                           NSLOG_INFO_MESSAGE);
     }
@@ -468,6 +469,7 @@ void open_unix_socket() {
     strncpy(sockaddr.sun_path, fl_paths.livestatus_socket.c_str(),
             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::bind(fl_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
                sizeof(sockaddr)) < 0) {
         generic_error ge{"cannot bind UNIX socket to address \"" +

@@ -1195,9 +1195,7 @@ class EventServer(ECServerThread):
             is_active_time_period=self._time_period.active,
         )
 
-    def compile_rules(  # pylint: disable=too-many-branches
-        self, rule_packs: Sequence[ECRulePack]
-    ) -> None:
+    def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
         self._rules = []
         self._rule_by_id = {}
@@ -1932,7 +1930,7 @@ class StatusTable:
     columns: Columns = []
 
     @abc.abstractmethod
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         """
         Must return a enumerable type containing fully populated lists (rows) matching the
         columns of the table.
@@ -1964,7 +1962,7 @@ class StatusTable:
                 num_rows += 1
 
     def _build_result_row(
-        self, row: list[object], requested_column_indexes: list[int | None]
+        self, row: Sequence[object], requested_column_indexes: list[int | None]
     ) -> list[object]:
         return [(None if index is None else row[index]) for index in requested_column_indexes]
 
@@ -2003,7 +2001,7 @@ class StatusTableEvents(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
@@ -2040,7 +2038,7 @@ class StatusTableHistory(StatusTable):
         super().__init__(logger)
         self._history = history
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._history.get(query)
 
 
@@ -2055,7 +2053,7 @@ class StatusTableRules(StatusTable):
         super().__init__(logger)
         self._event_status = event_status
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._event_status.get_rule_stats()
 
 
@@ -2067,7 +2065,7 @@ class StatusTableStatus(StatusTable):
         super().__init__(logger)
         self._event_server = event_server
 
-    def _enumerate(self, query: QueryGET) -> Iterable[list[object]]:
+    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         return self._event_server.get_status()
 
 
@@ -3517,7 +3515,7 @@ def reload_configuration(
 #   '----------------------------------------------------------------------'
 
 
-def main() -> None:  # pylint: disable=too-many-branches
+def main() -> None:
     """Main entry and option parsing"""
     os.unsetenv("LANG")
     logger = getLogger("cmk.mkeventd")

@@ -30,7 +30,7 @@ from cmk.gui.openapi.endpoints.cert.response_schemas import (
     X509PEM,
 )
 from cmk.gui.openapi.restful_objects import Endpoint, permissions
-from cmk.gui.openapi.restful_objects.endpoint_registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
 

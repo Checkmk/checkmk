@@ -19,7 +19,6 @@ from cmk.checkengine.parameters import TimespecificParameters, TimespecificParam
 
 import cmk.base.checkers as checkers
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import consume_check_results
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 from cmk.agent_based.v1 import Metric, Result, State
@@ -227,7 +226,18 @@ def test_time_resolved_check_parameters(
     ],
 )
 def test_aggregate_result(subresults: CheckResult, aggregated_results: ServiceCheckResult) -> None:
-    assert checkers._aggregate_results(consume_check_results(subresults)) == aggregated_results
+    assert (
+        checkers._aggregate_results(checkers.consume_check_results(subresults))
+        == aggregated_results
+    )
+
+
+def test_consume_result_invalid() -> None:
+    def offending_check_function() -> Iterable[object]:
+        yield None
+
+    with pytest.raises(TypeError):
+        assert checkers.consume_check_results(offending_check_function())
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:

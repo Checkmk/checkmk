@@ -99,6 +99,54 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="Dictionary",
         ),
         pytest.param(
+            api_v1.Integer(),
+            legacy_valuespecs.Integer(),
+            id="minimal Integer",
+        ),
+        pytest.param(
+            api_v1.Integer(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help"),
+                label=api_v1.Localizable("label"),
+                unit=api_v1.Localizable("days"),
+                default_value=-1,
+                custom_validate=lambda x: None,
+            ),
+            legacy_valuespecs.Integer(
+                title=_("title"),
+                help=_("help"),
+                label=_("label"),
+                unit=_("days"),
+                default_value=-1,
+                validate=lambda x, y: None,
+            ),
+            id="Integer",
+        ),
+        pytest.param(
+            api_v1.Percentage(),
+            legacy_valuespecs.Percentage(),
+            id="minimal Percentage",
+        ),
+        pytest.param(
+            api_v1.Percentage(
+                title=api_v1.Localizable("title"),
+                help_text=api_v1.Localizable("help"),
+                label=api_v1.Localizable("label"),
+                display_precision=2,
+                default_value=-1.0,
+                custom_validate=lambda x: None,
+            ),
+            legacy_valuespecs.Percentage(
+                title=_("title"),
+                help=_("help"),
+                label=_("label"),
+                display_format="%.2f",
+                default_value=-1.0,
+                validate=lambda x, y: None,
+            ),
+            id="Percentage",
+        ),
+        pytest.param(
             api_v1.TextInput(),
             legacy_valuespecs.TextInput(),
             id="minimal TextInput",
@@ -121,6 +169,32 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 validate=_legacy_custom_text_validate,
             ),
             id="TextInput",
+        ),
+        pytest.param(
+            api_v1.Tuple(elements=[]),
+            legacy_valuespecs.Tuple(elements=[]),
+            id="minimal Tuple",
+        ),
+        pytest.param(
+            api_v1.Tuple(
+                elements=[
+                    api_v1.TextInput(title=api_v1.Localizable("child title 1")),
+                    api_v1.TextInput(title=api_v1.Localizable("child title 2")),
+                ],
+                title=api_v1.Localizable("parent title"),
+                help_text=api_v1.Localizable("parent help"),
+                orientation=api_v1.Orientation.FLOAT,
+            ),
+            legacy_valuespecs.Tuple(
+                elements=[
+                    legacy_valuespecs.TextInput(title=_("child title 1")),
+                    legacy_valuespecs.TextInput(title=_("child title 2")),
+                ],
+                title=_("parent title"),
+                help=_("parent help"),
+                orientation="float",
+            ),
+            id="Tuple",
         ),
         pytest.param(
             api_v1.DropdownChoice(elements=[]),
@@ -164,6 +238,64 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 invalid_choice_error=_("invalid choice msg"),
             ),
             id="DropdownChoice",
+        ),
+        pytest.param(
+            api_v1.CascadingDropdown(elements=[], default_element=None),
+            legacy_valuespecs.CascadingDropdown(choices=[], no_preselect_title=""),
+            id="minimal CascadingDropdown",
+        ),
+        pytest.param(
+            api_v1.CascadingDropdown(
+                elements=[
+                    api_v1.CascadingDropdownElement(ident="first", value_spec=api_v1.TextInput())
+                ],
+                default_element=None,
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[("first", "first", legacy_valuespecs.TextInput())],
+                no_preselect_title="",
+            ),
+            id="CascadingDropdown no valuespec title",
+        ),
+        pytest.param(
+            api_v1.CascadingDropdown(
+                elements=[
+                    api_v1.CascadingDropdownElement(
+                        ident="first",
+                        value_spec=api_v1.TextInput(title=api_v1.Localizable("Spec title")),
+                    )
+                ],
+                default_element=None,
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[
+                    ("first", _("Spec title"), legacy_valuespecs.TextInput(title=_("Spec title")))
+                ],
+                no_preselect_title="",
+            ),
+            id="CascadingDropdown valuespec title",
+        ),
+        pytest.param(
+            api_v1.CascadingDropdown(
+                elements=[
+                    api_v1.CascadingDropdownElement(
+                        ident="first",
+                        value_spec=api_v1.TextInput(),
+                    )
+                ],
+                title=api_v1.Localizable("parent title"),
+                help_text=api_v1.Localizable("parent help"),
+                label=api_v1.Localizable("parent label"),
+                default_element="first",
+            ),
+            legacy_valuespecs.CascadingDropdown(
+                choices=[("first", _("first"), legacy_valuespecs.TextInput())],
+                title=_("parent title"),
+                help=_("parent help"),
+                label=_("parent label"),
+                default_value="first",
+            ),
+            id="CascadingDropdown",
         ),
     ],
 )

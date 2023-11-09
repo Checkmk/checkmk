@@ -11,9 +11,10 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import job
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+
+from cmk.agent_based.v1.type_defs import StringTable
 
 SECTION_1: job.Section = {
     "SHREK": {

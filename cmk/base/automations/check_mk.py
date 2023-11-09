@@ -143,7 +143,7 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
-from cmk.base.api.agent_based.value_store import set_value_store_manager, ValueStoreManager
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -162,6 +162,7 @@ from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.plugins.config_generation import load_active_checks
 from cmk.base.sources import make_parser
 
+from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.agent_based.v1_backend import plugin_contexts
 
 HistoryFile = str

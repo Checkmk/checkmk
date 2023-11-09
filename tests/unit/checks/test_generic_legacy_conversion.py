@@ -10,7 +10,7 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.sectionname import SectionName
 
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
+from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
 pytestmark = pytest.mark.checks
 
@@ -358,10 +358,8 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "cisco_temp",
         "cisco_temp_sensor",
         "cisco_ucs_cpu",
-        "cisco_ucs_fan",
         "cisco_ucs_hdd",
         "cisco_ucs_lun",
-        "cisco_ucs_mem",
         "cisco_ucs_mem_total",
         "cisco_ucs_psu",
         "cisco_ucs_raid",

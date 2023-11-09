@@ -41,6 +41,24 @@ def nowiki_to_markdown(description: list[str]) -> str:
     return "\n".join(generator())
 
 
+def _render_children(element: ET.Element) -> str:
+    tail = element.tail
+    if tail == "\n" or tail is None:
+        tail = ""
+    return "".join(
+        (
+            element.text or "",
+            *(_render_element(e) for e in element),
+            tail,
+        )
+    )
+
+
+def _render_element(element: ET.Element) -> str:
+    result: str = ET.tostring(element, encoding="utf-8", method="html").decode("utf-8")
+    return result
+
+
 def markdown_to_nowiki(content: str) -> str:
     # we do have html/xml fragments in content,
     # but the xml parser needs a single root element, so we wrap it in root.
@@ -59,34 +77,30 @@ def markdown_to_nowiki(content: str) -> str:
     def generator() -> Iterator[str]:
         for element in root:
             if element.tag == "p":
-                if element.text is not None:
-                    yield element.text
+                if element.text is not None or element:
+                    yield _render_children(element)
                     yield ""
                 else:
-                    if (
-                        len(element) == 1
-                        and element[0].tag == "code"
-                        and element[0].text is not None
-                    ):
+                    if element[0].tag == "code":
                         yield "C+:"
-                        yield element[0].text
-                        yield "C-:\n"
+                        yield _render_children(element[0])
+                        yield "\n----\nC-:\n"
                     else:
                         raise NotImplementedError()
             elif element.tag == "ul":
                 for li in element:
-                    yield f"LI: {li.text}"
+                    yield f"LI: {_render_children(li)}"
                 yield ""
             elif element.tag == "h2":
-                yield f"H2: {element.text}"
+                yield f"H2: {_render_children(element)}"
                 yield ""
             elif element.tag == "pre":
                 yield "C+:"
                 # text already contains closing \n
-                yield f"{element[0].text}C-:"
+                yield f"{_render_children(element[0])}C-:"
                 yield ""
             else:
-                raise NotImplementedError(f"can not handle tag {element.tag}")
+                yield _render_element(element)
 
     return "\n".join(generator())
 

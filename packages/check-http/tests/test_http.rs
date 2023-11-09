@@ -3,12 +3,17 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result as AnyhowResult;
-use check_http::{checking::State, cli::Cli, output::Output, runner::collect_checks};
-use clap::Parser;
+use check_http::checking::{CheckParameters, State};
+use check_http::connection::{ConnectionConfig, OnRedirect};
+use check_http::http::{ClientConfig, RequestConfig};
+use check_http::output::Output;
+use check_http::runner::collect_checks;
+use http::Method;
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::sync::atomic;
+use std::time::Duration;
 
 const START_PORT: u16 = 8888;
 const MAX_PORTS: u16 = 100;
@@ -19,7 +24,6 @@ static PORT_INDEX: atomic::AtomicU16 = atomic::AtomicU16::new(0);
 #[tokio::test(flavor = "multi_thread")]
 async fn test_basic_get() -> AnyhowResult<()> {
     check_http_output(
-        vec!["check_http", "-t", "1"],
         "HTTP/1.1 200 OK\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Ok,
@@ -31,7 +35,6 @@ async fn test_basic_get() -> AnyhowResult<()> {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_status_4xx() -> AnyhowResult<()> {
     check_http_output(
-        vec!["check_http", "-t", "1"],
         "HTTP/1.1 401 nope\nConnection: close\n\n",
         "GET / HTTP/1.1",
         State::Warn,
@@ -41,19 +44,20 @@ async fn test_status_4xx() -> AnyhowResult<()> {
 }
 
 async fn check_http_output(
-    mut raw_args: Vec<&str>,
     http_response: &str,
     expected_http_payload_start: &str,
     expected_state: State,
     expected_summary_start: &str,
 ) -> AnyhowResult<()> {
     let (port, listener) = tcp_listener("0.0.0.0");
-    let url = format!("http://{}:{}", LOCALHOST_DNS, port);
+    let (client_cfg, connection_cfg, request_cfg, check_params) = make_standard_configs(port);
 
-    raw_args.extend(["-u", &url].iter());
-    let args = Cli::parse_from(raw_args);
-
-    let check_http_thread = tokio::spawn(collect_checks(args));
+    let check_http_thread = tokio::spawn(collect_checks(
+        client_cfg,
+        connection_cfg,
+        request_cfg,
+        check_params,
+    ));
 
     let check_http_payload = process_http(listener, http_response)?;
 
@@ -64,6 +68,41 @@ async fn check_http_output(
     assert!(output.to_string().starts_with(expected_summary_start));
 
     Ok(())
+}
+
+fn make_standard_configs(
+    port: u16,
+) -> (
+    ClientConfig,
+    ConnectionConfig,
+    RequestConfig,
+    CheckParameters,
+) {
+    (
+        ClientConfig {
+            url: format!("http://{}:{}", LOCALHOST_DNS, port),
+            method: Method::GET,
+            user_agent: None,
+            headers: None,
+            timeout: Duration::from_secs(1),
+            auth_user: None,
+            auth_pw: None,
+        },
+        ConnectionConfig {
+            onredirect: OnRedirect::Follow,
+            max_redirs: 10,
+            force_ip: None,
+        },
+        RequestConfig {
+            without_body: false,
+        },
+        CheckParameters {
+            onredirect: OnRedirect::Follow,
+            page_size: None,
+            response_time_levels: None,
+            document_age_levels: None,
+        },
+    )
 }
 
 fn process_http(listener: TcpListener, send_response: &str) -> AnyhowResult<String> {

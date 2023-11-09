@@ -352,15 +352,14 @@ class RulesetCollection:
             for name in rulespec_registry.keys()
         )
 
-    def replace_folder_config(
-        # The Any below should most likely be RuleSpec[object] but I am not sure.
+    def get_ruleset_configs_from_file(
         self,
         folder: Folder,
         loaded_file_config: Mapping[str, Any],
         only_varname: RulesetName | None = None,
-    ) -> None:
+    ) -> Iterable[tuple[RulesetName, list[RuleSpec[object]]]]:
         if only_varname:
-            variable_names_to_load = [only_varname]
+            variable_names_to_load: list[RulesetName] = [only_varname]
         else:
 
             def varnames_from_item(name: str, value: object) -> Sequence[str]:
@@ -385,11 +384,20 @@ class RulesetCollection:
                 if subkey not in rulegroup_config:
                     continue  # Nothing configured: nothing left to do
 
-                ruleset_config = rulegroup_config[subkey]
+                yield varname, rulegroup_config[subkey]
             else:
-                config_varname, subkey = varname, None
-                ruleset_config = loaded_file_config.get(config_varname, [])
+                yield varname, loaded_file_config.get(varname, [])
 
+    def replace_folder_config(
+        # The Any below should most likely be RuleSpec[object] but I am not sure.
+        self,
+        folder: Folder,
+        loaded_file_config: Mapping[str, Any],
+        only_varname: RulesetName | None = None,
+    ) -> None:
+        for varname, ruleset_config in self.get_ruleset_configs_from_file(
+            folder, loaded_file_config, only_varname
+        ):
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 

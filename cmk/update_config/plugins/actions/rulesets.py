@@ -6,15 +6,19 @@
 from collections.abc import Container, Mapping, Sequence
 from logging import Logger
 from re import Pattern
+from typing import Any
 
+import cmk.utils.store as store
 from cmk.utils import debug
+from cmk.utils.labels import single_label_group_from_labels
 from cmk.utils.log import VERBOSE
 from cmk.utils.rulesets.definition import RuleGroup
-from cmk.utils.rulesets.ruleset_matcher import RulesetName
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
@@ -31,7 +35,11 @@ DEPRECATED_RULESET_PATTERNS: list[Pattern] = []
 
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        all_rulesets = AllRulesets.load_all_rulesets()
+        # To transform the given ruleset config files before initialization, we cannot call
+        # AllRulesets.load_all_rulesets() here.
+        raw_rulesets = AllRulesets(RulesetCollection._initialize_rulesets())
+        root_folder = folder_tree().root_folder()
+        all_rulesets = _transform_label_conditions_in_all_folders(logger, raw_rulesets, root_folder)
 
         _delete_deprecated_wato_rulesets(
             logger,
@@ -62,6 +70,58 @@ update_action_registry.register(
         sort_index=30,
     )
 )
+
+
+def _transform_label_conditions_in_all_folders(
+    logger: Logger, all_rulesets: AllRulesets, folder: Folder
+) -> AllRulesets:
+    for subfolder in folder.subfolders():
+        _transform_label_conditions_in_all_folders(logger, all_rulesets, subfolder)
+
+    loaded_file_config = store.load_mk_file(
+        folder.rules_file_path(),
+        {
+            **RulesetCollection._context_helpers(folder),
+            **RulesetCollection._prepare_empty_rulesets(),
+        },
+    )
+
+    for varname, ruleset_config in all_rulesets.get_ruleset_configs_from_file(
+        folder, loaded_file_config
+    ):
+        if not ruleset_config:
+            continue  # Nothing configured: nothing left to do
+
+        # Transform parameters per rule
+        for rule_config in ruleset_config:
+            _transform_label_conditions(rule_config)
+
+        # Overwrite rulesets
+        if varname in all_rulesets._rulesets:
+            all_rulesets._rulesets[varname].replace_folder_config(folder, ruleset_config)
+        else:
+            all_rulesets._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
+
+    return all_rulesets
+
+
+def _transform_label_conditions(rule_config: RuleSpec[object]) -> None:
+    if any(key.endswith("_labels") for key in rule_config.get("condition", {})):
+        rule_config["condition"] = transform_condition_labels_to_label_groups(  # type: ignore[typeddict-item]
+            rule_config.get("condition", {})  # type: ignore[arg-type]
+        )
+
+
+def transform_condition_labels_to_label_groups(conditions: dict[str, Any]) -> dict[str, Any]:
+    for what in ["host", "service"]:
+        old_key = f"{what}_labels"
+        new_key = f"{what}_label_groups"
+        if old_key in conditions:
+            conditions[new_key] = (
+                single_label_group_from_labels(conditions[old_key]) if conditions[old_key] else []
+            )
+            del conditions[old_key]
+    return conditions
 
 
 def _delete_deprecated_wato_rulesets(

@@ -30,4 +30,4 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
 @pytest.fixture(name="rsa_key", scope="module")
 def fixture_rsa_key() -> PrivateKey:
-    return PrivateKey.generate(1024)
+    return PrivateKey.generate_rsa(1024)

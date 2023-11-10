@@ -127,7 +127,7 @@ class CertificateWithPrivateKey(NamedTuple):
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
-        private_key = PrivateKey.generate(key_size)
+        private_key = PrivateKey.generate_rsa(key_size)
         name = X509Name.create(
             common_name=common_name,
             organization_name=organization or f"Checkmk Site {omd_site()}",
@@ -622,8 +622,8 @@ class PrivateKey:
         self._key = key
 
     @classmethod
-    def generate(cls, key_size: int) -> PrivateKey:
-        return PrivateKey(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
+    def generate_rsa(cls, key_size: int) -> PrivateKey:
+        return cls(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
 
     @overload
     @classmethod

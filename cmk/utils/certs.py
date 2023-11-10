@@ -90,7 +90,7 @@ class RootCA(CertificateWithPrivateKey):
         validity: relativedelta = _DEFAULT_VALIDITY,
         key_size: int = _DEFAULT_KEY_SIZE,
     ) -> tuple[Certificate, PrivateKey]:
-        new_cert_key = PrivateKey.generate(key_size)
+        new_cert_key = PrivateKey.generate_rsa(key_size)
         new_cert_csr = CertificateSigningRequest.create(
             subject_name=X509Name.create(common_name=common_name),
             subject_private_key=new_cert_key,

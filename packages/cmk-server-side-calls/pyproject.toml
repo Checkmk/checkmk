@@ -42,7 +42,6 @@ disable_memoryview_promotion = true
 max-line-length = 100
 persistent = "no"
 score = "no"
-disable = "invalid-name"
 
 [tool.pylint.messages_control]
 disable = "missing-docstring,fixme"

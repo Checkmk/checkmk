@@ -20,7 +20,7 @@ HOST_CONFIG = HostConfig(
     name="mobileironhostname",
     address="11.211.3.32",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPv4,
+    ip_family=IPAddressFamily.IPV4,
 )
 
 

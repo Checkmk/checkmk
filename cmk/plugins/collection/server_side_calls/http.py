@@ -54,7 +54,7 @@ class HostSettings:
         if self.family is not None:
             return self.family
 
-        family = "ipv6" if host_config.ip_family == IPAddressFamily.IPv6 else "ipv4"
+        family = "ipv6" if host_config.ip_family == IPAddressFamily.IPV6 else "ipv4"
         return Family(family)
 
     def get_fallback_address(self, host_config: HostConfig) -> str:

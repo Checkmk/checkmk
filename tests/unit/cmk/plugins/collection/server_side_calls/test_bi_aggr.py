@@ -11,7 +11,7 @@ from cmk.plugins.collection.server_side_calls.bi_aggr import active_check_bi_agg
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(
-    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPv4
+    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPV4
 )
 
 

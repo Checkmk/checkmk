@@ -16,7 +16,7 @@ from cmk.server_side_calls.v1 import (
 )
 
 HOST_CONFIG = HostConfig(
-    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPv4
+    name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPV4
 )
 
 

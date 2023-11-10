@@ -15,7 +15,7 @@ HOST_CONFIG = HostConfig(
     name="host",
     address="127.0.0.1",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPv4,
+    ip_family=IPAddressFamily.IPV4,
 )
 
 

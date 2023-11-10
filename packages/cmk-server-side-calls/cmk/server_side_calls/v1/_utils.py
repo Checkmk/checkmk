@@ -12,9 +12,9 @@ from typing import Literal
 class IPAddressFamily(StrEnum):
     """Defines an IP address family"""
 
-    IPv4 = "ipv4"
+    IPV4 = "ipv4"
     """IPv4 address family"""
-    IPv6 = "ipv6"
+    IPV6 = "ipv6"
     """IPv6 address family"""
 
 

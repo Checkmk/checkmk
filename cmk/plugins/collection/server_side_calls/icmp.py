@@ -48,7 +48,7 @@ class AddressCmdArgs(NamedTuple):
 
     def to_list(self) -> list[str]:
         addresses = [str(a) for a in self.address_args]
-        if self.ip_family == IPAddressFamily.IPv6:
+        if self.ip_family == IPAddressFamily.IPV6:
             return ["-6", *addresses]
         return addresses
 
@@ -95,21 +95,21 @@ def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> Addres
         case AddressType.ALIAS:
             return AddressCmdArgs(host_config.ip_family, [host_config.alias])
         case AddressType.ALL_IP4vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPv4, host_config.all_ipv4addresses)
+            return AddressCmdArgs(IPAddressFamily.IPV4, host_config.all_ipv4addresses)
         case AddressType.ALL_IP6vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPv6, host_config.all_ipv6addresses)
+            return AddressCmdArgs(IPAddressFamily.IPV6, host_config.all_ipv6addresses)
         case AddressType.ADDITIONAL_IP4vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPv4, host_config.additional_ipv4addresses)
+            return AddressCmdArgs(IPAddressFamily.IPV4, host_config.additional_ipv4addresses)
         case AddressType.ADDITIONAL_IP6vADDRESSES:
-            return AddressCmdArgs(IPAddressFamily.IPv6, host_config.additional_ipv6addresses)
+            return AddressCmdArgs(IPAddressFamily.IPV6, host_config.additional_ipv6addresses)
     if params.address == AddressType.INDEXED_IPv4ADDRESS and params.address_index is not None:
         ipv4address = host_config.additional_ipv4addresses[params.address_index - 1]
-        return AddressCmdArgs(IPAddressFamily.IPv4, [ipv4address])
+        return AddressCmdArgs(IPAddressFamily.IPV4, [ipv4address])
     if params.address == AddressType.INDEXED_IPv6ADDRESS and params.address_index is not None:
         ipv6address = host_config.additional_ipv6addresses[params.address_index - 1]
-        return AddressCmdArgs(IPAddressFamily.IPv6, [ipv6address])
+        return AddressCmdArgs(IPAddressFamily.IPV6, [ipv6address])
     if params.address == AddressType.EXPLICIT and params.explicit_address:
-        return AddressCmdArgs(IPAddressFamily.IPv4, [params.explicit_address])
+        return AddressCmdArgs(IPAddressFamily.IPV4, [params.explicit_address])
     raise ValueError("Invalid address parameters")
 
 

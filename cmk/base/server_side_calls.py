@@ -127,7 +127,7 @@ def _get_host_address_config(
 
 def _get_host_config(host_name: str, host_attrs: Mapping[str, str]) -> HostConfig:
     ip_family = (
-        IPAddressFamily.IPv4 if host_attrs["_ADDRESS_FAMILY"] == "4" else IPAddressFamily.IPv6
+        IPAddressFamily.IPV4 if host_attrs["_ADDRESS_FAMILY"] == "4" else IPAddressFamily.IPV6
     )
 
     return HostConfig(

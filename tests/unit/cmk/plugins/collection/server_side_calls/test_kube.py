@@ -14,7 +14,7 @@ HOST_CONFIG = HostConfig(
     name="host",
     address="11.211.3.32",
     alias="host_alias",
-    ip_family=IPAddressFamily.IPv4,
+    ip_family=IPAddressFamily.IPV4,
 )
 
 HTTP_PROXIES = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}

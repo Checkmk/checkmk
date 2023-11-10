@@ -54,7 +54,7 @@ from cmk.base.core_config import (
     write_notify_host_file,
 )
 from cmk.base.ip_lookup import AddressFamily
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 
 ObjectSpec = dict[str, Any]
 

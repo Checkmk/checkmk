@@ -28,7 +28,7 @@ def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]
 
 def load_special_agents() -> tuple[Sequence[str], Mapping[str, SpecialAgentConfig]]:
     loaded = discover_plugins(
-        "config_generation",
+        "server_side_calls",
         "special_agent_",
         SpecialAgentConfig,
         raise_errors=cmk.utils.debug.enabled(),

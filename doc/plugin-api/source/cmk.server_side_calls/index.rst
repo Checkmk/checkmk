@@ -1,8 +1,8 @@
 =====================
-Config generation API
+Server-side calls API
 =====================
 
-.. automodule:: cmk.config_generation
+.. automodule:: cmk.server_side_calls
    :members:
 
 Version 1

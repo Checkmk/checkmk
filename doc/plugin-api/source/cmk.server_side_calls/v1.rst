@@ -1,7 +1,7 @@
 ====================
-config_generation.v1
+server_side_calls.v1
 ====================
 
-.. automodule:: cmk.config_generation.v1
+.. automodule:: cmk.server_side_calls.v1
    :members:
    :show-inheritance:

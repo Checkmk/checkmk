@@ -14,10 +14,6 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    current_host,
-    current_service,
-)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -285,14 +281,13 @@ def test_mem_win(
     params: Mapping[str, Any],
     expected_result: CheckResult,
 ) -> None:
-    with current_host("unittest-hn"), current_service("unittest_sd", "unittest_sd_description"):
-        assert (
-            list(
-                fix_register.check_plugins[CheckPluginName("mem_win")].check_function(
-                    item=None,
-                    params=params,
-                    section=_SECTION,
-                )
+    assert (
+        list(
+            fix_register.check_plugins[CheckPluginName("mem_win")].check_function(
+                item=None,
+                params=params,
+                section=_SECTION,
             )
-            == expected_result
         )
+        == expected_result
+    )

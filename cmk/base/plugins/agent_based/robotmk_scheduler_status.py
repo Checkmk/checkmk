@@ -235,15 +235,19 @@ def _check_scheduler_status_errors(
             details=f"{section_robotmk_config.ReadingError}",
         )
 
-    if section_robotmk_rcc_setup_failures:
+    if rcc_setup_failures := (
+        [
+            *section_robotmk_rcc_setup_failures.telemetry_disabling,
+            *section_robotmk_rcc_setup_failures.shared_holotree,
+            *section_robotmk_rcc_setup_failures.holotree_init,
+        ]
+        if section_robotmk_rcc_setup_failures
+        else []
+    ):
         yield Result(
             state=State.CRIT,
             summary="Failures during RCC setup.",
-            details=";".join(
-                list(section_robotmk_rcc_setup_failures.telemetry_disabling)
-                + list(section_robotmk_rcc_setup_failures.shared_holotree)
-                + list(section_robotmk_rcc_setup_failures.holotree_init)
-            ),
+            details=";".join(rcc_setup_failures),
         )
 
     if section_robotmk_environment_build_states:

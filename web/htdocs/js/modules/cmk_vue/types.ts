@@ -8,7 +8,7 @@ export interface VueComponentSpec {
     component_type: string;
     title: string;
     help: string;
-    validation_errors?: string[];
+    validation_errors: string[];
     config: {[name: string]: any};
 }
 

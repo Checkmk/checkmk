@@ -17,17 +17,17 @@ from cmk.gui.validation.visitors.vue_lib import ValidationError, VueAppConfig, V
 
 from cmk.rulesets.v1.form_specs import Localizable  # type: ignore[attr-defined]
 from cmk.rulesets.v1.form_specs import (
-    CascadingDropdown,
+    CascadingSingleChoice,
     Dictionary,
-    DropdownChoice,
-    DropdownChoiceElement,
+    SingleChoice,
+    SingleChoiceElement,
     Float,
     FormSpec,
     Integer,
     List,
     Percentage,
     ServiceState,
-    TextInput,
+    Text,
     Transform,
     Tuple,
 )
@@ -112,13 +112,13 @@ class VueFormSpecVisitor:
             return self._visit_dictionary
         elif isinstance(form_spec, Tuple):
             return self._visit_tuple
-        elif isinstance(form_spec, CascadingDropdown):
+        elif isinstance(form_spec, CascadingSingleChoice):
             return self._visit_cascading_dropdown
-        elif isinstance(form_spec, DropdownChoice):
+        elif isinstance(form_spec, SingleChoice):
             return self._visit_dropdown_choice
         elif isinstance(form_spec, List):
             return self._visit_list
-        elif isinstance(form_spec, TextInput):
+        elif isinstance(form_spec, Text):
             return self._visit_text
         raise MKGeneralException(f"No visitor for {form_spec}")
 
@@ -243,7 +243,7 @@ class VueFormSpecVisitor:
         )
 
     def _visit_cascading_dropdown(
-        self, form_spec: CascadingDropdown, value: tuple[str, Any] | None
+        self, form_spec: CascadingSingleChoice, value: tuple[str, Any] | None
     ) -> VueVisitorMethodResult:
         elements = []
 
@@ -280,7 +280,7 @@ class VueFormSpecVisitor:
         )
 
     def _visit_dropdown_choice(
-        self, form_spec: DropdownChoice, value: Any
+        self, form_spec: SingleChoice, value: Any
     ) -> VueVisitorMethodResult:
         # TODO: improve transform. the frontend only renders strings
         return (
@@ -324,7 +324,7 @@ class VueFormSpecVisitor:
             raw_value,
         )
 
-    def _visit_text(self, form_spec: TextInput, value: str) -> VueVisitorMethodResult:
+    def _visit_text(self, form_spec: Text, value: str) -> VueVisitorMethodResult:
         return (
             VueFormSpecComponent(
                 form_spec,
@@ -386,10 +386,10 @@ VueFormSpecTypes = (
     Integer
     | Float
     | Percentage
-    | TextInput
+    | Text
     | Tuple
-    | DropdownChoice
-    | CascadingDropdown
+    | SingleChoice
+    | CascadingSingleChoice
     | Dictionary
     | List
 )
@@ -407,20 +407,20 @@ def _convert_to_supported_form_spec(custom_form_spec: FormSpec) -> VueFormSpecTy
 
     # If no explicit conversion exist, create an ugly valuespec
     # TODO: raise an exception
-    return TextInput(title=Localizable("UNKNOWN custom_form_spec {custom_form_spec}"))
+    return Text(title=Localizable("UNKNOWN custom_form_spec {custom_form_spec}"))
 
 
-def _convert_service_state(form_spec: ServiceState) -> DropdownChoice:
+def _convert_service_state(form_spec: ServiceState) -> SingleChoice:
     states = [
         (0, Localizable("OK")),
         (1, Localizable("WARN")),
         (2, Localizable("CRIT")),
         (3, Localizable("UNKNOWN")),
     ]
-    return DropdownChoice(
+    return SingleChoice(
         title=form_spec.title,
         help_text=form_spec.help_text,
-        elements=[DropdownChoiceElement(str(x), y) for x, y in states],
+        elements=[SingleChoiceElement(str(x), y) for x, y in states],
         transform=Transform(model_to_form=lambda x: str(x), form_to_model=lambda x: int(x)),
         prefill_selection=str(form_spec.prefill_value),
     )
@@ -435,16 +435,16 @@ def compute_default_value(form_spec: FormSpec) -> Any:
         return tuple(elements)
     if isinstance(form_spec, (Integer, Percentage, Float)):
         return form_spec.prefill_value
-    if isinstance(form_spec, CascadingDropdown):
+    if isinstance(form_spec, CascadingSingleChoice):
         return form_spec.prefill_selection
-    if isinstance(form_spec, DropdownChoice):
+    if isinstance(form_spec, SingleChoice):
         return form_spec.prefill_selection
     if isinstance(form_spec, List):
         return form_spec.prefill_value or []
     if isinstance(form_spec, Dictionary):
         # TODO: Enable active keys
         return {}
-    if isinstance(form_spec, TextInput):
+    if isinstance(form_spec, Text):
         return form_spec.prefill_value or ""
 
     return "##################MISSING DEFAULT VALUE##########################"

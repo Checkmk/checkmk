@@ -1929,7 +1929,9 @@ class ABCEditRuleMode(WatoMode):
 
         self._rule.value = value
 
-    def _get_render_mode(self) -> tuple[ExperimentalRenderMode, FormSpec | None]:
+    def _get_render_mode(
+        self,
+    ) -> tuple[ExperimentalRenderMode, FormSpec | None]:
         # NOTE: This code is non-productive and only supports rules within the
         # checkgroup_parameters group
         configured_mode = get_render_mode()

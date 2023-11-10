@@ -8,7 +8,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.config_generation.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
+from cmk.server_side_calls.v1 import ActiveCheckCommand, ActiveCheckConfig, HostConfig, HTTPProxy
 
 
 class FTPParams(BaseModel):

@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.config_generation.v1 import HostConfig, HTTPProxy, IPAddressFamily, PlainTextSecret
 from cmk.plugins.collection.config_generation.datadog import special_agent_datadog
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPAddressFamily, PlainTextSecret
 
 HOST_CONFIG = HostConfig(
     name="testhost",

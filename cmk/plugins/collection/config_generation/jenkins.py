@@ -8,7 +8,7 @@ from typing import Iterator, Mapping, Sequence
 
 from pydantic import BaseModel
 
-from cmk.config_generation.v1 import (
+from cmk.server_side_calls.v1 import (
     get_secret_from_params,
     HostConfig,
     HTTPProxy,

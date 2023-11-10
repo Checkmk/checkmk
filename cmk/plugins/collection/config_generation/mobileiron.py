@@ -8,7 +8,7 @@ from collections.abc import Iterator, Mapping, Sequence
 
 from pydantic import BaseModel, Field
 
-from cmk.config_generation.v1 import (
+from cmk.server_side_calls.v1 import (
     get_http_proxy,
     get_secret_from_params,
     HostConfig,

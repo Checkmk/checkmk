@@ -7,7 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.config_generation.v1 import get_secret_from_params, HostConfig, Secret
+from cmk.server_side_calls.v1 import get_secret_from_params, HostConfig, Secret
 
 SecretType = Literal["store", "password"]
 

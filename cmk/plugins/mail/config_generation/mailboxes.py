@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator, Mapping, Sequence
 
-from cmk.config_generation.v1 import (
+from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
     HostConfig,

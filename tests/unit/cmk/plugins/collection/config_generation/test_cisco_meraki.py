@@ -8,14 +8,14 @@ from typing import Any
 
 import pytest
 
-from cmk.config_generation.v1 import (
+from cmk.plugins.collection.config_generation.cisco_meraki import special_agent_cisco_meraki
+from cmk.server_side_calls.v1 import (
     HostConfig,
     HTTPProxy,
     IPAddressFamily,
     PlainTextSecret,
     SpecialAgentCommand,
 )
-from cmk.plugins.collection.config_generation.cisco_meraki import special_agent_cisco_meraki
 
 HOST_CONFIG = HostConfig(
     name="testhost",

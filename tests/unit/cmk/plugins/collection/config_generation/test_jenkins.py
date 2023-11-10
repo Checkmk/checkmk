@@ -7,13 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.config_generation.v1 import (
+from cmk.plugins.collection.config_generation.jenkins import special_agent_jenkins
+from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,
     PlainTextSecret,
     SpecialAgentCommand,
 )
-from cmk.plugins.collection.config_generation.jenkins import special_agent_jenkins
 
 HOST_CONFIG = HostConfig(
     name="hostname", address="0.0.0.1", alias="host_alias", ip_family=IPAddressFamily.IPv4

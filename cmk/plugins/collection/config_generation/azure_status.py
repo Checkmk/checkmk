@@ -8,7 +8,7 @@ from typing import Iterator
 
 from pydantic import BaseModel
 
-from cmk.config_generation.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, SpecialAgentConfig
+from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, SpecialAgentConfig
 
 
 class AzureStatusParams(BaseModel):

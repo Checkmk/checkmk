@@ -8,7 +8,6 @@ from typing import Any
 
 import pytest
 
-from cmk.config_generation.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 from cmk.plugins.collection.config_generation.http import (
     active_check_http,
     DirectHost,
@@ -17,6 +16,7 @@ from cmk.plugins.collection.config_generation.http import (
     HTTPParams,
     URLMode,
 )
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 
 HOST_CONFIG = HostConfig(
     name="hostname",

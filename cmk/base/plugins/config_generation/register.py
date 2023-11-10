@@ -7,8 +7,8 @@ from collections.abc import Mapping, Sequence
 
 import cmk.utils.debug
 
-from cmk.config_generation.v1 import ActiveCheckConfig, SpecialAgentConfig
 from cmk.discover_plugins import discover_plugins
+from cmk.server_side_calls.v1 import ActiveCheckConfig, SpecialAgentConfig
 
 
 def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]]:

@@ -7,8 +7,8 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.config_generation.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 from cmk.plugins.mail.config_generation.mail_loop import active_check_mail_loop
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 
 HOST_CONFIG = HostConfig(
     name="host",

@@ -80,6 +80,7 @@ config_setting(
     ("server-side-calls", "$(execpath @omd_packages//packages:cmk-server-side-calls)"),
     ("werks", "$(execpath @omd_packages//packages:cmk-werks)"),
     ("agent-based", "$(execpath @omd_packages//packages:cmk-agent-based)"),
+    ("mkp-tool", "$(execpath @omd_packages//packages:cmk-mkp-tool)"),
 ]]
 
 genrule(

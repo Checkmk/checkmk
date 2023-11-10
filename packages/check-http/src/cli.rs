@@ -63,15 +63,14 @@ pub struct Cli {
     #[arg(long, value_parser = parse_optional_pair::<f64>)]
     pub response_time_levels: Option<ResponseTimeLevels>,
 
-    /// WARN/CRIT levels for document age (Format: WARN>[,CRIT])
+    /// WARN level for document age
     /// If document age is not set, setting this option will also lead to state CRIT
-    #[arg(long, value_parser = parse_optional_pair::<u64>)]
-    pub document_age_levels: Option<DocumentAgeLevels>,
+    #[arg(long)]
+    pub document_age_levels: Option<u64>,
 }
 
-pub type PageSizeLimits = (usize, Option<usize>);
+type PageSizeLimits = (usize, Option<usize>);
 type ResponseTimeLevels = (f64, Option<f64>);
-pub type DocumentAgeLevels = (u64, Option<u64>);
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum OnRedirect {

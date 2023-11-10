@@ -17,8 +17,6 @@ python-lsp-black = "*"
 python-lsp-server = "*"
 
 [packages]
-pydantic = "*"
-semver = "*"
 cmk-mkp-tool = {editable = true, path = "."}
 
 [requires]

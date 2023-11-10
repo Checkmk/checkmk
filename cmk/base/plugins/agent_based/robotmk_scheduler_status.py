@@ -203,6 +203,58 @@ def discover_scheduler_status(
         yield Service()
 
 
+def _check_environment_build_state_failures(
+    suite_name: str,
+    failure: EnvironmentBuildStatusErrorNonZeroExit
+    | EnvironmentBuildStatusErrorTimeout
+    | EnviromentBuildStatusErrorMessage,
+) -> CheckResult:
+    details = None
+
+    if isinstance(failure, EnviromentBuildStatusErrorMessage):
+        summary = "Error during environment build."
+        details = failure.Error
+
+    if isinstance(
+        failure, (EnvironmentBuildStatusErrorNonZeroExit, EnvironmentBuildStatusErrorTimeout)
+    ):
+        summary = f"{failure.value} during environment build."
+
+    yield Result(state=State.CRIT, summary=f"{summary} for suite {suite_name}", details=details)
+
+
+def _check_scheduler_status_errors(
+    section_robotmk_config: Config | ConfigReadingError | None,
+    section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
+) -> CheckResult:
+    if isinstance(section_robotmk_config, ConfigReadingError):
+        yield Result(
+            state=State.CRIT,
+            summary="Error while reading config file.",
+            details=f"{section_robotmk_config.ReadingError}",
+        )
+
+    if section_robotmk_rcc_setup_failures:
+        yield Result(
+            state=State.CRIT,
+            summary="Failures during RCC setup.",
+            details=";".join(
+                list(section_robotmk_rcc_setup_failures.telemetry_disabling)
+                + list(section_robotmk_rcc_setup_failures.shared_holotree)
+                + list(section_robotmk_rcc_setup_failures.holotree_init)
+            ),
+        )
+
+    if section_robotmk_environment_build_states:
+        for suite_name, failure in section_robotmk_environment_build_states.root.items():
+            if isinstance(failure, EnvironmentBuildStatusFailure):
+                yield from _check_environment_build_state_failures(
+                    suite_name=suite_name,
+                    failure=failure.Failure,
+                )
+
+
 def check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
@@ -211,7 +263,17 @@ def check_scheduler_status(
 ) -> CheckResult:
     if not section_robotmk_config:
         return
-    # TODO: Determine the conditions for the status
+
+    if list(
+        errors := _check_scheduler_status_errors(
+            section_robotmk_config,
+            section_robotmk_rcc_setup_failures,
+            section_robotmk_environment_build_states,
+        )
+    ):
+        yield from errors
+        return
+
     yield Result(state=State.OK, summary="The Scheduler status is OK")
 
 

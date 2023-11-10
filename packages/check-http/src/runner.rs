@@ -5,34 +5,37 @@
 use crate::cli;
 use std::time::Instant;
 
-use crate::checking;
-use crate::checking::{Bounds, CheckResult, Limits, State};
-use crate::http;
-use crate::redirect;
+use crate::checking::{self, Bounds, CheckParameters, CheckResult, State, UpperLevels};
+use crate::connection::{self, ConnectionConfig};
+use crate::http::{self, RequestConfig};
 use std::time::Duration;
 
 pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
     let Ok(request) = http::prepare_request(
-        args.url,
-        args.method,
-        args.user_agent,
-        args.headers,
-        args.timeout,
-        args.auth_user,
-        args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
-        match args.onredirect {
-            cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
-            cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
-            cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
-            cli::OnRedirect::Follow => redirect::OnRedirect::Follow,
-            cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
-            cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
+        RequestConfig {
+            url: args.url,
+            method: args.method,
+            user_agent: args.user_agent,
+            headers: args.headers,
+            timeout: args.timeout,
+            auth_user: args.auth_user,
+            auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
         },
-        args.max_redirs,
-        match args.force_ip_version {
-            None => None,
-            Some(cli::ForceIP::Ipv4) => Some(redirect::ForceIP::Ipv4),
-            Some(cli::ForceIP::Ipv6) => Some(redirect::ForceIP::Ipv6),
+        ConnectionConfig {
+            onredirect: match args.onredirect {
+                cli::OnRedirect::Ok => connection::OnRedirect::Ok,
+                cli::OnRedirect::Warning => connection::OnRedirect::Warning,
+                cli::OnRedirect::Critical => connection::OnRedirect::Critical,
+                cli::OnRedirect::Follow => connection::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => connection::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => connection::OnRedirect::Stickyport,
+            },
+            max_redirs: args.max_redirs,
+            force_ip: match args.force_ip_version {
+                None => None,
+                Some(cli::ForceIP::Ipv4) => Some(connection::ForceIP::Ipv4),
+                Some(cli::ForceIP::Ipv6) => Some(connection::ForceIP::Ipv6),
+            },
         },
     ) else {
         return vec![CheckResult {
@@ -71,40 +74,31 @@ pub async fn collect_checks(args: cli::Cli) -> Vec<CheckResult> {
     };
     let elapsed = now.elapsed();
 
-    vec![
-        checking::check_status(
-            response.status,
-            response.version,
-            match args.onredirect {
-                cli::OnRedirect::Ok => redirect::OnRedirect::Ok,
-                cli::OnRedirect::Warning => redirect::OnRedirect::Warning,
-                cli::OnRedirect::Critical => redirect::OnRedirect::Critical,
-                cli::OnRedirect::Follow => redirect::OnRedirect::Follow,
-                cli::OnRedirect::Sticky => redirect::OnRedirect::Sticky,
-                cli::OnRedirect::Stickyport => redirect::OnRedirect::Stickyport,
+    checking::collect_response_checks(
+        response,
+        elapsed,
+        CheckParameters {
+            onredirect: match args.onredirect {
+                cli::OnRedirect::Ok => connection::OnRedirect::Ok,
+                cli::OnRedirect::Warning => connection::OnRedirect::Warning,
+                cli::OnRedirect::Critical => connection::OnRedirect::Critical,
+                cli::OnRedirect::Follow => connection::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => connection::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => connection::OnRedirect::Stickyport,
             },
-        ),
-        checking::check_body(
-            response.body,
-            match args.page_size {
-                None => Bounds::None,
-                Some((x, None)) => Bounds::Lower(x),
-                Some((x, Some(y))) => Bounds::LowerUpper(x, y),
-            },
-        ),
-        checking::check_response_time(
-            elapsed,
-            match args.response_time_levels {
-                None => Limits::None,
-                Some((x, None)) => Limits::Warn(Duration::from_secs_f64(x)),
-                Some((x, Some(y))) => {
-                    Limits::WarnCrit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
+            page_size: args.page_size.map(|val| match val {
+                (x, None) => Bounds::lower(x),
+                (x, Some(y)) => Bounds::lower_upper(x, y),
+            }),
+            response_time_levels: args.response_time_levels.map(|val| match val {
+                (x, None) => UpperLevels::warn(Duration::from_secs_f64(x)),
+                (x, Some(y)) => {
+                    UpperLevels::warn_crit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
                 }
-            },
-        ),
-        checking::check_document_age(&response.headers, args.document_age_levels),
-    ]
-    .into_iter()
-    .flatten()
-    .collect()
+            }),
+            document_age_levels: args
+                .document_age_levels
+                .map(|val| UpperLevels::warn(Duration::from_secs(val))),
+        },
+    )
 }

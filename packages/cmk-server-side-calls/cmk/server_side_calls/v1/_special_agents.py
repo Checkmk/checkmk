@@ -21,7 +21,9 @@ class SpecialAgentCommand:
 
     Args:
         command_arguments: Arguments that are passed to the special agent command-line interface
-        stdin: String given to the special agent script's standard input. This should be used only in case the agent requires input bigger than the max command-line size, otherwise pass the input as a command argument.
+        stdin: String given to the special agent script's standard input.
+                This should be used only in case the agent requires input bigger than the max
+                command-line size, otherwise pass the input as a command argument.
 
     Example:
         >>> SpecialAgentCommand(
@@ -42,8 +44,12 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
     One SpecialAgentConfig can result in multiple calls of the special agent.
 
     Args:
-        name: Special agent name. Has to match special agent executable name without the prefix ´agent_´.
-        parameter_parser: Translates the raw configured parameters into a validated data structure. The result of the function will be passed as an argument to the command_function. If you don't want to parse your parameters, use the noop_parser.
+        name: Special agent name. Has to match special agent executable name without
+                the prefix ´agent_´.
+        parameter_parser: Translates the raw configured parameters into a validated data structure.
+                        The result of the function will be passed as an argument to
+                        the command_function. If you don't want to parse your parameters,
+                        use the noop_parser.
         commands_function: Computes the special agent commands from the configured parameters
 
     Example:
@@ -54,7 +60,9 @@ class SpecialAgentConfig(Generic[_ParsedParameters]):
         ...     protocol: str
 
         >>> def generate_example_commands(
-        ...     params: ExampleParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ...     params: ExampleParams,
+        ...     host_config: HostConfig,
+        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--protocol", params.protocol, "--services", "logs", "errors", "stats"]
         ...     yield SpecialAgentCommand(command_arguments=args)

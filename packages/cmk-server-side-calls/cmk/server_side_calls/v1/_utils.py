@@ -50,7 +50,9 @@ class HostConfig:
 
 
         >>> def generate_example_commands(
-        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ...     params: Mapping[str, object],
+        ...     host_config: HostConfig,
+        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--hostname", host_config.name, "--address", host_config.address]
         ...     yield SpecialAgentCommand(command_arguments=args)
@@ -90,7 +92,8 @@ class HTTPProxy:
     Defines a HTTP proxy
 
     This object represents a HTTP proxy configured in the global settings.
-    A mapping of HTTPProxy objects will be created by the backend and passed to the `commands_function`.
+    A mapping of HTTPProxy objects will be created by the backend and passed to
+    the `commands_function`.
     The mapping consists of a proxy ids as keys and HTTPProxy objects as values.
 
     Args:
@@ -105,16 +108,26 @@ class HTTPProxy:
 
         >>> from pydantic import BaseModel
 
-        >>> from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, SpecialAgentCommand, get_http_proxy
+        >>> from cmk.server_side_calls.v1 import (
+        ...     HostConfig,
+        ...     HTTPProxy,
+        ...     SpecialAgentCommand,
+        ...     get_http_proxy
+        ... )
 
         >>> class ExampleParams(BaseModel):
         ...     proxy_type: Literal["global", "environment", "url", "no_proxy"]
         ...     proxy_value: str | None
 
         >>> def generate_example_commands(
-        ...     params: ExampleParams, host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ...     params: ExampleParams,
+        ...     host_config: HostConfig,
+        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
-        ...     args = ["--proxy", get_http_proxy(params.proxy_type, params.proxy_value, http_proxies)]
+        ...     args = [
+        ...         "--proxy",
+        ...         get_http_proxy(params.proxy_type, params.proxy_value, http_proxies)
+        ...     ]
         ...     yield SpecialAgentCommand(command_arguments=args)
     """
 
@@ -128,13 +141,14 @@ class StoredSecret:
     """
     Defines a password stored in the password store
 
-    In order to avoid showing passwords in plain text in agent configuration and active check commands,
-    store the password in the password store and use a StoredSecret object to represent an argument that
-    contains a stored password.
+    In order to avoid showing passwords in plain text in agent configuration and active
+    check commands, store the password in the password store and use a StoredSecret object
+    to represent an argument that contains a stored password.
 
     Args:
         value: Id of the password from the password store
-        format: printf-style format of the created argument. Should be used if active check or special agent require a secret argument in a particular format
+        format: printf-style format of the created argument. Should be used if active check
+                or special agent require a secret argument in a particular format
 
     Example:
 
@@ -153,7 +167,8 @@ class PlainTextSecret:
 
     Args:
         value: The password
-        format: printf-style format of the created argument. Should be used if active check or special agent require a secret argument in a particular format
+        format: printf-style format of the created argument. Should be used if
+                active check or special agent require a secret argument in a particular format
 
     Example:
 
@@ -178,7 +193,8 @@ def get_secret_from_params(
 
     Args:
         secret_type: Type of the secret
-        secret_value: Value of the secret. Can either be an id of the secret from the password store or an explicit value.
+        secret_value: Value of the secret. Can either be an id of the secret from
+                the password store or an explicit value.
         display_format: Format of the argument containing the secret
 
     Returns:
@@ -197,7 +213,9 @@ def get_secret_from_params(
 
 
         >>> def generate_example_commands(
-        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ...     params: Mapping[str, object],
+        ...     host_config: HostConfig,
+        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     secret = get_secret_from_params(
         ...         "store",
@@ -238,11 +256,18 @@ def get_http_proxy(
 
         >>> from collections.abc import Iterable, Mapping
 
-        >>> from cmk.server_side_calls.v1 import SpecialAgentCommand, HostConfig, HTTPProxy, get_http_proxy
+        >>> from cmk.server_side_calls.v1 import (
+        ...     SpecialAgentCommand,
+        ...     HostConfig,
+        ...     HTTPProxy,
+        ...     get_http_proxy
+        ... )
 
 
         >>> def generate_example_commands(
-        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ...     params: Mapping[str, object],
+        ...     host_config: HostConfig,
+        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     proxy = get_http_proxy("global", "example_proxy", http_proxies)
         ...     args = ["--proxy", proxy]
@@ -274,11 +299,17 @@ def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
 
         >>> from collections.abc import Iterable
 
-        >>> from cmk.server_side_calls.v1 import noop_parser, SpecialAgentCommand, SpecialAgentConfig
+        >>> from cmk.server_side_calls.v1 import (
+        ...     noop_parser,
+        ...     SpecialAgentCommand,
+        ...     SpecialAgentConfig
+        ... )
 
 
         >>> def generate_example_commands(
-        ...     params: Mapping[str, object], host_config: HostConfig, http_proxies: Mapping[str, HTTPProxy]
+        ...     params: Mapping[str, object],
+        ...     host_config: HostConfig,
+        ...     http_proxies: Mapping[str, HTTPProxy]
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--service", str(params["service"])]
         ...     yield SpecialAgentCommand(command_arguments=args)

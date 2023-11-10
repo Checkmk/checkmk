@@ -24,6 +24,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.table import table_element
+from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
@@ -113,5 +114,6 @@ def render_user_message_table(what: str) -> None:
 
 @cmk.gui.pages.register("ajax_delete_user_message")
 def ajax_delete_user_message() -> None:
+    check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)

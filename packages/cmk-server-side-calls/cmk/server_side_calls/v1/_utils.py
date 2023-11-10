@@ -19,7 +19,7 @@ class IPAddressFamily(StrEnum):
 
 
 @dataclass(frozen=True)
-class HostConfig:
+class HostConfig:  # pylint: disable=too-many-instance-attributes
     """
     Defines a host configuration
 

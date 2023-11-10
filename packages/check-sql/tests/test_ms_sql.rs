@@ -278,6 +278,19 @@ fn test_run_local_as_plugin_without_config() {
     );
 }
 
+#[test]
+fn test_check_log_file() {
+    let log_dir = tools::create_temp_process_dir();
+    let log_dir_path = log_dir.path();
+    let _ = tools::run_bin()
+        .env("MK_CONFDIR", ".")
+        .env("MK_LOGDIR", log_dir_path)
+        .unwrap_err()
+        .as_output()
+        .unwrap();
+    assert!(log_dir_path.join("check-sql_rCURRENT.log").exists());
+}
+
 const EXPECTED_START: &str = r"<<<mssql_instance:sep(124)>>>
 <<<mssql_databases:sep(124)>>>
 <<<mssql_counters:sep(124)>>>

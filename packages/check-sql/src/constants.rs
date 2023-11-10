@@ -13,12 +13,16 @@ pub mod log {
 pub mod environment {
     pub const CONFIG_NAME: &str = "check-sql.yml";
     pub const CONFIG_DIR_ENV_VAR: &str = "MK_CONFDIR";
+    pub const LOG_DIR_ENV_VAR: &str = "MK_LOGDIR";
 }
 
 lazy_static! {
     pub static ref DEFAULT_CONFIG_FILE: PathBuf =
         Path::new(&get_env_value(environment::CONFIG_DIR_ENV_VAR, "."))
             .join(environment::CONFIG_NAME);
+    pub static ref ENV_LOG_DIR: Option<PathBuf> = std::env::var(environment::LOG_DIR_ENV_VAR)
+        .ok()
+        .map(PathBuf::from);
 }
 
 fn get_env_value(var: &str, on_lack: &str) -> String {

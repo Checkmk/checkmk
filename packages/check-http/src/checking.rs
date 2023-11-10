@@ -112,17 +112,53 @@ impl From<State> for i32 {
     }
 }
 
-pub struct CheckResult {
-    pub state: State,
-    pub summary: String,
+pub struct Metric {
+    pub name: String,
+    pub value: f64,
+    pub unit: Option<&'static str>,
+    pub levels: Option<(f64, Option<f64>)>,
+    pub lower: Option<f64>,
+    pub upper: Option<f64>,
 }
 
-impl Display for CheckResult {
+impl Display for Metric {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+        fn write_optional<T: Display>(f: &mut Formatter, val: Option<T>) -> FormatResult {
+            if let Some(val) = val {
+                write!(f, "{}", val)?;
+            };
+            Ok(())
+        }
+
+        write!(f, "{}={}", self.name, self.value)?;
+        write_optional(f, self.unit)?;
+        let (warn, crit) = match self.levels {
+            Some((warn, opt_crit)) => (Some(warn), opt_crit),
+            None => (None, None),
+        };
+        write!(f, ";")?;
+        write_optional(f, warn)?;
+        write!(f, ";")?;
+        write_optional(f, crit)?;
+        write!(f, ";")?;
+        write_optional(f, self.lower)?;
+        write!(f, ";")?;
+        write_optional(f, self.upper)?;
+        Ok(())
+    }
+}
+
+pub struct CheckItem {
+    pub state: State,
+    pub text: String,
+}
+
+impl Display for CheckItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         write!(
             f,
             "{}{}",
-            self.summary,
+            self.text,
             match self.state {
                 State::Ok => "",
                 State::Warn => " (!)",
@@ -131,6 +167,11 @@ impl Display for CheckResult {
             }
         )
     }
+}
+
+pub enum CheckResult {
+    Summary(CheckItem),
+    Metric(Metric),
 }
 
 pub struct CheckParameters {
@@ -146,21 +187,18 @@ pub fn collect_response_checks(
     params: CheckParameters,
 ) -> Vec<CheckResult> {
     vec![
-        check_status(response.status, response.version, params.onredirect),
-        check_body(response.body, params.page_size),
-        check_response_time(response_time, params.response_time_levels),
-        check_document_age(&response.headers, params.document_age_levels),
+        check_status(response.status, response.version, params.onredirect)
+            .map(CheckResult::Summary),
+        check_body(response.body, params.page_size).map(CheckResult::Summary),
+        check_response_time(response_time, params.response_time_levels).map(CheckResult::Summary),
+        check_document_age(&response.headers, params.document_age_levels).map(CheckResult::Summary),
     ]
     .into_iter()
     .flatten()
     .collect()
 }
 
-fn check_status(
-    status: StatusCode,
-    version: Version,
-    onredirect: OnRedirect,
-) -> Option<CheckResult> {
+fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> Option<CheckItem> {
     let state = if status.is_client_error() {
         State::Warn
     } else if status.is_server_error() {
@@ -175,49 +213,49 @@ fn check_status(
         State::Ok
     };
 
-    Some(CheckResult {
+    Some(CheckItem {
         state,
-        summary: format!("{:?} {}", version, status),
+        text: format!("{:?} {}", version, status),
     })
 }
 
 fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
     page_size_limits: Option<Bounds<usize>>,
-) -> Option<CheckResult> {
+) -> Option<CheckItem> {
     let body = body?;
 
     match body {
         Ok(bd) => Some(check_page_size(bd.len(), page_size_limits)),
-        Err(_) => Some(CheckResult {
+        Err(_) => Some(CheckItem {
             state: State::Crit,
-            summary: "Error fetching the reponse body".to_string(),
+            text: "Error fetching the reponse body".to_string(),
         }),
     }
 }
 
-fn check_page_size(page_size: usize, page_size_limits: Option<Bounds<usize>>) -> CheckResult {
+fn check_page_size(page_size: usize, page_size_limits: Option<Bounds<usize>>) -> CheckItem {
     let state = page_size_limits
         .and_then(|bounds| bounds.evaluate(&page_size, State::Warn))
         .unwrap_or(State::Ok);
 
-    CheckResult {
+    CheckItem {
         state,
-        summary: format!("Page size: {} bytes", page_size),
+        text: format!("Page size: {} bytes", page_size),
     }
 }
 
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<UpperLevels<Duration>>,
-) -> Option<CheckResult> {
+) -> Option<CheckItem> {
     let state = response_time_levels
         .and_then(|levels| levels.evaluate(&response_time))
         .unwrap_or(State::Ok);
 
-    Some(CheckResult {
+    Some(CheckItem {
         state,
-        summary: format!(
+        text: format!(
             "Response time: {}.{}s",
             response_time.as_secs(),
             response_time.subsec_millis()
@@ -228,18 +266,18 @@ fn check_response_time(
 fn check_document_age(
     headers: &HeaderMap,
     document_age_levels: Option<UpperLevels<Duration>>,
-) -> Option<CheckResult> {
+) -> Option<CheckItem> {
     let document_age_levels = document_age_levels?;
 
     let now = SystemTime::now();
 
-    let cr_no_document_age = Some(CheckResult {
+    let cr_no_document_age = Some(CheckItem {
         state: State::Crit,
-        summary: "Can't determine document age".to_string(),
+        text: "Can't determine document age".to_string(),
     });
-    let cr_document_age_error = Some(CheckResult {
+    let cr_document_age_error = Some(CheckItem {
         state: State::Crit,
-        summary: "Can't decode document age".to_string(),
+        text: "Can't decode document age".to_string(),
     });
 
     let age_header = headers.get("last-modified").or(headers.get("date"));
@@ -259,9 +297,9 @@ fn check_document_age(
     let state = document_age_levels.evaluate(&age)?;
 
     //TODO(au): Specify "too old" in Output
-    Some(CheckResult {
+    Some(CheckItem {
         state,
-        summary: "Document age too old".to_string(),
+        text: "Document age too old".to_string(),
     })
 }
 

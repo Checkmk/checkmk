@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.config_generation.icmp import active_check_icmp
+from cmk.plugins.collection.server_side_calls.icmp import active_check_icmp
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(

@@ -13,7 +13,7 @@ from cmk.server_side_calls.v1 import ActiveCheckConfig, SpecialAgentConfig
 
 def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]]:
     loaded = discover_plugins(
-        "config_generation",
+        "server_side_calls",
         "active_check_",
         ActiveCheckConfig,
         raise_errors=cmk.utils.debug.enabled(),

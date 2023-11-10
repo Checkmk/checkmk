@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.config_generation.ftp import active_check_ftp
+from cmk.plugins.collection.server_side_calls.ftp import active_check_ftp
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(

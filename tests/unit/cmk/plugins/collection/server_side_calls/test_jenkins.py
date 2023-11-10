@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.config_generation.jenkins import special_agent_jenkins
+from cmk.plugins.collection.server_side_calls.jenkins import special_agent_jenkins
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,

@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.collection.config_generation.datadog import special_agent_datadog
+from cmk.plugins.collection.server_side_calls.datadog import special_agent_datadog
 from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPAddressFamily, PlainTextSecret
 
 HOST_CONFIG = HostConfig(

@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.config_generation.mobileiron import special_agent_mobileiron
+from cmk.plugins.collection.server_side_calls.mobileiron import special_agent_mobileiron
 from cmk.server_side_calls.v1 import (
     HostConfig,
     IPAddressFamily,

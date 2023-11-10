@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.collection.config_generation.azure import special_agent_azure
+from cmk.plugins.collection.server_side_calls.azure import special_agent_azure
 from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 
 HOST_CONFIG = HostConfig(

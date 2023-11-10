@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.config_generation.azure_status import special_agent_azure_status
+from cmk.plugins.collection.server_side_calls.azure_status import special_agent_azure_status
 from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(

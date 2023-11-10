@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.config_generation.kube import special_agent_kube
+from cmk.plugins.collection.server_side_calls.kube import special_agent_kube
 from cmk.server_side_calls.v1 import HostConfig, HTTPProxy, IPAddressFamily, PlainTextSecret
 
 HOST_CONFIG = HostConfig(

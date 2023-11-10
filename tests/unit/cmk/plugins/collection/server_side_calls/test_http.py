@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.collection.config_generation.http import (
+from cmk.plugins.collection.server_side_calls.http import (
     active_check_http,
     DirectHost,
     Family,

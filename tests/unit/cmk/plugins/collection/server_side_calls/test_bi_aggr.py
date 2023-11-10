@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.collection.config_generation.bi_aggr import active_check_bi_aggr
+from cmk.plugins.collection.server_side_calls.bi_aggr import active_check_bi_aggr
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPAddressFamily
 
 HOST_CONFIG = HostConfig(

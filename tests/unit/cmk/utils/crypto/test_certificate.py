@@ -23,7 +23,7 @@ from cmk.utils.crypto.certificate import (
     InvalidPEMError,
     InvalidSignatureError,
     PersistedCertificateWithPrivateKey,
-    RsaPrivateKey,
+    PrivateKey,
     Signature,
     WrongPasswordError,
     X509Name,
@@ -119,11 +119,11 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
     assert loaded_nums == orig_nums
 
 
-def test_serialize_rsa_key(tmp_path: Path, rsa_key: RsaPrivateKey) -> None:
+def test_serialize_rsa_key(tmp_path: Path, rsa_key: PrivateKey) -> None:
     pem_plain = rsa_key.dump_pem(None)
     assert pem_plain.str.startswith("-----BEGIN PRIVATE KEY-----")
 
-    loaded_plain = RsaPrivateKey.load_pem(pem_plain)
+    loaded_plain = PrivateKey.load_pem(pem_plain)
     assert loaded_plain._key.private_numbers() == rsa_key._key.private_numbers()  # type: ignore[attr-defined]
 
     pem_enc = rsa_key.dump_pem(Password("verysecure"))
@@ -132,10 +132,10 @@ def test_serialize_rsa_key(tmp_path: Path, rsa_key: RsaPrivateKey) -> None:
     with pytest.raises((WrongPasswordError, InvalidPEMError)):
         # This should really be a WrongPasswordError, but for some reason we see an InvalidPEMError
         # instead. We're not sure if it's an issue of our unit tests or if this confusion can also
-        # happen in production. See also `RsaPrivateKey.load_pem()`.
-        RsaPrivateKey.load_pem(pem_enc, Password("wrong"))
+        # happen in production. See also `PrivateKey.load_pem()`.
+        PrivateKey.load_pem(pem_enc, Password("wrong"))
 
-    loaded_enc = RsaPrivateKey.load_pem(pem_enc, Password("verysecure"))
+    loaded_enc = PrivateKey.load_pem(pem_enc, Password("verysecure"))
     assert loaded_enc._key.private_numbers() == rsa_key._key.private_numbers()  # type: ignore[attr-defined]
 
     pem_pkcs1 = rsa_key.dump_legacy_pkcs1()
@@ -149,7 +149,7 @@ def test_serialize_rsa_key(tmp_path: Path, rsa_key: RsaPrivateKey) -> None:
 
 
 @pytest.mark.parametrize("data", [b"", b"test", b"\0\0\0", "sign here: 📝".encode()])
-def test_verify_rsa_key(data: bytes, rsa_key: RsaPrivateKey) -> None:
+def test_verify_rsa_key(data: bytes, rsa_key: PrivateKey) -> None:
     signed = rsa_key.sign_data(data)
 
     rsa_key.public_key.verify(signed, data, HashAlgorithm.Sha512)
@@ -287,7 +287,7 @@ def test_subject_alt_names(self_signed_cert: CertificateWithPrivateKey, sans: li
     )
 
 
-def test_sign_csr(self_signed_cert: CertificateWithPrivateKey, rsa_key: RsaPrivateKey) -> None:
+def test_sign_csr(self_signed_cert: CertificateWithPrivateKey, rsa_key: PrivateKey) -> None:
     csr = CertificateSigningRequest.create(
         subject_name=X509Name.create(common_name="csr_test", organization_name="csr_test_org"),
         subject_private_key=rsa_key,

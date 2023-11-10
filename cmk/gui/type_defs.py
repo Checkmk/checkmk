@@ -22,7 +22,7 @@ from cmk.utils.crypto.certificate import (
     CertificatePEM,
     CertificateWithPrivateKey,
     EncryptedPrivateKeyPEM,
-    RsaPrivateKey,
+    PrivateKey,
 )
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.labels import Labels
@@ -676,9 +676,7 @@ class Key(BaseModel):
     def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
         return CertificateWithPrivateKey(
             certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
-            private_key=RsaPrivateKey.load_pem(
-                EncryptedPrivateKeyPEM(self.private_key), passphrase
-            ),
+            private_key=PrivateKey.load_pem(EncryptedPrivateKeyPEM(self.private_key), passphrase),
         )
 
     def fingerprint(self, algorithm: HashAlgorithm) -> str:

@@ -16,7 +16,7 @@ from cmk.utils.crypto.certificate import (
     Certificate,
     CertificatePEM,
     PlaintextPrivateKeyPEM,
-    RsaPrivateKey,
+    PrivateKey,
 )
 
 CA_NAME = "test-ca"
@@ -50,7 +50,7 @@ def test_create_site_certificate(ca: CertificateAuthority) -> None:
 
     mixed_pem = ca._site_certificate_path(site_id).read_bytes()
     certificate = Certificate.load_pem(CertificatePEM(mixed_pem))
-    private_key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
+    private_key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(mixed_pem), None)
 
     assert certificate.common_name == site_id
     assert certificate.public_key == private_key.public_key

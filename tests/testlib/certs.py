@@ -9,7 +9,7 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey, RsaPrivateKey
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey, PrivateKey
 
 
 @pytest.fixture(name="self_signed_cert", scope="module")
@@ -29,5 +29,5 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 
 
 @pytest.fixture(name="rsa_key", scope="module")
-def fixture_rsa_key() -> RsaPrivateKey:
-    return RsaPrivateKey.generate(1024)
+def fixture_rsa_key() -> PrivateKey:
+    return PrivateKey.generate(1024)

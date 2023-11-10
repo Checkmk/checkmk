@@ -21,7 +21,7 @@ from cmk.utils.crypto.certificate import (
     Certificate,
     CertificateSigningRequest,
     CertificateWithPrivateKey,
-    RsaPrivateKey,
+    PrivateKey,
     X509Name,
 )
 
@@ -61,8 +61,8 @@ class RootCA(CertificateWithPrivateKey):
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
         key = load_pem_private_key(pem_bytes, None)
-        assert isinstance(key, RSAPrivateKey)
-        return cls(certificate=Certificate(cert), private_key=RsaPrivateKey(key))
+        assert isinstance(key, RSAPrivateKey)  # TODO
+        return cls(certificate=Certificate(cert), private_key=PrivateKey(key))
 
     @classmethod
     def load_or_create(
@@ -89,8 +89,8 @@ class RootCA(CertificateWithPrivateKey):
         common_name: str,
         validity: relativedelta = _DEFAULT_VALIDITY,
         key_size: int = _DEFAULT_KEY_SIZE,
-    ) -> tuple[Certificate, RsaPrivateKey]:
-        new_cert_key = RsaPrivateKey.generate(key_size)
+    ) -> tuple[Certificate, PrivateKey]:
+        new_cert_key = PrivateKey.generate(key_size)
         new_cert_csr = CertificateSigningRequest.create(
             subject_name=X509Name.create(common_name=common_name),
             subject_private_key=new_cert_key,
@@ -130,7 +130,7 @@ def write_cert_store(source_dir: Path, store_path: Path) -> None:
 def _save_cert_chain(
     path_pem: Path,
     certificate_chain: Iterable[Certificate],
-    key: RsaPrivateKey,
+    key: PrivateKey,
 ) -> None:
     path_pem.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
     with path_pem.open(mode="wb") as f:

@@ -17,7 +17,7 @@ from cmk.utils.certs import CN_TEMPLATE, RootCA
 from cmk.utils.crypto.certificate import (
     Certificate,
     CertificateWithPrivateKey,
-    RsaPrivateKey,
+    PrivateKey,
     X509Name,
 )
 
@@ -203,7 +203,7 @@ def test_sign_csr_with_local_ca() -> None:
         is_ca=True,
     )
 
-    peter_key = RsaPrivateKey.generate(1024)
+    peter_key = PrivateKey.generate(1024)
     peter_cert = Certificate._create(
         subject_public_key=peter_key.public_key,
         subject_name=X509Name.create(common_name="peter"),

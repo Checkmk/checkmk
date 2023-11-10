@@ -50,7 +50,7 @@ class AesCbcCipher:
         return block[: -block[-1]]
 
 
-def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) -> bytes:
+def encrypt_for_rsa_key(recipient_key: certificate.PublicKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
     return recipient_key._key.encrypt(
         data,
@@ -62,7 +62,7 @@ def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) ->
     )
 
 
-def decrypt_with_rsa_key(recipient_key: certificate.RsaPrivateKey, data: bytes) -> bytes:
+def decrypt_with_rsa_key(recipient_key: certificate.PrivateKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
     return recipient_key._key.decrypt(
         data,

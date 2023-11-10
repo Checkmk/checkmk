@@ -24,7 +24,7 @@ Certificate
     contains the public key and certificate information, but no private key. Useful for validating
     certificates and signatures.
 
-RsaPublicKey/RsaPrivateKey
+PublicKey/PrivateKey
     probably don't have a direct use case on their own in our code base, at the moment.
 
 """
@@ -111,7 +111,7 @@ class CertificateWithPrivateKey(NamedTuple):
     """A bundle of a certificate and its matching private key"""
 
     certificate: Certificate
-    private_key: RsaPrivateKey
+    private_key: PrivateKey
 
     @classmethod
     def generate_self_signed(
@@ -127,7 +127,7 @@ class CertificateWithPrivateKey(NamedTuple):
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
-        private_key = RsaPrivateKey.generate(key_size)
+        private_key = PrivateKey.generate(key_size)
         name = X509Name.create(
             common_name=common_name,
             organization_name=organization or f"Checkmk Site {omd_site()}",
@@ -147,7 +147,7 @@ class CertificateWithPrivateKey(NamedTuple):
         return CertificateWithPrivateKey(certificate, private_key)
 
     @property
-    def public_key(self) -> RsaPublicKey:
+    def public_key(self) -> PublicKey:
         """
         Convenience accessor to the certificate's public key.
 
@@ -177,7 +177,7 @@ class CertificateWithPrivateKey(NamedTuple):
                 )
             ) is None:
                 raise InvalidPEMError("Could not find encrypted private key")
-            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
+            key = PrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
         else:
             if (
                 key_match := re.search(
@@ -185,7 +185,7 @@ class CertificateWithPrivateKey(NamedTuple):
                 )
             ) is None:
                 raise InvalidPEMError("Could not find private key")
-            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
+            key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
 
         return cls(
             certificate=cert,
@@ -232,7 +232,7 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
         certificate_path: Path,
         certificate: Certificate,
         private_key_path: Path,
-        private_key: RsaPrivateKey,
+        private_key: PrivateKey,
     ) -> PersistedCertificateWithPrivateKey:
         """
         Initialize the certificate bundle.
@@ -263,9 +263,9 @@ class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
         # bit verbose, as mypy thinks the PEM-NewTypes are bytes when I try to assign them directly
         pk_pem = private_key_path.read_bytes()
         if private_key_password is None:
-            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(pk_pem))
+            key = PrivateKey.load_pem(PlaintextPrivateKeyPEM(pk_pem))
         else:
-            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(pk_pem), private_key_password)
+            key = PrivateKey.load_pem(EncryptedPrivateKeyPEM(pk_pem), private_key_password)
 
         return PersistedCertificateWithPrivateKey(certificate_path, cert, private_key_path, key)
 
@@ -314,7 +314,7 @@ class Certificate:
         cls,
         *,
         # subject info
-        subject_public_key: RsaPublicKey,
+        subject_public_key: PublicKey,
         subject_name: X509Name,
         subject_alt_dns_names: list[str] | None = None,
         # cert properties
@@ -322,7 +322,7 @@ class Certificate:
         start_date: datetime,
         is_ca: bool = False,
         # issuer info
-        issuer_signing_key: RsaPrivateKey,
+        issuer_signing_key: PrivateKey,
         issuer_name: X509Name,
     ) -> Certificate:
         """
@@ -413,10 +413,10 @@ class Certificate:
         return sn.to_bytes((sn.bit_length() + 7) // 8).hex(":")
 
     @property
-    def public_key(self) -> RsaPublicKey:
+    def public_key(self) -> PublicKey:
         pk = self._cert.public_key()
         assert isinstance(pk, rsa.RSAPublicKey)
-        return RsaPublicKey(pk)
+        return PublicKey(pk)
 
     @property
     def subject(self) -> X509Name:
@@ -460,7 +460,7 @@ class Certificate:
                  * if the signature scheme is not supported, see below
 
         We assume the signature is made with PKCS1 v1.5 padding, as this is the only scheme
-        cryptography.io supports for X.509 certificates (see `RsaPublicKey.verify`). This is true
+        cryptography.io supports for X.509 certificates (see `PublicKey.verify`). This is true
         for certificates created with `Certificate._create`, but might not be true for certificates
         loaded from elsewhere.
         """
@@ -611,7 +611,7 @@ class Certificate:
         return datetime.now(tz=timezone.utc).replace(tzinfo=None)
 
 
-class RsaPrivateKey:
+class PrivateKey:
     """
     An unencrypted RSA private key.
 
@@ -622,17 +622,17 @@ class RsaPrivateKey:
         self._key = key
 
     @classmethod
-    def generate(cls, key_size: int) -> RsaPrivateKey:
-        return RsaPrivateKey(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
+    def generate(cls, key_size: int) -> PrivateKey:
+        return PrivateKey(rsa.generate_private_key(public_exponent=65537, key_size=key_size))
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> RsaPrivateKey:
+    def load_pem(cls, pem_data: PlaintextPrivateKeyPEM, password: None = None) -> PrivateKey:
         ...
 
     @overload
     @classmethod
-    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> RsaPrivateKey:
+    def load_pem(cls, pem_data: EncryptedPrivateKeyPEM, password: Password) -> PrivateKey:
         ...
 
     @classmethod
@@ -640,7 +640,7 @@ class RsaPrivateKey:
         cls,
         pem_data: EncryptedPrivateKeyPEM | PlaintextPrivateKeyPEM,
         password: Password | None = None,
-    ) -> RsaPrivateKey:
+    ) -> PrivateKey:
         """
         Decode a PKCS8 PEM encoded RSA private key.
 
@@ -654,7 +654,7 @@ class RsaPrivateKey:
             TypeError: when trying to load an EncryptedPrivateKeyPEM but no password is given.
                 This would be caught by mypy though.
 
-        >>> RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
+        >>> PrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
         Traceback (most recent call last):
             ...
         cmk.utils.crypto.certificate.InvalidPEMError
@@ -682,10 +682,10 @@ class RsaPrivateKey:
         ...     ])
         ... )
 
-        >>> RsaPrivateKey.load_pem(pem, Password("foo"))
-        <cmk.utils.crypto.certificate.RsaPrivateKey object at 0x...>
+        >>> PrivateKey.load_pem(pem, Password("foo"))
+        <cmk.utils.crypto.certificate.PrivateKey object at 0x...>
 
-        >>> RsaPrivateKey.load_pem(pem, Password("not foo"))
+        >>> PrivateKey.load_pem(pem, Password("not foo"))
         Traceback (most recent call last):
             ...
         cmk.utils.crypto.certificate.WrongPasswordError
@@ -695,7 +695,7 @@ class RsaPrivateKey:
         try:
             deserialized = serialization.load_pem_private_key(pem_data.bytes, password=pw)
             assert isinstance(deserialized, rsa.RSAPrivateKey)
-            return RsaPrivateKey(deserialized)
+            return PrivateKey(deserialized)
         except ValueError as exception:
             if str(exception) == "Bad decrypt. Incorrect password?":
                 raise WrongPasswordError
@@ -744,8 +744,8 @@ class RsaPrivateKey:
         return PlaintextPrivateKeyPEM(bytes_)
 
     @property
-    def public_key(self) -> RsaPublicKey:
-        return RsaPublicKey(self._key.public_key())
+    def public_key(self) -> PublicKey:
+        return PublicKey(self._key.public_key())
 
     def sign_data(
         self, data: bytes, hash_algorithm: HashAlgorithm = HashAlgorithm.Sha512
@@ -753,15 +753,15 @@ class RsaPrivateKey:
         return Signature(self._key.sign(data, padding.PKCS1v15(), hash_algorithm.value))
 
 
-class RsaPublicKey:
+class PublicKey:
     def __init__(self, key: rsa.RSAPublicKey) -> None:
         self._key = key
 
     @classmethod
-    def load_pem(cls, pem_data: PublicKeyPEM) -> RsaPublicKey:
+    def load_pem(cls, pem_data: PublicKeyPEM) -> PublicKey:
         deserialized = serialization.load_pem_public_key(pem_data.bytes)
         assert isinstance(deserialized, rsa.RSAPublicKey)
-        return RsaPublicKey(deserialized)
+        return PublicKey(deserialized)
 
     def dump_pem(self) -> PublicKeyPEM:
         # TODO: Use SubjectPublicKeyInfo format rather than PKCS1. PKCS1 doesn't include an
@@ -781,7 +781,7 @@ class RsaPublicKey:
         ).decode("utf-8")
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, RsaPublicKey):
+        if not isinstance(other, PublicKey):
             return NotImplemented
         return self._key.public_numbers() == other._key.public_numbers()
 
@@ -899,7 +899,7 @@ class CertificateSigningRequest:
 
     @classmethod
     def create(
-        cls, subject_name: X509Name, subject_private_key: RsaPrivateKey
+        cls, subject_name: X509Name, subject_private_key: PrivateKey
     ) -> CertificateSigningRequest:
         """Create a new Certificate Signing Request
 
@@ -918,10 +918,10 @@ class CertificateSigningRequest:
         return X509Name(self.csr.subject)
 
     @property
-    def public_key(self) -> RsaPublicKey:
+    def public_key(self) -> PublicKey:
         pk = self.csr.public_key()
         assert isinstance(pk, rsa.RSAPublicKey)
-        return RsaPublicKey(pk)
+        return PublicKey(pk)
 
     @property
     def is_signature_valid(self) -> bool:

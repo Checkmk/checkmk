@@ -13,8 +13,8 @@ from cmk.utils.crypto.certificate import (
     Certificate,
     CertificatePEM,
     EncryptedPrivateKeyPEM,
-    RsaPrivateKey,
-    RsaPublicKey,
+    PrivateKey,
+    PublicKey,
 )
 from cmk.utils.crypto.deprecated import (
     AesCbcCipher,
@@ -136,12 +136,12 @@ class BackupStream(MKBackupStream):
 
         return self._cipher.update(chunk), was_last_chunk
 
-    def _get_encryption_public_key(self, key_id: bytes) -> RsaPublicKey:
+    def _get_encryption_public_key(self, key_id: bytes) -> PublicKey:
         key = self._get_key_spec(key_id)
         return Certificate.load_pem(CertificatePEM(key["certificate"])).public_key
 
     # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
-    def _derive_key(self, pubkey: RsaPublicKey, key_length: int) -> tuple[bytes, bytes]:
+    def _derive_key(self, pubkey: PublicKey, key_length: int) -> tuple[bytes, bytes]:
         secret_key = os.urandom(key_length)
         return secret_key, encrypt_for_rsa_key(pubkey, secret_key)
 
@@ -215,7 +215,7 @@ class RestoreStream(MKBackupStream):
 
         return file_version, encrypted_secret_key
 
-    def _get_encryption_private_key(self, key_id: bytes) -> RsaPrivateKey:
+    def _get_encryption_private_key(self, key_id: bytes) -> PrivateKey:
         key = self._get_key_spec(key_id)
 
         try:
@@ -228,7 +228,7 @@ class RestoreStream(MKBackupStream):
             )
 
         try:
-            return RsaPrivateKey.load_pem(
+            return PrivateKey.load_pem(
                 EncryptedPrivateKeyPEM(key["private_key"]), Password(passphrase)
             )
         except (ValueError, IndexError, TypeError, MKException):

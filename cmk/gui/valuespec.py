@@ -7804,7 +7804,7 @@ class SSHKeyPair(ValueSpec[None | SSHKeyPairValue]):
         # TODO: This method is the only reason we have to offer dump_legacy_pkcs1. Can we use
         # dump_pem instead? The only difference is "-----BEGIN RSA PRIVATE KEY-----" (pkcs1) vs
         # "-----BEGIN PRIVATE KEY-----".
-        key = certificate.RsaPrivateKey.generate(4096)
+        key = certificate.PrivateKey.generate(4096)
         private_key = key.dump_legacy_pkcs1().str
         public_key = key.public_key.dump_openssh()
         return (private_key, public_key)
@@ -8016,7 +8016,7 @@ def CertificateWithPrivateKey(  # pylint: disable=redefined-builtin
             raise MKUserError(varprefix, _("Encrypted private keys are not supported"))
 
         try:
-            certificate.RsaPrivateKey.load_pem(certificate.PlaintextPrivateKeyPEM(value))
+            certificate.PrivateKey.load_pem(certificate.PlaintextPrivateKeyPEM(value))
         except Exception:
             raise MKUserError(varprefix, _("Invalid private key"))
 

@@ -14,10 +14,12 @@ from tests.unit.conftest import FixRegister
 
 from cmk.checkengine.checking import CheckPluginName
 
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    current_host,
+    current_service,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-
-from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
 
 _SECTION = {
     "MemTotal": 137438347264,

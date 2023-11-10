@@ -68,6 +68,7 @@ from cmk.checkengine.summarize import summarize
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api
 import cmk.base.config as config
+from cmk.base import plugin_contexts
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin as CheckPluginAPI
 from cmk.base.api.agent_based.value_store import ValueStoreManager
@@ -78,7 +79,6 @@ from cmk.base.sources import make_parser, make_sources, Source
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric
 from cmk.agent_based.v1 import Result as CheckFunctionResult
 from cmk.agent_based.v1 import State
-from cmk.agent_based.v1_backend import plugin_contexts
 
 __all__ = [
     "CheckPluginMapper",

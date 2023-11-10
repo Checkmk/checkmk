@@ -9,6 +9,7 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.prediction import FixedPredictionUpdater
 
+from cmk.base import plugin_contexts
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
@@ -18,8 +19,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.utils.multipath import Group
-
-from cmk.agent_based.v1_backend import plugin_contexts
 
 
 def test_parse_diskstat_minimum() -> None:

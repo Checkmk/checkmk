@@ -27,9 +27,7 @@ from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer
 # It is configured as an agent bakery rule, and controls the *deployment* of the only_from setting.
 # We want to use that very setting to check whether it is deployed correctly.
 # I currently see no better soluton than this API violation.
-from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

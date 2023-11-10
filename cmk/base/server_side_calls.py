@@ -19,8 +19,8 @@ from cmk.utils.translations import TranslationOptions
 
 import cmk.base.config as base_config
 import cmk.base.core_config as core_config
+from cmk.base import plugin_contexts
 
-from cmk.agent_based.v1_backend import plugin_contexts
 from cmk.server_side_calls.v1 import (
     ActiveCheckConfig,
     HostConfig,

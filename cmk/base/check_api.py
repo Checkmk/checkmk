@@ -42,14 +42,10 @@ import cmk.base.config as _config
 from cmk.base.api.agent_based.register.utils_legacy import (
     LegacyCheckDefinition as LegacyCheckDefinition,
 )
+from cmk.base.plugin_contexts import host_name as host_name  # pylint: disable=unused-import
+from cmk.base.plugin_contexts import service_description  # pylint: disable=unused-import
 
 from cmk.agent_based.v1 import render as _render
-from cmk.agent_based.v1_backend.plugin_contexts import (
-    host_name as host_name,  # pylint: disable=unused-import
-)
-from cmk.agent_based.v1_backend.plugin_contexts import (
-    service_description,  # pylint: disable=unused-import
-)
 
 # pylint: enable=unused-import
 

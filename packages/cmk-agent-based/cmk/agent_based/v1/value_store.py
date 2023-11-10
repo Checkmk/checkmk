@@ -35,8 +35,9 @@ the check function is called.
 
 .. autofunction:: set_value_store_manager
 
+.. autoclass:: _TypeValueStoreManager
 
-.. autoclass:: TypeValueStoreManager
+.. autoclass:: _ValueStoreManagerProtocol
 
 """
 

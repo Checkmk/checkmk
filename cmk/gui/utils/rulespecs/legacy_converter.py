@@ -17,17 +17,6 @@ from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem
 
 from cmk.rulesets import v1 as ruleset_api_v1
 
-_RULESPEC_GROUP_LEGACY_MAPPING = {
-    (
-        ruleset_api_v1.Functionality.MONITORING_CONFIGURATION,
-        ruleset_api_v1.Topic.APPLICATIONS,
-    ): wato.RulespecGroupCheckParametersApplications,
-    (
-        ruleset_api_v1.Functionality.MONITORING_CONFIGURATION,
-        ruleset_api_v1.Topic.VIRTUALIZATION,
-    ): wato.RulespecGroupCheckParametersVirtualization,
-}
-
 
 def _localize_optional(
     to_localize: ruleset_api_v1.Localizable | None, localizer: Callable[[str], str]
@@ -65,7 +54,23 @@ def _convert_to_legacy_rulespec_group(
         raise ValueError(functionality_to_convert)
     if not isinstance(topic_to_convert, ruleset_api_v1.Topic):
         raise ValueError(topic_to_convert)
-    return _RULESPEC_GROUP_LEGACY_MAPPING[(functionality_to_convert, topic_to_convert)]
+    return _get_builtin_legacy_sub_group_with_main_group(functionality_to_convert, topic_to_convert)
+
+
+def _get_builtin_legacy_sub_group_with_main_group(
+    functionality_to_convert: ruleset_api_v1.Functionality,
+    topic_to_convert: ruleset_api_v1.Topic,
+) -> type[legacy_rulespecs.RulespecSubGroup]:
+    match functionality_to_convert:
+        case ruleset_api_v1.Functionality.MONITORING_CONFIGURATION:
+            match topic_to_convert:
+                case ruleset_api_v1.Topic.APPLICATIONS:
+                    return wato.RulespecGroupCheckParametersApplications
+                case ruleset_api_v1.Topic.VIRTUALIZATION:
+                    return wato.RulespecGroupCheckParametersVirtualization
+            assert_never(topic_to_convert)
+    # TODO change to assert_never when more functionalities are added
+    raise ValueError(functionality_to_convert)
 
 
 @dataclass(frozen=True)
@@ -94,50 +99,52 @@ def _extract_dictionary_key_props(
 def _convert_to_legacy_valuespec(
     to_convert: ruleset_api_v1.ValueSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
-    if isinstance(to_convert, ruleset_api_v1.Integer):
-        return _convert_to_legacy_integer(to_convert, localizer)
+    match to_convert:
+        case ruleset_api_v1.Integer():
+            return _convert_to_legacy_integer(to_convert, localizer)
 
-    if isinstance(to_convert, ruleset_api_v1.Percentage):
-        return _convert_to_legacy_percentage(to_convert, localizer)
+        case ruleset_api_v1.Percentage():
+            return _convert_to_legacy_percentage(to_convert, localizer)
 
-    if isinstance(to_convert, ruleset_api_v1.TextInput):
-        return _convert_to_legacy_text_input(to_convert, localizer)
+        case ruleset_api_v1.TextInput():
+            return _convert_to_legacy_text_input(to_convert, localizer)
 
-    if isinstance(to_convert, ruleset_api_v1.Tuple):
-        return _convert_to_legacy_tuple(to_convert, localizer)
+        case ruleset_api_v1.Tuple():
+            return _convert_to_legacy_tuple(to_convert, localizer)
 
-    if isinstance(to_convert, ruleset_api_v1.Dictionary):
-        elements = [
-            (key, _convert_to_legacy_valuespec(elem.spec, localizer))
-            for key, elem in to_convert.elements.items()
-        ]
+        case ruleset_api_v1.Dictionary():
+            elements = [
+                (key, _convert_to_legacy_valuespec(elem.spec, localizer))
+                for key, elem in to_convert.elements.items()
+            ]
 
-        legacy_key_props = _extract_dictionary_key_props(to_convert.elements)
+            legacy_key_props = _extract_dictionary_key_props(to_convert.elements)
 
-        return legacy_valuespecs.Dictionary(
-            elements=elements,
-            title=_localize_optional(to_convert.title, localizer),
-            help=_localize_optional(to_convert.help_text, localizer),
-            empty_text=_localize_optional(to_convert.no_elements_text, localizer),
-            required_keys=legacy_key_props.required,
-            ignored_keys=to_convert.deprecated_elements,
-            hidden_keys=legacy_key_props.hidden,
-            show_more_keys=legacy_key_props.show_more,
-            validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
-            if to_convert.custom_validate is not None
-            else None,
-        )
+            return legacy_valuespecs.Dictionary(
+                elements=elements,
+                title=_localize_optional(to_convert.title, localizer),
+                help=_localize_optional(to_convert.help_text, localizer),
+                empty_text=_localize_optional(to_convert.no_elements_text, localizer),
+                required_keys=legacy_key_props.required,
+                ignored_keys=to_convert.deprecated_elements,
+                hidden_keys=legacy_key_props.hidden,
+                show_more_keys=legacy_key_props.show_more,
+                validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
+                if to_convert.custom_validate is not None
+                else None,
+            )
 
-    if isinstance(to_convert, ruleset_api_v1.DropdownChoice):
-        return _convert_to_legacy_dropdown_choice(to_convert, localizer)
+        case ruleset_api_v1.DropdownChoice():
+            return _convert_to_legacy_dropdown_choice(to_convert, localizer)
 
-    if isinstance(to_convert, ruleset_api_v1.CascadingDropdown):
-        return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
+        case ruleset_api_v1.CascadingDropdown():
+            return _convert_to_legacy_cascading_dropdown(to_convert, localizer)
 
-    if isinstance(to_convert, ruleset_api_v1.MonitoringState):
-        return _convert_to_legacy_monitoring_state(to_convert, localizer)
+        case ruleset_api_v1.MonitoringState():
+            return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
-    raise NotImplementedError(to_convert)
+        case other:
+            assert_never(other)
 
 
 def _convert_to_legacy_integer(

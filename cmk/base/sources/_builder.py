@@ -38,9 +38,9 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_store
 from cmk.base.config import ConfigCache
-from cmk.base.config_generation import SpecialAgent
 from cmk.base.ip_lookup import AddressFamily
 from cmk.base.plugins.config_generation import load_special_agents
+from cmk.base.server_side_calls import SpecialAgent
 
 from ._api import Source
 from ._sources import (

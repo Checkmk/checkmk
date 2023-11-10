@@ -15,7 +15,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
-from cmk.base.config_generation import (
+from cmk.base.server_side_calls import (
     _get_host_address_config,
     ActiveCheck,
     ActiveServiceData,

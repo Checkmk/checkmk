@@ -393,8 +393,8 @@ def _is_allowed_for_legacy_check_tests(
         (
             _allow_default_plus_component_under_test(imported=imported, component=component),
             _in_component(imported=imported, component=Component("cmk.base.legacy_checks")),
-            _in_component(imported=imported, component=Component("cmk.base.config_generation")),
             _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
+            _in_component(imported=imported, component=Component("cmk.base.server_side_calls")),
             _in_component(imported=imported, component=Component("cmk.base.api.agent_based")),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.snmplib")),

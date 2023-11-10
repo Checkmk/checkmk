@@ -211,12 +211,13 @@ class DictElement:
         spec: Configuration specification of this entry
         required: Whether the user has to configure the value in question. If set to False, it may
                   be omitted.
+        read_only: Element that can't be edited. Can be used to store the discovered parameters.
         show_more: Only show if "show more" is activated
     """
 
     spec: "ValueSpec"
     required: bool | None = False
-    ignored: bool | None = False  # TODO check if hidden_keys are needed in addition
+    read_only: bool | None = False
     show_more: bool | None = False
 
 
@@ -234,6 +235,10 @@ class Dictionary:
         custom_validate: Custom validation function. Will be executed in addition to any
                          builtin validation logic. Needs to raise a ValidationError in case
                          validation fails. The return value of the function will not be used.
+        deprecated_elements: Elements that can no longer be configured, but aren't removed
+                            from the old rules that already have them configured. Can be
+                            used when deprecating elements, to avoid breaking the old configurations.
+                            They are configured with a list of element keys.
         no_elements_text: Text to show if no elements are specified
     """
 
@@ -242,6 +247,7 @@ class Dictionary:
     help_text: Localizable | None = None
 
     custom_validate: Callable[[Mapping[str, object]], object] | None = None
+    deprecated_elements: Sequence[str] = field(default_factory=list)
     no_elements_text: Localizable | None = None
 
     def __post_init__(self):

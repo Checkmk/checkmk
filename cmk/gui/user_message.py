@@ -23,6 +23,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.table import table_element
+from cmk.gui.utils.csrf_token import check_csrf_token
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -113,5 +114,6 @@ def render_user_message_table(what: str) -> None:
 
 
 def ajax_delete_user_message() -> None:
+    check_csrf_token()
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)

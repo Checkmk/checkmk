@@ -1,0 +1,27 @@
+Title: CSRF in user-message deletion
+Class: security
+Compatible: compat
+Component: wato
+Date: 1700648297
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+In Checkmk you can message other users via *Send user message*.
+Prior to this Werk an authenticated attacker who receives such a user-message could craft a link with the generated message uuid to delete the message.
+This link was prone to CSRF and when another user was tricked into opening this link the message was deleted possibly before the user could read it.
+
+* This vulnerability was identified through a commissioned penetration test conducted by Port Zero.
+
+<b>Affected Versions</b>:
+LI: 2.2.0
+LI: 2.1.0
+LI: 2.0.0
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 3.5 (Low) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:L/A:N</tt>.
+We assigned CVE-2023-6251 to this vulnerability.
+
+<b>Changes</b>:
+This Werk adds CSRF token validation to this endpoint.

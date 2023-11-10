@@ -591,6 +591,10 @@ msgstr "%s non è un elemento esistente in questa selezione."
 msgid "%s is parent of %s."
 msgstr "%s è genitore di %s."
 
+#, fuzzy, python-format
+msgid "%s is too %s. The %s allowed value is %s."
+msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
+
 #, python-format
 msgid "%s latency"
 msgstr "%s latenza"
@@ -2692,9 +2696,6 @@ msgstr "Informazioni su Checkmk"
 msgid "Absolut level for total number of used file descriptors"
 msgstr "Livello assoluto per il numero totale di descrittori di file usati"
 
-msgid "Absolut level for total number of used processes"
-msgstr "Livello assoluto per il numero totale di processi utilizzati"
-
 msgid "Absolut level for total number of used sockets"
 msgstr "Livello assoluto per il numero totale di prese utilizzate"
 
@@ -2766,6 +2767,10 @@ msgstr "Livelli assoluti per la memoria recuperata da GC"
 
 msgid "Absolute levels for output traffic"
 msgstr "Livelli assoluti per il traffico in uscita"
+
+#, fuzzy
+msgid "Absolute levels for total number of used processes"
+msgstr "Livello assoluto per il numero totale di processi utilizzati"
 
 msgid "Absolute levels for unused licenses"
 msgstr "Livelli assoluti per le licenze non utilizzate"
@@ -4625,9 +4630,6 @@ msgstr "Cottura e firma dell'agente"
 msgid "Agent baking finished."
 msgstr "La cottura dell'agente è terminata."
 
-msgid "Agent based plugins (Checks, Inventory)"
-msgstr "Plugin basati su agenti (controlli, inventario)"
-
 msgid "Agent controller"
 msgstr "Agente controllore"
 
@@ -4989,9 +4991,6 @@ msgstr ""
 msgid "Alerted"
 msgstr "Allertato"
 
-msgid "Alerting depending on the number of used licenses is disabled"
-msgstr "L'allerta in base al numero di licenze utilizzate è disabilitata"
-
 msgid "Alertmanager"
 msgstr "Alertmanager"
 
@@ -5105,6 +5104,10 @@ msgstr "Tutti i clienti con statistiche di host e servizi"
 
 msgid "All datasources are OK"
 msgstr "Tutte le fonti di dati sono OK"
+
+#, fuzzy
+msgid "All differences in frozen aggregations"
+msgstr "Tutte le aggregazioni congelate"
 
 msgid "All directions"
 msgstr "Tutte le direzioni"
@@ -5761,6 +5764,10 @@ msgstr ""
 msgid "Always assume host to be up"
 msgstr "Presumere sempre che l'host sia attivo"
 
+#, fuzzy
+msgid "Always be OK"
+msgstr "Segnala sempre OK"
+
 msgid "Always bulk"
 msgstr "Sempre alla rinfusa"
 
@@ -5769,9 +5776,6 @@ msgstr "Installare sempre Python con l'agente"
 
 msgid "Always keep vanished clustered services"
 msgstr "Mantenere sempre i servizi in cluster scomparsi"
-
-msgid "Always report OK"
-msgstr "Segnala sempre OK"
 
 msgid "Always send <b>all</b> messages, even old ones (just for testing!)"
 msgstr ""
@@ -7222,6 +7226,10 @@ msgstr "Utilizzo medio"
 msgid "Average utilization core %d"
 msgstr "Utilizzo medio del nucleo %d"
 
+#, fuzzy
+msgid "Average utilization of memory on the active supervisor"
+msgstr "L'utilizzo medio della memoria sul supervisore attivo"
+
 msgid "Average utilization per core"
 msgstr "Utilizzo medio per core"
 
@@ -7809,9 +7817,6 @@ msgstr "Tempo fatturabile"
 
 msgid "Bin Log Disk Usage"
 msgstr "Utilizzo del disco del registro Bin"
-
-msgid "Binaries"
-msgstr "Binari"
 
 msgid "Bind DN"
 msgstr "Legare DN"
@@ -10725,9 +10730,6 @@ msgstr "Controlli sugli host regolari"
 
 msgid "Checks via SSH. "
 msgstr "Controlla via SSH. "
-
-msgid "Checks' man pages"
-msgstr "Pagine man dei controlli"
 
 msgid "Checktype"
 msgstr "Tipo di controllo"
@@ -13830,9 +13832,6 @@ msgstr "Soglia critica"
 msgid "Critical warning"
 msgstr "Avviso critico"
 
-msgid "Critical when all licenses are used"
-msgstr "Critico quando tutte le licenze sono utilizzate"
-
 msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
 "Criticità del servizio quando i sensori rilevano che l'alimentazione è "
@@ -13918,6 +13917,10 @@ msgid "Current replication mode"
 msgstr "Modalità di replica corrente"
 
 msgid "Current setting"
+msgstr "Impostazione corrente"
+
+#, fuzzy
+msgid "Current setting as VUE"
 msgstr "Impostazione corrente"
 
 msgid "Current size"
@@ -15070,6 +15073,9 @@ msgstr "Configurazione predefinita"
 msgid "Default credentials"
 msgstr "Credenziali predefinite"
 
+msgid "Default element is not one of the specified elements"
+msgstr ""
+
 msgid "Default is 22."
 msgstr "Il valore predefinito è 22."
 
@@ -15980,9 +15986,6 @@ msgstr "Distribuire file personalizzati con l'agente"
 msgid "Deploy iptables plugin"
 msgstr "Distribuire il plugin iptables"
 
-msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
-msgstr "Distribuire l'ambiente legacy (Python 3.4 + set di moduli standard)"
-
 msgid "Deploy logged in users plugin"
 msgstr "Distribuire il plugin per gli utenti registrati"
 
@@ -16042,12 +16045,6 @@ msgstr "Distribuire il plugin che aggiorna automaticamente l'agente"
 
 msgid "Deploy powershell plugin - recommended for Win2k8 upwards"
 msgstr "Distribuire il plugin powershell - raccomandato per Win2k8 in su"
-
-msgid ""
-"Deploy standard environment (Current Python 3.8 + standard set of modules)"
-msgstr ""
-"Distribuire l'ambiente standard (Python 3.8 corrente + set di moduli "
-"standard)"
 
 #, python-format
 msgid "Deploy the %s plugin and its configuration"
@@ -17154,6 +17151,10 @@ msgstr "Visualizza tutte le aggregazioni di BI."
 msgid "Displays all aggregations of a certain group."
 msgstr "Visualizza tutte le aggregazioni di un certo gruppo."
 
+#, fuzzy
+msgid "Displays all frozen BI aggregations."
+msgstr "Visualizza tutte le aggregazioni di BI."
+
 msgid "Displays amount of hosts in a selected state."
 msgstr "Visualizza la quantità di host in uno stato selezionato."
 
@@ -17770,9 +17771,6 @@ msgstr "Crescita del numero di documenti al minuto"
 
 msgid "Documentation URL"
 msgstr "URL della documentazione"
-
-msgid "Documentation files"
-msgstr "File di documentazione"
 
 msgid "Documents fragmentation"
 msgstr "Frammentazione dei documenti"
@@ -22536,9 +22534,6 @@ msgstr "GUI"
 
 msgid "GUI design"
 msgstr "Progettazione GUI"
-
-msgid "GUI extensions"
-msgstr "Estensioni GUI"
 
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
@@ -30484,20 +30479,17 @@ msgstr ""
 "raggruppamento delle notifiche o scegliere un altro plugin di notifica che "
 "permetta il raggruppamento."
 
-msgid "Legacy GUI extensions"
-msgstr "Estensioni dell'interfaccia grafica legacy"
-
 msgid "Legacy agent management"
 msgstr "Gestione degli agenti legacy"
 
-msgid "Legacy check plugins"
-msgstr "Plugin di controllo legacy"
-
-msgid "Legacy inventory plugins"
-msgstr "Plugin di inventario legacy"
-
 msgid "Legacy run"
 msgstr "Corsa dell'eredità"
+
+msgid "Legacy valuespec (input data is ignored"
+msgstr ""
+
+msgid "Legacy valuespec (input data is ignored)"
+msgstr ""
 
 msgid "Legal"
 msgstr "Legale"
@@ -30912,6 +30904,12 @@ msgstr "Livelli per il numero di sessioni che sono attualmente attive"
 msgid "Levels for the number of sessions that are currently inactive"
 msgstr "Livelli per il numero di sessioni che sono attualmente inattive"
 
+#, fuzzy
+msgid "Levels for the number of threads running in a JVM"
+msgstr ""
+"Questa regola imposta i livelli di warn e crit per il numero di thread in "
+"esecuzione in una JVM."
+
 msgid "Levels for the percentual growth per time range"
 msgstr "Livelli per la crescita percentuale per intervallo di tempo"
 
@@ -30966,6 +30964,10 @@ msgstr "Livelli di attesa"
 
 msgid "Levels health"
 msgstr "Livelli di salute"
+
+#, fuzzy
+msgid "Levels in percentage of total memory usage"
+msgstr "Specificare i livelli in percentuale dell'uso totale della memoria"
 
 msgid "Levels instance"
 msgstr "Istanza dei livelli"
@@ -31107,6 +31109,10 @@ msgstr ""
 msgid "Levels on time offset"
 msgstr "Livelli a tempo compensato"
 
+#, fuzzy
+msgid "Levels on time since last successful backup"
+msgstr "Specificare il tempo trascorso dall'ultimo backup riuscito"
+
 msgid "Levels on total CPU utilization"
 msgstr "Livelli di utilizzo totale della CPU"
 
@@ -31153,9 +31159,6 @@ msgstr "Stoccaggio dei livelli"
 
 msgid "Libelle Business Shadow"
 msgstr "Ombra del business Libelle"
-
-msgid "Libraries"
-msgstr "Biblioteche"
 
 msgid "Licence state"
 msgstr "Stato della licenza"
@@ -31952,9 +31955,6 @@ msgstr ""
 
 msgid "Locality Name"
 msgstr "Nome della località"
-
-msgid "Localizations"
-msgstr "Localizzazioni"
 
 msgid "Locally enabled"
 msgstr "Abilitato localmente"
@@ -37305,9 +37305,6 @@ msgstr "Regole di notifica"
 msgid "Notification rules of user %s"
 msgstr "Regole di notifica dell'utente %s"
 
-msgid "Notification scripts"
-msgstr "Script di notifica"
-
 msgid "Notification sort order for bulk notifications"
 msgstr "Ordinamento delle notifiche per le notifiche di massa"
 
@@ -39646,9 +39643,6 @@ msgstr ""
 "problema per piccole installazioni. Puoi abilitare questo per avere le meta "
 "informazioni aggiornate quando elabori il risultato del primo controllo dopo "
 "il riavvio."
-
-msgid "PNP4Nagios templates (deprecated)"
-msgstr "Modelli PNP4Nagios (deprecato)"
 
 msgid "POP3"
 msgstr "POP3"
@@ -42508,9 +42502,6 @@ msgstr "Versione Python"
 
 msgid "Python agent plugin execution (UNIX)"
 msgstr "Esecuzione del plugin dell'agente Python (UNIX)"
-
-msgid "Python environment"
-msgstr "Ambiente Python"
 
 msgid "Python version for execution of python agent plugins"
 msgstr "Versione Python per l'esecuzione dei plugin dell'agente python"
@@ -46538,11 +46529,12 @@ msgstr "Seleziona il tipo di elemento della pagina fissa"
 msgid "Select view"
 msgstr "Seleziona la vista"
 
+#, fuzzy
 msgid ""
 "Select which Azure services to monitor.\n"
-"In case you want to monitor 'Users in the Active Directory' or 'AD Connect "
-"Sync', you will need to grant the 'Directory.Read.All' graph permission to "
-"the Azure app and to grant admin consent to it."
+"In case you want to monitor 'Users in the Active Directory', 'AD Connect "
+"Sync', or 'App Registrations' you will need to grant the 'Directory.Read."
+"All' graph permission to the Azure app and to grant admin consent to it."
 msgstr ""
 "Selezionare i servizi Azure da monitorare.\n"
 "Se si desidera monitorare 'Users in the Active Directory' o 'AD Connect "
@@ -50105,9 +50097,6 @@ msgstr ""
 "flusso, errori di invocazione, dimensione insufficiente del batch. Questa "
 "metrica viene riportata solo per le invocazioni basate sul flusso."
 
-msgid "Specify time since last successful backup"
-msgstr "Specificare il tempo trascorso dall'ultimo backup riuscito"
-
 msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
 msgstr "Specificare due lettere maiuscole come <tt>EN</tt> o <tt>DE</tt>."
 
@@ -51810,6 +51799,14 @@ msgstr "Code di Brightmail di Symantec"
 msgid "Symmetric encryption (Linux, Windows)"
 msgstr "Crittografia simmetrica (Linux, Windows)"
 
+#, fuzzy
+msgid "Sync disabled"
+msgstr "disattivato"
+
+#, fuzzy
+msgid "Sync enabled"
+msgstr "abilitare"
+
 msgid "Sync group memberships from other connections"
 msgstr "Sincronizzare le appartenenze di gruppo da altre connessioni"
 
@@ -51868,6 +51865,10 @@ msgstr "Sincronizzazione di"
 
 msgid "Synchronous"
 msgstr "Sincrono"
+
+#, fuzzy
+msgid "Syncing"
+msgstr "Sincronizzazione di"
 
 msgid "Synology Updates"
 msgstr "Aggiornamenti Synology"
@@ -53666,9 +53667,6 @@ msgstr ""
 "aumentare questo limite qui se hai davvero bisogno di elaborare una grande "
 "quantità di dati. Impostalo a zero per disabilitare il limite."
 
-msgid "The average utilization of memory on the active supervisor"
-msgstr "L'utilizzo medio della memoria sul supervisore attivo"
-
 msgid "The backup has been deleted."
 msgstr "Il backup è stato cancellato."
 
@@ -54872,6 +54870,11 @@ msgstr ""
 "un intervallo regolare. Qui puoi cambiare l'intervallo di aggiornamento in "
 "base alle tue esigenze. Questo valore significa che tutti gli snapin che "
 "richiedono un aggiornamento regolare sono aggiornati in questo intervallo."
+
+#, fuzzy
+msgid "The installed Python modules and their versions"
+msgstr ""
+"Inventario di tutti i plugin dell'agente distribuiti e delle loro versioni"
 
 msgid "The installed agent needs an update"
 msgstr "L'agente installato ha bisogno di un aggiornamento"
@@ -56525,18 +56528,6 @@ msgstr ""
 "Un valore di 1,5 significa che l'attuale risultato del controllo è stato "
 "raccolto un intervallo di controllo e mezzo di un oggetto. Questo significa "
 "90 secondi nel caso di un controllo che viene controllato ogni 60 secondi."
-
-msgid ""
-"The standard environment we deploy can't be used on legacy Windows systems "
-"such as Windows Server 2008, Windows Server 2008R2. If you want to deploy "
-"agent plugins like the agent updater, mk_logwatch or mk_jolokia on such "
-"windows hosts, you have to select the option \"Deploy legacy environment\" "
-"here."
-msgstr ""
-"L'ambiente standard che distribuiamo non può essere usato su sistemi Windows "
-"legacy come Windows Server 2008, Windows Server 2008R2. Se vuoi distribuire "
-"i plugin dell'agente come l'agent updater, mk_logwatch o mk_jolokia su tali "
-"host Windows, devi selezionare l'opzione \"Deploy legacy environment\" qui."
 
 msgid ""
 "The start of a recurring downtime can only be set for days 1-28 of a month."
@@ -58322,10 +58313,10 @@ msgid ""
 "This is essentially the raw agent updater script that gets packaged within "
 "the binary versions. You have to care for the dependencies by yourself. The "
 "script requires a Python 3.4 (or greater) installation and matching python "
-"packages \"requests\", \"PySocks\" and \"pyOpenSSL\" installed on the target "
-"hosts. Requirements may change eventually without announcement. However, "
-"this might be the right choice for experienced users or users that want to "
-"run the agent updater on architectures like ARM, ppc or others."
+"packages \"requests\", \"PySocks\" and \"cryptography\" installed on the "
+"target hosts. Requirements may change eventually without announcement. "
+"However, this might be the right choice for experienced users or users that "
+"want to run the agent updater on architectures like ARM, ppc or others."
 msgstr ""
 "Si tratta essenzialmente dello script di aggiornamento dell'agente grezzo "
 "che viene impacchettato nelle versioni binarie. È necessario occuparsi da "
@@ -60475,13 +60466,6 @@ msgid ""
 msgstr ""
 "Questa regola imposta i livelli di warn e crit per il numero di richieste in "
 "arrivo a un server applicativo JVM."
-
-msgid ""
-"This rule sets the warn and crit levels for the number of threads running in "
-"a JVM."
-msgstr ""
-"Questa regola imposta i livelli di warn e crit per il numero di thread in "
-"esecuzione in una JVM."
 
 msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
@@ -70852,6 +70836,10 @@ msgstr ""
 "La vostra icona è in conflitto con un'icona integrata di Checkmk. Scegliere "
 "un altro nome per l'icona."
 
+#, fuzzy, python-format
+msgid "Your input '%s' does not match the required format '%s'."
+msgstr "Il tuo input non corrisponde al formato richiesto."
+
 msgid "Your input does not match the required format."
 msgstr "Il tuo input non corrisponde al formato richiesto."
 
@@ -71880,6 +71868,10 @@ msgstr "ignorare lo stato"
 msgid "ignore which one is active"
 msgstr "ignora quale sia attivo"
 
+#, fuzzy
+msgid "ignored"
+msgstr "ignorare"
+
 msgid "immediate stop"
 msgstr "arresto immediato"
 
@@ -72486,6 +72478,9 @@ msgstr "commento persistente"
 msgid "pfSense Firewall Packet Rates"
 msgstr "Tassi dei pacchetti del firewall pfSense"
 
+msgid "pip freeze output"
+msgstr ""
+
 msgid "pkts / sec"
 msgstr "pkts / sec"
 
@@ -73073,6 +73068,73 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#~ msgid "Agent based plugins (Checks, Inventory)"
+#~ msgstr "Plugin basati su agenti (controlli, inventario)"
+
+#~ msgid "Binaries"
+#~ msgstr "Binari"
+
+#~ msgid "Checks' man pages"
+#~ msgstr "Pagine man dei controlli"
+
+#~ msgid "Documentation files"
+#~ msgstr "File di documentazione"
+
+#~ msgid "GUI extensions"
+#~ msgstr "Estensioni GUI"
+
+#~ msgid "Legacy GUI extensions"
+#~ msgstr "Estensioni dell'interfaccia grafica legacy"
+
+#~ msgid "Legacy check plugins"
+#~ msgstr "Plugin di controllo legacy"
+
+#~ msgid "Legacy inventory plugins"
+#~ msgstr "Plugin di inventario legacy"
+
+#~ msgid "Libraries"
+#~ msgstr "Biblioteche"
+
+#~ msgid "Localizations"
+#~ msgstr "Localizzazioni"
+
+#~ msgid "Notification scripts"
+#~ msgstr "Script di notifica"
+
+#~ msgid "PNP4Nagios templates (deprecated)"
+#~ msgstr "Modelli PNP4Nagios (deprecato)"
+
+#~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
+#~ msgstr "Distribuire l'ambiente legacy (Python 3.4 + set di moduli standard)"
+
+#~ msgid ""
+#~ "Deploy standard environment (Current Python 3.8 + standard set of modules)"
+#~ msgstr ""
+#~ "Distribuire l'ambiente standard (Python 3.8 corrente + set di moduli "
+#~ "standard)"
+
+#~ msgid "Python environment"
+#~ msgstr "Ambiente Python"
+
+#~ msgid ""
+#~ "The standard environment we deploy can't be used on legacy Windows "
+#~ "systems such as Windows Server 2008, Windows Server 2008R2. If you want "
+#~ "to deploy agent plugins like the agent updater, mk_logwatch or mk_jolokia "
+#~ "on such windows hosts, you have to select the option \"Deploy legacy "
+#~ "environment\" here."
+#~ msgstr ""
+#~ "L'ambiente standard che distribuiamo non può essere usato su sistemi "
+#~ "Windows legacy come Windows Server 2008, Windows Server 2008R2. Se vuoi "
+#~ "distribuire i plugin dell'agente come l'agent updater, mk_logwatch o "
+#~ "mk_jolokia su tali host Windows, devi selezionare l'opzione \"Deploy "
+#~ "legacy environment\" qui."
+
+#~ msgid "Alerting depending on the number of used licenses is disabled"
+#~ msgstr "L'allerta in base al numero di licenze utilizzate è disabilitata"
+
+#~ msgid "Critical when all licenses are used"
+#~ msgstr "Critico quando tutte le licenze sono utilizzate"
 
 #~ msgid ""
 #~ "The site is currently locked by another activation process. Please try "

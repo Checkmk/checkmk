@@ -280,7 +280,7 @@ def hook_before_call(
 def hook_after_call(  # pylint: disable=too-many-branches
     context: schemathesis.hooks.HookContext,
     case: schemathesis.models.Case,
-    response: schemathesis.utils.GenericResponse,
+    response: schemathesis.GenericResponse,
 ) -> None:
     """Modify the case after execution but before validation.
 

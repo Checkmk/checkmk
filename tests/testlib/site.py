@@ -92,7 +92,7 @@ class Site:
     @property
     def apache_port(self) -> int:
         if self._apache_port is None:
-            self._apache_port = int(self.get_config("APACHE_TCP_PORT"))
+            self._apache_port = int(self.get_config("APACHE_TCP_PORT", "5000"))
         return self._apache_port
 
     @property

@@ -8,6 +8,8 @@
 
 from functools import partial
 
+from livestatus import MultiSiteConnection
+
 from cmk.utils.crash_reporting import crash_report_registry
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 from cmk.utils.version import edition, Edition
@@ -34,6 +36,7 @@ from cmk.gui import (
     prediction,
     robotmk,
     sidebar,
+    sites,
     user_message,
     valuespec,
     visuals,
@@ -264,6 +267,7 @@ def register() -> None:
     agent_registration.register(permission_section_registry)
     weblib.register(page_registry)
     openapi_registration.register(endpoint_registry)
+    sites.ConnectionClass = MultiSiteConnection
 
 
 register()

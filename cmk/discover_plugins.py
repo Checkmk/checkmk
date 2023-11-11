@@ -57,9 +57,7 @@ class DiscoveredPlugins(Generic[_PluginType]):
 
 def discover_plugins(
     plugin_group: str,
-    name_prefix: str,
-    plugin_type: type[_PluginType],
-    *,
+    plugin_prefixes: Mapping[type[_PluginType], str],
     raise_errors: bool,
 ) -> DiscoveredPlugins[_PluginType]:
     """Collect all plugins from well-known locations"""
@@ -71,7 +69,7 @@ def discover_plugins(
     )
     namespaces_by_priority = find_namespaces(modules, plugin_group, ls=_ls_defensive)
 
-    collector = Collector(plugin_type, name_prefix, raise_errors=raise_errors)
+    collector = Collector(plugin_prefixes, raise_errors=raise_errors)
     for mod_name in namespaces_by_priority:
         collector.add_from_module(mod_name, _import_optionally)
 
@@ -117,7 +115,7 @@ def _import_optionally(module_name: str, raise_errors: bool) -> ModuleType | Non
         return importlib.import_module(module_name)
     except ModuleNotFoundError:
         return None  # never choke upon empty/non-existing folders.
-    except Exception as _exc:
+    except Exception:
         if raise_errors:
             raise
         return None
@@ -133,13 +131,18 @@ def _ls_defensive(path: str) -> Sequence[str]:
 class Collector(Generic[_PluginType]):
     def __init__(
         self,
-        plugin_type: type[_PluginType],
-        name_prefix: str,
-        *,
+        plugin_prefixes: Mapping[type[_PluginType], str],
         raise_errors: bool,
     ) -> None:
-        self.plugin_type: Final = plugin_type
-        self.name_prefix: Final = name_prefix
+        # Transform plugin types / prefixes to the data structure we
+        # need for this algorithm.
+        # We pass them differently to help the type inference along.
+        # Other approaches require even worse explicit type annotations
+        # on caller side.
+        self._prefix_to_types = tuple(
+            (prefix, tuple(t for t, p in plugin_prefixes.items() if p == prefix))
+            for prefix in set(plugin_prefixes.values())
+        )
         self.raise_errors: Final = raise_errors
 
         self.errors: list[Exception] = []
@@ -170,11 +173,15 @@ class Collector(Generic[_PluginType]):
     ) -> None:
         """Dispatch valid and invalid well-known objects"""
         for name, value in objects.items():
-            if not name.startswith(self.name_prefix):
-                continue
+            try:
+                plugin_types = next(
+                    types for prefix, types in self._prefix_to_types if name.startswith(prefix)
+                )
+            except StopIteration:
+                continue  # no match
 
             location = PluginLocation(module_name, name)
-            if not isinstance(value, self.plugin_type):
+            if not isinstance(value, plugin_types):
                 self._handle_error(TypeError(f"{location}: {value!r}"))
                 continue
 

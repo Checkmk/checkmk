@@ -5,15 +5,14 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins
+from cmk.discover_plugins import discover_plugins
 from cmk.rulesets.v1 import RuleSpec
 
 
 def load_api_v1_rulespecs(raise_errors: bool) -> tuple[Sequence[str], Mapping[str, RuleSpec]]:
-    discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
+    discovered_plugins = discover_plugins(
         "rulesets",
-        "rulespec_",
-        RuleSpec,
+        {RuleSpec: "rulespec_"},
         raise_errors=raise_errors,
     )
     errors = [str(e) for e in discovered_plugins.errors]

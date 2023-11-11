@@ -9,7 +9,14 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FixedValue,
+    Migrate,
+    MonitoringState,
+    TextInput,
+)
 
 # these default values were suggested by Aldi Sued
 VM_STATES_DEFVALS = [
@@ -51,7 +58,6 @@ def _item_spec_hyperv_vms():
 
 def _expected_state_map() -> Dictionary:
     return Dictionary(
-        title=_("Direct mapping of VM state to monitoring state"),
         help=_(
             "Define a direct translation of the possible states of the VM to monitoring "
             "states, i.e. to the result of the check. This overwrites the default "
@@ -73,7 +79,7 @@ def _expected_state_map() -> Dictionary:
 
 def _discovery_state() -> FixedValue:
     return FixedValue(
-        value={"compare_discovery": True},
+        value=True,
         title=_("Compare against discovered state"),
         totext=_("Compare the current state of the VM against the discovered state"),
         help=_(
@@ -86,14 +92,53 @@ def _discovery_state() -> FixedValue:
     )
 
 
-def _parameter_valuespec_hyperv_vms() -> Alternative:
-    return Alternative(
-        title=_("Translation of VM state to monitoring state"),
-        elements=[
-            _expected_state_map(),
-            _discovery_state(),
-        ],
+def _parameter_valuespec_hyperv_vms() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "vm_target_state",
+                    CascadingDropdown(
+                        title=_("Translation of VM state to monitoring state"),
+                        choices=[
+                            (
+                                "map",
+                                _("Direct mapping of VM state to monitoring state"),
+                                _expected_state_map(),
+                            ),
+                            (
+                                "discovery",
+                                _("Compare against discovered state"),
+                                _discovery_state(),
+                            ),
+                        ],
+                    ),
+                ),
+                (
+                    "discovered_state",
+                    TextInput(title=_("State during discovery of the service")),
+                ),
+            ],
+            optional_keys=["discovered_state"],
+            hidden_keys=["discovered_state"],  # not shown when editing the rule
+        ),
+        migrate=_migrate_hyperv_vmstate,
     )
+
+
+def _migrate_hyperv_vmstate(p: dict) -> dict:
+    if "vm_target_state" in p or "discovered_state" in p:
+        return p
+    if set(p) == {"state"}:  # properly migrate autochecks:
+        return {"discovered_state": p["state"]}
+    new = {
+        "vm_target_state": ("discovery", True)
+        if "compare_discovery" in p
+        else ("map", {k: v for k, v in p.items() if k != "state"})
+    }
+    if "state" in p:
+        new["discovered_state"] = p["state"]
+    return new
 
 
 rulespec_registry.register(

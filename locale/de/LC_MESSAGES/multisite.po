@@ -10011,6 +10011,10 @@ msgstr "Check Zugriff auf LDAP-Service"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "CheckMK-Status der Piggyback-Hosts innerhalb dieses Zeitraums prüfen"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Check Parameter"
 msgstr "Check-Parameter"
 
@@ -12028,6 +12032,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Rauch-Schwellwerte festlegen"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "Untere Schwellwerte für Container"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -12260,6 +12268,10 @@ msgid ""
 msgstr ""
 "Konfigurieren Sie Schwellenwerte, die für Cluster gelten, je nachdem, wie "
 "viele Knoten sie haben."
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "Obere Schwellwerte für Container"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -15825,6 +15837,10 @@ msgstr "Plugin für AD-Replikation ausrollen"
 msgid "Deploy Arcserve plugin"
 msgstr "Arcserve-Plugin ausrollen"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "Das MSSQL-Server-Plugin ausrollen"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "Das DB2 memory Plugin ausrollen"
 
@@ -17247,6 +17263,10 @@ msgstr "Hosts nicht erstellen"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Plugin für AD-Replikation nicht ausrollen"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "Das MySQL Plugin nicht ausrollen"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "Das DB2 memory Plugin nicht ausrollen"
@@ -20610,6 +20630,10 @@ msgstr "Werkseinstellungen"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "Failover State"
 
 msgid "Failed"
 msgstr "Fehlgeschlagen"
@@ -31727,6 +31751,10 @@ msgstr "Lokale HTTP 503 Antworten"
 msgid "Local IP address"
 msgstr "Lokale IP Adresse"
 
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "Lokale Anmeldungsdaten"
+
 msgid "Local Only"
 msgstr "Nur lokal"
 
@@ -35756,6 +35784,9 @@ msgstr "Name der virtuellen Maschine und/oder<br>Typ der Garbagecollection"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Name der virtuellen Maschine und/oder<br>Threadpool"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "Namensauflösung"
@@ -41482,6 +41513,10 @@ msgstr "Port Nummer:"
 msgid "Port numbers"
 msgstr "Port-Nummern"
 
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Port types to include in usage statistics"
 msgstr "Porttypen, die in die Belegungsstatistik eingeschlossen werden"
 
@@ -45446,6 +45481,10 @@ msgstr "WEICH"
 
 msgid "SQL Compilations/sec"
 msgstr "SQL-Kompilationen/sec"
+
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "Datenbankbenutzer-Anmeldedaten"
 
 msgid "SQL Databases"
 msgstr "SQL-Datenbanken"
@@ -54511,6 +54550,10 @@ msgstr "Der Hostname des erwarteten ausgewählten Cluster-Controllers"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "Der Hostname des Knotens, auf dem die Ressource erwartet wird."
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "Hostname oder IPv4-Adresse des Listeners"
+
 msgid "The hostname template does not contain any label."
 msgstr "Die Hostnamenvorlage enthält kein Label."
 
@@ -59005,6 +59048,14 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
+"365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
 "365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
@@ -77813,9 +77864,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Do not deploy plugin plugin"
 #~ msgstr "Plugin nicht ausrollen"
-
-#~ msgid "Failover state"
-#~ msgstr "Failover State"
 
 #~ msgid "Invalid time unit %s"
 #~ msgstr "Ungültige Zeiteinheit %s"

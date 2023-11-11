@@ -10092,6 +10092,10 @@ msgstr "Comprobar el acceso al servicio LDAP"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Comprobar el estado del MK del host a cuestas en este periodo"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Check Parameter"
 msgstr "Parámetro de control"
 
@@ -12143,6 +12147,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Sin niveles en los inodos"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "Contenedores niveles inferiores"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -12376,6 +12384,10 @@ msgid ""
 msgstr ""
 "Configure los umbrales que se aplican a los clusters en función del número "
 "de nodos que tengan."
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "Contenedores niveles superiores"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -15952,6 +15964,10 @@ msgstr "Implementar el complemento AD-Replication"
 msgid "Deploy Arcserve plugin"
 msgstr "Implementar complemento de Arcserve"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "Implementar el complemento del servidor MSSQL"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "Implementar complemento de memoria de DB2"
 
@@ -17394,6 +17410,10 @@ msgstr "No crear hosts"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "No desplegar el plugin de AD-Replicación"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "No despliegue el plugin de MySQL"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "No implementar el plugin de memoria de DB2"
@@ -20776,6 +20796,10 @@ msgstr "Ajuste de fábrica"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "Estados de conmutación por error"
 
 msgid "Failed"
 msgstr "Fallido"
@@ -31982,6 +32006,10 @@ msgstr "Respuestas locales HTTP 503"
 msgid "Local IP address"
 msgstr "Dirección IP local"
 
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "Datos de autentificación local"
+
 msgid "Local Only"
 msgstr "Sólo local"
 
@@ -36067,6 +36095,9 @@ msgstr "Nombre de la máquina virtual y/o<br>tipo de recolección de basura"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nombre de la máquina virtual y/o<br>threadpool"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "Resolución del nombre"
@@ -41848,6 +41879,10 @@ msgstr "Número de puerto:"
 msgid "Port numbers"
 msgstr "Números de puerto"
 
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Port types to include in usage statistics"
 msgstr "Tipos de puertos a incluir en las estadísticas de uso"
 
@@ -45875,6 +45910,10 @@ msgstr "SOFT"
 
 msgid "SQL Compilations/sec"
 msgstr "SQL Compilaciones/seg"
+
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "Credenciales de usuario de la base de datos"
 
 msgid "SQL Databases"
 msgstr "Bases de datos SQL"
@@ -55045,6 +55084,10 @@ msgstr "El nombre de host del controlador distinguido esperado del clúster"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "El nombre de host del nodo que se espera que contenga este recurso."
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "Nombre de host o dirección IPv4 del receptor"
+
 msgid "The hostname template does not contain any label."
 msgstr "La plantilla de nombre de host no contiene ninguna etiqueta."
 
@@ -59556,6 +59599,15 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"Este plugin puede utilizarse para recopilar información de todas las "
+"licencias y planes de servicio de MS Office 365 utilizando el módulo "
+"MSOnline PowerShell."
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "Este plugin puede utilizarse para recopilar información de todas las "
 "licencias y planes de servicio de MS Office 365 utilizando el módulo "

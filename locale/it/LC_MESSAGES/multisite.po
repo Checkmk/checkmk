@@ -10048,6 +10048,10 @@ msgstr "Controllare l'accesso al servizio LDAP"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Controlla lo stato MK dell'host piggybacked in questo periodo"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Check Parameter"
 msgstr "Controllare il parametro"
 
@@ -12085,6 +12089,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Nessun livello sugli inode"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "Contenitori livelli inferiori"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -12315,6 +12323,10 @@ msgid ""
 "have."
 msgstr ""
 "Configurare le soglie da applicare ai cluster in base al numero di nodi."
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "Contenitori livelli superiori"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -15882,6 +15894,10 @@ msgstr "Distribuire il plugin AD-Replication"
 msgid "Deploy Arcserve plugin"
 msgstr "Distribuire il plugin Arcserve"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "Distribuire il plugin MSSQL Server"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "Distribuire il plugin di memoria DB2"
 
@@ -17310,6 +17326,10 @@ msgstr "Non creare host"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Non distribuire il plugin AD-Replication"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "Non distribuire il plugin MySQL"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "Non distribuire il plugin di memoria DB2"
@@ -20692,6 +20712,10 @@ msgstr "Impostazione di fabbrica"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "Stati di failover"
 
 msgid "Failed"
 msgstr "Fallito"
@@ -31855,6 +31879,10 @@ msgstr "Risposte HTTP 503 locali"
 msgid "Local IP address"
 msgstr "Indirizzo IP locale"
 
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "Dati di autenticazione locale"
+
 msgid "Local Only"
 msgstr "Solo locale"
 
@@ -35907,6 +35935,9 @@ msgstr "Nome della macchina virtuale e/o<br>tipo di garbage collection"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Nome della macchina virtuale e/o<br>threadpool"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "Risoluzione del nome"
@@ -41668,6 +41699,10 @@ msgstr "Numero di porta:"
 msgid "Port numbers"
 msgstr "Numeri di porta"
 
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Port types to include in usage statistics"
 msgstr "Tipi di porta da includere nelle statistiche di utilizzo"
 
@@ -45678,6 +45713,10 @@ msgstr "SOFT"
 
 msgid "SQL Compilations/sec"
 msgstr "Compilazione SQL/sec"
+
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "Credenziali dell'utente del database"
 
 msgid "SQL Databases"
 msgstr "Database SQL"
@@ -54781,6 +54820,10 @@ msgstr "L'hostname del controllore distinto previsto per il cluster"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "L'hostname del nodo previsto per tenere questa risorsa."
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "Hostname o indirizzo IPv4 per l'ascoltatore"
+
 msgid "The hostname template does not contain any label."
 msgstr "Il modello di hostname non contiene alcuna etichetta."
 
@@ -59275,6 +59318,15 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"Questo plugin può essere utilizzato per raccogliere informazioni su tutte le "
+"licenze e i piani di servizio di MS Office 365 utilizzando il modulo "
+"MSOnline PowerShell."
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "Questo plugin può essere utilizzato per raccogliere informazioni su tutte le "
 "licenze e i piani di servizio di MS Office 365 utilizzando il modulo "

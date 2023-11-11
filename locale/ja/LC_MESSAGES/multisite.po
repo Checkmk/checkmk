@@ -9756,6 +9756,10 @@ msgstr "LDAPサービスへのアクセスを確認する"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "この期間内にピギーバックされたホストのMKステータスを確認します"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server(Windows)"
+
 msgid "Check Parameter"
 msgstr "パラメータを確認する"
 
@@ -11724,6 +11728,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "煙のレベルを設定する"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "コンテナの下位レベル"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -11938,6 +11946,10 @@ msgid ""
 "Configure thresholds that apply to clusters based on how many nodes they "
 "have."
 msgstr "クラスタのノード数に応じて、クラスタに適用する閾値を設定します。"
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "コンテナの上位レベル"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
@@ -15439,6 +15451,10 @@ msgstr "ADレプリケーションプラグインをデプロイする"
 msgid "Deploy Arcserve plugin"
 msgstr "Arcserveプラグインをデプロイする"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "MSSQL Serverプラグインを展開する"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "DB2 memoryプラグインをデプロイします"
 
@@ -16831,6 +16847,10 @@ msgstr "ホストを作成しない"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "AD-Replicationプラグインをデプロイしないでください"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "MySQLプラグインをデプロイしないでください"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "DB2メモリー・プラグインをデプロイしないでください"
@@ -20143,6 +20163,10 @@ msgstr "出荷時設定"
 
 msgid "Fahrenheit"
 msgstr "華氏"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "フェイルオーバー状態"
 
 msgid "Failed"
 msgstr "失敗しました"
@@ -30991,6 +31015,10 @@ msgstr "ローカルHTTP503応答"
 msgid "Local IP address"
 msgstr "ローカルIPアドレス"
 
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "ローカル認証データ"
+
 msgid "Local Only"
 msgstr "ローカルのみ"
 
@@ -34959,6 +34987,9 @@ msgstr "仮想マシンの名前および/または<br>ガベージコレクシ�
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "仮想マシンおよび/または<br>スレッドプールの名前"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "名前解決"
@@ -40543,6 +40574,10 @@ msgstr "ポート番号:"
 msgid "Port numbers"
 msgstr "ポート番号"
 
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server(Windows)"
+
 msgid "Port types to include in usage statistics"
 msgstr "使用統計に含めるポートタイプ"
 
@@ -44477,6 +44512,10 @@ msgstr "柔らかい"
 
 msgid "SQL Compilations/sec"
 msgstr "SQLコンパイル/秒"
+
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "データベースユーザー資格情報"
 
 msgid "SQL Databases"
 msgstr "SQLデータベース"
@@ -53239,6 +53278,10 @@ msgstr "クラスターの予想される識別コントローラーのホスト
 msgid "The hostname of the expected node to hold this resource."
 msgstr "このリソースを保持することが期待されるノードのホスト名。"
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "リスナーのホスト名またはIPv4アドレス"
+
 msgid "The hostname template does not contain any label."
 msgstr "ホスト名テンプレートにラベルが含まれていません。"
 
@@ -57491,6 +57534,14 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"このプラグインは、MSOnline PowerShellモジュールを使用してすべてのMS Office "
+"365ライセンスとサービスプランの情報を収集するために使用できます。"
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "このプラグインは、MSOnline PowerShellモジュールを使用してすべてのMS Office "
 "365ライセンスとサービスプランの情報を収集するために使用できます。"

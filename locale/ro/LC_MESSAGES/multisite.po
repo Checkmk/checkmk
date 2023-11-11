@@ -10090,6 +10090,10 @@ msgstr "Verificați accesul la serviciul LDAP"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Verificați starea MK a gazdei piggybacked în această perioadă"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Check Parameter"
 msgstr "Verificați parametrul"
 
@@ -12118,6 +12122,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Configurați nivelurile de fum"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "Containere niveluri inferioare"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -12350,6 +12358,10 @@ msgid ""
 msgstr ""
 "Configurați praguri care se aplică grupurilor în funcție de numărul de "
 "noduri pe care le au."
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "Containere niveluri superioare"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -15936,6 +15948,10 @@ msgstr "Implementarea pluginului AD-Replication"
 msgid "Deploy Arcserve plugin"
 msgstr "Implementarea plugin-ului Arcserve"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "Implementarea plugin-ului MSSQL Server"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "Implementarea plugin-ului de memorie DB2"
 
@@ -17363,6 +17379,10 @@ msgstr "Nu creați gazde"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Nu implementați pluginul AD-Replication"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "Nu implementați plugin-ul MySQL"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "Nu implementați pluginul de memorie DB2"
@@ -20736,6 +20756,10 @@ msgstr "Setare din fabrică"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "RAID: starea sistemului"
 
 msgid "Failed"
 msgstr "A eșuat"
@@ -31931,6 +31955,10 @@ msgstr "Răspunsuri HTTP 503 locale"
 msgid "Local IP address"
 msgstr "Adresa IP locală"
 
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "Date de autentificare locală"
+
 msgid "Local Only"
 msgstr "Numai local"
 
@@ -35999,6 +36027,9 @@ msgstr "Numele mașinii virtuale și/sau<br>tipul de colectare a gunoiului"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Numele mașinii virtuale și/sau al<br>threadpool-ului"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "Rezoluția numelui"
@@ -41754,6 +41785,10 @@ msgstr "Numărul portului:"
 msgid "Port numbers"
 msgstr "Numerele de port"
 
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Port types to include in usage statistics"
 msgstr "Tipuri de porturi care trebuie incluse în statisticile de utilizare"
 
@@ -45746,6 +45781,10 @@ msgstr "SOFT"
 
 msgid "SQL Compilations/sec"
 msgstr "Compilări SQL/sec"
+
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "Credențiale de utilizator al bazei de date"
 
 msgid "SQL Databases"
 msgstr "Baze de date SQL"
@@ -54920,6 +54959,10 @@ msgstr "Numele de gazdă al controlorului distins așteptat al clusterului"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "Numele de gazdă al nodului care urmează să dețină această resursă."
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "Numele de gazdă sau adresa IPv4 pentru ascultător"
+
 msgid "The hostname template does not contain any label."
 msgstr "Șablonul de nume de gazdă nu conține nicio etichetă."
 
@@ -59446,6 +59489,15 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"Acest plugin poate fi utilizat pentru a colecta informații despre toate "
+"licențele și planurile de servicii MS Office 365 utilizând modulul MSOnline "
+"PowerShell."
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "Acest plugin poate fi utilizat pentru a colecta informații despre toate "
 "licențele și planurile de servicii MS Office 365 utilizând modulul MSOnline "
@@ -75296,10 +75348,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #, fuzzy
 #~ msgid "Voluble"
 #~ msgstr "Nume nou"
-
-#, fuzzy
-#~ msgid "Failover state"
-#~ msgstr "RAID: starea sistemului"
 
 #, fuzzy
 #~ msgid "Name - Use the containers' name"

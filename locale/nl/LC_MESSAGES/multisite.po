@@ -10010,6 +10010,10 @@ msgstr "Toegang tot LDAP-service controleren"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "Controleer MK status van piggybacked host binnen deze periode"
 
+#, fuzzy
+msgid "Check MS SQL Server- BETA (Linux, Windows)"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Check Parameter"
 msgstr "Controleer Parameter"
 
@@ -12037,6 +12041,10 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Geen niveaus op inodes"
 
+#, fuzzy
+msgid "Configure lower levels"
+msgstr "Containers lagere niveaus"
+
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
 "(so called active checks)"
@@ -12268,6 +12276,10 @@ msgid ""
 msgstr ""
 "Configureer drempels die van toepassing zijn op clusters op basis van het "
 "aantal nodes dat ze hebben."
+
+#, fuzzy
+msgid "Configure upper levels"
+msgstr "Containers bovenste niveaus"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr "Configureer hier uw ServiceNow URL (bijv. https://myservicenow.com)."
@@ -15833,6 +15845,10 @@ msgstr "AD-Replicatie plugin implementeren"
 msgid "Deploy Arcserve plugin"
 msgstr "Inzet Arcserve plugin"
 
+#, fuzzy
+msgid "Deploy Check SQL Server plugin"
+msgstr "MSSQL Server plugin implementeren"
+
 msgid "Deploy DB2 memory plugin"
 msgstr "DB2 geheugen plugin implementeren"
 
@@ -17247,6 +17263,10 @@ msgstr "Maak geen hosts"
 
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Implementeer geen AD-Replicatie plugin"
+
+#, fuzzy
+msgid "Do not deploy Check SQL Server plugin"
+msgstr "De MySQL plugin niet implementeren"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "Implementeer geen DB2 geheugen plugin"
@@ -20610,6 +20630,10 @@ msgstr "Fabrieksinstelling"
 
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Fail over partner"
+msgstr "Failover staten"
 
 msgid "Failed"
 msgstr "Mislukt"
@@ -31747,6 +31771,10 @@ msgstr "Lokale HTTP 503 antwoorden"
 msgid "Local IP address"
 msgstr "Lokaal IP-adres"
 
+#, fuzzy
+msgid "Local Integrated Authentication (Windows)"
+msgstr "Lokale authentificatiegegevens"
+
 msgid "Local Only"
 msgstr "Alleen lokaal"
 
@@ -35783,6 +35811,9 @@ msgstr "Naam van de virtuele machine en/of het<br>type vuilnisverzameling"
 
 msgid "Name of the virtual machine and/or<br>threadpool"
 msgstr "Naam van de virtuele machine en/of<br>threadpool"
+
+msgid "Name or IP address of the host where MS SQL runs if hostname fail"
+msgstr ""
 
 msgid "Name resolution"
 msgstr "Naam resolutie"
@@ -41513,6 +41544,10 @@ msgstr "Poortnummer:"
 msgid "Port numbers"
 msgstr "Poort nummers"
 
+#, fuzzy
+msgid "Port of the Microsoft SQL Server instance"
+msgstr "Microsoft SQL Server (Windows)"
+
 msgid "Port types to include in usage statistics"
 msgstr "Poorttypes die in de gebruiksstatistieken moeten worden opgenomen"
 
@@ -45480,6 +45515,10 @@ msgstr "SOFT"
 
 msgid "SQL Compilations/sec"
 msgstr "SQL Compilaties/sec"
+
+#, fuzzy
+msgid "SQL Database User Credentials"
+msgstr "Database gebruikersgegevens"
 
 msgid "SQL Databases"
 msgstr "SQL databases"
@@ -54579,6 +54618,10 @@ msgstr "De hostnaam van de verwachte gedistingeerde controller van het cluster"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "De hostnaam van het verwachte knooppunt dat deze bron bevat."
 
+#, fuzzy
+msgid "The hostname or IP address for the Microsoft SQL Server instance"
+msgstr "Hostnaam of IPv4 adres voor luisteraar"
+
 msgid "The hostname template does not contain any label."
 msgstr "Het hostnaamsjabloon bevat geen label."
 
@@ -59061,6 +59104,15 @@ msgstr ""
 msgid ""
 "This plugin can be used to collect information of all MS Office 365 licenses "
 "and serviceplans using the MSOnline PowerShell module."
+msgstr ""
+"Deze plugin kan worden gebruikt om informatie te verzamelen van alle MS "
+"Office 365 licenties en serviceplans met behulp van de MSOnline PowerShell "
+"module."
+
+#, fuzzy
+msgid ""
+"This plugin can be used to collect information of all running MSSQL servers "
+"on the local and remote system. "
 msgstr ""
 "Deze plugin kan worden gebruikt om informatie te verzamelen van alle MS "
 "Office 365 licenties en serviceplans met behulp van de MSOnline PowerShell "

@@ -21,6 +21,7 @@ from cmk.gui import (
     crash_handler,
     crash_reporting,
     cron,
+    customer,
     default_permissions,
     graphing,
     gui_background_job,
@@ -268,6 +269,7 @@ def register() -> None:
     weblib.register(page_registry)
     openapi_registration.register(endpoint_registry)
     sites.ConnectionClass = MultiSiteConnection
+    customer.CustomerAPIClass = customer.CustomerAPIStub
 
 
 register()

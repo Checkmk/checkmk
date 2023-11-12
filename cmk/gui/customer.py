@@ -10,7 +10,7 @@ from livestatus import SiteConfigurations, SiteId
 
 from cmk.gui.groups import GroupSpec
 from cmk.gui.hooks import request_memoize
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.valuespec import DropdownChoice, ValueSpec
 
 CustomerId = str
 SCOPE_GLOBAL = None
@@ -62,6 +62,13 @@ class ABCCustomerAPI(ABC):
     def default_customer_id(cls) -> CustomerId:
         return ""
 
+    @classmethod
+    @abstractmethod
+    def customer_choice_element(
+        cls, deflt: CustomerId | None = None, with_global: bool = True
+    ) -> list[tuple[str, ValueSpec]]:
+        ...
+
 
 class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
@@ -97,6 +104,12 @@ class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
     def default_customer_id(cls) -> CustomerId:
         return ""
+
+    @classmethod
+    def customer_choice_element(
+        cls, deflt: CustomerId | None = None, with_global: bool = True
+    ) -> list[tuple[str, ValueSpec]]:
+        return []
 
 
 @request_memoize()

@@ -60,6 +60,7 @@ import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.i18n import _
@@ -87,11 +88,6 @@ from ._user_attribute import get_user_attributes
 from ._user_spec import add_internal_attributes, new_user_template
 from ._user_sync import user_sync_config
 from .store import load_cached_profile, release_users_lock
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
-else:
-    default_customer_id = None  # type: ignore[assignment]
 
 
 def register(
@@ -1308,7 +1304,9 @@ class LDAPUserConnector(UserConnector):
                 user = new_user_template(self.id)
                 mode_create = True
                 if cmk_version.edition() is cmk_version.Edition.CME:
-                    user["customer"] = self._config.get("customer", default_customer_id)
+                    user["customer"] = self._config.get(
+                        "customer", customer_api().default_customer_id()
+                    )
 
             return mode_create, user
 

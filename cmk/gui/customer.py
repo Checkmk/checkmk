@@ -69,6 +69,16 @@ class ABCCustomerAPI(ABC):
     ) -> list[tuple[str, ValueSpec]]:
         ...
 
+    @classmethod
+    @abstractmethod
+    def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
+        ...
+
 
 class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
@@ -110,6 +120,14 @@ class CustomerAPIStub(ABCCustomerAPI):
         cls, deflt: CustomerId | None = None, with_global: bool = True
     ) -> list[tuple[str, ValueSpec]]:
         return []
+
+    @classmethod
+    def is_provider(cls, customer_id: CustomerIdOrGlobal) -> bool:
+        return False
+
+    @classmethod
+    def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
+        return False
 
 
 @request_memoize()

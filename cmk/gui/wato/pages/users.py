@@ -22,6 +22,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -81,12 +82,6 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 from cmk.gui.watolib.utils import ldap_connections_are_configurable
-
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
 
 
 def register(_mode_registry: ModeRegistry) -> None:
@@ -330,8 +325,7 @@ class ModeUsers(WatoMode):
             html.immediate_browser_redirect(2, url)
 
         elif (
-            self._job_snapshot.status.state
-            == gui_background_job.background_job.JobStatusStates.FINISHED
+            self._job_snapshot.status.state == background_job.JobStatusStates.FINISHED
             and not self._job_snapshot.acknowledged_by
         ):
             # Just finished, auto-acknowledge
@@ -388,6 +382,7 @@ class ModeUsers(WatoMode):
 
         html.div("", id_="row_info")
 
+        customer = customer_api()
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - active_config.user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
@@ -468,7 +463,7 @@ class ModeUsers(WatoMode):
                         html.write_text(_("Never logged in"))
 
                 if edition() is Edition.CME:
-                    table.cell(_("Customer"), managed.get_customer_name(user_spec))
+                    table.cell(_("Customer"), customer.get_customer_name(user_spec))
 
                 # Connection
                 if connection:
@@ -635,8 +630,7 @@ class ModeEditUser(WatoMode):
         self._roles = load_roles()
         self._user_id: UserId | None
 
-        if edition() is Edition.CME:
-            self._vs_customer = managed.vs_customer()
+        self._vs_customer = customer_api().vs_customer()
 
         self._can_edit_users = edition() != Edition.CSE
 
@@ -874,7 +868,7 @@ class ModeEditUser(WatoMode):
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
-            if customer != default_customer_id():
+            if customer != customer_api().default_customer_id():
                 user_attrs["customer"] = customer
             elif "customer" in user_attrs:
                 del user_attrs["customer"]
@@ -1079,7 +1073,7 @@ class ModeEditUser(WatoMode):
 
         if edition() is Edition.CME:
             forms.section(self._vs_customer.title())
-            self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
+            self._vs_customer.render_input("customer", customer_api().get_customer_id(self._user))
 
             html.help(self._vs_customer.help())
 

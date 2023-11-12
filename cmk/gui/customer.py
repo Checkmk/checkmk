@@ -10,6 +10,7 @@ from livestatus import SiteConfigurations, SiteId
 
 from cmk.gui.groups import GroupSpec
 from cmk.gui.hooks import request_memoize
+from cmk.gui.valuespec import DropdownChoice
 
 CustomerId = str
 SCOPE_GLOBAL = None
@@ -44,6 +45,23 @@ class ABCCustomerAPI(ABC):
     def get_customer_name_by_id(cls, customer_id: CustomerIdOrGlobal) -> str:
         ...
 
+    @classmethod
+    @abstractmethod
+    def get_customer_name(cls, the_object: Mapping[str, Any]) -> str:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def vs_customer(
+        cls, deflt: CustomerId | None = None, with_global: bool = True
+    ) -> DropdownChoice:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def default_customer_id(cls) -> CustomerId:
+        return ""
+
 
 class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
@@ -65,6 +83,20 @@ class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
     def get_customer_name_by_id(cls, customer_id: CustomerIdOrGlobal) -> str:
         return str(customer_id)
+
+    @classmethod
+    def get_customer_name(cls, the_object: Mapping[str, Any]) -> str:
+        return ""
+
+    @classmethod
+    def vs_customer(
+        cls, deflt: CustomerId | None = None, with_global: bool = True
+    ) -> DropdownChoice:
+        return DropdownChoice(choices=[])
+
+    @classmethod
+    def default_customer_id(cls) -> CustomerId:
+        return ""
 
 
 @request_memoize()

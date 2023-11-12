@@ -45,37 +45,18 @@ from cmk.utils.version import edition, Edition
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.config import active_config
-from cmk.gui.htmllib.type_defs import RequireConfirmation
-from cmk.gui.type_defs import Icon, PermissionName
-from cmk.gui.utils.urls import DocReference
-from cmk.gui.wato import NotificationParameter, NotificationParameterRegistry
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ABCConfigDomain
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.main_menu import MainModuleTopic
-from cmk.gui.watolib.mkeventd import (
-    export_mkp_rule_pack,
-    get_rule_stats_from_ec,
-    save_mkeventd_rules,
-)
-
-import cmk.mkp_tool
-
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
-
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -93,13 +74,14 @@ from cmk.gui.page_menu import (
 from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult, Choices
+from cmk.gui.type_defs import ActionResult, Choices, Icon, PermissionName
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
+    DocReference,
     make_confirm_delete_link,
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
@@ -136,14 +118,21 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import ContactGroupSelection, MainModuleTopicEvents
+from cmk.gui.wato import (
+    ContactGroupSelection,
+    MainModuleTopicEvents,
+    NotificationParameter,
+    NotificationParameterRegistry,
+)
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
+from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
@@ -153,7 +142,7 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainOMD
 from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupNotifications,
     ConfigVariableGroupSiteManagement,
@@ -162,7 +151,12 @@ from cmk.gui.watolib.config_variable_groups import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import CollectedHostAttributes, make_action_link
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
+from cmk.gui.watolib.mkeventd import (
+    export_mkp_rule_pack,
+    get_rule_stats_from_ec,
+    save_mkeventd_rules,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespec_groups import (
     RulespecGroupHostsMonitoringRulesVarious,
@@ -183,6 +177,8 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
+
+import cmk.mkp_tool
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
@@ -291,14 +287,12 @@ def mib_dirs() -> list[tuple[Path, str]]:
 
 
 def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -> ec.MatchResult:
-    if managed:
+    if edition() is Edition.CME:
         rule_customer_id = (
-            rule_pack["customer"]
-            if "customer" in rule_pack
-            else rule.get("customer", managed.SCOPE_GLOBAL)
+            rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
         )
-        site_customer_id = managed.get_customer_id(active_config.sites[event["site"]])
-        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
+        site_customer_id = customer_api().get_customer_id(active_config.sites[event["site"]])
+        if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
             return ec.MatchFailure(reason=_("Wrong customer"))
 
     time_period = ec.TimePeriods(log.logger)
@@ -541,7 +535,7 @@ def vs_mkeventd_rule_pack(
     )
 
     if edition() is Edition.CME:
-        elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
+        elements += customer_api().customer_choice_element(deflt=SCOPE_GLOBAL)
 
     return Dictionary(
         title=_("Rule pack properties"),
@@ -577,13 +571,13 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         value=customer,
                         title=_("Customer"),
                         totext="{} ({})".format(
-                            managed.get_customer_name_by_id(customer), _("Set by rule pack")
+                            customer_api().get_customer_name_by_id(customer), _("Set by rule pack")
                         ),
                     ),
                 ),
             ]
         else:
-            elements += managed.customer_choice_element()
+            elements += customer_api().customer_choice_element()
 
     elements += [
         (
@@ -2108,7 +2102,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
-                        html.write_text(managed.get_customer_name(rule_pack))
+                        html.write_text(customer_api().get_customer_name(rule_pack))
 
                 table.cell(
                     _("Rules"),
@@ -2436,11 +2430,12 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     if "customer" in self._rule_pack:
                         html.write_text(
                             "{} ({})".format(
-                                managed.get_customer_name(self._rule_pack), _("Set by rule pack")
+                                customer_api().get_customer_name(self._rule_pack),
+                                _("Set by rule pack"),
                             )
                         )
                     else:
-                        html.write_text(managed.get_customer_name(rule))
+                        html.write_text(customer_api().get_customer_name(rule))
 
                 if rule.get("drop"):
                     table.cell(_("State"), css=["state statep nowrap"])

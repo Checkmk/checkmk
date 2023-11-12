@@ -79,6 +79,11 @@ class ABCCustomerAPI(ABC):
     def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
         ...
 
+    @classmethod
+    @abstractmethod
+    def customer_collection(cls) -> list[CustomerIdOrGlobal]:
+        ...
+
 
 class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
@@ -128,6 +133,10 @@ class CustomerAPIStub(ABCCustomerAPI):
     @classmethod
     def is_current_customer(cls, customer_id: CustomerIdOrGlobal) -> bool:
         return False
+
+    @classmethod
+    def customer_collection(cls) -> list[CustomerIdOrGlobal]:
+        return []
 
 
 @request_memoize()

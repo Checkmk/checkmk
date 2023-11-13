@@ -1,0 +1,19 @@
+Title: downtimes: can now delete downtimes from remote sites
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1699869696
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0p15
+
+
+As a result a previous change to the downtimes delete endpoint,
+we introduced a bug which prevented downtime deletion on
+remote sites.
+
+This werk addresses this issue. Downtimes on remote sites are now
+deleted as expected.
+

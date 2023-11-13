@@ -16,7 +16,7 @@
 import re
 from collections import Counter
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, Literal, NamedTuple, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
@@ -35,6 +35,23 @@ class ItemData(TypedDict):
 class Section(NamedTuple):
     errors: Sequence[str]
     logfiles: Mapping[str, ItemData]
+
+
+SyslogConfig = tuple[Literal["tcp"], dict] | tuple[Literal["udp"], dict]
+
+
+class DictLogwatchEc(TypedDict, total=False):
+    method: Literal["", "spool:"] | str | SyslogConfig
+    facility: int
+    restrict_logfiles: list[str]
+    monitor_logfilelist: bool
+    expected_logfiles: list[str]
+    logwatch_reclassify: bool
+    monitor_logfile_access_state: Literal[0, 1, 2, 3]
+    separate_checks: bool
+
+
+ParameterLogwatchEc = Literal[""] | DictLogwatchEc
 
 
 def service_extra_conf(service: str) -> list:
@@ -59,11 +76,12 @@ def extract_unseen_lines(
     ]
 
 
-def get_ec_rule_params() -> Sequence[Any]:
+# This is only wishful typing -- but lets assume this is what we get.
+def get_ec_rule_params() -> Sequence[ParameterLogwatchEc]:
     """Isolate the remaining API violation w.r.t. parameters"""
     return cmk.base.config.get_config_cache().ruleset_matcher.get_host_values(
         HostName(host_name()),
-        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),
+        cmk.base.config.checkgroup_parameters.get("logwatch_ec", []),  # type: ignore[arg-type]
     )
 
 
@@ -80,7 +98,7 @@ def discoverable_items(*sections: Section) -> list[str]:
     )
 
 
-def ec_forwarding_enabled(params: Mapping[str, Any], item: str) -> bool:
+def ec_forwarding_enabled(params: DictLogwatchEc, item: str) -> bool:
     if "restrict_logfiles" not in params:
         return True  # matches all logs on this host
 
@@ -90,7 +108,7 @@ def ec_forwarding_enabled(params: Mapping[str, Any], item: str) -> bool:
 
 def select_forwarded(
     items: Sequence[str],
-    forward_settings: Sequence[Mapping[str, Any]],
+    forward_settings: Sequence[ParameterLogwatchEc],
     *,
     invert: bool = False,
 ) -> set[str]:

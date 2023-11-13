@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 import pytest
 
@@ -248,7 +248,7 @@ class _FakeForwarder:
 )
 def test_check_logwatch_ec_common_single_node(
     item: str | None,
-    params: Mapping[str, Any],
+    params: logwatch_.ParameterLogwatchEc,
     parsed: logwatch_ec.ClusterSection,
     expected_result: CheckResult,
 ) -> None:
@@ -451,7 +451,7 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
     ],
 )
 def test_check_logwatch_ec_common_multiple_nodes_ungrouped(
-    params: Mapping[str, Any],
+    params: logwatch_.DictLogwatchEc,
     cluster_section: logwatch_ec.ClusterSection,
     expected_result: CheckResult,
 ) -> None:

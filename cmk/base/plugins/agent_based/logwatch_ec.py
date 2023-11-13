@@ -20,7 +20,7 @@ from collections import Counter, defaultdict
 from collections.abc import Generator, Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -51,7 +51,7 @@ from .utils import logwatch
 ClusterSection = dict[str | None, logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2
 
-CHECK_DEFAULT_PARAMETERS = {
+CHECK_DEFAULT_PARAMETERS: logwatch.DictLogwatchEc = {
     "facility": 17,  # default to "local1"
     "method": "",  # local site
     "monitor_logfilelist": False,
@@ -65,7 +65,10 @@ def discover_group(
     yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "groups")
 
 
-def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> CheckResult:
+def check_logwatch_ec(
+    params: logwatch.ParameterLogwatchEc,
+    section: logwatch.Section,
+) -> CheckResult:
     # fall back to the cluster case with None as node name.
     yield from check_logwatch_ec_common(
         None,
@@ -79,7 +82,7 @@ def check_logwatch_ec(params: Mapping[str, Any], section: logwatch.Section) -> C
 
 
 def cluster_check_logwatch_ec(
-    params: Mapping[str, Any],
+    params: logwatch.ParameterLogwatchEc,
     section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     yield from check_logwatch_ec_common(
@@ -113,7 +116,7 @@ def discover_single(
 
 def check_logwatch_ec_single(
     item: str,
-    params: Mapping[str, Any],
+    params: logwatch.ParameterLogwatchEc,
     section: logwatch.Section,
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
@@ -130,7 +133,7 @@ def check_logwatch_ec_single(
 
 def cluster_check_logwatch_ec_single(
     item: str,
-    params: Mapping[str, Any],
+    params: logwatch.ParameterLogwatchEc,
     section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
     # fall back to the cluster case with None as node name.
@@ -151,6 +154,7 @@ register.check_plugin(
     sections=["logwatch"],
     discovery_function=discover_single,
     check_function=check_logwatch_ec_single,
+    # seems we're not using the ruleset since 2.0.0?!
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     cluster_check_function=cluster_check_logwatch_ec_single,
 )
@@ -192,24 +196,25 @@ def logwatch_to_prio(level: str) -> int:
     return 4
 
 
-def _logwatch_inventory_mode_rules(  # type: ignore[no-untyped-def]
-    forward_settings,
-) -> tuple[str, dict[str, Any]]:
-    merged_rules = {}
+def _logwatch_inventory_mode_rules(
+    forward_settings: Sequence[logwatch.ParameterLogwatchEc],
+) -> tuple[Literal["no", "single", "groups"], logwatch.DictLogwatchEc]:
+    merged_rules: logwatch.DictLogwatchEc = {}
     for rule in forward_settings[-1::-1]:
         if isinstance(rule, dict):
             for key, value in rule.items():
-                merged_rules[key] = value
+                merged_rules[key] = value  # type: ignore[literal-required]
         elif isinstance(rule, str):
             return "no", {}  # Configured "no forwarding"
 
-    mode = "single" if merged_rules.get("separate_checks", False) else "groups"
-    return mode, merged_rules
+    if merged_rules.get("separate_checks", False):
+        return "single", merged_rules
+    return "groups", merged_rules
 
 
 def discover_logwatch_ec_common(
     section: logwatch.Section,
-    params: Sequence[Mapping[str, Any]],
+    params: Sequence[logwatch.ParameterLogwatchEc],
     use_mode: str,
 ) -> DiscoveryResult:
     discoverable_items = logwatch.discoverable_items(section)
@@ -234,7 +239,7 @@ def discover_logwatch_ec_common(
         "logwatch_reclassify",
     ]:
         if key in merged_rules:
-            single_log_params[key] = merged_rules[key]
+            single_log_params[key] = merged_rules[key]  # type: ignore[literal-required]
     for log in forwarded_logs:
         single_log_params["expected_logfiles"] = [log]
         yield Service(item=log, parameters=single_log_params.copy())
@@ -295,7 +300,7 @@ def _filter_accumulated_lines(
 
 def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     item: str | None,
-    params: Mapping[str, Any],
+    params: logwatch.ParameterLogwatchEc,
     parsed: ClusterSection,
     *,
     service_level: int,
@@ -304,6 +309,10 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     message_forwarder: MessageForwarderProto,
 ) -> CheckResult:
     yield from logwatch.check_errors(parsed)
+
+    # Not sure why this assertion holds,
+    # but if it doesn't, `if params["monitor_logfilelist"]` would crash.
+    assert params
 
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log

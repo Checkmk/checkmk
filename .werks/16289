@@ -1,0 +1,10 @@
+Title: jolokia_jvm_memory: translate old heap and nonheap metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1699881953
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p38
+

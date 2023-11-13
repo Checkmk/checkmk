@@ -6,6 +6,7 @@ use crate::config::{self, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
 use anyhow::Result;
+use futures::stream::{self, StreamExt};
 
 use tiberius::{AuthMethod, Config, Query, Row, SqlBrowser};
 use tokio::net::TcpStream;
@@ -59,7 +60,11 @@ impl InstanceEngine {
             self.cluster.as_deref().unwrap_or_default()
         )
     }
-    pub async fn generate_section(&self, _client: &Client, section: &Section) -> String {
+    pub async fn generate_section(
+        &self,
+        _ms_sql: &config::ms_sql::Config,
+        section: &Section,
+    ) -> String {
         let result = section.to_header();
         result + format!("{} not implemented\n", section.name).as_str()
     }
@@ -129,8 +134,7 @@ async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<Stri
 
     let mut result = to_section("instance").to_header(); // as in old plugin
     let sections = get_work_sections(ms_sql);
-    let mut client = create_client_from_config(ms_sql).await?;
-    let all = find_instance_engines(&mut client).await?;
+    let all = get_instance_engines(ms_sql.auth(), ms_sql.conn()).await?;
     let instances: Vec<InstanceEngine> = [&all.0[..], &all.1[..]].concat();
 
     for instance in &instances {
@@ -144,22 +148,20 @@ async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<Stri
     //        result += &instance.generate_section(&client, section).await;
     //    }
     //}
-    Ok(result + &generate_result(&instances, &sections, &client).await?)
+    Ok(result + &generate_result(&instances, &sections, ms_sql).await?)
 }
-
-use futures::stream::{self, StreamExt}; // Make sure to include this crate in your `Cargo.toml`
 
 /// Intelligent async processing of the data
 async fn generate_result(
     instances: &[InstanceEngine],
     sections: &[Section],
-    client: &Client,
+    ms_sql: &config::ms_sql::Config,
 ) -> Result<String> {
     // place all futures now in vector for future asynchronous processing
     let tasks = instances.iter().flat_map(|instance| {
         sections
             .iter()
-            .map(move |section| instance.generate_section(client, section))
+            .map(move |section| instance.generate_section(ms_sql, section))
     });
 
     // processing here
@@ -171,12 +173,14 @@ async fn generate_result(
     Ok(results.join(""))
 }
 
-async fn create_client_from_config(ms_sql: &config::ms_sql::Config) -> Result<Client> {
-    let client = match ms_sql.auth().auth_type() {
+async fn create_client_from_config(
+    auth: &config::ms_sql::Authentication,
+    conn: &config::ms_sql::Connection,
+) -> Result<Client> {
+    let client = match auth.auth_type() {
         config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
-            if let Some(credentials) = obtain_config_credentials(ms_sql) {
-                create_remote_client(ms_sql.conn().hostname(), ms_sql.conn().port(), credentials)
-                    .await?
+            if let Some(credentials) = obtain_config_credentials(auth) {
+                create_remote_client(conn.hostname(), conn.port(), credentials).await?
             } else {
                 anyhow::bail!("Not provided credentials")
             }
@@ -190,16 +194,16 @@ async fn create_client_from_config(ms_sql: &config::ms_sql::Config) -> Result<Cl
     Ok(client)
 }
 
-fn obtain_config_credentials(ms_sql: &config::ms_sql::Config) -> Option<Credentials> {
-    match ms_sql.auth().auth_type() {
+fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Option<Credentials> {
+    match auth.auth_type() {
         config::ms_sql::AuthType::SqlServer => Some(Credentials::SqlServer {
-            user: ms_sql.auth().username(),
-            password: ms_sql.auth().password().map(|s| s.as_str()).unwrap_or(""),
+            user: auth.username(),
+            password: auth.password().map(|s| s.as_str()).unwrap_or(""),
         }),
         #[cfg(windows)]
         config::ms_sql::AuthType::Windows => Some(Credentials::Windows {
-            user: ms_sql.auth().username(),
-            password: ms_sql.auth().password().map(|s| s.as_str()).unwrap_or(""),
+            user: auth.username(),
+            password: auth.password().map(|s| s.as_str()).unwrap_or(""),
         }),
         _ => None,
     }
@@ -400,7 +404,16 @@ pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Vec<Row>>
 }
 
 /// return all MS SQL instances installed
-pub async fn find_instance_engines(
+pub async fn get_instance_engines(
+    auth: &config::ms_sql::Authentication,
+    conn: &config::ms_sql::Connection,
+) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
+    let mut client = create_client_from_config(auth, conn).await?;
+    detect_instance_engines(&mut client).await
+}
+
+/// [low level helper] return all MS SQL instances installed
+pub async fn detect_instance_engines(
     client: &mut Client,
 ) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
     Ok((
@@ -462,19 +475,20 @@ mssql:
 
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_client_from_config_for_error() {
-        assert!(
-            create_client_from_config(&make_config_with_auth_type("token"))
-                .await
-                .unwrap_err()
-                .to_string()
-                .contains("Not supported authorization type")
-        );
+        let config = make_config_with_auth_type("token");
+        assert!(create_client_from_config(config.auth(), config.conn())
+            .await
+            .unwrap_err()
+            .to_string()
+            .contains("Not supported authorization type"));
     }
 
     #[test]
     fn test_obtain_credentials_from_config() {
         #[cfg(windows)]
-        assert!(obtain_config_credentials(&make_config_with_auth_type("windows")).is_some());
-        assert!(obtain_config_credentials(&make_config_with_auth_type("sql_server")).is_some());
+        assert!(obtain_config_credentials(make_config_with_auth_type("windows").auth()).is_some());
+        assert!(
+            obtain_config_credentials(make_config_with_auth_type("sql_server").auth()).is_some()
+        );
     }
 }

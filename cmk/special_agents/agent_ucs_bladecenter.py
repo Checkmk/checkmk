@@ -8,6 +8,8 @@
 True
 >>> C_SERIES_REGEX.match("UCSC") is not None
 True
+>>> C_SERIES_REGEX.match("APIC") is not None
+True
 >>> B_SERIES_REGEX.match("UCSB") is not None
 True
 """
@@ -52,10 +54,14 @@ Entities = list[tuple[str, re.Pattern[str], Sequence[Entry]]]
 B_SERIES_REGEX = re.compile(r"^UCSB$")
 # As of SUP-11234 hyperflex systems share the same hardware with UCSC systems.
 # Those two models should be basically the same: UCSC-C240-M5SX and HXAF240C-M5SX
+# 13th Nov 2023 Michael Frank (michael.frank@forvia.com)
+# Added support for Cisco APIC Rackmount
 C_SERIES_REGEX = re.compile(
     r"""
     ^
     (
+        APIC      # apic-server-l3
+        |
         UCSC      # normal, direct form
         |
         HX        # hyperflex

@@ -146,7 +146,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    windows/check_mk_agent.msi \
 	    windows/unsign-msi.patch \
 	    windows/python-3.cab \
-	    windows/python-3.4.cab \
 	    windows/check_mk.user.yml \
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \

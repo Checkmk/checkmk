@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.cisco_ucs_mem import (
     check_cisco_ucs_mem,
     discover_cisco_ucs_mem,
@@ -88,6 +89,6 @@ def test_discover_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
     ],
 )
 def test_check_cisco_ucs_mem(
-    section: Mapping[str, MemoryModule], item: str, expected_output: Sequence[object]
+    section: Mapping[str, MemoryModule], item: str, expected_output: CheckResult
 ) -> None:
     assert list(check_cisco_ucs_mem(item, section)) == expected_output

@@ -660,12 +660,18 @@ def _command_package(
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    installer = Installer(path_config.installed_packages_dir)
     try:
         manifest = store.store(
             create_mkp(package, path_config.get_path, version_packaged=site_context.version),
             persisting_function,
         )
+    except PackageError as exc:
+        sys.stderr.write(f"{exc}\n")
+        return 1
+    _logger.info("Successfully created %s %s", manifest.name, manifest.version)
+
+    installer = Installer(path_config.installed_packages_dir)
+    try:
         installed = install(
             installer,
             store,
@@ -679,8 +685,8 @@ def _command_package(
     except PackageError as exc:
         sys.stderr.write(f"{exc}\n")
         return 1
+    _logger.info("Successfully installed %s %s", manifest.name, manifest.version)
 
-    _logger.info("Successfully created %s %s", manifest.name, manifest.version)
     return 0
 
 

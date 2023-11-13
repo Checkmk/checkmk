@@ -13,7 +13,7 @@ use std::time::Duration;
 
 use crate::connection::{apply_connection_settings, ConnectionConfig};
 
-pub struct RequestConfig {
+pub struct ClientConfig {
     pub url: String,
     pub method: Method,
     pub user_agent: Option<HeaderValue>,
@@ -21,6 +21,14 @@ pub struct RequestConfig {
     pub timeout: Duration,
     pub auth_user: Option<String>,
     pub auth_pw: Option<String>,
+}
+
+// TODO(au): This seems a bit misplaced.
+// When doing the request with one entry point instead of two,
+// this can go to ClientConfig (that could be named RequestConfig again),
+// but this needs some preparation.
+pub struct RequestConfig {
+    pub without_body: bool,
 }
 
 pub struct ProcessedResponse {
@@ -31,7 +39,7 @@ pub struct ProcessedResponse {
 }
 
 pub fn prepare_request(
-    cfg: RequestConfig,
+    cfg: ClientConfig,
     conn_cfg: ConnectionConfig,
 ) -> AnyhowResult<RequestBuilder> {
     let mut headers = HeaderMap::new();
@@ -59,14 +67,14 @@ pub fn prepare_request(
 
 pub async fn perform_request(
     request: RequestBuilder,
-    without_body: bool,
+    cfg: RequestConfig,
 ) -> Result<ProcessedResponse, ReqwestError> {
     let response = request.send().await?;
 
     let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
-    let body = match without_body {
+    let body = match cfg.without_body {
         false => Some(response.bytes().await),
         true => None,
     };

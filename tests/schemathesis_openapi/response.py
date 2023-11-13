@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def fix_response(  # pylint: disable=too-many-branches
     case: schemathesis.models.Case,
-    response: schemathesis.utils.GenericResponse,
+    response: schemathesis.GenericResponse,
     method: str | None = None,
     path: str | None = None,
     body: dict[str, Any] | None = None,

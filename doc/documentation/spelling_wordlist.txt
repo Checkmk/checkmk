@@ -8,6 +8,7 @@ cmk
 Crontab
 crontab
 cron
+Jira
 keepalive
 Liveproxyd
 Livestatus

@@ -16,11 +16,14 @@ import cmk.gui.pages
 from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
+from cmk.gui.openapi.endpoints import host_config
 from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import Cell, painter_registry
 from cmk.gui.type_defs import Row
+from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
+from cmk.gui.wato import notification_parameter_registry, NotificationParameterMail
 
 
 def resolve_combined_single_metric_spec(
@@ -72,6 +75,10 @@ def register_painters() -> None:
 def register() -> None:
     if cmk_version.edition() is not cmk_version.Edition.CRE:
         return
+
+    notification_parameter_registry.register(NotificationParameterMail)
+    GUIViewRenderer.page_menu_dropdowns_hook = lambda v, r, p: None
+    host_config.agent_links_hook = lambda h: []
 
     register_pages()
     register_painters()

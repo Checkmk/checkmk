@@ -75,7 +75,7 @@ def _attempt_result(
 register.check_plugin(
     name="robotmk_suite",
     sections=["robotmk_suite_execution_report"],
-    service_name="Suite %s",
+    service_name="RMK Suite %s",
     discovery_function=discover,
     check_function=check,
 )

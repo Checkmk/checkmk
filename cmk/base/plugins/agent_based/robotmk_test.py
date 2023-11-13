@@ -109,7 +109,7 @@ def _remap_state(status: Outcome) -> State:
 register.check_plugin(
     name="robotmk_test",
     sections=["robotmk_suite_execution_report"],
-    service_name="%s",
+    service_name="RMK Test %s",
     discovery_function=discover,
     check_function=check,
     check_ruleset_name="robotmk",

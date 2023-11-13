@@ -40,8 +40,7 @@ A host_config object can have the following relations present in `links`:
 import itertools
 import operator
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
-from urllib.parse import urlencode
+from typing import Any, Callable
 
 import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
@@ -78,6 +77,7 @@ from cmk.gui.openapi.restful_objects import (
 )
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
@@ -744,6 +744,9 @@ def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
     return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
+agent_links_hook: Callable[[HostName], list[LinkType]] = lambda h: []
+
+
 def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
     extensions = {
         "folder": "/" + host.folder().path(),
@@ -754,24 +757,7 @@ def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
         "cluster_nodes": host.cluster_nodes(),
     }
 
-    agent_links = []
-    if cmk_version.edition() is not cmk_version.Edition.CRE:
-        from cmk.cee.bakery.type_defs import (  # pylint: disable=import-error,no-name-in-module
-            AgentPackagePlatform,
-        )
-
-        for platform in sorted(AgentPackagePlatform, key=lambda p: p.value):
-            agent_links.append(
-                constructors.link_rel(
-                    rel="cmk/download",
-                    href="{}?{}".format(
-                        constructors.domain_type_action_href("agent", "download"),
-                        urlencode({"os_type": platform.value, "host_name": host.id()}),
-                    ),
-                    method="get",
-                    title=f"Download the {platform.value} agent of the host.",
-                )
-            )
+    agent_links = agent_links_hook(host.name())
 
     return constructors.domain_object(
         domain_type="host_config",

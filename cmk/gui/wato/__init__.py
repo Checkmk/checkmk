@@ -101,6 +101,7 @@ from ._notification_parameter import (
     notification_parameter_registry as notification_parameter_registry,
 )
 from ._notification_parameter import NotificationParameter as NotificationParameter
+from ._notification_parameter import NotificationParameterMail as NotificationParameterMail
 from ._notification_parameter import NotificationParameterRegistry as NotificationParameterRegistry
 from ._notification_parameter import register_notification_parameters
 from ._permissions import PermissionSectionWATO as PermissionSectionWATO

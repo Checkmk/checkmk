@@ -455,7 +455,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def ext_files = "robotmk_ext.exe"
         def check_sql = "check-sql.exe"
         def hashes_file = "windows_files_hashes.txt"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}"
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,${ohm_files},${ext_files},${check_sql},${hashes_file}"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {

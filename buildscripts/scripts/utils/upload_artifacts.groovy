@@ -45,7 +45,7 @@ def download_version_dir(DOWNLOAD_SOURCE,
             sh("mkdir -p ${DOWNLOAD_DEST}")
             sh """
                 rsync --recursive --links --perms --times --verbose \
-                    --exclude="${EXCLUDE_PATTERN}" \
+                    --exclude=${EXCLUDE_PATTERN} \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
                     ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
                     ${DOWNLOAD_DEST}/
@@ -68,7 +68,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT, EXCLUDE_PATTERN="") {
             sh """
                 rsync -av \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                    --exclude="${EXCLUDE_PATTERN}" \
+                    --exclude=${EXCLUDE_PATTERN} \
                     ${SOURCE_PATH} \
                     ${UPLOAD_DEST}
             """

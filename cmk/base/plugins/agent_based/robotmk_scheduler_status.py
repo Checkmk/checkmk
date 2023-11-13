@@ -285,7 +285,7 @@ register.check_plugin(
         "robotmk_environment_build_states",
         "robotmk_scheduler_state",
     ],
-    service_name="Robotmk Scheduler Status",
+    service_name="RMK Scheduler Status",
     discovery_function=discover_scheduler_status,
     check_function=check_scheduler_status,
 )

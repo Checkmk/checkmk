@@ -203,16 +203,85 @@ def _allow_for_gui(
             _is_allowed_import(imported=imported),
             (
                 _in_component(imported=imported, component=Component("cmk.gui"))
-                and not (
-                    _in_component(imported=imported, component=Component("cmk.gui.plugins"))
-                    or _in_component(imported=imported, component=Component("cmk.gui.cee.plugins"))
-                    or _in_component(imported=imported, component=Component("cmk.gui.cce.plugins"))
-                    or _in_component(imported=imported, component=Component("cmk.gui.cme.plugins"))
-                )
+                and not _in_component(imported=imported, component=Component("cmk.gui.cee"))
+                and not _in_component(imported=imported, component=Component("cmk.gui.cce"))
+                # Can not be activated yet
+                # and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                and not _is_a_plugin_import(imported=imported)
+            ),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+        )
+    )
+
+
+def _allow_for_gui_cee(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_allowed_import(imported=imported),
+            (
+                _in_component(imported=imported, component=Component("cmk.gui"))
+                and not _in_component(imported=imported, component=Component("cmk.gui.cce"))
+                # Can not be activated yet
+                # and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                and not _is_a_plugin_import(imported=imported)
             ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.fetchers")),
             _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+        )
+    )
+
+
+def _allow_for_gui_cce(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_allowed_import(imported=imported),
+            (
+                _in_component(imported=imported, component=Component("cmk.gui"))
+                and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                and not _is_a_plugin_import(imported=imported)
+            ),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+        )
+    )
+
+
+def _allow_for_gui_cme(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_allowed_import(imported=imported),
+            (
+                _in_component(imported=imported, component=Component("cmk.gui"))
+                and not _is_a_plugin_import(imported=imported)
+            ),
+            _in_component(imported=imported, component=Component("cmk.checkengine")),
+            _in_component(imported=imported, component=Component("cmk.fetchers")),
+            _in_component(imported=imported, component=Component("cmk.cee.bakery")),
+        )
+    )
+
+
+def _is_a_plugin_import(*, imported: ModuleName) -> bool:
+    return any(
+        (
+            _in_component(imported=imported, component=Component("cmk.gui.plugins")),
+            _in_component(imported=imported, component=Component("cmk.gui.cee.plugins")),
+            _in_component(imported=imported, component=Component("cmk.gui.cce.plugins")),
         )
     )
 
@@ -381,8 +450,10 @@ _COMPONENTS = (
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui.plugins"), _allow_for_gui_plugins),
     (Component("cmk.gui.cee.plugins"), _allow_for_gui_plugins),
-    (Component("cmk.gui.cme.plugins"), _allow_for_gui_plugins),
     (Component("cmk.gui.cce.plugins"), _allow_for_gui_plugins),
+    (Component("cmk.gui.cee"), _allow_for_gui_cee),
+    (Component("cmk.gui.cce"), _allow_for_gui_cce),
+    (Component("cmk.gui.cme"), _allow_for_gui_cme),
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),

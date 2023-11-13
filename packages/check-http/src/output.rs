@@ -48,6 +48,16 @@ impl Display for Output {
         });
         write_joined(f, metrics, " | ", " ")?;
 
+        let details = self
+            .check_results
+            .iter()
+            .filter_map(|cr| match cr {
+                CheckResult::Details(check_item) => Some(check_item),
+                _ => None,
+            })
+            .filter(|summ| !summ.text.is_empty());
+        write_joined(f, details, "\n", "\n")?;
+
         Ok(())
     }
 }
@@ -57,7 +67,9 @@ impl Output {
         let worst_state = match check_results
             .iter()
             .filter_map(|cr| match cr {
-                CheckResult::Summary(check_item) => Some(&check_item.state),
+                CheckResult::Summary(check_item) | CheckResult::Details(check_item) => {
+                    Some(&check_item.state)
+                }
                 _ => None,
             })
             .max()
@@ -80,6 +92,13 @@ mod test_output_format {
 
     fn summary(state: State, text: &str) -> CheckResult {
         CheckResult::Summary(CheckItem {
+            state,
+            text: text.to_string(),
+        })
+    }
+
+    fn details(state: State, text: &str) -> CheckResult {
+        CheckResult::Details(CheckItem {
             state,
             text: text.to_string(),
         })
@@ -112,7 +131,7 @@ mod test_output_format {
     fn test_merge_check_results_with_state_only() {
         let cr1 = summary(State::Ok, "");
         let cr2 = summary(State::Ok, "");
-        let cr3 = summary(State::Ok, "");
+        let cr3 = details(State::Ok, "");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
             "HTTP OK"
@@ -123,10 +142,10 @@ mod test_output_format {
     fn test_merge_check_results_ok() {
         let cr1 = summary(State::Ok, "summary 1");
         let cr2 = summary(State::Ok, "summary 2");
-        let cr3 = summary(State::Ok, "summary 3");
+        let cr3 = details(State::Ok, "details 3");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK - summary 1, summary 2, summary 3"
+            "HTTP OK - summary 1, summary 2\ndetails 3"
         );
     }
 
@@ -145,27 +164,27 @@ mod test_output_format {
     fn test_merge_check_results_crit() {
         let cr1 = summary(State::Ok, "summary 1");
         let cr2 = summary(State::Warn, "summary 2");
-        let cr3 = summary(State::Crit, "summary 3");
+        let cr3 = details(State::Crit, "details 3");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
+            "HTTP CRITICAL - summary 1, summary 2 (!)\ndetails 3 (!!)"
         );
     }
 
     #[test]
     fn test_merge_check_results_unknown() {
         let cr1 = summary(State::Ok, "summary 1");
-        let cr2 = summary(State::Warn, "summary 2");
-        let cr3 = summary(State::Crit, "summary 3");
+        let cr2 = details(State::Warn, "details 2");
+        let cr3 = details(State::Crit, "details 3");
         let cr4 = summary(State::Unknown, "summary 4");
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3, cr4])),
-            "HTTP UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+            "HTTP UNKNOWN - summary 1, summary 4 (?)\ndetails 2 (!)\ndetails 3 (!!)"
         );
     }
 
     #[test]
-    fn test_merge_empty_summary_basic_metric() {
+    fn test_merge_empty_checks_basic_metric() {
         let cr1 = summary(State::Ok, "");
         let m1 = metric("my_metric", 123., None, None, None, None);
         assert_eq!(
@@ -214,6 +233,20 @@ mod test_output_format {
         assert_eq!(
             format!("{}", Output::from_check_results(vec![m1, m2])),
             "HTTP OK | my_metric_1=1;;;; my_metric_2=2;;;;"
+        );
+    }
+
+    #[test]
+    fn test_merge_summary_details_metrics() {
+        let cr1 = summary(State::Ok, "summary 1");
+        let cr2 = details(State::Warn, "details 2");
+        let cr3 = details(State::Crit, "details 3");
+        let cr4 = summary(State::Ok, "summary 4");
+        let m1 = metric("my_metric_1", 1., None, None, None, None);
+        let m2 = metric("my_metric_2", 2., None, None, None, None);
+        assert_eq!(
+            format!("{}", Output::from_check_results(vec![cr1, m1, cr2, m2, cr3, cr4])),
+            "HTTP CRITICAL - summary 1, summary 4 | my_metric_1=1;;;; my_metric_2=2;;;;\ndetails 2 (!)\ndetails 3 (!!)"
         );
     }
 }

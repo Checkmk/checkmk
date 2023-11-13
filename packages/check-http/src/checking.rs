@@ -171,6 +171,7 @@ impl Display for CheckItem {
 
 pub enum CheckResult {
     Summary(CheckItem),
+    Details(CheckItem),
     Metric(Metric),
 }
 

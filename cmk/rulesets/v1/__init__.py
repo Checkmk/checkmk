@@ -19,7 +19,6 @@ from cmk.rulesets.v1._rulespec import (
     HostRuleSpec,
     InventoryParameterRuleSpec,
     RuleEvalType,
-    RuleSpec,
     ServiceRuleSpec,
     SpecialAgentRuleSpec,
 )
@@ -55,7 +54,6 @@ __all__ = [
     "HostRuleSpec",
     "InventoryParameterRuleSpec",
     "RuleEvalType",
-    "RuleSpec",
     "ServiceRuleSpec",
     "SpecialAgentRuleSpec",
     "CustomFunctionality",

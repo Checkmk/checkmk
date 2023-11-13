@@ -18,6 +18,7 @@ from cmk.gui.utils.rulespecs.legacy_converter import (
     _convert_to_legacy_valuespec,
     convert_to_legacy_rulespec,
 )
+from cmk.gui.utils.rulespecs.loader import RuleSpec as APIV1RuleSpec
 
 import cmk.rulesets.v1 as api_v1
 
@@ -360,7 +361,7 @@ def test_convert_to_legacy_rulespec_group(
     ],
 )
 def test_convert_to_legacy_rulespec(
-    new_rulespec: api_v1.RuleSpec, expected: legacy_rulespecs.Rulespec
+    new_rulespec: APIV1RuleSpec, expected: legacy_rulespecs.Rulespec
 ) -> None:
     _compare_specs(convert_to_legacy_rulespec(new_rulespec, _), expected)
 

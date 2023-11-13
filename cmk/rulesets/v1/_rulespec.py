@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Callable
@@ -19,17 +18,7 @@ class RuleEvalType(Enum):
 
 
 @dataclass(frozen=True)
-class RuleSpec(abc.ABC):
-    def __new__(cls, *args, **kwargs):
-        if cls is RuleSpec:
-            raise TypeError("Cannot instantiate abstract RuleSpec.")
-        return super().__new__(cls)
-
-    name: str
-
-
-@dataclass(frozen=True)
-class HostRuleSpec(RuleSpec):
+class HostRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
@@ -42,7 +31,7 @@ class HostRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class ServiceRuleSpec(RuleSpec):
+class ServiceRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
@@ -54,7 +43,7 @@ class ServiceRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class CheckParameterRuleSpecWithItem(RuleSpec):
+class CheckParameterRuleSpecWithItem:
     title: Localizable
     topic: Topic | CustomTopic
     value_spec: Callable[[], Dictionary]
@@ -77,7 +66,7 @@ class CheckParameterRuleSpecWithItem(RuleSpec):
 
 
 @dataclass(frozen=True)
-class CheckParameterRuleSpecWithoutItem(RuleSpec):
+class CheckParameterRuleSpecWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
     value_spec: Callable[[], Dictionary]
@@ -94,7 +83,7 @@ class CheckParameterRuleSpecWithoutItem(RuleSpec):
 
 
 @dataclass(frozen=True)
-class EnforcedServiceRuleSpecWithItem(RuleSpec):
+class EnforcedServiceRuleSpecWithItem:
     title: Localizable
     topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
@@ -112,7 +101,7 @@ class EnforcedServiceRuleSpecWithItem(RuleSpec):
 
 
 @dataclass(frozen=True)
-class EnforcedServiceRuleSpecWithoutItem(RuleSpec):
+class EnforcedServiceRuleSpecWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
@@ -124,7 +113,7 @@ class EnforcedServiceRuleSpecWithoutItem(RuleSpec):
 
 
 @dataclass(frozen=True)
-class InventoryParameterRuleSpec(RuleSpec):
+class InventoryParameterRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
@@ -136,7 +125,7 @@ class InventoryParameterRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class ActiveChecksRuleSpec(RuleSpec):
+class ActiveChecksRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
@@ -148,7 +137,7 @@ class ActiveChecksRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class AgentConfigRuleSpec(RuleSpec):
+class AgentConfigRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
@@ -160,7 +149,7 @@ class AgentConfigRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class SpecialAgentRuleSpec(RuleSpec):
+class SpecialAgentRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
@@ -172,7 +161,7 @@ class SpecialAgentRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class ExtraHostConfRuleSpec(RuleSpec):
+class ExtraHostConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
@@ -184,7 +173,7 @@ class ExtraHostConfRuleSpec(RuleSpec):
 
 
 @dataclass(frozen=True)
-class ExtraServiceConfRuleSpec(RuleSpec):
+class ExtraServiceConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality

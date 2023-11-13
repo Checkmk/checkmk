@@ -5,14 +5,55 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.discover_plugins import discover_plugins
-from cmk.rulesets.v1 import RuleSpec
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins
+from cmk.rulesets.v1 import (
+    ActiveChecksRuleSpec,
+    AgentConfigRuleSpec,
+    CheckParameterRuleSpecWithItem,
+    CheckParameterRuleSpecWithoutItem,
+    EnforcedServiceRuleSpecWithItem,
+    EnforcedServiceRuleSpecWithoutItem,
+    ExtraHostConfRuleSpec,
+    ExtraServiceConfRuleSpec,
+    HostRuleSpec,
+    InventoryParameterRuleSpec,
+    ServiceRuleSpec,
+    SpecialAgentRuleSpec,
+)
+
+RuleSpec = (
+    HostRuleSpec
+    | ServiceRuleSpec
+    | CheckParameterRuleSpecWithItem
+    | CheckParameterRuleSpecWithoutItem
+    | EnforcedServiceRuleSpecWithItem
+    | EnforcedServiceRuleSpecWithoutItem
+    | InventoryParameterRuleSpec
+    | ActiveChecksRuleSpec
+    | AgentConfigRuleSpec
+    | SpecialAgentRuleSpec
+    | ExtraHostConfRuleSpec
+    | ExtraServiceConfRuleSpec
+)
 
 
 def load_api_v1_rulespecs(raise_errors: bool) -> tuple[Sequence[str], Mapping[str, RuleSpec]]:
-    discovered_plugins = discover_plugins(
+    discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         "rulesets",
-        {RuleSpec: "rulespec_"},
+        {
+            HostRuleSpec: "rulespec_",
+            ServiceRuleSpec: "rulespec_",
+            CheckParameterRuleSpecWithItem: "rulespec_",
+            CheckParameterRuleSpecWithoutItem: "rulespec_",
+            EnforcedServiceRuleSpecWithItem: "rulespec_",
+            EnforcedServiceRuleSpecWithoutItem: "rulespec_",
+            InventoryParameterRuleSpec: "rulespec_",
+            ActiveChecksRuleSpec: "rulespec_",
+            AgentConfigRuleSpec: "rulespec_",
+            SpecialAgentRuleSpec: "rulespec_",
+            ExtraHostConfRuleSpec: "rulespec_",
+            ExtraServiceConfRuleSpec: "rulespec_",
+        },
         raise_errors=raise_errors,
     )
     errors = [str(e) for e in discovered_plugins.errors]

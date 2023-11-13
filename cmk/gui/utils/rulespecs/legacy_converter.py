@@ -12,6 +12,7 @@ from typing import Any, assert_never, Callable, TypeVar
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.utils.rulespecs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem, rulespec_group_registry
 
@@ -25,7 +26,7 @@ def _localize_optional(
 
 
 def convert_to_legacy_rulespec(
-    to_convert: ruleset_api_v1.RuleSpec, localizer: Callable[[str], str]
+    to_convert: APIV1RuleSpec, localizer: Callable[[str], str]
 ) -> legacy_rulespecs.Rulespec:
     if isinstance(to_convert, ruleset_api_v1.CheckParameterRuleSpecWithItem):
         return CheckParameterRulespecWithItem(

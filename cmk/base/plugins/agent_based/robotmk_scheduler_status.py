@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, RootModel, TypeAdapter
 
-from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -59,11 +59,20 @@ class SessionConfigSpecificUser(BaseModel, frozen=True):
     SpecificUser: UserSessionConfig
 
 
+class SourceHost(Enum):
+    Source = "Source"
+
+
+class PiggybackHost(BaseModel, frozen=True):
+    Piggyback: str
+
+
 class SuiteConfig(BaseModel, frozen=True):
     robot_framework_config: RobotFrameworkConfig
     execution_config: ExecutionConfig
     environment_config: EnvironmentConfigSystem | EnvironmentConfigRcc
     session_config: SessionConfigCurrent | SessionConfigSpecificUser
+    host: SourceHost | PiggybackHost
 
 
 class Config(BaseModel, frozen=True):
@@ -224,17 +233,9 @@ def _check_environment_build_state_failures(
 
 
 def _check_scheduler_status_errors(
-    section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
     section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
 ) -> CheckResult:
-    if isinstance(section_robotmk_config, ConfigReadingError):
-        yield Result(
-            state=State.CRIT,
-            summary="Error while reading config file.",
-            details=f"{section_robotmk_config.ReadingError}",
-        )
-
     if rcc_setup_failures := (
         [
             *section_robotmk_rcc_setup_failures.telemetry_disabling,
@@ -268,9 +269,10 @@ def check_scheduler_status(
     if not section_robotmk_config:
         return
 
+    yield from _check_config(section_robotmk_config)
+
     if list(
         errors := _check_scheduler_status_errors(
-            section_robotmk_config,
             section_robotmk_rcc_setup_failures,
             section_robotmk_environment_build_states,
         )
@@ -278,7 +280,48 @@ def check_scheduler_status(
         yield from errors
         return
 
-    yield Result(state=State.OK, summary="The Scheduler status is OK")
+
+def _check_config(config: Config | ConfigReadingError) -> CheckResult:
+    if isinstance(config, ConfigReadingError):
+        yield Result(
+            state=State.CRIT,
+            summary="Error while reading configuration",
+            details=f"{config.ReadingError}",
+        )
+        return
+    if not config.suites:
+        yield Result(
+            state=State.WARN,
+            summary="No suites configured",
+        )
+        return
+
+    yield Result(
+        state=State.OK,
+        summary=(
+            f"{len(config.suites)} suite{'' if len(config.suites) == 1 else 's'} configured "
+            f"({', '.join(config.suites)})"
+        ),
+    )
+
+    for suite_name, suite_config in config.suites.items():
+        yield Result(state=State.OK, notice=_render_suite_config(suite_name, suite_config))
+
+
+def _render_suite_config(suite_name: str, suite_config: SuiteConfig) -> str:
+    return "\n".join(
+        [
+            f"Configuration of suite {suite_name}",
+            f"- Scheduling interval: {render.timespan(suite_config.execution_config.execution_interval_seconds)}",
+            f"- RCC: {'Yes' if isinstance(suite_config.environment_config, EnvironmentConfigRcc) else 'No'}",
+            f"- Maximum number of attempts: {suite_config.execution_config.n_attempts_max}",
+        ]
+        + (
+            [f"- Assigned to host: {suite_config.host.Piggyback}"]
+            if isinstance(suite_config.host, PiggybackHost)
+            else []
+        )
+    )
 
 
 register.check_plugin(

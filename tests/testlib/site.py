@@ -1529,6 +1529,10 @@ class SiteFactory:
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())
 
+        # refresh the site object after creating the site
+        self._base_ident = ""
+        site = self.get_existing_site(test_site.id)
+
         # restoring the tmpfs was broken and has been fixed with
         # 3448a7da56ed6d4fa2c2f425d0b1f4b6e02230aa
         from_version = Version.from_str(test_site.version.version)
@@ -1541,10 +1545,6 @@ class SiteFactory:
             assert os.path.exists(site.path(counters_dir))
             assert os.path.exists(site.path(str(piggyback_dir)))
             assert os.path.exists(site.path(str(piggyback_source_dir)))
-
-        # refresh the site object after creating the site
-        self._base_ident = ""
-        site = self.get_existing_site(test_site.id)
 
         # open the livestatus port
         site.open_livestatus_tcp(encrypted=False)

@@ -1246,6 +1246,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
     output.write("from cmk.utils.log import console\n")
+    output.write("from cmk.base.api.agent_based.register import register_plugin_by_type\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("from cmk.checkengine.submitters import get_submitter\n")
@@ -1258,6 +1259,8 @@ if os.path.islink(%(dst)r):
     for module in {l.module for l in locations}:
         output.write("import %s\n" % module)
         console.verbose(" %s%s%s", tty.green, module, tty.normal, stream=sys.stderr)
+    for location in (l for l in locations if l.name is not None):
+        output.write(f"register_plugin_by_type({location!r}, {location.module}.{location.name})\n")
 
     # Register default Checkmk signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")

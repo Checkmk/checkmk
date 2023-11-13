@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from typing import assert_never
+
 import cmk.utils.debug
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
@@ -14,7 +16,7 @@ from cmk.agent_based.v2alpha import (
     SimpleSNMPSection,
     SNMPSection,
 )
-from cmk.discover_plugins import PluginLocation
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginLocation
 
 from ._config import (
     add_check_plugin,
@@ -30,6 +32,8 @@ from .check_plugins import create_check_plugin
 from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
 
+_ABPlugins = SimpleSNMPSection | SNMPSection | AgentSection | CheckPlugin | InventoryPlugin
+
 
 def load_all_plugins() -> list[str]:
     errors = []
@@ -37,7 +41,40 @@ def load_all_plugins() -> list[str]:
         errors.append(f"Error in agent based plugin {plugin}: {exception}\n")
         if cmk.utils.debug.enabled():
             raise exception
+
+    discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
+        "agent_based",
+        {
+            SimpleSNMPSection: "section_",
+            SNMPSection: "section_",
+            AgentSection: "section_",
+            CheckPlugin: "check_plugin_",
+            InventoryPlugin: "inventory_plugin_",
+        },
+        raise_errors=cmk.utils.debug.enabled(),
+    )
+    errors.extend(f"Error in agent based plugin: {exc}" for exc in discovered_plugins.errors)
+    for loaded_plugin in discovered_plugins.plugins.items():
+        register_plugin_by_type(*loaded_plugin)
+
     return errors
+
+
+def register_plugin_by_type(
+    location: PluginLocation,
+    plugin: AgentSection | SimpleSNMPSection | SNMPSection | CheckPlugin | InventoryPlugin,
+) -> None:
+    match plugin:
+        case AgentSection():
+            register_agent_section(plugin, location)
+        case SimpleSNMPSection() | SNMPSection():
+            register_snmp_section(plugin, location)
+        case CheckPlugin():
+            register_check_plugin(plugin, location)
+        case InventoryPlugin():
+            register_inventory_plugin(plugin, location)
+        case unreachable:
+            assert_never(unreachable)
 
 
 def register_agent_section(section: AgentSection, location: PluginLocation) -> None:

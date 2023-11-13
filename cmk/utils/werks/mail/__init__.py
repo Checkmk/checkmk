@@ -290,7 +290,29 @@ def get_werk_commits(repo: Repo, branch_name: str, args: Args) -> Sequence[WerkC
 
 
 def git_notes_fetch(repo: Repo, args: Args) -> None:
-    repo.git.fetch("origin", f"refs/notes/{args.ref}:refs/notes/{args.ref}")
+    try:
+        repo.git.fetch("origin", f"refs/notes/{args.ref}:refs/notes/{args.ref}")
+    except Exception as e:
+        local = repo.git.show_ref("--", args.ref)
+        remote = repo.git.ls_remote("origin", f"refs/notes/{args.ref}")
+        raise RuntimeError(
+            f"""Could not fetch notes {args.ref} from remote.
+Maybe there were local changes to refs/notes/{args.ref}, that were not pushed to the remote, but the
+remote changed in the meantime. Now there is a conflict between the local and the remote notes.
+
+Normally you want to fix this conflict by force accepting the remote state:
+   git fetch origin +refs/notes/{args.ref}:refs/notes/{args.ref}
+
+But be sure you know what you are doing, it might send out unwanted mails to
+mailing-lists.
+
+You can check out the different states with the following hashes:
+local state:
+{local}
+remote state:
+{remote}
+"""
+        ) from e
 
 
 def git_notes_push(repo: Repo, args: Args) -> None:

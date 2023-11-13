@@ -14,6 +14,7 @@ from cmk.agent_based.v2alpha import (
     SimpleSNMPSection,
     SNMPSection,
 )
+from cmk.discover_plugins import PluginLocation
 
 from ._config import (
     add_check_plugin,
@@ -39,7 +40,7 @@ def load_all_plugins() -> list[str]:
     return errors
 
 
-def register_agent_section(section: AgentSection, full_module: str) -> None:
+def register_agent_section(section: AgentSection, location: PluginLocation) -> None:
     section_plugin = create_agent_section_plugin(
         name=section.name,
         parsed_section_name=section.parsed_section_name,
@@ -49,7 +50,7 @@ def register_agent_section(section: AgentSection, full_module: str) -> None:
         host_label_ruleset_name=section.host_label_ruleset_name,
         host_label_ruleset_type=section.host_label_ruleset_type,
         supersedes=section.supersedes,
-        full_module=full_module,
+        location=location,
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -60,7 +61,9 @@ def register_agent_section(section: AgentSection, full_module: str) -> None:
         add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
-def register_snmp_section(section: SimpleSNMPSection | SNMPSection, full_module: str) -> None:
+def register_snmp_section(
+    section: SimpleSNMPSection | SNMPSection, location: PluginLocation
+) -> None:
     section_plugin = create_snmp_section_plugin(
         name=section.name,
         parsed_section_name=section.parsed_section_name,
@@ -72,7 +75,7 @@ def register_snmp_section(section: SimpleSNMPSection | SNMPSection, full_module:
         detect_spec=section.detect,
         fetch=section.fetch,
         supersedes=section.supersedes,
-        full_module=full_module,
+        location=location,
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -83,7 +86,7 @@ def register_snmp_section(section: SimpleSNMPSection | SNMPSection, full_module:
         add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
-def register_check_plugin(check: CheckPlugin, full_module: str) -> None:
+def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
     plugin = create_check_plugin(
         name=check.name,
         sections=check.sections,
@@ -96,7 +99,7 @@ def register_check_plugin(check: CheckPlugin, full_module: str) -> None:
         check_default_parameters=check.check_default_parameters,
         check_ruleset_name=check.check_ruleset_name,
         cluster_check_function=check.cluster_check_function,
-        full_module=full_module,
+        location=location,
     )
 
     if is_registered_check_plugin(plugin.name):
@@ -107,14 +110,14 @@ def register_check_plugin(check: CheckPlugin, full_module: str) -> None:
         add_discovery_ruleset(plugin.discovery_ruleset_name)
 
 
-def register_inventory_plugin(inventory: InventoryPlugin, full_module: str) -> None:
+def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocation) -> None:
     plugin = create_inventory_plugin(
         name=inventory.name,
         sections=inventory.sections,
         inventory_function=inventory.inventory_function,
         inventory_default_parameters=inventory.inventory_default_parameters,
         inventory_ruleset_name=inventory.inventory_ruleset_name,
-        full_module=full_module,
+        location=location,
     )
 
     if is_registered_inventory_plugin(plugin.name):

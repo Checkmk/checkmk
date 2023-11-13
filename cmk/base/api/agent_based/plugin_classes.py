@@ -26,6 +26,7 @@ from cmk.agent_based.v1.type_defs import (
     StringByteTable,
     StringTable,
 )
+from cmk.discover_plugins import PluginLocation
 
 InventoryFunction = Callable[..., InventoryResult]
 
@@ -52,7 +53,7 @@ class AgentSectionPlugin(NamedTuple):
     host_label_ruleset_name: RuleSetName | None
     host_label_ruleset_type: RuleSetTypeName
     supersedes: set[SectionName]
-    full_module: str | None  # not available for auto migrated plugins.
+    location: PluginLocation | None  # not available for auto migrated plugins.
 
 
 class _OIDSpecLike(Protocol):
@@ -90,7 +91,7 @@ class SNMPSectionPlugin(NamedTuple):
     detect_spec: SNMPDetectBaseType
     trees: Sequence[_SNMPTreeLike]
     supersedes: set[SectionName]
-    full_module: str | None  # not available for auto migrated plugins.
+    location: PluginLocation | None  # not available for auto migrated plugins.
 
 
 SectionPlugin = AgentSectionPlugin | SNMPSectionPlugin
@@ -108,7 +109,7 @@ class CheckPlugin(NamedTuple):
     check_default_parameters: ParametersTypeAlias | None
     check_ruleset_name: RuleSetName | None
     cluster_check_function: CheckFunction | None
-    full_module: str | None  # not available for auto migrated plugins.
+    location: PluginLocation | None  # not available for auto migrated plugins.
 
 
 class InventoryPlugin(NamedTuple):
@@ -117,4 +118,4 @@ class InventoryPlugin(NamedTuple):
     inventory_function: InventoryFunction
     inventory_default_parameters: ParametersTypeAlias
     inventory_ruleset_name: RuleSetName | None
-    full_module: str
+    location: PluginLocation

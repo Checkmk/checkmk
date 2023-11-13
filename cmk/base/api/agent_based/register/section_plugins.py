@@ -37,6 +37,7 @@ from cmk.base.api.agent_based.register.utils import (
 from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
+from cmk.discover_plugins import PluginLocation
 
 
 def _create_parse_annotation(
@@ -246,7 +247,7 @@ def create_agent_section_plugin(
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
-    full_module: str | None = None,
+    location: PluginLocation | None = None,
     validate_creation_kwargs: bool = True,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
@@ -284,7 +285,7 @@ def create_agent_section_plugin(
             "merged" if host_label_ruleset_type is RuleSetType.MERGED else "all"
         ),
         supersedes=_create_supersedes(section_name, supersedes),
-        full_module=full_module,
+        location=location,
     )
 
 
@@ -300,7 +301,7 @@ def create_snmp_section_plugin(
     host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
-    full_module: str | None = None,
+    location: PluginLocation | None = None,
     validate_creation_kwargs: bool = True,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
@@ -350,7 +351,7 @@ def create_snmp_section_plugin(
         supersedes=_create_supersedes(section_name, supersedes),
         detect_spec=detect_spec,
         trees=tree_list,
-        full_module=full_module,
+        location=location,
     )
 
 
@@ -390,5 +391,5 @@ def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
         host_label_ruleset_name=None,
         host_label_ruleset_type="merged",  # doesn't matter, use default.
         supersedes=set(),
-        full_module=None,
+        location=None,
     )

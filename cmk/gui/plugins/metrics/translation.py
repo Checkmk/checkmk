@@ -244,6 +244,10 @@ check_metrics["check_mk-jolokia_metrics_mem"] = {
     "heap": {"name": "mem_heap", "scale": MB},
     "nonheap": {"name": "mem_nonheap", "scale": MB},
 }
+check_metrics["check_mk-jolokia_jvm_memory"] = {
+    "heap": {"name": "mem_heap", "scale": MB},
+    "nonheap": {"name": "mem_nonheap", "scale": MB},
+}
 check_metrics["check_mk-jolokia_metrics_threads"] = {
     "ThreadRate": {"name": "threads_rate"},
     "ThreadCount": {"name": "threads"},

@@ -19,20 +19,25 @@ pub enum SendTo {
 
 pub fn init(args: ArgsOs) -> Result<CheckConfig> {
     let args = Args::parse_from(args);
-    init_logging_from_args(&args)?;
+    init_logging(&args)?;
     get_check_config(&args)
 }
 
-fn init_logging_from_args(args: &Args) -> Result<()> {
+fn init_logging(args: &Args) -> Result<()> {
     let level = &args.logging_level();
-    let log_dir = args.log_dir.as_deref();
     let send_to = if args.display_log {
         SendTo::Stderr
     } else {
         SendTo::Null
     };
 
-    init_logging(level, log_dir, send_to)?;
+    let log_dir = if args.log_dir.is_some() {
+        args.log_dir.as_deref()
+    } else {
+        constants::ENV_LOG_DIR.as_deref().filter(|&p| p.exists())
+    };
+
+    apply_logging_parameters(level, log_dir, send_to)?;
     Ok(())
 }
 
@@ -41,11 +46,11 @@ fn get_check_config(args: &Args) -> Result<CheckConfig> {
         Some(ref config_file) => config_file,
         None => &constants::DEFAULT_CONFIG_FILE,
     };
-
+    log::info!("Using config file: {}", file.display());
     CheckConfig::load_file(file)
 }
 
-fn init_logging(
+fn apply_logging_parameters(
     level: &str,
     log_dir: Option<&Path>,
     send_to: SendTo,

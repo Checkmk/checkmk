@@ -135,13 +135,13 @@ from cmk.checkengine.summarize import summarize
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-import cmk.base.config_generation as config_generation
 import cmk.base.core
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
+import cmk.base.server_side_calls as server_side_calls
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
@@ -159,7 +159,7 @@ from cmk.base.core import CoreAction, do_restart
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
 from cmk.base.errorhandling import create_section_crash_dump
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
@@ -436,7 +436,7 @@ def active_check_preview_rows(
         pretty = make_check_source(desc).rsplit("_", maxsplit=1)[-1].title()
         return f"WAITING - {pretty} check, cannot be done offline"
 
-    active_check_config = config_generation.ActiveCheck(
+    active_check_config = server_side_calls.ActiveCheck(
         load_active_checks()[1],
         config.active_check_info,
         host_name,
@@ -1317,7 +1317,7 @@ class AutomationAnalyseServices(Automation):
 
         # 4. Active checks
         host_attrs = config_cache.get_host_attributes(host_name)
-        active_check_config = config_generation.ActiveCheck(
+        active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,
@@ -2166,7 +2166,7 @@ class AutomationActiveCheck(Automation):
 
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = self._get_resouce_macros()
-        active_check_config = config_generation.ActiveCheck(
+        active_check_config = server_side_calls.ActiveCheck(
             load_active_checks()[1],
             config.active_check_info,
             host_name,

@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib import SpecialAgent
 
-from cmk.base.config_generation import SpecialAgentInfoFunctionResult
+from cmk.base.server_side_calls import SpecialAgentInfoFunctionResult
 
 
 @pytest.mark.parametrize(

@@ -403,11 +403,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "appdynamics_sessions",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
             "aws_dynamodb_table_read_capacity",
             RuleGroup.CheckgroupParameters("aws_dynamodb_capacity"),
         ),
@@ -465,11 +460,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("memory_multiitem"),
         ),
         ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
-        (
-            "check",
-            "ddn_s2a_faultsbasic_disks",
-            RuleGroup.CheckgroupParameters("disk_failures"),
-        ),
         (
             "check",
             "ddn_s2a_faultsbasic_fans",
@@ -569,22 +559,7 @@ class ErrorReporter:
             "ibm_imm_fan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
-        (
-            "check",
-            "innovaphone_mem",
-            RuleGroup.CheckgroupParameters("innovaphone_mem"),
-        ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        (
-            "check",
-            "jolokia_metrics_app_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
-        (
-            "check",
-            "jolokia_metrics_bea_sess",
-            RuleGroup.CheckgroupParameters("jvm_sessions"),
-        ),
         (
             "check",
             "jolokia_metrics_serv_req",

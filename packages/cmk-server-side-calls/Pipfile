@@ -15,6 +15,7 @@ pyls-isort = "*"
 pylsp-mypy = "*"
 python-lsp-black = "*"
 python-lsp-server = "*"
+pydantic = "*"
 
 [packages]
 cmk-server-side-calls = {editable = true, path = "."}

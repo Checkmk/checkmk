@@ -120,7 +120,7 @@ from cmk.base.config import ConfigCache
 from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.errorhandling import CheckResultErrorHandler, create_section_crash_dump
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager

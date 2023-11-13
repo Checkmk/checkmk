@@ -7,12 +7,14 @@ import time
 from datetime import datetime
 
 from cmk.utils.crypto.password import Password
+from cmk.utils.log.security_event import log_security_event
 
 from cmk.gui import forms, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.log import UserManagementEvent
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.session import session
@@ -82,6 +84,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
             user_spec["serial"] += 1
 
         userdb.save_users(users, now)
+
+        log_security_event(
+            UserManagementEvent(
+                event="password changed",
+                affected_user=user.id,
+                acting_user=user.id,
+            )
+        )
 
         flash(_("Successfully changed password."))
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Sequence
 from functools import partial
 
 import pytest
@@ -73,28 +73,29 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         api_v1.MonitoringState(title=api_v1.Localizable("title")),
                         show_more=True,
                     ),
-                    "key_ignored": api_v1.DictElement(
+                    "key_read_only": api_v1.DictElement(
                         api_v1.MonitoringState(title=api_v1.Localizable("title")),
-                        ignored=True,
+                        read_only=True,
                     ),
                 },
                 title=api_v1.Localizable("Configuration title"),
                 help_text=api_v1.Localizable("Helpful description"),
+                deprecated_elements=["old_key", "another_old_key"],
                 no_elements_text=api_v1.Localizable("No elements specified"),
             ),
             legacy_valuespecs.Dictionary(
                 elements=[
                     ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
                     ("key_opt", legacy_valuespecs.MonitoringState(title=_("title"))),
-                    ("key_ignored", legacy_valuespecs.MonitoringState(title=_("title"))),
+                    ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
                 ],
                 title=_("Configuration title"),
                 help=_("Helpful description"),
                 empty_text=_("No elements specified"),
                 required_keys=["key_req"],
-                default_keys=["key_req"],
                 show_more_keys=["key_opt"],
-                ignored_keys=["key_ignored"],
+                hidden_keys=["key_read_only"],
+                ignored_keys=["old_key", "another_old_key"],
             ),
             id="Dictionary",
         ),
@@ -366,8 +367,9 @@ def test_convert_to_legacy_rulespec(
 def _compare_specs(actual: object, expected: object) -> None:
     ignored_attrs = {"__orig_class__"}
 
-    if isinstance(expected, Iterable) and not isinstance(expected, str):
-        assert isinstance(actual, Iterable) and not isinstance(actual, str)
+    if isinstance(expected, Sequence) and not isinstance(expected, str):
+        assert isinstance(actual, Sequence) and not isinstance(actual, str)
+        assert len(actual) == len(expected)
         for actual_elem, expected_elem in zip(actual, expected):
             _compare_specs(actual_elem, expected_elem)
         return

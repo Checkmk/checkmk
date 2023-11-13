@@ -1,7 +1,0 @@
-====================
-config_generation.v1
-====================
-
-.. automodule:: cmk.config_generation.v1
-   :members:
-   :show-inheritance:

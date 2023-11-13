@@ -16,7 +16,7 @@ import cmk.utils.man_pages as man_pages
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base.plugins.config_generation import load_active_checks
+from cmk.base.plugins.server_side_calls import load_active_checks
 
 ManPages = Mapping[str, man_pages.ManPage | None]
 

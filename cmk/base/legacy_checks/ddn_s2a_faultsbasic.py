@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
 
@@ -42,31 +42,23 @@ def parse_ddn_s2a_faultsbasic(string_table):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-ddn_s2a_faultsbasic_disks_default_levels = (1, 2)
-
 
 def inventory_ddn_s2a_faultsbasic_disks(parsed):
     if "disk_failures_count" in parsed:
-        return [(None, ddn_s2a_faultsbasic_disks_default_levels)]
-    return []
+        yield None, {}
 
 
 def check_ddn_s2a_faultsbasic_disks(_no_item, params, parsed):
-    warn, crit = params
-    num_failures = int(parsed["disk_failures_count"])
+    yield check_levels(
+        int(parsed["disk_failures_count"]),
+        None,
+        params["levels"],
+        human_readable_func=str,
+        infoname="Failures detected",
+    )
 
-    if num_failures >= crit:
-        status = 2
-    elif num_failures >= warn:
-        status = 1
-    else:
-        status = 0
-
-    infotext = "%d failures detected" % num_failures
     if parsed.get("failed_disk_item"):
-        infotext += ". Failed disks: " + ", ".join(parsed["failed_disk_item"])
-
-    return status, infotext
+        yield 0, "Failed disks: " + ", ".join(parsed["failed_disk_item"])
 
 
 check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
@@ -75,6 +67,9 @@ check_info["ddn_s2a_faultsbasic.disks"] = LegacyCheckDefinition(
     discovery_function=inventory_ddn_s2a_faultsbasic_disks,
     check_function=check_ddn_s2a_faultsbasic_disks,
     check_ruleset_name="disk_failures",
+    check_default_parameters={
+        "levels": (1, 2),
+    },
 )
 
 # .

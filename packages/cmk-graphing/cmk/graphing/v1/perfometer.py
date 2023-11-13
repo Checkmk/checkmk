@@ -5,7 +5,6 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TypeAlias
 
 from .metric import Quantity
 
@@ -50,6 +49,3 @@ class Stacked:
 
     def __post_init__(self) -> None:
         assert self.name
-
-
-PerfometerType: TypeAlias = Perfometer | Bidirectional | Stacked

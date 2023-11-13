@@ -6,6 +6,7 @@
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from pathlib import Path
+from typing import assert_never
 
 from pydantic import BaseModel, Field, RootModel, TypeAdapter
 
@@ -184,29 +185,29 @@ register.agent_section(
 )
 
 
-class SchedulerState(Enum):
-    Setup = "Setup"
+class SchedulerPhase(Enum):
+    RCCSetup = "RCCSetup"
     EnvironmentBuilding = "EnvironmentBuilding"
     Scheduling = "Scheduling"
 
 
-def parse_robotmk_scheduler_state(
+def parse_robotmk_scheduler_phase(
     string_table: StringTable,
-) -> SchedulerState | None:
-    return SchedulerState(string_table[0][0].strip('"'))
+) -> SchedulerPhase | None:
+    return SchedulerPhase(string_table[0][0].strip('"'))
 
 
 register.agent_section(
-    name="robotmk_scheduler_state",
-    parse_function=parse_robotmk_scheduler_state,
+    name="robotmk_scheduler_phase",
+    parse_function=parse_robotmk_scheduler_phase,
 )
 
 
 def discover_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
+    section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
     section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
-    section_robotmk_scheduler_state: SchedulerState | None,
 ) -> DiscoveryResult:
     if section_robotmk_config:
         yield Service()
@@ -262,14 +263,20 @@ def _check_scheduler_status_errors(
 
 def check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
+    section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
     section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
-    section_robotmk_scheduler_state: SchedulerState | None,
 ) -> CheckResult:
     if not section_robotmk_config:
         return
 
     yield from _check_config(section_robotmk_config)
+
+    if section_robotmk_scheduler_phase:
+        yield Result(
+            state=State.OK,
+            summary=f"Current phase: {_render_scheduler_phase(section_robotmk_scheduler_phase)}",
+        )
 
     if list(
         errors := _check_scheduler_status_errors(
@@ -324,13 +331,25 @@ def _render_suite_config(suite_name: str, suite_config: SuiteConfig) -> str:
     )
 
 
+def _render_scheduler_phase(scheduler_phase: SchedulerPhase) -> str:
+    match scheduler_phase:
+        case SchedulerPhase.RCCSetup:
+            return "RCC setup"
+        case SchedulerPhase.EnvironmentBuilding:
+            return "Environment building"
+        case SchedulerPhase.Scheduling:
+            return "Suite scheduling"
+        case _:
+            assert_never(scheduler_phase)
+
+
 register.check_plugin(
     name="robotmk_scheduler_status",
     sections=[
         "robotmk_config",
+        "robotmk_scheduler_phase",
         "robotmk_rcc_setup_failures",
         "robotmk_environment_build_states",
-        "robotmk_scheduler_state",
     ],
     service_name="RMK Scheduler Status",
     discovery_function=discover_scheduler_status,

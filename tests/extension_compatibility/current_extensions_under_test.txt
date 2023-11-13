@@ -1,3 +1,4 @@
+https://exchange.checkmk.com/api/packages/download/12/apcaccess-5.2.2.mkp
 https://exchange.checkmk.com/api/packages/download/161/kentix_devices-3.0.1.mkp
 https://exchange.checkmk.com/api/packages/download/184/mikrotik-2.4.0.mkp
 https://exchange.checkmk.com/api/packages/download/244/rspamd-1.4.1.mkp

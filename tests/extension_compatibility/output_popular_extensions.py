@@ -16,7 +16,7 @@ from pydantic import BaseModel
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cmk.utils.version import __version__, parse_check_mk_version
 
-NUMBER_OF_EXTENSION_TESTED = 10
+NUMBER_OF_EXTENSION_TESTED = 11
 
 
 def main(parsed_version: int) -> None:

@@ -630,8 +630,8 @@ def output_csv(werks: list[Werk]) -> None:
         # below.
         if isinstance(entry, tuple) and len(entry) == 2:
             name, alias = entry
-        elif isinstance(entry, str):  # TODO: Hmmm...
-            name, alias = entry, entry  # type: ignore[unreachable]
+        elif isinstance(entry, str):  # type: ignore[unreachable]  # TODO: Hmmm...
+            name, alias = entry, entry
         else:
             bail_out(f"invalid component {entry!r}")
 

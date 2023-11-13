@@ -467,7 +467,7 @@ def piggy_back(
             name=name,
             service_name=service.name,
             labels=HostLabelSection(
-                labels=service.labeler(host).labels | {"cmk/gcp/projectId": client.project}
+                labels=dict(service.labeler(host).labels) | {"cmk/gcp/projectId": client.project}
             ),
             sections=sections,
         )

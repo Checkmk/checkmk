@@ -450,7 +450,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
         service_labels[service.description] = {
             label.name: label.value for label in service.service_labels.values()
-        } | get_labels_from_attributes(list(passive_service_attributes.items()))
+        } | dict(get_labels_from_attributes(list(passive_service_attributes.items())))
 
         service_spec.update(passive_service_attributes)
 

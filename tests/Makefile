@@ -13,16 +13,17 @@ PYTEST_DOC_TEST_OPTS := \
     --import-mode=importlib \
     -o pythonpath=. \
     --doctest-modules \
+    ../cmk/active_checks \
     ../cmk/base \
     ../cmk/bi \
+    ../cmk/discover_plugins.py \
     ../cmk/fields \
     ../cmk/gui \
     ../cmk/post_rename_site \
     ../cmk/special_agents \
     ../cmk/update_config \
     ../cmk/utils \
-    ../omd/packages/omd \
-    ../cmk/active_checks
+    ../omd/packages/omd
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     $(PYTEST_DOC_TEST_OPTS) \

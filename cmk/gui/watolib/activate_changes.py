@@ -1448,6 +1448,11 @@ class ActivateChangesManager(ActivateChanges):
         return sites
 
     def _info_path(self, activation_id: str) -> str:
+        if not re.match(r"^[\d\-a-fA-F]+$", activation_id):
+            raise MKUserError(
+                None,
+                _("Invalid activation_id"),
+            )
         return f"{ACTIVATION_TMP_BASE_DIR}/{activation_id}/info.mk"
 
     def activations(self) -> Iterator[tuple[str, dict[str, Any]]]:

@@ -9,7 +9,7 @@ from typing import assert_never, Literal, TypedDict
 
 from cmk.utils.paths import robotmk_html_log_dir  # pylint: disable=cmk-module-layer-violation
 
-from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
     host_name,
     service_description,
 )

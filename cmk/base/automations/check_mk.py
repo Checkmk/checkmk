@@ -143,6 +143,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.server_side_calls as server_side_calls
 import cmk.base.sources as sources
+from cmk.base import plugin_contexts
 from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
@@ -163,7 +164,6 @@ from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
-from cmk.agent_based.v1_backend import plugin_contexts
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]

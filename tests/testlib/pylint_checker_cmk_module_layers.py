@@ -226,8 +226,7 @@ def _allow_for_gui_cee(
             (
                 _in_component(imported=imported, component=Component("cmk.gui"))
                 and not _in_component(imported=imported, component=Component("cmk.gui.cce"))
-                # Can not be activated yet
-                # and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
+                and not _in_component(imported=imported, component=Component("cmk.gui.cme"))
                 and not _is_a_plugin_import(imported=imported)
             ),
             _in_component(imported=imported, component=Component("cmk.checkengine")),

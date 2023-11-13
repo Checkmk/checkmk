@@ -1,0 +1,17 @@
+filegroup(
+  name = "package_source_files",
+  srcs =  glob([
+    "**",
+  ]),
+)
+
+genrule(
+    name = "build",
+    srcs = [":package_source_files"],
+    outs = ["robotmk.exe", "robotmk_agent.exe", "rcc.exe"],
+    cmd = """
+         target_path=$$(realpath $(RULEDIR));
+         cd external/robotmk/artifact/;
+         cp robotmk.exe robotmk_agent.exe windows64/rcc.exe $${target_path};
+    """,
+)

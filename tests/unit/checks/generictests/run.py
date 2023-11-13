@@ -12,7 +12,10 @@ from tests.testlib import Check, MissingCheckInfoError
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.hostaddress import HostName
 
-from cmk.agent_based.v1_backend.plugin_contexts import current_host, current_service
+from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    current_host,
+    current_service,
+)
 
 from ..checktestlib import (
     assertCheckResultsEqual,

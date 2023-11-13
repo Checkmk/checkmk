@@ -119,13 +119,13 @@ def delete_downtime(
     downtimes = Query(
         [Downtimes.id, Downtimes.is_service],
         query,
-    ).fetchall(connection, bool(only_sites), only_sites)
+    ).fetchall(connection, True, only_sites)
 
     for downtime in downtimes:
         if downtime["is_service"]:
-            _del_service_downtime(connection, downtime["id"], downtime.get("site"))
+            _del_service_downtime(connection, downtime["id"], downtime["site"])
         else:
-            _del_host_downtime(connection, downtime["id"], downtime.get("site"))
+            _del_host_downtime(connection, downtime["id"], downtime["site"])
 
 
 def schedule_services_downtimes_with_query(  # type: ignore[no-untyped-def]

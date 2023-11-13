@@ -17,6 +17,12 @@ from ._mkp import PackagePart
 
 @dataclass(frozen=True)
 class PathConfig:
+    # This is very confusing.
+    # Those paths describe both where to put things when installing,
+    # and where to look for things when packaging.
+    # There are also paths that have different purposes :-(
+
+    # paths for MKP content
     agent_based_plugins_dir: Path
     agents_dir: Path
     alert_handlers_dir: Path
@@ -25,20 +31,22 @@ class PathConfig:
     checks_dir: Path
     doc_dir: Path
     gui_plugins_dir: Path
-    installed_packages_dir: Path
     inventory_dir: Path
     lib_dir: Path
     locale_dir: Path
-    local_root: Path
     mib_dir: Path
     mkp_rule_pack_dir: Path
     notifications_dir: Path
+    pnp_templates_dir: Path
+    web_dir: Path
+
+    # other paths
+    installed_packages_dir: Path
+    local_root: Path
     packages_enabled_dir: Path
     packages_local_dir: Path
     packages_shipped_dir: Path
-    pnp_templates_dir: Path
     tmp_dir: Path
-    web_dir: Path
 
     @classmethod
     def from_toml(cls, content: str) -> Self:

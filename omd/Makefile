@@ -54,6 +54,7 @@ PACKAGES := \
     livestatus \
     unixcat \
     neb \
+    robotmk \
     xmlsec1
 
 ifeq ($(EDITION),enterprise)

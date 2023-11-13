@@ -26,9 +26,7 @@ from typing import Any, IO, Literal
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-)
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

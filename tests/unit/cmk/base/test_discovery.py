@@ -77,8 +77,7 @@ from cmk.base.checkers import (
     SectionPluginMapper,
 )
 from cmk.base.config import ConfigCache
-
-from cmk.agent_based.v1_backend.plugin_contexts import current_host
+from cmk.base.plugin_contexts import current_host
 
 
 def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:

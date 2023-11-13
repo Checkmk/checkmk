@@ -30,6 +30,7 @@ from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-modu
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -44,10 +45,6 @@ from cmk.base.plugins.agent_based.utils import logwatch
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
-)
-
-from cmk.agent_based.v1_backend.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
 )
 
 ClusterSection = dict[str | None, logwatch.Section]

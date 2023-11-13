@@ -8,12 +8,7 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Callable
 
-from cmk.rulesets.v1._groups import (
-    Functionality,
-    RuleSpecCustomFunctionality,
-    RuleSpecCustomTopic,
-    Topic,
-)
+from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
 from cmk.rulesets.v1._localize import Localizable
 from cmk.rulesets.v1._valuespec import Dictionary, DropdownChoice, ItemSpec, TextInput, ValueSpec
 
@@ -36,9 +31,9 @@ class RuleSpec(abc.ABC):
 @dataclass(frozen=True)
 class HostRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
+    topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
-    functionality: Functionality | RuleSpecCustomFunctionality
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -49,8 +44,8 @@ class HostRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class ServiceRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -61,7 +56,7 @@ class ServiceRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class CheckParameterRuleSpecWithItem(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
+    topic: Topic | CustomTopic
     value_spec: Callable[[], Dictionary]
     item: ItemSpec
     name: str
@@ -77,14 +72,14 @@ class CheckParameterRuleSpecWithItem(RuleSpec):
 
     def __post_init__(self):
         assert isinstance(self.item, (TextInput, DropdownChoice))
-        if not isinstance(self.topic, (Topic, RuleSpecCustomTopic)):
+        if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
 
 @dataclass(frozen=True)
 class CheckParameterRuleSpecWithoutItem(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
+    topic: Topic | CustomTopic
     value_spec: Callable[[], Dictionary]
     name: str
     is_deprecated: bool = False
@@ -101,9 +96,9 @@ class CheckParameterRuleSpecWithoutItem(RuleSpec):
 @dataclass(frozen=True)
 class EnforcedServiceRuleSpecWithItem(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
+    topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
-    functionality: Functionality | RuleSpecCustomFunctionality
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     item: ItemSpec
     name: str
@@ -112,16 +107,16 @@ class EnforcedServiceRuleSpecWithItem(RuleSpec):
 
     def __post_init__(self):
         assert isinstance(self.item, (TextInput, DropdownChoice))
-        if not isinstance(self.topic, (Topic, RuleSpecCustomTopic)):
+        if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
 
 @dataclass(frozen=True)
 class EnforcedServiceRuleSpecWithoutItem(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
+    topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
-    functionality: Functionality | RuleSpecCustomFunctionality
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     name: str
     is_deprecated: bool = False
@@ -131,8 +126,8 @@ class EnforcedServiceRuleSpecWithoutItem(RuleSpec):
 @dataclass(frozen=True)
 class InventoryParameterRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -143,8 +138,8 @@ class InventoryParameterRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class ActiveChecksRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -155,8 +150,8 @@ class ActiveChecksRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class AgentConfigRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -167,8 +162,8 @@ class AgentConfigRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class SpecialAgentRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -179,8 +174,8 @@ class SpecialAgentRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class ExtraHostConfRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str
@@ -191,8 +186,8 @@ class ExtraHostConfRuleSpec(RuleSpec):
 @dataclass(frozen=True)
 class ExtraServiceConfRuleSpec(RuleSpec):
     title: Localizable
-    topic: Topic | RuleSpecCustomTopic
-    functionality: Functionality | RuleSpecCustomFunctionality
+    topic: Topic | CustomTopic
+    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     eval_type: RuleEvalType
     name: str

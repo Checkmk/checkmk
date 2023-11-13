@@ -3,12 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.rulesets.v1._groups import (
-    Functionality,
-    RuleSpecCustomFunctionality,
-    RuleSpecCustomTopic,
-    Topic,
-)
+from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
 
 # TODO localize will probably not stay here, but we want to find a consistent solution for all apis
 from cmk.rulesets.v1._localize import Localizable
@@ -63,8 +58,8 @@ __all__ = [
     "RuleSpec",
     "ServiceRuleSpec",
     "SpecialAgentRuleSpec",
-    "RuleSpecCustomFunctionality",
-    "RuleSpecCustomTopic",
+    "CustomFunctionality",
+    "CustomTopic",
     "Functionality",
     "Topic",
     "Dictionary",

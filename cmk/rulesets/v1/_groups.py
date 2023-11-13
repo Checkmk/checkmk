@@ -19,7 +19,7 @@ class Topic(Enum):
 
 
 @dataclass(frozen=True)
-class RuleSpecCustomFunctionality:
+class CustomFunctionality:
     """
     Args:
         title: human-readable title of this group
@@ -31,7 +31,7 @@ class RuleSpecCustomFunctionality:
 
 
 @dataclass(frozen=True)
-class RuleSpecCustomTopic:
+class CustomTopic:
     """
     Args:
         title: human-readable title of this group

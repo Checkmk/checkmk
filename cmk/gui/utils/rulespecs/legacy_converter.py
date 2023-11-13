@@ -13,7 +13,7 @@ from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
-from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem
+from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem, rulespec_group_registry
 
 from cmk.rulesets import v1 as ruleset_api_v1
 
@@ -33,7 +33,9 @@ def convert_to_legacy_rulespec(
             title=None
             if to_convert.title is None
             else partial(to_convert.title.localize, localizer),
-            group=_convert_to_legacy_rulespec_group(to_convert.functionality, to_convert.topic),
+            group=_convert_to_legacy_rulespec_group(
+                to_convert.functionality, to_convert.topic, localizer
+            ),
             item_spec=partial(_convert_to_legacy_item_spec, to_convert.item, localizer),
             match_type="dict",
             parameter_valuespec=partial(
@@ -46,15 +48,41 @@ def convert_to_legacy_rulespec(
 
 
 def _convert_to_legacy_rulespec_group(
-    functionality_to_convert: ruleset_api_v1.Functionality
-    | ruleset_api_v1.RuleSpecCustomFunctionality,
-    topic_to_convert: ruleset_api_v1.Topic | ruleset_api_v1.RuleSpecCustomTopic,
-) -> type[legacy_rulespecs.RulespecSubGroup]:
-    if not isinstance(functionality_to_convert, ruleset_api_v1.Functionality):
-        raise ValueError(functionality_to_convert)
-    if not isinstance(topic_to_convert, ruleset_api_v1.Topic):
-        raise ValueError(topic_to_convert)
-    return _get_builtin_legacy_sub_group_with_main_group(functionality_to_convert, topic_to_convert)
+    functionality_to_convert: ruleset_api_v1.Functionality | ruleset_api_v1.CustomFunctionality,
+    topic_to_convert: ruleset_api_v1.Topic | ruleset_api_v1.CustomTopic,
+    localizer: Callable[[str], str],
+) -> type[legacy_rulespecs.RulespecBaseGroup]:
+    if isinstance(functionality_to_convert, ruleset_api_v1.Functionality) and isinstance(
+        topic_to_convert, ruleset_api_v1.Topic
+    ):
+        return _get_builtin_legacy_sub_group_with_main_group(
+            functionality_to_convert, topic_to_convert
+        )
+    if isinstance(functionality_to_convert, ruleset_api_v1.Functionality) and isinstance(
+        topic_to_convert, ruleset_api_v1.CustomTopic
+    ):
+        identifier = f"{hash(topic_to_convert.title.localize(lambda x: x))}"
+        return _convert_to_custom_group(
+            identifier,
+            legacy_rulespecs.RulespecSubGroup,
+            {
+                "title": topic_to_convert.title.localize(localizer),
+                "main_group": _get_builtin_legacy_main_group(functionality_to_convert),
+                "sub_group_name": identifier,
+            },
+        )
+    if isinstance(functionality_to_convert, ruleset_api_v1.CustomFunctionality):
+        raise NotImplementedError
+
+    raise ValueError((functionality_to_convert, topic_to_convert))
+
+
+def _get_builtin_legacy_main_group(
+    functionality_to_convert: ruleset_api_v1.Functionality,
+) -> type[legacy_rulespecs.RulespecGroup]:
+    if functionality_to_convert is ruleset_api_v1.Functionality.MONITORING_CONFIGURATION:
+        return wato._rulespec_groups.RulespecGroupMonitoringConfiguration  # type: ignore[attr-defined]
+    raise ValueError(functionality_to_convert)
 
 
 def _get_builtin_legacy_sub_group_with_main_group(
@@ -71,6 +99,19 @@ def _get_builtin_legacy_sub_group_with_main_group(
             assert_never(topic_to_convert)
     # TODO change to assert_never when more functionalities are added
     raise ValueError(functionality_to_convert)
+
+
+def _convert_to_custom_group(
+    identifier: str,
+    base: type,
+    args: dict[str, str | type[legacy_rulespecs.RulespecGroup]],
+) -> type[legacy_rulespecs.RulespecBaseGroup]:
+    if identifier in rulespec_group_registry:
+        return rulespec_group_registry[identifier]
+
+    group_class = type(identifier, (base,), args)
+    rulespec_group_registry.register(group_class)
+    return group_class
 
 
 @dataclass(frozen=True)

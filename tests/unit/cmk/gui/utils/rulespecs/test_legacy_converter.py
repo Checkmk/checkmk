@@ -320,7 +320,7 @@ def test_convert_to_legacy_rulespec_group(
     new_topic: api_v1.Topic,
     expected: type[watolib.rulespecs.RulespecSubGroup],
 ) -> None:
-    assert _convert_to_legacy_rulespec_group(new_functionality, new_topic) == expected
+    assert _convert_to_legacy_rulespec_group(new_functionality, new_topic, _) == expected
 
 
 @pytest.mark.parametrize(

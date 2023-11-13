@@ -1,0 +1,16 @@
+Title: "Always up" hosts can always notify
+Class: fix
+Compatible: compat
+Component: core
+Date: 1699884551
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p37
+
+Do not postpone notifications for "always up" hosts.
+
+The notification logic would wrongly assume that "always up" hosts may,
+in fact, be down and erroneously postpone notifications.  This has been
+fixed, such hosts are never down.

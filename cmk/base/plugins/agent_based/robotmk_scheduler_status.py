@@ -5,7 +5,9 @@
 
 from collections.abc import Mapping, Sequence
 from enum import Enum
+from itertools import chain
 from pathlib import Path
+from time import time
 from typing import assert_never
 
 from pydantic import BaseModel, Field, RootModel, TypeAdapter
@@ -158,7 +160,7 @@ class EnvironmentBuildStatusPending(Enum):
     Pending = "Pending"
 
 
-class EnvironmentBuildStatuses(RootModel, frozen=True):
+class EnvironmentBuildStates(RootModel, frozen=True):
     root: Mapping[
         str,
         (
@@ -173,10 +175,8 @@ class EnvironmentBuildStatuses(RootModel, frozen=True):
 
 def parse_robotmk_environment_build_states(
     string_table: StringTable,
-) -> EnvironmentBuildStatuses | None:
-    return (
-        EnvironmentBuildStatuses.model_validate_json(string_table[0][0]) if string_table else None
-    )
+) -> EnvironmentBuildStates | None:
+    return EnvironmentBuildStates.model_validate_json(string_table[0][0]) if string_table else None
 
 
 register.agent_section(
@@ -207,65 +207,34 @@ def discover_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
-    section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStates | None,
 ) -> DiscoveryResult:
     if section_robotmk_config:
         yield Service()
-
-
-def _check_environment_build_state_failures(
-    suite_name: str,
-    failure: EnvironmentBuildStatusErrorNonZeroExit
-    | EnvironmentBuildStatusErrorTimeout
-    | EnviromentBuildStatusErrorMessage,
-) -> CheckResult:
-    details = None
-
-    if isinstance(failure, EnviromentBuildStatusErrorMessage):
-        summary = "Error during environment build."
-        details = failure.Error
-
-    if isinstance(
-        failure, (EnvironmentBuildStatusErrorNonZeroExit, EnvironmentBuildStatusErrorTimeout)
-    ):
-        summary = f"{failure.value} during environment build."
-
-    yield Result(state=State.CRIT, summary=f"{summary} for suite {suite_name}", details=details)
-
-
-def _check_scheduler_status_errors(
-    section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
-    section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
-) -> CheckResult:
-    if rcc_setup_failures := (
-        [
-            *section_robotmk_rcc_setup_failures.telemetry_disabling,
-            *section_robotmk_rcc_setup_failures.shared_holotree,
-            *section_robotmk_rcc_setup_failures.holotree_init,
-        ]
-        if section_robotmk_rcc_setup_failures
-        else []
-    ):
-        yield Result(
-            state=State.CRIT,
-            summary="Failures during RCC setup.",
-            details=";".join(rcc_setup_failures),
-        )
-
-    if section_robotmk_environment_build_states:
-        for suite_name, failure in section_robotmk_environment_build_states.root.items():
-            if isinstance(failure, EnvironmentBuildStatusFailure):
-                yield from _check_environment_build_state_failures(
-                    suite_name=suite_name,
-                    failure=failure.Failure,
-                )
 
 
 def check_scheduler_status(
     section_robotmk_config: Config | ConfigReadingError | None,
     section_robotmk_scheduler_phase: SchedulerPhase | None,
     section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
-    section_robotmk_environment_build_states: EnvironmentBuildStatuses | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStates | None,
+) -> CheckResult:
+    yield from _check_scheduler_status(
+        section_robotmk_config=section_robotmk_config,
+        section_robotmk_scheduler_phase=section_robotmk_scheduler_phase,
+        section_robotmk_rcc_setup_failures=section_robotmk_rcc_setup_failures,
+        section_robotmk_environment_build_states=section_robotmk_environment_build_states,
+        now=time(),
+    )
+
+
+def _check_scheduler_status(
+    *,
+    section_robotmk_config: Config | ConfigReadingError | None,
+    section_robotmk_scheduler_phase: SchedulerPhase | None,
+    section_robotmk_rcc_setup_failures: RCCSetupFailures | None,
+    section_robotmk_environment_build_states: EnvironmentBuildStates | None,
+    now: float,
 ) -> CheckResult:
     if not section_robotmk_config:
         return
@@ -281,14 +250,8 @@ def check_scheduler_status(
     if section_robotmk_rcc_setup_failures:
         yield from _check_rcc_setup_failures(section_robotmk_rcc_setup_failures)
 
-    if list(
-        errors := _check_scheduler_status_errors(
-            section_robotmk_rcc_setup_failures,
-            section_robotmk_environment_build_states,
-        )
-    ):
-        yield from errors
-        return
+    if section_robotmk_environment_build_states:
+        yield from _check_environment_build_states(section_robotmk_environment_build_states, now)
 
 
 def _check_config(config: Config | ConfigReadingError) -> CheckResult:
@@ -362,6 +325,80 @@ def _check_rcc_setup_failures(rcc_setup_failures: RCCSetupFailures) -> CheckResu
         ]
         if failures
     )
+
+
+def _check_environment_build_states(
+    environment_build_states: EnvironmentBuildStates,
+    now: float,
+) -> CheckResult:
+    yield from chain.from_iterable(
+        _check_environment_build_status(suite_name, environment_build_status, now)
+        for suite_name, environment_build_status in environment_build_states.root.items()
+    )
+
+
+def _check_environment_build_status(
+    suite_name: str,
+    environment_build_status: EnvironmentBuildStatusNotNeeded
+    | EnvironmentBuildStatusPending
+    | EnvironmentBuildStatusSuccess
+    | EnvironmentBuildStatusInProgress
+    | EnvironmentBuildStatusFailure,
+    now: float,
+) -> CheckResult:
+    match environment_build_status:
+        case EnvironmentBuildStatusSuccess():
+            yield _check_environment_build_success(suite_name, environment_build_status)
+        case EnvironmentBuildStatusInProgress():
+            yield _check_environment_build_in_progress(suite_name, environment_build_status, now)
+        case EnvironmentBuildStatusFailure():
+            yield _check_environment_build_failure(suite_name, environment_build_status.Failure)
+
+
+def _check_environment_build_success(
+    suite_name: str,
+    environment_build_success: EnvironmentBuildStatusSuccess,
+) -> Result:
+    return Result(
+        state=State.OK,
+        notice=f"Suite {suite_name}: Environment build took {render.timespan(environment_build_success.duration)}",
+    )
+
+
+def _check_environment_build_in_progress(
+    suite_name: str,
+    environment_build_in_progress: EnvironmentBuildStatusInProgress,
+    now: float,
+) -> Result:
+    return Result(
+        state=State.OK,
+        summary=f"Suite {suite_name}: Environment build currently running for {render.timespan(now - environment_build_in_progress.start_time)}",
+    )
+
+
+def _check_environment_build_failure(
+    suite_name: str,
+    environment_build_failure: EnvironmentBuildStatusErrorNonZeroExit
+    | EnvironmentBuildStatusErrorTimeout
+    | EnviromentBuildStatusErrorMessage,
+) -> Result:
+    match environment_build_failure:
+        case EnvironmentBuildStatusErrorNonZeroExit():
+            return Result(
+                state=State.CRIT,
+                summary=f"Suite {suite_name}: Environment building failed. Suite won't be scheduled.",
+            )
+        case EnvironmentBuildStatusErrorTimeout():
+            return Result(
+                state=State.CRIT,
+                summary=f"Suite {suite_name}: Environment building timed out. Suite won't be scheduled.",
+            )
+        case EnviromentBuildStatusErrorMessage():
+            return Result(
+                state=State.CRIT,
+                summary=f"Suite {suite_name}: Error while attempting to build environment, see service details. Suite won't be scheduled.",
+                details=environment_build_failure.Error,
+            )
 
 
 register.check_plugin(

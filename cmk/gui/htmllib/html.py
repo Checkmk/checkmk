@@ -1340,6 +1340,40 @@ class HTMLGenerator(HTMLWriter):
             onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
         )
 
+    def date(
+        self,
+        var: str,
+        id_: str,
+        value: str,
+        cssclass: str | None = None,
+    ) -> None:
+        self.write_html(
+            self.render_input(
+                name=var,
+                type_="date",
+                id_=id_,
+                value=value,
+                class_=[] if cssclass is None else [cssclass],
+            )
+        )
+
+    def time(
+        self,
+        var: str,
+        id_: str,
+        value: str,
+        cssclass: str | None = None,
+    ) -> None:
+        self.write_html(
+            self.render_input(
+                name=var,
+                type_="time",
+                id_=id_,
+                value=value,
+                class_=[] if cssclass is None else [cssclass],
+            )
+        )
+
 
 @overload
 def _path(path_or_str: Path) -> Path:

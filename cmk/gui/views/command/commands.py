@@ -1272,7 +1272,8 @@ class CommandScheduleDowntimes(Command):
         html.write_text(_("Start"))
         html.close_td()
         html.open_td()
-        self._vs_down_from().render_input("_down_from", time.time())
+        html.date("_down_from_date", "start_date", time.strftime("%Y-%m-%d"), cssclass="down_from")
+        html.time("_down_from_time", "start_time", time.strftime("%H:%M"), cssclass="down_from")
         html.close_td()
         html.close_tr()
 
@@ -1288,7 +1289,14 @@ class CommandScheduleDowntimes(Command):
         html.write_text(_("End"))
         html.close_td()
         html.open_td()
-        self._vs_down_to().render_input("_down_to", time.time() + 7200)
+        # self._vs_down_to().render_input("_down_to", time.time() + 7200)
+        html.date("_down_to_date", "end_date", time.strftime("%Y-%m-%d"), cssclass="down_to")
+        html.time(
+            "_down_to_time",
+            "end_time",
+            time.strftime("%H:%M", time.localtime(time.time() + 7200)),
+            cssclass="down_to",
+        )
         html.close_td()
 
         html.open_tr()

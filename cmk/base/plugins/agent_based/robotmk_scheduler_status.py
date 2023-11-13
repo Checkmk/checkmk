@@ -278,6 +278,9 @@ def check_scheduler_status(
             summary=f"Current phase: {_render_scheduler_phase(section_robotmk_scheduler_phase)}",
         )
 
+    if section_robotmk_rcc_setup_failures:
+        yield from _check_rcc_setup_failures(section_robotmk_rcc_setup_failures)
+
     if list(
         errors := _check_scheduler_status_errors(
             section_robotmk_rcc_setup_failures,
@@ -341,6 +344,24 @@ def _render_scheduler_phase(scheduler_phase: SchedulerPhase) -> str:
             return "Suite scheduling"
         case _:
             assert_never(scheduler_phase)
+
+
+def _check_rcc_setup_failures(rcc_setup_failures: RCCSetupFailures) -> CheckResult:
+    yield from (
+        Result(
+            state=State.CRIT,
+            summary=(
+                f"{label} failed for the following suites: {', '.join(failures)}. "
+                "These suites won't be scheduled."
+            ),
+        )
+        for label, failures in [
+            ("Disabling RCC telemetry", rcc_setup_failures.telemetry_disabling),
+            ("Enabling RCC shared holotree", rcc_setup_failures.shared_holotree),
+            ("RCC holotree initialization", rcc_setup_failures.holotree_init),
+        ]
+        if failures
+    )
 
 
 register.check_plugin(

@@ -3,22 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.cisco_ucs_fault_section import parse_cisco_ucs_fault
 from cmk.base.plugins.agent_based.cisco_ucs_mem import (
     check_cisco_ucs_mem,
     discover_cisco_ucs_mem,
     MemoryModule,
     parse_cisco_ucs_mem,
 )
+from cmk.base.plugins.agent_based.utils.cisco_ucs import Fault
 
 
-@pytest.fixture(name="section", scope="module")
-def fixture_section() -> dict[str, MemoryModule]:
+@pytest.fixture(name="section_cisco_ucs_mem", scope="module")
+def fixture_section_ucs_mem() -> dict[str, MemoryModule]:
     return parse_cisco_ucs_mem(
         [
             [
@@ -193,8 +195,23 @@ def fixture_section() -> dict[str, MemoryModule]:
     )
 
 
-def test_discover_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
-    assert list(discover_cisco_ucs_mem(section, None)) == [
+@pytest.fixture(name="section_cisco_ucs_fault", scope="module")
+def fixture_section_ucs_fault() -> dict[str, list[Fault]]:
+    return parse_cisco_ucs_fault(
+        [
+            [
+                "sys/rack-unit-1/board/memarray-1/mem-15",
+                "1",
+                "185",
+                "DDR4_P2_G2_ECC: DIMM 14 is inoperable : Check or replace DIMM",
+                "5",
+            ]
+        ]
+    )
+
+
+def test_discover_cisco_ucs_mem(section_cisco_ucs_mem: Mapping[str, MemoryModule]) -> None:
+    assert list(discover_cisco_ucs_mem(section_cisco_ucs_mem, None)) == [
         Service(item="mem-1"),
         Service(item="mem-2"),
         Service(item="mem-3"),
@@ -229,11 +246,31 @@ def test_discover_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> None:
                 Result(state=State.OK, summary="Size: 32768 MB, SN: 0357CDB9"),
                 Result(state=State.OK, notice="No faults"),
             ],
-            id="Item in data",
+            id="Item in data no fault",
+        ),
+        pytest.param(
+            "mem-15",
+            [
+                Result(state=State.OK, summary="Status: operable"),
+                Result(state=State.OK, summary="Presence: equipped"),
+                Result(state=State.OK, summary="Type: ddr4"),
+                Result(state=State.OK, summary="Size: 32768 MB, SN: 0357CDF9"),
+                Result(
+                    state=State.OK,
+                    notice="Fault: 185 - DDR4_P2_G2_ECC: DIMM 14 is inoperable : Check or replace DIMM",
+                ),
+            ],
+            id="Item in data with fault",
         ),
     ],
 )
 def test_check_cisco_ucs_mem(
-    section: Mapping[str, MemoryModule], item: str, expected_output: CheckResult
+    section_cisco_ucs_mem: Mapping[str, MemoryModule],
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]],
+    item: str,
+    expected_output: CheckResult,
 ) -> None:
-    assert list(check_cisco_ucs_mem(item, section, None)) == expected_output
+    assert (
+        list(check_cisco_ucs_mem(item, section_cisco_ucs_mem, section_cisco_ucs_fault))
+        == expected_output
+    )

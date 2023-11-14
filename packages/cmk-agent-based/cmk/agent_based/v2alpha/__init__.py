@@ -3,42 +3,56 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from . import clusterize, register, render, type_defs
-from ._check_levels import check_levels, check_levels_predictive
-from ._checking_classes import (
-    HostLabel,
-    IgnoreResults,
-    IgnoreResultsError,
-    Metric,
-    Result,
-    Service,
-    ServiceLabel,
-    State,
-)
-from ._detection import (
+# pylint: disable=duplicate-code
+
+from ..v1 import (
     all_of,
     any_of,
+    Attributes,
+    check_levels,
+    check_levels_predictive,
     contains,
     endswith,
     equals,
     exists,
+    get_average,
+    get_rate,
+    get_value_store,
+    GetRateError,
+    HostLabel,
+    IgnoreResults,
+    IgnoreResultsError,
     matches,
+    Metric,
     not_contains,
     not_endswith,
     not_equals,
     not_exists,
     not_matches,
     not_startswith,
+    OIDBytes,
+    OIDCached,
+    OIDEnd,
+    Result,
+    Service,
+    ServiceLabel,
+    SNMPTree,
     startswith,
+    State,
+    TableRow,
 )
-from ._inventory_classes import Attributes, TableRow
-from ._regex import regex
-from ._snmp import OIDBytes, OIDCached, OIDEnd, SNMPTree
-from ._value_store_utils import get_average, get_rate, GetRateError
-from .value_store import get_value_store
+from ..v1._detection import SNMPDetectSpecification  # sorry
+from . import clusterize, render, type_defs
+from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
 
 __all__ = [
     # the order is relevant for the sphinx doc!
+    "AgentSection",
+    "CheckPlugin",
+    "SNMPSection",
+    "SimpleSNMPSection",
+    "SNMPDetectSpecification",
+    "InventoryPlugin",
     # begin with section stuff
     "all_of",
     "any_of",
@@ -68,7 +82,6 @@ __all__ = [
     "OIDBytes",
     "OIDCached",
     "OIDEnd",
-    "regex",
     "render",
     "Result",
     "Service",

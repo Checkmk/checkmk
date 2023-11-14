@@ -2,7 +2,6 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import enum
 import inspect
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -17,6 +16,8 @@ from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
+
+from cmk.agent_based.v1.register import RuleSetType
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
@@ -176,17 +177,6 @@ def _validate_optional_section_annotation(
 
 def _value_type(annotation: inspect.Parameter) -> bytes:
     return get_args(annotation)[1]
-
-
-class RuleSetType(enum.Enum):
-    """Indicate the type of the rule set
-
-    Discovery and host label functions may either use all rules of a rule set matching
-    the current host, or the merged rules.
-    """
-
-    MERGED = enum.auto()
-    ALL = enum.auto()
 
 
 def validate_ruleset_type(ruleset_type: RuleSetType) -> None:

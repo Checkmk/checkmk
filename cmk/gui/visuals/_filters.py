@@ -11,8 +11,8 @@ from typing import Literal
 
 import livestatus
 
-import cmk.gui.sites as sites
 from cmk.gui import query_filters
+from cmk.gui import sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html

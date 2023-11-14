@@ -35,10 +35,12 @@ explicit_package_bases = true
 packages = ["cmk", "tests"]
 strict = true
 # Miscellaneous stuff not in --strict
-disallow_any_decorated = true
-disallow_any_explicit = true
-disallow_any_expr = false  # lots of Anys in APIs like pydantic, argparse, lxml, ...
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_generics = true
 disallow_any_unimported = true
+disallow_subclassing_any = true
 no_implicit_optional = true
 strict_optional = true
 warn_unreachable = true

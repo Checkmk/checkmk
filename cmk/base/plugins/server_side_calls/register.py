@@ -14,13 +14,11 @@ from cmk.server_side_calls.v1 import ActiveCheckConfig, SpecialAgentConfig
 def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]]:
     loaded = discover_plugins(
         "server_side_calls",
-        "active_check_",
-        ActiveCheckConfig,
+        {ActiveCheckConfig: "active_check_"},
         raise_errors=cmk.utils.debug.enabled(),
     )
     # TODO:
     #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    #  * deal with duplicate names.
     return [str(e) for e in loaded.errors], {
         plugin.name: plugin for plugin in loaded.plugins.values()
     }
@@ -29,13 +27,11 @@ def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]
 def load_special_agents() -> tuple[Sequence[str], Mapping[str, SpecialAgentConfig]]:
     loaded = discover_plugins(
         "server_side_calls",
-        "special_agent_",
-        SpecialAgentConfig,
+        {SpecialAgentConfig: "special_agent_"},
         raise_errors=cmk.utils.debug.enabled(),
     )
     # TODO:
     #  * see if we really need to return the errors. Maybe we can just either ignore or raise them.
-    #  * deal with duplicate names.
     return [str(e) for e in loaded.errors], {
         plugin.name: plugin for plugin in loaded.plugins.values()
     }

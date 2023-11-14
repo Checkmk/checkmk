@@ -23,8 +23,8 @@ import urllib3
 
 from livestatus import SiteConfiguration, SiteId
 
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state

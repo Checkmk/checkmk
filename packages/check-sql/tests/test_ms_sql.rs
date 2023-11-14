@@ -37,7 +37,7 @@ fn is_instance_good(i: &InstanceEngine) -> bool {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_local() {
     let mut client = api::create_local_client().await.unwrap();
-    let instances = api::find_instance_engines(&mut client).await.unwrap();
+    let instances = api::detect_instance_engines(&mut client).await.unwrap();
     let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
@@ -50,7 +50,7 @@ async fn test_find_all_instances_local() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
     let mut client = api::create_local_client().await.unwrap();
-    let instances = api::find_instance_engines(&mut client).await.unwrap();
+    let instances = api::detect_instance_engines(&mut client).await.unwrap();
     let names: Vec<String> = [&instances.0[..], &instances.1[..]]
         .concat()
         .into_iter()
@@ -99,7 +99,7 @@ async fn test_remote_connection() {
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let instances = api::find_instance_engines(&mut client).await.unwrap();
+        let instances = api::detect_instance_engines(&mut client).await.unwrap();
         let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
         assert!(all.iter().all(is_instance_good));
         let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
@@ -122,7 +122,7 @@ async fn test_find_all_instances_remote() {
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let instances = api::find_instance_engines(&mut client).await.unwrap();
+        let instances = api::detect_instance_engines(&mut client).await.unwrap();
         let names: Vec<String> = [&instances.0[..], &instances.1[..]]
             .concat()
             .into_iter()

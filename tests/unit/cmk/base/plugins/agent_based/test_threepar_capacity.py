@@ -153,7 +153,7 @@ def test_discover_threepar_capacity(
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 3}}']],
             "all",
-            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"failed_capacity_levels": (2.0, 5.0)},
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
@@ -172,7 +172,7 @@ def test_discover_threepar_capacity(
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 6}}']],
             "all",
-            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
+            dict(FILESYSTEM_DEFAULT_PARAMS) | {"failed_capacity_levels": (2.0, 5.0)},
             [
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),

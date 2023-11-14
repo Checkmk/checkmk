@@ -58,7 +58,7 @@ metric_config: Mapping[int, Config] = {
     15: Config("write_avg_exe_ms", "Write Average EXE", "%.3f/ms"),
 }
 
-Section = Mapping[str, tuple[str]]
+Section = Mapping[str, tuple[str, ...]]
 
 
 def parse_nfsiostat(string_table: StringTable) -> Section:

@@ -34,7 +34,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--skip-cleanup",
         action="store_true",
-        default=False,
+        default=os.getenv("CLEANUP", "1") != "1",
         help="Skip cleanup process after test execution",
     )
     parser.addoption(
@@ -188,7 +188,7 @@ def _get_site(request: pytest.FixtureRequest) -> Iterator[Site]:
 
         yield site
 
-        if os.getenv("CLEANUP", "1") == "1" and not skip_cleanup:
+        if not skip_cleanup:
             # cleanup existing agent-output folder in the test site
             logger.info('Removing folder "%s"...', dump_path)
             assert run(["sudo", "rm", "-rf", dump_path]).returncode == 0

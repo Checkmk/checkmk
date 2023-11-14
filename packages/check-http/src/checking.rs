@@ -150,7 +150,7 @@ impl Display for Metric {
 
 pub struct CheckItem {
     pub state: State,
-    pub text: String,
+    text: String,
 }
 
 impl Display for CheckItem {
@@ -169,10 +169,33 @@ impl Display for CheckItem {
     }
 }
 
+impl CheckItem {
+    fn new(state: State, text: &str) -> Option<Self> {
+        if text.is_empty() {
+            return None;
+        };
+
+        Some(Self {
+            state,
+            text: text.to_string(),
+        })
+    }
+}
+
 pub enum CheckResult {
     Summary(CheckItem),
     Details(CheckItem),
     Metric(Metric),
+}
+
+impl CheckResult {
+    pub fn summary(state: State, text: &str) -> Option<CheckResult> {
+        CheckItem::new(state, text).map(Self::Summary)
+    }
+
+    pub fn details(state: State, text: &str) -> Option<CheckResult> {
+        CheckItem::new(state, text).map(Self::Details)
+    }
 }
 
 pub struct CheckParameters {
@@ -188,18 +211,21 @@ pub fn collect_response_checks(
     params: CheckParameters,
 ) -> Vec<CheckResult> {
     vec![
-        check_status(response.status, response.version, params.onredirect)
-            .map(CheckResult::Summary),
-        check_body(response.body, params.page_size).map(CheckResult::Summary),
-        check_response_time(response_time, params.response_time_levels).map(CheckResult::Summary),
-        check_document_age(&response.headers, params.document_age_levels).map(CheckResult::Summary),
+        check_status(response.status, response.version, params.onredirect),
+        check_body(response.body, params.page_size),
+        check_response_time(response_time, params.response_time_levels),
+        check_document_age(&response.headers, params.document_age_levels),
     ]
     .into_iter()
     .flatten()
     .collect()
 }
 
-fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) -> Option<CheckItem> {
+fn check_status(
+    status: StatusCode,
+    version: Version,
+    onredirect: OnRedirect,
+) -> Option<CheckResult> {
     let state = if status.is_client_error() {
         State::Warn
     } else if status.is_server_error() {
@@ -214,72 +240,60 @@ fn check_status(status: StatusCode, version: Version, onredirect: OnRedirect) ->
         State::Ok
     };
 
-    Some(CheckItem {
-        state,
-        text: format!("{:?} {}", version, status),
-    })
+    CheckResult::summary(state, &format!("{:?} {}", version, status))
 }
 
 fn check_body(
     body: Option<Result<Bytes, ReqwestError>>,
     page_size_limits: Option<Bounds<usize>>,
-) -> Option<CheckItem> {
+) -> Option<CheckResult> {
     let body = body?;
 
     match body {
-        Ok(bd) => Some(check_page_size(bd.len(), page_size_limits)),
-        Err(_) => Some(CheckItem {
-            state: State::Crit,
-            text: "Error fetching the reponse body".to_string(),
-        }),
+        Ok(bd) => check_page_size(bd.len(), page_size_limits),
+        Err(_) => CheckResult::summary(State::Crit, "Error fetching the reponse body"),
     }
 }
 
-fn check_page_size(page_size: usize, page_size_limits: Option<Bounds<usize>>) -> CheckItem {
+fn check_page_size(
+    page_size: usize,
+    page_size_limits: Option<Bounds<usize>>,
+) -> Option<CheckResult> {
     let state = page_size_limits
         .and_then(|bounds| bounds.evaluate(&page_size, State::Warn))
         .unwrap_or(State::Ok);
 
-    CheckItem {
-        state,
-        text: format!("Page size: {} bytes", page_size),
-    }
+    CheckResult::summary(state, &format!("Page size: {} bytes", page_size))
 }
 
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<UpperLevels<f64>>,
-) -> Option<CheckItem> {
+) -> Option<CheckResult> {
     let state = response_time_levels
         .and_then(|levels| levels.evaluate(&response_time.as_secs_f64()))
         .unwrap_or(State::Ok);
 
-    Some(CheckItem {
+    CheckResult::summary(
         state,
-        text: format!(
+        &format!(
             "Response time: {}.{}s",
             response_time.as_secs(),
             response_time.subsec_millis()
         ),
-    })
+    )
 }
 
 fn check_document_age(
     headers: &HeaderMap,
     document_age_levels: Option<UpperLevels<u64>>,
-) -> Option<CheckItem> {
+) -> Option<CheckResult> {
     let document_age_levels = document_age_levels?;
 
     let now = SystemTime::now();
 
-    let cr_no_document_age = Some(CheckItem {
-        state: State::Crit,
-        text: "Can't determine document age".to_string(),
-    });
-    let cr_document_age_error = Some(CheckItem {
-        state: State::Crit,
-        text: "Can't decode document age".to_string(),
-    });
+    let cr_no_document_age = CheckResult::summary(State::Crit, "Can't determine document age");
+    let cr_document_age_error = CheckResult::summary(State::Crit, "Can't decode document age");
 
     let age_header = headers.get("last-modified").or(headers.get("date"));
     let Some(age) = age_header else {
@@ -298,127 +312,127 @@ fn check_document_age(
     let state = document_age_levels.evaluate(&age.as_secs())?;
 
     //TODO(au): Specify "too old" in Output
-    Some(CheckItem {
-        state,
-        text: "Document age too old".to_string(),
-    })
+    CheckResult::summary(state, "Document age too old")
+}
+
+#[cfg(test)]
+mod test_helper {
+    use super::CheckResult;
+    use crate::checking::State;
+    pub fn has_state(cr: Option<CheckResult>, state: State) -> bool {
+        let Some(cr) = cr else { return false };
+        match cr {
+            CheckResult::Details(ci) | CheckResult::Summary(ci) => ci.state == state,
+            _ => false,
+        }
+    }
 }
 
 #[cfg(test)]
 mod test_check_page_size {
+    use super::test_helper::has_state;
     use crate::checking::check_page_size;
     use crate::checking::Bounds;
     use crate::checking::State;
 
     #[test]
     fn test_without_bounds() {
-        assert_eq!(check_page_size(42, None).state, State::Ok);
+        assert!(has_state(check_page_size(42, None), State::Ok));
     }
 
     #[test]
     fn test_lower_within_bounds() {
-        assert_eq!(
-            check_page_size(42, Some(Bounds::lower(12))).state,
+        assert!(has_state(
+            check_page_size(42, Some(Bounds::lower(12))),
             State::Ok
-        );
+        ));
     }
 
     #[test]
     fn test_lower_out_of_bounds() {
-        assert_eq!(
-            check_page_size(42, Some(Bounds::lower(56))).state,
+        assert!(has_state(
+            check_page_size(42, Some(Bounds::lower(56))),
             State::Warn
-        );
+        ));
     }
 
     #[test]
     fn test_lower_and_higher_within_bounds() {
-        assert_eq!(
-            check_page_size(56, Some(Bounds::lower_upper(42, 100))).state,
+        assert!(has_state(
+            check_page_size(56, Some(Bounds::lower_upper(42, 100))),
             State::Ok
-        );
+        ));
     }
 
     #[test]
     fn test_lower_and_higher_too_low() {
-        assert_eq!(
-            check_page_size(42, Some(Bounds::lower_upper(56, 100))).state,
+        assert!(has_state(
+            check_page_size(42, Some(Bounds::lower_upper(56, 100))),
             State::Warn
-        );
+        ));
     }
 
     #[test]
     fn test_lower_and_higher_too_high() {
-        assert_eq!(
-            check_page_size(142, Some(Bounds::lower_upper(56, 100))).state,
+        assert!(has_state(
+            check_page_size(142, Some(Bounds::lower_upper(56, 100))),
             State::Warn
-        );
+        ));
     }
 }
 
 #[cfg(test)]
 mod test_check_response_time {
+    use super::test_helper::has_state;
     use crate::checking::check_response_time;
     use crate::checking::{State, UpperLevels};
     use std::time::Duration;
 
     #[test]
     fn test_unbounded() {
-        assert_eq!(
-            check_response_time(Duration::new(5, 0), None)
-                .unwrap()
-                .state,
+        assert!(has_state(
+            check_response_time(Duration::new(5, 0), None),
             State::Ok
-        );
+        ),);
     }
 
     #[test]
     fn test_warn_within_bounds() {
-        assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(6.)))
-                .unwrap()
-                .state,
+        assert!(has_state(
+            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(6.))),
             State::Ok
-        );
+        ));
     }
 
     #[test]
     fn test_warn_is_warn() {
-        assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(4.)))
-                .unwrap()
-                .state,
+        assert!(has_state(
+            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(4.))),
             State::Warn
-        );
+        ));
     }
 
     #[test]
     fn test_warncrit_within_bounds() {
-        assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(6., 7.)))
-                .unwrap()
-                .state,
+        assert!(has_state(
+            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(6., 7.))),
             State::Ok
-        );
+        ));
     }
 
     #[test]
     fn test_warncrit_is_warn() {
-        assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(4., 6.)))
-                .unwrap()
-                .state,
+        assert!(has_state(
+            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(4., 6.))),
             State::Warn
-        );
+        ));
     }
 
     #[test]
     fn test_warncrit_is_crit() {
-        assert_eq!(
-            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(2., 3.)))
-                .unwrap()
-                .state,
+        assert!(has_state(
+            check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(2., 3.))),
             State::Crit
-        );
+        ));
     }
 }

@@ -32,14 +32,10 @@ impl Display for Output {
 
         write!(f, "HTTP {}", self.worst_state)?;
 
-        let summaries = self
-            .check_results
-            .iter()
-            .filter_map(|cr| match cr {
-                CheckResult::Summary(check_item) => Some(check_item),
-                _ => None,
-            })
-            .filter(|summ| !summ.text.is_empty());
+        let summaries = self.check_results.iter().filter_map(|cr| match cr {
+            CheckResult::Summary(check_item) => Some(check_item),
+            _ => None,
+        });
         write_joined(f, summaries, " - ", ", ")?;
 
         let metrics = self.check_results.iter().filter_map(|cr| match cr {
@@ -48,14 +44,10 @@ impl Display for Output {
         });
         write_joined(f, metrics, " | ", " ")?;
 
-        let details = self
-            .check_results
-            .iter()
-            .filter_map(|cr| match cr {
-                CheckResult::Details(check_item) => Some(check_item),
-                _ => None,
-            })
-            .filter(|summ| !summ.text.is_empty());
+        let details = self.check_results.iter().filter_map(|cr| match cr {
+            CheckResult::Details(check_item) => Some(check_item),
+            _ => None,
+        });
         write_joined(f, details, "\n", "\n")?;
 
         Ok(())
@@ -88,20 +80,14 @@ impl Output {
 #[cfg(test)]
 mod test_output_format {
     use super::*;
-    use crate::checking::{CheckItem, Metric};
+    use crate::checking::Metric;
 
     fn summary(state: State, text: &str) -> CheckResult {
-        CheckResult::Summary(CheckItem {
-            state,
-            text: text.to_string(),
-        })
+        CheckResult::summary(state, text).unwrap()
     }
 
     fn details(state: State, text: &str) -> CheckResult {
-        CheckResult::Details(CheckItem {
-            state,
-            text: text.to_string(),
-        })
+        CheckResult::details(state, text).unwrap()
     }
 
     fn metric(
@@ -128,14 +114,9 @@ mod test_output_format {
     }
 
     #[test]
+    #[should_panic]
     fn test_merge_check_results_with_state_only() {
-        let cr1 = summary(State::Ok, "");
-        let cr2 = summary(State::Ok, "");
-        let cr3 = details(State::Ok, "");
-        assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK"
-        );
+        let _ = summary(State::Ok, "");
     }
 
     #[test]
@@ -184,11 +165,10 @@ mod test_output_format {
     }
 
     #[test]
-    fn test_merge_empty_checks_basic_metric() {
-        let cr1 = summary(State::Ok, "");
+    fn test_basic_metric() {
         let m1 = metric("my_metric", 123., None, None, None, None);
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, m1])),
+            format!("{}", Output::from_check_results(vec![m1])),
             "HTTP OK | my_metric=123;;;;"
         );
     }

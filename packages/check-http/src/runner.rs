@@ -4,7 +4,7 @@
 
 use std::time::Instant;
 
-use crate::checking::{self, CheckItem, CheckParameters, CheckResult, State};
+use crate::checking::{self, CheckParameters, CheckResult, State};
 use crate::connection::ConnectionConfig;
 use crate::http::{self, ClientConfig, RequestConfig};
 
@@ -15,10 +15,7 @@ pub async fn collect_checks(
     check_params: CheckParameters,
 ) -> Vec<CheckResult> {
     let Ok(request) = http::prepare_request(client_config, connection_cfg) else {
-        return vec![CheckResult::Summary(CheckItem {
-            state: State::Unknown,
-            text: "Error building the request".to_string(),
-        })];
+        return vec![CheckResult::summary(State::Unknown, "Error building the request").unwrap()];
     };
 
     let now = Instant::now();
@@ -26,26 +23,16 @@ pub async fn collect_checks(
         Ok(resp) => resp,
         Err(err) => {
             if err.is_timeout() {
-                return vec![CheckResult::Summary(CheckItem {
-                    state: State::Crit,
-                    text: "timeout".to_string(),
-                })];
+                return vec![CheckResult::summary(State::Crit, "timeout").unwrap()];
             } else if err.is_connect() {
-                return vec![CheckResult::Summary(CheckItem {
-                    state: State::Crit,
-                    text: "Failed to connect".to_string(),
-                })];
+                return vec![CheckResult::summary(State::Crit, "Failed to connect").unwrap()];
             } else if err.is_redirect() {
-                return vec![CheckResult::Summary(CheckItem {
-                    state: State::Crit,
-                    text: err.to_string(),
-                })];
+                return vec![CheckResult::summary(State::Crit, &err.to_string()).unwrap()];
             // Hit one of max_redirs, sticky, stickyport
             } else {
-                return vec![CheckResult::Summary(CheckItem {
-                    state: State::Unknown,
-                    text: "Error while sending request".to_string(),
-                })];
+                return vec![
+                    CheckResult::summary(State::Unknown, "Error while sending request").unwrap(),
+                ];
             }
         }
     };

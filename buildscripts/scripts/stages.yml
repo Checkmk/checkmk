@@ -65,6 +65,10 @@ VARIABLES:
     - NAME: CHANGED_RUN_PIPENV_SCRIPT
       SH: "echo '${CHANGED_FILES_ABS}' | grep '${WORKSPACE}/scripts/run-pipenv' - || true"
 
+    - NAME: CHANGED_WERK_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '.werks/' || true"
+      REPLACE_NEWLINES: true
+
       # Gather the list of changed agent plugins
     - NAME: CHANGED_AGENT_PLUGINS
       SH: "echo '${CHANGED_FILES_REL}' | grep '^agents/plugins/' || true"
@@ -126,6 +130,15 @@ STAGES:
       COMMAND: "make test-unit-docker"
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/python3-unit-junit.xml"
+
+    - NAME: 'Python Werks validate'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_WERK_FILES
+      DIR: ''
+      ENV_VARS:
+        CHANGED_WERK_FILES: "${CHANGED_WERK_FILES}"
+      COMMAND: "./scripts/run-in-docker.sh ./scripts/run-pipenv run python -m cmk.werks.validate &> ${RESULTS}/werk_validate.txt"
+      TEXT_ON_SKIP: 'No Werk files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/werk_validate.txt"
 
     - NAME: 'Python Linting'
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT

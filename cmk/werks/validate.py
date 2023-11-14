@@ -13,7 +13,7 @@ from . import load_werk
 
 def main() -> None:
     if changed_werk_files := os.environ.get("CHANGED_WERK_FILES"):
-        werks_to_check = (Path(line) for line in changed_werk_files.split("\n") if line)
+        werks_to_check = (Path(line) for line in changed_werk_files.split(" ") if line)
     else:
         werks_to_check = (
             path

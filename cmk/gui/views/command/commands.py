@@ -1122,7 +1122,7 @@ class CommandGroupDowntimes(CommandGroup):
 
 
 class RecurringDowntimes(Protocol):
-    def show_input_elements(self) -> None:
+    def show_input_elements(self, default: str) -> None:
         ...
 
     def number(self) -> int:
@@ -1133,7 +1133,7 @@ class RecurringDowntimes(Protocol):
 
 
 class NoRecurringDowntimes:
-    def show_input_elements(self) -> None:
+    def show_input_elements(self, default: str) -> None:
         pass
 
     def number(self) -> int:
@@ -1306,7 +1306,7 @@ class CommandScheduleDowntimes(Command):
         html.write_text(_("Repeat"))
         html.close_td()
         html.open_td()
-        self.recurring_downtimes.show_input_elements()
+        self.recurring_downtimes.show_input_elements(default="0")
         html.close_td()
         html.close_table()
 

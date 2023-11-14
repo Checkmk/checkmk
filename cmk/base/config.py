@@ -698,7 +698,6 @@ class PackedConfigGenerator:
         "host_groups",
         "contacts",
         "timeperiods",
-        "extra_service_conf",
         "extra_nagios_conf",
     ]
 
@@ -739,6 +738,11 @@ class PackedConfigGenerator:
                     values_red[hostname] = attributes
             return values_red
 
+        def filter_extra_service_conf(
+            values: dict[str, list[dict[str, str]]]
+        ) -> dict[str, list[dict[str, str]]]:
+            return {"check_interval": values.get("check_interval", [])}
+
         filter_var_functions: Dict[str, Callable[[Any], Any]] = {
             "all_hosts": filter_all_hosts,
             "clusters": filter_clusters,
@@ -749,6 +753,7 @@ class PackedConfigGenerator:
             "hosttags": filter_hostname_in_dict,  # unknown key, might be typo or legacy option
             "host_tags": filter_hostname_in_dict,
             "host_paths": filter_hostname_in_dict,
+            "extra_service_conf": filter_extra_service_conf,
         }
 
         #

@@ -45,7 +45,7 @@ editions:
     saas:
         release: ["ubuntu-22.04"]
         # Max L runs on the latest ubuntu and does not want to reinstall his machine
-        daily: ["ubuntu-22.04", "ubuntu-23.04"]
+        daily: ["ubuntu-22.04", "ubuntu-23.10"]
         testbuild: []
 
 # TODO: Sync this with our omd/distros/*.mk files

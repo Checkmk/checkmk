@@ -150,7 +150,12 @@ class CommandReschedule(Command):
     def tables(self):
         return ["host", "service"]
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        row: Row,
+        len_action_rows: int,
+        cmdtag: Literal["HOST", "SVC"],
+    ) -> HTML:
         return HTML("<br><br>" + _("Spreading: %s minutes") % request.var("_resched_spread"))
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
@@ -240,7 +245,12 @@ class CommandNotifications(Command):
     def tables(self):
         return ["host", "service"]
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        row: Row,
+        len_action_rows: int,
+        cmdtag: Literal["HOST", "SVC"],
+    ) -> HTML:
         return HTML(
             "<br><br>"
             + (
@@ -513,7 +523,12 @@ class CommandClearModifiedAttributes(Command):
         html.button("_cancel", _("Cancel"))
         html.close_div()
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        row: Row,
+        len_action_rows: int,
+        cmdtag: Literal["HOST", "SVC"],
+    ) -> HTML:
         return HTML(
             "<br><br>"
             + _("Resets the commands '%s', '%s' and '%s' to the default state")
@@ -1442,7 +1457,7 @@ class CommandScheduleDowntimes(Command):
 
             start_time = self._custom_start_time()
             end_time = self._custom_end_time(start_time)
-            title = self._title_range(start_time, end_time)
+            title = _("Schedule a downtime?")
         else:  # one of the default time buttons
             button_value = self.button_interval_value()
             if button_value is None:
@@ -1498,9 +1513,57 @@ class CommandScheduleDowntimes(Command):
         return CommandConfirmDialogOptions(
             title,
             self.affected(len_action_rows, cmdtag),
-            self.confirm_dialog_additions(row, len_action_rows),
+            self.confirm_dialog_additions(row, len_action_rows, cmdtag),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
+        )
+
+    def confirm_dialog_additions(
+        self,
+        row: Row,
+        len_action_rows: int,
+        cmdtag: Literal["HOST", "SVC"],
+    ) -> HTML:
+        additions = (
+            "<br><br>"
+            + _("Start: %s") % time.asctime(time.localtime(start_time := self._custom_start_time()))
+            + "<br>"
+            + _("End: %s") % time.asctime(time.localtime(self._custom_end_time(start_time)))
+            + "<br><br>"
+        )
+
+        attributes = ""
+        included_from_html = self._vs_host_downtime().from_html_vars("_include_childs")
+        self._vs_host_downtime().validate_value(included_from_html, "_include_childs")
+        if "_include_childs" in included_from_html:
+            if included_from_html.get("_include_childs") is True:
+                attributes += "<li>" + _("Child hosts also go in downtime (recursivly).") + "</li>"
+            else:
+                attributes += "<li>" + _("Child hosts also go in downtime.") + "</li>"
+
+        duration_from_html = self._vs_flexible().from_html_vars("_down_duration")
+        self._vs_flexible().validate_value(duration_from_html, "_down_duration")
+        if duration := duration_from_html.get("_down_duration"):
+            attributes += (
+                "<li>"
+                + _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
+                % (duration / 3600)
+                + "</li>"
+            )
+
+        if attributes:
+            additions = additions + _("Downtime attributes:") + "<ul>" + attributes + "</ul>"
+
+        return HTML(
+            additions
+            + "<u>"
+            + _("Info:")
+            + "</u> "
+            + (
+                _("Downtime also applies to services.")
+                if cmdtag == "HOST"
+                else _("Downtime does not apply to host.")
+            )
         )
 
     def _remove_downtime_details(
@@ -1609,12 +1672,6 @@ class CommandScheduleDowntimes(Command):
 
     def _title_for_next_minutes(self, minutes, prefix):
         return _("<b>%s for the next %d minutes</b>?") % (prefix, minutes)
-
-    def _title_range(self, start_time, end_time):
-        return _("Schedule a downtime from %s to %s?") % (
-            time.asctime(time.localtime(start_time)),
-            time.asctime(time.localtime(end_time)),
-        )
 
     def button_interval_value(self):
         rangebtns = (varname for varname, _value in request.itervars(prefix="_downrange"))
@@ -1869,7 +1926,12 @@ class CommandRemoveComments(Command):
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML("")
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        row: Row,
+        len_action_rows: int,
+        cmdtag: Literal["HOST", "SVC"],
+    ) -> HTML:
         if len_action_rows > 1:
             return HTML(_("Total comments: %d") % len_action_rows)
         return HTML(_("Author: %s") % row["comment_author"])

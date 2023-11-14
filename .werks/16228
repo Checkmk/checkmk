@@ -1,0 +1,24 @@
+Title: Enable update as site user due incompatible python versions
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1699525492
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This werk is relevant for you in case you've been using <tt>omd -V {version} update</tt> as site user.
+Due to the update of the Python version from 3.11.2 to 3.11.5 with 2.2.0p13, we needed to introduce a fix in order to avoid the following issue:
+
+C+:
+Traceback (most recent call last):
+ File "/omd/versions/2.2.0p13.cee/bin/omd", line 60, in <module>
+   import omdlib.main
+ File "/omd/versions/2.2.0p13.cee/lib/python3/omdlib/main.py", line 36, in <module>
+   import random
+ File "/omd/versions/2.2.0p13.cee/lib/python3.11/random.py", line 49, in <module>
+   from math import log as _log, exp as _exp, pi as _pi, e as _e, ceil as _ceil
+ImportError: /omd/versions/2.2.0p13.cee/lib/python3.11/lib-dynload/math.cpython-311-x86_64-linux-gnu.so: undefined symbol: _PyModule_Add
+C-:
+
+However, this fix introduced another issue with the release of 2.2.0p13, that's why we had to withdraw 2.2.0p13 and release 2.2.0p14 which addressed both issues.

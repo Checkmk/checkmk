@@ -2532,6 +2532,12 @@ def _need_to_update_config_after_sync() -> bool:
     this_v = version.Version.from_str(version.__version__)
     other_v = version.Version.from_str(central_version)
     if this_v.base is None or other_v.base is None:
+        logger.debug(
+            "Unable to determine base version of master daily build (%s, %s): "
+            "Assume no cmk-update-config needed",
+            this_v.base,
+            other_v.base,
+        )
         # We can not decide which is the current base version of the master daily builds.
         # For this reason we always treat them to be compatbile.
         return False

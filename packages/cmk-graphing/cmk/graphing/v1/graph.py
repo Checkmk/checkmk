@@ -6,39 +6,43 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field, KW_ONLY
 
+from . import metric
 from ._localize import Localizable
-from .metric import MetricName, Quantity
+from ._name import Name
+
+__all__ = [
+    "Name",
+    "MinimalRange",
+    "Graph",
+    "Bidirectional",
+]
 
 
 @dataclass(frozen=True, kw_only=True)
 class MinimalRange:
-    upper: int | float | Quantity
-    lower: int | float | Quantity
+    upper: int | float | metric.Quantity
+    lower: int | float | metric.Quantity
 
 
 @dataclass(frozen=True)
 class Graph:
-    name: str
+    name: Name
     title: Localizable
     _: KW_ONLY
     minimal_range: MinimalRange | None = None
-    compound_lines: Sequence[Quantity] = field(default_factory=list)
-    simple_lines: Sequence[Quantity] = field(default_factory=list)
-    optional: Sequence[MetricName] = field(default_factory=list)
-    conflicting: Sequence[MetricName] = field(default_factory=list)
+    compound_lines: Sequence[metric.Quantity] = field(default_factory=list)
+    simple_lines: Sequence[metric.Quantity] = field(default_factory=list)
+    optional: Sequence[metric.Name] = field(default_factory=list)
+    conflicting: Sequence[metric.Name] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        assert self.name
         assert self.compound_lines or self.simple_lines
 
 
 @dataclass(frozen=True)
 class Bidirectional:
-    name: str
+    name: Name
     title: Localizable
     _: KW_ONLY
     upper: Graph
     lower: Graph
-
-    def __post_init__(self) -> None:
-        assert self.name

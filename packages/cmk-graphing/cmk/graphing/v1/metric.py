@@ -11,20 +11,27 @@ from typing import TypeAlias
 
 from ._color import Color
 from ._localize import Localizable
+from ._name import Name
 
-
-@dataclass(frozen=True)
-class MetricName:
-    value: str
-
-    def __post_init__(self) -> None:
-        if not self.value:
-            raise ValueError(self.value)
+__all__ = [
+    "Name",
+    "Metric",
+    "Constant",
+    "WarningOf",
+    "CriticalOf",
+    "MinimumOf",
+    "MaximumOf",
+    "Sum",
+    "Product",
+    "Difference",
+    "Fraction",
+    "Quantity",
+]
 
 
 @dataclass(frozen=True)
 class Metric:
-    name: MetricName
+    name: Name
     title: Localizable
     unit: str
     color: Color
@@ -40,23 +47,23 @@ class Constant:
 
 @dataclass(frozen=True)
 class WarningOf:
-    name: MetricName
+    name: Name
 
 
 @dataclass(frozen=True)
 class CriticalOf:
-    name: MetricName
+    name: Name
 
 
 @dataclass(frozen=True)
 class MinimumOf:
-    name: MetricName
+    name: Name
     color: Color
 
 
 @dataclass(frozen=True)
 class MaximumOf:
-    name: MetricName
+    name: Name
     color: Color
 
 
@@ -101,7 +108,7 @@ class Fraction:
 
 
 Quantity: TypeAlias = (
-    MetricName
+    Name
     | Constant
     | WarningOf
     | CriticalOf

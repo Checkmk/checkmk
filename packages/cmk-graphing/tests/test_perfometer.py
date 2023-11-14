@@ -5,62 +5,17 @@
 
 import pytest
 
-from cmk.graphing.v1 import metric, perfometer
+from cmk.graphing.v1 import perfometer
 
 
-def test_perfometer_error_missing_name() -> None:
-    upper_bound = perfometer.Closed(100)
-    lower_bound = perfometer.Closed(0)
-    with pytest.raises(AssertionError):
-        perfometer.Perfometer(
-            "",
-            [metric.MetricName("metric-name")],
-            upper_bound=upper_bound,
-            lower_bound=lower_bound,
-        )
+def test_name_error() -> None:
+    with pytest.raises(ValueError):
+        perfometer.Name("")
 
 
 def test_perfometer_error_missing_segments() -> None:
+    name = perfometer.Name("perfometer-name")
     upper_bound = perfometer.Closed(100)
     lower_bound = perfometer.Closed(0)
     with pytest.raises(AssertionError):
-        perfometer.Perfometer(
-            "perfometer-name",
-            [],
-            upper_bound=upper_bound,
-            lower_bound=lower_bound,
-        )
-
-
-def test_bidirectional_error_missing_name() -> None:
-    left = perfometer.Perfometer(
-        "perfometer-name-left",
-        [metric.MetricName("metric-name")],
-        upper_bound=perfometer.Closed(100),
-        lower_bound=perfometer.Closed(0),
-    )
-    right = perfometer.Perfometer(
-        "perfometer-name-right",
-        [metric.MetricName("metric-name")],
-        upper_bound=perfometer.Closed(100),
-        lower_bound=perfometer.Closed(0),
-    )
-    with pytest.raises(AssertionError):
-        perfometer.Bidirectional("", left=left, right=right)
-
-
-def test_stacked_error_missing_name() -> None:
-    upper = perfometer.Perfometer(
-        "perfometer-name-left",
-        [metric.MetricName("metric-name")],
-        upper_bound=perfometer.Closed(100),
-        lower_bound=perfometer.Closed(0),
-    )
-    lower = perfometer.Perfometer(
-        "perfometer-name-right",
-        [metric.MetricName("metric-name")],
-        upper_bound=perfometer.Closed(100),
-        lower_bound=perfometer.Closed(0),
-    )
-    with pytest.raises(AssertionError):
-        perfometer.Stacked("", upper=upper, lower=lower)
+        perfometer.Perfometer(name, [], upper_bound=upper_bound, lower_bound=lower_bound)

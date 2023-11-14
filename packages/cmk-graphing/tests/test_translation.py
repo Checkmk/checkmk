@@ -8,6 +8,11 @@ import pytest
 from cmk.graphing.v1 import translation
 
 
+def test_name_error() -> None:
+    with pytest.raises(ValueError):
+        translation.Name("")
+
+
 def test_passive_check_error() -> None:
     with pytest.raises(AssertionError):
         translation.PassiveCheck("")
@@ -28,40 +33,27 @@ def test_nagios_plugin_error() -> None:
         translation.NagiosPlugin("")
 
 
-def test_renaming_error() -> None:
-    with pytest.raises(AssertionError):
-        translation.Renaming("")
-
-
 def test_scaling_error() -> None:
     with pytest.raises(AssertionError):
         translation.Scaling(0)
 
 
-def test_renaming_and_scaling_error_rename_to_empty() -> None:
-    with pytest.raises(AssertionError):
-        translation.RenamingAndScaling("", 1)
-
-
 def test_renaming_and_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
-        translation.RenamingAndScaling("new-name", 0)
-
-
-def test_translations_error_missing_name() -> None:
-    check_commands = [translation.PassiveCheck("check-command-name")]
-    translations = {"old-name": translation.Renaming("new-name")}
-    with pytest.raises(AssertionError):
-        translation.Translations("", check_commands, translations)
+        translation.RenamingAndScaling(translation.Name("new-name"), 0)
 
 
 def test_translations_error_missing_check_commands() -> None:
-    translations = {"old-name": translation.Renaming("new-name")}
+    name = translation.Name("name")
+    translations = {
+        translation.Name("old-name"): translation.Renaming(translation.Name("new-name"))
+    }
     with pytest.raises(AssertionError):
-        translation.Translations("name", [], translations)
+        translation.Translations(name, [], translations)
 
 
 def test_translations_error_missing_translations() -> None:
+    name = translation.Name("name")
     check_commands = [translation.PassiveCheck("check-command-name")]
     with pytest.raises(AssertionError):
-        translation.Translations("name", check_commands, {})
+        translation.Translations(name, check_commands, {})

@@ -27,6 +27,7 @@ DECLARE @GetAll TABLE
  VersionNames nvarchar(100),
  ClusterNames nvarchar(100),
  Ports nvarchar(100),
+ DynamicPorts nvarchar(100),
  Data nvarchar(100))
 
 Insert into @GetInstances
@@ -85,11 +86,18 @@ BEGIN
     DECLARE @Port NVARCHAR(100);
     EXECUTE xp_regread
         @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @cluster_key,
+        @key = @port_key,
         @value_name = 'tcpPort',
         @value = @Port OUTPUT;
 
-	insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port )
+    DECLARE @DynamicPort NVARCHAR(100);
+    EXECUTE xp_regread
+        @rootkey = 'HKEY_LOCAL_MACHINE',
+        @key = @port_key,
+        @value_name = 'TcpDynamicPorts',
+        @value = @DynamicPort OUTPUT;
+    
+    insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports, DynamicPorts) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port, @DynamicPort )
     
     -- Get the next instance
     FETCH NEXT FROM instance_cursor INTO @InstanceName;
@@ -98,7 +106,7 @@ END
 CLOSE instance_cursor;
 DEALLOCATE instance_cursor;
 
-SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports FROM @GetAll;";
+SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
 
 pub const SYS_DATABASES: &str = "SELECT name FROM sys.databases";
 

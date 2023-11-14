@@ -46,7 +46,8 @@ pub struct InstanceEngine {
     pub version: String,
     pub edition: String,
     pub cluster: Option<String>,
-    pub port: Option<u16>,
+    port: Option<u16>,
+    dynamic_port: Option<u16>,
     pub available: Option<bool>,
 }
 
@@ -67,6 +68,10 @@ impl InstanceEngine {
     ) -> String {
         let result = section.to_header();
         result + format!("{} not implemented\n", section.name).as_str()
+    }
+
+    pub fn port(&self) -> Option<u16> {
+        self.port.or(self.dynamic_port)
     }
 }
 
@@ -97,6 +102,9 @@ impl From<&Row> for InstanceEngine {
             cluster: row.get_optional_string(4),
             port: row
                 .get_optional_string(5)
+                .and_then(|s| s.parse::<u16>().ok()),
+            dynamic_port: row
+                .get_optional_string(6)
                 .and_then(|s| s.parse::<u16>().ok()),
             available: None,
         }

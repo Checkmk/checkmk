@@ -29,7 +29,7 @@ fn is_instance_good(i: &InstanceEngine) -> bool {
         && i.id.contains(&i.name[..4])
         && i.id.contains("MSSQL")
         && i.version.chars().filter(|&c| c == '.').count() == 3
-        && i.port.is_none()
+        && i.port().is_some()
         && i.cluster.is_none()
 }
 

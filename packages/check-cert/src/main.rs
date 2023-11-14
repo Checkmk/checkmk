@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::{Context, Result};
-use check_cert::{checker, fetcher};
+use check_cert::{checker, fetcher, output};
 use clap::Parser;
 use openssl::asn1::Asn1Time;
 use std::time::Duration;
@@ -57,9 +57,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         !args.disable_sni,
     )?;
 
-    let result = checker::check_validity(&args.url, cert.not_after(), &warn_time, &crit_time);
-    println!("{}", result.summary);
-    std::process::exit(match result.state {
+    let out = output::Output::from_check_results(vec![checker::check_validity(
+        &args.url,
+        cert.not_after(),
+        &warn_time,
+        &crit_time,
+    )]);
+    println!("{}", out);
+    std::process::exit(match out.worst_state {
         checker::State::Ok => 0,
         checker::State::Warn => 1,
         checker::State::Crit => 2,

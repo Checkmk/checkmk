@@ -5,7 +5,7 @@
 use openssl::asn1::{Asn1Time, Asn1TimeRef};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum State {
     Ok,
     Warn,

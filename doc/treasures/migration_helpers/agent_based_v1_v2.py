@@ -71,16 +71,6 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def main(argv: list[str]) -> int:
-    args = parse_arguments(argv)
-    for file_name in args.file_name:
-        _transform(file_name, args.inplace)
-
-    _autoflake(args.file_name)
-
-    return 0
-
-
 def _transform(file_name: Path, inplace: bool) -> None:
     content = file_name.read_text()
 
@@ -109,6 +99,16 @@ def _transform(file_name: Path, inplace: bool) -> None:
 
 def _autoflake(file_names: Sequence[str]) -> None:
     subprocess.check_call(["autoflake", "-i", "--remove-all-unused-imports", *file_names])
+
+
+def main(argv: list[str]) -> int:
+    args = parse_arguments(argv)
+    for file_name in args.file_name:
+        _transform(file_name, args.inplace)
+
+    _autoflake(args.file_name)
+
+    return 0
 
 
 if __name__ == "__main__":

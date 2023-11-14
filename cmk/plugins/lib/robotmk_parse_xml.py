@@ -12,18 +12,14 @@ from pydantic import BaseModel, BeforeValidator, Field, PlainValidator
 from typing_extensions import Annotated
 
 
-def _parse_datetime(value: str) -> datetime:
-    date_format = "%Y%m%d %H:%M:%S.%f"
-    return datetime.strptime(value, date_format)
+def _parse_datetime_v6(value: str) -> datetime | None:
+    try:
+        return datetime.strptime(value, "%Y%m%d %H:%M:%S.%f")
+    except ValueError:
+        return None
 
 
-DateTimeFormat = Annotated[datetime, PlainValidator(_parse_datetime)]
-
-
-def _ensure_sequence(
-    raw_value: Union[Mapping[str, object], Sequence[Mapping[str, object]]]
-) -> Sequence[Mapping[str, object]]:
-    return [raw_value] if isinstance(raw_value, Mapping) else raw_value
+DateTimeFormatV6 = Annotated[datetime | None, PlainValidator(_parse_datetime_v6)]
 
 
 class Outcome(enum.Enum):
@@ -33,34 +29,48 @@ class Outcome(enum.Enum):
     NOT_RUN = "NOT RUN"
 
 
-class Status(BaseModel, frozen=True):
+class StatusV6(BaseModel, frozen=True):
     status: Outcome = Field(alias="@status")
-    starttime: DateTimeFormat = Field(alias="@starttime")
-    endtime: DateTimeFormat = Field(alias="@endtime")
-    text: str | None = Field(default=None, alias="#text")
+    starttime: DateTimeFormatV6 = Field(alias="@starttime")
+    endtime: DateTimeFormatV6 = Field(alias="@endtime")
+    elapsed: float | None = Field(alias="@elapsed", default=None)
+
+    def runtime(self) -> float | None:
+        return (
+            self.elapsed
+            if self.starttime is None or self.endtime is None
+            else (self.endtime - self.starttime).total_seconds()
+        )
+
+
+class StatusV7(BaseModel, frozen=True):
+    status: Outcome = Field(alias="@status")
+    start: datetime = Field(alias="@start")
+    elapsed: float = Field(alias="@elapsed")
+
+    def runtime(self) -> float:
+        return self.elapsed
 
 
 class Test(BaseModel, frozen=True):
-    id: str = Field(alias="@id")
     name: str = Field(alias="@name")
-    line: int = Field(alias="@line")
-    status: Status
-    tag: str | None = None
+    status: StatusV6 | StatusV7
+
+
+def _ensure_sequence(
+    raw_value: Union[Mapping[str, object], Sequence[Mapping[str, object]]]
+) -> Sequence[Mapping[str, object]]:
+    return [raw_value] if isinstance(raw_value, Mapping) else raw_value
 
 
 class Suite(BaseModel, frozen=True):
-    id: str = Field(alias="@id")
     name: str = Field(alias="@name")
     suite: Annotated[Sequence["Suite"], BeforeValidator(_ensure_sequence)] = Field(default=[])
     test: Annotated[Sequence[Test], BeforeValidator(_ensure_sequence)] = Field(default=[])
+    status: StatusV6 | StatusV7
 
 
 class Generator(BaseModel, frozen=True):
-    generator: str = Field(alias="@generator")
-    generated: DateTimeFormat = Field(alias="@generated")
-    rpa: bool = Field(alias="@rpa")
-    schemaversion: int = Field(alias="@schemaversion")
-    errors: Mapping[str, object] | None = Field(default=None)
     suite: Suite
 
 

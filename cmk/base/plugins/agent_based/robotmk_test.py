@@ -76,13 +76,14 @@ def check(
 def _check_test(params: Params, test: Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)
     yield Result(state=_remap_state(test.status.status), summary=f"{test.status.status.value}")
-    yield from check_levels(
-        (test.status.endtime - test.status.starttime).total_seconds(),
-        label="Test runtime",
-        levels_upper=params["test_runtime"],
-        metric_name="test_runtime",
-        render_func=render.timespan,
-    )
+    if (runtime := test.status.runtime()) is not None:
+        yield from check_levels(
+            runtime,
+            label="Test runtime",
+            levels_upper=params["test_runtime"],
+            metric_name="test_runtime",
+            render_func=render.timespan,
+        )
 
 
 def _transmit_to_livestatus(

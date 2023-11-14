@@ -10,62 +10,54 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from cmk.plugins.lib.robotmk_parse_xml import (
     extract_tests_with_full_names,
     Outcome,
-    Status,
+    StatusV6,
     Suite,
     Test,
 )
 
 
-class StatusFactory(ModelFactory[Status]):
-    __model__ = Status
+class StatusV6Factory(ModelFactory[StatusV6]):
+    __model__ = StatusV6
 
 
-class SuiteFactory(ModelFactory):
+class SuiteFactory(ModelFactory[Suite]):
     __model__ = Suite
 
+    status = StatusV6Factory.build(
+        factory_use_construct=True,
+        status=Outcome.PASS,
+        starttime=datetime(2023, 11, 14, 13, 27, 40),
+        endtime=datetime(2023, 11, 14, 13, 45, 56),
+    )
 
-status_mock = StatusFactory.build(
-    factory_use_construct=True,
-    status=Outcome.PASS,
-    starttime=datetime(1998, 9, 30, 0, 27, 40),
-    endtime=datetime(1994, 3, 22, 15, 57, 14),
-)
 
-
-class TestFactory(ModelFactory):
+class TestFactory(ModelFactory[Test]):
     __model__ = Test
 
-    status = status_mock
-
-
-def _assert_all_tests(result: dict[str, Test], expected: dict[str, Test]) -> None:
-    for test_name, test in result.items():
-        assert test_name in expected
-        assert test.name == expected[test_name].name
-        assert test.status == expected[test_name].status
-        assert test.line == expected[test_name].line
+    status = StatusV6Factory.build(
+        factory_use_construct=True,
+        status=Outcome.PASS,
+        starttime=datetime(2023, 11, 14, 13, 29, 33),
+        endtime=datetime(2023, 11, 14, 13, 31, 34),
+    )
 
 
 def test_empty_suite() -> None:
-    empty_suite = SuiteFactory.build(
-        factory_use_construct=True, name="EmptySuite", test=[], suite=[]
+    assert not extract_tests_with_full_names(
+        SuiteFactory.build(factory_use_construct=True, name="EmptySuite", test=[], suite=[])
     )
-    result = extract_tests_with_full_names(empty_suite)
-    assert result == {}
 
 
 def test_single_test() -> None:
     single_test_suite = SuiteFactory.build(
         factory_use_construct=True,
         name="SingleTestSuite",
-        test=[TestFactory.build(factory_use_construct=True, name="Test1", line=5)],
+        test=[TestFactory.build(factory_use_construct=True, name="Test1")],
         suite=[],
     )
-    result = extract_tests_with_full_names(single_test_suite)
-    expected = {
-        "SingleTestSuite-Test1": TestFactory.build(factory_use_construct=True, name="Test1", line=5)
+    assert extract_tests_with_full_names(single_test_suite) == {
+        "SingleTestSuite-Test1": TestFactory.build(factory_use_construct=True, name="Test1")
     }
-    _assert_all_tests(result, expected)
 
 
 def test_multiple_tests() -> None:
@@ -73,39 +65,32 @@ def test_multiple_tests() -> None:
         factory_use_construct=True,
         name="MultipleTestsSuite",
         test=[
-            TestFactory.build(factory_use_construct=True, name="Test1", line=5),
-            TestFactory.build(factory_use_construct=True, name="Test2", line=5),
+            TestFactory.build(factory_use_construct=True, name="Test1"),
+            TestFactory.build(factory_use_construct=True, name="Test2"),
         ],
         suite=[],
     )
-    result = extract_tests_with_full_names(multiple_tests_suite)
-    expected = {
-        "MultipleTestsSuite-Test1": TestFactory.build(
-            factory_use_construct=True, name="Test1", line=5
-        ),
-        "MultipleTestsSuite-Test2": TestFactory.build(
-            factory_use_construct=True, name="Test2", line=5
-        ),
+    assert extract_tests_with_full_names(multiple_tests_suite) == {
+        "MultipleTestsSuite-Test1": TestFactory.build(factory_use_construct=True, name="Test1"),
+        "MultipleTestsSuite-Test2": TestFactory.build(factory_use_construct=True, name="Test2"),
     }
-
-    _assert_all_tests(result, expected)
 
 
 def test_nested_suites() -> None:
     nested_suites = SuiteFactory.build(
         factory_use_construct=True,
         name="TopSuite",
-        test=[TestFactory.build(factory_use_construct=True, name="Test4", line=42)],
+        test=[TestFactory.build(factory_use_construct=True, name="Test4")],
         suite=[
             SuiteFactory.build(
                 factory_use_construct=True,
                 name="SubSuite1",
-                test=[TestFactory.build(factory_use_construct=True, name="Test1", line=6)],
+                test=[TestFactory.build(factory_use_construct=True, name="Test1")],
                 suite=[
                     SuiteFactory.build(
                         factory_use_construct=True,
                         name="SubSubSuite",
-                        test=[TestFactory.build(factory_use_construct=True, name="Test2", line=5)],
+                        test=[TestFactory.build(factory_use_construct=True, name="Test2")],
                         suite=[],
                     )
                 ],
@@ -113,23 +98,16 @@ def test_nested_suites() -> None:
             SuiteFactory.build(
                 factory_use_construct=True,
                 name="SubSuite2",
-                test=[TestFactory.build(factory_use_construct=True, name="Test3", line=221)],
+                test=[TestFactory.build(factory_use_construct=True, name="Test3")],
                 suite=[],
             ),
         ],
     )
-    result = extract_tests_with_full_names(nested_suites)
-    expected = {
-        "TopSuite-Test4": TestFactory.build(factory_use_construct=True, name="Test4", line=42),
-        "TopSuite-SubSuite1-Test1": TestFactory.build(
-            factory_use_construct=True, name="Test1", line=6
-        ),
+    assert extract_tests_with_full_names(nested_suites) == {
+        "TopSuite-Test4": TestFactory.build(factory_use_construct=True, name="Test4"),
+        "TopSuite-SubSuite1-Test1": TestFactory.build(factory_use_construct=True, name="Test1"),
         "TopSuite-SubSuite1-SubSubSuite-Test2": TestFactory.build(
-            factory_use_construct=True, name="Test2", line=5
+            factory_use_construct=True, name="Test2"
         ),
-        "TopSuite-SubSuite2-Test3": TestFactory.build(
-            factory_use_construct=True, name="Test3", line=221
-        ),
+        "TopSuite-SubSuite2-Test3": TestFactory.build(factory_use_construct=True, name="Test3"),
     }
-
-    _assert_all_tests(result, expected)

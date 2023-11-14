@@ -79,9 +79,9 @@ class SuiteConfig(BaseModel, frozen=True):
 
 
 class Config(BaseModel, frozen=True):
-    working_directory: str
-    results_directory: str
-    rcc_binary_path: str
+    working_directory: Path
+    results_directory: Path
+    rcc_binary_path: Path
     suites: Mapping[str, SuiteConfig]
 
 

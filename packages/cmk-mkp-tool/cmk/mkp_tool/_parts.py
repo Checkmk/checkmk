@@ -50,7 +50,31 @@ class PathConfig:
 
     @classmethod
     def from_toml(cls, content: str) -> Self:
-        return cls(**tomllib.loads(content)["paths"])
+        raw = tomllib.loads(content)["paths"]
+        return cls(
+            agent_based_plugins_dir=Path(raw["agent_based_plugins_dir"]),
+            agents_dir=Path(raw["agents_dir"]),
+            alert_handlers_dir=Path(raw["alert_handlers_dir"]),
+            bin_dir=Path(raw["bin_dir"]),
+            check_manpages_dir=Path(raw["check_manpages_dir"]),
+            checks_dir=Path(raw["checks_dir"]),
+            doc_dir=Path(raw["doc_dir"]),
+            gui_plugins_dir=Path(raw["gui_plugins_dir"]),
+            inventory_dir=Path(raw["inventory_dir"]),
+            lib_dir=Path(raw["lib_dir"]),
+            locale_dir=Path(raw["locale_dir"]),
+            mib_dir=Path(raw["mib_dir"]),
+            mkp_rule_pack_dir=Path(raw["mkp_rule_pack_dir"]),
+            notifications_dir=Path(raw["notifications_dir"]),
+            pnp_templates_dir=Path(raw["pnp_templates_dir"]),
+            web_dir=Path(raw["web_dir"]),
+            installed_packages_dir=Path(raw["installed_packages_dir"]),
+            local_root=Path(raw["local_root"]),
+            packages_enabled_dir=Path(raw["packages_enabled_dir"]),
+            packages_local_dir=Path(raw["packages_local_dir"]),
+            packages_shipped_dir=Path(raw["packages_shipped_dir"]),
+            tmp_dir=Path(raw["tmp_dir"]),
+        )
 
     def get_path(self, part: PackagePart) -> Path:
         match part:

@@ -78,14 +78,14 @@ def safe_branch_name(scm) {
     return branch_name(scm).replaceAll("/", "-");
 }
 
-def get_cmk_version(branch, version) {
+def get_cmk_version(branch_name, version) {
     return (
       // Regular daily build of master branch
-      (branch == 'master' && version in ['daily', 'git']) ? "${build_date}" :
+      (branch_name == 'master' && version in ['daily', 'git']) ? "${build_date}" :
       // Experimental builds
-      (branch.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch}" :
+      (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
       // version branch dailies (e.g. 1.6.0)
-      (version == version in ['daily', 'git']) ? "${branch}-${build_date}" :
+      (version == version in ['daily', 'git']) ? "${branch_name}-${build_date}" :
       // else
       "${version}");
 }

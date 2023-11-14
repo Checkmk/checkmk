@@ -462,11 +462,6 @@ class ErrorReporter:
         ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
         (
             "check",
-            "ddn_s2a_faultsbasic_fans",
-            RuleGroup.CheckgroupParameters("fan_failures"),
-        ),
-        (
-            "check",
             "ddn_s2a_stats_io",
             RuleGroup.CheckgroupParameters("storage_iops"),
         ),

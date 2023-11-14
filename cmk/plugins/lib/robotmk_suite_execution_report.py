@@ -32,6 +32,7 @@ def _parse_xml(xml_value: str) -> Rebot:
 class RebotResult(BaseModel, frozen=True):
     xml: Annotated[Rebot, BeforeValidator(_parse_xml)]
     html_base64: str
+    timestamp: int
 
 
 class RebotOutcomeResult(BaseModel, frozen=True):
@@ -42,9 +43,16 @@ class RebotOutcomeError(BaseModel, frozen=True):
     Error: str
 
 
+class AttemptsConfig(BaseModel, frozen=True):
+    interval: int
+    timeout: int
+    n_attempts_max: int
+
+
 class AttemptsOutcome(BaseModel, frozen=True):
     attempts: Sequence[AttemptOutcome | AttemptOutcomeOtherError]
     rebot: RebotOutcomeResult | RebotOutcomeError | None
+    config: AttemptsConfig
 
 
 class ExecutionReport(BaseModel, frozen=True):

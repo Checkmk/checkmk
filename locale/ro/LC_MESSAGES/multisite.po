@@ -29169,6 +29169,10 @@ msgstr "Schemă URL invalidă. Trebuie să fie una dintre următoarele: %s"
 msgid "Invalid action"
 msgstr "Acțiune invalidă"
 
+#, fuzzy
+msgid "Invalid activation_id"
+msgstr "Acțiune invalidă"
+
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
@@ -31009,6 +31013,14 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "Niveluri pentru numărul de fișe active dintr-un dispozitiv."
 
+#, fuzzy
+msgid ""
+"Levels for the number of current connections to a JVM application on the "
+"servlet level"
+msgstr ""
+"Această regulă stabilește nivelurile warn și crit pentru numărul de "
+"conexiuni curente la o aplicație JVM la nivel de servlet."
+
 msgid "Levels for the number of print jobs"
 msgstr "Niveluri pentru numărul de lucrări de imprimare"
 
@@ -31078,6 +31090,10 @@ msgstr "Niveluri de așteptare"
 
 msgid "Levels health"
 msgstr "Niveluri de sănătate"
+
+#, fuzzy
+msgid "Levels in percentage of total RAM"
+msgstr "Specificați nivelurile în procente din totalul RAM"
 
 #, fuzzy
 msgid "Levels in percentage of total memory usage"
@@ -60692,13 +60708,6 @@ msgstr ""
 
 msgid "This rule sets the required state of a switch contact"
 msgstr "Această regulă stabilește starea necesară a unui contact de comutație"
-
-msgid ""
-"This rule sets the warn and crit levels for the number of current "
-"connections to a JVM application on the servlet level."
-msgstr ""
-"Această regulă stabilește nivelurile warn și crit pentru numărul de "
-"conexiuni curente la o aplicație JVM la nivel de servlet."
 
 msgid ""
 "This rule sets the warn and crit levels for the number of incoming requests "

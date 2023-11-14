@@ -29076,6 +29076,10 @@ msgstr "Schema URL non valido. Deve essere uno di: %s"
 msgid "Invalid action"
 msgstr "Azione non valida"
 
+#, fuzzy
+msgid "Invalid activation_id"
+msgstr "Azione non valida"
+
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
@@ -30919,6 +30923,14 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "Livelli per il numero di spine attive in un dispositivo."
 
+#, fuzzy
+msgid ""
+"Levels for the number of current connections to a JVM application on the "
+"servlet level"
+msgstr ""
+"Questa regola imposta i livelli di warn e crit per il numero di connessioni "
+"correnti a un'applicazione JVM a livello di servlet."
+
 msgid "Levels for the number of print jobs"
 msgstr "Livelli per il numero di lavori di stampa"
 
@@ -30988,6 +31000,10 @@ msgstr "Livelli di attesa"
 
 msgid "Levels health"
 msgstr "Livelli di salute"
+
+#, fuzzy
+msgid "Levels in percentage of total RAM"
+msgstr "Specificare i livelli in percentuale della RAM totale"
 
 #, fuzzy
 msgid "Levels in percentage of total memory usage"
@@ -60504,13 +60520,6 @@ msgstr ""
 msgid "This rule sets the required state of a switch contact"
 msgstr ""
 "Questa regola imposta lo stato richiesto di un contatto dell'interruttore"
-
-msgid ""
-"This rule sets the warn and crit levels for the number of current "
-"connections to a JVM application on the servlet level."
-msgstr ""
-"Questa regola imposta i livelli di warn e crit per il numero di connessioni "
-"correnti a un'applicazione JVM a livello di servlet."
 
 msgid ""
 "This rule sets the warn and crit levels for the number of incoming requests "

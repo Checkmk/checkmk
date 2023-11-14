@@ -28944,6 +28944,10 @@ msgstr "Esquema de URL inválido. Deve ser um de: %s"
 msgid "Invalid action"
 msgstr "Ação inválida"
 
+#, fuzzy
+msgid "Invalid activation_id"
+msgstr "Ação inválida"
+
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
@@ -30776,6 +30780,14 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "Níveis para o número de fichas activas de um dispositivo."
 
+#, fuzzy
+msgid ""
+"Levels for the number of current connections to a JVM application on the "
+"servlet level"
+msgstr ""
+"Esta regra estabelece os níveis de alerta e de critério para o número de "
+"conexões atuais a uma aplicação JVM no nível do servlet."
+
 msgid "Levels for the number of print jobs"
 msgstr "Níveis para o número de trabalhos de impressão"
 
@@ -30844,6 +30856,10 @@ msgstr "Níveis de espera"
 
 msgid "Levels health"
 msgstr "Níveis de saúde"
+
+#, fuzzy
+msgid "Levels in percentage of total RAM"
+msgstr "Especificar níveis em porcentagem do total de RAM"
 
 #, fuzzy
 msgid "Levels in percentage of total memory usage"
@@ -60179,13 +60195,6 @@ msgstr ""
 
 msgid "This rule sets the required state of a switch contact"
 msgstr "Esta regra define o estado requerido de um contato de comutação"
-
-msgid ""
-"This rule sets the warn and crit levels for the number of current "
-"connections to a JVM application on the servlet level."
-msgstr ""
-"Esta regra estabelece os níveis de alerta e de critério para o número de "
-"conexões atuais a uma aplicação JVM no nível do servlet."
 
 msgid ""
 "This rule sets the warn and crit levels for the number of incoming requests "

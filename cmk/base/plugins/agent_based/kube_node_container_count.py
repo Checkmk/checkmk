@@ -33,7 +33,7 @@ def discovery(section: ContainerCount) -> DiscoveryResult:
 def check(params: KubeContainersLevelsUpperLower, section: ContainerCount) -> CheckResult:
     """Computes `total` and uses `check_levels` for each section element,
     setting levels from `params` individually"""
-    section_dict = section.dict()
+    section_dict = section.model_dump()
     section_dict["total"] = sum(section_dict.values())
     for name, value in section_dict.items():
         level_count_name = cast(CountName, name)

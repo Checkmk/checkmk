@@ -21,7 +21,7 @@ class FailureMessage(BaseModel):
     def to_human_readable(self) -> Iterable[str]:
         yield from (
             f"{field_name.title()}: {field_value}"
-            for field_name, field_value in self.dict(exclude_none=True).items()
+            for field_name, field_value in self.model_dump(exclude_none=True).items()
         )
 
 

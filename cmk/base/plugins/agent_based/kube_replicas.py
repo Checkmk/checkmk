@@ -74,7 +74,7 @@ register.agent_section(
 
 
 def parse_kube_controller_spec(string_table: StringTable) -> ControllerSpec:
-    return ControllerSpec.parse_raw(string_table[0][0])
+    return ControllerSpec.model_validate_json(string_table[0][0])
 
 
 register.agent_section(

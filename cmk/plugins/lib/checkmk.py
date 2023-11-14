@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 from pyasn1.error import PyAsn1Error
 from pyasn1.type.useful import GeneralizedTime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 CheckmkSection = Mapping[str, str | None]
 CmkUpdateAgentStatus = Mapping[str, str]
@@ -53,8 +53,7 @@ class CertInfoController(BaseModel):
     to: datetime
     issuer: str
 
-    @validator("to", pre=True)
-    @classmethod
+    @field_validator("to", mode="before")
     def _parse_cert_validity(cls, value: str | datetime) -> datetime:
         return (
             value
@@ -104,8 +103,7 @@ class CertInfo(BaseModel):
     signature_algorithm: str | None = Field(None)
     common_name: str | None = Field(None)
 
-    @validator("not_after", pre=True)
-    @classmethod
+    @field_validator("not_after", mode="before")
     def _validate_not_after(cls, value: str | datetime | None) -> datetime | None:
         """convert not_after from str to datetime
 

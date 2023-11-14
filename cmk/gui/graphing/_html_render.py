@@ -177,7 +177,7 @@ def _render_graph_html(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
             json.dumps(html_code),
-            graph_artwork.json(),
+            graph_artwork.model_dump_json(),
             graph_render_config.model_dump_json(),
             json.dumps(_graph_ajax_context(graph_artwork, graph_data_range, graph_render_config)),
         )
@@ -194,7 +194,7 @@ def _graph_ajax_context(
     graph_render_config: GraphRenderConfig,
 ) -> dict[str, Any]:
     return {
-        "definition": graph_artwork.definition.dict(),
+        "definition": graph_artwork.definition.model_dump(),
         "data_range": graph_data_range.model_dump(),
         "render_config": graph_render_config.model_dump(),
         "display_id": graph_artwork.display_id,
@@ -637,7 +637,7 @@ def _render_ajax_graph(
         save_graph_pin()
 
     if request.has_var("consolidation_function"):
-        graph_recipe = graph_recipe.copy(
+        graph_recipe = graph_recipe.model_copy(
             update={"consolidation_function": request.var("consolidation_function")}
         )
 
@@ -664,10 +664,10 @@ def _render_ajax_graph(
 
     return {
         "html": html_code,
-        "graph": graph_artwork.dict(),
+        "graph": graph_artwork.model_dump(),
         "context": {
             "graph_id": context["graph_id"],
-            "definition": graph_recipe.dict(),
+            "definition": graph_recipe.model_dump(),
             "data_range": graph_data_range.model_dump(),
             "render_config": graph_render_config.model_dump(),
         },
@@ -812,7 +812,7 @@ def _render_graph_container_html(
     output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
-            graph_recipe.json(),
+            graph_recipe.model_dump_json(),
             graph_data_range.model_dump_json(),
             graph_render_config.model_dump_json(),
             json.dumps(graph_display_id),

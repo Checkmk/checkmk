@@ -16,7 +16,7 @@ def parse_cmk_agent_ctl_status(string_table: StringTable) -> ControllerSection |
     except IndexError:
         return None
 
-    return ControllerSection.parse_raw(json_str)
+    return ControllerSection.model_validate_json(json_str)
 
 
 register.agent_section(

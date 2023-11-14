@@ -45,7 +45,7 @@ class TestPredictionQuerier:
                         "other_metric/everyday.info",
                         "other_metric/everyday",
                     ],
-                    f"prediction_file:file:{querier.metric_name}/everyday.info": expected_prediction_info.json().encode(),
+                    f"prediction_file:file:{querier.metric_name}/everyday.info": expected_prediction_info.model_dump_json().encode(),
                 }
             ],
             site=SiteName("local"),
@@ -87,7 +87,7 @@ class TestPredictionQuerier:
                 {
                     "host_name": str(querier.host_name),
                     "description": str(querier.service_name),
-                    f"prediction_file:file:{querier.metric_name}/everyday": expected_prediction_data.json().encode(),
+                    f"prediction_file:file:{querier.metric_name}/everyday": expected_prediction_data.model_dump_json().encode(),
                 }
             ],
             site=SiteName("local"),

@@ -106,7 +106,7 @@ def test_stored_usage_value() -> None:
     value_store = {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * 1,
-            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).model_dump_json(),
         )
     }
     performance_cpu = cmk.plugins.lib.kube_resources.performance_cpu(
@@ -119,7 +119,7 @@ def test_stored_outdated_usage_value() -> None:
     value_store = {
         "cpu_usage": (
             TIMESTAMP - ONE_MINUTE * 2,
-            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).json(),
+            PerformanceUsage(resource=Cpu(type_="cpu", usage=USAGE)).model_dump_json(),
         )
     }
 

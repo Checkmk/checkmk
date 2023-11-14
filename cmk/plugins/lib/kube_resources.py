@@ -318,7 +318,10 @@ def performance_cpu(
     no new data is available.
     """
     if section_kube_performance_cpu is not None:
-        host_value_store[value_store_key] = (current_timestamp, section_kube_performance_cpu.json())
+        host_value_store[value_store_key] = (
+            current_timestamp,
+            section_kube_performance_cpu.model_dump_json(),
+        )
         return section_kube_performance_cpu
 
     if (timestamped_usage := host_value_store.get(value_store_key)) is not None:

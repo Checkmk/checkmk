@@ -10,7 +10,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Callable, Literal, Self, Union
 
-from pydantic import BaseModel, Field, SerializeAsAny, TypeAdapter, validator
+from pydantic import BaseModel, Field, field_validator, SerializeAsAny, TypeAdapter
 from typing_extensions import TypedDict
 
 from livestatus import SiteId
@@ -460,7 +460,6 @@ class GraphRecipe(GraphRecipeBase, frozen=True):
     # https://docs.pydantic.dev/2.4/concepts/serialization/#serializing-with-duck-typing
     specification: SerializeAsAny[GraphSpecification]
 
-    @validator("specification", pre=True)
-    @classmethod
+    @field_validator("specification", mode="before")
     def parse_specification(cls, value: Mapping[str, object]) -> GraphSpecification:
         return parse_raw_graph_specification(value)

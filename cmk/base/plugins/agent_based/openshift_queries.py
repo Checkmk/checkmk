@@ -20,7 +20,7 @@ from cmk.plugins.lib.kube import (
 
 
 def parse(string_table: StringTable) -> OpenShiftEndpoint:
-    return OpenShiftEndpoint.parse_raw(string_table[0][0])
+    return OpenShiftEndpoint.model_validate_json(string_table[0][0])
 
 
 register.agent_section(

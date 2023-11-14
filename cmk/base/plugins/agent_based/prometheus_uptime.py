@@ -20,7 +20,7 @@ def parse(string_table: type_defs.StringTable) -> uptime.Section:
     >>> parse([['{"seconds": 2117}']])
     Section(uptime_sec=2117, message=None)
     """
-    seconds = Uptime.parse_raw(string_table[0][0]).seconds
+    seconds = Uptime.model_validate_json(string_table[0][0]).seconds
     return uptime.Section(uptime_sec=seconds, message=None)
 
 

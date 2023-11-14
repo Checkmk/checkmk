@@ -105,7 +105,7 @@ def test_conditions_returns_all_native_conditions() -> None:
     )
     node_conditions = _conditions(api_node)
     assert node_conditions is not None
-    conditions_dict = node_conditions.dict()
+    conditions_dict = node_conditions.model_dump()
     assert len(conditions_dict) == len(NATIVE_NODE_CONDITION_TYPES)
     assert all(
         condition_type.lower() in conditions_dict for condition_type in NATIVE_NODE_CONDITION_TYPES
@@ -123,7 +123,7 @@ def test_conditions_respects_status_conditions() -> None:
 
     node_conditions = _conditions(api_node)
     assert node_conditions is not None
-    conditions_dict = node_conditions.dict()
+    conditions_dict = node_conditions.model_dump()
     assert len(conditions_dict) == len(native_conditions)
     assert all(
         conditions_dict[condition.type_.lower()]["status"] == condition.status
@@ -218,9 +218,9 @@ def test_api_node_container_count(
     )
     node_container_count = _container_count(api_node)
     assert isinstance(node_container_count, section.ContainerCount)
-    assert node_container_count.dict()[container_status_state.value] == pod_containers_count
+    assert node_container_count.model_dump()[container_status_state.value] == pod_containers_count
     assert all(
         count == 0
-        for state, count in node_container_count.dict().items()
+        for state, count in node_container_count.model_dump().items()
         if state != container_status_state.value
     )

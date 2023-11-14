@@ -139,14 +139,14 @@ def check_result(params: Mapping[str, VSResultAge], section: DeploymentCondition
 def test_ok_state_mappings_match_conditions() -> None:
     assert all(
         condition in kube_deployment_conditions.CONDITIONS_OK_MAPPINGS
-        for condition in DeploymentConditions.schema()["properties"]
+        for condition in DeploymentConditions.model_json_schema()["properties"]
     )
 
 
 def test_parse(string_table: StringTable) -> None:
     section = kube_deployment_conditions.parse(string_table)
     assert section is not None
-    assert len(section.dict()) == 3
+    assert len(section.model_dump()) == 3
 
 
 def test_discovery(section: DeploymentConditions) -> None:

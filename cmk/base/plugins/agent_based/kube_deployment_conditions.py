@@ -61,7 +61,7 @@ def condition_levels(params: Mapping[str, VSResultAge], condition: str) -> tuple
 def _check(
     now: float, params: Mapping[str, VSResultAge], section: DeploymentConditions
 ) -> CheckResult:
-    conditions = section.dict()
+    conditions = section.model_dump()
     if all(
         condition["status"] is CONDITIONS_OK_MAPPINGS[name]
         for name, condition in conditions.items()

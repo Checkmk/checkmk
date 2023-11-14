@@ -81,7 +81,7 @@ class KubeNodeCountVSResult(TypedDict):
 
 
 def parse(string_table: StringTable) -> NodeCount:
-    return NodeCount.parse_raw(string_table[0][0])
+    return NodeCount.model_validate_json(string_table[0][0])
 
 
 def discovery(section: NodeCount) -> DiscoveryResult:

@@ -27,7 +27,7 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
             range=(23, 42),
             dsname="kuchen_count",
             params=PredictionParameters(horizon=3, period="wday"),
-        ).json(),
+        ).model_dump_json(),
     )
     data_file.write_text(
         PredictionData(
@@ -37,7 +37,7 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
             ],
             data_twindow=[1, 10],
             step=2,
-        ).json(),
+        ).model_dump_json(),
     )
 
     RemoveUnreadablePredictions.cleanup_unreadable_files(tmp_path)
@@ -59,7 +59,7 @@ def test_corrupt_files_are_removed(tmp_path: Path) -> None:
             ],
             data_twindow=[1, 10],
             step=2,
-        ).json(),
+        ).model_dump_json(),
     )
 
     RemoveUnreadablePredictions.cleanup_unreadable_files(tmp_path)

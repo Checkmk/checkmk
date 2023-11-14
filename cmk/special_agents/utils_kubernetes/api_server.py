@@ -13,9 +13,9 @@ import typing
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+import pydantic
 import requests
 from kubernetes import client  # type: ignore[import]
-from pydantic import parse_obj_as
 
 from cmk.special_agents.utils_kubernetes import query
 from cmk.special_agents.utils_kubernetes.controllers import (
@@ -467,6 +467,14 @@ def parse_api_data(
     ]
 
     cluster_details = api.ClusterDetails(api_health=api_health, version=git_version)
+
+    def _parse_obj_as(
+        model: type[list[api.PersistentVolume]],
+        expr: typing.Sequence[typing.Any],
+    ) -> typing.Sequence[api.PersistentVolume]:
+        adapter = pydantic.TypeAdapter(model)
+        return adapter.validate_python(expr)
+
     return APIData(
         cron_jobs=cron_jobs,
         deployments=deployments,
@@ -477,7 +485,7 @@ def parse_api_data(
         nodes=nodes,
         pods=pods,
         persistent_volume_claims=persistent_volume_claims,
-        persistent_volumes=parse_obj_as(list[api.PersistentVolume], raw_persistent_volumes),
+        persistent_volumes=_parse_obj_as(list[api.PersistentVolume], raw_persistent_volumes),
         kubelet_open_metrics=[
             kubelet_metric_sample
             for dump in kubelet_open_metrics_dumps

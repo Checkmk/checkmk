@@ -287,7 +287,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
-            self._graph_specification.json(),
+            self._graph_specification.model_dump_json(),
             json.dumps(
                 default_dashlet_graph_render_options()
                 # Something is wrong with the typing here. self._dashlet_spec is a subclass of

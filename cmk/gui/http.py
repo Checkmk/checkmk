@@ -380,7 +380,7 @@ class Request(
     ) -> Model_T:
         """Try to convert the value of an HTTP request variable to a given pydantic model"""
         try:
-            return model.parse_raw(mandatory_parameter(varname, self.var(varname)))
+            return model.model_validate_json(mandatory_parameter(varname, self.var(varname)))
         except ValueError as exception:
             raise MKUserError(varname, _("The value is not valid: '%s'") % exception)
 

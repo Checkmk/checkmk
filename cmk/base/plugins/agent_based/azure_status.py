@@ -33,7 +33,7 @@ class AzureStatusesPerRegion(BaseModel, frozen=True):
 
 
 def parse_azure_status(string_table: StringTable) -> AzureStatusesPerRegion:
-    azure_status = AzureStatus.parse_raw(string_table[0][0])
+    azure_status = AzureStatus.model_validate_json(string_table[0][0])
 
     regions: dict[str, list[AzureIssue]] = {r: [] for r in azure_status.regions}
     for issue in azure_status.issues:

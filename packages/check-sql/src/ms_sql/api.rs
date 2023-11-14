@@ -17,6 +17,7 @@ pub type Client = tiberius::Client<Compat<TcpStream>>;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
+const INSTANCE_SECTION_NAME: &str = "instance";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -24,22 +25,37 @@ pub enum Credentials<'a> {
 }
 
 pub struct Section {
-    pub name: String,
-    pub separator: Option<char>,
+    name: String,
+    sep: Option<char>,
 }
 
 impl Section {
+    pub fn new(name: impl ToString) -> Self {
+        let name = name.to_string();
+        let sep = get_section_separator(&name);
+        Self { name, sep }
+    }
     pub fn to_header(&self) -> String {
-        header(&self.name, self.separator)
+        header(&self.name, self.sep)
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn sep(&self) -> char {
+        self.sep.unwrap_or(' ')
     }
 }
 
 pub trait Column {
-    fn get_string(&self, idx: usize) -> String;
-    fn get_optional_string(&self, idx: usize) -> Option<String>;
+    fn get_value_by_idx(&self, idx: usize) -> String;
+    fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
+    fn get_value_by_name(&self, idx: &str) -> String;
+    fn get_optional_value_by_name(&self, idx: &str) -> Option<String>;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct InstanceEngine {
     pub name: String,
     pub id: String,
@@ -54,20 +70,114 @@ pub struct InstanceEngine {
 impl InstanceEngine {
     pub fn generate_leading_entry(&self, sep: char) -> String {
         format!(
-            "MSSQL_{}{sep}config{sep}{}{sep}{}{sep}{}\n",
-            self.name,
+            "{}{sep}config{sep}{}{sep}{}{sep}{}\n",
+            self.mssql_name(),
             self.version,
             self.edition,
             self.cluster.as_deref().unwrap_or_default()
         )
     }
-    pub async fn generate_section(
+
+    pub fn mssql_name(&self) -> String {
+        format!("MSSQL_{}", self.name)
+    }
+
+    pub async fn generate_sections(
         &self,
-        _ms_sql: &config::ms_sql::Config,
-        section: &Section,
+        ms_sql: &config::ms_sql::Config,
+        sections: &[Section],
     ) -> String {
-        let result = section.to_header();
-        result + format!("{} not implemented\n", section.name).as_str()
+        let mut result = String::new();
+        let instance_section = Section::new(INSTANCE_SECTION_NAME); // this is important section always present
+        match self.create_client(ms_sql.auth(), ms_sql.conn()).await {
+            Ok(mut client) => {
+                for section in sections {
+                    result += &section.to_header();
+                    match section.name.as_str() {
+                        INSTANCE_SECTION_NAME => {
+                            result += &self.generate_state_entry(true, instance_section.sep());
+                            result += &self
+                                .generate_details_entry(&mut client, instance_section.sep())
+                                .await;
+                        }
+                        _ => {
+                            result += format!("{} not implemented\n", section.name).as_str();
+                        }
+                    }
+                }
+            }
+            Err(err) => {
+                result += &instance_section.to_header();
+                result += &self.generate_state_entry(false, instance_section.sep());
+                log::warn!("Can't access {} instance with err {err}\n", self.id);
+            }
+        };
+        result
+    }
+
+    /// Create a client for an Instance based on Config
+    pub async fn create_client(
+        &self,
+        auth: &config::ms_sql::Authentication,
+        conn: &config::ms_sql::Connection,
+    ) -> Result<Client> {
+        let client = match auth.auth_type() {
+            config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
+                if let Some(credentials) = obtain_config_credentials(auth) {
+                    create_remote_client(
+                        conn.hostname(),
+                        self.port().unwrap_or(defaults::STANDARD_PORT),
+                        credentials,
+                    )
+                    .await?
+                } else {
+                    anyhow::bail!("Not provided credentials")
+                }
+            }
+
+            #[cfg(windows)]
+            config::ms_sql::AuthType::Integrated => {
+                create_local_instance_client(&self.name, conn.sql_browser_port()).await?
+            }
+
+            _ => anyhow::bail!("Not supported authorization type"),
+        };
+        Ok(client)
+    }
+
+    pub async fn generate_details_entry(&self, client: &mut Client, sep: char) -> String {
+        match run_query(client, &queries::get_details_query()).await {
+            Ok(rows) => self.process_details_rows(rows, sep),
+            Err(err) => {
+                log::error!("Failed to get details: {}", err);
+                format!("{}{:?}", sep.to_string().repeat(4), err).to_string()
+            }
+        }
+    }
+
+    pub fn generate_state_entry(&self, accessible: bool, sep: char) -> String {
+        format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
+    }
+
+    fn process_details_rows(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
+        if rows.is_empty() || rows[0].is_empty() {
+            const ERROR: &str = "No output from query";
+            log::warn!("{}", ERROR);
+            format!("{}{}", sep.to_string().repeat(4), ERROR).to_string()
+        } else {
+            let row = &rows[0];
+            let version = get_row_value(&row[0], queries::QUERY_DETAILS_VERSION_PARAM);
+            let level = get_row_value(&row[0], queries::QUERY_DETAILS_LEVEL_PARAM);
+            let edition = get_row_value(&row[0], queries::QUERY_DETAILS_EDITION_PARAM);
+
+            format!(
+                "{}{sep}details{sep}{}{sep}{}{sep}{}\n",
+                self.mssql_name(),
+                version,
+                level,
+                edition
+            )
+        }
     }
 
     pub fn port(&self) -> Option<u16> {
@@ -75,16 +185,36 @@ impl InstanceEngine {
     }
 }
 
+fn get_row_value(row: &Row, idx: &str) -> String {
+    row.get_optional_value_by_name(idx).unwrap_or_else(|| {
+        log::warn!("Failed to get {idx} from query");
+        String::new()
+    })
+}
+
 impl Column for Row {
-    fn get_string(&self, idx: usize) -> String {
+    fn get_value_by_idx(&self, idx: usize) -> String {
         self.try_get::<&str, usize>(idx)
             .unwrap_or_default()
             .unwrap_or_default()
             .to_string()
     }
 
-    fn get_optional_string(&self, idx: usize) -> Option<String> {
+    fn get_optional_value_by_idx(&self, idx: usize) -> Option<String> {
         self.try_get::<&str, usize>(idx)
+            .unwrap_or_default()
+            .map(str::to_string)
+    }
+
+    fn get_value_by_name(&self, idx: &str) -> String {
+        self.try_get::<&str, &str>(idx)
+            .unwrap_or_default()
+            .unwrap_or_default()
+            .to_string()
+    }
+
+    fn get_optional_value_by_name(&self, idx: &str) -> Option<String> {
+        self.try_get::<&str, &str>(idx)
             .unwrap_or_default()
             .map(str::to_string)
     }
@@ -95,16 +225,16 @@ impl From<&Row> for InstanceEngine {
     /// try_get is used to not panic
     fn from(row: &Row) -> Self {
         InstanceEngine {
-            name: row.get_string(0),
-            id: row.get_string(1),
-            edition: row.get_string(2),
-            version: row.get_string(3),
-            cluster: row.get_optional_string(4),
+            name: row.get_value_by_idx(0),
+            id: row.get_value_by_idx(1),
+            edition: row.get_value_by_idx(2),
+            version: row.get_value_by_idx(3),
+            cluster: row.get_optional_value_by_idx(4),
             port: row
-                .get_optional_string(5)
+                .get_optional_value_by_idx(5)
                 .and_then(|s| s.parse::<u16>().ok()),
             dynamic_port: row
-                .get_optional_string(6)
+                .get_optional_value_by_idx(6)
                 .and_then(|s| s.parse::<u16>().ok()),
             available: None,
         }
@@ -138,17 +268,16 @@ impl CheckConfig {
 
 /// Generate header for each section without any data
 async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
-    const INSTANCE_SECTION_NAME: &str = "instance";
+    let instance_section_sep = get_section_separator(INSTANCE_SECTION_NAME).unwrap_or(' ');
 
-    let mut result = to_section("instance").to_header(); // as in old plugin
+    let mut result = Section::new(INSTANCE_SECTION_NAME).to_header(); // as in old plugin
     let sections = get_work_sections(ms_sql);
     let all = get_instance_engines(ms_sql.auth(), ms_sql.conn()).await?;
     let instances: Vec<InstanceEngine> = [&all.0[..], &all.1[..]].concat();
 
     for instance in &instances {
-        result += &to_section(INSTANCE_SECTION_NAME).to_header();
-        result += &instance
-            .generate_leading_entry(get_section_separator(INSTANCE_SECTION_NAME).unwrap_or(' '));
+        result += &Section::new(INSTANCE_SECTION_NAME).to_header();
+        result += &instance.generate_leading_entry(instance_section_sep);
     }
     // TODO(sk): remove this reference code after fucntionality of [futures] will be verified
     //for instance in &instances {
@@ -166,11 +295,9 @@ async fn generate_result(
     ms_sql: &config::ms_sql::Config,
 ) -> Result<String> {
     // place all futures now in vector for future asynchronous processing
-    let tasks = instances.iter().flat_map(|instance| {
-        sections
-            .iter()
-            .map(move |section| instance.generate_section(ms_sql, section))
-    });
+    let tasks = instances
+        .iter()
+        .map(move |instance| instance.generate_sections(ms_sql, sections.clone()));
 
     // processing here
     let results = stream::iter(tasks)
@@ -222,16 +349,10 @@ pub fn get_work_sections(ms_sql: &config::ms_sql::Config) -> Vec<Section> {
     let mut base: Vec<Section> = sections
         .get_filtered_always()
         .iter()
-        .map(to_section)
+        .map(Section::new)
         .collect();
-    base.extend(sections.get_filtered_cached().iter().map(to_section));
+    base.extend(sections.get_filtered_cached().iter().map(Section::new));
     base
-}
-
-fn to_section(name: impl ToString) -> Section {
-    let name = name.to_string();
-    let separator = get_section_separator(&name);
-    Section { name, separator }
 }
 
 fn get_section_separator(name: &str) -> Option<char> {
@@ -257,10 +378,51 @@ pub async fn create_remote_client(
     port: u16,
     credentials: Credentials<'_>,
 ) -> Result<Client> {
+    match _create_remote_client(
+        host,
+        port,
+        &credentials,
+        tiberius::EncryptionLevel::Required,
+    )
+    .await
+    {
+        Ok(client) => Ok(client),
+        #[cfg(unix)]
+        Err(err) => {
+            log::warn!(
+                "Encryption is not supported by the host, err is {}. Trying without encryption...",
+                err
+            );
+            Ok(_create_remote_client(
+                host,
+                port,
+                &credentials,
+                tiberius::EncryptionLevel::NotSupported,
+            )
+            .await?)
+        }
+        #[cfg(windows)]
+        Err(err) => {
+            log::warn!(
+                "Encryption is not supported by the host, err is {}. Stopping...",
+                err
+            );
+            Err(err)
+        }
+    }
+}
+
+pub async fn _create_remote_client(
+    host: &str,
+    port: u16,
+    credentials: &Credentials<'_>,
+    encryption: tiberius::EncryptionLevel,
+) -> Result<Client> {
     let mut config = Config::new();
 
     config.host(host);
     config.port(port);
+    config.encryption(encryption);
     config.authentication(match credentials {
         Credentials::SqlServer { user, password } => AuthMethod::sql_server(user, password),
         #[cfg(windows)]
@@ -497,6 +659,21 @@ mssql:
         assert!(obtain_config_credentials(make_config_with_auth_type("windows").auth()).is_some());
         assert!(
             obtain_config_credentials(make_config_with_auth_type("sql_server").auth()).is_some()
+        );
+    }
+    #[test]
+    fn test_generate_state_entry() {
+        let i = InstanceEngine {
+            name: "test_name".to_string(),
+            ..Default::default()
+        };
+        assert_eq!(
+            i.generate_state_entry(false, '.'),
+            format!("MSSQL_test_name.state.0\n")
+        );
+        assert_eq!(
+            i.generate_state_entry(true, '.'),
+            format!("MSSQL_test_name.state.1\n")
         );
     }
 }

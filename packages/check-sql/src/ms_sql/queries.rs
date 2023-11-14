@@ -108,10 +108,29 @@ DEALLOCATE instance_cursor;
 
 SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
 
+pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
+pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
+pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";
+
 pub const SYS_DATABASES: &str = "SELECT name FROM sys.databases";
 
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()
+}
+
+pub fn get_details_query() -> String {
+    format!(
+        "SELECT cast(SERVERPROPERTY('{}') as varchar) as {}, \
+         cast(SERVERPROPERTY ('{}') as varchar) as {}, \
+         cast(SERVERPROPERTY ('{}') as varchar) as {}",
+        "productversion",
+        QUERY_DETAILS_VERSION_PARAM,
+        "productlevel",
+        QUERY_DETAILS_LEVEL_PARAM,
+        "edition",
+        QUERY_DETAILS_EDITION_PARAM,
+    )
+    .to_string()
 }
 
 pub fn get_32bit_instances_query() -> String {

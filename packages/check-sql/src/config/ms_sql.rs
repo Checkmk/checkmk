@@ -274,6 +274,9 @@ impl Connection {
     pub fn port(&self) -> u16 {
         self.port
     }
+    pub fn sql_browser_port(&self) -> Option<u16> {
+        None
+    }
     pub fn socket(&self) -> Option<&PathBuf> {
         self.socket.as_ref()
     }

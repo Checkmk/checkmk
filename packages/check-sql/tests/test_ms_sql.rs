@@ -166,6 +166,58 @@ async fn test_validate_all_instances_remote() {
     }
 }
 
+/// This test is ignored because it requires real credentials and real server
+/// Intended to be used manually by dev to check whether all instances are accessible.
+/// TODO(sk): remove on branching
+#[ignore]
+#[tokio::test(flavor = "multi_thread")]
+async fn test_validate_all_instances_remote_extra() {
+    use yaml_rust::YamlLoader;
+    if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
+        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
+        let instances = api::detect_instance_engines(&mut client).await.unwrap();
+        let is = [&instances.0[..], &instances.1[..]].clone().concat();
+        let ms_sql = check_sql::config::ms_sql::Config::from_yaml(
+            &YamlLoader::load_from_str(
+                r"---
+mssql:
+  standard:
+    authentication:
+      username: your_user
+      password: your_password
+      type: sql_server
+    connection:
+      hostname: your_host
+",
+            )
+            .expect("fix test string!")[0]
+                .clone(),
+        )
+        .unwrap()
+        .unwrap();
+
+        for i in is {
+            let c = i.create_client(ms_sql.auth(), ms_sql.conn()).await;
+            match c {
+                Ok(mut c) => assert!(
+                    tools::run_get_version(&mut c).await.is_some()
+                        && api::get_computer_name(&mut c)
+                            .await
+                            .unwrap()
+                            .unwrap()
+                            .to_lowercase()
+                            .starts_with("agentbuild")
+                ),
+                Err(e) => {
+                    panic!("Unexpected error: `{:?}`", e);
+                }
+            }
+        }
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn test_get_computer_name() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
@@ -318,6 +370,7 @@ fn test_run_as_plugin_with_config() {
         let (stdout, code) = tools::get_good_results(&exec).unwrap();
         assert_eq!(code, 0, "For label: {}", &label);
         assert!(stdout.starts_with(EXPECTED_START), "For label: {}", &label);
+        validate_stdout(&stdout, &label);
     }
 
     // Bad config
@@ -329,6 +382,42 @@ fn test_run_as_plugin_with_config() {
     let (stderr, code) = tools::get_bad_results(&exec_err).unwrap();
     assert_eq!(code, 1);
     assert_eq!(stderr, "Error: No Config\n");
+}
+
+/// Minimally validates stdout for a given key words.
+/// This is NOT real integration test. May be replaced in the future with a real testing.
+fn validate_stdout(stdout: &str, label: &str) {
+    let contains =
+        |lines: &Vec<&str>, label: &str| lines.iter().filter(|&s| s.contains(label)).count();
+
+    let lines: Vec<&str> = stdout.lines().collect();
+    // - config entries: one per engine
+    assert_eq!(contains(&lines, "|config|"), 3, "{}\n{}", &label, stdout);
+    // - state entries: one per engine
+    assert_eq!(contains(&lines, "|state|1"), 3, "{}\n{}", &label, stdout);
+    // - details entries: one per engine
+    assert_eq!(contains(&lines, "|details|"), 3, "{}\n{}", &label, stdout);
+    assert_eq!(
+        contains(&lines, "|RTM|Express Edition"),
+        2,
+        "{}\n{}",
+        &label,
+        stdout
+    );
+    assert_eq!(
+        contains(&lines, "|RTM|Express Edition (64-bit)"),
+        1,
+        "{}\n{}",
+        &label,
+        stdout
+    );
+    assert_eq!(
+        contains(&lines, "|RTM|Standard Edition"),
+        1,
+        "{}\n{}",
+        &label,
+        stdout
+    );
 }
 
 /// create [local,  remote] or [local]  for Windows

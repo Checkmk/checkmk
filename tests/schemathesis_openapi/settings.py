@@ -34,6 +34,8 @@ else:
             "CMK-14991",
             "CMK-14995",
             "CMK-15035",
+            "CMK-15166",
+            "CMK-15167",
         }
     )
 for issue in set(getenv("TEST_OPENAPI_ALLOW", "").upper().split(",")):

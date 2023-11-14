@@ -32,7 +32,7 @@ from cmk.gui.permissions import (
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, Dictionary
+from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
@@ -1253,9 +1253,8 @@ class CommandScheduleDowntimes(Command):
                 id_=varname,
                 class_=["button", "duration"],
                 value=_u(time_range["title"]),
-                # onclick="cmk.utils.toggle_class(this, 'active', '')",
-                onclick="",
-                submit="_down_custom",
+                onclick=self._get_onclick(time_range["end"]),
+                submit="_set_date_and_time",
             )
         html.close_td()
         html.close_tr()
@@ -1272,8 +1271,8 @@ class CommandScheduleDowntimes(Command):
         html.write_text(_("Start"))
         html.close_td()
         html.open_td()
-        html.date("_down_from_date", "start_date", time.strftime("%Y-%m-%d"), cssclass="down_from")
-        html.time("_down_from_time", "start_time", time.strftime("%H:%M"), cssclass="down_from")
+        self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
+        self._vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
         html.close_td()
         html.close_tr()
 
@@ -1289,13 +1288,9 @@ class CommandScheduleDowntimes(Command):
         html.write_text(_("End"))
         html.close_td()
         html.open_td()
-        # self._vs_down_to().render_input("_down_to", time.time() + 7200)
-        html.date("_down_to_date", "end_date", time.strftime("%Y-%m-%d"), cssclass="down_to")
-        html.time(
-            "_down_to_time",
-            "end_time",
-            time.strftime("%H:%M", time.localtime(time.time() + 7200)),
-            cssclass="down_to",
+        self._vs_date().render_input("_down_to_date", time.strftime("%Y-%m-%d"))
+        self._vs_time().render_input(
+            "_down_to_time", time.strftime("%H:%M", time.localtime(time.time() + 7200))
         )
         html.close_td()
 
@@ -1321,6 +1316,29 @@ class CommandScheduleDowntimes(Command):
         html.close_td()
         html.close_tr()
         html.close_div()
+
+    def _vs_date(self) -> DatePicker:
+        return DatePicker(
+            title=_("Downtime datepicker"),
+        )
+
+    def _vs_time(self) -> TimePicker:
+        return TimePicker(
+            title=_("Downtime timepicker"),
+        )
+
+    def _get_onclick(
+        self, time_range: int | Literal["next_day", "next_week", "next_month", "next_year"]
+    ) -> str:
+        start_time = self._current_local_time()
+        end_time = time_interval_end(time_range, self._current_local_time())
+
+        return (
+            f'cmk.utils.update_time("down_from_date","{time.strftime("%Y-%m-%d",time.localtime(start_time))}");'
+            f'cmk.utils.update_time("down_from_time","{time.strftime("%H:%M",time.localtime(start_time))}");'
+            f'cmk.utils.update_time("down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
+            f'cmk.utils.update_time("down_to_time","{time.strftime("%H:%M", time.localtime(end_time))}");'
+        )
 
     def _render_advanced_options(self, what) -> None:  # type: ignore[no-untyped-def]
         with foldable_container(
@@ -1421,6 +1439,7 @@ class CommandScheduleDowntimes(Command):
             title = self._title_for_next_minutes(duration_minutes, title_prefix)
         elif request.var("_down_custom"):
             varprefix = "_down_custom"
+
             start_time = self._custom_start_time()
             end_time = self._custom_end_time(start_time)
             title = self._title_range(start_time, end_time)
@@ -1548,18 +1567,30 @@ class CommandScheduleDowntimes(Command):
         return minutes
 
     def _custom_start_time(self):
-        maybe_down_from = self._vs_down_from().from_html_vars("_down_from")
-        if maybe_down_from is None:
-            raise Exception("impossible: _down_from is None")
-        down_from = int(maybe_down_from)
+        vs_date = self._vs_date()
+        raw_start_date = vs_date.from_html_vars("_down_from_date")
+        vs_date.validate_value(raw_start_date, "_down_from_date")
+
+        vs_time = self._vs_time()
+        raw_start_time = vs_time.from_html_vars("_down_from_time")
+        vs_time.validate_value(raw_start_date, "_down_from_time")
+
+        down_from = time.mktime(
+            time.strptime(f"{raw_start_date} {raw_start_time}", "%Y-%m-%d %H:%M")
+        )
         self._vs_down_from().validate_value(down_from, "_down_from")
-        return maybe_down_from
+        return down_from
 
     def _custom_end_time(self, start_time):
-        maybe_down_to = self._vs_down_to().from_html_vars("_down_to")
-        if maybe_down_to is None:
-            raise Exception("impossible: _down_to is None")
-        end_time = maybe_down_to
+        vs_date = self._vs_date()
+        raw_end_date = vs_date.from_html_vars("_down_to_date")
+        vs_date.validate_value(raw_end_date, "_down_to_date")
+
+        vs_time = self._vs_time()
+        raw_end_time = vs_time.from_html_vars("_down_to_time")
+        vs_time.validate_value(raw_end_time, "_down_to_time")
+
+        end_time = time.mktime(time.strptime(f"{raw_end_date} {raw_end_time}", "%Y-%m-%d %H:%M"))
         self._vs_down_to().validate_value(end_time, "_down_to")
 
         if end_time < time.time():
@@ -1688,9 +1719,11 @@ def _find_all_leaves(  # type: ignore[no-untyped-def]
 
 
 def time_interval_end(
-    time_value: Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
+    time_value: int | Literal["next_day", "next_week", "next_month", "next_year"], start_time: float
 ) -> float | None:
     now = time.localtime(start_time)
+    if isinstance(time_value, int):
+        return start_time + 7200
     if time_value == "next_day":
         return (
             time.mktime((now.tm_year, now.tm_mon, now.tm_mday, 23, 59, 59, 0, 0, now.tm_isdst)) + 1

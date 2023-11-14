@@ -1343,34 +1343,30 @@ class HTMLGenerator(HTMLWriter):
     def date(
         self,
         var: str,
-        id_: str,
         value: str,
-        cssclass: str | None = None,
+        id_: str,
     ) -> None:
         self.write_html(
             self.render_input(
                 name=var,
-                type_="date",
-                id_=id_,
                 value=value,
-                class_=[] if cssclass is None else [cssclass],
+                type_="date",
+                id=id_,
             )
         )
 
     def time(
         self,
         var: str,
-        id_: str,
         value: str,
-        cssclass: str | None = None,
+        id_: str,
     ) -> None:
         self.write_html(
             self.render_input(
                 name=var,
-                type_="time",
-                id_=id_,
                 value=value,
-                class_=[] if cssclass is None else [cssclass],
+                type_="time",
+                id=id_,
             )
         )
 

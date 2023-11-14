@@ -4,16 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from time import time
 from typing import assert_never
 
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
+    AttemptsConfig,
     ExecutionReport,
     ExecutionReportAlreadyRunning,
+    RebotOutcomeError,
+    RebotOutcomeResult,
 )
 
-from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
@@ -28,18 +32,67 @@ def check(
 ) -> CheckResult:
     if not (execution_report := section.get(item)):
         return
-    yield from _check_suite_execution_report(execution_report)
+    yield from _check_suite_execution_report(execution_report, time())
 
 
 def _check_suite_execution_report(
     report: ExecutionReport | ExecutionReportAlreadyRunning,
+    now: float,
 ) -> CheckResult:
     if isinstance(report, ExecutionReportAlreadyRunning):
         yield Result(state=State.CRIT, summary="Suite already running, execution skipped")
         return
 
+    yield from _check_rebot(
+        rebot=report.Executed.rebot,
+        config=report.Executed.config,
+        now=now,
+    )
+
     for attempt in report.Executed.attempts:
         yield _attempt_result(attempt)
+
+
+def _check_rebot(
+    *,
+    rebot: RebotOutcomeResult | RebotOutcomeError | None,
+    config: AttemptsConfig,
+    now: float,
+) -> CheckResult:
+    match rebot:
+        case RebotOutcomeResult():
+            yield from _check_rebot_age(
+                rebot_timestamp=rebot.Ok.timestamp,
+                execution_interval=config.interval,
+                now=now,
+            )
+        case RebotOutcomeError():
+            yield Result(
+                state=State.CRIT,
+                summary="Producing merged test results with Rebot failed, see details",
+                details=rebot.Error,
+            )
+        case None:
+            yield Result(
+                state=State.CRIT,
+                summary="No data available because none of the attempts produced any output",
+            )
+
+
+def _check_rebot_age(
+    *,
+    rebot_timestamp: int,
+    execution_interval: int,
+    now: float,
+) -> CheckResult:
+    if (rebot_age := now - rebot_timestamp) > execution_interval:
+        yield Result(
+            state=State.CRIT,
+            summary=(
+                f"Data is too old (age: {render.timespan(rebot_age)}, "
+                f"execution interval: {render.timespan(execution_interval)})"
+            ),
+        )
 
 
 def _attempt_result(

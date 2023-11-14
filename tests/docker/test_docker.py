@@ -669,28 +669,6 @@ def test_update(
         ),
         VersionsCompatible,
     )
-    # Currently, in the master branch, we can't derive the future major version from the daily
-    # build version. So we hack around a bit to gather it from the git. In the future we plan to
-    # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
-    # additional check can be removed.
-    branch_version = subprocess.check_output(
-        [
-            "make",
-            "-s",
-            "-C",
-            str(testlib.repo_path()),
-            "-f",
-            "defines.make",
-            "print-BRANCH_VERSION",
-        ],
-        encoding="utf-8",
-    ).rstrip()
-    assert isinstance(
-        versions_compatible(
-            Version.from_str(old_version.version), Version.from_str(branch_version)
-        ),
-        VersionsCompatible,
-    )
 
     # 1. create container with old version and add a file to mark the pre-update state
     c_orig = _start(

@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         !args.disable_sni,
     )?;
 
-    let out = output::Output::from_check_results(vec![checker::check_validity(
+    let out = output::Output::from(vec![checker::check_validity(
         &args.url,
         cert.not_after(),
         &warn_time,

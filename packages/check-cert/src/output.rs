@@ -27,15 +27,13 @@ impl Display for Output {
     }
 }
 
-impl Output {
-    pub fn from_check_results(check_results: Vec<CheckResult>) -> Self {
-        let worst_state = match check_results.iter().map(|cr| &cr.state).max() {
-            Some(state) => state.clone(),
-            None => State::Ok,
-        };
-
+impl From<Vec<CheckResult>> for Output {
+    fn from(check_results: Vec<CheckResult>) -> Self {
         Self {
-            worst_state,
+            worst_state: match check_results.iter().map(|cr| &cr.state).max() {
+                Some(state) => state.clone(),
+                None => State::Ok,
+            },
             check_results,
         }
     }
@@ -52,7 +50,7 @@ mod test_output_format {
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Output::from_check_results(vec![])), "OK");
+        assert_eq!(format!("{}", Output::from(vec![])), "OK");
     }
 
     #[test]
@@ -69,10 +67,7 @@ mod test_output_format {
             state: State::Ok,
             summary: s(""),
         };
-        assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "OK"
-        );
+        assert_eq!(format!("{}", Output::from(vec![cr1, cr2, cr3])), "OK");
     }
 
     #[test]
@@ -90,7 +85,7 @@ mod test_output_format {
             summary: s("summary 3"),
         };
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
+            format!("{}", Output::from(vec![cr1, cr2, cr3])),
             "OK - summary 1, summary 2, summary 3"
         );
     }
@@ -110,7 +105,7 @@ mod test_output_format {
             summary: s("summary 3"),
         };
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
+            format!("{}", Output::from(vec![cr1, cr2, cr3])),
             "WARNING - summary 1, summary 2 (!), summary 3"
         );
     }
@@ -130,7 +125,7 @@ mod test_output_format {
             summary: s("summary 3"),
         };
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
+            format!("{}", Output::from(vec![cr1, cr2, cr3])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
     }
@@ -154,7 +149,7 @@ mod test_output_format {
             summary: s("summary 4"),
         };
         assert_eq!(
-            format!("{}", Output::from_check_results(vec![cr1, cr2, cr3, cr4])),
+            format!("{}", Output::from(vec![cr1, cr2, cr3, cr4])),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }

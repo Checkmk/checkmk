@@ -9,7 +9,6 @@ use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
-use std::time::Duration;
 
 mod cli;
 mod pwstore;
@@ -76,14 +75,10 @@ fn make_configs(
                 (x, Some(y)) => Bounds::lower_upper(x, y),
             }),
             response_time_levels: args.response_time_levels.map(|val| match val {
-                (x, None) => UpperLevels::warn(Duration::from_secs_f64(x)),
-                (x, Some(y)) => {
-                    UpperLevels::warn_crit(Duration::from_secs_f64(x), Duration::from_secs_f64(y))
-                }
+                (x, None) => UpperLevels::warn(x),
+                (x, Some(y)) => UpperLevels::warn_crit(x, y),
             }),
-            document_age_levels: args
-                .document_age_levels
-                .map(|val| UpperLevels::warn(Duration::from_secs(val))),
+            document_age_levels: args.document_age_levels.map(UpperLevels::warn),
         },
     )
 }

@@ -607,6 +607,11 @@ class ErrorReporter:
             "mongodb_collections",
             RuleGroup.CheckgroupParameters("mongodb_collections"),
         ),
+        (
+            "check",
+            "mounts",
+            RuleGroup.CheckgroupParameters("fs_mount_options"),
+        ),
         ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
         (
             "check",

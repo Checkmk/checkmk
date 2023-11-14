@@ -9,30 +9,19 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, ListOfStrings, Migrate, TextInput
+from cmk.gui.valuespec import ListOfStrings, TextInput
 
 
-def _parameter_valuespec_fs_mount_options() -> Migrate:
-    return Migrate(
-        valuespec=Dictionary(
-            elements=[
-                (
-                    "expected_mount_options",
-                    ListOfStrings(
-                        title=_("Expected mount options"),
-                        help=_(
-                            "Specify all expected mount options here. If the list of "
-                            "actually found options differs from this list, the check will go "
-                            "warning or critical. Just the option <tt>commit</tt> is being "
-                            "ignored since it is modified by the power saving algorithms."
-                        ),
-                        valuespec=TextInput(),
-                    ),
-                ),
-            ],
-            optional_keys=[],
+def _parameter_valuespec_fs_mount_options():
+    return ListOfStrings(
+        title=_("Expected mount options"),
+        help=_(
+            "Specify all expected mount options here. If the list of "
+            "actually found options differs from this list, the check will go "
+            "warning or critical. Just the option <tt>commit</tt> is being "
+            "ignored since it is modified by the power saving algorithms."
         ),
-        migrate=lambda p: p if isinstance(p, dict) else {"expected_mount_options": p},
+        valuespec=TextInput(),
     )
 
 

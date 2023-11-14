@@ -137,7 +137,7 @@ check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
     check_ruleset_name="jvm_requests",
     check_default_parameters={
         "levels_lower": (-1, -1),
-        "levels_higher": (5000, 6000),
+        "levels_upper": (5000, 6000),
     },
 )
 
@@ -253,12 +253,18 @@ def check_jolokia_metrics_bea_requests(item, _no_params, info):
     if not app:
         return
 
-    raw_requests = app.get("CompletedRequestCount") or app.get("requestCount")
-    if not raw_requests:
-        return
-
-    rate = get_rate(get_value_store(), item, time.time(), int(raw_requests), raise_overflow=True)
-    yield check_levels(rate, "rate", None, human_readable_func=lambda x: f"{x:.2f} requests/sec")
+    for nk in ["CompletedRequestCount", "requestCount"]:
+        if nk in app:
+            requests = int(app[nk])
+            rate = get_rate(
+                get_value_store(),
+                "j4p.bea.requests.%s" % item,
+                time.time(),
+                requests,
+                raise_overflow=True,
+            )
+            yield 0, "%.2f requests/sec" % rate, [("rate", rate)]
+            return
 
 
 def check_jolokia_metrics_bea_threads(item, _no_params, info):

@@ -562,11 +562,6 @@ class ErrorReporter:
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
         (
             "check",
-            "jolokia_metrics_serv_req",
-            RuleGroup.CheckgroupParameters("jvm_requests"),
-        ),
-        (
-            "check",
             "juniper_screenos_mem",
             RuleGroup.CheckgroupParameters("juniper_mem"),
         ),
@@ -611,11 +606,6 @@ class ErrorReporter:
             "check",
             "mongodb_collections",
             RuleGroup.CheckgroupParameters("mongodb_collections"),
-        ),
-        (
-            "check",
-            "mounts",
-            RuleGroup.CheckgroupParameters("fs_mount_options"),
         ),
         ("check", "mq_queues", RuleGroup.CheckgroupParameters("mq_queues")),
         (

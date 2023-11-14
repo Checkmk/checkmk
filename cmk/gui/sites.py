@@ -273,19 +273,13 @@ def _inhibit_incompatible_site_connection(
     }
 
 
+ConnectionClass = MultiSiteConnection
+
+
 def _connect_multiple_sites(user: LoggedInUser) -> None:
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites(user)
     _set_initial_site_states(enabled_sites, disabled_sites)
-
-    if edition() is Edition.CME:
-        # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        from cmk.gui.cme.livestatus import (  # pylint: disable=no-name-in-module
-            CMEMultiSiteConnection,
-        )
-
-        g.live = CMEMultiSiteConnection(enabled_sites, disabled_sites)
-    else:
-        g.live = MultiSiteConnection(enabled_sites, disabled_sites)
+    g.live = ConnectionClass(enabled_sites, disabled_sites)
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.

@@ -117,8 +117,10 @@ build {
   # install ansible
   provisioner "shell" {
     inline = [
-      "sudo apt-get install -y -q software-properties-common python3-pip",
-      "sudo python3 -m pip install ansible==8.5.0",
+      "sudo apt-get install -y -q software-properties-common",
+      "sudo add-apt-repository --yes --update ppa:ansible/ansible",
+      "sudo apt-get update",
+      "sudo apt-get install -y -q ansible",
     ]
   }
   # run playbook

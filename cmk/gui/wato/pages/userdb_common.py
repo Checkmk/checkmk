@@ -15,6 +15,7 @@ import cmk.utils.version as cmk_version
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -37,11 +38,6 @@ from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)
@@ -139,6 +135,7 @@ def _connections_by_gui_index(
 def render_connections_page(
     connection_type: str, edit_mode_path: str, config_mode_path: str
 ) -> None:
+    customer = customer_api()
     with table_element() as table:
         for display_index, (real_index, connection) in _connections_by_gui_index(
             connection_type, load_connection_config(lock=False)
@@ -189,7 +186,7 @@ def render_connections_page(
             table.cell(_("Name"), connection.get("name", connection_id))
 
             if cmk_version.edition() is cmk_version.Edition.CME:
-                table.cell(_("Customer"), managed.get_customer_name(connection))
+                table.cell(_("Customer"), customer.get_customer_name(connection))
 
             table.cell(_("Description"))
             url = connection.get("docu_url")
@@ -207,7 +204,7 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
 
 def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     if cmk_version.edition() is cmk_version.Edition.CME:
-        return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
+        return list(customer_api().get_sites_of_customer(connection["customer"]).keys())
     return get_login_sites()
 
 

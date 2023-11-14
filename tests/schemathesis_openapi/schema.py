@@ -9,6 +9,7 @@ from typing import Any, Iterator
 
 import schemathesis
 from schemathesis import DataGenerationMethod  # type: ignore[attr-defined]
+from schemathesis.specs.openapi import schemas
 
 from tests.testlib.site import get_site_factory, Site
 
@@ -82,8 +83,8 @@ def add_formats_and_patterns(raw_schema: dict[str, Any]) -> None:
 
 
 def add_links(
-    schema: schemathesis.specs.openapi.schemas.BaseOpenAPISchema,
-) -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
+    schema: schemas.BaseOpenAPISchema,
+) -> schemas.BaseOpenAPISchema:
     """Define required API links.
 
     Link POST requests to dependent GET/PUT/PATCH/DELETE or POST requests.
@@ -140,7 +141,7 @@ def add_links(
 
 
 def get_crud_endpoints(
-    schema: schemathesis.specs.openapi.schemas.BaseOpenAPISchema,
+    schema: schemas.BaseOpenAPISchema,
     accept: str | None = None,
     ignore: str | None = None,
     methods: tuple[str, ...] = ("get", "put", "patch", "delete"),
@@ -174,7 +175,7 @@ def get_site() -> Iterator[Site]:
     yield from get_site_factory(prefix="openapi_").get_test_site("central", auto_cleanup=False)
 
 
-def get_schema() -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
+def get_schema() -> schemas.BaseOpenAPISchema:
     """Return schema for parametrization."""
     site = next(get_site())
     token = f"Bearer automation {site.get_automation_secret()}"
@@ -230,7 +231,7 @@ def get_schema() -> schemathesis.specs.openapi.schemas.BaseOpenAPISchema:
 
 
 def parametrize_crud_endpoints(
-    schema: schemathesis.specs.openapi.schemas.BaseOpenAPISchema,
+    schema: schemas.BaseOpenAPISchema,
     accept: str | None = None,
     ignore: str | None = None,
 ) -> dict[str, Any]:

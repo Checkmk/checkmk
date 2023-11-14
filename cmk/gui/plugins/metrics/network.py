@@ -224,7 +224,7 @@ metric_info["latencies_99"] = {
 metric_info["availability"] = {
     "title": _("Availability"),
     "unit": "%",
-    "color": "31",
+    "color": "31/a",
 }
 
 # TODO: Metric names with preceeding numbers seems not to be capable
@@ -751,37 +751,37 @@ metric_info["net_data_sent"] = {
 metric_info["total_modems"] = {
     "title": _("Total number of modems"),
     "unit": "count",
-    "color": "12/c",
+    "color": "12/a",
 }
 
 metric_info["active_modems"] = {
     "title": _("Active modems"),
     "unit": "count",
-    "color": "14/c",
+    "color": "14/a",
 }
 
 metric_info["registered_modems"] = {
     "title": _("Registered modems"),
     "unit": "count",
-    "color": "16/c",
+    "color": "16/a",
 }
 
 metric_info["channel_utilization"] = {
     "title": _("Channel utilization"),
     "unit": "%",
-    "color": "24/c",
+    "color": "24/a",
 }
 
 metric_info["channel_utilization_24ghz"] = {
     "title": _("Channel utilization for 2,4GHz Band"),
     "unit": "%",
-    "color": "25/c",
+    "color": "25/a",
 }
 
 metric_info["channel_utilization_5ghz"] = {
     "title": _("Channel utilization for 5GHz Band"),
     "unit": "%",
-    "color": "26/c",
+    "color": "26/a",
 }
 
 metric_info["connector_outlets"] = {
@@ -1419,13 +1419,13 @@ metric_info["connections_max"] = {
 metric_info["connections_conn_threads"] = {
     "title": _("Currently open connections"),
     "unit": "count",
-    "color": "31/c",
+    "color": "31/a",
 }
 
 metric_info["connections_perc_conn_threads"] = {
     "title": _("Open connections load"),
     "unit": "%",
-    "color": "31/c",
+    "color": "31/a",
 }
 
 metric_info["connections_perc_used"] = {

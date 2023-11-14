@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Sequence
 
 from cmk.utils.debug import enabled as debug_enabled
 
@@ -22,8 +22,8 @@ def load_plugins() -> None:
     register_plugins(loaded_rulespecs)
 
 
-def register_plugins(loaded_rulespecs: Mapping[str, RuleSpec]) -> None:
-    for name, rulespec in loaded_rulespecs.items():
+def register_plugins(loaded_rulespecs: Sequence[RuleSpec]) -> None:
+    for rulespec in loaded_rulespecs:
         try:
             legacy_rulespec = convert_to_legacy_rulespec(rulespec, _)
             if legacy_rulespec.name in rulespec_registry.keys():
@@ -33,4 +33,4 @@ def register_plugins(loaded_rulespecs: Mapping[str, RuleSpec]) -> None:
                 continue
             rulespec_registry.register(legacy_rulespec)
         except Exception as e:
-            logger.error("Error converting to legacy rulespec '%s' : %s", name, e)
+            logger.error("Error converting to legacy rulespec '%s' : %s", rulespec.name, e)

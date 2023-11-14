@@ -13,8 +13,13 @@ from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.rulespecs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
-from cmk.gui.watolib.rulespecs import CheckParameterRulespecWithItem, rulespec_group_registry
+from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithItem,
+    ManualCheckParameterRulespec,
+    rulespec_group_registry,
+)
 
 from cmk.rulesets import v1 as ruleset_api_v1
 
@@ -28,24 +33,60 @@ def _localize_optional(
 def convert_to_legacy_rulespec(
     to_convert: APIV1RuleSpec, localizer: Callable[[str], str]
 ) -> legacy_rulespecs.Rulespec:
-    if isinstance(to_convert, ruleset_api_v1.CheckParameterRuleSpecWithItem):
-        return CheckParameterRulespecWithItem(
-            check_group_name=to_convert.name,
-            title=None
-            if to_convert.title is None
-            else partial(to_convert.title.localize, localizer),
-            group=_convert_to_legacy_rulespec_group(
-                to_convert.functionality, to_convert.topic, localizer
-            ),
-            item_spec=partial(_convert_to_legacy_item_spec, to_convert.item, localizer),
-            match_type="dict",
-            parameter_valuespec=partial(
-                _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
-            ),
-            create_manual_check=False,  # TODO create EnforcedService explicitly and convert
-        )
+    match to_convert:
+        case ruleset_api_v1.CheckParameterRuleSpecWithItem():
+            return _convert_to_legacy_check_parameter_with_item_rulespec(to_convert, localizer)
+        case ruleset_api_v1.EnforcedServiceRuleSpecWithItem():
+            item_spec = partial(_convert_to_legacy_item_spec, to_convert.item, localizer)
+            return _convert_to_legacy_manual_check_parameter_rulespec(
+                to_convert, localizer, item_spec
+            )
+        case ruleset_api_v1.EnforcedServiceRuleSpecWithoutItem():
+            return _convert_to_legacy_manual_check_parameter_rulespec(to_convert, localizer)
+        case ruleset_api_v1.CheckParameterRuleSpecWithoutItem() | ruleset_api_v1.HostRuleSpec() | ruleset_api_v1.ServiceRuleSpec() | ruleset_api_v1.InventoryParameterRuleSpec() | ruleset_api_v1.ActiveChecksRuleSpec() | ruleset_api_v1.AgentConfigRuleSpec() | ruleset_api_v1.SpecialAgentRuleSpec() | ruleset_api_v1.ExtraHostConfRuleSpec() | ruleset_api_v1.ExtraServiceConfRuleSpec():
+            raise NotImplementedError(to_convert)
+        case other:
+            assert_never(other)
 
-    raise NotImplementedError(to_convert)
+
+def _convert_to_legacy_check_parameter_with_item_rulespec(
+    to_convert: ruleset_api_v1.CheckParameterRuleSpecWithItem, localizer: Callable[[str], str]
+) -> CheckParameterRulespecWithItem:
+    return CheckParameterRulespecWithItem(
+        check_group_name=to_convert.name,
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        group=_convert_to_legacy_rulespec_group(
+            to_convert.functionality, to_convert.topic, localizer
+        ),
+        item_spec=partial(_convert_to_legacy_item_spec, to_convert.item, localizer),
+        match_type="dict",
+        parameter_valuespec=partial(
+            _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
+        ),
+        is_deprecated=to_convert.is_deprecated,
+        create_manual_check=False,
+    )
+
+
+def _convert_to_legacy_manual_check_parameter_rulespec(
+    to_convert: ruleset_api_v1.EnforcedServiceRuleSpecWithItem
+    | ruleset_api_v1.EnforcedServiceRuleSpecWithoutItem,
+    localizer: Callable[[str], str],
+    item_spec: Callable[[], legacy_valuespecs.ValueSpec] | None = None,
+) -> ManualCheckParameterRulespec:
+    return ManualCheckParameterRulespec(
+        group=_convert_to_legacy_rulespec_group(
+            to_convert.functionality, to_convert.topic, localizer
+        ),
+        check_group_name=to_convert.name,
+        parameter_valuespec=partial(
+            _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
+        ),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        is_deprecated=False,
+        match_type="dict",
+        item_spec=item_spec,
+    )
 
 
 def _convert_to_legacy_rulespec_group(
@@ -81,9 +122,12 @@ def _convert_to_legacy_rulespec_group(
 def _get_builtin_legacy_main_group(
     functionality_to_convert: ruleset_api_v1.Functionality,
 ) -> type[legacy_rulespecs.RulespecGroup]:
-    if functionality_to_convert is ruleset_api_v1.Functionality.MONITORING_CONFIGURATION:
-        return wato._rulespec_groups.RulespecGroupMonitoringConfiguration  # type: ignore[attr-defined]
-    raise ValueError(functionality_to_convert)
+    match functionality_to_convert:
+        case ruleset_api_v1.Functionality.MONITORING_CONFIGURATION:
+            return wato._rulespec_groups.RulespecGroupMonitoringConfiguration  # type: ignore[attr-defined]
+        case ruleset_api_v1.Functionality.ENFORCED_SERVICES:
+            return legacy_rulespecs.RulespecGroupEnforcedServices
+    assert_never(functionality_to_convert)
 
 
 def _get_builtin_legacy_sub_group_with_main_group(
@@ -97,9 +141,19 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return wato.RulespecGroupCheckParametersApplications
                 case ruleset_api_v1.Topic.VIRTUALIZATION:
                     return wato.RulespecGroupCheckParametersVirtualization
+
             assert_never(topic_to_convert)
-    # TODO change to assert_never when more functionalities are added
-    raise ValueError(functionality_to_convert)
+
+        case ruleset_api_v1.Functionality.ENFORCED_SERVICES:
+            match topic_to_convert:
+                case ruleset_api_v1.Topic.APPLICATIONS:
+                    return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
+                case ruleset_api_v1.Topic.VIRTUALIZATION:
+                    return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
+
+            assert_never(topic_to_convert)
+
+    assert_never(functionality_to_convert)
 
 
 def _convert_to_custom_group(
@@ -315,6 +369,7 @@ def _convert_to_legacy_dropdown_choice(
         "empty_text": _localize_optional(to_convert.no_elements_text, localizer),
         "read_only": to_convert.frozen,
     }
+
     if to_convert.invalid_element_validation is not None:
         match to_convert.invalid_element_validation.mode:
             case ruleset_api_v1.InvalidElementMode.COMPLAIN:
@@ -330,14 +385,17 @@ def _convert_to_legacy_dropdown_choice(
         converted_kwargs["invalid_choice_error"] = _localize_optional(
             to_convert.invalid_element_validation.error_msg, localizer
         )
+
     if to_convert.deprecated_elements is not None:
         converted_kwargs["deprecated_choices"] = to_convert.deprecated_elements
+
     if to_convert.prefill_selection is not None:
         converted_kwargs["default_value"] = (
             to_convert.prefill_selection.value
             if isinstance(to_convert.prefill_selection, enum.Enum)
             else to_convert.prefill_selection
         )
+
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
             to_convert.custom_validate, localizer

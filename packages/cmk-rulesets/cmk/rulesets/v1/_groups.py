@@ -10,6 +10,7 @@ from cmk.rulesets.v1._localize import Localizable
 
 
 class Functionality(Enum):
+    ENFORCED_SERVICES = auto()
     MONITORING_CONFIGURATION = auto()
 
 

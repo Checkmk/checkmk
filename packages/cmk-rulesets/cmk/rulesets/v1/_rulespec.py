@@ -57,8 +57,6 @@ class CheckParameterRuleSpecWithItem:
     def functionality(self) -> Functionality:
         return Functionality.MONITORING_CONFIGURATION
 
-    # TODO register enforced service
-
     def __post_init__(self) -> None:
         assert isinstance(self.item, (TextInput, DropdownChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
@@ -79,20 +77,20 @@ class CheckParameterRuleSpecWithoutItem:
     def functionality(self) -> Functionality:
         return Functionality.MONITORING_CONFIGURATION
 
-    # TODO register enforced service
-
 
 @dataclass(frozen=True)
 class EnforcedServiceRuleSpecWithItem:
     title: Localizable
     topic: Topic | CustomTopic
-    # TODO: fix functionality to specific RuleSpecFunctionality
-    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     item: ItemSpec
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
+
+    @property
+    def functionality(self) -> Functionality:
+        return Functionality.ENFORCED_SERVICES
 
     def __post_init__(self) -> None:
         assert isinstance(self.item, (TextInput, DropdownChoice))
@@ -104,12 +102,18 @@ class EnforcedServiceRuleSpecWithItem:
 class EnforcedServiceRuleSpecWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
-    # TODO: fix functionality to specific RuleSpecFunctionality
-    functionality: Functionality | CustomFunctionality
     value_spec: Callable[[], ValueSpec]
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
+
+    @property
+    def functionality(self) -> Functionality:
+        return Functionality.ENFORCED_SERVICES
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.topic, (Topic, CustomTopic)):
+            raise ValueError
 
 
 @dataclass(frozen=True)

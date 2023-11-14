@@ -6,13 +6,13 @@ use crate::checker::{CheckResult, State};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
 pub struct Output {
-    pub worst_state: State,
+    pub state: State,
     check_results: Vec<CheckResult>,
 }
 
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(f, "{}", self.worst_state)?;
+        write!(f, "{}", self.state)?;
         let mut crs_iter = self
             .check_results
             .iter()
@@ -30,7 +30,7 @@ impl Display for Output {
 impl From<Vec<CheckResult>> for Output {
     fn from(check_results: Vec<CheckResult>) -> Self {
         Self {
-            worst_state: match check_results.iter().map(|cr| &cr.state).max() {
+            state: match check_results.iter().map(|cr| &cr.state).max() {
                 Some(state) => state.clone(),
                 None => State::Ok,
             },

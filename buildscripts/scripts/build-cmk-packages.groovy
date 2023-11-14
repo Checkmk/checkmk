@@ -68,10 +68,10 @@ def main() {
 
     def branch_name = versioning.safe_branch_name(scm);
 
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(branch_name, DOCKER_TAG_BUILD, DOCKER_TAG_FOLDER);
-    def branch_version = versioning.get_branch_version(checkout_dir);
 
     /// Get the ID of the docker group from the node(!). This must not be
     /// executed inside the container (as long as the IDs are different)

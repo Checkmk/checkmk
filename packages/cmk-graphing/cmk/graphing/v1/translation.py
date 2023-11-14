@@ -76,7 +76,7 @@ class RenamingAndScaling:
 TranslationType: TypeAlias = Renaming | Scaling | RenamingAndScaling
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Translations:
     name: str
     check_commands: Sequence[CheckCommandType]

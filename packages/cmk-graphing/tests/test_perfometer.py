@@ -13,10 +13,10 @@ def test_perfometer_error_missing_name() -> None:
     lower_bound = perfometer.Closed(0)
     with pytest.raises(AssertionError):
         perfometer.Perfometer(
-            name="",
+            "",
+            [metric.MetricName("metric-name")],
             upper_bound=upper_bound,
             lower_bound=lower_bound,
-            segments=[metric.MetricName("metric-name")],
         )
 
 
@@ -25,42 +25,42 @@ def test_perfometer_error_missing_segments() -> None:
     lower_bound = perfometer.Closed(0)
     with pytest.raises(AssertionError):
         perfometer.Perfometer(
-            name="perfometer-name",
+            "perfometer-name",
+            [],
             upper_bound=upper_bound,
             lower_bound=lower_bound,
-            segments=[],
         )
 
 
 def test_bidirectional_error_missing_name() -> None:
     left = perfometer.Perfometer(
-        name="perfometer-name-left",
+        "perfometer-name-left",
+        [metric.MetricName("metric-name")],
         upper_bound=perfometer.Closed(100),
         lower_bound=perfometer.Closed(0),
-        segments=[metric.MetricName("metric-name")],
     )
     right = perfometer.Perfometer(
-        name="perfometer-name-right",
+        "perfometer-name-right",
+        [metric.MetricName("metric-name")],
         upper_bound=perfometer.Closed(100),
         lower_bound=perfometer.Closed(0),
-        segments=[metric.MetricName("metric-name")],
     )
     with pytest.raises(AssertionError):
-        perfometer.Bidirectional(name="", left=left, right=right)
+        perfometer.Bidirectional("", left=left, right=right)
 
 
 def test_stacked_error_missing_name() -> None:
     upper = perfometer.Perfometer(
-        name="perfometer-name-left",
+        "perfometer-name-left",
+        [metric.MetricName("metric-name")],
         upper_bound=perfometer.Closed(100),
         lower_bound=perfometer.Closed(0),
-        segments=[metric.MetricName("metric-name")],
     )
     lower = perfometer.Perfometer(
-        name="perfometer-name-right",
+        "perfometer-name-right",
+        [metric.MetricName("metric-name")],
         upper_bound=perfometer.Closed(100),
         lower_bound=perfometer.Closed(0),
-        segments=[metric.MetricName("metric-name")],
     )
     with pytest.raises(AssertionError):
-        perfometer.Stacked(name="", upper=upper, lower=lower)
+        perfometer.Stacked("", upper=upper, lower=lower)

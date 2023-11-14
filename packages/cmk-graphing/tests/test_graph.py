@@ -9,40 +9,32 @@ from cmk.graphing.v1 import graph, Localizable, metric
 
 
 def test_graph_error_missing_name() -> None:
+    title = Localizable("Title")
+    compound_lines = [metric.MetricName("metric-name-1")]
+    simple_lines = [metric.MetricName("metric-name-2")]
     with pytest.raises(AssertionError):
-        graph.Graph(
-            name="",
-            title=Localizable("Title"),
-            compound_lines=[metric.MetricName("metric-name-1")],
-            simple_lines=[metric.MetricName("metric-name-2")],
-        )
+        graph.Graph("", title, compound_lines=compound_lines, simple_lines=simple_lines)
 
 
 def test_graph_error_missing_compound_lines_and_simple_lines() -> None:
+    title = Localizable("Title")
     with pytest.raises(AssertionError):
-        graph.Graph(
-            name="name",
-            title=Localizable("Title"),
-        )
+        graph.Graph("name", title)
 
 
 def test_bidirectional_error_missing_name() -> None:
     upper = graph.Graph(
-        name="graph-upper",
-        title=Localizable("Title"),
+        "graph-upper",
+        Localizable("Title"),
         compound_lines=[metric.MetricName("metric-name-1")],
         simple_lines=[metric.MetricName("metric-name-2")],
     )
     lower = graph.Graph(
-        name="graph-lower",
-        title=Localizable("Title"),
+        "graph-lower",
+        Localizable("Title"),
         compound_lines=[metric.MetricName("metric-name-1")],
         simple_lines=[metric.MetricName("metric-name-2")],
     )
+    title = Localizable("Title")
     with pytest.raises(AssertionError):
-        graph.Bidirectional(
-            name="",
-            title=Localizable("Title"),
-            upper=upper,
-            lower=lower,
-        )
+        graph.Bidirectional("", title, upper=upper, lower=lower)

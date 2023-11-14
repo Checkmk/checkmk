@@ -40,40 +40,28 @@ def test_scaling_error() -> None:
 
 def test_renaming_and_scaling_error_rename_to_empty() -> None:
     with pytest.raises(AssertionError):
-        translation.RenamingAndScaling(rename_to="", scale_by=1)
+        translation.RenamingAndScaling("", 1)
 
 
 def test_renaming_and_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
-        translation.RenamingAndScaling(rename_to="new-name", scale_by=0)
+        translation.RenamingAndScaling("new-name", 0)
 
 
 def test_translations_error_missing_name() -> None:
     check_commands = [translation.PassiveCheck("check-command-name")]
     translations = {"old-name": translation.Renaming("new-name")}
     with pytest.raises(AssertionError):
-        translation.Translations(
-            name="",
-            check_commands=check_commands,
-            translations=translations,
-        )
+        translation.Translations("", check_commands, translations)
 
 
 def test_translations_error_missing_check_commands() -> None:
     translations = {"old-name": translation.Renaming("new-name")}
     with pytest.raises(AssertionError):
-        translation.Translations(
-            name="name",
-            check_commands=[],
-            translations=translations,
-        )
+        translation.Translations("name", [], translations)
 
 
 def test_translations_error_missing_translations() -> None:
     check_commands = [translation.PassiveCheck("check-command-name")]
     with pytest.raises(AssertionError):
-        translation.Translations(
-            name="name",
-            check_commands=check_commands,
-            translations={},
-        )
+        translation.Translations("name", check_commands, {})

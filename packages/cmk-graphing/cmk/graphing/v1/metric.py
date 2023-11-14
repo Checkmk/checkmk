@@ -15,14 +15,14 @@ from ._localize import Localizable
 
 @dataclass(frozen=True)
 class MetricName:
-    name: str
+    value: str
 
     def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError(self.name)
+        if not self.value:
+            raise ValueError(self.value)
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Metric:
     name: MetricName
     title: Localizable
@@ -30,12 +30,12 @@ class Metric:
     color: Color
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Constant:
-    value: int | float
     title: Localizable
     unit: str
     color: Color
+    value: int | float
 
 
 @dataclass(frozen=True)
@@ -51,23 +51,20 @@ class CriticalOf:
 @dataclass(frozen=True)
 class MinimumOf:
     name: MetricName
-    _: KW_ONLY
     color: Color
 
 
 @dataclass(frozen=True)
 class MaximumOf:
     name: MetricName
-    _: KW_ONLY
     color: Color
 
 
 @dataclass(frozen=True)
 class Sum:
-    summands: Sequence[Quantity]
-    _: KW_ONLY
     title: Localizable
     color: Color
+    summands: Sequence[Quantity]
 
     def __post_init__(self) -> None:
         assert self.summands
@@ -75,31 +72,32 @@ class Sum:
 
 @dataclass(frozen=True)
 class Product:
-    factors: Sequence[Quantity]
-    _: KW_ONLY
     title: Localizable
     unit: str
     color: Color
+    factors: Sequence[Quantity]
 
     def __post_init__(self) -> None:
         assert self.factors
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Difference:
-    minuend: Quantity
-    subtrahend: Quantity
     title: Localizable
     color: Color
+    _: KW_ONLY
+    minuend: Quantity
+    subtrahend: Quantity
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Fraction:
-    dividend: Quantity
-    divisor: Quantity
     title: Localizable
     unit: str
     color: Color
+    _: KW_ONLY
+    dividend: Quantity
+    divisor: Quantity
 
 
 Quantity: TypeAlias = (

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, KW_ONLY
 
 from .metric import Quantity
 
@@ -19,21 +19,23 @@ class Open:
     bound: int | float | Quantity
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Perfometer:
     name: str
+    segments: Sequence[Quantity]
+    _: KW_ONLY
     upper_bound: Closed | Open
     lower_bound: Closed | Open
-    segments: Sequence[Quantity]
 
     def __post_init__(self) -> None:
         assert self.name
         assert self.segments
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Bidirectional:
     name: str
+    _: KW_ONLY
     left: Perfometer
     right: Perfometer
 
@@ -41,9 +43,10 @@ class Bidirectional:
         assert self.name
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Stacked:
     name: str
+    _: KW_ONLY
     upper: Perfometer
     lower: Perfometer
 

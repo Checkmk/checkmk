@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, KW_ONLY
 
 from ._localize import Localizable
 from .metric import MetricName, Quantity
@@ -16,13 +16,14 @@ class MinimalRange:
     lower: int | float | Quantity
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Graph:
     name: str
     title: Localizable
+    _: KW_ONLY
+    minimal_range: MinimalRange | None = None
     compound_lines: Sequence[Quantity] = field(default_factory=list)
     simple_lines: Sequence[Quantity] = field(default_factory=list)
-    minimal_range: MinimalRange | None = None
     optional: Sequence[MetricName] = field(default_factory=list)
     conflicting: Sequence[MetricName] = field(default_factory=list)
 
@@ -31,10 +32,11 @@ class Graph:
         assert self.compound_lines or self.simple_lines
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Bidirectional:
     name: str
     title: Localizable
+    _: KW_ONLY
     upper: Graph
     lower: Graph
 

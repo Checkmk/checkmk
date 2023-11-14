@@ -63,7 +63,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         &warn_time,
         &crit_time,
     )]);
-    println!("{}", out);
+    println!("HTTP {}", out);
     std::process::exit(match out.worst_state {
         checker::State::Ok => 0,
         checker::State::Warn => 1,

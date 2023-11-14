@@ -12,7 +12,7 @@ pub struct Output {
 
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(f, "HTTP {}", self.worst_state)?;
+        write!(f, "{}", self.worst_state)?;
         let mut crs_iter = self
             .check_results
             .iter()
@@ -52,7 +52,7 @@ mod test_output_format {
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Output::from_check_results(vec![])), "HTTP OK");
+        assert_eq!(format!("{}", Output::from_check_results(vec![])), "OK");
     }
 
     #[test]
@@ -71,7 +71,7 @@ mod test_output_format {
         };
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK"
+            "OK"
         );
     }
 
@@ -91,7 +91,7 @@ mod test_output_format {
         };
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP OK - summary 1, summary 2, summary 3"
+            "OK - summary 1, summary 2, summary 3"
         );
     }
 
@@ -111,7 +111,7 @@ mod test_output_format {
         };
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP WARNING - summary 1, summary 2 (!), summary 3"
+            "WARNING - summary 1, summary 2 (!), summary 3"
         );
     }
 
@@ -131,7 +131,7 @@ mod test_output_format {
         };
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3])),
-            "HTTP CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
     }
 
@@ -155,7 +155,7 @@ mod test_output_format {
         };
         assert_eq!(
             format!("{}", Output::from_check_results(vec![cr1, cr2, cr3, cr4])),
-            "HTTP UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+            "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }
 }

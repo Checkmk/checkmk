@@ -61,7 +61,27 @@ def load_custom_attr(
     parser: Callable[[str], T],
     lock: bool = False,
 ) -> T | None:
-    result = load_text_from_file(Path(custom_attr_path(user_id, key)), lock=lock)
+    """This function can be called thousands of times during a single request
+    The load_text_from_file adds additional overhead(cpu load) that is not required
+    for simple read-only operations.
+    In addition to providing the data, the task of this function is to check whether
+    load_text_from_file can be replaced by a simpler operation
+    """
+    attr_path = custom_attr_path(user_id, key)
+    if not os.path.exists(attr_path):
+        return None
+
+    if lock:
+        result = load_text_from_file(Path(attr_path, lock=lock))
+    else:
+        # Simpler operation if no lock is required. Does NOT check file permissions
+        # These are only considered critical in case of pickled data
+        # Files in the ~/var/check_mk/web/{username} do and WILL never contain pickled data
+        try:
+            with open(str(attr_path), mode="r") as file_object:
+                result = file_object.read()
+        except (FileNotFoundError, IOError):
+            return None
     return None if result == "" else parser(result.strip())
 
 

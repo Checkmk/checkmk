@@ -5,7 +5,7 @@
 use anyhow::{Context, Result};
 use check_cert::{checker, fetcher};
 use clap::Parser;
-use openssl::asn1::{Asn1Time, Asn1TimeRef};
+use openssl::asn1::Asn1Time;
 use std::time::Duration;
 
 #[derive(Parser, Debug)]
@@ -36,11 +36,6 @@ struct Args {
     disable_sni: bool,
 }
 
-fn diff_to_now(x: &Asn1TimeRef) -> i32 {
-    let exp = Asn1Time::days_from_now(0).unwrap().diff(x).unwrap();
-    exp.days
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
@@ -62,52 +57,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         !args.disable_sni,
     )?;
 
-    match checker::check_validity(cert.not_after(), &warn_time, &crit_time) {
-        checker::Validity::OK => {
-            println!(
-                "OK - Certificate '{}' will expire on {}",
-                args.url,
-                cert.not_after()
-            );
-            std::process::exit(0)
-        }
-        checker::Validity::Warn => {
-            println!(
-                "WARNING - Certificate '{}' expires in {} day(s) ({})",
-                args.url,
-                diff_to_now(cert.not_after()),
-                cert.not_after()
-            );
-            std::process::exit(1)
-        }
-        checker::Validity::Crit => {
-            println!(
-                "CRITICAL - Certificate '{}' expires in {} day(s) ({})",
-                args.url,
-                diff_to_now(cert.not_after()),
-                cert.not_after()
-            );
-            std::process::exit(2)
-        }
-    }
-}
-
-#[cfg(test)]
-mod test_diff_to_now {
-    use crate::diff_to_now;
-    use openssl::asn1::Asn1Time;
-
-    fn days_from_now(days: u32) -> Asn1Time {
-        Asn1Time::days_from_now(days).unwrap()
-    }
-
-    #[test]
-    fn test_diff_to_today() {
-        assert!(diff_to_now(days_from_now(0).as_ref()) == 0);
-    }
-
-    #[test]
-    fn test_diff_to_tomorrow() {
-        assert!(diff_to_now(days_from_now(1).as_ref()) == 1);
-    }
+    let result = checker::check_validity(&args.url, cert.not_after(), &warn_time, &crit_time);
+    println!("{}", result.summary);
+    std::process::exit(match result.state {
+        checker::State::Ok => 0,
+        checker::State::Warn => 1,
+        checker::State::Crit => 2,
+        checker::State::Unknown => 3,
+    })
 }

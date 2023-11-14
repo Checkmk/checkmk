@@ -281,6 +281,7 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "mongodb_flushing",
         "mongodb_instance",
         "mongodb_locks",
+        "mounts",
         "mq_queues",
         "msexch_replhealth",
         "msoffice_serviceplans",

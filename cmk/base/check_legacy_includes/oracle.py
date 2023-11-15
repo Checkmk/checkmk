@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=no-else-continue
-
-from cmk.utils.exceptions import MKGeneralException
-
 
 # This function must be executed for each agent line which has been
 # found for the current item. It must deal with the ORA-* error
@@ -73,5 +69,5 @@ def oracle_handle_ora_errors_discovery(info):
         err = oracle_handle_ora_errors(line)
         if err is False:
             continue
-        elif isinstance(err, tuple):
-            raise MKGeneralException(err[1])
+        if isinstance(err, tuple):
+            raise RuntimeError(err[1])

@@ -40,9 +40,9 @@ mod keys {
 
     pub const MODE: &str = "mode";
 
-    pub const INSTANCES: &str = "instances";
+    pub const CUSTOM_SQLS: &str = "custom_sqls";
 
-    pub const SID: &str = "sid";
+    pub const INSTANCE: &str = "instance";
     pub const ALIAS: &str = "alias";
     pub const PIGGYBACK: &str = "piggyback";
 }
@@ -101,7 +101,7 @@ pub struct Config {
     sections: Sections,
     discovery: Discovery,
     mode: Mode,
-    instances: Vec<Instance>,
+    custom_sqls: Vec<CustomSql>,
 }
 
 impl Default for Config {
@@ -112,7 +112,7 @@ impl Default for Config {
             sections: Sections::default(),
             discovery: Discovery::default(),
             mode: Mode::Port,
-            instances: vec![],
+            custom_sqls: vec![],
         }
     }
 }
@@ -131,10 +131,10 @@ impl Config {
         let auth = Authentication::from_yaml(standard)?;
         let conn = Connection::from_yaml(standard)?.unwrap_or_default();
         let sections = Sections::from_yaml(standard)?.unwrap_or_default();
-        let instances: Result<Vec<Instance>> = mssql
-            .get_yaml_vector(keys::INSTANCES)
+        let instances: Result<Vec<CustomSql>> = mssql
+            .get_yaml_vector(keys::CUSTOM_SQLS)
             .into_iter()
-            .map(|v| Instance::from_yaml(&v, &auth, &conn, &sections))
+            .map(|v| CustomSql::from_yaml(&v, &auth, &conn, &sections))
             .collect();
 
         Ok(Some(Self {
@@ -143,7 +143,7 @@ impl Config {
             sections,
             discovery: Discovery::from_yaml(standard)?,
             mode: Mode::from_yaml(standard)?,
-            instances: instances?,
+            custom_sqls: instances?,
         }))
     }
     pub fn auth(&self) -> &Authentication {
@@ -161,8 +161,8 @@ impl Config {
     pub fn mode(&self) -> &Mode {
         &self.mode
     }
-    pub fn instances(&self) -> &Vec<Instance> {
-        &self.instances
+    pub fn custom_sqls(&self) -> &Vec<CustomSql> {
+        &self.custom_sqls
     }
 }
 
@@ -478,15 +478,15 @@ impl TryFrom<&str> for Mode {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Instance {
-    sid: String,
+pub struct CustomSql {
+    instance: String,
     auth: Authentication,
     conn: Connection,
     alias: Option<String>,
     piggyback: Option<Piggyback>,
 }
 
-impl Instance {
+impl CustomSql {
     pub fn from_yaml(
         yaml: &Yaml,
         auth: &Authentication,
@@ -494,17 +494,17 @@ impl Instance {
         sections: &Sections,
     ) -> Result<Self> {
         Ok(Self {
-            sid: yaml
-                .get_string(keys::SID)
-                .context("Bad/Missing sid in instance")?,
+            instance: yaml
+                .get_string(keys::INSTANCE)
+                .context("Bad/Missing instance in custom sql")?,
             auth: Authentication::from_yaml(yaml).unwrap_or(auth.clone()),
             conn: Connection::from_yaml(yaml)?.unwrap_or(conn.clone()),
             alias: yaml.get_string(keys::ALIAS),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
         })
     }
-    pub fn sid(&self) -> &String {
-        &self.sid
+    pub fn instance(&self) -> &String {
+        &self.instance
     }
     pub fn auth(&self) -> &Authentication {
         &self.auth
@@ -598,15 +598,15 @@ mssql:
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
-  instances: # optional
-    - sid: "INST1" # mandatory
+  custom_sqls: # optional
+    - instance: "INST1" # mandatory
       authentication: # optional, same as above
       connection: # optional,  same as above
       alias: "someApplicationName" # optional
       piggyback: # optional
         hostname: "myPiggybackHost" # mandatory
         sections: # optional, same as above
-    - sid: "INST2" # mandatory
+    - instance: "INST2" # mandatory
 "#;
         pub const AUTHENTICATION_FULL: &str = r#"
 authentication:
@@ -667,8 +667,8 @@ piggyback:
       - "disabled"
     cache_age: 111
 "#;
-        pub const INSTANCE: &str = r#"
-sid: "INST1"
+        pub const INSTANCE_SOME: &str = r#"
+instance: "INST1"
 authentication:
   username: "u1"
 connection:
@@ -707,7 +707,7 @@ piggyback:
                 sections: Sections::default(),
                 discovery: Discovery::default(),
                 mode: Mode::Port,
-                instances: vec![],
+                custom_sqls: vec![],
             }
         );
     }
@@ -927,19 +927,19 @@ discovery:
     }
     #[test]
     fn test_instance() {
-        let instance = Instance::from_yaml(
-            &create_yaml(data::INSTANCE),
+        let sql = CustomSql::from_yaml(
+            &create_yaml(data::INSTANCE_SOME),
             &Authentication::default(),
             &Connection::default(),
             &Sections::default(),
         )
         .unwrap();
-        assert_eq!(instance.sid(), "INST1");
-        assert_eq!(instance.auth().username(), "u1");
-        assert_eq!(instance.conn().hostname(), "h1");
-        assert_eq!(instance.alias().unwrap(), "a1");
-        assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
-        assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);
+        assert_eq!(sql.instance(), "INST1");
+        assert_eq!(sql.auth().username(), "u1");
+        assert_eq!(sql.conn().hostname(), "h1");
+        assert_eq!(sql.alias().unwrap(), "a1");
+        assert_eq!(sql.piggyback().unwrap().hostname(), "piggy");
+        assert_eq!(sql.piggyback().unwrap().sections().cache_age(), 123);
     }
 
     #[test]
@@ -947,14 +947,14 @@ discovery:
         let c = Config::from_yaml(&create_yaml(data::TEST_CONFIG))
             .unwrap()
             .unwrap();
-        assert_eq!(c.instances().len(), 2);
-        assert!(c.instances()[0].piggyback().is_some());
+        assert_eq!(c.custom_sqls().len(), 2);
+        assert!(c.custom_sqls()[0].piggyback().is_some());
         assert_eq!(
-            c.instances()[0].piggyback().unwrap().hostname(),
+            c.custom_sqls()[0].piggyback().unwrap().hostname(),
             "myPiggybackHost"
         );
-        assert_eq!(c.instances()[0].sid(), "INST1");
-        assert_eq!(c.instances()[1].sid(), "INST2");
+        assert_eq!(c.custom_sqls()[0].instance(), "INST1");
+        assert_eq!(c.custom_sqls()[1].instance(), "INST2");
         assert_eq!(c.mode(), &Mode::Port);
         assert_eq!(
             c.discovery().include(),

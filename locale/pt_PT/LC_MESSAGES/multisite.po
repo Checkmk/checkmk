@@ -32429,6 +32429,12 @@ msgstr "Níveis mais baixos para a vida saudável"
 msgid "Lower levels for hit ratio"
 msgstr "Níveis mais baixos para o rácio de acerto"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Esta regra estabelece os níveis de alerta e de critério para o número de "
+"solicitações de entrada para um servidor de aplicações JVM."
+
 msgid "Lower levels for number of requests"
 msgstr "Níveis inferiores para o número de pedidos"
 
@@ -60197,13 +60203,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "Esta regra define o estado requerido de um contato de comutação"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Esta regra estabelece os níveis de alerta e de critério para o número de "
-"solicitações de entrada para um servidor de aplicações JVM."
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -64154,6 +64153,12 @@ msgstr "Níveis superiores para o primeiro item de saída"
 
 msgid "Upper levels for hit ratio"
 msgstr "Níveis superiores para o rácio de acerto"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Esta regra estabelece os níveis de alerta e de critério para o número de "
+"solicitações de entrada para um servidor de aplicações JVM."
 
 msgid "Upper levels for indexes"
 msgstr "Níveis superiores para os índices"

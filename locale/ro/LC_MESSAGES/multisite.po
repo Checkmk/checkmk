@@ -32662,6 +32662,12 @@ msgstr "Niveluri mai mici pentru durata de viață a sănătății"
 msgid "Lower levels for hit ratio"
 msgstr "Niveluri mai mici pentru raportul de succes"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"cereri primite de un server de aplicații JVM."
+
 msgid "Lower levels for number of requests"
 msgstr "Niveluri inferioare pentru numărul de cereri"
 
@@ -60710,13 +60716,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "Această regulă stabilește starea necesară a unui contact de comutație"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
-"cereri primite de un server de aplicații JVM."
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -64701,6 +64700,12 @@ msgstr "Nivelurile superioare pentru primul element de ieșire"
 
 msgid "Upper levels for hit ratio"
 msgstr "Niveluri superioare pentru raportul de succes"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"cereri primite de un server de aplicații JVM."
 
 msgid "Upper levels for indexes"
 msgstr "Niveluri superioare pentru indici"

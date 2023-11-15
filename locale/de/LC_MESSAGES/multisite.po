@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-11-14 00:08+0000\n"
+"PO-Revision-Date: 2023-11-15 07:59+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -6202,7 +6202,7 @@ msgid "Apply OMD config changes"
 msgstr "OMD-Konfigurationsänderungen anwenden"
 
 msgid "Apply bake revision"
-msgstr ""
+msgstr "Back-Revision anwenden"
 
 msgid "Apply compression"
 msgstr "Komprimierung verwenden"
@@ -28967,9 +28967,8 @@ msgstr "Ungültiges URL-Schema. Muss eines von folgenden sein: %s"
 msgid "Invalid action"
 msgstr "Ungültige Aktion"
 
-#, fuzzy
 msgid "Invalid activation_id"
-msgstr "Ungültige Aktion"
+msgstr "Ungültige activation_id"
 
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -30808,13 +30807,12 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "Schellen für die Anzahl der aktiven Anschlüsse in einem Gerät."
 
-#, fuzzy
 msgid ""
 "Levels for the number of current connections to a JVM application on the "
 "servlet level"
 msgstr ""
-"Diese Regel setzt die WARN und CRIT-Schwellen für die aktuelle Zahl der "
-"Verbindungen zu einer JVM Applikation bezogen auf ein Servlet."
+"Schwellwerte für die Zahl der aktuellen Verbindungen zu einer JVM "
+"Applikation bezogen auf ein Servlet"
 
 msgid "Levels for the number of print jobs"
 msgstr "Schwellwerte für die Anzahl Druckerjobs"
@@ -30826,7 +30824,7 @@ msgid "Levels for the number of sessions that are currently inactive"
 msgstr "Schwellwerte für die Anzahl der aktuell inaktiven Sitzungen"
 
 msgid "Levels for the number of threads running in a JVM"
-msgstr "Schwellwerte für die Zahl der laufenden Threads in einer JVM."
+msgstr "Schwellwerte für die Zahl der laufenden Threads in einer JVM"
 
 msgid "Levels for the percentual growth per time range"
 msgstr "Schwellwert für prozentuales Wachstum pro Zeitraum"
@@ -30881,9 +30879,8 @@ msgstr "Schwellen für Wartezeiten"
 msgid "Levels health"
 msgstr "Schwellwerte Gesundheit"
 
-#, fuzzy
 msgid "Levels in percentage of total RAM"
-msgstr "Legen Sie Schwellwerte in Prozent des vorhandenen RAM fest"
+msgstr "Schwellwerte in Prozent des gesamten RAM"
 
 msgid "Levels in percentage of total memory usage"
 msgstr "Schwellwerte in Prozent der gesamten Speicherbelegung"
@@ -32439,6 +32436,10 @@ msgstr "Untere Schwellen der Health-Lebensdauer"
 
 msgid "Lower levels for hit ratio"
 msgstr "Niedrigere Werte für die Trefferquote"
+
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Untere Schwellwerte für eingehende Anfragen an einen JVM Applikationsserver"
 
 msgid "Lower levels for number of requests"
 msgstr "Untere Schwellwerte für Menge der Anfragen"
@@ -60234,13 +60235,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "Diese Regel legt den erforderlichen Zustand eines Schaltkontakts fest"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Diese Regel setzt die WARN und CRIT Level für die Zahl der eingehenden "
-"Anfragen zu einem JVM Server."
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -64201,6 +64195,10 @@ msgstr "Obergrenze für das erste ausgegebene Element"
 
 msgid "Upper levels for hit ratio"
 msgstr "Obere Werte für die Trefferquote"
+
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Obere Schwellwerte für eingehende Anfragen an einen JVM Applikationsserver"
 
 msgid "Upper levels for indexes"
 msgstr "Obere Schwellen für Indices"

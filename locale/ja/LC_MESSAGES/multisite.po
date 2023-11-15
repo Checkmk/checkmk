@@ -31708,6 +31708,12 @@ msgstr "ヘルスライフタイムの下位レベル"
 msgid "Lower levels for hit ratio"
 msgstr "ヒット比率の下位レベル"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"このルールは、JVMアプリケーションサーバーへの着信要求の数の警告レベルとクリ"
+"ティカルレベルを設定します。"
+
 msgid "Lower levels for number of requests"
 msgstr "リクエスト数の下位レベル"
 
@@ -58673,13 +58679,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "このルールは、スイッチ接点の必要な状態を設定します"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"このルールは、JVMアプリケーションサーバーへの着信要求の数の警告レベルとクリ"
-"ティカルレベルを設定します。"
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -62534,6 +62533,12 @@ msgstr "最初の出力項目の上位レベル"
 
 msgid "Upper levels for hit ratio"
 msgstr "ヒット比率の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"このルールは、JVMアプリケーションサーバーへの着信要求の数の警告レベルとクリ"
+"ティカルレベルを設定します。"
 
 msgid "Upper levels for indexes"
 msgstr "インデックスの上位レベル"

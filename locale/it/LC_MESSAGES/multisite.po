@@ -32586,6 +32586,12 @@ msgstr "Livelli più bassi per la durata della salute"
 msgid "Lower levels for hit ratio"
 msgstr "Livelli più bassi per il rapporto di successo"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Questa regola imposta i livelli di warn e crit per il numero di richieste in "
+"arrivo a un server applicativo JVM."
+
 msgid "Lower levels for number of requests"
 msgstr "Livelli inferiori per numero di richieste"
 
@@ -60522,13 +60528,6 @@ msgstr ""
 "Questa regola imposta lo stato richiesto di un contatto dell'interruttore"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Questa regola imposta i livelli di warn e crit per il numero di richieste in "
-"arrivo a un server applicativo JVM."
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -64507,6 +64506,12 @@ msgstr "Livelli superiori per il primo elemento di uscita"
 
 msgid "Upper levels for hit ratio"
 msgstr "Livelli superiori per l'indice di successo"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Questa regola imposta i livelli di warn e crit per il numero di richieste in "
+"arrivo a un server applicativo JVM."
 
 msgid "Upper levels for indexes"
 msgstr "Livelli superiori per gli indici"

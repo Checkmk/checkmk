@@ -475,7 +475,7 @@ class Site:
         return PythonHelper(self, helper_file)
 
     def omd(self, mode: str, *args: str) -> int:
-        cmd = ["sudo", "/usr/bin/omd", mode, self.id] + list(args)
+        cmd = ["sudo", "omd", mode, self.id] + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
         completed_process = subprocess.run(
             cmd,
@@ -664,7 +664,7 @@ class Site:
             completed_process = subprocess.run(
                 [
                     "/usr/bin/sudo",
-                    "/usr/bin/omd",
+                    "omd",
                     "-f",
                     "-V",
                     self.version.version_directory(),
@@ -675,7 +675,7 @@ class Site:
                 if self.update
                 else [
                     "/usr/bin/sudo",
-                    "/usr/bin/omd",
+                    "omd",
                     "-V",
                     self.version.version_directory(),
                     "create",
@@ -962,7 +962,7 @@ class Site:
         completed_process = subprocess.run(
             [
                 "/usr/bin/sudo",
-                "/usr/bin/omd",
+                "omd",
                 "-f",
                 "rm",
                 "--apache-reload",
@@ -984,7 +984,7 @@ class Site:
             while not self.is_running():
                 i += 1
                 if i > 10:
-                    self.execute(["/usr/bin/omd", "status"]).wait()
+                    self.execute(["omd", "status"]).wait()
                     # print("= BEGIN PROCESSES FAIL ==============================")
                     # self.execute(["ps", "aux"]).wait()
                     # print("= END PROCESSES FAIL ==============================")
@@ -1065,7 +1065,7 @@ class Site:
             return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
 
         try:
-            self.check_output(["/usr/bin/omd", "status", "--bare"])
+            self.check_output(["omd", "status", "--bare"])
             return 0
         except subprocess.CalledProcessError as e:
             logger.info("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
@@ -1385,9 +1385,7 @@ class SiteFactory:
         logger.info("Creating %s site from backup...", name)
 
         omd_restore_cmd = (
-            ["sudo", "/usr/bin/omd", "restore"]
-            + (["--reuse", "--kill"] if reuse else [])
-            + [backup_path]
+            ["sudo", "omd", "restore"] + (["--reuse", "--kill"] if reuse else []) + [backup_path]
         )
 
         completed_process = subprocess.run(
@@ -1415,7 +1413,7 @@ class SiteFactory:
         rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
-                "/usr/bin/omd",
+                "omd",
                 "-V",
                 self.version.version_directory(),
                 "create",
@@ -1514,7 +1512,7 @@ class SiteFactory:
         rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
-                "/usr/bin/omd",
+                "omd",
                 "-V",
                 target_version.version_directory(),
                 "update",

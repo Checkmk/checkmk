@@ -47,7 +47,7 @@ build_cmd = """
     export PATH="$$TMPDIR/workdir/$(OUTS):$$PATH"
 
     # Build directory
-    mkdir -p $$HOME//$(OUTS)
+    mkdir -p $$HOME/$(OUTS)
 
     export CPATH="$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/:$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include/openssl:$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include/"
 
@@ -71,6 +71,17 @@ build_cmd = """
     export OPENSSL_LIB_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib"
     export OPENSSL_INCLUDE_DIR="$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include"
 
+    if [[ "{requirements}" = -r* ]]; then
+        REQUIREMENTS="{requirements}"
+    else
+        REQUIREMENTS=$$HOME/tmp/$(OUTS)
+	rm -rf $$REQUIREMENTS
+	mkdir -p $$REQUIREMENTS
+        echo "Copy package sources"
+        echo "cp -r {requirements}/** $$REQUIREMENTS"
+        cp -r {requirements}/** $$REQUIREMENTS
+    fi
+
     # install requirements
     export CFLAGS="-I$$HOME/$$EXT_DEPS_PATH/openssl/openssl/include -I$$HOME/$$EXT_DEPS_PATH/freetds/freetds/include -I$$HOME/$$EXT_DEPS_PATH/python/python/include/python{pyMajMin}/"
     export LDFLAGS="-L$$HOME/$$EXT_DEPS_PATH/openssl/openssl/lib -L$$HOME/$$EXT_DEPS_PATH/freedts/freedts/lib -L$$HOME/$$EXT_DEPS_PATH/python/python/lib -Wl,--strip-debug -Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib"
@@ -85,5 +96,5 @@ build_cmd = """
       --no-warn-script-location \\
       --prefix="$$HOME/$(OUTS)" \\
       -i {pypi_mirror} \\
-      {requirements}
+      $$REQUIREMENTS
 """

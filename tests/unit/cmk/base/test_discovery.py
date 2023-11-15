@@ -964,7 +964,11 @@ _expected_services: dict = {
     (CheckPluginName("uptime"), None): {},
 }
 
-_expected_host_labels = [HostLabel("cmk/os_family", "linux", SectionName("check_mk"))]
+_expected_host_labels = [
+    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+    HostLabel("cmk/os_type", "linux", SectionName("check_mk")),
+    HostLabel("cmk/os_platform", "linux", SectionName("check_mk")),
+]
 
 
 @pytest.mark.usefixtures("fix_register")

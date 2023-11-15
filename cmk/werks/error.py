@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.werks.cli import main  # pylint: disable=cmk-module-layer-violation
 
-if __name__ == "__main__":
-    main()
+class WerkError(TypeError):
+    pass

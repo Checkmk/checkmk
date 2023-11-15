@@ -7,7 +7,8 @@ from typing import Final
 import pytest
 
 from cmk.base.plugins.agent_based.storcli_physical_disks import parse_storcli_physical_disks
-from cmk.base.plugins.agent_based.utils import megaraid
+
+from cmk.plugins.lib import megaraid
 
 OUTPUT: Final = """
 CLI Version = 007.0709.0000.0000 Aug 14, 2018

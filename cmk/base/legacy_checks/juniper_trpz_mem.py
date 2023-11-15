@@ -11,7 +11,8 @@ from cmk.base.check_legacy_includes.juniper_mem import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
+
+from cmk.plugins.lib.juniper import DETECT_JUNIPER_TRPZ
 
 check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,

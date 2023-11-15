@@ -6,9 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import register, Result, State
-from .agent_based_api.v1.type_defs import CheckResult
-from .utils.fileinfo import (
+from cmk.plugins.lib.fileinfo import (
     check_fileinfo_data,
     check_fileinfo_groups_data,
     discovery_fileinfo,
@@ -16,6 +14,9 @@ from .utils.fileinfo import (
     Fileinfo,
     parse_fileinfo,
 )
+
+from .agent_based_api.v1 import register, Result, State
+from .agent_based_api.v1.type_defs import CheckResult
 
 
 def check_fileinfo(item: str, params: Mapping[str, Any], section: Fileinfo) -> CheckResult:

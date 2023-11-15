@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.checkmk import ControllerSection
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.checkmk import ControllerSection
 
 
 def parse_cmk_agent_ctl_status(string_table: StringTable) -> ControllerSection | None:

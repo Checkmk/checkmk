@@ -7,6 +7,9 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from cmk.plugins.lib.azure import create_check_metrics_function, MetricData, parse_resources
+from cmk.plugins.lib.azure_load_balancer import LoadBalancer, Section
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -18,8 +21,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.azure import create_check_metrics_function, MetricData, parse_resources
-from .utils.azure_load_balancer import LoadBalancer, Section
 
 
 def parse_load_balancer(string_table: StringTable) -> Section:

@@ -18,8 +18,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils import uptime
-from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+
+from cmk.plugins.lib import uptime
+from cmk.plugins.lib.docker import AgentOutputMalformatted
 
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [

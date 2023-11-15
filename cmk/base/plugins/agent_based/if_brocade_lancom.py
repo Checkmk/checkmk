@@ -5,9 +5,10 @@
 
 from collections.abc import Iterable, Mapping
 
+from cmk.plugins.lib import if64, interfaces
+
 from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable
-from .utils import if64, interfaces
 
 StringByteLine = list[str | list[int]]
 

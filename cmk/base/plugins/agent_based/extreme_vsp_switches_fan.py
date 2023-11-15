@@ -6,10 +6,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.plugins.lib.fan import check_fan
+from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.fan import check_fan
-from .utils.netextreme import DETECT_NETEXTREME
 
 
 @dataclass

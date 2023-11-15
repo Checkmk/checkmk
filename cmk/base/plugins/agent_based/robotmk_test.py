@@ -14,14 +14,15 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
     service_description,
 )
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.robotmk_parse_xml import extract_tests_with_full_names, Outcome, Test
-from .utils.robotmk_suite_execution_report import (
+from cmk.plugins.lib.robotmk_parse_xml import extract_tests_with_full_names, Outcome, Test
+from cmk.plugins.lib.robotmk_suite_execution_report import (
     ExecutionReport,
     ExecutionReportAlreadyRunning,
     RebotOutcomeResult,
 )
+
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 class Params(TypedDict):

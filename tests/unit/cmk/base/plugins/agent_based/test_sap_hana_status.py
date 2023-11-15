@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.sap_hana import ParsedSection
+
+from cmk.plugins.lib.sap_hana import ParsedSection
 
 ITEM = "H90 33"
 SECTION = {

@@ -10,9 +10,10 @@ from enum import Enum
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
+from cmk.plugins.lib.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability, Presence
+
 from .agent_based_api.v1 import Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability, Presence
 
 
 class MemoryType(Enum):

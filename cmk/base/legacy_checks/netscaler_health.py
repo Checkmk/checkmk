@@ -9,7 +9,8 @@ from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
+
+from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 #
 # Based on contribution by Karsten Schöke <karsten.schoeke@geobasis-bb.de>

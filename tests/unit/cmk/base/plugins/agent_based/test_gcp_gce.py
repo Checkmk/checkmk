@@ -13,9 +13,9 @@ from cmk.base.plugins.agent_based.gcp_gce import (
     check_summary,
     parse_gce_uptime,
 )
-from cmk.base.plugins.agent_based.utils import gcp, uptime
-from cmk.base.plugins.agent_based.utils.interfaces import CHECK_DEFAULT_PARAMETERS
 
+from cmk.plugins.lib import gcp, uptime
+from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS
 from cmk.special_agents import agent_gcp
 
 

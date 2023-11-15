@@ -15,7 +15,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     TableRow,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils import interfaces
 from cmk.base.plugins.agent_based.winperf_if import (
     _check_dhcp,
     _check_winperf_if,
@@ -32,6 +31,8 @@ from cmk.base.plugins.agent_based.winperf_if import (
     SectionTeaming,
     TeamingData,
 )
+
+from cmk.plugins.lib import interfaces
 
 from .utils_inventory import sort_inventory_result
 

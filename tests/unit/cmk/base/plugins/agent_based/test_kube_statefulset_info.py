@@ -10,13 +10,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_statefulset_info import check_kube_statefulset_info
-from cmk.base.plugins.agent_based.utils.kube import (
-    NamespaceName,
-    Selector,
-    StatefulSetInfo,
-    ThinContainers,
-    Timestamp,
-)
+
+from cmk.plugins.lib.kube import NamespaceName, Selector, StatefulSetInfo, ThinContainers, Timestamp
 
 
 @pytest.mark.parametrize(

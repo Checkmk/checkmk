@@ -10,7 +10,8 @@ from typing import Any
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions, inventory_aws_generic, parse_aws
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
+
+from cmk.plugins.lib.aws import aws_rds_service_item
 
 Section = Mapping[str, Any]
 

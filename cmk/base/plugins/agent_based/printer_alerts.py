@@ -6,9 +6,10 @@
 from collections.abc import Sequence
 from typing import Final, NamedTuple
 
+from cmk.plugins.lib.printer import DETECT_PRINTER
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.printer import DETECT_PRINTER
 
 
 class Alert(NamedTuple):

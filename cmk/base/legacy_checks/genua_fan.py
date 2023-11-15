@@ -10,7 +10,8 @@ from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.genua import DETECT_GENUA
+
+from cmk.plugins.lib.genua import DETECT_GENUA
 
 
 def inventory_genua_fan(string_table: list[StringTable]) -> Iterable[tuple[str, dict[str, object]]]:

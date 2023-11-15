@@ -5,7 +5,8 @@
 import pydantic
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, type_defs
-from cmk.base.plugins.agent_based.utils import uptime
+
+from cmk.plugins.lib import uptime
 
 
 class Uptime(pydantic.BaseModel):

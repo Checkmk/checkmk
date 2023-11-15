@@ -22,8 +22,8 @@ from cmk.base.plugins.agent_based.gcp_gcs import (
     discover,
     parse_gcp_gcs,
 )
-from cmk.base.plugins.agent_based.utils import gcp
 
+from cmk.plugins.lib import gcp
 from cmk.special_agents.agent_gcp import GCS
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin

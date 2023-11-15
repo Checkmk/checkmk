@@ -6,7 +6,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |

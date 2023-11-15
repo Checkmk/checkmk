@@ -6,8 +6,9 @@ from dataclasses import dataclass
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 
+from cmk.plugins.lib.enviromux import DETECT_ENVIROMUX_MICRO
+
 from .agent_based_api.v1 import Attributes, register, SNMPTree
-from .utils.enviromux import DETECT_ENVIROMUX_MICRO
 
 
 @dataclass

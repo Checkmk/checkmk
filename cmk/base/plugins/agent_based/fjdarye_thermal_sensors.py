@@ -14,14 +14,15 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 
-from .agent_based_api.v1 import register, SNMPTree
-from .utils.fjdarye import (
+from cmk.plugins.lib.fjdarye import (
     check_fjdarye_item,
     DETECT_FJDARYE,
     discover_fjdarye_item,
     FJDARYE_SUPPORTED_DEVICES,
     parse_fjdarye_item,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
 
 register.snmp_section(
     name="fjdarye_thermal_sensors",

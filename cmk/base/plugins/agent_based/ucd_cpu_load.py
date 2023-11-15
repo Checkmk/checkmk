@@ -5,10 +5,11 @@
 
 from typing import List
 
+from cmk.plugins.lib.cpu import Load, Section
+from cmk.plugins.lib.ucd_hr_detection import UCD
+
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.cpu import Load, Section
-from .utils.ucd_hr_detection import UCD
 
 
 def parse_ucd_cpu_load(string_table: List[StringTable]) -> Section | None:

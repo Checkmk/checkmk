@@ -6,9 +6,10 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib import domino, memory, ps
+
 from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import domino, memory, ps
 
 # Example SNMP walk:
 #

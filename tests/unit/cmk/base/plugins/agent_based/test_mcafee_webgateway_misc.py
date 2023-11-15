@@ -17,7 +17,8 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based import mcafee_webgateway_misc
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils import mcafee_gateway
+
+from cmk.plugins.lib import mcafee_gateway
 
 # SUP-13087
 WALK = """

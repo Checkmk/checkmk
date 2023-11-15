@@ -9,10 +9,11 @@ from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.cisco_mem import DETECT_MULTIITEM
+from cmk.plugins.lib.entity_mib import PhysicalClasses
+
 from .agent_based_api.v1 import check_levels, OIDEnd, register, render, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_mem import DETECT_MULTIITEM
-from .utils.entity_mib import PhysicalClasses
 
 DISCOVERY_DEFAULT_PARAMETERS = {"individual": True, "average": False}
 

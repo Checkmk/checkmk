@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.cisco_ucs_fan import (
     discover_cisco_ucs_fan,
     parse_cisco_ucs_fan,
 )
-from cmk.base.plugins.agent_based.utils.cisco_ucs import Operability
+
+from cmk.plugins.lib.cisco_ucs import Operability
 
 
 @pytest.fixture(name="section", scope="module")

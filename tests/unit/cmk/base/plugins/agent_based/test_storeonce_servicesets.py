@@ -15,8 +15,9 @@ from cmk.base.plugins.agent_based.storeonce_servicesets import (
     discover_storeonce_servicesets,
     parse_storeonce_servicesets,
 )
-from cmk.base.plugins.agent_based.utils import storeonce
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib import storeonce
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 Section = storeonce.SectionServiceSets
 

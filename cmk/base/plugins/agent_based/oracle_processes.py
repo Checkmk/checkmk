@@ -6,6 +6,8 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
+from cmk.plugins.lib.oracle import OraErrors
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -16,7 +18,6 @@ from .agent_based_api.v1 import (
     Service,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.oracle import OraErrors
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 

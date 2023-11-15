@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib.cpu import Section
+from cmk.plugins.lib.cpu_load import check_cpu_load
+
 from .agent_based_api.v1 import register, Service
 from .agent_based_api.v1.type_defs import DiscoveryResult
-from .utils.cpu import Section
-from .utils.cpu_load import check_cpu_load
 
 
 def discover_cpu_load(section: Section) -> DiscoveryResult:

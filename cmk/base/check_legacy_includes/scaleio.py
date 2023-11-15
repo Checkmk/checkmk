@@ -6,7 +6,7 @@
 
 from contextlib import suppress
 
-from cmk.base.plugins.agent_based.utils.scaleio import convert_scaleio_space_into_mb
+from cmk.plugins.lib.scaleio import convert_scaleio_space_into_mb
 
 
 def convert_scaleio_space(unit: str, value: float) -> float | None:

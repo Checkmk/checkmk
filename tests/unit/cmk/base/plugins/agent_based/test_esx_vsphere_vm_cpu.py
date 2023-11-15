@@ -10,7 +10,8 @@ from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_s
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_cpu
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
-from cmk.base.plugins.agent_based.utils import esx_vsphere
+
+from cmk.plugins.lib import esx_vsphere
 
 
 class ESXCpuFactory(ModelFactory):

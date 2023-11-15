@@ -8,13 +8,14 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     check_filesystem_levels,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Volume(BaseModel, frozen=True):

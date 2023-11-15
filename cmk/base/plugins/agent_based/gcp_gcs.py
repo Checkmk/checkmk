@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import gcp
+
 from .agent_based_api.v1 import register, render, Service, ServiceLabel
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import gcp
 
 
 def parse_gcp_gcs(string_table: StringTable) -> gcp.Section:

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
-from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, DfBlock, InodesSubsection
-from cmk.base.plugins.agent_based.utils.mobileiron import Section, SourceHostSection
+from cmk.plugins.lib.df import BlocksSubsection, DfBlock, InodesSubsection
+from cmk.plugins.lib.mobileiron import Section, SourceHostSection
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable

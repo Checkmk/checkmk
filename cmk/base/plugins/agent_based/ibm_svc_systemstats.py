@@ -8,6 +8,8 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.cpu_util import check_cpu_util
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -19,7 +21,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu_util import check_cpu_util
 
 Item = str
 StatName = str

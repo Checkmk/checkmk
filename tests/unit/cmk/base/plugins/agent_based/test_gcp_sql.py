@@ -26,9 +26,9 @@ from cmk.base.plugins.agent_based.gcp_sql import (
     discover_gcp_sql_replication,
     parse,
 )
-from cmk.base.plugins.agent_based.utils import gcp
-from cmk.base.plugins.agent_based.utils.gcp import Section, SectionItem
 
+from cmk.plugins.lib import gcp
+from cmk.plugins.lib.gcp import Section, SectionItem
 from cmk.special_agents.agent_gcp import CLOUDSQL
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin

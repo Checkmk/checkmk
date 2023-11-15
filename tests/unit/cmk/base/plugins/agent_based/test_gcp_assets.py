@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 from cmk.base.plugins.agent_based.gcp_assets import parse_assets
-from cmk.base.plugins.agent_based.utils.gcp import AssetSection, Config
+
+from cmk.plugins.lib.gcp import AssetSection, Config
 
 ASSET_TABLE = [
     ['{"project":"backup-255820", "config":[]}'],

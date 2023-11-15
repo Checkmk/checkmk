@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.prism_containers import (
     check_prism_container,
     discovery_prism_container,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 SECTION = {
     "NutanixManagementShare": {

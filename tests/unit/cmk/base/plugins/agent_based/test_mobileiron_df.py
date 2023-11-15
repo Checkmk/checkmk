@@ -6,7 +6,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron_df
-from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, DfBlock, InodesSubsection
+
+from cmk.plugins.lib.df import BlocksSubsection, DfBlock, InodesSubsection
 
 
 @pytest.mark.parametrize(

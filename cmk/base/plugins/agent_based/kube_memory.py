@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.utils.kube_resources import (
+from cmk.plugins.lib.kube import PerformanceUsage
+from cmk.plugins.lib.kube_resources import (
     AllocatableResource,
     check_resource,
     DEFAULT_PARAMS,
@@ -16,7 +17,6 @@ from cmk.base.plugins.agent_based.utils.kube_resources import (
 
 from .agent_based_api.v1 import register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.kube import PerformanceUsage
 
 register.agent_section(
     name="kube_memory_resources_v1",

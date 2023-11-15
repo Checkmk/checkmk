@@ -6,9 +6,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from cmk.plugins.lib.cisco_meraki import check_last_reported_ts, load_json, MerakiAPIData
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_meraki import check_last_reported_ts, load_json, MerakiAPIData
 
 
 @dataclass(frozen=True)

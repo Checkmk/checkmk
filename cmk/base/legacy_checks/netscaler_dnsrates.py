@@ -14,7 +14,8 @@ import time
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
-from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
+
+from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 
 def inventory_netscaler_dnsrates(info):

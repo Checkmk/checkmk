@@ -12,7 +12,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
+
+from cmk.plugins.lib.brocade import DETECT_MLX
 
 # TODO refactoring: use parse-function
 

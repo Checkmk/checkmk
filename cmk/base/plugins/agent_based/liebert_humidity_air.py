@@ -14,9 +14,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import liebert
+
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import liebert
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
     "levels": (50, 55),

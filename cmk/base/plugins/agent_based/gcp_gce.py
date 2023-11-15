@@ -7,9 +7,10 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import gcp, interfaces, uptime
+
 from .agent_based_api.v1 import get_value_store, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import gcp, interfaces, uptime
 
 
 def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:

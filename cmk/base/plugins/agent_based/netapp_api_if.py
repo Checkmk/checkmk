@@ -16,7 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
     type_defs,
 )
-from cmk.base.plugins.agent_based.utils import interfaces, netapp_api
+
+from cmk.plugins.lib import interfaces, netapp_api
 
 MACList = list[tuple[str, str | None]]
 

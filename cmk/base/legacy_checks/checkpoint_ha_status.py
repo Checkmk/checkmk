@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
+
+from cmk.plugins.lib.checkpoint import DETECT
 
 # .1.3.6.1.4.1.2620.1.5.2.0 1
 # .1.3.6.1.4.1.2620.1.5.3.0 6

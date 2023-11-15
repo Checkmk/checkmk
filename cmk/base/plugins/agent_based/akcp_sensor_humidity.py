@@ -9,14 +9,15 @@
 # ["Humdity1 Description", "0",    "0",    "2"]
 
 
-from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
-from .utils.akcp import DETEC_AKCP_SP2PLUS
-from .utils.akcp_sensor import (
+from cmk.plugins.lib.akcp import DETEC_AKCP_SP2PLUS
+from cmk.plugins.lib.akcp_sensor import (
     AKCP_HUMIDITY_CHECK_DEFAULT_PARAMETERS,
     check_akcp_humidity,
     inventory_akcp_humidity,
     parse_akcp_sensor,
 )
+
+from .agent_based_api.v1 import all_of, not_exists, register, SNMPTree, startswith
 
 register.snmp_section(
     name="akcp_sensor_humidity",

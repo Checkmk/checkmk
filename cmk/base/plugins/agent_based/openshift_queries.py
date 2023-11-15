@@ -10,7 +10,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     COLLECTOR_SERVICE_NAME,
     OpenShiftEndpoint,
     PrometheusResult,

@@ -6,8 +6,9 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import ipmi
+
 from .agent_based_api.v1 import register, Service, State, type_defs
-from .utils import ipmi
 
 # Example of output from ipmi:
 # <<<ipmi>>>

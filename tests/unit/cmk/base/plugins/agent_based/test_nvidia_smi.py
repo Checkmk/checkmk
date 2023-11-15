@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
     type_defs,
 )
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType
+
+from cmk.plugins.lib.temperature import TempParamType
 
 STRING_TABLE = [
     ['<?xml version="1.0" ?>'],

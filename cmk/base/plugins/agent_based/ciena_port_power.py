@@ -7,9 +7,10 @@ from collections.abc import Mapping
 from math import log10
 from typing import NamedTuple
 
+from cmk.plugins.lib.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
+
 from .agent_based_api.v1 import check_levels, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.ciena_ces import DETECT_CIENA_5142, DETECT_CIENA_5171
 
 inf = float("inf")
 

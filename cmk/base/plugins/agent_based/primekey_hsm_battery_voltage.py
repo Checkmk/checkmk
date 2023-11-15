@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
+
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.primekey import DETECT_PRIMEKEY
 
 
 @dataclass(frozen=True)

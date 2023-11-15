@@ -115,8 +115,9 @@
 
 """
 
+from cmk.plugins.lib.memory import SectionMemUsed
+
 from .agent_based_api.v1 import register, type_defs
-from .utils.memory import SectionMemUsed
 
 
 def parse_aix_memory(string_table: type_defs.StringTable) -> SectionMemUsed | None:

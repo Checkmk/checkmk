@@ -6,9 +6,10 @@
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
+from cmk.plugins.lib.device_types import get_device_type_label
+
 from .agent_based_api.v1 import Attributes, exists, OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.device_types import get_device_type_label
 
 
 class SNMPExtendedInfoEntry(NamedTuple):

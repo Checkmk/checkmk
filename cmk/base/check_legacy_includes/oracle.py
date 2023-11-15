@@ -19,7 +19,7 @@
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
-# cmk/base/plugins/agent_based/utils/oracle.py
+# cmk.plugins.lib/oracle.py
 # ==================================================================================================
 def oracle_handle_ora_errors(line):
     if len(line) == 1:
@@ -47,7 +47,7 @@ def oracle_handle_ora_errors(line):
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
 # THE NEW CHECK API. PLEASE DO NOT MODIFY THIS FILE ANYMORE. INSTEAD, MODIFY THE MIGRATED CODE
 # RESIDING IN
-# cmk/base/plugins/agent_based/utils/oracle.py
+# cmk.plugins.lib/oracle.py
 # ==================================================================================================
 def oracle_handle_legacy_ora_errors(line):
     # Skip over line before ORA- errors (e.g. sent by AIX agent from 2014)

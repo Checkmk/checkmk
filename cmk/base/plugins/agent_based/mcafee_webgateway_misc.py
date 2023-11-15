@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils import mcafee_gateway
+
+from cmk.plugins.lib import mcafee_gateway
 
 
 def discovery_mcafee_webgateway_misc(

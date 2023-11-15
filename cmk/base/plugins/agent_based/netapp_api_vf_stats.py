@@ -7,6 +7,8 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.plugins.lib import cpu_util, netapp_api
+
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
@@ -20,7 +22,6 @@ from .agent_based_api.v1 import (
     State,
     type_defs,
 )
-from .utils import cpu_util, netapp_api
 
 # <<<netapp_api_vf_stats:sep(9)>>>
 # vfiler vfiler0 instance_uuid   node_uuid       vfiler_cpu_busy 663312444303217 vfiler_net_data_sent 8204762    vfiler_read_ops 14334581 ...

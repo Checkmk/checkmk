@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import cmk.utils.aws_constants as aws_types
+import cmk.utils.aws_constants as aws_types  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_limits, parse_aws_limits_generic

@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.cisco_ucs_temp_cpu import (
     discover_cisco_ucs_temp_cpu,
     parse_cisco_ucs_temp_cpu,
 )
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
+
+from cmk.plugins.lib.temperature import TempParamType as TempParamType
 
 
 @pytest.fixture(name="section", scope="module")

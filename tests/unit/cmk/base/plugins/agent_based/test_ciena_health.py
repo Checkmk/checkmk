@@ -19,7 +19,8 @@ from cmk.base.plugins.agent_based.ciena_health import (
     Section,
     SNMPData,
 )
-from cmk.base.plugins.agent_based.utils.ciena_ces import (
+
+from cmk.plugins.lib.ciena_ces import (
     FanStatus,
     LeoFanStatus,
     LeoPowerSupplyState,

@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE_BX
+
+from cmk.plugins.lib.blade import DETECT_BLADE_BX
 
 
 def check_blade_bx_temp(item, params, info):

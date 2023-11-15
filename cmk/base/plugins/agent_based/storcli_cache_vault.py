@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Final, NamedTuple
 
+from cmk.plugins.lib import megaraid
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import megaraid
 
 _KNOWN_PROPERTIES: Final = (
     "State",

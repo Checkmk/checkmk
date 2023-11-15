@@ -6,7 +6,7 @@
 
 from typing import Final
 
-from cmk.base.plugins.agent_based.utils.cisco_ucs import DETECT
+from cmk.plugins.lib.cisco_ucs import DETECT
 
 map_operability: Final = {
     "0": (2, "unknown"),

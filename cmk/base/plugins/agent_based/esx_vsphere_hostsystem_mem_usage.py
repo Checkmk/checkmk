@@ -5,10 +5,11 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.esx_vsphere import Section
+from cmk.plugins.lib.memory import check_element
+
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.esx_vsphere import Section
-from .utils.memory import check_element
 
 
 class EsxHostsystemMemory(NamedTuple):

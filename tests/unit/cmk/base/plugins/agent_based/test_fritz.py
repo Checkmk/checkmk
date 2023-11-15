@@ -28,10 +28,8 @@ from cmk.base.plugins.agent_based.fritz import (
     parse_fritz,
     Section,
 )
-from cmk.base.plugins.agent_based.utils.interfaces import (
-    CHECK_DEFAULT_PARAMETERS,
-    DISCOVERY_DEFAULT_PARAMETERS,
-)
+
+from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS, DISCOVERY_DEFAULT_PARAMETERS
 
 _STRING_TABLE = [
     ["VersionOS", "137.06.83"],

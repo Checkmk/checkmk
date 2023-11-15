@@ -17,10 +17,10 @@ from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, CheckPlu
 from cmk.base.plugins.agent_based import kube_pod_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.kube import PodCondition, PodConditions
 
 from cmk.agent_based.v1 import Result, State
 from cmk.agent_based.v1.type_defs import CheckResult
+from cmk.plugins.lib.kube import PodCondition, PodConditions
 
 MINUTE = 60
 TIMESTAMP = 359

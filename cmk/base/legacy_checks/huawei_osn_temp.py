@@ -7,7 +7,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_OSN
+
+from cmk.plugins.lib.huawei import DETECT_HUAWEI_OSN
 
 # The laser should not get hotter than 70°C
 

@@ -6,14 +6,15 @@
 from collections.abc import Mapping
 from typing import assert_never
 
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.robotmk_suite_execution_report import (
+from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
     ExecutionReport,
     ExecutionReportAlreadyRunning,
 )
+
+from .agent_based_api.v1 import register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 def discover(

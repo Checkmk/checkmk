@@ -18,10 +18,10 @@ from cmk.base.plugins.agent_based.entity_sensors import (
     discover_entity_sensors_temp,
     parse_entity_sensors,
 )
-from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensor, EntitySensorSection
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.entity_sensors import EntitySensor, EntitySensorSection
+from cmk.plugins.lib.temperature import TempParamType
 
 _SECTION_CISCO_ENTITY_SENSORS = {
     "fan": {

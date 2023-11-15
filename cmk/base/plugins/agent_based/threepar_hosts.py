@@ -12,8 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
+from cmk.plugins.lib.threepar import parse_3par
+
 from .agent_based_api.v1 import register, Result, Service, State
-from .utils.threepar import parse_3par
 
 
 @dataclass

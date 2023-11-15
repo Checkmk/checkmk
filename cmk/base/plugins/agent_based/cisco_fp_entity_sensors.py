@@ -52,8 +52,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils import entity_sensors as utils
-from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensorSection, OIDSysDescr
+
+from cmk.plugins.lib import entity_sensors as utils
+from cmk.plugins.lib.entity_sensors import EntitySensorSection, OIDSysDescr
 
 
 def parse_cisco_fp_entity_sensors(string_table: list[StringTable]) -> EntitySensorSection:

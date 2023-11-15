@@ -14,9 +14,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     render,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
-from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.base.plugins.agent_based.utils.wmi import required_tables_missing, WMISection, WMITable
+
+from cmk.plugins.lib.wmi import get_wmi_time
+from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
+from cmk.plugins.lib.wmi import required_tables_missing, WMISection, WMITable
 
 _Metric = tuple[str, float, float | None, float | None, float | None, float | None]
 LegacyCheckFunctionGenerator = Generator[tuple[int, str, list[_Metric]], None, None]

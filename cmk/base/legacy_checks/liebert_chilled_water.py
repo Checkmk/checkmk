@@ -7,10 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.liebert import (
-    DETECT_LIEBERT,
-    parse_liebert_str_without_unit,
-)
+
+from cmk.plugins.lib.liebert import DETECT_LIEBERT, parse_liebert_str_without_unit
 
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.100.4626 Supply Chilled Water Over Temp

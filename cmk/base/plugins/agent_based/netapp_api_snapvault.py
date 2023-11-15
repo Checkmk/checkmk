@@ -19,9 +19,10 @@ from collections import OrderedDict
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from cmk.plugins.lib.netapp_api import SectionSingleInstance
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.netapp_api import SectionSingleInstance
 
 
 def _cleanse_item_name(name: str) -> str:

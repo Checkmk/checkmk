@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition, savefloat
 from cmk.base.check_legacy_includes.humidity import check_humidity
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
+
+from cmk.plugins.lib.stulz import DETECT_STULZ
 
 stulz_humidity_default_levels = (35, 40, 60, 65)
 

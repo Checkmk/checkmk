@@ -10,8 +10,6 @@ import pytest
 from freezegun import freeze_time
 
 import cmk.base.plugins.agent_based.sap_hana_data_volume as sap_hana_data_volume
-import cmk.base.plugins.agent_based.utils.df as df
-import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     IgnoreResultsError,
@@ -21,6 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 
+import cmk.plugins.lib.df as df
+import cmk.plugins.lib.sap_hana as sap_hana
 from cmk.agent_based.v1.type_defs import StringTable
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"

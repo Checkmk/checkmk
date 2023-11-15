@@ -23,6 +23,8 @@ from typing import Any, assert_never, Literal
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib import humidity, temperature
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -36,7 +38,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import humidity, temperature
 
 
 @dataclass(frozen=True)

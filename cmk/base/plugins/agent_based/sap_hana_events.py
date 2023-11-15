@@ -5,9 +5,10 @@
 
 from typing import Final
 
+from cmk.plugins.lib import sap_hana
+
 from .agent_based_api.v1 import IgnoreResultsError, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import sap_hana
 
 SAP_HANA_EVENTS_MAP: Final = {
     "open_events": (State.CRIT, "Unacknowledged events"),

@@ -9,6 +9,8 @@ from typing import Any
 
 import cmk.utils.oracle_constants as oracle_constants  # pylint: disable=cmk-module-layer-violation
 
+from cmk.plugins.lib.oracle import InstancePerformance, SectionPerformance
+
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
@@ -22,7 +24,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.oracle import InstancePerformance, SectionPerformance
 
 # In cooperation with Thorsten Bruhns from OPITZ Consulting
 

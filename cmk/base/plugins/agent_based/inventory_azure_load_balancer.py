@@ -7,8 +7,9 @@ from collections.abc import Mapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.azure import FrontendIpConfiguration
-from cmk.base.plugins.agent_based.utils.azure_load_balancer import (
+
+from cmk.plugins.lib.azure import FrontendIpConfiguration
+from cmk.plugins.lib.azure_load_balancer import (
     InboundNatRule,
     LoadBalancerBackendPool,
     OutboundRule,

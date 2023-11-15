@@ -7,6 +7,8 @@ import datetime
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import docker, uptime
+
 from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service, State
 from .agent_based_api.v1.type_defs import (
     CheckResult,
@@ -14,7 +16,6 @@ from .agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
 )
-from .utils import docker, uptime
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 

@@ -9,7 +9,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import winperf_phydisk
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric
-from cmk.base.plugins.agent_based.utils import diskstat
+
+from cmk.plugins.lib import diskstat
 
 STRING_TABLE = [
     ["1435670669.29", "234", "2", "3"],

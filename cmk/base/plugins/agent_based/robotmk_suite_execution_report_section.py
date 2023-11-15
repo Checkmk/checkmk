@@ -5,13 +5,14 @@
 
 from collections.abc import Mapping
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.robotmk_suite_execution_report import (
+from cmk.plugins.lib.robotmk_suite_execution_report import (
     ExecutionReport,
     ExecutionReportAlreadyRunning,
     SuiteExecutionReport,
 )
+
+from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse(

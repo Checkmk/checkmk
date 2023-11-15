@@ -7,13 +7,8 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.utils.cpu_util import check_cpu_util
-from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
-
-from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import interfaces
-from .utils.aws import (
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.aws import (
     AWSMetric,
     check_aws_metrics,
     discover_aws_generic,
@@ -21,6 +16,11 @@ from .utils.aws import (
     extract_aws_metrics_by_labels,
     parse_aws,
 )
+from cmk.plugins.lib.cpu_util import check_cpu_util
+from cmk.plugins.lib.diskstat import check_diskstat_dict
+
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, float]
 

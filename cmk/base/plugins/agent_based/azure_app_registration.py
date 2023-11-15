@@ -9,9 +9,10 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
+from cmk.plugins.lib.azure import parse_azure_datetime
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.azure import parse_azure_datetime
 
 THIRTY_DAYS = 30 * 24 * 60 * 60
 SEVEN_DAYS = 7 * 24 * 60 * 60

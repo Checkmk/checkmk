@@ -22,15 +22,15 @@ from cmk.base.plugins.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_9800_clients,
     parse_cisco_wlc_clients,
 )
-from cmk.base.plugins.agent_based.utils.wlc_clients import (
+from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
+
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.wlc_clients import (
     ClientsPerInterface,
     ClientsTotal,
     VsResult,
     WlcClientsSection,
 )
-from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
-
-from cmk.agent_based.v1.type_defs import StringTable
 
 # raw data looks like this:
 # TODO: we sould use this as test input

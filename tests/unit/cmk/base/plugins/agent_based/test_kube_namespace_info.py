@@ -7,7 +7,8 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_namespace_info import check_kube_namespace_info
-from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo, NamespaceName, Timestamp
+
+from cmk.plugins.lib.kube import NamespaceInfo, NamespaceName, Timestamp
 
 
 def test_check_kube_namespace_info() -> None:

@@ -7,7 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.domino import DETECT
+
+from cmk.plugins.lib.domino import DETECT
 
 MAILQUEUES_LABEL = (
     ("lnDeadMail", "Dead mails"),

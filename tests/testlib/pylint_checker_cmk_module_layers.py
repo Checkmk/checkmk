@@ -344,6 +344,22 @@ def _is_allowed_for_agent_based_api_exposure_under_plugins(
     )
 
 
+def _is_allowed_for_plugins(
+    *,
+    imported: ModuleName,
+    component: Component,  # pylint: disable=unused-argument
+) -> bool:
+    return any(
+        (
+            _in_component(imported=imported, component=Component("cmk.agent_based.v2alpha")),
+            _in_component(imported=imported, component=Component("cmk.graphing.v1")),
+            _in_component(imported=imported, component=Component("cmk.plugins")),
+            _in_component(imported=imported, component=Component("cmk.rulesets.v1")),
+            _in_component(imported=imported, component=Component("cmk.server_side_calls.v1")),
+        )
+    )
+
+
 def _is_allowed_for_agent_based_plugin(
     *,
     imported: ModuleName,
@@ -356,8 +372,10 @@ def _is_allowed_for_agent_based_plugin(
                 component=Component("cmk.base.plugins.agent_based.agent_based_api"),
             ),
             _in_component(
-                imported=imported, component=Component("cmk.base.plugins.agent_based.utils")
+                imported=imported,
+                component=Component("cmk.base.plugins.agent_based.utils"),
             ),
+            _in_component(imported=imported, component=Component("cmk.plugins")),
         )
     )
 
@@ -382,6 +400,27 @@ def _allow_default_plus_component_under_test(
     )
 
 
+def _is_allowed_for_legacy_checks(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _in_component(imported=imported, component=Component("cmk.base.legacy_checks")),
+            _in_component(imported=imported, component=Component("cmk.base.check_legacy_includes")),
+            _in_component(imported=imported, component=Component("cmk.plugins")),
+            _in_component(imported=imported, component=Component("cmk.base.config")),
+            _in_component(imported=imported, component=Component("cmk.base.check_api")),
+            _in_component(
+                imported=imported,
+                component=Component("cmk.base.plugins.agent_based"),
+            ),
+            _in_component(imported=imported, component=Component("cmk.agent_based")),
+        )
+    )
+
+
 def _is_allowed_for_legacy_check_tests(
     *,
     imported: ModuleName,
@@ -396,6 +435,7 @@ def _is_allowed_for_legacy_check_tests(
             _in_component(imported=imported, component=Component("cmk.base.api.agent_based")),
             _in_component(imported=imported, component=Component("cmk.checkengine")),
             _in_component(imported=imported, component=Component("cmk.snmplib")),
+            _in_component(imported=imported, component=Component("cmk.plugins")),
         )
     )
 
@@ -432,6 +472,8 @@ _COMPONENTS = (
     # and we want to encourage that
     (Component("cmk.base.api.agent_based.value_store"), _allow_default_plus_checkers),
     (Component("cmk.base.api.agent_based"), _allow_default_plus_fetchers_checkers_and_snmplib),
+    (Component("cmk.base.check_legacy_includes"), _is_allowed_for_legacy_checks),
+    (Component("cmk.base.legacy_checks"), _is_allowed_for_legacy_checks),
     (
         Component("cmk.base.plugins.agent_based.agent_based_api"),
         _is_allowed_for_agent_based_api_exposure_under_plugins,
@@ -455,6 +497,7 @@ _COMPONENTS = (
     (Component("cmk.gui"), _allow_for_gui),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
+    (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
     (Component("cmk.rulesets"), _in_component),

@@ -5,8 +5,9 @@
 
 from collections.abc import Sequence
 
+from cmk.plugins.lib import interfaces
+
 from .agent_based_api.v1 import register, type_defs
-from .utils import interfaces
 
 Section = Sequence[interfaces.InterfaceWithCounters]
 

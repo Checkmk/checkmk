@@ -9,13 +9,8 @@ from contextlib import suppress
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import (
-    BlocksSubsection,
-    DfBlock,
-    DfInode,
-    DfSection,
-    InodesSubsection,
-)
+
+from cmk.plugins.lib.df import BlocksSubsection, DfBlock, DfInode, DfSection, InodesSubsection
 
 LsblkMap = Mapping[str, str | None]
 MpToDevice = Mapping[str, str]

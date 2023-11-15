@@ -28,7 +28,8 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
 )
 from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
-from cmk.base.plugins.agent_based.utils.checkmk import (
+
+from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,

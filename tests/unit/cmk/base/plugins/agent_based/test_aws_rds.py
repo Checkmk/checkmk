@@ -30,7 +30,8 @@ from cmk.base.plugins.agent_based.aws_rds import (
     discover_aws_rds_transaction_logs_usage,
     parse_aws_rds,
 )
-from cmk.base.plugins.agent_based.utils.aws import AWSSectionMetrics
+
+from cmk.plugins.lib.aws import AWSSectionMetrics
 
 SECTION = {
     "database-1 [eu-central-1]": {

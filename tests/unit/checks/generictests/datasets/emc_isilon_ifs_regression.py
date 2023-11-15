@@ -7,7 +7,7 @@ from cmk.base.plugins.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS
 
 checkname = "emc_isilon_ifs"
 

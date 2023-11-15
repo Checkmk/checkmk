@@ -11,7 +11,8 @@ from cmk.base.check_legacy_includes.hp_proliant import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
+
+from cmk.plugins.lib.hp_proliant import DETECT
 
 check_info["hp_proliant_cpu"] = LegacyCheckDefinition(
     detect=DETECT,

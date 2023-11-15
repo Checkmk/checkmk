@@ -5,12 +5,13 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.utils.docker as docker
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inventory_docker_node_images import (
     inventory_docker_node_images,
     parse_docker_node_images,
 )
+
+import cmk.plugins.lib.docker as docker
 
 from .utils_inventory import sort_inventory_result
 

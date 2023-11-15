@@ -48,9 +48,9 @@ from cmk.base.plugins.agent_based.mssql_counters_transactions import (
 from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     discovery_mssql_counters_transactions,
 )
-from cmk.base.plugins.agent_based.utils.mssql_counters import Section
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.mssql_counters import Section
 
 ValueStore = dict[str, Any]
 

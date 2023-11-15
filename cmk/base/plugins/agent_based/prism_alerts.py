@@ -6,9 +6,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib.prism import load_json
+
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.prism import load_json
 
 Section = Sequence[Mapping[Any, Any]]
 StringMap = Mapping[str, str]

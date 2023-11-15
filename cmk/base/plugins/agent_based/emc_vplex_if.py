@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.emc import DETECT_VPLEX
+
 from .agent_based_api.v1 import OIDEnd, register, SNMPTree, type_defs
-from .utils import interfaces
-from .utils.emc import DETECT_VPLEX
 
 
 def parse_emc_vplex_if(

@@ -17,7 +17,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     State,
 )
-from cmk.base.plugins.agent_based.utils.multipath import Group
+
+from cmk.plugins.lib.multipath import Group
 
 
 def test_parse_diskstat_minimum() -> None:

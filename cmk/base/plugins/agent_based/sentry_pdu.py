@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.sentry import DEVICE_STATES_V4
+
 from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.sentry import DEVICE_STATES_V4
 
 
 class PDU(NamedTuple):

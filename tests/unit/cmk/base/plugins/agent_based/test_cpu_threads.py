@@ -11,7 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.cpu import parse_cpu
 from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
-from cmk.base.plugins.agent_based.utils.cpu import Load, Section, Threads
+
+from cmk.plugins.lib.cpu import Load, Section, Threads
 
 
 def test_cpu_threads() -> None:

@@ -8,6 +8,16 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any, Literal
 
+from cmk.plugins.lib.kube import (
+    ControllerSpec,
+    DaemonSetReplicas,
+    DeploymentReplicas,
+    StatefulSetReplicas,
+    UpdateStrategy,
+    VSResultAge,
+)
+from cmk.plugins.lib.kube_strategy import strategy_text
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -19,15 +29,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import (
-    ControllerSpec,
-    DaemonSetReplicas,
-    DeploymentReplicas,
-    StatefulSetReplicas,
-    UpdateStrategy,
-    VSResultAge,
-)
-from .utils.kube_strategy import strategy_text
 
 
 def parse_kube_deployment_replicas(string_table: StringTable) -> DeploymentReplicas:

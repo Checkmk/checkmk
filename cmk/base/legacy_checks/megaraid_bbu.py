@@ -9,7 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State
-from cmk.base.plugins.agent_based.utils.megaraid import check_state
+
+from cmk.plugins.lib.megaraid import check_state
 
 # Agent output not included since it has almost 100 lines
 # it's available in our archive or fh's bitbucket

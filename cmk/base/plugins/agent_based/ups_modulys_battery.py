@@ -7,7 +7,8 @@ import sys
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -20,7 +21,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.ups_modulys import DETECT_UPS_MODULYS
 
 
 class UPSBattery(NamedTuple):

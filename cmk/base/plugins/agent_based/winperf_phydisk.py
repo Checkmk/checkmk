@@ -7,6 +7,8 @@ from collections.abc import Mapping, MutableMapping, Sequence
 from enum import IntEnum, StrEnum, unique
 from typing import Any, Final
 
+from cmk.plugins.lib import diskstat
+
 from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
@@ -15,7 +17,6 @@ from .agent_based_api.v1 import (
     register,
     type_defs,
 )
-from .utils import diskstat
 
 # Example output from agent
 # <<<winperf_phydisk>>>

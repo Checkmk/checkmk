@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection
+
+from cmk.plugins.lib import ucd_hr_detection
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should

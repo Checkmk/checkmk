@@ -8,9 +8,10 @@ import urllib.parse
 from collections.abc import Mapping, Sequence
 from typing import NamedTuple
 
+from cmk.plugins.lib import cache_helper
+
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import cache_helper
 
 
 class PluginData(NamedTuple):

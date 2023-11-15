@@ -8,7 +8,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.hpux_cpu import parse_hpux_cpu
-from cmk.base.plugins.agent_based.utils.cpu import Load, Section
+
+from cmk.plugins.lib.cpu import Load, Section
 
 
 @pytest.mark.parametrize(

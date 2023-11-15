@@ -7,9 +7,10 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.prism import load_json
+
 from .agent_based_api.v1 import Metric, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.prism import load_json
 
 Section = Mapping[str, Mapping[str, Any]]
 

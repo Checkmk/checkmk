@@ -5,15 +5,16 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, SNMPTree, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     FILESYSTEM_DEFAULT_PARAMS,
     mountpoints_in_group,
 )
-from .utils.hitachi_hnas import DETECT, parse_physical_volumes, parse_virtual_volumes
+from cmk.plugins.lib.hitachi_hnas import DETECT, parse_physical_volumes, parse_virtual_volumes
+
+from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 STATE_MAP = {
     "mounted": State.OK,

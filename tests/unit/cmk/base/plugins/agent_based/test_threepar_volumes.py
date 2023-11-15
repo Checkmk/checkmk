@@ -16,9 +16,9 @@ from cmk.base.plugins.agent_based.threepar_volumes import (
     discover_threepar_volumes,
     parse_threepar_volumes,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [

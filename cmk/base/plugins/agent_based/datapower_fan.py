@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from cmk.plugins.lib.datapower import DETECT
+
 from .agent_based_api.v1 import register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.datapower import DETECT
 
 
 @dataclass(frozen=True)

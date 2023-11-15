@@ -71,8 +71,9 @@ import time
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, TypeVar
 
+from cmk.plugins.lib import diskstat, multipath
+
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
-from .utils import diskstat, multipath
 
 
 def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:

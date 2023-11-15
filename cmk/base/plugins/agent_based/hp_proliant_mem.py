@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final, NamedTuple
 
+from cmk.plugins.lib.hp_proliant import DETECT, MAP_TYPES_MEMORY
+
 from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils.hp_proliant import DETECT, MAP_TYPES_MEMORY
 
 _STATUS_MAP: Final = {
     "1": "other",

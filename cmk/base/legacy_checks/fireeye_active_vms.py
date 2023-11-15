@@ -7,7 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils import fireeye
+
+from cmk.plugins.lib import fireeye
 
 
 def discover_fireeye_active_vms(string_table):

@@ -14,7 +14,8 @@ import pytest
 from cmk.base.plugins.agent_based import kube_deployment_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils.kube import DeploymentConditions, VSResultAge
+
+from cmk.plugins.lib.kube import DeploymentConditions, VSResultAge
 
 MINUTE = 60
 TIMESTAMP = 120

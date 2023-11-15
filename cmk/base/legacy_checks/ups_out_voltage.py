@@ -10,7 +10,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ups_out_voltage import check_ups_out_voltage
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
+
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
 
 
 def discover_ups_out_voltage(info: list[list[str]]) -> Iterable[tuple[str, dict]]:

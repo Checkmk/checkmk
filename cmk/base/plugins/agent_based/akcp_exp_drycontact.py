@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import register, SNMPTree
-from .utils.akcp import DETECT_AKCP_EXP
-from .utils.akcp_sensor import (
+from cmk.plugins.lib.akcp import DETECT_AKCP_EXP
+from cmk.plugins.lib.akcp_sensor import (
     check_akcp_sensor_drycontact,
     inventory_akcp_sensor_no_params,
     parse_akcp_sensor,
 )
+
+from .agent_based_api.v1 import register, SNMPTree
 
 # Example for contents of info
 #           description            state  online  critical_desc  normal_desc

@@ -8,7 +8,8 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.docker import NodeInfoSection
+
+from cmk.plugins.lib.docker import NodeInfoSection
 
 
 def discover_docker_node_info(section: NodeInfoSection) -> Iterable[tuple[None, dict]]:

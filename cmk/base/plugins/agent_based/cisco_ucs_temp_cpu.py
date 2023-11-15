@@ -7,12 +7,13 @@ from collections.abc import Mapping, MutableMapping
 from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
+
+from cmk.plugins.lib.cisco_ucs import DETECT
+from cmk.plugins.lib.temperature import check_temperature
+from cmk.plugins.lib.temperature import TempParamType as TempParamType
 
 from .agent_based_api.v1 import get_value_store, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_ucs import DETECT
 
 
 def parse_cisco_ucs_temp_cpu(string_table: StringTable) -> dict[str, int]:

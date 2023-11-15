@@ -7,7 +7,8 @@
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.viprinet import DETECT_VIPRINET
+
+from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 check_info["viprinet_mem"] = LegacyCheckDefinition(
     detect=DETECT_VIPRINET,

@@ -16,7 +16,8 @@ from cmk.base.plugins.agent_based.cisco_ucs_mem import (
     MemoryModule,
     parse_cisco_ucs_mem,
 )
-from cmk.base.plugins.agent_based.utils.cisco_ucs import Fault
+
+from cmk.plugins.lib.cisco_ucs import Fault
 
 
 @pytest.fixture(name="section_cisco_ucs_mem", scope="module")

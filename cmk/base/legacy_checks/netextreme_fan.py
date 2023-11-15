@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fan import check_fan
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
+
+from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
 
 # Just an assumption, levels as in other fan checks
 

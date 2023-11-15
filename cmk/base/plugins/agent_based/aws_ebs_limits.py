@@ -6,9 +6,10 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from cmk.plugins.lib.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
+
 from .agent_based_api.v1 import register, render, Service
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
-from .utils.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
 
 AWS_EBS_LIMITS_DEFAULT_PARAMS = {
     "block_store_snapshots": (None, 80.0, 90.0),

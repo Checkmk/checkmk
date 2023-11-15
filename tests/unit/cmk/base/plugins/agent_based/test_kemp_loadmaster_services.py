@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.kemp_loadmaster_services import (
     discover_kemp_loadmaster_services,
     parse_kemp_loadmaster_services,
 )
-from cmk.base.plugins.agent_based.utils.kemp_loadmaster import VSSection
+
+from cmk.plugins.lib.kemp_loadmaster import VSSection
 
 STRING_TABLE = [
     ["vs adaptive method type", "1", "100", "1"],

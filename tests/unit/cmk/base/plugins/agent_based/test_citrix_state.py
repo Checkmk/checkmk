@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.citrix_state import (
     DEFAULT_PARAMS,
 )
 from cmk.base.plugins.agent_based.inventory_citrix_state import inventory_citrix_state
-from cmk.base.plugins.agent_based.utils.citrix_state import parse_citrix_state
+
+from cmk.plugins.lib.citrix_state import parse_citrix_state
 
 from .utils_inventory import sort_inventory_result
 

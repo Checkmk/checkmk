@@ -8,6 +8,8 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib import oracle
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -18,7 +20,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import oracle
 
 # actual format
 # <<<oracle_rman>>>

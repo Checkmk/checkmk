@@ -7,7 +7,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import netapp_api_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.utils import interfaces
+
+from cmk.plugins.lib import interfaces
 
 
 @pytest.mark.parametrize(

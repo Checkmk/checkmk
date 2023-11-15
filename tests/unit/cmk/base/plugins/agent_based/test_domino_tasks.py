@@ -9,9 +9,9 @@ import pytest
 from cmk.checkengine.parameters import Parameters
 
 from cmk.base.plugins.agent_based.domino_tasks import check_domino_tasks
-from cmk.base.plugins.agent_based.utils import ps
 
 from cmk.agent_based.v1 import IgnoreResultsError, Metric, Result, State
+from cmk.plugins.lib import ps
 
 SECTION_DOMINO_TASKS_DATA = (
     1,

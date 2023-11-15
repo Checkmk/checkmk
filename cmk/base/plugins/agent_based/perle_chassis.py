@@ -5,9 +5,10 @@
 
 from dataclasses import dataclass
 
+from cmk.plugins.lib.perle import DETECT_PERLE
+
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.perle import DETECT_PERLE
 
 
 @dataclass

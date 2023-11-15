@@ -5,9 +5,10 @@
 
 from collections.abc import Sequence
 
+from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
+
 from .agent_based_api.v1 import register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.fortinet import DETECT_FORTISANDBOX
 
 Section = Sequence[tuple[str, str]]
 

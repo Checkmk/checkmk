@@ -20,8 +20,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 
+from cmk.plugins.lib.mobileiron import SourceHostSection
+
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mobileiron import SourceHostSection
 
 
 def check_mobileiron_sourcehost(

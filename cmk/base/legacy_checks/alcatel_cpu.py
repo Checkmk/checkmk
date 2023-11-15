@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.alcatel import check_alcatel_cpu, inventory_alcatel_cpu
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL
+
+from cmk.plugins.lib.alcatel import DETECT_ALCATEL
 
 check_info["alcatel_cpu"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL,

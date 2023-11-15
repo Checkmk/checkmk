@@ -98,6 +98,8 @@ from typing import NamedTuple
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.ip_format import clean_v4_address, clean_v6_address
+
 from .agent_based_api.v1 import (
     all_of,
     exists,
@@ -114,7 +116,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringByteTable
-from .utils.ip_format import clean_v4_address, clean_v6_address
 
 
 class BGPData(NamedTuple):

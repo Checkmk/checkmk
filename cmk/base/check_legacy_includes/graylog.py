@@ -10,7 +10,8 @@ import time
 
 from cmk.base.check_api import check_levels, get_age_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_rate, get_value_store
-from cmk.base.plugins.agent_based.utils import graylog
+
+from cmk.plugins.lib import graylog
 
 json = json_module
 parse_graylog_agent_data = graylog.deserialize_and_merge_json

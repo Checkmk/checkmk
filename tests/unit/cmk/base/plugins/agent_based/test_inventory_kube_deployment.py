@@ -12,7 +12,8 @@ from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_deployment import inventory_kube_deployment
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     DeploymentInfo,
     NamespaceName,
     Recreate,

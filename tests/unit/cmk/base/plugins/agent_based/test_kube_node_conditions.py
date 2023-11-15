@@ -12,7 +12,8 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 from cmk.base.plugins.agent_based import kube_node_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
-from cmk.base.plugins.agent_based.utils import kube
+
+from cmk.plugins.lib import kube
 
 
 class NodeConditionFactory(ModelFactory):

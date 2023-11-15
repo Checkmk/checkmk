@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import cpu, memory, ps
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import CheckResult
-from .utils import cpu, memory, ps
 
 
 def check_ps(

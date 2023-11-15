@@ -6,16 +6,17 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from .agent_based_api.v1 import get_value_store, register, SNMPTree
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlocks,
 )
-from .utils.netscaler import SNMP_DETECT
+from cmk.plugins.lib.netscaler import SNMP_DETECT
+
+from .agent_based_api.v1 import get_value_store, register, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 #
 # Example Output:

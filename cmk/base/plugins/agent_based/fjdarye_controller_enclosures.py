@@ -15,8 +15,9 @@
 # the latter can be one of the following:
 
 
+from cmk.plugins.lib.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
+
 from .agent_based_api.v1 import any_of, equals, register, SNMPTree
-from .utils.fjdarye import check_fjdarye_item, discover_fjdarye_item, parse_fjdarye_item
 
 FJDARYE_CONTROLLER_ENCLOSURES = {
     ".1.3.6.1.4.1.211.1.21.1.60": ".2.6.2.1",  # fjdarye60

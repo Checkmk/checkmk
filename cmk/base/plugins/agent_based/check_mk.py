@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.checkmk import CheckmkSection
+
 from .agent_based_api.v1 import Attributes, HostLabel, register
 from .agent_based_api.v1.type_defs import HostLabelGenerator, InventoryResult, StringTable
-from .utils.checkmk import CheckmkSection
 
 
 def parse_checkmk_labels(string_table: StringTable) -> CheckmkSection:

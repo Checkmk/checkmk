@@ -15,7 +15,8 @@ from tests.testlib import set_timezone
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
-from cmk.base.plugins.agent_based.utils import ps as ps_utils
+
+from cmk.plugins.lib import ps as ps_utils
 
 
 def splitter(
@@ -1399,7 +1400,7 @@ def test_parse_ps_windows(mocker: MockerFixture) -> None:
         assert False, "how do I not have an item"
     item = service.item
 
-    mocker.patch("cmk.base.plugins.agent_based.utils.ps.cpu_rate", return_value=1000000)
+    mocker.patch("cmk.plugins.lib.ps.cpu_rate", return_value=1000000)
     mocker.patch("cmk.base.plugins.agent_based.agent_based_api.v1.get_value_store", return_value={})
     results = list(
         ps_check.check_ps(

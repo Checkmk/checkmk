@@ -316,10 +316,6 @@ def register_oracle_graphs():
             ("oracle_pga_total_freeable_pga_memory", "line"),
         ],
         "optional_metrics": ["oracle_pga_total_freeable_pga_memory"],
-        "range": (
-            0,
-            "oracle_pga_total_pga_allocated,oracle_pga_total_pga_inuse,oracle_pga_total_freeable_pga_memory,MAX,MAX",
-        ),
     }
 
 

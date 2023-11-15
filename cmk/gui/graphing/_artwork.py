@@ -635,7 +635,9 @@ def _compute_v_axis_min_max(
 
     # Apply explicit range if defined in graph
     explicit_min_value, explicit_max_value = graph_recipe.explicit_vertical_range
-    if explicit_min_value is not None:
+    if explicit_min_value is None:
+        min_value = 0.0
+    else:
         min_value = explicit_min_value
     if explicit_max_value is not None:
         max_value = explicit_max_value

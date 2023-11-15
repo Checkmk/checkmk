@@ -212,5 +212,4 @@ graph_info["active_shards"] = {
         ("active_shards", "line"),
         ("active_primary_shards", "line"),
     ],
-    "range": (0, "active_shards,active_primary_shards,MAX"),
 }

@@ -1421,7 +1421,6 @@ graph_info["zfs_meta_data"] = {
         ("zfs_metadata_used", "line"),
         ("zfs_metadata_limit", "line"),
     ],
-    "range": (0, "zfs_metadata_max,zfs_metadata_used,zfs_metadata_limit,MAX,MAX"),
 }
 
 graph_info["cache_hit_ratio"] = {
@@ -1431,7 +1430,6 @@ graph_info["cache_hit_ratio"] = {
         ("prefetch_metadata_hit_ratio", "line"),
         ("prefetch_data_hit_ratio", "line"),
     ],
-    "range": (0, "cache_hit_ratio,prefetch_metadata_hit_ratio,prefetch_data_hit_ratio,MAX,MAX"),
 }
 
 graph_info["wasted_space_of_tables_and_indexes"] = {
@@ -1624,7 +1622,6 @@ graph_info["ram_swap_overview"] = {
         ("mem_used", "line"),
         ("swap_used", "line"),
     ],
-    "range": (0, "mem_total,swap_total,MAX"),
 }
 
 graph_info["swap"] = {
@@ -1634,7 +1631,6 @@ graph_info["swap"] = {
         ("swap_used", "stack"),
         ("swap_cached", "stack"),
     ],
-    "range": (0, "swap_total,swap_used,swap_cached,MAX,MAX"),
 }
 
 graph_info["caches"] = {
@@ -1777,7 +1773,6 @@ graph_info["heap_memory_usage"] = {
         "mem_heap:warn",
         "mem_heap:crit",
     ],
-    "range": (0, "mem_heap_committed,mem_heap,MAX"),
 }
 
 graph_info["non-heap_memory_usage"] = {
@@ -1791,7 +1786,6 @@ graph_info["non-heap_memory_usage"] = {
         "mem_nonheap:crit",
         "mem_nonheap:max",
     ],
-    "range": (0, "mem_nonheap_committed,mem_nonheap,MAX"),
 }
 
 graph_info["private_and_shared_memory"] = {
@@ -1841,7 +1835,6 @@ graph_info["files_notification_spool"] = {
         ("corrupted_files", "line"),
     ],
     "optional_metrics": ["deferred_files", "corrupted_files"],
-    "range": (0, "new_files,deferred_files,corrupted_files,MAX,MAX"),
 }
 
 # workaround for showing single metrics of multiple hosts on the same combined graph dashlet

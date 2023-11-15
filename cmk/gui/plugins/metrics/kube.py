@@ -378,5 +378,4 @@ graph_info["kube_cronjob_status"] = {
         ("kube_cron_job_status_job_duration", "line"),
         ("kube_cron_job_status_execution_duration", "line"),
     ],
-    "range": (0, "kube_cron_job_status_job_duration,kube_cron_job_status_execution_duration,MAX"),
 }

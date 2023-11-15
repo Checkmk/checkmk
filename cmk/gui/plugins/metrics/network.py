@@ -1891,7 +1891,6 @@ graph_info["tcp_connection_states"] = {
 graph_info["db_connections"] = {
     "title": _("DB Connections"),
     "metrics": [("active_connections", "line"), ("idle_connections", "line")],
-    "range": (0, "active_connections,idle_connections,MAX"),
     "scalars": [
         ("active_connections:warn", _("Warning (active connections)")),
         ("active_connections:crit", _("Critical (active connections)")),
@@ -1956,7 +1955,6 @@ graph_info["round_trip_average"] = {
         ("rtmin", "line"),
         ("rta", "line"),
     ],
-    "range": (0, "rtmax,rtmin,rta,MAX,MAX"),
     "scalars": [
         "rta:warn",
         "rta:crit",
@@ -2138,7 +2136,6 @@ graph_info["DB_connections"] = {
         ("connections_conn_threads", "line"),
         ("connections_max", "line"),
     ],
-    "range": (0, "connections_max_used,connections_conn_threads,connections_max,MAX,MAX"),
 }
 
 graph_info["http_errors"] = {
@@ -2147,7 +2144,6 @@ graph_info["http_errors"] = {
         ("http_5xx_rate", "line"),
         ("http_4xx_rate", "line"),
     ],
-    "range": (0, "http_5xx_rate,http_4xx_rate,MAX"),
 }
 
 graph_info["inodes_used"] = {

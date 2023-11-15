@@ -1279,7 +1279,11 @@ class SiteFactory:
         return self._sites
 
     def get_site(
-        self, name: str, init_livestatus: bool = True, activate_changes: bool = True
+        self,
+        name: str,
+        start: bool = True,
+        init_livestatus: bool = True,
+        activate_changes: bool = True,
     ) -> Site:
         site = self._site_obj(name)
 
@@ -1287,6 +1291,9 @@ class SiteFactory:
 
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
+
+        if not start:
+            return site
 
         site.start()
         site.prepare_for_tests()

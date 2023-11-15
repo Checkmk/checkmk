@@ -62,6 +62,9 @@ def _check_netapp_api_luns(
     if (lun := section.get(item)) is None:
         return
 
+    yield Result(state=State.OK, summary=f"Volume: {lun['volume']}")
+    yield Result(state=State.OK, summary=f"Vserver: {lun['vserver']}")
+
     if lun.get("online") != "true":
         yield Result(state=State.CRIT, summary="LUN is offline")
 

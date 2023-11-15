@@ -1,0 +1,11 @@
+Title: No longer sporadically report stale services which are based on piggyback data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1699980710
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If the check interval of a host was greater than 1 minute, any of its reported piggyback data
+was at risk of being ignored by the target host because of being too old.

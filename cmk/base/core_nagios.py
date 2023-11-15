@@ -56,6 +56,8 @@ from cmk.base.core_config import (
 from cmk.base.ip_lookup import AddressFamily
 from cmk.base.plugins.server_side_calls import load_active_checks
 
+from cmk.discover_plugins import PluginLocation
+
 ObjectSpec = dict[str, Any]
 
 
@@ -1248,12 +1250,14 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("from cmk.checkengine.submitters import get_submitter\n")
     output.write("\n")
-    for full_mod_name in _get_needed_agent_based_modules(
+
+    locations = _get_needed_agent_based_locations(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ):
-        output.write("import %s\n" % full_mod_name)
-        console.verbose(" %s%s%s", tty.green, full_mod_name, tty.normal, stream=sys.stderr)
+    )
+    for module in {l.module for l in locations}:
+        output.write("import %s\n" % module)
+        console.verbose(" %s%s%s", tty.green, module, tty.normal, stream=sys.stderr)
 
     # Register default Checkmk signal handler
     output.write("cmk.base.utils.register_sigint_handler()\n")
@@ -1431,7 +1435,7 @@ def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> CheckPlug
     # A management plugin *could have been* created on the fly, from a 'regular' legacy
     # check plugin. In this case, we must load that.
     plugin = agent_based_register.get_check_plugin(check_plugin_name)
-    if not plugin or plugin.full_module is not None:
+    if not plugin or plugin.location is not None:
         # it does *not* result from a legacy plugin, if module is not None
         return None
 
@@ -1459,30 +1463,30 @@ def _get_legacy_check_file_names_to_load(
     return filenames
 
 
-def _get_needed_agent_based_modules(
+def _get_needed_agent_based_locations(
     check_plugin_names: set[CheckPluginName],
     inventory_plugin_names: set[InventoryPluginName],
-) -> list[str]:
+) -> list[PluginLocation]:
     modules = {
-        plugin.full_module
+        plugin.location
         for plugin in [agent_based_register.get_check_plugin(p) for p in check_plugin_names]
-        if plugin is not None and plugin.full_module is not None
+        if plugin is not None and plugin.location is not None
     }
     modules.update(
-        plugin.full_module
+        plugin.location
         for plugin in [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
-        if plugin is not None and plugin.full_module is not None
+        if plugin is not None and plugin.location is not None
     )
     modules.update(
-        section.full_module
+        section.location
         for section in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=check_plugin_names,
             inventory_plugin_names=inventory_plugin_names,
         ).values()
-        if section.full_module is not None
+        if section.location is not None
     )
 
-    return sorted(modules)
+    return sorted(modules, key=lambda l: (l.module, l.name or ""))
 
 
 def _get_required_legacy_check_sections(
@@ -1497,6 +1501,6 @@ def _get_required_legacy_check_sections(
         check_plugin_names=check_plugin_names,
         inventory_plugin_names=inventory_plugin_names,
     ).values():
-        if section.full_module is None:
+        if section.location is None:
             required_legacy_check_sections.add(str(section.name))
     return required_legacy_check_sections

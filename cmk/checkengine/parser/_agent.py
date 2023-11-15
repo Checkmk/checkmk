@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import abc
 import logging
+import re
 import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import final, Final, NamedTuple
@@ -16,6 +17,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
+from cmk.utils.regex import REGEX_HOST_NAME_CHARS
 from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions
 
@@ -30,6 +32,11 @@ from ._parser import (
     Parser,
     SectionNameCollection,
 )
+
+# cmk.utils.regex.REGEX_HOST_NAME is too relaxed and accepts, for example, "."
+# as a valid host name.  Fixing it over there, however, could break its
+# current users.
+is_valid_hostname = re.compile(rf"^\w[{REGEX_HOST_NAME_CHARS}]*$").match
 
 
 class SectionWithHeader(NamedTuple):
@@ -73,6 +80,12 @@ class ParserState(abc.ABC):
         PiggybackedHost --> Host : ""<<<~<>>>>""
         Host --> Host : ""<<<~<>>>>""
         PiggybackedHost --> PiggybackedHost : ""<<<~<HOSTNAME>>>>""
+
+        Host --> IgnoredPiggybackedHost : ""<<<~<.>>>>""
+        IgnoredPiggybackedHost --> Host : ""<<<~<>>>>""
+
+        PiggybackedHost --> IgnoredPiggybackedHost : ""<<<~<.>>>>""
+        IgnoredPiggybackedHost --> PiggybackedHost : ""<<<~<HOSTNAME>>>>""
 
     See Also:
         Gamma, Helm, Johnson, Vlissides (1995) Design Patterns "State pattern"
@@ -212,6 +225,16 @@ class ParserState(abc.ABC):
             logger=self._logger,
         )
 
+    def to_piggyback_ignore_parser(self) -> PiggybackIgnoreParser:
+        return PiggybackIgnoreParser(
+            self.hostname,
+            self.sections,
+            self.piggyback_sections,
+            translation=self.translation,
+            encoding_fallback=self.encoding_fallback,
+            logger=self._logger,
+        )
+
     def to_error(self, line: bytes) -> ParserState:
         self._logger.warning(
             "%s: Ignoring invalid data %r",
@@ -256,6 +279,8 @@ class NOOPParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self
+        if not is_valid_hostname(piggyback_header.hostname):
+            return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> ParserState:
@@ -304,6 +329,8 @@ class PiggybackParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self.to_noop_parser()
+        if not is_valid_hostname(piggyback_header.hostname):
+            return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> ParserState:
@@ -355,6 +382,8 @@ class PiggybackSectionParser(ParserState):
             self.translation,
             encoding_fallback=self.encoding_fallback,
         )
+        if not is_valid_hostname(piggyback_header.hostname):
+            return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> ParserState:
@@ -405,6 +434,8 @@ class PiggybackNOOPParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self.to_noop_parser()
+        if not is_valid_hostname(piggyback_header.hostname):
+            return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> ParserState:
@@ -419,6 +450,33 @@ class PiggybackNOOPParser(ParserState):
     def on_section_footer(self, line: bytes) -> ParserState:
         # Optional
         return self.to_piggyback_noop_parser(self.current_host)
+
+
+class PiggybackIgnoreParser(ParserState):
+    def do_action(self, line: bytes) -> PiggybackIgnoreParser:
+        return self
+
+    def on_piggyback_header(self, line: bytes) -> ParserState:
+        piggyback_header = PiggybackMarker.from_headerline(
+            line,
+            self.translation,
+            encoding_fallback=self.encoding_fallback,
+        )
+        if piggyback_header.hostname == self.hostname:
+            # Unpiggybacked "normal" host
+            return self.to_noop_parser()
+        if not is_valid_hostname(piggyback_header.hostname):
+            return self.to_piggyback_ignore_parser()
+        return self.to_piggyback_parser(piggyback_header)
+
+    def on_piggyback_footer(self, line: bytes) -> ParserState:
+        return self.to_noop_parser()
+
+    def on_section_header(self, line: bytes) -> PiggybackIgnoreParser:
+        return self
+
+    def on_section_footer(self, line: bytes) -> PiggybackIgnoreParser:
+        return self
 
 
 class HostSectionParser(ParserState):
@@ -460,6 +518,8 @@ class HostSectionParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self
+        if not is_valid_hostname(piggyback_header.hostname):
+            return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
     def on_piggyback_footer(self, line: bytes) -> ParserState:

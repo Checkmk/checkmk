@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-11-09 07:00+0000\n"
+"PO-Revision-Date: 2023-11-14 00:08+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -2791,9 +2791,8 @@ msgstr "Absolute Schwellwerte für Arbeitsspeicher 'reclaimed by GC'"
 msgid "Absolute levels for output traffic"
 msgstr "Absolute Schwellwerte für ausgehenden Verkehr"
 
-#, fuzzy
 msgid "Absolute levels for total number of used processes"
-msgstr "Absoluter Schwellwert für die Gesamtanzahl an benutzten Prozessen"
+msgstr "Absolute Schwellwerte für die Gesamtanzahl an benutzten Prozessen"
 
 msgid "Absolute levels for unused licenses"
 msgstr "Absolutschwellwerte für ungenutzte Lizenzen"
@@ -10011,9 +10010,8 @@ msgstr "Check Zugriff auf LDAP-Service"
 msgid "Check MK status of piggybacked host within this period"
 msgstr "CheckMK-Status der Piggyback-Hosts innerhalb dieses Zeitraums prüfen"
 
-#, fuzzy
 msgid "Check MS SQL Server- BETA (Linux, Windows)"
-msgstr "Microsoft SQL Server (Windows)"
+msgstr "Check MS SQL-Server- BETA (Linux, Windows)"
 
 msgid "Check Parameter"
 msgstr "Check-Parameter"
@@ -12032,9 +12030,8 @@ msgstr ""
 msgid "Configure levels on smoke"
 msgstr "Rauch-Schwellwerte festlegen"
 
-#, fuzzy
 msgid "Configure lower levels"
-msgstr "Untere Schwellwerte für Container"
+msgstr "Untere Schwellwerte konfigurieren"
 
 msgid ""
 "Configure monitoring of networking services using classical nagios plugins "
@@ -12269,9 +12266,8 @@ msgstr ""
 "Konfigurieren Sie Schwellenwerte, die für Cluster gelten, je nachdem, wie "
 "viele Knoten sie haben."
 
-#, fuzzy
 msgid "Configure upper levels"
-msgstr "Obere Schwellwerte für Container"
+msgstr "Obere Schwellwerte konfigurieren"
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr ""
@@ -15034,7 +15030,7 @@ msgid "Default credentials"
 msgstr "Standard-Zugangsdaten"
 
 msgid "Default element is not one of the specified elements"
-msgstr ""
+msgstr "Das Standard-Element ist keins der vorgegebenen Elemente"
 
 msgid "Default is 22."
 msgstr "Default ist 22."
@@ -15837,9 +15833,8 @@ msgstr "Plugin für AD-Replikation ausrollen"
 msgid "Deploy Arcserve plugin"
 msgstr "Arcserve-Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy Check SQL Server plugin"
-msgstr "Das MSSQL-Server-Plugin ausrollen"
+msgstr "Check SQL-Server-Plugin verteilen"
 
 msgid "Deploy DB2 memory plugin"
 msgstr "Das DB2 memory Plugin ausrollen"
@@ -17264,9 +17259,8 @@ msgstr "Hosts nicht erstellen"
 msgid "Do not deploy AD-Replication plugin"
 msgstr "Plugin für AD-Replikation nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy Check SQL Server plugin"
-msgstr "Das MySQL Plugin nicht ausrollen"
+msgstr "Check SQL-Server-Plugin nicht verteilen"
 
 msgid "Do not deploy DB2 memory plugin"
 msgstr "Das DB2 memory Plugin nicht ausrollen"
@@ -20631,9 +20625,8 @@ msgstr "Werkseinstellungen"
 msgid "Fahrenheit"
 msgstr "Fahrenheit"
 
-#, fuzzy
 msgid "Fail over partner"
-msgstr "Failover State"
+msgstr "Failover-Partner"
 
 msgid "Failed"
 msgstr "Fehlgeschlagen"
@@ -28974,6 +28967,10 @@ msgstr "Ungültiges URL-Schema. Muss eines von folgenden sein: %s"
 msgid "Invalid action"
 msgstr "Ungültige Aktion"
 
+#, fuzzy
+msgid "Invalid activation_id"
+msgstr "Ungültige Aktion"
+
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
@@ -30811,6 +30808,14 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "Schellen für die Anzahl der aktiven Anschlüsse in einem Gerät."
 
+#, fuzzy
+msgid ""
+"Levels for the number of current connections to a JVM application on the "
+"servlet level"
+msgstr ""
+"Diese Regel setzt die WARN und CRIT-Schwellen für die aktuelle Zahl der "
+"Verbindungen zu einer JVM Applikation bezogen auf ein Servlet."
+
 msgid "Levels for the number of print jobs"
 msgstr "Schwellwerte für die Anzahl Druckerjobs"
 
@@ -30820,9 +30825,8 @@ msgstr "Schwellwerte für Anzahl von aktuell laufenden Sitzungen"
 msgid "Levels for the number of sessions that are currently inactive"
 msgstr "Schwellwerte für die Anzahl der aktuell inaktiven Sitzungen"
 
-#, fuzzy
 msgid "Levels for the number of threads running in a JVM"
-msgstr "Diese Regel setzt Schwellwerte für die Zahl der Threads einer JVM."
+msgstr "Schwellwerte für die Zahl der laufenden Threads in einer JVM."
 
 msgid "Levels for the percentual growth per time range"
 msgstr "Schwellwert für prozentuales Wachstum pro Zeitraum"
@@ -30878,8 +30882,11 @@ msgid "Levels health"
 msgstr "Schwellwerte Gesundheit"
 
 #, fuzzy
+msgid "Levels in percentage of total RAM"
+msgstr "Legen Sie Schwellwerte in Prozent des vorhandenen RAM fest"
+
 msgid "Levels in percentage of total memory usage"
-msgstr "Prozentuale Schwellwerte für die gesamte Speicherbelegung"
+msgstr "Schwellwerte in Prozent der gesamten Speicherbelegung"
 
 msgid "Levels instance"
 msgstr "Schwellwerte für Instanzen"
@@ -31018,7 +31025,7 @@ msgid "Levels on time offset"
 msgstr "Schwellwerte für Zeitversatz"
 
 msgid "Levels on time since last successful backup"
-msgstr ""
+msgstr "Schwellwerte der Zeit seit dem letzten erfolgreichen Backup"
 
 msgid "Levels on total CPU utilization"
 msgstr "Schwellwerte für die gesamte CPU-Auslastung"
@@ -31751,9 +31758,8 @@ msgstr "Lokale HTTP 503 Antworten"
 msgid "Local IP address"
 msgstr "Lokale IP Adresse"
 
-#, fuzzy
 msgid "Local Integrated Authentication (Windows)"
-msgstr "Lokale Anmeldungsdaten"
+msgstr "Local Integrated Authentication (Windows)"
 
 msgid "Local Only"
 msgstr "Nur lokal"
@@ -35787,6 +35793,8 @@ msgstr "Name der virtuellen Maschine und/oder<br>Threadpool"
 
 msgid "Name or IP address of the host where MS SQL runs if hostname fail"
 msgstr ""
+"Name oder IP-Adresse des Hosts, auf dem MS SQL läuft, wenn Host-Name "
+"fehlschlägt"
 
 msgid "Name resolution"
 msgstr "Namensauflösung"
@@ -41513,9 +41521,8 @@ msgstr "Port Nummer:"
 msgid "Port numbers"
 msgstr "Port-Nummern"
 
-#, fuzzy
 msgid "Port of the Microsoft SQL Server instance"
-msgstr "Microsoft SQL Server (Windows)"
+msgstr "Port der Microsoft SQL Server-Instanz"
 
 msgid "Port types to include in usage statistics"
 msgstr "Porttypen, die in die Belegungsstatistik eingeschlossen werden"
@@ -45482,9 +45489,8 @@ msgstr "WEICH"
 msgid "SQL Compilations/sec"
 msgstr "SQL-Kompilationen/sec"
 
-#, fuzzy
 msgid "SQL Database User Credentials"
-msgstr "Datenbankbenutzer-Anmeldedaten"
+msgstr "SQL Datenbankbenutzer-Anmeldedaten"
 
 msgid "SQL Databases"
 msgstr "SQL-Datenbanken"
@@ -54550,9 +54556,8 @@ msgstr "Der Hostname des erwarteten ausgewählten Cluster-Controllers"
 msgid "The hostname of the expected node to hold this resource."
 msgstr "Der Hostname des Knotens, auf dem die Ressource erwartet wird."
 
-#, fuzzy
 msgid "The hostname or IP address for the Microsoft SQL Server instance"
-msgstr "Hostname oder IPv4-Adresse des Listeners"
+msgstr "Hostname oder IP-Adresse der Microsoft SQL Server-Instanz"
 
 msgid "The hostname template does not contain any label."
 msgstr "Die Hostnamenvorlage enthält kein Label."
@@ -59052,13 +59057,12 @@ msgstr ""
 "Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
 "365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
 
-#, fuzzy
 msgid ""
 "This plugin can be used to collect information of all running MSSQL servers "
 "on the local and remote system. "
 msgstr ""
-"Dieses Plugin kann verwendet werden, um Informationen über alle MS Office "
-"365-Lizenzen und Servicepläne mit dem MSOnline PowerShell-Modul zu sammeln."
+"Dieses Plugin kann verwendet werden, um Informationen über alle MSSQL Server "
+"auf dem lokalen oder dem entfernten System zu sammeln. "
 
 msgid ""
 "This plugin can be used to collect information of all running MSSQL servers "
@@ -60228,13 +60232,6 @@ msgstr ""
 
 msgid "This rule sets the required state of a switch contact"
 msgstr "Diese Regel legt den erforderlichen Zustand eines Schaltkontakts fest"
-
-msgid ""
-"This rule sets the warn and crit levels for the number of current "
-"connections to a JVM application on the servlet level."
-msgstr ""
-"Diese Regel setzt die WARN und CRIT-Schwellen für die aktuelle Zahl der "
-"Verbindungen zu einer JVM Applikation bezogen auf ein Servlet."
 
 msgid ""
 "This rule sets the warn and crit levels for the number of incoming requests "
@@ -71617,9 +71614,8 @@ msgstr "ignoriere den Status"
 msgid "ignore which one is active"
 msgstr "ignorieren welcher aktiv ist"
 
-#, fuzzy
 msgid "ignored"
-msgstr "ignoriere"
+msgstr "ignoriert"
 
 msgid "immediate stop"
 msgstr "sofortiger Stop"

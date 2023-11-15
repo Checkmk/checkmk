@@ -106,7 +106,6 @@ graph_info["number_of_executors"] = {
         ("jenkins_busy_executors", "line"),
         ("jenkins_idle_executors", "line"),
     ],
-    "range": (0, "jenkins_num_executors,jenkins_busy_executors,jenkins_idle_executors,MAX,MAX"),
 }
 
 graph_info["number_of_tasks"] = {
@@ -116,5 +115,4 @@ graph_info["number_of_tasks"] = {
         ("jenkins_blocked_tasks", "line"),
         ("jenkins_pending_tasks", "line"),
     ],
-    "range": (0, "jenkins_stuck_tasks,jenkins_blocked_tasks,jenkins_pending_tasks,MAX,MAX"),
 }

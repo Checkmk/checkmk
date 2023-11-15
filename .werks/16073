@@ -1,0 +1,17 @@
+Title: Redesign of audit log page
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1699865170
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Werk #16072 introduced the regulare rotating of the wato audit log.
+
+The audit log page was now adjusted to also show archived/rotated logs.
+Therefore, you are now asked to choose a file to view instead of showing the current log
+on opening the page.
+
+Besides that, the "Clear" option was renamed to "Archive" because the current
+log file is archived not cleared.

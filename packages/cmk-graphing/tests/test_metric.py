@@ -8,16 +8,18 @@ import pytest
 from cmk.graphing.v1 import Color, Localizable, metric, Unit
 
 
-def test_metric_name_error() -> None:
+def test_name_error() -> None:
     with pytest.raises(ValueError):
-        metric.MetricName(name="")
+        metric.Name("")
 
 
 def test_sum_error_no_summands() -> None:
+    title = Localizable("Title")
     with pytest.raises(AssertionError):
-        metric.Sum([], title=Localizable("Title"), color=Color.BLUE)
+        metric.Sum(title, Color.BLUE, [])
 
 
-def test_product_error_no_summands() -> None:
+def test_product_error_no_factors() -> None:
+    title = Localizable("Title")
     with pytest.raises(AssertionError):
-        metric.Product([], title=Localizable("Title"), unit=Unit.COUNT, color=Color.BLUE)
+        metric.Product(title, Unit.COUNT, Color.BLUE, [])

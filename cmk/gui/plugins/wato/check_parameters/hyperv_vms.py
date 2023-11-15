@@ -49,41 +49,49 @@ def _item_spec_hyperv_vms():
     )
 
 
+def _expected_state_map() -> Dictionary:
+    return Dictionary(
+        title=_("Direct mapping of VM state to monitoring state"),
+        help=_(
+            "Define a direct translation of the possible states of the VM to monitoring "
+            "states, i.e. to the result of the check. This overwrites the default "
+            "mapping used by the check."
+        ),
+        elements=[
+            (
+                vm_state,
+                MonitoringState(
+                    title=_("Monitoring state if VM state is %s") % vm_state,
+                    default_value=default_value,
+                ),
+            )
+            for vm_state, default_value in VM_STATES_DEFVALS
+        ],
+        ignored_keys=["state"],
+    )
+
+
+def _discovery_state() -> FixedValue:
+    return FixedValue(
+        value={"compare_discovery": True},
+        title=_("Compare against discovered state"),
+        totext=_("Compare the current state of the VM against the discovered state"),
+        help=_(
+            "Compare the current state of the VM against the state at the point in time "
+            "when the VM was discovered. If the two states do not match, the service "
+            "will go to CRIT. Note that this only works if the check is not executed as "
+            "a manual check. If you choose this option for manual checks, the service "
+            "will go always to UNKN."
+        ),
+    )
+
+
 def _parameter_valuespec_hyperv_vms() -> Alternative:
     return Alternative(
         title=_("Translation of VM state to monitoring state"),
         elements=[
-            Dictionary(
-                title=_("Direct mapping of VM state to monitoring state"),
-                help=_(
-                    "Define a direct translation of the possible states of the VM to monitoring "
-                    "states, i.e. to the result of the check. This overwrites the default "
-                    "mapping used by the check."
-                ),
-                elements=[
-                    (
-                        vm_state,
-                        MonitoringState(
-                            title=_("Monitoring state if VM state is %s") % vm_state,
-                            default_value=default_value,
-                        ),
-                    )
-                    for vm_state, default_value in VM_STATES_DEFVALS
-                ],
-                ignored_keys=["state"],
-            ),
-            FixedValue(
-                value={"compare_discovery": True},
-                title=_("Compare against discovered state"),
-                totext=_("Compare the current state of the VM against the discovered state"),
-                help=_(
-                    "Compare the current state of the VM against the state at the point in time "
-                    "when the VM was discovered. If the two states do not match, the service "
-                    "will go to CRIT. Note that this only works if the check is not executed as "
-                    "a manual check. If you choose this option for manual checks, the service "
-                    "will go always to UNKN."
-                ),
-            ),
+            _expected_state_map(),
+            _discovery_state(),
         ],
     )
 

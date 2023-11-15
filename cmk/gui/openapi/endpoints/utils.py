@@ -15,6 +15,7 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.version import edition, Edition
 
+from cmk.gui.customer import customer_api
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.groups import GroupSpec, GroupSpecs, GroupType, load_group_information
 from cmk.gui.http import Response
@@ -23,11 +24,6 @@ from cmk.gui.openapi.restful_objects.type_defs import CollectionObject
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.hosts_and_folders import Folder
-
-if edition() is Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
-
 
 GroupName = Literal["host_group_config", "contact_group_config", "service_group_config", "agent"]
 
@@ -38,9 +34,9 @@ def complement_customer(details):
 
     if "customer" in details:
         customer_id = details["customer"]
-        details["customer"] = "global" if managed.is_global(customer_id) else customer_id
+        details["customer"] = "global" if customer_api().is_global(customer_id) else customer_id
     else:  # special case where customer is set to customer_default_id which results in no-entry
-        details["customer"] = default_customer_id()
+        details["customer"] = customer_api().default_customer_id()
     return details
 
 
@@ -78,7 +74,7 @@ def serialize_group(name: GroupName) -> Any:
             customer_id = group["customer"]
             extensions["customer"] = "global" if customer_id is None else customer_id
         elif edition() is Edition.CME:
-            extensions["customer"] = default_customer_id()
+            extensions["customer"] = customer_api().default_customer_id()
 
         extensions["alias"] = group["alias"]
         return constructors.domain_object(
@@ -241,7 +237,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
 
     """
     # None is a valid customer_id used for 'Global' configuration
-    if remove_provider and customer_id == default_customer_id():
+    if remove_provider and customer_id == customer_api().default_customer_id():
         attributes.pop("customer", None)
         return attributes
 

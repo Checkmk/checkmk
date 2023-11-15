@@ -18,6 +18,7 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 from cmk.base.api.agent_based.plugin_classes import CheckPlugin
 
 from cmk.agent_based.v1.register import RuleSetType
+from cmk.discover_plugins import PluginLocation
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
@@ -26,7 +27,7 @@ ITEM_VARIABLE: Final = "%s"
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
 
-def get_validated_plugin_module_name() -> str:
+def get_validated_plugin_location() -> PluginLocation:
     """Find out which module registered the plugin and make sure its in the right place"""
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
@@ -34,7 +35,7 @@ def get_validated_plugin_module_name() -> str:
 
     match full_module_name.split("."):
         case ("cmk", "base", "plugins", "agent_based", _module):
-            return full_module_name
+            return PluginLocation(full_module_name)
         case (
             "cmk",
             "base",
@@ -43,7 +44,7 @@ def get_validated_plugin_module_name() -> str:
             edition,
             _module,
         ) if edition in _ALLOWED_EDITION_FOLDERS:
-            return full_module_name
+            return PluginLocation(full_module_name)
 
     raise ImportError(f"do not register from {full_module_name!r}")
 

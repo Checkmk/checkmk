@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
 from .agent_based_api.v1 import Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_ucs import DETECT, Operability, Presence
+from .utils.cisco_ucs import check_cisco_fault, DETECT, Fault, Operability, Presence
 
 
 class MemoryType(Enum):
@@ -52,6 +52,7 @@ class MemoryModule:
     memtype: MemoryType
     operability: Operability
     presence: Presence
+    id: str
 
 
 def parse_cisco_ucs_mem(string_table: StringTable) -> dict[str, MemoryModule]:
@@ -62,8 +63,9 @@ def parse_cisco_ucs_mem(string_table: StringTable) -> dict[str, MemoryModule]:
             memtype=MemoryType(memtype),
             operability=Operability(operability),
             presence=Presence(presence),
+            id=id,
         )
-        for name, serial, memtype, capacity, operability, presence in string_table
+        for name, serial, memtype, capacity, operability, presence, id in string_table
     }
 
 
@@ -79,22 +81,33 @@ register.snmp_section(
             "6",  # .1.3.6.1.4.1.9.9.719.1.30.11.1.6  cucsMemoryUnitCapacity
             "14",  # .1.3.6.1.4.1.9.9.719.1.30.11.1.14 cucsMemoryUnitOperability
             "17",  # .1.3.6.1.4.1.9.9.719.1.30.11.1.17 cucsMemoryUnitPresence
+            "2",  # .1.3.6.1.4.1.9.9.719.1.30.11.1.2  cucsMemoryUnitDn
         ],
     ),
     detect=DETECT,
 )
 
 
-def discover_cisco_ucs_mem(section: Mapping[str, MemoryModule]) -> DiscoveryResult:
+def discover_cisco_ucs_mem(
+    section_cisco_ucs_mem: Mapping[str, MemoryModule] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+) -> DiscoveryResult:
+    if not section_cisco_ucs_mem:
+        return
+
     yield from (
         Service(item=name)
-        for name, memory_module in section.items()
+        for name, memory_module in section_cisco_ucs_mem.items()
         if memory_module.presence is not Presence.missing
     )
 
 
-def check_cisco_ucs_mem(item: str, section: Mapping[str, MemoryModule]) -> CheckResult:
-    if not (memory_module := section.get(item)):
+def check_cisco_ucs_mem(
+    item: str,
+    section_cisco_ucs_mem: Mapping[str, MemoryModule] | None,
+    section_cisco_ucs_fault: Mapping[str, Sequence[Fault]] | None,
+) -> CheckResult:
+    if not (memory_module := (section_cisco_ucs_mem or {}).get(item)):
         return
 
     yield Result(
@@ -110,10 +123,13 @@ def check_cisco_ucs_mem(item: str, section: Mapping[str, MemoryModule]) -> Check
         state=State.OK, summary=f"Size: {memory_module.capacity} MB, SN: {memory_module.serial}"
     )
 
+    yield from check_cisco_fault((section_cisco_ucs_fault or {}).get(memory_module.id, []))
+
 
 register.check_plugin(
     name="cisco_ucs_mem",
     service_name="Memory %s",
+    sections=["cisco_ucs_mem", "cisco_ucs_fault"],
     discovery_function=discover_cisco_ucs_mem,
     check_function=check_cisco_ucs_mem,
 )

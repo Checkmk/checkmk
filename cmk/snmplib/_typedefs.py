@@ -104,7 +104,7 @@ class SNMPHostConfig(NamedTuple):
                 return contexts
         return [""]
 
-    def serialize(self):
+    def serialize(self) -> Mapping[str, object]:
         serialized = self._asdict()
         serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
         serialized["oid_range_limits"] = {

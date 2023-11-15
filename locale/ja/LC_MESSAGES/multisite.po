@@ -28286,6 +28286,10 @@ msgstr "無効なURLスキーム。次のいずれかである必要がありま
 msgid "Invalid action"
 msgstr "無効なアクション"
 
+#, fuzzy
+msgid "Invalid activation_id"
+msgstr "無効なアクション"
+
 msgid ""
 "Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
@@ -30095,6 +30099,14 @@ msgstr ""
 msgid "Levels for the number of active plugs in a device."
 msgstr "デバイス内のアクティブなプラグの数のレベル。"
 
+#, fuzzy
+msgid ""
+"Levels for the number of current connections to a JVM application on the "
+"servlet level"
+msgstr ""
+"このルールは、サーブレットレベルでJVMアプリケーションへの現在の接続数の警告レ"
+"ベルとクリティカルレベルを設定します。"
+
 msgid "Levels for the number of print jobs"
 msgstr "印刷ジョブの数のレベル"
 
@@ -30161,6 +30173,10 @@ msgstr "待機レベル"
 
 msgid "Levels health"
 msgstr "レベルのヘルス"
+
+#, fuzzy
+msgid "Levels in percentage of total RAM"
+msgstr "合計RAMのパーセンテージでレベルを指定します"
 
 #, fuzzy
 msgid "Levels in percentage of total memory usage"
@@ -58655,13 +58671,6 @@ msgstr ""
 
 msgid "This rule sets the required state of a switch contact"
 msgstr "このルールは、スイッチ接点の必要な状態を設定します"
-
-msgid ""
-"This rule sets the warn and crit levels for the number of current "
-"connections to a JVM application on the servlet level."
-msgstr ""
-"このルールは、サーブレットレベルでJVMアプリケーションへの現在の接続数の警告レ"
-"ベルとクリティカルレベルを設定します。"
 
 msgid ""
 "This rule sets the warn and crit levels for the number of incoming requests "

@@ -78,6 +78,8 @@ def test_checks(section: SectionSingleInstance) -> None:
             60.0,
         )
     ) == [
+        Result(state=State.OK, summary="Volume: iscsi_crm_dblogs"),
+        Result(state=State.OK, summary="Vserver: ISCSI_CRM"),
         Metric(
             "fs_used",
             513958.37890625,

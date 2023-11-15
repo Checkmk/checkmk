@@ -120,6 +120,11 @@ def parse_arguments() -> argparse.Namespace:
         help="reference for git notes, should be werk_mail for production.",
     )
     parser_mail.add_argument(
+        "--ref-fixup",
+        default="werk_mail_fixup",
+        help="reference for git notes for fixing broken werk commits",
+    )
+    parser_mail.add_argument(
         "--do-fetch-git-notes",
         help="fetch git notes before interacting with them",
         action="store_true",

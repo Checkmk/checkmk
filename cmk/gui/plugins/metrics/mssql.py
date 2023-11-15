@@ -24,13 +24,13 @@ from cmk.gui.i18n import _
 metric_info["database_job_duration"] = {
     "title": _("Job Duration"),
     "unit": "s",
-    "color": "44/c",
+    "color": "44/a",
 }
 
 metric_info["page_life_expectancy"] = {
     "title": _("Page Life Expectancy"),
     "unit": "s",
-    "color": "44/c",
+    "color": "44/a",
 }
 
 # .

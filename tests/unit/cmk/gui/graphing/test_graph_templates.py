@@ -214,6 +214,7 @@ def test_duplicate_graph_templates() -> None:
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {
         ("growing", "shrinking"),
+        ("livestatus_requests_per_connection", "livestatus_connects_and_requests"),
         ("mem_growing", "mem_shrinking"),
     }
 
@@ -522,10 +523,8 @@ def test_non_trivial_graph_declarations() -> None:
             non_trivial_graphs.append(ident)
 
     assert set(non_trivial_graphs) == {
-        "active_shards",
         "bandwidth",
         "bandwidth_translated",
-        "cache_hit_ratio",
         "cmk_cpu_time_by_phase",
         "cmk_hosts_total",
         "cmk_services_total",
@@ -543,41 +542,24 @@ def test_non_trivial_graph_declarations() -> None:
         "cpu_utilization_8",
         "cpu_utilization_numcpus",
         "cpu_utilization_simple",
-        "db_connections",
-        "DB_connections",
         "disk_throughput",
-        "files_notification_spool",
         "fs_used",
         "fs_used_2",
         "growing",
-        "heap_memory_usage",
-        "http_errors",
-        "kube_cronjob_status",
-        "livestatus_connects_and_requests",
         "livestatus_requests_per_connection",
         "mem_growing",
         "mem_shrinking",
-        "message_processing",
-        "non-heap_memory_usage",
-        "number_of_executors",
-        "number_of_tasks",
-        "oracle_pga_memory_info",
         "oracle_sga_pga_total",
         "qos_class_traffic",
-        "ram_swap_overview",
         "ram_swap_used",
-        "round_trip_average",
-        "rule_efficiency",
         "savings",
         "shrinking",
         "size_per_process",
-        "swap",
         "time_offset",
         "used_cpu_time",
         "util_average_1",
         "util_average_2",
         "util_fallback",
-        "zfs_meta_data",
     }
 
 

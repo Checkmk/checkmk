@@ -11,63 +11,67 @@ from typing import TypeAlias
 
 from ._color import Color
 from ._localize import Localizable
+from ._name import Name
+
+__all__ = [
+    "Name",
+    "Metric",
+    "Constant",
+    "WarningOf",
+    "CriticalOf",
+    "MinimumOf",
+    "MaximumOf",
+    "Sum",
+    "Product",
+    "Difference",
+    "Fraction",
+    "Quantity",
+]
 
 
 @dataclass(frozen=True)
-class MetricName:
-    name: str
-
-    def __post_init__(self) -> None:
-        if not self.name:
-            raise ValueError(self.name)
-
-
-@dataclass(frozen=True, kw_only=True)
 class Metric:
-    name: MetricName
+    name: Name
     title: Localizable
     unit: str
     color: Color
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Constant:
-    value: int | float
     title: Localizable
     unit: str
     color: Color
+    value: int | float
 
 
 @dataclass(frozen=True)
 class WarningOf:
-    name: MetricName
+    name: Name
 
 
 @dataclass(frozen=True)
 class CriticalOf:
-    name: MetricName
+    name: Name
 
 
 @dataclass(frozen=True)
 class MinimumOf:
-    name: MetricName
-    _: KW_ONLY
+    name: Name
     color: Color
 
 
 @dataclass(frozen=True)
 class MaximumOf:
-    name: MetricName
-    _: KW_ONLY
+    name: Name
     color: Color
 
 
 @dataclass(frozen=True)
 class Sum:
-    summands: Sequence[Quantity]
-    _: KW_ONLY
     title: Localizable
     color: Color
+    summands: Sequence[Quantity]
 
     def __post_init__(self) -> None:
         assert self.summands
@@ -75,35 +79,36 @@ class Sum:
 
 @dataclass(frozen=True)
 class Product:
-    factors: Sequence[Quantity]
-    _: KW_ONLY
     title: Localizable
     unit: str
     color: Color
+    factors: Sequence[Quantity]
 
     def __post_init__(self) -> None:
         assert self.factors
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Difference:
-    minuend: Quantity
-    subtrahend: Quantity
     title: Localizable
     color: Color
+    _: KW_ONLY
+    minuend: Quantity
+    subtrahend: Quantity
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class Fraction:
-    dividend: Quantity
-    divisor: Quantity
     title: Localizable
     unit: str
     color: Color
+    _: KW_ONLY
+    dividend: Quantity
+    divisor: Quantity
 
 
 Quantity: TypeAlias = (
-    MetricName
+    Name
     | Constant
     | WarningOf
     | CriticalOf

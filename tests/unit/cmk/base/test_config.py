@@ -1387,7 +1387,7 @@ def test_host_config_static_checks(
             check_default_parameters=None,
             check_ruleset_name=None,
             cluster_check_function=None,
-            full_module=None,
+            location=None,
         )
 
     monkeypatch.setattr(agent_based_register, "get_check_plugin", make_plugin)
@@ -2895,7 +2895,7 @@ def test__extract_check_plugins(monkeypatch: MonkeyPatch) -> None:
         cluster_check_function=None,
         check_default_parameters=None,
         check_ruleset_name=None,
-        full_module=None,
+        location=None,
     )
 
     monkeypatch.setattr(

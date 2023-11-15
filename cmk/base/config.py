@@ -750,7 +750,6 @@ class PackedConfigGenerator:
         "host_groups",
         "contacts",
         "timeperiods",
-        "extra_service_conf",
         "extra_nagios_conf",
     ]
 
@@ -799,6 +798,11 @@ class PackedConfigGenerator:
                     values_red[hostname] = attributes
             return values_red
 
+        def filter_extra_service_conf(
+            values: dict[str, list[dict[str, str]]]
+        ) -> dict[str, list[dict[str, str]]]:
+            return {"check_interval": values.get("check_interval", [])}
+
         filter_var_functions: dict[str, Callable[[Any], Any]] = {
             "all_hosts": filter_all_hosts,
             "clusters": filter_clusters,
@@ -809,6 +813,7 @@ class PackedConfigGenerator:
             "hosttags": filter_hostname_in_dict,  # unknown key, might be typo or legacy option
             "host_tags": filter_hostname_in_dict,
             "host_paths": filter_hostname_in_dict,
+            "extra_service_conf": filter_extra_service_conf,
         }
 
         #
@@ -1642,7 +1647,7 @@ def _extract_check_plugins(
             present_plugin = agent_based_register.get_check_plugin(
                 CheckPluginName(maincheckify(check_plugin_name))
             )
-            if present_plugin is not None and present_plugin.full_module is not None:
+            if present_plugin is not None and present_plugin.location is not None:
                 # module is not None => it's a new plugin
                 # (allow loading multiple times, e.g. update-config)
                 # implemented here instead of the agent based register so that new API code does not

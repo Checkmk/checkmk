@@ -107,6 +107,7 @@ __all__ = [
     "write_contacts_and_users_file",
     "UserSyncBackgroundJob",
     "builtin_connections",
+    "user_sync_default_config",
 ]
 
 

@@ -5,44 +5,16 @@
 
 import pytest
 
-from cmk.graphing.v1 import graph, Localizable, metric
+from cmk.graphing.v1 import graph, Localizable
 
 
-def test_graph_error_missing_name() -> None:
-    with pytest.raises(AssertionError):
-        graph.Graph(
-            name="",
-            title=Localizable("Title"),
-            compound_lines=[metric.MetricName("metric-name-1")],
-            simple_lines=[metric.MetricName("metric-name-2")],
-        )
+def test_name_error() -> None:
+    with pytest.raises(ValueError):
+        graph.Name("")
 
 
 def test_graph_error_missing_compound_lines_and_simple_lines() -> None:
+    name = graph.Name("name")
+    title = Localizable("Title")
     with pytest.raises(AssertionError):
-        graph.Graph(
-            name="name",
-            title=Localizable("Title"),
-        )
-
-
-def test_bidirectional_error_missing_name() -> None:
-    upper = graph.Graph(
-        name="graph-upper",
-        title=Localizable("Title"),
-        compound_lines=[metric.MetricName("metric-name-1")],
-        simple_lines=[metric.MetricName("metric-name-2")],
-    )
-    lower = graph.Graph(
-        name="graph-lower",
-        title=Localizable("Title"),
-        compound_lines=[metric.MetricName("metric-name-1")],
-        simple_lines=[metric.MetricName("metric-name-2")],
-    )
-    with pytest.raises(AssertionError):
-        graph.Bidirectional(
-            name="",
-            title=Localizable("Title"),
-            upper=upper,
-            lower=lower,
-        )
+        graph.Graph(name, title)

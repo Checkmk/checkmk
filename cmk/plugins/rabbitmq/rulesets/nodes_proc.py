@@ -12,8 +12,8 @@ from cmk.rulesets.v1 import (
     Integer,
     Localizable,
     Percentage,
-    RuleSpecSubGroup,
     TextInput,
+    Topic,
     Tuple,
 )
 
@@ -55,7 +55,7 @@ def _parameter_valuespec_rabbitmq_nodes_proc():
 
 rulespec_rabbitmq_nodes_proc = CheckParameterRuleSpecWithItem(
     name="rabbitmq_nodes_proc",
-    group=RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS,
+    topic=Topic.APPLICATIONS,
     item=TextInput(title=Localizable("Node name")),
     value_spec=_parameter_valuespec_rabbitmq_nodes_proc,
     title=Localizable("RabbitMQ nodes processes"),

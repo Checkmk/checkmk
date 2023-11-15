@@ -9,40 +9,32 @@ from enum import auto, Enum
 from cmk.rulesets.v1._localize import Localizable
 
 
-class RuleSpecMainGroup(Enum):
+class Functionality(Enum):
     MONITORING_CONFIGURATION = auto()
 
 
-class RuleSpecSubGroup(Enum):
-    CHECK_PARAMETERS_APPLICATIONS = auto()
-    CHECK_PARAMETERS_VIRTUALIZATION = auto()
+class Topic(Enum):
+    APPLICATIONS = auto()
+    VIRTUALIZATION = auto()
 
 
 @dataclass(frozen=True)
-class RuleSpecCustomMainGroup:
-    """Main topic to group sub-groups of rulespecs further together
-
+class CustomFunctionality:
+    """
     Args:
-        name: identifier of this group
         title: human-readable title of this group
-        help_text: description of the content of this group
+        help_text: description of the content of this functionality
     """
 
-    name: str
     title: Localizable
     help_text: Localizable
 
 
 @dataclass(frozen=True)
-class RuleSpecCustomSubGroup:
-    """Group rulespecs for a similar purpose together
-
+class CustomTopic:
+    """
     Args:
-        main_group: topic to group this and other groups with the same main-group under
-        name: identifier of this group
         title: human-readable title of this group
     """
 
-    main_group: RuleSpecMainGroup | RuleSpecCustomMainGroup
-    name: str  # TODO: previously: getter: combination of main group name and sub group name
     title: Localizable

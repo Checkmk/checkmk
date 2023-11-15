@@ -6,10 +6,9 @@
 import json
 from collections.abc import Mapping
 
-import cmk.base.plugins.agent_based.utils.docker as docker
-
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .utils import docker
 
 Section = Mapping[str, Mapping]
 

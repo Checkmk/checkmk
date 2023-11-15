@@ -57,6 +57,7 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
         raw_schema, "TagConditionConditionSchemaBase", ["key", "operator", "value"], "CMK-15035"
     )
     require_properties(raw_schema, "LabelCondition", ["operator"], "CMK-15035")
+    require_properties(raw_schema, "PreDefinedTimeRange", ["range"], "CMK-15166")
 
     # NOTE: CMK-12182 is mostly done, but fixing InputPassword was apparently overlooked
     update_property(
@@ -427,6 +428,20 @@ def hook_after_call(  # pylint: disable=too-many-branches
         },
         ticket_id="CMK-13216",
     )
+    fix_response(
+        case,
+        response,
+        method="POST",
+        path="/domain-types/host_tag_group/collections/all",
+        body={"detail": 'The tag ID ".*" is used twice.'},
+        status_code=500,
+        set_status_code=400,
+        update_body={
+            "title": "Bad Request",
+            "status": 400,
+        },
+        ticket_id="CMK-15167",
+    )
 
     # invalid status: 500 instead of 404
     fix_response(
@@ -436,7 +451,7 @@ def hook_after_call(  # pylint: disable=too-many-branches
         path="/objects/bi_pack/{pack_id}",
         status_code=500,
         body={"detail": "The requested pack_id does not exist"},
-        set_status_code=400,
+        set_status_code=404,
         update_body={"title": "Bad Request", "status": 404},
         ticket_id="CMK-14991",
     )

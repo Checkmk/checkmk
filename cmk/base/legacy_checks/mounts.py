@@ -11,6 +11,7 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Any
 
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
@@ -62,7 +63,7 @@ def _should_ignore_option(option):
 
 
 def check_mounts(
-    item: str, targetopts: Sequence[str], section: Mapping[str, Mount]
+    item: str, params: Mapping[str, Any], section: Mapping[str, Mount]
 ) -> Iterable[tuple[int, str]]:
     if (mount := section.get(item)) is None:
         return
@@ -70,6 +71,8 @@ def check_mounts(
     if mount.is_stale:
         yield 1, "Mount point detected as stale"
         return
+
+    targetopts = params["expected_mount_options"]
 
     # Now compute the exact difference.
     exceeding = [

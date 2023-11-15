@@ -33,6 +33,7 @@ from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.customer import customer_api, SCOPE_GLOBAL
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
@@ -48,10 +49,6 @@ from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
 from cmk.fields import base, DateTime, validators
-
-if version.edition() is version.Edition.CME:
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-
 
 _logger = logging.getLogger(__name__)
 
@@ -1076,12 +1073,12 @@ class _CustomerField(base.String):
     def _validate(self, value):
         super()._validate(value)
         if value == "global":
-            value = managed.SCOPE_GLOBAL
+            value = SCOPE_GLOBAL
 
         if not self._allow_global and value is None:
             raise self.make_error("invalid_global")
 
-        included = value in managed.customer_collection()
+        included = value in customer_api().customer_collection()
         if self._should_exist and not included:
             raise self.make_error("should_exist", customer=value)
         if not self._should_exist and included:

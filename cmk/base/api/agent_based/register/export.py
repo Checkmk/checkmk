@@ -32,7 +32,7 @@ from ._discover import (
     register_inventory_plugin,
     register_snmp_section,
 )
-from .utils import get_validated_plugin_module_name
+from .utils import get_validated_plugin_location
 
 _ParametersTypeAlias = Mapping[str, Any]
 
@@ -120,7 +120,7 @@ def agent_section(
             host_label_ruleset_type=host_label_ruleset_type,
             supersedes=supersedes,
         ),
-        get_validated_plugin_module_name(),
+        get_validated_plugin_location(),
     )
 
 
@@ -252,7 +252,7 @@ def snmp_section(
             host_label_ruleset_type=host_label_ruleset_type,
             supersedes=supersedes,
         ),
-        get_validated_plugin_module_name(),
+        get_validated_plugin_location(),
     )
 
 
@@ -338,7 +338,7 @@ def check_plugin(
             check_ruleset_name=check_ruleset_name,
             cluster_check_function=cluster_check_function,
         ),
-        get_validated_plugin_module_name(),
+        get_validated_plugin_location(),
     )
 
 
@@ -386,5 +386,5 @@ def inventory_plugin(
             inventory_default_parameters=inventory_default_parameters,
             inventory_ruleset_name=inventory_ruleset_name,
         ),
-        get_validated_plugin_module_name(),
+        get_validated_plugin_location(),
     )

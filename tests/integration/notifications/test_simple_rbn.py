@@ -74,6 +74,7 @@ def fixture_test_log(
 def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
+    # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
         "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN"
@@ -92,6 +93,7 @@ def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None
 
     site.send_service_check_result("notify-test", service, 2, "FAKE CRIT")
 
+    # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
         f"] SERVICE NOTIFICATION: check-mk-notify;notify-test;{service};CRITICAL;check-mk-notify;FAKE CRIT"

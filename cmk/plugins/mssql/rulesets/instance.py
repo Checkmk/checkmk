@@ -9,9 +9,9 @@ from cmk.rulesets.v1 import (
     Dictionary,
     Localizable,
     MonitoringState,
-    RuleSpecSubGroup,
     State,
     TextInput,
+    Topic,
 )
 
 
@@ -28,7 +28,7 @@ def _parameter_valuespec_mssql_instance() -> Dictionary:
 rulespec_mssql_instance = CheckParameterRuleSpecWithItem(
     name="mssql_instance",
     title=Localizable("MSSQL Instance"),
-    group=RuleSpecSubGroup.CHECK_PARAMETERS_APPLICATIONS,
+    topic=Topic.APPLICATIONS,
     item=TextInput(title=Localizable("Instance identifier")),
     value_spec=_parameter_valuespec_mssql_instance,
 )

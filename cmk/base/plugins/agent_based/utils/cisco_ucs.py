@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+from dataclasses import dataclass
 from enum import Enum
 from typing import assert_never
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 DETECT = any_of(
     contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1682"),
@@ -185,3 +188,47 @@ class Presence(Enum):
                 return State.WARN
             case _:
                 assert_never(self)
+
+
+class FaultSeverity(Enum):
+    cleared = "0"
+    info = "1"
+    warning = "3"
+    minor = "4"
+    major = "5"
+    critical = "6"
+
+
+@dataclass(frozen=True, kw_only=True)
+class Fault:
+    acknowledge: bool
+    code: str
+    description: str
+    severity: FaultSeverity
+
+    def monitoring_state(self) -> State:
+        if self.acknowledge:
+            return State.OK
+
+        match self.severity:
+            case FaultSeverity.major | FaultSeverity.critical:
+                return State.CRIT
+            case FaultSeverity.warning | FaultSeverity.minor:
+                return State.WARN
+            case FaultSeverity.cleared | FaultSeverity.info:
+                return State.OK
+            case _:
+                assert_never(self.severity)
+
+
+def check_cisco_fault(faults: Sequence[Fault]) -> CheckResult:
+    if faults:
+        yield from (
+            Result(
+                state=fault.monitoring_state(),
+                notice=f"Fault: {fault.code} - {fault.description}",
+            )
+            for fault in faults
+        )
+    else:
+        yield Result(state=State.OK, notice="No faults")

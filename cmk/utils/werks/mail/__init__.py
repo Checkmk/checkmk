@@ -6,6 +6,7 @@
 import argparse
 import datetime
 import difflib
+import json
 import logging
 import re
 import textwrap
@@ -39,6 +40,7 @@ class Args(NamedTuple):
     repo_path: Path
     branch: str
     ref: str
+    ref_fixup: str
     mail: str
 
     assume_no_notes_but: str
@@ -54,6 +56,7 @@ class Args(NamedTuple):
             repo_path=args.repo_path.absolute(),
             branch=args.branch,
             ref=args.ref,
+            ref_fixup=args.ref_fixup,
             mail=args.mail,
             assume_no_notes_but=args.assume_no_notes_but,
             do_send_mail=args.do_send_mail,
@@ -126,12 +129,14 @@ def build_mail_addresses(werk: Werk, args: Args) -> Sequence[Address]:
 
 class File(NamedTuple):
     name: str
+    path: str
     content: str
 
     @classmethod
     def new(cls, path: str, blob: Blob) -> "File":
         return File(
             name=Path(path).name,
+            path=path,
             content=blob.data_stream.read().decode("utf-8"),
         )
 
@@ -161,9 +166,39 @@ class WerkModified(NamedTuple):
         return "adapted"
 
 
+WerkChange = WerkModified | WerkAdded | WerkRemoved
+
+
 class WerkCommit(NamedTuple):
-    changes: list[WerkAdded | WerkRemoved | WerkModified]
+    changes: list[WerkChange]
     commit: Commit
+
+
+def load_werk_fixup(werk_commit: WerkCommit, change: WerkChange, repo: Repo, args: Args) -> Werk:
+    try:
+        if args.do_fetch_git_notes:
+            git_notes_fetch(repo, args.ref_fixup, force=True)
+        fixup = repo.git.notes(f"--ref={args.ref_fixup}", "show", werk_commit.commit)
+    except GitCommandError as e:
+        raise RuntimeError(
+            f"""Can not load werk fixup
+There was a error parsing a Werk, but the fixup could not be loaded. You should create one:
+First check out {werk_commit.commit} and edit the werk {change.file.name} to fix the error.
+Then execute the following commands:
+
+    git fetch origin +refs/notes/{args.ref_fixup}:refs/notes/{args.ref_fixup}
+    jq --null-input --rawfile werk_fixed_up {change.file.path} '{{"{change.file.path}": $werk_fixed_up}}' | git notes --ref {args.ref_fixup} add -F - {werk_commit.commit}
+    git push origin refs/notes/{args.ref_fixup}
+
+If there are multiple broken werks in this commit, look at the note created by this command and
+manually add a seconds key for the second fixup.
+Force pushing to refs/notes/{args.ref_fixup} should not be a problem. Once the fixed up mail was sent, the fixup note
+can be safely removed or rewritten.
+"""
+        ) from e
+
+    werk_content: str = json.loads(fixup)[change.file.path]
+    return load_werk(file_content=werk_content, file_name=change.file.name)
 
 
 def _is_werks_path(path: str | None) -> bool:
@@ -289,8 +324,31 @@ def get_werk_commits(repo: Repo, branch_name: str, args: Args) -> Sequence[WerkC
     return werk_changes
 
 
-def git_notes_fetch(repo: Repo, args: Args) -> None:
-    repo.git.fetch("origin", f"refs/notes/{args.ref}:refs/notes/{args.ref}")
+def git_notes_fetch(repo: Repo, notes_ref: str, force: bool = False) -> None:
+    force_str = "+" if force else ""
+    try:
+        repo.git.fetch("origin", f"{force_str}refs/notes/{notes_ref}:refs/notes/{notes_ref}")
+    except Exception as e:
+        local = repo.git.show_ref("--", notes_ref)
+        remote = repo.git.ls_remote("origin", f"refs/notes/{notes_ref}")
+        raise RuntimeError(
+            f"""Could not fetch notes {notes_ref} from remote.
+Maybe there were local changes to refs/notes/{notes_ref}, that were not pushed to the remote, but the
+remote changed in the meantime. Now there is a conflict between the local and the remote notes.
+
+Normally you want to fix this conflict by force accepting the remote state:
+   git fetch origin +refs/notes/{notes_ref}:refs/notes/{notes_ref}
+
+But be sure you know what you are doing, it might send out unwanted mails to
+mailing-lists.
+
+You can check out the different states with the following hashes:
+local state:
+{local}
+remote state:
+{remote}
+"""
+        ) from e
 
 
 def git_notes_push(repo: Repo, args: Args) -> None:
@@ -298,13 +356,12 @@ def git_notes_push(repo: Repo, args: Args) -> None:
 
 
 def send_mail(
-    change: WerkModified | WerkAdded | WerkRemoved,
+    werk: Werk,
+    change: WerkChange,
     template: Template,
     translator: WerkTranslator,
     args: Args,
 ) -> None:
-    werk = load_werk(file_content=change.file.content, file_name=change.file.name)
-
     base_version = str(Version.from_str(werk.version).base)
 
     mail_addresses = build_mail_addresses(werk, args)
@@ -344,6 +401,7 @@ def main(argparse_args: argparse.Namespace) -> None:
     logger.info("repo_path=%s", args.repo_path)
     logger.info("branch=%s", args.branch)
     logger.info("ref=%s", args.ref)
+    logger.info("ref_fixup=%s", args.ref_fixup)
 
     env = Environment(
         loader=PackageLoader("cmk.utils.werks.mail", "templates"),
@@ -357,7 +415,7 @@ def main(argparse_args: argparse.Namespace) -> None:
     repo = Repo(args.repo_path)
 
     if args.do_fetch_git_notes:
-        git_notes_fetch(repo, args)
+        git_notes_fetch(repo, args.ref)
 
     werk_commits = get_werk_commits(repo, args.branch, args)
 
@@ -377,7 +435,19 @@ def main(argparse_args: argparse.Namespace) -> None:
                 change.file.name,
                 change.__class__.__name__,
             )
-            send_mail(change, template, translator, args)
+            try:
+                werk = load_werk(file_content=change.file.content, file_name=change.file.name)
+            except Exception:
+                logging.exception(
+                    "Werk parsing failed for werk %s on branch %s on commit %s, will try to load fixup",
+                    change.file.path,
+                    args.branch,
+                    werk_commit.commit,
+                )
+                werk = load_werk_fixup(werk_commit, change, repo, args)
+                logging.info("Successfully loaded fixup")
+
+            send_mail(werk, change, template, translator, args)
 
         if args.do_push_git_notes:
             git_notes_push(repo, args)

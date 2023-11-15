@@ -200,7 +200,7 @@ metric_info["parts_per_million"] = {
 metric_info["frequency"] = {
     "title": _("Frequency"),
     "unit": "hz",
-    "color": "11/c",
+    "color": "11/a",
 }
 
 metric_info["battery_capacity"] = {

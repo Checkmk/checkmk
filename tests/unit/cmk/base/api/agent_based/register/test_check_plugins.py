@@ -20,6 +20,8 @@ from cmk.base.api.agent_based.register.utils import (
     validate_function_arguments,
 )
 
+from cmk.discover_plugins import PluginLocation
+
 
 def dummy_generator(section):  # pylint: disable=unused-argument
     return
@@ -220,4 +222,4 @@ def test_create_check_plugin() -> None:
 
 def test_module_attribute(fix_register: FixRegister) -> None:
     local_check = fix_register.check_plugins[CheckPluginName("local")]
-    assert local_check.full_module == "cmk.base.plugins.agent_based.local"
+    assert local_check.location == PluginLocation("cmk.base.plugins.agent_based.local")

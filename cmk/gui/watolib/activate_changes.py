@@ -30,6 +30,7 @@ import time
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from itertools import filterfalse
 from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
@@ -78,7 +79,11 @@ from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
+from cmk.gui.type_defs import Users
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.userdb import load_users, user_sync_default_config
+from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
+from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.urls import makeuri_contextless
@@ -2532,6 +2537,12 @@ def _need_to_update_config_after_sync() -> bool:
     this_v = version.Version.from_str(version.__version__)
     other_v = version.Version.from_str(central_version)
     if this_v.base is None or other_v.base is None:
+        logger.debug(
+            "Unable to determine base version of master daily build (%s, %s): "
+            "Assume no cmk-update-config needed",
+            this_v.base,
+            other_v.base,
+        )
         # We can not decide which is the current base version of the master daily builds.
         # For this reason we always treat them to be compatbile.
         return False
@@ -3093,18 +3104,62 @@ class AutomationReceiveConfigSync(AutomationCommand):
         """Use the given tar archive and list of files to be deleted to update the local files"""
         base_dir = cmk.utils.paths.omd_root
 
-        for site_path in to_delete:
-            site_file = base_dir.joinpath(site_path)
-            try:
-                site_file.unlink()
-            except FileNotFoundError:
-                # errno.ENOENT - File already removed. Fine
-                pass
-            except NotADirectoryError:
-                # errno.ENOTDIR - dir with files was replaced by e.g. symlink
-                pass
+        default_sync_config = user_sync_default_config(omd_site())
+        current_users = {}
+        keep_local_users = False
+        active_connectors = []
+        if isinstance(default_sync_config, tuple) and default_sync_config[0] == "list":
+            keep_local_users = True
+            current_users = load_users()
+            active_connectors = default_sync_config[1]
 
-        _unpack_sync_archive(sync_archive, base_dir)
+        try:
+            # to_delete should not include any files mentioned in the sync_archive
+            for site_path in to_delete:
+                site_file = base_dir.joinpath(site_path)
+                try:
+                    site_file.unlink()
+                except FileNotFoundError:
+                    # errno.ENOENT - File already removed. Fine
+                    pass
+                except NotADirectoryError:
+                    # errno.ENOTDIR - dir with files was replaced by e.g. symlink
+                    pass
+
+            _unpack_sync_archive(sync_archive, base_dir)
+        finally:
+            if keep_local_users:
+                _reintegrate_site_local_users(current_users, active_connectors)
+
+
+def _reintegrate_site_local_users(old_users: Users, active_connectors: list[str]) -> None:
+    """
+    Fixes missing user files after a new snapshot got applied
+    The remote site already ignores ~/var/check_mk/web folders which are only known
+    to the remote site. Remaining files to fix:
+    - contacts.mk  # written in save_users()
+    - users.mk     # written in save_users()
+    - auth.serials # written in save_users(), serial is taken from user_profile
+    """
+
+    # Only read the data of these updated users -> load_users_uncached
+    # It would be a bad idea to exchange any loaded users in a running request
+    new_users = load_users_uncached()
+
+    local_site_users: Users = {}
+    for username, settings in old_users.items():
+        if username in new_users:
+            # User is known in central site
+            continue
+        connector = settings.get("connector")
+        if connector in (None, HtpasswdUserConnector.type()):
+            # User has an incompatible connector type
+            continue
+        if connector in active_connectors:
+            # This user is only known on the remote site, keep it
+            local_site_users[username] = settings
+    new_users.update(local_site_users)
+    save_users(new_users, datetime.now())
 
 
 @dataclass

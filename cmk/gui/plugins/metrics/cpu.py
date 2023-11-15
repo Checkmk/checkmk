@@ -25,7 +25,7 @@ from cmk.gui.i18n import _l
 metric_info["load1"] = {
     "title": _l("CPU load average of last minute"),
     "unit": "",
-    "color": "34/c",
+    "color": "34/a",
 }
 
 metric_info["load5"] = {

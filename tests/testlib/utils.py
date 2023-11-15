@@ -142,6 +142,19 @@ def current_branch_name() -> str:
     return branch_name.split("\n", 1)[0]
 
 
+def current_branch_version() -> str:
+    return subprocess.check_output(
+        [
+            "make",
+            "--no-print-directory",
+            "-f",
+            str(repo_path() / "defines.make"),
+            "print-BRANCH_VERSION",
+        ],
+        encoding="utf-8",
+    ).strip()
+
+
 def current_base_branch_name() -> str:
     branch_name = current_branch_name()
 

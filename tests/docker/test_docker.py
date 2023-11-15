@@ -659,8 +659,9 @@ def test_update(
     # Later this site is being updated to the current daily build
     old_version = CMKVersion(
         version_spec="2.2.0p8",
-        branch="2.2.0",
         edition=Edition.CRE,
+        branch="2.2.0",
+        branch_version="2.2.0",
     )
 
     assert isinstance(

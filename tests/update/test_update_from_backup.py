@@ -17,21 +17,24 @@ from tests.testlib.pytest_helpers.marks import skip_if_not_cloud_edition
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import (
     current_base_branch_name,
+    current_branch_version,
     get_services_with_status,
     qa_test_data_path,
 )
 from tests.testlib.version import CMKVersion
-from tests.update.conftest import BaseVersions
 
 from cmk.utils.version import Edition
 
+from tests.update.conftest import BaseVersions
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
-    base_version = CMKVersion("2.2.0", Edition.CEE, current_base_branch_name())
+    base_version = CMKVersion(
+        "2.2.0", Edition.CEE, current_base_branch_name(), current_branch_version()
+    )
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -57,7 +60,9 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
-    base_version = CMKVersion("2.2.0p4", Edition.CCE, current_base_branch_name())
+    base_version = CMKVersion(
+        "2.2.0p4", Edition.CCE, current_base_branch_name(), current_branch_version()
+    )
     return SiteFactory(version=base_version, prefix="")
 
 
@@ -100,8 +105,12 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 
         assert len(base_ok_services[hostname]) > 0
 
-    target_version = CMKVersion(CMKVersion.DAILY, Edition.CEE, current_base_branch_name())
-    min_version = CMKVersion(BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name())
+    target_version = CMKVersion(
+        CMKVersion.DAILY, Edition.CEE, current_base_branch_name(), current_branch_version()
+    )
+    min_version = CMKVersion(
+        BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name(), current_branch_version()
+    )
     target_site = site_factory.interactive_update(base_site, target_version, min_version)
 
     target_services = {}
@@ -166,7 +175,9 @@ def test_update_from_backup_demo(
 
         assert len(base_services[hostname]) > 0, f"No services found in host {hostname}"
 
-    target_version = CMKVersion(CMKVersion.DAILY, Edition.CCE, current_base_branch_name())
+    target_version = CMKVersion(
+        CMKVersion.DAILY, Edition.CCE, current_base_branch_name(), current_branch_version()
+    )
 
     site_factory_demo = SiteFactory(
         version=target_version,

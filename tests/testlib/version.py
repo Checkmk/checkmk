@@ -13,6 +13,7 @@ from typing import Final
 from tests.testlib.utils import (
     branch_from_env,
     current_base_branch_name,
+    current_branch_version,
     edition_from_env,
     version_spec_from_env,
 )
@@ -28,11 +29,14 @@ class CMKVersion:
     DAILY = "daily"
     GIT = "git"
 
-    def __init__(self, version_spec: str, edition: Edition, branch: str) -> None:
+    def __init__(
+        self, version_spec: str, edition: Edition, branch: str, branch_version: str
+    ) -> None:
         self.version_spec: Final = version_spec
-        self.version: Final = self._version(version_spec, branch)
+        self.version: Final = self._version(version_spec, branch, branch_version)
         self.edition: Final = edition
         self.branch: Final = branch
+        self.branch_version: Final = branch_version
 
     def _get_default_version(self) -> str:
         if os.path.exists("/etc/alternatives/omd"):
@@ -41,14 +45,12 @@ class CMKVersion:
             path = os.readlink("/omd/versions/default")
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
-    def _version(self, version_spec: str, branch: str) -> str:
+    def _version(self, version_spec: str, branch: str, branch_version: str) -> str:
         if version_spec in (self.DAILY, self.GIT):
             date_part = time.strftime("%Y.%m.%d")
-            if branch == "master":
-                return date_part
-            if re.match(r"^\d+\.\d+\.\d+.*", branch):
-                return f"{branch}-{date_part}"
-            return f"{date_part}-{branch.replace('/', '-')}"
+            if branch.startswith("sandbox"):
+                return f"{date_part}-{branch.replace('/', '-')}"
+            return f"{branch_version}-{date_part}"
 
         if version_spec == self.DEFAULT:
             return self._get_default_version()
@@ -95,6 +97,7 @@ def version_from_env(
         version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
         edition_from_env(fallback_edition or Edition.CEE),
         branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
+        current_branch_version(),
     )
 
 

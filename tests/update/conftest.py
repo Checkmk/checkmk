@@ -18,7 +18,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name
+from tests.testlib.utils import current_base_branch_name, current_branch_version
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
@@ -58,7 +58,12 @@ class BaseVersions:
         BASE_VERSIONS_STR = json.load(f)
 
     BASE_VERSIONS = [
-        CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
+        CMKVersion(
+            base_version_str,
+            Edition.CEE,
+            current_base_branch_name(),
+            current_branch_version(),
+        )
         for base_version_str in BASE_VERSIONS_STR
     ]
     IDS = [
@@ -135,7 +140,12 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
     update = base_site is not None and base_site.exists()
     update_conflict_mode = "keepold"
     sf = SiteFactory(
-        version=CMKVersion(version.version, version.edition, current_base_branch_name()),
+        version=CMKVersion(
+            version.version,
+            version.edition,
+            current_base_branch_name(),
+            current_branch_version(),
+        ),
         prefix="update_",
         update_from_git=False,
         update=update,
@@ -176,7 +186,12 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
             sf.interactive_update(
                 base_site,  # type: ignore
                 version,
-                CMKVersion(BaseVersions.MIN_VERSION, Edition.CEE, current_base_branch_name()),
+                CMKVersion(
+                    BaseVersions.MIN_VERSION,
+                    Edition.CEE,
+                    current_base_branch_name(),
+                    current_branch_version(),
+                ),
             )
             if not version_supported(source_version):
                 pytest.skip(f"{source_version} is not a supported version for {target_version}")

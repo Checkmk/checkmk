@@ -79,6 +79,7 @@ def _is_allowed_import(imported: ModuleName) -> bool:
             _in_component(imported=imported, component=Component("cmk.server_side_calls")),
             _in_component(imported=imported, component=Component("cmk.werks")),
             _in_component(imported=imported, component=Component("cmk.mkp_tool")),
+            _in_component(imported=imported, component=Component("cmk.graphing")),
         )
     )
 

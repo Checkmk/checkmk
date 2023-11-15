@@ -209,6 +209,10 @@ def get_pipfile_libs(repopath: Path) -> t.Dict[PackageName, t.List[ImportName]]:
             # Ignoring some of our own sub-packages e.g. agent-receiver
             continue
 
+        if name == "markdown":
+            pipfile_to_libs[PackageName("markdown")] = site_packages[PackageName("Markdown")]
+            continue
+
         if name in site_packages:
             pipfile_to_libs[name] = site_packages[name]
             continue

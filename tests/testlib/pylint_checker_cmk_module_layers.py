@@ -180,6 +180,7 @@ _COMPONENTS = (
     (Component("cmk.cee.liveproxy"), _is_default_allowed_import),
     (Component("cmk.cee.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.post_rename_site"), _allow_default_plus_gui_and_base),
+    (Component("cmk.werks"), _is_default_allowed_import),
 )
 
 _EXPLICIT_FILE_TO_COMPONENT = {

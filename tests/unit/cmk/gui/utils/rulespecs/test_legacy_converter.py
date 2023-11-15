@@ -184,7 +184,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ],
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
-                orientation=api_v1.Orientation.FLOAT,
             ),
             legacy_valuespecs.Tuple(
                 elements=[
@@ -193,7 +192,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 ],
                 title=_("parent title"),
                 help=_("parent help"),
-                orientation="float",
             ),
             id="Tuple",
         ),

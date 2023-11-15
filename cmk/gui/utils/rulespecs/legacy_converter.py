@@ -214,7 +214,6 @@ def _convert_to_legacy_tuple(
     converted_kwargs: MutableMapping[str, Any] = {
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
-        "orientation": to_convert.orientation.name.lower(),
     }
 
     if to_convert.custom_validate is not None:

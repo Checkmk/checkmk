@@ -91,20 +91,12 @@ class TextInput:
     custom_validate: Callable[[str], object] | None = None
 
 
-class Orientation(enum.Enum):
-    VERTICAL = enum.auto()
-    HORIZONTAL = enum.auto()
-    FLOAT = enum.auto()
-
-
 _TupleType = TypeVar("_TupleType", bound=tuple[object, ...])
 
 
 @dataclass(frozen=True)
 class Tuple(Generic[_TupleType]):
     elements: Sequence["ValueSpec"]
-
-    orientation: Orientation = Orientation.VERTICAL
 
     title: Localizable | None = None
     help_text: Localizable | None = None

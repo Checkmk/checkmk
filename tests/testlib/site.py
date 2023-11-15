@@ -1285,9 +1285,6 @@ class SiteFactory:
 
         site.create()
 
-        # refresh the site object after creating the site
-        site = self.get_existing_site(name)
-
         if init_livestatus:
             site.open_livestatus_tcp(encrypted=False)
 

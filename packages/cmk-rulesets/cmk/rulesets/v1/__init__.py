@@ -34,6 +34,7 @@ from cmk.rulesets.v1._valuespec import (
     InvalidElementMode,
     InvalidElementValidator,
     ItemSpec,
+    List,
     MonitoringState,
     Percentage,
     State,
@@ -81,4 +82,5 @@ __all__ = [
     "Tuple",
     "CascadingDropdown",
     "CascadingDropdownElement",
+    "List",
 ]

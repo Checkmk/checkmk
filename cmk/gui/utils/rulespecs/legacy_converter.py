@@ -239,6 +239,9 @@ def _convert_to_legacy_valuespec(
         case ruleset_api_v1.MonitoringState():
             return _convert_to_legacy_monitoring_state(to_convert, localizer)
 
+        case ruleset_api_v1.List():
+            return _convert_to_legacy_list(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -455,3 +458,24 @@ def _convert_to_legacy_validation(
             raise MKUserError(var_prefix, e.message.localize(localizer))
 
     return wrapper
+
+
+def _convert_to_legacy_list(
+    to_convert: ruleset_api_v1.List, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "valuespec": _convert_to_legacy_valuespec(to_convert.value_spec, localizer),
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "movable": to_convert.order_editable,
+    }
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    return legacy_valuespecs.ListOf(**converted_kwargs)

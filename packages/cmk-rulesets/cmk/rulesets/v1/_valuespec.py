@@ -261,6 +261,31 @@ class MonitoringState:
     prefill_value: State = State.OK
 
 
+@dataclass(frozen=True)
+class List:
+    """
+    Specifies a list of configuration elements of the same type.
+
+    Args:
+        spec: Configuration specification of the list elements
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+        prefill_value: Value to pre-populate the form field with
+        order_editable: Can the elements be reordered in the UI
+    """
+
+    value_spec: "ValueSpec"
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+
+    custom_validate: Callable[[Sequence[object]], object] | None = None
+    prefill_value: Sequence[object] | None = None
+    order_editable: bool = True
+
+
 ItemSpec = TextInput | DropdownChoice
 
 
@@ -273,4 +298,5 @@ ValueSpec = (
     | CascadingDropdown
     | Dictionary
     | MonitoringState
+    | List
 )

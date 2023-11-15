@@ -297,6 +297,35 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="CascadingDropdown",
         ),
+        pytest.param(
+            api_v1.List(value_spec=api_v1.Tuple(elements=[])),
+            legacy_valuespecs.ListOf(valuespec=legacy_valuespecs.Tuple(elements=[])),
+            id="minimal ListOf",
+        ),
+        pytest.param(
+            api_v1.List(
+                value_spec=api_v1.Tuple(
+                    elements=[api_v1.TextInput(), api_v1.Integer(unit=api_v1.Localizable("km"))]
+                ),
+                title=api_v1.Localizable("list title"),
+                help_text=api_v1.Localizable("list help"),
+                prefill_value=[("first", 1), ("second", 2), ("third", 3)],
+                order_editable=False,
+            ),
+            legacy_valuespecs.ListOf(
+                valuespec=legacy_valuespecs.Tuple(
+                    elements=[legacy_valuespecs.TextInput(), legacy_valuespecs.Integer(unit="km")]
+                ),
+                title="list title",
+                help="list help",
+                default_value=[("first", 1), ("second", 2), ("third", 3)],
+                add_label="Add new element",
+                del_label="Delete this entry",
+                movable=False,
+                text_if_empty="No entries",
+            ),
+            id="ListOf",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(
@@ -434,3 +463,34 @@ def test_convert_validation(input_value: str) -> None:
     assert actual_error.value.args == expected_error.value.args
     assert actual_error.value.message == expected_error.value.message
     assert actual_error.value.varname == expected_error.value.varname
+
+
+@pytest.mark.parametrize(
+    "input_value, expected_error",
+    [
+        pytest.param(
+            ["first", "second", "third"], "Max number of elements exceeded", id="max elements"
+        ),
+        pytest.param([], "Empty list", id="empty validation"),
+        pytest.param(["first", "first"], "Duplicate elements", id="custom validation"),
+    ],
+)
+def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -> None:
+    def _v1_custom_list_validate(value: Sequence[object]) -> None:
+        api_v1.disallow_empty(error_msg=api_v1.Localizable("Empty list"))(value)
+
+        if len(value) > 2:
+            raise api_v1.ValidationError(api_v1.Localizable("Max number of elements exceeded"))
+
+        if len(set(value)) != len(value):
+            raise api_v1.ValidationError(api_v1.Localizable("Duplicate elements"))
+
+    v1_api_list = api_v1.List(
+        value_spec=api_v1.Tuple(elements=[api_v1.TextInput()]),
+        custom_validate=_v1_custom_list_validate,
+    )
+
+    legacy_list = _convert_to_legacy_valuespec(v1_api_list, _)
+
+    with pytest.raises(MKUserError, match=expected_error):
+        legacy_list.validate_value(input_value, "var_prefix")

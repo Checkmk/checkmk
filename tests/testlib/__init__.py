@@ -224,20 +224,23 @@ class WatchLog:
     def check_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
-        if not self._check_for_line(match_for, timeout):
+        found, lines = self._check_for_line(match_for, timeout)
+        if not found:
             raise Exception(
-                "Did not find %r in %s after %d seconds" % (match_for, self._log_path, timeout)
+                "Did not find %r in %s after %d seconds\n%s"
+                % (match_for, self._log_path, timeout, lines)
             )
 
     def check_not_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
             timeout = self._default_timeout
-        if self._check_for_line(match_for, timeout):
+        found, lines = self._check_for_line(match_for, timeout)
+        if found:
             raise Exception(
-                "Found %r in %s after %d seconds" % (match_for, self._log_path, timeout)
+                "Found %r in %s after %d seconds\n%s" % (match_for, self._log_path, timeout, lines)
             )
 
-    def _check_for_line(self, match_for: str, timeout: float) -> bool:
+    def _check_for_line(self, match_for: str, timeout: float) -> tuple[bool, str]:
         if self._tail_process is None:
             raise Exception("no log file")
         timeout_at = time.time() + timeout
@@ -245,18 +248,20 @@ class WatchLog:
             "Start checking for matching line %r at %d until %d\n"
             % (match_for, time.time(), timeout_at)
         )
+        lines: list[str] = []
         while time.time() < timeout_at:
             # print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
             assert self._tail_process.stdout is not None
             line = self._tail_process.stdout.readline()
+            lines += line
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
-                return True
+                return True, "\n".join(lines)
             time.sleep(0.1)
 
         sys.stdout.write("Timed out at %d\n" % (time.time()))
-        return False
+        return False, "\n".join(lines)
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:

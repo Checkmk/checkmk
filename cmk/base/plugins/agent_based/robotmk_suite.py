@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
+from itertools import chain
 from time import time
-from typing import assert_never, TypedDict
+from typing import TypedDict
 
 from cmk.plugins.lib.robotmk_parse_xml import Outcome, StatusV6, StatusV7
 from cmk.plugins.lib.robotmk_suite_execution_report import (
@@ -58,8 +59,10 @@ def _check_suite_execution_report(
         now=now,
     )
 
-    for attempt in report.Executed.attempts:
-        yield _attempt_result(attempt)
+    yield from chain.from_iterable(
+        _check_attempt(attempt_number, attempt)
+        for attempt_number, attempt in enumerate(report.Executed.attempts, start=1)
+    )
 
 
 def _check_rebot(
@@ -136,35 +139,26 @@ def _check_runtime(
     )
 
 
-def _attempt_result(
+def _check_attempt(
+    attempt_number: int,
     attempt_outcome: AttemptOutcome | AttemptOutcomeOtherError,
-) -> Result:
-    state = State.OK if attempt_outcome is AttemptOutcome.AllTestsPassed else State.CRIT
-
+) -> CheckResult:
     match attempt_outcome:
-        case AttemptOutcome.AllTestsPassed:
-            summary = "All tests passed"
-        case AttemptOutcome.TestFailures:
-            summary = "Test failures"
         case AttemptOutcome.RobotFrameworkFailure:
-            summary = "Robot Framework failure"
+            yield Result(
+                state=State.WARN,
+                summary=f"Attempt {attempt_number}: Robot Framework failure",
+            )
         case AttemptOutcome.EnvironmentFailure:
-            summary = "Environment failure"
+            yield Result(
+                state=State.WARN,
+                summary=f"Attempt {attempt_number}: Environment failure",
+            )
         case AttemptOutcome.TimedOut:
-            summary = "Timeout"
-        case AttemptOutcomeOtherError():
-            summary = "Unexpected error"
-        case _:
-            assert_never(attempt_outcome)
-
-    return (
-        Result(state=state, summary=summary, details=attempt_outcome.OtherError)
-        if isinstance(attempt_outcome, AttemptOutcomeOtherError)
-        else Result(
-            state=state,
-            summary=summary,
-        )
-    )
+            yield Result(
+                state=State.WARN,
+                summary=f"Attempt {attempt_number}: Timeout",
+            )
 
 
 register.check_plugin(

@@ -244,7 +244,7 @@ pub fn check_levels<T: Display + Copy + PartialOrd + Into<f64>>(
     };
 
     let opt_unit = unit.unwrap_or_default();
-    let warn_crit_marker = if let State::Warn | State::Crit = state {
+    let warn_crit_info = if let State::Warn | State::Crit = state {
         match &upper_levels {
             Some(UpperLevels { warn, crit: None }) => format!(" (warn at {}{})", warn, opt_unit),
             Some(UpperLevels {
@@ -259,7 +259,7 @@ pub fn check_levels<T: Display + Copy + PartialOrd + Into<f64>>(
 
     notice(
         state,
-        &format!("{}: {}{}{}", description, value, opt_unit, warn_crit_marker),
+        &format!("{}: {}{}{}", description, value, opt_unit, warn_crit_info),
     )
 }
 
@@ -354,10 +354,36 @@ fn check_page_size(
     page_size_limits: Option<Bounds<usize>>,
 ) -> Vec<Option<CheckResult>> {
     let state = page_size_limits
+        .as_ref()
         .and_then(|bounds| bounds.evaluate(&page_size, State::Warn))
         .unwrap_or(State::Ok);
 
-    notice(state, &format!("Page size: {} bytes", page_size))
+    let bounds_info = if let State::Warn = state {
+        match page_size_limits {
+            Some(Bounds { lower, upper: None }) => format!(" (warn below {} Bytes)", lower),
+            Some(Bounds {
+                lower,
+                upper: Some(upper),
+            }) => format!(" (warn below/above {} Bytes/{} Bytes)", lower, upper),
+            _ => "".to_string(),
+        }
+    } else {
+        "".to_string()
+    };
+
+    let mut res = notice(
+        state,
+        &format!("Page size: {} Bytes{}", page_size, bounds_info),
+    );
+    res.push(Some(CheckResult::Metric(Metric {
+        name: "size".to_string(),
+        value: page_size as f64,
+        unit: Some('B'),
+        levels: None,
+        lower: Some(0.),
+        upper: None,
+    })));
+    res
 }
 
 fn check_response_time(
@@ -447,54 +473,77 @@ pub mod test_helper {
 
 #[cfg(test)]
 mod test_check_page_size {
-    use super::test_helper::has_state;
-    use crate::checking::check_page_size;
-    use crate::checking::Bounds;
-    use crate::checking::State;
+    use super::test_helper::metric;
+    use super::*;
 
     #[test]
     fn test_without_bounds() {
-        assert!(has_state(check_page_size(42, None), State::Ok));
+        assert!(
+            check_page_size(42, None)
+                == vec![
+                    CheckResult::details(State::Ok, "Page size: 42 Bytes"),
+                    Some(metric("size", 42., Some('B'), None, Some(0.), None))
+                ]
+        )
     }
 
     #[test]
     fn test_lower_within_bounds() {
-        assert!(has_state(
-            check_page_size(42, Some(Bounds::lower(12))),
-            State::Ok
-        ));
+        assert!(
+            check_page_size(42, Some(Bounds::lower(12)))
+                == vec![
+                    CheckResult::details(State::Ok, "Page size: 42 Bytes"),
+                    Some(metric("size", 42., Some('B'), None, Some(0.), None))
+                ]
+        );
     }
 
     #[test]
     fn test_lower_out_of_bounds() {
-        assert!(has_state(
-            check_page_size(42, Some(Bounds::lower(56))),
-            State::Warn
-        ));
-    }
-
-    #[test]
-    fn test_lower_and_higher_within_bounds() {
-        assert!(has_state(
-            check_page_size(56, Some(Bounds::lower_upper(42, 100))),
-            State::Ok
-        ));
+        assert!(
+            check_page_size(42, Some(Bounds::lower(56)))
+                == vec![
+                    CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                    CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                    Some(metric("size", 42., Some('B'), None, Some(0.), None))
+                ]
+        );
     }
 
     #[test]
     fn test_lower_and_higher_too_low() {
-        assert!(has_state(
-            check_page_size(42, Some(Bounds::lower_upper(56, 100))),
-            State::Warn
-        ));
+        assert!(
+            check_page_size(42, Some(Bounds::lower_upper(56, 100)))
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    Some(metric("size", 42., Some('B'), None, Some(0.), None))
+                ]
+        );
     }
 
     #[test]
     fn test_lower_and_higher_too_high() {
-        assert!(has_state(
-            check_page_size(142, Some(Bounds::lower_upper(56, 100))),
-            State::Warn
-        ));
+        assert!(
+            check_page_size(142, Some(Bounds::lower_upper(56, 100)))
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    Some(metric("size", 142., Some('B'), None, Some(0.), None))
+                ]
+        );
     }
 }
 

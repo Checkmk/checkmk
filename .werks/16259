@@ -1,0 +1,39 @@
+Title: Changed local override mechanism for Checkmk plugins
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1700031909
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This Werk affects users that have modified existing plugins shipped with Checkmk (or intend to do so in the future).
+Other plugins are not affected by this change.
+
+In Checkmk, users can "hide" shipped plugin files by putting a corresponding file with the same path in the sites <tt>local/</tt> folder.
+Checkmk will always prefer the files found there over the shipped ones, allowing users to effectively "patch" a sites plugins.
+
+While this mechanism <i>probably</i> will continue to work (<i>maybe</i>), it is discouraged and no longer supported.
+
+Users that want to modify, replace or extend an existing plugin are advised to make a copy of the plugin, <b>give it a new name</b> and disable the shipped one in the <i>Setup</i>.
+
+We believe this step is necessary in order to provide a good user experience for plugin developers and a smooth upgrade process for plugin users.
+
+These are the main reasons:
+
+<ul>
+  <li>
+While the APIs for plugin development deliberately do not care about the files names the plugins are in, the current mechanism works based on a file name.
+This effectively makes the file name part of the APIs.
+Strictly speaking, moving a plugin to a different file (or splitting large files up) would require an incompatible Werk, as it might break users local overrides.
+This was mostly not done in the past, and is not sustainable in the future.
+(Also the Werk only alerts users to the problem, they would still have to deal with it).
+  </li>
+  <li>
+In the wake of new APIs for plugin development (corresponding Werks will follow), plugins will be moved to new locations in the filesystem a lot, exacerbating the above problem.
+  </li>
+  <li>
+One of the advantages of the future APIs will be that plugins are bundled by their topic (e.g. all plugins related to Kubernetes might be found in <tt>cmk/plugins/kube</tt>, be it special agents, <i>WATO</i> rulespecs, check plugins or graph definitions).
+As a result, some changes to the plugin loading mechanism have to be made, resulting in hard to predict results if combined with the above shadowing mechanism.
+  </li>
+</ul>

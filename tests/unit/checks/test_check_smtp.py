@@ -15,7 +15,7 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (("foo", {}), ["-4", "-H", "$_HOSTADDRESS_4$"]),
+        ({"name": "foo"}, ["-4", "-H", "$_HOSTADDRESS_4$"]),
     ],
 )
 def test_check_smtp_argument_parsing(

@@ -10,20 +10,15 @@ from cmk.base.check_api import host_name, is_ipv6_primary, passwordstore_get_cmd
 from cmk.base.config import active_check_info
 
 
-def check_smtp_arguments(params):  # pylint: disable=too-many-branches
-    _description, settings = params
+# TODO: rename to params. not now to keep change small.
+def check_smtp_arguments(settings):  # pylint: disable=too-many-branches
     args = []
 
     if "expect" in settings:
         args += ["-e", settings["expect"]]
 
     if "port" in settings:
-        port = int(settings["port"])  # ValueSpec was broken, convert to int
-        args += ["-p", port]
-
-    # Be compatible to legacy option
-    if "ip_version" in settings:
-        settings["address_family"] = settings.pop("ip_version")
+        args += ["-p", settings["port"]]
 
     # Use the address family of the monitored host by default
     address_family = settings.get("address_family")
@@ -65,12 +60,8 @@ def check_smtp_arguments(params):  # pylint: disable=too-many-branches
         args += ["-F", settings["fqdn"]]
 
     if "cert_days" in settings:
-        # legacy behavior
-        if isinstance(settings["cert_days"], int):
-            args += ["-D", settings["cert_days"]]
-        else:
-            warn, crit = settings["cert_days"]
-            args += ["-D", "%d,%d" % (warn, crit)]
+        warn, crit = settings["cert_days"]
+        args += ["-D", "%d,%d" % (warn, crit)]
 
     if "hostname" in settings:
         args += ["-H", settings["hostname"]]
@@ -81,9 +72,9 @@ def check_smtp_arguments(params):  # pylint: disable=too-many-branches
 
 
 def check_smtp_desc(params):
-    if params[0].startswith("^"):
-        return params[0][1:]
-    return "SMTP %s" % params[0]
+    if (name := params["name"]).startswith("^"):
+        return name[1:]
+    return f"SMTP {name}"
 
 
 active_check_info["smtp"] = {

@@ -243,7 +243,7 @@ class Request(
     """
 
     # TODO investigate why there are so many form_parts
-    max_form_parts = 10000
+    max_form_parts = 20000
     # pylint: disable=too-many-ancestors
 
     def __init__(self, environ, populate_request=True, shallow=False):

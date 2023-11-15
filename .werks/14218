@@ -1,0 +1,11 @@
+Title: Saving a formular might produce an "Internal server error"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1700062613
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p37
+
+This is a followup werk for werk 15939. The limit parameter got increased even more.

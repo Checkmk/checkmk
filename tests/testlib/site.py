@@ -1544,24 +1544,24 @@ class SiteFactory:
             else os.environ.get("CLEANUP") == "1"
         )
         site = self.get_existing_site(name, start=reuse_site)
+        if site.exists():
+            if reuse_site:
+                logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
+            else:
+                logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
+                site.rm()
+        if not site.exists():
+            site = self.get_site(name, init_livestatus)
+        if auto_restart_httpd:
+            restart_httpd()
+        logger.info(
+            'Site "%s" is ready!%s',
+            site.id,
+            f" [{description}]" if description else "",
+        )
         with cse_openid_oauth_provider(
             f"http://localhost:{site.apache_port}"
         ) if self.version.is_saas_edition() else nullcontext():
-            if site.exists():
-                if reuse_site:
-                    logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
-                else:
-                    logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
-                    site.rm()
-            if not site.exists():
-                site = self.get_site(name, init_livestatus)
-            if auto_restart_httpd:
-                restart_httpd()
-            logger.info(
-                'Site "%s" is ready!%s',
-                site.id,
-                f" [{description}]" if description else "",
-            )
             try:
                 yield site
             finally:

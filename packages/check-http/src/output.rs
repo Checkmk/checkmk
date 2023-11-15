@@ -80,7 +80,7 @@ impl Output {
 #[cfg(test)]
 mod test_output_format {
     use super::*;
-    use crate::checking::Metric;
+    use crate::checking::test_helper::metric;
 
     fn summary(state: State, text: &str) -> CheckResult {
         CheckResult::summary(state, text).unwrap()
@@ -88,24 +88,6 @@ mod test_output_format {
 
     fn details(state: State, text: &str) -> CheckResult {
         CheckResult::details(state, text).unwrap()
-    }
-
-    fn metric(
-        name: &str,
-        value: f64,
-        unit: Option<&'static str>,
-        levels: Option<(f64, Option<f64>)>,
-        lower: Option<f64>,
-        upper: Option<f64>,
-    ) -> CheckResult {
-        CheckResult::Metric(Metric {
-            name: name.to_string(),
-            value,
-            unit,
-            levels,
-            lower,
-            upper,
-        })
     }
 
     #[test]
@@ -179,7 +161,7 @@ mod test_output_format {
         let m1 = metric(
             "my_metric",
             123.,
-            Some("s"),
+            Some('s'),
             Some((1., Some(2.))),
             Some(0.),
             Some(100.),
@@ -195,7 +177,7 @@ mod test_output_format {
         let m1 = metric(
             "my_metric",
             123.1,
-            Some("s"),
+            Some('s'),
             Some((1.2, Some(2.3))),
             Some(0.1),
             Some(100.2),

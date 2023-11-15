@@ -12,6 +12,25 @@ use std::time::{Duration, SystemTime};
 use crate::connection::OnRedirect;
 use crate::http::ProcessedResponse;
 
+// We're using f64 for Metrics, but u64 can't convert to f64 loslessly,
+// so there' no From<u64> implemented for f64.
+// We need the trait to convert to f64 generically, and lossy conversion
+// is acceptable, but we have to write our own type to have it.
+#[derive(PartialOrd, Copy, Clone, PartialEq)]
+pub struct U64(pub u64);
+
+impl From<U64> for f64 {
+    fn from(value: U64) -> Self {
+        value.0 as f64
+    }
+}
+
+impl Display for U64 {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+        write!(f, "{}", self.0)
+    }
+}
+
 // check_http allows specification of
 // * no levels/bounds
 // * warn/lower
@@ -25,7 +44,7 @@ pub struct UpperLevels<T> {
 
 impl<T> UpperLevels<T>
 where
-    T: PartialOrd,
+    T: PartialOrd + Copy + Into<f64>,
 {
     pub fn warn(warn: T) -> Self {
         Self { warn, crit: None }
@@ -47,6 +66,10 @@ where
             Self { warn, crit: _ } if value >= warn => Some(State::Warn),
             _ => None,
         }
+    }
+
+    pub fn as_f64_levels(&self) -> (f64, Option<f64>) {
+        (self.warn.into(), self.crit.map(Into::into))
     }
 }
 
@@ -112,10 +135,11 @@ impl From<State> for i32 {
     }
 }
 
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Metric {
     pub name: String,
     pub value: f64,
-    pub unit: Option<&'static str>,
+    pub unit: Option<char>,
     pub levels: Option<(f64, Option<f64>)>,
     pub lower: Option<f64>,
     pub upper: Option<f64>,
@@ -148,6 +172,7 @@ impl Display for Metric {
     }
 }
 
+#[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct CheckItem {
     pub state: State,
     text: String,
@@ -182,6 +207,7 @@ impl CheckItem {
     }
 }
 
+#[cfg_attr(test, derive(PartialEq))]
 pub enum CheckResult {
     Summary(CheckItem),
     Details(CheckItem),
@@ -206,11 +232,65 @@ pub fn notice(state: State, text: &str) -> Vec<Option<CheckResult>> {
     }
 }
 
+pub fn check_levels<T: Display + Copy + PartialOrd + Into<f64>>(
+    description: &str,
+    value: T,
+    unit: Option<&'static str>,
+    upper_levels: &Option<UpperLevels<T>>,
+) -> Vec<Option<CheckResult>> {
+    let state = match &upper_levels {
+        Some(ul) => ul.evaluate(&value).unwrap_or(State::Ok),
+        None => State::Ok,
+    };
+
+    let opt_unit = unit.unwrap_or_default();
+    let warn_crit_marker = if let State::Warn | State::Crit = state {
+        match &upper_levels {
+            Some(UpperLevels { warn, crit: None }) => format!(" (warn at {}{})", warn, opt_unit),
+            Some(UpperLevels {
+                warn,
+                crit: Some(crit),
+            }) => format!(" (warn/crit at {}{}/{}{})", warn, opt_unit, crit, opt_unit),
+            _ => "".to_string(),
+        }
+    } else {
+        "".to_string()
+    };
+
+    notice(
+        state,
+        &format!("{}: {}{}{}", description, value, opt_unit, warn_crit_marker),
+    )
+}
+
+pub fn check_levels_with_metric<T: Display + Copy + PartialOrd + Into<f64>>(
+    description: &str,
+    value: T,
+    unit: Option<&'static str>,
+    upper_levels: &Option<UpperLevels<T>>,
+    metric_name: &str,
+    lower: Option<f64>,
+    upper: Option<f64>,
+) -> Vec<Option<CheckResult>> {
+    let mut ret = check_levels(description, value, unit, upper_levels);
+    let metric_unit = unit.map(|u| u.trim().chars().next().unwrap());
+
+    ret.push(Some(CheckResult::Metric(Metric {
+        name: metric_name.to_string(),
+        value: value.into(),
+        unit: metric_unit,
+        levels: upper_levels.as_ref().map(|l| l.as_f64_levels()),
+        lower,
+        upper,
+    })));
+    ret
+}
+
 pub struct CheckParameters {
     pub onredirect: OnRedirect,
     pub page_size: Option<Bounds<usize>>,
     pub response_time_levels: Option<UpperLevels<f64>>,
-    pub document_age_levels: Option<UpperLevels<u64>>,
+    pub document_age_levels: Option<UpperLevels<U64>>,
 }
 
 pub fn collect_response_checks(
@@ -300,7 +380,7 @@ fn check_response_time(
 
 fn check_document_age(
     headers: &HeaderMap,
-    document_age_levels: Option<UpperLevels<u64>>,
+    document_age_levels: Option<UpperLevels<U64>>,
 ) -> Option<CheckResult> {
     let document_age_levels = document_age_levels?;
 
@@ -323,16 +403,34 @@ fn check_document_age(
         return cr_document_age_error;
     };
 
-    let state = document_age_levels.evaluate(&age.as_secs())?;
+    let state = document_age_levels.evaluate(&U64(age.as_secs()))?;
 
     //TODO(au): Specify "too old" in Output
     CheckResult::summary(state, "Document age too old")
 }
 
 #[cfg(test)]
-mod test_helper {
-    use super::CheckResult;
+pub mod test_helper {
+    use super::{CheckResult, Metric};
     use crate::checking::State;
+
+    pub fn metric(
+        name: &str,
+        value: f64,
+        unit: Option<char>,
+        levels: Option<(f64, Option<f64>)>,
+        lower: Option<f64>,
+        upper: Option<f64>,
+    ) -> CheckResult {
+        CheckResult::Metric(Metric {
+            name: name.to_string(),
+            value,
+            unit,
+            levels,
+            lower,
+            upper,
+        })
+    }
 
     pub fn has_state(crs: Vec<Option<CheckResult>>, state: State) -> bool {
         crs.iter().any(|cr| is_state(cr, &state))
@@ -453,5 +551,125 @@ mod test_check_response_time {
             &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(2., 3.))),
             &State::Crit
         ));
+    }
+}
+
+#[cfg(test)]
+mod test_check_levels {
+    use super::test_helper::metric;
+    use super::*;
+
+    #[test]
+    fn test_basic() {
+        assert!(
+            check_levels("test", U64(0), None, &None)
+                == vec![CheckResult::details(State::Ok, "test: 0")]
+        )
+    }
+
+    #[test]
+    fn test_warn_level_inactive() {
+        assert!(
+            check_levels(
+                "test",
+                U64(0),
+                Some(" Bytes"),
+                &Some(UpperLevels::warn(U64(10)))
+            ) == vec![CheckResult::details(State::Ok, "test: 0 Bytes")]
+        )
+    }
+
+    #[test]
+    fn test_warn_level_active() {
+        assert!(
+            check_levels(
+                "test",
+                U64(20),
+                Some("%"),
+                &Some(UpperLevels::warn(U64(10)))
+            ) == vec![
+                CheckResult::summary(State::Warn, "test: 20% (warn at 10%)"),
+                CheckResult::details(State::Warn, "test: 20% (warn at 10%)")
+            ]
+        )
+    }
+
+    #[test]
+    fn test_warn_crit_levels() {
+        assert!(
+            check_levels(
+                "test",
+                U64(20),
+                Some("%"),
+                &Some(UpperLevels::warn_crit(U64(10), U64(20)))
+            ) == vec![
+                CheckResult::summary(State::Crit, "test: 20% (warn/crit at 10%/20%)"),
+                CheckResult::details(State::Crit, "test: 20% (warn/crit at 10%/20%)")
+            ]
+        )
+    }
+
+    #[test]
+    fn test_with_metric() {
+        assert!(
+            check_levels_with_metric(
+                "Test Value",
+                U64(30),
+                Some(" seconds"),
+                &Some(UpperLevels::warn_crit(U64(10), U64(20))),
+                "test",
+                Some(0.),
+                Some(42.),
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Test Value: 30 seconds (warn/crit at 10 seconds/20 seconds)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Test Value: 30 seconds (warn/crit at 10 seconds/20 seconds)"
+                ),
+                Some(metric(
+                    "test",
+                    30.,
+                    Some('s'),
+                    Some((10., Some(20.))),
+                    Some(0.),
+                    Some(42.)
+                ))
+            ]
+        )
+    }
+
+    #[test]
+    fn test_with_metric_float() {
+        assert!(
+            check_levels_with_metric(
+                "Test Value",
+                30.1,
+                Some(" MiB"),
+                &Some(UpperLevels::warn_crit(10.1, 20.1)),
+                "test",
+                Some(0.1),
+                Some(42.1),
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Test Value: 30.1 MiB (warn/crit at 10.1 MiB/20.1 MiB)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Test Value: 30.1 MiB (warn/crit at 10.1 MiB/20.1 MiB)"
+                ),
+                Some(metric(
+                    "test",
+                    30.1,
+                    Some('M'),
+                    Some((10.1, Some(20.1))),
+                    Some(0.1),
+                    Some(42.1)
+                ))
+            ]
+        )
     }
 }

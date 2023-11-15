@@ -6,8 +6,9 @@ mod common;
 
 use check_sql::ms_sql::api::InstanceEngine;
 use check_sql::{config::CheckConfig, ms_sql::api};
-use common::tools;
+use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
+use yaml_rust::YamlLoader;
 
 fn expected_instances() -> Vec<String> {
     const EXPECTED_INSTANCES: [&str; 3] = ["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"];
@@ -123,35 +124,35 @@ async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
         let instances = api::detect_instance_engines(&mut client).await.unwrap();
-        let names: Vec<String> = [&instances.0[..], &instances.1[..]]
-            .concat()
-            .into_iter()
-            .map(|i| i.name)
-            .collect();
+        let is = [&instances.0[..], &instances.1[..]].concat();
 
-        for name in names {
-            let c = api::create_remote_instance_client(
-                &name,
-                &endpoint.host,
-                None,
-                api::Credentials::SqlServer {
-                    user: &endpoint.user,
-                    password: &endpoint.pwd,
-                },
-            )
-            .await;
-            match c {
-                Ok(mut c) => assert!(
-                    tools::run_get_version(&mut c).await.is_some()
-                        && api::get_computer_name(&mut c)
-                            .await
-                            .unwrap()
-                            .unwrap()
-                            .to_lowercase()
-                            .starts_with("agentbuild")
-                ),
+        let r = YamlLoader::load_from_str(&create_remote_config(endpoint)).unwrap();
+        let cfg = check_sql::config::ms_sql::Config::from_yaml(&r[0])
+            .unwrap()
+            .unwrap();
+        for i in is {
+            match i.create_client(cfg.auth(), cfg.conn()).await {
+                Ok(mut c) => {
+                    let counters = i.generate_counters_entry(&mut c, '|').await;
+                    assert!(
+                        counters.split('\n').collect::<Vec<&str>>().len() > 100,
+                        "{:?}",
+                        counters
+                    );
+                    assert!(!counters.contains(' '));
+                    assert!(!counters.contains('$'));
+                    assert!(
+                        tools::run_get_version(&mut c).await.is_some()
+                            && api::get_computer_name(&mut c)
+                                .await
+                                .unwrap()
+                                .unwrap()
+                                .to_lowercase()
+                                .starts_with("agentbuild")
+                    )
+                }
                 Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
-                    // we may not have valid credentials to connect - it's normal
+                    panic!("Unexpected LOGIN error: `{:?}`", e);
                 }
                 Err(e) if e.to_string().starts_with(api::SQL_TCP_ERROR_TAG) => {
                     panic!("Unexpected CONNECTION error: `{:?}`", e);
@@ -440,8 +441,17 @@ mssql:
     }
 
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let content_remote = format!(
-            r#"
+        let content_remote = create_remote_config(endpoint);
+        result.push(("remote".to_owned(), content_remote.to_string()));
+    } else {
+        tools::skip_on_lack_of_ms_sql_endpoint()
+    }
+    result
+}
+
+fn create_remote_config(endpoint: SqlDbEndpoint) -> String {
+    format!(
+        r#"
 ---
 mssql:
   standard:
@@ -452,13 +462,8 @@ mssql:
     connection:
        hostname: {}
 "#,
-            endpoint.user, endpoint.pwd, endpoint.host
-        );
-        result.push(("remote".to_owned(), content_remote.to_string()));
-    } else {
-        tools::skip_on_lack_of_ms_sql_endpoint()
-    }
-    result
+        endpoint.user, endpoint.pwd, endpoint.host
+    )
 }
 
 fn update_config_in_dir(dir: &TempDir, content: &str) {

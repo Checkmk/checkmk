@@ -18,6 +18,7 @@ pub type Client = tiberius::Client<Compat<TcpStream>>;
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 const INSTANCE_SECTION_NAME: &str = "instance";
+const COUNTERS_SECTION_NAME: &str = "counters";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -49,6 +50,7 @@ impl Section {
 }
 
 pub trait Column {
+    fn get_bigint_by_idx(&self, idx: usize) -> i64;
     fn get_value_by_idx(&self, idx: usize) -> String;
     fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
     fn get_value_by_name(&self, idx: &str) -> String;
@@ -98,6 +100,11 @@ impl InstanceEngine {
                             result += &self.generate_state_entry(true, instance_section.sep());
                             result += &self
                                 .generate_details_entry(&mut client, instance_section.sep())
+                                .await;
+                        }
+                        COUNTERS_SECTION_NAME => {
+                            result += &self
+                                .generate_known_section(&mut client, &section.name)
                                 .await;
                         }
                         _ => {
@@ -159,6 +166,57 @@ impl InstanceEngine {
         format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
     }
 
+    pub async fn generate_known_section(&self, client: &mut Client, name: &str) -> String {
+        let sep = Section::new(name).sep();
+        match name {
+            COUNTERS_SECTION_NAME => {
+                self.generate_utc_entry(client, sep).await
+                    + &self.generate_counters_entry(client, sep).await
+            }
+            _ => format!("{} not implemented\n", name).to_string(),
+        }
+    }
+
+    pub async fn generate_counters_entry(&self, client: &mut Client, sep: char) -> String {
+        let x = run_query(client, queries::QUERY_COUNTERS)
+            .await
+            .and_then(validate_rows)
+            .and_then(|rows| self.process_counters_rows(&rows, sep));
+        match x {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get counters: {}", err);
+                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+            }
+        }
+    }
+
+    fn process_counters_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
+        let rows = &rows[0];
+        let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
+        Ok(z.join(""))
+    }
+
+    async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
+        let x = run_query(client, queries::QUERY_UTC)
+            .await
+            .and_then(validate_rows)
+            .and_then(|rows| self.process_utc_rows(&rows, sep));
+        match x {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get UTC: {}", err);
+                format!("{sep}{sep}{}{sep}{}\n", self.name, err).to_string()
+            }
+        }
+    }
+
+    fn process_utc_rows(&self, rows: &[Vec<Row>], sep: char) -> Result<String> {
+        let row = &rows[0];
+        let utc = row[0].get_value_by_name(queries::QUERY_UTC_TIME_PARAM);
+        Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
+    }
+
     fn process_details_rows(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
         if rows.is_empty() || rows[0].is_empty() {
             const ERROR: &str = "No output from query";
@@ -185,6 +243,33 @@ impl InstanceEngine {
     }
 }
 
+fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+    if rows.is_empty() || rows[0].is_empty() {
+        Err(anyhow::anyhow!("No output from query"))
+    } else {
+        Ok(rows)
+    }
+}
+
+fn to_counter_entry(row: &Row, sep: char) -> String {
+    let counter = row
+        .get_value_by_idx(0)
+        .trim()
+        .replace(' ', "_")
+        .to_lowercase();
+    let object = row.get_value_by_idx(1).trim().replace([' ', '$'], "_");
+    let instance = row.get_value_by_idx(2).trim().replace(' ', "_");
+    let value = row.get_bigint_by_idx(3).to_string();
+    format!(
+        "{object}{sep}{counter}{sep}{}{sep}{value}\n",
+        if instance.is_empty() {
+            "None"
+        } else {
+            &instance
+        }
+    )
+}
+
 fn get_row_value(row: &Row, idx: &str) -> String {
     row.get_optional_value_by_name(idx).unwrap_or_else(|| {
         log::warn!("Failed to get {idx} from query");
@@ -193,6 +278,12 @@ fn get_row_value(row: &Row, idx: &str) -> String {
 }
 
 impl Column for Row {
+    fn get_bigint_by_idx(&self, idx: usize) -> i64 {
+        self.try_get::<i64, usize>(idx)
+            .unwrap_or_default()
+            .unwrap_or_default()
+    }
+
     fn get_value_by_idx(&self, idx: usize) -> String {
         self.try_get::<&str, usize>(idx)
             .unwrap_or_default()

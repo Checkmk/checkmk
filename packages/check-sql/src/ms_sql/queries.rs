@@ -108,6 +108,10 @@ DEALLOCATE instance_cursor;
 
 SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
 
+pub const QUERY_UTC: &str = "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date";
+pub const QUERY_UTC_TIME_PARAM: &str = "utc_date";
+pub const QUERY_COUNTERS: &str = "SELECT counter_name, object_name, instance_name, cntr_value FROM sys.dm_os_performance_counters  WHERE object_name NOT LIKE '%Deprecated%'";
+
 pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
 pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
 pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";

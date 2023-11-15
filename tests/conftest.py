@@ -12,6 +12,9 @@ import shutil
 from pathlib import Path
 
 import pytest
+from pytest_metadata.plugin import metadata_key  # type: ignore[import-untyped]
+
+from tests.testlib.utils import current_base_branch_name
 
 if os.getenv("_PYTEST_RAISE", "0") != "0":
     # This allows exceptions to be handled by IDEs (rather than just printing the results)
@@ -88,7 +91,21 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    """Registers custom markers to pytest"""
+    """Add important environment variables to the report and register custom pytest markers"""
+    env_vars = {
+        "BRANCH": current_base_branch_name(),
+        "EDITION": "cee",
+        "VERSION": "git",
+        "DISTRO": "",
+        "TZ": "",
+        "REUSE": "0",
+        "CLEANUP": "1",
+    }
+    env_lines = [f"{key}={os.getenv(key, val)}" for key, val in env_vars.items() if val]
+    config.stash[metadata_key]["Variables"] = (
+        "<ul><li>\n" + ("</li><li>\n".join(env_lines)) + "</li></ul>"
+    )
+
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types)
     )

@@ -420,14 +420,10 @@ def main(argparse_args: argparse.Namespace) -> None:
     werk_commits = get_werk_commits(repo, args.branch, args)
 
     for werk_commit in werk_commits:
-        # we add the note first, so maybe we will lose a werk mail
-        # but this way we make sure we fail if the mail was already
-        # sent out, as we can not add a second note (without -f)
-        if args.do_add_notes:
-            add_note(repo, werk_commit.commit, args)
-        else:
-            print(f"DRY RUN: add note to commit {werk_commit.commit}")
-
+        # first lets loop over all werks in this commit, to parse all werks added/changed in this
+        # commit. we want the setting of the note and sending of the mail as close as possible, so
+        # we prepare all data in this first loop.
+        change_with_werk = []
         for change in werk_commit.changes:
             logger.info(
                 "Detected werk change in commit %s: %s %s",
@@ -447,6 +443,17 @@ def main(argparse_args: argparse.Namespace) -> None:
                 werk = load_werk_fixup(werk_commit, change, repo, args)
                 logging.info("Successfully loaded fixup")
 
+            change_with_werk.append((change, werk))
+
+        # we add the note first, so maybe we will lose a werk mail
+        # but this way we make sure we fail if the mail was already
+        # sent out, as we can not add a second note (without -f)
+        if args.do_add_notes:
+            add_note(repo, werk_commit.commit, args)
+        else:
+            print(f"DRY RUN: add note to commit {werk_commit.commit}")
+
+        for change, werk in change_with_werk:
             send_mail(werk, change, template, translator, args)
 
         if args.do_push_git_notes:

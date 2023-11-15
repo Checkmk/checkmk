@@ -1439,6 +1439,7 @@ function update_mouse_indicator(
         canvas.clientHeight -
         to_display_coord(graph_bottom_border(graph)) +
         "px";
+    indicator.style.pointerEvents = "none";
 }
 
 function remove_all_mouse_indicators() {

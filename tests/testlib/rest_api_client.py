@@ -224,7 +224,7 @@ def default_rule_properties() -> RuleProperties:
     return {"disabled": False}
 
 
-class StringMatcher(TypedDict):
+class StringMatcher(TypedDict, total=False):
     match_on: list[str]
     operator: Literal["one_of", "none_of"]
 

@@ -70,6 +70,7 @@ def _create_rule(
     ruleset: str = "inventory_df_rules",
     value: dict[str, Any] | list[Any] | tuple | str | None = None,
     value_raw: str | None = DEFAULT_VALUE_RAW,
+    conditions: RuleConditions | None = None,
     expect_ok: bool = True,
 ) -> tuple[Response, dict[str, Any]]:
     if value is None:
@@ -87,7 +88,8 @@ def _create_rule(
     if documentation_url:
         properties["documentation_url"] = documentation_url
 
-    conditions: RuleConditions = DEFAULT_CONDITIONS
+    if conditions is None:
+        conditions = DEFAULT_CONDITIONS
 
     values = {
         "ruleset": ruleset,
@@ -702,3 +704,31 @@ def test_update_rule_no_value_raw(
     )
     resp.assert_status_code(400)
     assert resp.json["detail"] == "These fields have problems: value_raw"
+
+
+def test_create_rule_missing_match_on(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {"service_description": {"operator": "one_of"}}
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)
+
+
+def test_create_rule_missing_operator(clients: ClientRegistry) -> None:
+    conditions: RuleConditions = {"service_description": {"match_on": []}}
+    resp, _ = _create_rule(
+        clients=clients,
+        folder="/",
+        comment="They made me do it!",
+        description="This is my title for this very important rule.",
+        documentation_url="http://example.com/",
+        conditions=conditions,
+        expect_ok=False,
+    )
+    resp.assert_status_code(400)

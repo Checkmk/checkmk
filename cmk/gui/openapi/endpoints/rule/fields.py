@@ -149,6 +149,7 @@ class LabelConditionSchema(base.BaseSchema):
     )
     operator = fields.String(
         enum=["is", "is_not"],
+        required=True,
         description="How the label should be matched.",
     )
     value = fields.String(
@@ -213,6 +214,7 @@ class TagConditionSchemaBase(base.BaseSchema):
     operator_type: str
 
     key = fields.String(
+        required=True,
         description="The name of the tag.",
     )
 
@@ -313,10 +315,12 @@ class TagConditionScalarSchemaBase(TagConditionSchemaBase):
 
     # field defined in superclass
     operator = fields.String(
+        required=True,
         description="If the tag's value should match what is given under the field `value`.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
     value = fields.String(
+        required=True,
         description="The value of a tag.",
     )
 
@@ -347,11 +351,13 @@ class TagConditionConditionSchemaBase(TagConditionSchemaBase):
 
     # field defined in superclass
     operator = fields.String(
+        required=True,
         description="If the matched tag should be one of the given values, or not.",
         enum=list(allowed_operators),  # Our serializer only wants to know lists.
     )
     value = fields.List(
         fields.String(description="The value of a tag."),
+        required=True,
         description="A list of values for the tag.",
     )
 
@@ -508,10 +514,12 @@ class HostOrServiceConditionSchema(base.BaseSchema):
 
     match_on = fields.List(
         fields.String(),
+        required=True,
         description="A list of string matching regular expressions.",
     )
     operator = fields.String(
         enum=["one_of", "none_of"],
+        required=True,
         description=(
             "How the hosts or services should be matched.\n"
             " * one_of - will match if any of the hosts or services is matched\n"

@@ -1,5 +1,5 @@
-#!/bin/bash
-#
+#!/usr/bin/env bash
+# Launch a cognito idp for the SaaS edition
 set -e
 
 REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
@@ -7,34 +7,16 @@ REPO_PATH="$(dirname "$(dirname "$(realpath "$0")")")"
 # acquire sudo to run to change the configuration
 sudo true
 
-configure_cognito() {
-    idp_url="$1"
-    checkmk_port="$2"
-
-    client_id="notused"
-    base_url="http://localhost:$checkmk_port"
-    well_known="$idp_url/.well-known/openid-configuration"
-
-    # Create JSON object
-    JSON=$(printf '{\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s",\n "%s":"%s"\n}' \
-        "client_id" "$client_id" \
-        "base_url" "$base_url" \
-        "saas_api_url" "$idp_url" \
-        "tenant_id" "123tenant567" \
-        "logout_url" "$idp_url/logout" \
-        "well_known" "$well_known")
-
-    # Write JSON object to file
-    sudo mkdir -p /etc/cse
-    echo "$JSON" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
-}
-
-PORT=5551
-# URL under which we can reach the openid provider
+# PORT and URL under which we can reach the openid provider
+PORT=${1:-5551}
 export URL="http://localhost:${PORT}"
 
-# checkmk uses port 5000 by default
-configure_cognito $URL 5000
+# URL of the checkmk instance; checkmk uses port 5000 by default
+CMK_URL="http://localhost:${2:-5000}"
 
-export PYTHONPATH="${REPO_PATH}/tests/testlib"
-"$REPO_PATH"/scripts/run-pipenv run uvicorn cse.openid_oauth_provider:application --port "$PORT"
+# Write cognito configuration file
+sudo mkdir -p /etc/cse
+"$(dirname "$0")/create_cognito_config_cse.sh" "${URL}" "${CMK_URL}" | sudo tee /etc/cse/cognito-cmk.json >/dev/null
+
+export PYTHONPATH="${REPO_PATH}:${REPO_PATH}/tests/testlib"
+"${REPO_PATH}/scripts/run-pipenv" run uvicorn cse.openid_oauth_provider:application --port "${PORT}"

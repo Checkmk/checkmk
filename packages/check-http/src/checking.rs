@@ -291,6 +291,7 @@ pub struct CheckParameters {
     pub page_size: Option<Bounds<usize>>,
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<U64>>,
+    pub timeout: Duration,
 }
 
 pub fn collect_response_checks(
@@ -301,10 +302,15 @@ pub fn collect_response_checks(
     check_status(response.status, response.version, params.onredirect)
         .into_iter()
         .chain(check_body(response.body, params.page_size))
-        .chain(vec![
-            check_response_time(response_time, params.response_time_levels),
-            check_document_age(&response.headers, params.document_age_levels),
-        ])
+        .chain(check_response_time(
+            response_time,
+            params.response_time_levels,
+            params.timeout,
+        ))
+        .chain(vec![check_document_age(
+            &response.headers,
+            params.document_age_levels,
+        )])
         .flatten()
         .collect()
 }
@@ -389,18 +395,16 @@ fn check_page_size(
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<UpperLevels<f64>>,
-) -> Option<CheckResult> {
-    let state = response_time_levels
-        .and_then(|levels| levels.evaluate(&response_time.as_secs_f64()))
-        .unwrap_or(State::Ok);
-
-    CheckResult::summary(
-        state,
-        &format!(
-            "Response time: {}.{}s",
-            response_time.as_secs(),
-            response_time.subsec_millis()
-        ),
+    timeout: Duration,
+) -> Vec<Option<CheckResult>> {
+    check_levels_with_metric(
+        "Response time",
+        response_time.as_secs_f64(),
+        Some(" seconds"),
+        &response_time_levels,
+        "time",
+        Some(0.),
+        Some(timeout.as_secs_f64()),
     )
 }
 
@@ -438,7 +442,6 @@ fn check_document_age(
 #[cfg(test)]
 pub mod test_helper {
     use super::{CheckResult, Metric};
-    use crate::checking::State;
 
     pub fn metric(
         name: &str,
@@ -456,18 +459,6 @@ pub mod test_helper {
             lower,
             upper,
         })
-    }
-
-    pub fn has_state(crs: Vec<Option<CheckResult>>, state: State) -> bool {
-        crs.iter().any(|cr| is_state(cr, &state))
-    }
-
-    pub fn is_state(cr: &Option<CheckResult>, state: &State) -> bool {
-        let Some(cr) = cr else { return false };
-        match cr {
-            CheckResult::Details(ci) | CheckResult::Summary(ci) => &ci.state == state,
-            _ => false,
-        }
     }
 }
 
@@ -549,57 +540,139 @@ mod test_check_page_size {
 
 #[cfg(test)]
 mod test_check_response_time {
-    use super::test_helper::is_state;
-    use crate::checking::check_response_time;
-    use crate::checking::{State, UpperLevels};
+    use super::test_helper::metric;
+    use super::*;
     use std::time::Duration;
 
     #[test]
     fn test_unbounded() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), None),
-            &State::Ok
-        ),);
+        assert!(
+            check_response_time(Duration::new(5, 0), None, Duration::from_secs(10))
+                == vec![
+                    CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                    Some(metric("time", 5., Some('s'), None, Some(0.), Some(10.)))
+                ]
+        );
     }
 
     #[test]
     fn test_warn_within_bounds() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(6.))),
-            &State::Ok
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn(6.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                Some(metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some((6., None)),
+                    Some(0.),
+                    Some(10.)
+                ))
+            ]
+        );
     }
 
     #[test]
     fn test_warn_is_warn() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(4.))),
-            &State::Warn
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn(4.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
+                CheckResult::details(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
+                Some(metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some((4., None)),
+                    Some(0.),
+                    Some(10.)
+                ))
+            ]
+        );
     }
 
     #[test]
     fn test_warncrit_within_bounds() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(6., 7.))),
-            &State::Ok
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn_crit(6., 7.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                Some(metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some((6., Some(7.))),
+                    Some(0.),
+                    Some(10.)
+                ))
+            ]
+        );
     }
 
     #[test]
     fn test_warncrit_is_warn() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(4., 6.))),
-            &State::Warn
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn_crit(4., 6.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Response time: 5 seconds (warn/crit at 4 seconds/6 seconds)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Response time: 5 seconds (warn/crit at 4 seconds/6 seconds)"
+                ),
+                Some(metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some((4., Some(6.))),
+                    Some(0.),
+                    Some(10.)
+                ))
+            ]
+        );
     }
 
     #[test]
     fn test_warncrit_is_crit() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(2., 3.))),
-            &State::Crit
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn_crit(2., 3.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
+                ),
+                Some(metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some((2., Some(3.))),
+                    Some(0.),
+                    Some(10.)
+                ))
+            ]
+        );
     }
 }
 

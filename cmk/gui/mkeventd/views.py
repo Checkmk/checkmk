@@ -1364,9 +1364,9 @@ class CommandECChangeState(ECCommand):
 
     def confirm_dialog_additions(
         self,
+        cmdtag: Literal["HOST", "SVC"],
         row: Row,
         len_action_rows: int,
-        cmdtag: Literal["HOST", "SVC"],
     ) -> HTML:
         return HTML(
             "<br><br>"
@@ -1537,9 +1537,9 @@ class CommandECArchiveEventsOfHost(ECCommand):
 
     def confirm_dialog_additions(
         self,
+        cmdtag: Literal["HOST", "SVC"],
         row: Row,
         len_action_rows: int,
-        cmdtag: Literal["HOST", "SVC"],
     ) -> HTML:
         return HTML(
             _(

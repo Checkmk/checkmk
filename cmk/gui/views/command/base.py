@@ -74,9 +74,9 @@ class Command(abc.ABC):
 
     def confirm_dialog_additions(
         self,
+        cmdtag: Literal["HOST", "SVC"],
         row: Row,
         len_action_rows: int,
-        cmdtag: Literal["HOST", "SVC"],
     ) -> HTML:
         return HTML("")
 
@@ -89,7 +89,7 @@ class Command(abc.ABC):
         return CommandConfirmDialogOptions(
             self.confirm_title,
             self.affected(len_action_rows, cmdtag),
-            self.confirm_dialog_additions(row, len_action_rows, cmdtag),
+            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
             self.confirm_dialog_icon_class(),
             self.confirm_button,
         )

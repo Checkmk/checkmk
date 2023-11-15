@@ -8390,7 +8390,7 @@ class DatePicker(ValueSpec[str]):
         html.date(
             var=varprefix,
             value=value,
-            id_=varprefix[1:],
+            id_="date_" + varprefix,
         )
 
     def canonical_value(self) -> str:
@@ -8434,7 +8434,7 @@ class TimePicker(ValueSpec[str]):
         html.time(
             var=varprefix,
             value=value,
-            id_=varprefix[1:],
+            id_="time_" + varprefix,
         )
 
     def canonical_value(self) -> str:

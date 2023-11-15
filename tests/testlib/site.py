@@ -1313,13 +1313,14 @@ class SiteFactory:
     ) -> Site:
         site = self._site_obj(name)
 
+        if site.exists() and init_livestatus:
+            site.gather_livestatus_port(from_config=True)
+
         if not (site.exists() and start):
             return site
 
-        if init_livestatus:
-            site.gather_livestatus_port(from_config=True)
-
         site.start()
+
         logger.debug("Reused site %s", site.id)
         return site
 

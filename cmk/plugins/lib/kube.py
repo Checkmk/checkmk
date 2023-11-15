@@ -510,7 +510,7 @@ class PodInfo(Section):
     annotations: FilteredAnnotations  # used for host labels
     node: NodeName | None = None  # this is optional, because there may be pods, which are not
     # scheduled on any node (e.g., no node with enough capacity is available).
-    host_network: str | None = None
+    host_network: bool | None = None
     dns_policy: str | None = None
     host_ip: IpAddress | None = None
     pod_ip: IpAddress | None = None
@@ -742,8 +742,8 @@ class RollingUpdate(BaseModel):
     """
 
     type_: Literal["RollingUpdate"] = Field("RollingUpdate")
-    max_surge: str  # This field was introduced in Kubernetes v1.21.
-    max_unavailable: str
+    max_surge: str | int  # This field was introduced in Kubernetes v1.21.
+    max_unavailable: str | int
 
 
 class Recreate(BaseModel):

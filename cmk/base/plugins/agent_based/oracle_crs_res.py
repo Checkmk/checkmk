@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections import defaultdict
-from dataclasses import dataclass
 from typing import Any, Mapping, Optional
+
+import pydantic
 
 from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -29,15 +30,19 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 # ...usw...
 
 
-@dataclass(frozen=True)
-class Resource:
+class Resource(pydantic.BaseModel):
+    class Config:
+        frozen = True
+
     type: str
     state: str
     target: str
 
 
-@dataclass(frozen=True)
-class Section:
+class Section(pydantic.BaseModel):
+    class Config:
+        frozen = True
+
     crs_nodename: Optional[str]
     resources: Mapping[str, Mapping[Optional[str], Resource]]
 
@@ -73,8 +78,8 @@ def parse(string_table: StringTable) -> Section:
 
     resources: dict[str, Mapping[Optional[str], Resource]] = {}
     for resname, values in raw_ressources.items():
-        resources[resname] = {node: Resource(**entry) for node, entry in values.items()}
-    return Section(crs_nodename, resources)
+        resources[resname] = {node: Resource.parse_obj(entry) for node, entry in values.items()}
+    return Section.parse_obj({"crs_nodename": crs_nodename, "resources": resources})
 
 
 register.agent_section(name="oracle_crs_res", parse_function=parse)

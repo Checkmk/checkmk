@@ -1,0 +1,17 @@
+Title: oracle_crs_res: TypeError: Resource.__init__() got an unexpected keyword argument 'enabled'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700145397
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p15
+
+Agent output changed with newer oracle databases, it now includes "enabled"
+data. Previous version of this check could not handle this and crashed with
+the following error:
+
+<tt>TypeError: Resource.__init__() got an unexpected keyword argument 'enabled'</tt>
+
+oracle_crs_res now ignores all additional data.

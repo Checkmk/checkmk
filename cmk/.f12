@@ -30,6 +30,7 @@ PYTHON3_PATHS=(
     fields
     gui
     notification_plugins
+    plugins
     post_rename_site
     snmplib
     special_agents

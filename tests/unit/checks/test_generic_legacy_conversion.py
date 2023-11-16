@@ -1005,7 +1005,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "mongodb_replica_set",
         "mongodb_replica_set.election",
         "mongodb_replication_info",
-        "mounts",
         "moxa_iologik_register",
         "mq_queues",
         "msexch_activesync",

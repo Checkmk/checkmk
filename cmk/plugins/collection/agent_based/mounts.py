@@ -9,13 +9,12 @@
 # to
 # knvmsapprd:/transreorg/sap/trans /transreorg/sap/trans\040(deleted) nfs4 rw,relatime,vers=4.0,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=172.24.98.63,local_lock=none,addr=172.24.98.57 0 0
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.agent_based.v2alpha import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,30 +45,28 @@ def parse_mounts(string_table: StringTable) -> Mapping[str, Mount]:
     return section
 
 
-def discovery_mounts(section: Mapping[str, Mount]) -> Iterable[tuple[str, Mapping]]:
+def discovery_mounts(section: Mapping[str, Mount]) -> DiscoveryResult:
     yield from (
-        (m.mountpoint, {"expected_mount_options": m.options})
+        Service(item=m.mountpoint, parameters={"expected_mount_options": m.options})
         for m in section.values()
         if m.fs_type != "tmpfs"
         and m.mountpoint not in ["/etc/resolv.conf", "/etc/hostname", "/etc/hosts"]
     )
 
 
-def _should_ignore_option(option):
+def _should_ignore_option(option: str) -> bool:
     for ignored_option in ["commit=", "localalloc=", "subvol=", "subvolid="]:
         if option.startswith(ignored_option):
             return True
     return False
 
 
-def check_mounts(
-    item: str, params: Mapping[str, Any], section: Mapping[str, Mount]
-) -> Iterable[tuple[int, str]]:
+def check_mounts(item: str, params: Mapping[str, Any], section: Mapping[str, Mount]) -> CheckResult:
     if (mount := section.get(item)) is None:
         return
 
     if mount.is_stale:
-        yield 1, "Mount point detected as stale"
+        yield Result(state=State.WARN, summary="Mount point detected as stale")
         return
 
     targetopts = params["expected_mount_options"]
@@ -84,23 +81,31 @@ def check_mounts(
     ]
 
     if not missing and not exceeding:
-        yield 0, "Mount options exactly as expected"
+        yield Result(state=State.OK, summary="Mount options exactly as expected")
         return
 
     if missing:
-        yield 1, "Missing: %s" % ",".join(missing)
+        yield Result(state=State.WARN, summary="Missing: %s" % ",".join(missing))
     if exceeding:
-        yield 1, "Exceeding: %s" % ",".join(exceeding)
+        yield Result(state=State.WARN, summary="Exceeding: %s" % ",".join(exceeding))
 
     if "ro" in exceeding:
-        yield 2, "Filesystem has switched to read-only and is probably corrupted"
+        yield Result(
+            state=State.CRIT,
+            summary="Filesystem has switched to read-only and is probably corrupted",
+        )
 
 
-check_info["mounts"] = LegacyCheckDefinition(
-    service_name="Mount options of %s",
+section_mounts = AgentSection(
+    name="mounts",
     parse_function=parse_mounts,
-    discovery_function=discovery_mounts,  # type: ignore[typeddict-item]  # fix coming up
+)
+
+check_plugin_mounts = CheckPlugin(
+    name="mounts",
+    service_name="Mount options of %s",
+    discovery_function=discovery_mounts,
     check_function=check_mounts,
     check_ruleset_name="fs_mount_options",
-    check_default_parameters={"expected_mount_options": []},  # will be overwritten by dicsovery
+    check_default_parameters={"expected_mount_options": []},
 )

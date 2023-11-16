@@ -385,10 +385,9 @@ class ModeTags(ABCTagMode):
                 table.cell(_("Demonstration"), sortable=False)
                 if tag_group.help:
                     html.help(tag_group.help)
-                html.begin_form("tag_%s" % tag_group.id)
-                tag_group_attribute = host_attribute("tag_%s" % tag_group.id)
-                tag_group_attribute.render_input("", tag_group_attribute.default_value())
-                html.end_form()
+                with html.form_context("tag_%s" % tag_group.id):
+                    tag_group_attribute = host_attribute("tag_%s" % tag_group.id)
+                    tag_group_attribute.render_input("", tag_group_attribute.default_value())
 
     def _show_tag_icons(self, tag_group, nr):
         # Tag groups were made built-in with ~1.4. Previously users could modify
@@ -707,14 +706,12 @@ class ModeEditAuxtag(ABCEditTagMode):
         return redirect(mode_url("tags"))
 
     def page(self) -> None:
-        html.begin_form("aux_tag")
+        with html.form_context("aux_tag"):
+            self._valuespec().render_input("aux_tag", self._aux_tag.to_config())
 
-        self._valuespec().render_input("aux_tag", self._aux_tag.to_config())
-
-        forms.end()
-        html.show_localization_hint()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.show_localization_hint()
+            html.hidden_fields()
 
     def _valuespec(self):
         return Dictionary(
@@ -828,15 +825,13 @@ class ModeEditTagGroup(ABCEditTagMode):
         return redirect(mode_url("tags"))
 
     def page(self) -> None:
-        html.begin_form("tag_group", method="POST")
+        with html.form_context("tag_group", method="POST"):
+            self._valuespec().render_input("tag_group", self._tag_group.get_dict_format())
 
-        self._valuespec().render_input("tag_group", self._tag_group.get_dict_format())
+            forms.end()
+            html.show_localization_hint()
 
-        forms.end()
-        html.show_localization_hint()
-
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
     def _valuespec(self):
         basic_elements = self._basic_elements(_("Tag group ID"))
@@ -1001,40 +996,41 @@ def _rename_tags_after_confirmation(
                 "rules concern, you have to decide how to proceed."
             )
         )
-        html.begin_form("confirm", method="POST")
-
-        if affected_rulesets and _is_removing_tags(operation):
-            html.br()
-            html.b(
-                _(
-                    "Some tags that are used in rules have been removed by you. What "
-                    "shall we do with that rules?"
+        with html.form_context("confirm", method="POST"):
+            if affected_rulesets and _is_removing_tags(operation):
+                html.br()
+                html.b(
+                    _(
+                        "Some tags that are used in rules have been removed by you. What "
+                        "shall we do with that rules?"
+                    )
                 )
-            )
-            html.open_ul()
-            html.radiobutton(
-                "_repair", "remove", True, _("Just remove the affected tags from the rules.")
-            )
+                html.open_ul()
+                html.radiobutton(
+                    "_repair", "remove", True, _("Just remove the affected tags from the rules.")
+                )
+                html.br()
+                html.radiobutton(
+                    "_repair",
+                    "delete",
+                    False,
+                    _(
+                        "Delete rules containing tags that have been removed, if tag is used in a positive sense. Just remove that tag if it's used negated."
+                    ),
+                )
+            else:
+                html.open_ul()
+                html.radiobutton(
+                    "_repair", "repair", True, _("Fix affected folders, hosts and rules.")
+                )
+
             html.br()
-            html.radiobutton(
-                "_repair",
-                "delete",
-                False,
-                _(
-                    "Delete rules containing tags that have been removed, if tag is used in a positive sense. Just remove that tag if it's used negated."
-                ),
-            )
-        else:
-            html.open_ul()
-            html.radiobutton("_repair", "repair", True, _("Fix affected folders, hosts and rules."))
+            html.radiobutton("_repair", "abort", False, _("Abort your modifications."))
+            html.close_ul()
 
-        html.br()
-        html.radiobutton("_repair", "abort", False, _("Abort your modifications."))
-        html.close_ul()
+            html.button("_do_confirm", _("Proceed"), "")
+            html.hidden_fields(add_action_vars=True)
 
-        html.button("_do_confirm", _("Proceed"), "")
-        html.hidden_fields(add_action_vars=True)
-        html.end_form()
         html.close_div()
         return False
 

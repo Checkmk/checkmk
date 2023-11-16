@@ -135,25 +135,24 @@ class UserChangePasswordPage(ABCUserProfilePage):
                 _("You can not change your password, because it is managed by another system."),
             )
 
-        html.begin_form("profile", method="POST")
-        html.prevent_password_auto_completion()
-        html.open_div(class_="wato")
-        forms.header(self._page_title())
+        with html.form_context("profile", method="POST"):
+            html.prevent_password_auto_completion()
+            html.open_div(class_="wato")
+            forms.header(self._page_title())
 
-        forms.section(_("Current Password"))
-        html.password_input("cur_password", autocomplete="new-password")
+            forms.section(_("Current Password"))
+            html.password_input("cur_password", autocomplete="new-password")
 
-        forms.section(_("New Password"))
-        html.password_input("password", autocomplete="new-password")
-        html.password_meter()
+            forms.section(_("New Password"))
+            html.password_input("password", autocomplete="new-password")
+            html.password_meter()
 
-        forms.section(_("New Password Confirmation"))
-        html.password_input("password2", autocomplete="new-password")
+            forms.section(_("New Password Confirmation"))
+            html.password_input("password2", autocomplete="new-password")
 
-        html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
+            html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
 
-        forms.end()
-        html.close_div()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.close_div()
+            html.hidden_fields()
         html.footer()

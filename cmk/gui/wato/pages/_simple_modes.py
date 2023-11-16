@@ -534,14 +534,13 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         self._store.save(entries, active_config.wato_pprint_config)
 
     def page(self) -> None:
-        html.begin_form("edit", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit", method="POST"):
+            html.prevent_password_auto_completion()
 
-        vs = self.valuespec()
+            vs = self.valuespec()
 
-        vs.render_input("_edit", self._entry)
-        vs.set_focus("_edit")
-        forms.end()
+            vs.render_input("_edit", self._entry)
+            vs.set_focus("_edit")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()

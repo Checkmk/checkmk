@@ -339,7 +339,12 @@ class ModeUsers(WatoMode):
                 + self._job_details_link()
             )
 
-        self._show_user_list()
+        users = userdb.load_users()
+
+        with html.form_context("bulk_delete_form", method="POST"):
+            self._show_user_list(users)
+
+        self._show_user_list_footer(users)
 
     def _job_details_link(self):
         return HTMLWriter.render_a("%s" % self._job.get_title(), href=self._job.detail_url())
@@ -366,17 +371,13 @@ class ModeUsers(WatoMode):
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 
-    def _show_user_list(self) -> None:  # pylint: disable=too-many-branches``
+    def _show_user_list(  # pylint: disable=too-many-branches
+        self, users: dict[UserId, UserSpec]
+    ) -> None:
         visible_custom_attrs = [
             (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
         ]
-
-        users = userdb.load_users()
-
         entries = list(users.items())
-
-        html.begin_form("bulk_delete_form", method="POST")
-
         roles = load_roles()
         contact_groups = load_contact_group_information()
 
@@ -564,8 +565,8 @@ class ModeUsers(WatoMode):
 
         html.hidden_field("selection", weblib.selection_id())
         html.hidden_fields()
-        html.end_form()
 
+    def _show_user_list_footer(self, users: dict[UserId, UserSpec]) -> None:
         show_row_count(
             row_count=(row_count := len(users)),
             row_info=_("user") if row_count == 1 else _("users"),
@@ -911,11 +912,14 @@ class ModeEditUser(WatoMode):
                 role for role in self._roles.keys() if html.get_checkbox("role_" + role)
             ]
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         # Let exceptions from loading notification scripts happen now
         load_notification_scripts()
 
-        html.begin_form("user", method="POST")
+        with html.form_context("user", method="POST"):
+            self._show_form()
+
+    def _show_form(self) -> None:  # pylint: disable=too-many-branches
         html.prevent_password_auto_completion()
         custom_user_attr_topics = get_user_attributes_by_topic()
         is_automation_user = self._user.get("automation_secret", None) is not None
@@ -1042,7 +1046,6 @@ class ModeEditUser(WatoMode):
         else:
             html.set_focus("alias")
         html.hidden_fields()
-        html.end_form()
 
     def _render_identity(
         self, custom_user_attr_topics: dict[str, list[tuple[str, UserAttribute]]]

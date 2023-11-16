@@ -181,15 +181,14 @@ def choose_view(
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("choose_view")
-    forms.header(_("Select view"))
-    forms.section(vs_view.title())
-    vs_view.render_input("view", None)
-    html.help(vs_view.help())
-    forms.end()
+    with html.form_context("choose_view"):
+        forms.header(_("Select view"))
+        forms.section(vs_view.title())
+        vs_view.render_input("view", None)
+        html.help(vs_view.help())
+        forms.end()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()
 
 

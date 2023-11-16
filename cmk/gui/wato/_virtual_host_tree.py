@@ -81,25 +81,23 @@ class VirtualHostTree(SidebarSnapin):
         self._show_tree()
 
     def _show_tree_selection(self):
-        html.begin_form("vtree")
-
-        html.dropdown(
-            "vtree",
-            self._tree_choices(),
-            deflt="%s" % self._current_tree_id,
-            onchange="virtual_host_tree_changed(this)",
-            style="width:210px" if self._current_tree_path else None,
-        )
-
-        # Give chance to change one level up, if we are in a subtree
-        if self._current_tree_path:
-            upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(
-                self._current_tree_path[:-1]
+        with html.form_context("vtree"):
+            html.dropdown(
+                "vtree",
+                self._tree_choices(),
+                deflt="%s" % self._current_tree_id,
+                onchange="virtual_host_tree_changed(this)",
+                style="width:210px" if self._current_tree_path else None,
             )
-            html.icon_button(upurl, _("Go up one tree level"), "back")
 
-        html.br()
-        html.end_form()
+            # Give chance to change one level up, if we are in a subtree
+            if self._current_tree_path:
+                upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(
+                    self._current_tree_path[:-1]
+                )
+                html.icon_button(upurl, _("Go up one tree level"), "back")
+
+            html.br()
         html.final_javascript(self._javascript())
 
     def _show_tree(self):

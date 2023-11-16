@@ -917,45 +917,44 @@ class ModeFolder(WatoMode):
         html.div("", id_="row_info")
 
         # Show table of hosts in this folder
-        html.begin_form("hosts", method="POST")
-        with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
-            # Compute colspan for bulk actions
-            colspan = 6
-            for attr in host_attribute_registry.attributes():
-                if attr.show_in_table():
+        with html.form_context("hosts", method="POST"):
+            with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
+                # Compute colspan for bulk actions
+                colspan = 6
+                for attr in host_attribute_registry.attributes():
+                    if attr.show_in_table():
+                        colspan += 1
+                if (
+                    not self._folder.locked_hosts()
+                    and user.may("wato.edit_hosts")
+                    and user.may("wato.move_hosts")
+                ):
                     colspan += 1
-            if (
-                not self._folder.locked_hosts()
-                and user.may("wato.edit_hosts")
-                and user.may("wato.move_hosts")
-            ):
-                colspan += 1
-            if self._folder.is_search_folder():
-                colspan += 1
+                if self._folder.is_search_folder():
+                    colspan += 1
 
-            contact_group_names = load_contact_group_information()
+                contact_group_names = load_contact_group_information()
 
-            host_errors = self._folder.host_validation_errors()
-            rendered_hosts: list[HostName] = []
+                host_errors = self._folder.host_validation_errors()
+                rendered_hosts: list[HostName] = []
 
-            # Now loop again over all hosts and display them
-            max_hosts = len(hostnames)
-            for hostname in hostnames:
-                if table.limit_reached:
-                    table.limit_hint = max_hosts
-                    continue
-                self._show_host_row(
-                    rendered_hosts,
-                    table,
-                    HostName(hostname),
-                    colspan,
-                    host_errors,
-                    contact_group_names,
-                )
+                # Now loop again over all hosts and display them
+                max_hosts = len(hostnames)
+                for hostname in hostnames:
+                    if table.limit_reached:
+                        table.limit_hint = max_hosts
+                        continue
+                    self._show_host_row(
+                        rendered_hosts,
+                        table,
+                        HostName(hostname),
+                        colspan,
+                        host_errors,
+                        contact_group_names,
+                    )
 
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
 
         show_row_count(
             row_count=(row_count := len(hostnames)),
@@ -1293,43 +1292,41 @@ class ABCFolderMode(WatoMode, abc.ABC):
         if new and folder.locked():
             folder.show_locking_information()
 
-        html.begin_form("edit_host", method="POST")
+        with html.form_context("edit_host", method="POST"):
+            # title
+            basic_attributes: list[tuple[str, ValueSpec, str]] = [
+                ("title", TextInput(title=_("Title")), "" if new else self._folder.title()),
+            ]
+            html.set_focus("title")
 
-        # title
-        basic_attributes: list[tuple[str, ValueSpec, str]] = [
-            ("title", TextInput(title=_("Title")), "" if new else self._folder.title()),
-        ]
-        html.set_focus("title")
-
-        # folder name (omit this for root folder)
-        if new or not folder.is_root():
-            if not active_config.wato_hide_filenames:
-                basic_attributes += [
-                    (
-                        "name",
-                        TextInput(
-                            title=_("Internal directory name"),
-                            help=_(
-                                "This is the name of subdirectory where the files and "
-                                "other folders will be created. You cannot change this later."
+            # folder name (omit this for root folder)
+            if new or not folder.is_root():
+                if not active_config.wato_hide_filenames:
+                    basic_attributes += [
+                        (
+                            "name",
+                            TextInput(
+                                title=_("Internal directory name"),
+                                help=_(
+                                    "This is the name of subdirectory where the files and "
+                                    "other folders will be created. You cannot change this later."
+                                ),
                             ),
+                            self._folder.name(),
                         ),
-                        self._folder.name(),
-                    ),
-                ]
+                    ]
 
-        configure_attributes(
-            new=new,
-            hosts={"folder": (myself := None if new else folder)},
-            for_what="folder",
-            parent=folder if new else folder.parent(),
-            myself=myself,
-            basic_attributes=basic_attributes,
-        )
+            configure_attributes(
+                new=new,
+                hosts={"folder": (myself := None if new else folder)},
+                for_what="folder",
+                parent=folder if new else folder.parent(),
+                myself=myself,
+                basic_attributes=basic_attributes,
+            )
 
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_fields()
 
 
 class ModeEditFolder(ABCFolderMode):

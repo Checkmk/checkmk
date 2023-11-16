@@ -152,41 +152,39 @@ class ModeBulkDiscovery(WatoMode):
         self._show_start_form()
 
     def _show_start_form(self) -> None:
-        html.begin_form("bulkinventory", method="POST")
+        with html.form_context("bulkinventory", method="POST"):
+            msgs = []
+            if self._all:
+                vs = vs_bulk_discovery(render_form=True)
+            else:
+                # "Include subfolders" does not make sense for a selection of hosts
+                # which is already given in the following situations:
+                # - in the current folder below 'Selected hosts: Discovery'
+                # - Below 'Bulk import' a automatic service discovery for
+                #   imported/selected hosts can be executed
+                vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
+                msgs.append(
+                    _("You have selected <b>%d</b> hosts for bulk discovery.")
+                    % len(self._get_hosts_to_discover())
+                )
+                # The cast is needed for the moment, because mypy does not understand our data structure here
+                selection = cast(
+                    tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
+                )
+                self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
-        msgs = []
-        if self._all:
-            vs = vs_bulk_discovery(render_form=True)
-        else:
-            # "Include subfolders" does not make sense for a selection of hosts
-            # which is already given in the following situations:
-            # - in the current folder below 'Selected hosts: Discovery'
-            # - Below 'Bulk import' a automatic service discovery for
-            #   imported/selected hosts can be executed
-            vs = vs_bulk_discovery(render_form=True, include_subfolders=False)
             msgs.append(
-                _("You have selected <b>%d</b> hosts for bulk discovery.")
-                % len(self._get_hosts_to_discover())
+                _(
+                    "The Checkmk discovery will automatically find and configure services "
+                    "to be checked on your hosts and may also discover host labels."
+                )
             )
-            # The cast is needed for the moment, because mypy does not understand our data structure here
-            selection = cast(
-                tuple[bool, bool, bool, bool], self._bulk_discovery_params["selection"]
-            )
-            self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
+            html.open_p()
+            html.write_text(" ".join(msgs))
+            vs.render_input("bulkinventory", self._bulk_discovery_params)
+            forms.end()
 
-        msgs.append(
-            _(
-                "The Checkmk discovery will automatically find and configure services "
-                "to be checked on your hosts and may also discover host labels."
-            )
-        )
-        html.open_p()
-        html.write_text(" ".join(msgs))
-        vs.render_input("bulkinventory", self._bulk_discovery_params)
-        forms.end()
-
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
     def _get_hosts_to_discover(self) -> list[DiscoveryHost]:
         if self._only_failed_invcheck:

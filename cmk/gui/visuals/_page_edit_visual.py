@@ -330,46 +330,47 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("visual", method="POST")
-    html.hidden_field("back", back_url)
-    html.hidden_field("mode", mode)
-    if request.has_var("owner"):
-        html.hidden_field("owner", request.var("owner"))
-    html.hidden_field("load_name", oldname)  # safe old name in case user changes it
+    with html.form_context("visual", method="POST"):
+        html.hidden_field("back", back_url)
+        html.hidden_field("mode", mode)
+        if request.has_var("owner"):
+            html.hidden_field("owner", request.var("owner"))
+        html.hidden_field("load_name", oldname)  # safe old name in case user changes it
 
-    # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
-    # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
-    visib = {}
-    for key, _vs in visibility_elements:
-        if visual.get(key):
-            visib[key] = visual[key]
-    visual["visibility"] = visib
+        # FIXME: Hier werden die Flags aus visibility nicht korrekt geladen. Wäre es nicht besser,
+        # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
+        visib = {}
+        for key, _vs in visibility_elements:
+            if visual.get(key):
+                visib[key] = visual[key]
+        visual["visibility"] = visib
 
-    visual["topic"] = visual.get("topic") or "other"  # default to "other" (in case of empty string)
-    vs_general.render_input("general", visual)
+        visual["topic"] = (
+            visual.get("topic") or "other"
+        )  # default to "other" (in case of empty string)
+        vs_general.render_input("general", visual)
 
-    if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
-        custom_field_handler(visual)
+        if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
+            custom_field_handler(visual)
 
-    render_context_specs(
-        # During view configuration: if a MKUserError is raised BEFORE the visual context is set
-        # via 'visual["context"] = process_context_specs(context_specs)' from above then we get a
-        # KeyError here and the whole configuration is lost and has to be started from scratch.
-        # Example: If no column is choosen.
-        visual.get("context", {}),
-        context_specs,
-        isopen=what != "dashboards",
-        help_text=help_text_context,
-    )
+        render_context_specs(
+            # During view configuration: if a MKUserError is raised BEFORE the visual context is set
+            # via 'visual["context"] = process_context_specs(context_specs)' from above then we get a
+            # KeyError here and the whole configuration is lost and has to be started from scratch.
+            # Example: If no column is choosen.
+            visual.get("context", {}),
+            context_specs,
+            isopen=what != "dashboards",
+            help_text=help_text_context,
+        )
 
-    if custom_field_handler and custom_field_handler.__name__ == "dashboard_fields_handler":
-        custom_field_handler(visual)
+        if custom_field_handler and custom_field_handler.__name__ == "dashboard_fields_handler":
+            custom_field_handler(visual)
 
-    forms.end()
-    html.show_localization_hint()
+        forms.end()
+        html.show_localization_hint()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()
 
 

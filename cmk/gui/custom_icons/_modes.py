@@ -137,11 +137,10 @@ class ModeIcons(WatoMode):
             )
         )
 
-        html.begin_form("upload_form", method="POST")
-        self._vs_upload().render_input("_upload_icon", None)
-        html.button(varname="_save", title=_("Upload"), cssclass="hot")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("upload_form", method="POST"):
+            self._vs_upload().render_input("_upload_icon", None)
+            html.button(varname="_save", title=_("Upload"), cssclass="hot")
+            html.hidden_fields()
 
         icons = sorted(self._load_custom_icons().items())
         with table_element("icons", _("Custom Icons")) as table:

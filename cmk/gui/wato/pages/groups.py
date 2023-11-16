@@ -277,31 +277,30 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         )
 
     def page(self) -> None:
-        html.begin_form("group", method="POST")
-        forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new, is_required=True)
-        html.help(
-            _(
-                "The name of the group is used as an internal key. It cannot be "
-                "changed later. It is also visible in the status GUI."
+        with html.form_context("group", method="POST"):
+            forms.header(_("Properties"))
+            forms.section(_("Name"), simple=not self._new, is_required=True)
+            html.help(
+                _(
+                    "The name of the group is used as an internal key. It cannot be "
+                    "changed later. It is also visible in the status GUI."
+                )
             )
-        )
-        if self._new:
-            html.text_input("name", size=50)
-            html.set_focus("name")
-        else:
-            html.write_text(self._name)
-            html.set_focus("alias")
+            if self._new:
+                html.text_input("name", size=50)
+                html.set_focus("name")
+            else:
+                html.write_text(self._name)
+                html.set_focus("alias")
 
-        forms.section(_("Alias"), is_required=True)
-        html.help(_("An alias or description of this group."))
-        html.text_input("alias", self.group["alias"], size=50)
+            forms.section(_("Alias"), is_required=True)
+            html.help(_("An alias or description of this group."))
+            html.text_input("alias", self.group["alias"], size=50)
 
-        self._show_extra_page_elements()
+            self._show_extra_page_elements()
 
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_fields()
 
 
 class ModeHostgroups(ModeGroups):

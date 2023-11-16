@@ -72,17 +72,16 @@ def page_create_visual(
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("create_visual")
-    html.hidden_field("mode", "create")
+    with html.form_context("create_visual"):
+        html.hidden_field("mode", "create")
 
-    forms.header(_("Select specific object type"))
-    forms.section(vs_infos.title())
-    vs_infos.render_input("single_infos", "")
-    html.help(vs_infos.help())
-    forms.end()
+        forms.header(_("Select specific object type"))
+        forms.section(vs_infos.title())
+        vs_infos.render_input("single_infos", "")
+        html.help(vs_infos.help())
+        forms.end()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()
 
 

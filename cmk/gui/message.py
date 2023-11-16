@@ -155,11 +155,10 @@ def page_message() -> None:
         except MKUserError as e:
             html.user_error(e)
 
-    html.begin_form("message", method="POST")
-    vs_message.render_input_as_form("_message", {})
+    with html.form_context("message", method="POST"):
+        vs_message.render_input_as_form("_message", {})
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
     html.footer()
 
 

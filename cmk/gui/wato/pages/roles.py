@@ -256,10 +256,11 @@ class ModeEditRole(WatoMode):
         return redirect(mode_url("roles"))
 
     def page(self) -> None:
+        with html.form_context("role", method="POST"):
+            self._page_form()
+
+    def _page_form(self) -> None:
         search = get_search_expression()
-
-        html.begin_form("role", method="POST")
-
         # ID
         forms.header(_("Basic properties"), css="wide")
         forms.section(_("Internal ID"), simple=self._role.builtin, is_required=True)
@@ -345,7 +346,6 @@ class ModeEditRole(WatoMode):
 
         forms.end()
         html.hidden_fields()
-        html.end_form()
 
 
 class ModeRoleMatrix(WatoMode):

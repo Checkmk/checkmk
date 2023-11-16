@@ -185,36 +185,39 @@ def page_login() -> None:
     jqm_page_header(title, id_="login")
     html.div(_("Welcome to Checkmk Mobile."), id_="loginhead")
 
-    html.begin_form("login", method="POST", add_transid=False)
-    # Keep information about original target URL
-    default_origtarget = (
-        "index.py" if requested_file_name(request) in ["login", "logout"] else makeuri(request, [])
-    )
-    origtarget = request.get_url_input("_origtarget", default_origtarget)
-    html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
+    with html.form_context("login", method="POST", add_transid=False):
+        # Keep information about original target URL
+        default_origtarget = (
+            "index.py"
+            if requested_file_name(request) in ["login", "logout"]
+            else makeuri(request, [])
+        )
+        origtarget = request.get_url_input("_origtarget", default_origtarget)
+        html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
 
-    saml2_user_error: str | None = None
-    if saml_connections := [
-        c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
-    ]:
-        saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
+        saml2_user_error: str | None = None
+        if saml_connections := [
+            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+        ]:
+            saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
-    html.text_input("_username", label=_("Username:"), autocomplete="username", id_="input_user")
-    html.password_input(
-        "_password",
-        size=None,
-        label=_("Password:"),
-        autocomplete="current-password",
-        id_="input_pass",
-    )
-    html.br()
-    html.button("_login", _("Login"))
+        html.text_input(
+            "_username", label=_("Username:"), autocomplete="username", id_="input_user"
+        )
+        html.password_input(
+            "_password",
+            size=None,
+            label=_("Password:"),
+            autocomplete="current-password",
+            id_="input_pass",
+        )
+        html.br()
+        html.button("_login", _("Login"))
 
-    if user_errors and not saml2_user_error:
-        show_user_errors("login_error")
+        if user_errors and not saml2_user_error:
+            show_user_errors("login_error")
 
-    html.set_focus("_username")
-    html.end_form()
+        html.set_focus("_username")
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(
@@ -418,19 +421,18 @@ def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> Non
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
-    html.begin_form("filter")
-    html.open_ul(**{"data-role": "listview", "data-inset": "false"})
-    for _sort_index, title, f in s:
-        html.open_li(**{"data-role": "fieldcontain"})
-        html.legend(title)
-        f.display(context.get(f.ident, {}))
-        html.close_li()
-    html.close_ul()
-    html.hidden_fields()
-    html.hidden_field("search", "Search")
-    html.hidden_field("page", "data")
-    html.form_has_submit_button = True  # a.results_button functions as a submit button
-    html.end_form()
+    with html.form_context("filter"):
+        html.open_ul(**{"data-role": "listview", "data-inset": "false"})
+        for _sort_index, title, f in s:
+            html.open_li(**{"data-role": "fieldcontain"})
+            html.legend(title)
+            f.display(context.get(f.ident, {}))
+            html.close_li()
+        html.close_ul()
+        html.hidden_fields()
+        html.hidden_field("search", "Search")
+        html.hidden_field("page", "data")
+        html.form_has_submit_button = True  # a.results_button functions as a submit button
     html.final_javascript(
         """
         const filter_form = document.getElementById("form_filter");
@@ -465,12 +467,11 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
             html.h3(command.title)
             html.open_p()
 
-            html.begin_form("actions")
-            html.hidden_field("_do_actions", "yes")
-            html.hidden_field("actions", "yes")
-            command.render(what)
-            html.hidden_fields()
-            html.end_form()
+            with html.form_context("actions"):
+                html.hidden_field("_do_actions", "yes")
+                html.hidden_field("actions", "yes")
+                command.render(what)
+                html.hidden_fields()
 
             html.close_p()
             html.close_div()

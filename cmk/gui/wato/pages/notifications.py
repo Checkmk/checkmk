@@ -1667,13 +1667,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             )
             return
 
-        html.begin_form("rule", method="POST")
-        vs = self._valuespec()
-        vs.render_input("rule", self._rule)
-        vs.set_focus("rule")
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule", method="POST"):
+            vs = self._valuespec()
+            vs.render_input("rule", self._rule)
+            vs.set_focus("rule")
+            forms.end()
+            html.hidden_fields()
 
 
 class ModeEditNotificationRule(ABCEditNotificationRuleMode):

@@ -248,39 +248,38 @@ class ABCHostMode(WatoMode, abc.ABC):
         if lock_message:
             html.div(lock_message, class_="info")
 
-        html.begin_form("edit_host", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_host", method="POST"):
+            html.prevent_password_auto_completion()
 
-        basic_attributes: list[tuple[str, ValueSpec, object]] = [
-            # attribute name, valuepec, default value
-            ("host", self._vs_host_name(), self._host.name()),
-        ]
-
-        if self._is_cluster():
-            if self._host:
-                nodes = self._host.cluster_nodes()
-                assert nodes is not None
-            else:
-                nodes = []
-            basic_attributes += [
+            basic_attributes: list[tuple[str, ValueSpec, object]] = [
                 # attribute name, valuepec, default value
-                ("nodes", self._vs_cluster_nodes(), nodes if self._host else []),
+                ("host", self._vs_host_name(), self._host.name()),
             ]
 
-        configure_attributes(
-            new=self._mode != "edit",
-            hosts={self._host.name(): self._host} if self._mode != "new" else {},
-            for_what="host" if not self._is_cluster() else "cluster",
-            parent=folder_from_request(),
-            basic_attributes=basic_attributes,
-        )
+            if self._is_cluster():
+                if self._host:
+                    nodes = self._host.cluster_nodes()
+                    assert nodes is not None
+                else:
+                    nodes = []
+                basic_attributes += [
+                    # attribute name, valuepec, default value
+                    ("nodes", self._vs_cluster_nodes(), nodes if self._host else []),
+                ]
 
-        if self._mode != "edit":
-            html.set_focus("host")
+            configure_attributes(
+                new=self._mode != "edit",
+                hosts={self._host.name(): self._host} if self._mode != "new" else {},
+                for_what="host" if not self._is_cluster() else "cluster",
+                parent=folder_from_request(),
+                basic_attributes=basic_attributes,
+            )
 
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            if self._mode != "edit":
+                html.set_focus("host")
+
+            forms.end()
+            html.hidden_fields()
 
     def _vs_cluster_nodes(self):
         return ListOfStrings(

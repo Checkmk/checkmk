@@ -178,13 +178,11 @@ class ModeDiagnostics(WatoMode):
         if self._job.is_active():
             raise HTTPRedirect(self._job.detail_url())
 
-        html.begin_form("diagnostics", method="POST")
+        with html.form_context("diagnostics", method="POST"):
+            vs_diagnostics = self._vs_diagnostics()
+            vs_diagnostics.render_input("diagnostics", {})
 
-        vs_diagnostics = self._vs_diagnostics()
-        vs_diagnostics.render_input("diagnostics", {})
-
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
     def _vs_diagnostics(self) -> Dictionary:
         return Dictionary(

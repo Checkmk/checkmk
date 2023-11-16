@@ -205,50 +205,49 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         backup_codes = credentials["backup_codes"]
         totp_credentials = credentials["totp_credentials"]
 
-        html.begin_form("two_factor", method="POST")
-        html.div("", id_="webauthn_message")
-        forms.header(_("Credentials"))
+        with html.form_context("two_factor", method="POST"):
+            html.div("", id_="webauthn_message")
+            forms.header(_("Credentials"))
 
-        forms.section(_("Security Tokens"), simple=True)
-        if webauthn_credentials:
-            self._show_registered_credentials(webauthn_credentials)
-        else:
-            html.i(_("Not registered"))
+            forms.section(_("Security Tokens"), simple=True)
+            if webauthn_credentials:
+                self._show_registered_credentials(webauthn_credentials)
+            else:
+                html.i(_("Not registered"))
 
-        forms.section(_("Authenticaton Applications"), simple=True)
-        if totp_credentials:
-            self._show_registered_credentials(totp_credentials)
-        else:
-            html.i(_("Not registered"))
+            forms.section(_("Authenticaton Applications"), simple=True)
+            if totp_credentials:
+                self._show_registered_credentials(totp_credentials)
+            else:
+                html.i(_("Not registered"))
 
-        forms.section(_("Backup codes"), simple=True)
-        if backup_codes:
-            html.p(
-                _(
-                    "You have %d unused backup codes left. You can use them as one-time password "
-                    "if your key is not available."
+            forms.section(_("Backup codes"), simple=True)
+            if backup_codes:
+                html.p(
+                    _(
+                        "You have %d unused backup codes left. You can use them as one-time password "
+                        "if your key is not available."
+                    )
+                    % len(backup_codes)
                 )
-                % len(backup_codes)
-            )
-            html.i(
-                _(
-                    "If you regenerate backup codes, you automatically invalidate the existing codes."
+                html.i(
+                    _(
+                        "If you regenerate backup codes, you automatically invalidate the existing codes."
+                    )
                 )
-            )
-            delete_url = make_confirm_delete_link(
-                url=makeactionuri(request, transactions, [("_delete_codes", "")]),
-                title=_("Invalidate all backup codes"),
-            )
-            html.open_a(class_=["iconlink", "link"], target="main", href=delete_url)
-            html.i(_("Invalidate all codes"))
-            html.close_a()
-        else:
-            html.i(_("No backup codes created yet."))
+                delete_url = make_confirm_delete_link(
+                    url=makeactionuri(request, transactions, [("_delete_codes", "")]),
+                    title=_("Invalidate all backup codes"),
+                )
+                html.open_a(class_=["iconlink", "link"], target="main", href=delete_url)
+                html.i(_("Invalidate all codes"))
+                html.close_a()
+            else:
+                html.i(_("No backup codes created yet."))
 
-        forms.end()
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
         html.footer()
 
     @classmethod
@@ -342,33 +341,32 @@ class RegisterTotpSecret(ABCUserProfilePage):
             self.secret = TOTP.generate_secret()
         base32_secret = b32encode(self.secret).decode()
 
-        html.begin_form("profile", method="POST")
-        html.prevent_password_auto_completion()
-        html.open_div(class_="wato")
+        with html.form_context("profile", method="POST"):
+            html.prevent_password_auto_completion()
+            html.open_div(class_="wato")
 
-        html.div(
-            "",
-            data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
-            % (
-                parse.quote(user.alias, safe=""),
-                base32_secret,
-                parse.quote("checkmk " + omd_site(), safe=""),
-            ),
-        )
-        html.p("Alternatively you can enter your secret manually: %s" % (base32_secret))
+            html.div(
+                "",
+                data_cmk_qrdata="otpauth://totp/%s?secret=%s&issuer=%s"
+                % (
+                    parse.quote(user.alias, safe=""),
+                    base32_secret,
+                    parse.quote("checkmk " + omd_site(), safe=""),
+                ),
+            )
+            html.p("Alternatively you can enter your secret manually: %s" % (base32_secret))
 
-        self._valuespec().render_input(
-            "profile",
-            {
-                "Validate OTP": "",
-            },
-        )
+            self._valuespec().render_input(
+                "profile",
+                {
+                    "Validate OTP": "",
+                },
+            )
 
-        forms.end()
-        html.close_div()
-        html.hidden_field("_otp", base32_secret)
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.close_div()
+            html.hidden_field("_otp", base32_secret)
+            html.hidden_fields()
         html.footer()
 
     def _valuespec(self) -> Dictionary:
@@ -459,23 +457,22 @@ class EditCredentialAlias(ABCUserProfilePage):
         else:
             raise MKUserError("_edit", _("The credential does not exist"))
 
-        html.begin_form("profile", method="POST")
-        html.prevent_password_auto_completion()
-        html.open_div(class_="wato")
+        with html.form_context("profile", method="POST"):
+            html.prevent_password_auto_completion()
+            html.open_div(class_="wato")
 
-        self._valuespec(credential).render_input(
-            "profile",
-            {
-                "registered_at": self._display_time(credential["registered_at"]),
-                "alias": credential["alias"],
-            },
-        )
+            self._valuespec(credential).render_input(
+                "profile",
+                {
+                    "registered_at": self._display_time(credential["registered_at"]),
+                    "alias": credential["alias"],
+                },
+            )
 
-        forms.end()
-        html.close_div()
-        html.hidden_field("_edit", credential_id)
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.close_div()
+            html.hidden_field("_edit", credential_id)
+            html.hidden_fields()
         html.footer()
 
     def _display_time(self, epoch_time: int) -> str:
@@ -654,72 +651,70 @@ class UserLoginTwoFactor(Page):
 
         # WebAuthn
         if credentials["webauthn_credentials"]:
-            html.begin_form(
+            with html.form_context(
                 "webauthn_login",
                 method="POST",
                 add_transid=False,
                 action="user_login_two_factor.py",
-            )
-            html.prevent_password_auto_completion()
-            html.hidden_field(
-                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-            )
+            ):
+                html.prevent_password_auto_completion()
+                html.hidden_field(
+                    "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
+                )
 
-            html.div("", id_="webauthn_message")
-            html.javascript("cmk.webauthn.login()")
+                html.div("", id_="webauthn_message")
+                html.javascript("cmk.webauthn.login()")
 
-            html.hidden_fields()
-            html.end_form()
+                html.hidden_fields()
 
         # TOTP
         if credentials["totp_credentials"]:
-            html.begin_form(
+            with html.form_context(
                 "totp_login", method="POST", add_transid=False, action="user_login_two_factor.py"
-            )
-            html.prevent_password_auto_completion()
-            html.hidden_field(
-                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-            )
-
-            if totp_code := request.get_validated_type_input(Password, "_totp_code"):
-                totp_credential = credentials["totp_credentials"]
-                for credential in totp_credential:
-                    otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
-                    if otp.check_totp(
-                        totp_code.raw_bytes.decode(),
-                        otp.calculate_generation(datetime.datetime.now()),
-                    ):
-                        session.session_info.two_factor_completed = True
-                        raise HTTPRedirect(origtarget)
-
-            with foldable_container(
-                treename="authenticator_app",
-                id_="backup_container",
-                isopen=False,
-                title=_("Use Authenticator App"),
-                indent=False,
-                save_state=False,
             ):
-                html.label(
-                    "%s:" % _("OTP code"),
-                    id_=totp_style["label"],
-                    class_=["legend"],
-                    for_="_totp_code",
+                html.prevent_password_auto_completion()
+                html.hidden_field(
+                    "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
                 )
-                html.br()
-                html.password_input("_totp_code", id_=totp_style["input"], size=None)
 
-                html.open_div(id_="button_text")
-                html.button(totp_style["button"], _("Use authenticator code"), cssclass="hot")
-                html.close_div()
+                if totp_code := request.get_validated_type_input(Password, "_totp_code"):
+                    totp_credential = credentials["totp_credentials"]
+                    for credential in totp_credential:
+                        otp = TOTP(totp_credential[credential]["secret"], TotpVersion.one)
+                        if otp.check_totp(
+                            totp_code.raw_bytes.decode(),
+                            otp.calculate_generation(datetime.datetime.now()),
+                        ):
+                            session.session_info.two_factor_completed = True
+                            raise HTTPRedirect(origtarget)
 
-            if user_errors:
-                html.open_div(id_="login_error")
-                html.show_user_errors()
-                html.close_div()
+                with foldable_container(
+                    treename="authenticator_app",
+                    id_="backup_container",
+                    isopen=False,
+                    title=_("Use Authenticator App"),
+                    indent=False,
+                    save_state=False,
+                ):
+                    html.label(
+                        "%s:" % _("OTP code"),
+                        id_=totp_style["label"],
+                        class_=["legend"],
+                        for_="_totp_code",
+                    )
+                    html.br()
+                    html.password_input("_totp_code", id_=totp_style["input"], size=None)
 
-            html.hidden_fields()
-            html.end_form()
+                    html.open_div(id_="button_text")
+                    html.button(totp_style["button"], _("Use authenticator code"), cssclass="hot")
+                    html.close_div()
+
+                if user_errors:
+                    html.open_div(id_="login_error")
+                    html.show_user_errors()
+                    html.close_div()
+
+                html.hidden_fields()
 
         # Backup
         if credentials["backup_codes"]:
@@ -730,53 +725,52 @@ class UserLoginTwoFactor(Page):
                     "button": "_use_backup_code",
                     "div": "backup_foldable",
                 }
-            html.begin_form(
+            with html.form_context(
                 "backup_code_login",
                 method="POST",
                 add_transid=False,
                 action="user_login_two_factor.py",
-            )
-            html.prevent_password_auto_completion()
-            html.hidden_field(
-                "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
-            )
-
-            if backup_code := request.get_validated_type_input(Password, "_backup_code"):
-                if is_two_factor_backup_code_valid(user.id, backup_code):
-                    session.session_info.two_factor_completed = True
-                    raise HTTPRedirect(origtarget)
-
-            html.open_div(class_=backup_style["div"])
-            with foldable_container(
-                treename="backup_codes",
-                id_="backup_container",
-                isopen=False,
-                title=_("Use backup code"),
-                indent=False,
-                save_state=False,
             ):
-                html.label(
-                    "%s:" % _("Backup code"),
-                    id_=backup_style["label"],
-                    class_=["legend", ""],
-                    for_="_backup_code",
+                html.prevent_password_auto_completion()
+                html.hidden_field(
+                    "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
                 )
-                html.br()
-                html.password_input("_backup_code", id_=backup_style["input"], size=None)
 
-                html.open_div(id_="button_text")
-                html.button(backup_style["button"], _("Use backup code"), cssclass="hot")
+                if backup_code := request.get_validated_type_input(Password, "_backup_code"):
+                    if is_two_factor_backup_code_valid(user.id, backup_code):
+                        session.session_info.two_factor_completed = True
+                        raise HTTPRedirect(origtarget)
+
+                html.open_div(class_=backup_style["div"])
+                with foldable_container(
+                    treename="backup_codes",
+                    id_="backup_container",
+                    isopen=False,
+                    title=_("Use backup code"),
+                    indent=False,
+                    save_state=False,
+                ):
+                    html.label(
+                        "%s:" % _("Backup code"),
+                        id_=backup_style["label"],
+                        class_=["legend", ""],
+                        for_="_backup_code",
+                    )
+                    html.br()
+                    html.password_input("_backup_code", id_=backup_style["input"], size=None)
+
+                    html.open_div(id_="button_text")
+                    html.button(backup_style["button"], _("Use backup code"), cssclass="hot")
+                    html.close_div()
                 html.close_div()
-            html.close_div()
 
-            if user_errors:
-                html.open_div(id_="login_error")
-                html.show_user_errors()
+                if user_errors:
+                    html.open_div(id_="login_error")
+                    html.show_user_errors()
+                    html.close_div()
+
                 html.close_div()
-
-            html.close_div()
-            html.hidden_fields()
-            html.end_form()
+                html.hidden_fields()
 
         html.close_div()
         html.footer()

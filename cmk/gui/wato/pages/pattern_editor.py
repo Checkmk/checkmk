@@ -165,27 +165,26 @@ class ModePatternEditor(WatoMode):
         self._show_patterns()
 
     def _show_try_form(self):
-        html.begin_form("try")
-        forms.header(_("Try pattern match"))
-        forms.section(_("Hostname"))
-        self._vs_host().render_input("host", self._hostname)
-        forms.section(_("Logfile"))
-        html.help(_("Here you need to insert the original file or pathname"))
-        html.text_input("file", size=80)
-        forms.section(_("Text to match"))
-        html.help(
-            _(
-                "You can insert some text (e.g. a line of the logfile) to test the patterns defined "
-                "for this logfile. All patterns for this logfile are listed below. Matching patterns "
-                'will be highlighted after clicking the "Try out" button.'
+        with html.form_context("try"):
+            forms.header(_("Try pattern match"))
+            forms.section(_("Hostname"))
+            self._vs_host().render_input("host", self._hostname)
+            forms.section(_("Logfile"))
+            html.help(_("Here you need to insert the original file or pathname"))
+            html.text_input("file", size=80)
+            forms.section(_("Text to match"))
+            html.help(
+                _(
+                    "You can insert some text (e.g. a line of the logfile) to test the patterns defined "
+                    "for this logfile. All patterns for this logfile are listed below. Matching patterns "
+                    'will be highlighted after clicking the "Try out" button.'
+                )
             )
-        )
-        html.text_input("match", cssclass="match", size=100)
-        forms.end()
-        html.button("_try", _("Try out"))
-        request.del_var("folder")  # Never hand over the folder here
-        html.hidden_fields()
-        html.end_form()
+            html.text_input("match", cssclass="match", size=100)
+            forms.end()
+            html.button("_try", _("Try out"))
+            request.del_var("folder")  # Never hand over the folder here
+            html.hidden_fields()
 
     def _vs_host(self):
         return ConfigHostname()

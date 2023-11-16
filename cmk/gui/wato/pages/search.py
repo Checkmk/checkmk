@@ -108,33 +108,32 @@ class ModeSearch(WatoMode):
             )
         )
         # Show search form
-        html.begin_form("edit_host", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_host", method="POST"):
+            html.prevent_password_auto_completion()
 
-        basic_attributes = [
-            (
-                "host_search_host",
-                TextInput(
-                    title=_(
-                        "Hostname",
-                    )
+            basic_attributes = [
+                (
+                    "host_search_host",
+                    TextInput(
+                        title=_(
+                            "Hostname",
+                        )
+                    ),
+                    "",
                 ),
-                "",
-            ),
-        ]
-        html.set_focus("host_search_host")
+            ]
+            html.set_focus("host_search_host")
 
-        # Attributes
-        configure_attributes(
-            new=False,
-            hosts={},
-            for_what="host_search",
-            parent=None,
-            varprefix="host_search_",
-            basic_attributes=basic_attributes,
-        )
+            # Attributes
+            configure_attributes(
+                new=False,
+                hosts={},
+                for_what="host_search",
+                parent=None,
+                varprefix="host_search_",
+                basic_attributes=basic_attributes,
+            )
 
-        forms.end()
-        html.hidden_field("host_search", "1")
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_field("host_search", "1")
+            html.hidden_fields()

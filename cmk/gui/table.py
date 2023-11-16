@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 from collections.abc import Iterator
@@ -477,19 +478,14 @@ class Table:
         if actions_enabled and actions_visible:
             html.open_tr(class_=["data", "even0", "actions"])
             html.open_td(colspan=num_cols)
-            if not html.in_form():
-                html.begin_form("%s_actions" % table_id)
-
-            if request.has_var("_%s_sort" % table_id):
-                html.open_div(class_=["sort"])
-                html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
-                html.close_div()
-
-            if not html.in_form():
-                html.begin_form("%s_actions" % table_id)
-
-            html.hidden_fields()
-            html.end_form()
+            with html.form_context(
+                "%s_actions" % table_id
+            ) if not html.in_form() else contextlib.nullcontext():
+                if request.has_var("_%s_sort" % table_id):
+                    html.open_div(class_=["sort"])
+                    html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
+                    html.close_div()
+                html.hidden_fields()
             html.close_tr()
 
         for nr, row in enumerate(rows):

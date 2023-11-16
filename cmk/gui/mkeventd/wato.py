@@ -1522,13 +1522,12 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
 
     def _show_event_simulator(self) -> ec.Event | None:
         event = user.load_file("simulated_event", {})
-        html.begin_form("simulator")
-        self._vs_mkeventd_event().render_input("event", event)
-        forms.end()
-        html.hidden_fields()
-        html.button("_simulate", _("Try out"))
-        html.button("_generate", _("Generate event"))
-        html.end_form()
+        with html.form_context("simulator"):
+            self._vs_mkeventd_event().render_input("event", event)
+            forms.end()
+            html.hidden_fields()
+            html.button("_simulate", _("Try out"))
+            html.button("_generate", _("Generate event"))
         html.br()
 
         return (
@@ -2321,9 +2320,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             self._add_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return redirect(self.mode_url(rule_pack=self._rule_pack_id))
 
-    def page(self) -> None:  # pylint: disable=too-many-branches
+    def page(self) -> None:
         self._verify_ec_enabled()
         search_expression = self._search_expression()
+
+        found_rules: list[ec.Rule]
         if search_expression:
             found_rules = self._filter_mkeventd_rules(search_expression, self._rule_pack)
         else:
@@ -2339,8 +2340,16 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             return
 
         if len(self._rule_packs) > 1:
-            html.begin_form("move_to", method="POST")
+            with html.form_context("move_to", method="POST"):
+                self._show_table(event, found_rules)
+                html.hidden_field("_move_to", "yes")
+                html.hidden_fields()
+        else:
+            self._show_table(event, found_rules)
 
+    def _show_table(  # pylint: disable=too-many-branches
+        self, event: ec.Event | None, found_rules: list[ec.Rule]
+    ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
         priorities = _deref(syslog_priorities)
         facilities = dict(_deref(syslog_facilities))
@@ -2512,11 +2521,6 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     ]
                     html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
-            if len(self._rule_packs) > 1:
-                html.hidden_field("_move_to", "yes")
-                html.hidden_fields()
-                html.end_form()
-
     def _filter_mkeventd_rules(
         self, search_expression: str, rule_pack: ec.ECRulePackSpec
     ) -> list[ec.Rule]:
@@ -2664,12 +2668,11 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        html.begin_form("rule_pack")
-        vs = self._valuespec()
-        vs.render_input("rule_pack", dict(self._rule_pack))
-        vs.set_focus("rule_pack")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule_pack"):
+            vs = self._valuespec()
+            vs.render_input("rule_pack", dict(self._rule_pack))
+            vs.set_focus("rule_pack")
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         if self._type == ec.RulePackType.internal:
@@ -2865,12 +2868,11 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        html.begin_form("rule")
-        vs = self._valuespec()
-        vs.render_input("rule", self._rule)
-        vs.set_focus("rule")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("rule"):
+            vs = self._valuespec()
+            vs.render_input("rule", self._rule)
+            vs.set_focus("rule")
+            html.hidden_fields()
 
     def _valuespec(self) -> Dictionary:
         return vs_mkeventd_rule(self._rule_pack.get("customer"))
@@ -2971,18 +2973,17 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         html.close_ul()
 
         if user.may("mkeventd.switchmode"):
-            html.begin_form(
+            with html.form_context(
                 "switch",
                 require_confirmation=RequireConfirmation(
                     html=_("Do you really want to switch the event daemon mode?")
                 ),
-            )
-            if repl_mode == "sync":
-                html.button("_switch_takeover", _("Switch to Takeover mode!"))
-            elif repl_mode == "takeover":
-                html.button("_switch_sync", _("Switch back to sync mode!"))
-            html.hidden_fields()
-            html.end_form()
+            ):
+                if repl_mode == "sync":
+                    html.button("_switch_takeover", _("Switch to Takeover mode!"))
+                elif repl_mode == "takeover":
+                    html.button("_switch_sync", _("Switch back to sync mode!"))
+                html.hidden_fields()
 
 
 class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
@@ -3265,14 +3266,18 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def page(self) -> None:
         self._verify_ec_enabled()
-        for path, title in mib_dirs():
-            self._show_mib_table(path, title)
+        for mib_path, title in mib_dirs():
+            is_custom_dir = mib_path == mib_upload_dir()
+            if is_custom_dir:
+                with html.form_context("bulk_delete_form", method="POST"):
+                    self._show_mib_table(mib_path, title)
+                    html.hidden_fields()
+                    html.end_form()
+            else:
+                self._show_mib_table(mib_path, title)
 
     def _show_mib_table(self, path: Path, title: str) -> None:
         is_custom_dir = path == mib_upload_dir()
-
-        if is_custom_dir:
-            html.begin_form("bulk_delete_form", method="POST")
 
         with table_element("mibs_%s" % path, title, searchable=False) as table:
             for filename, mib in sorted(self._load_snmp_mibs(path).items()):
@@ -3304,10 +3309,6 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("MIB"), mib.name)
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
-
-        if is_custom_dir:
-            html.hidden_fields()
-            html.end_form()
 
     def _load_snmp_mibs(self, directory: Path) -> Mapping[str, MIBInfo]:
         return {
@@ -3539,15 +3540,14 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             )
         )
 
-        html.begin_form("upload_form", method="POST")
-        forms.header(_("Upload MIB file"))
+        with html.form_context("upload_form", method="POST"):
+            forms.header(_("Upload MIB file"))
 
-        forms.section(_("Select file"), is_required=True)
-        html.upload_file("_upload_mib")
-        forms.end()
+            forms.section(_("Select file"), is_required=True)
+            html.upload_file("_upload_mib")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:

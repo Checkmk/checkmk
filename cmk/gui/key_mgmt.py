@@ -268,12 +268,11 @@ class PageEditKey:
 
     def page(self) -> None:
         # Currently only "new" is supported
-        html.begin_form("key", method="POST")
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("key", {})
-        self._vs_key().set_focus("key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="POST"):
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("key", {})
+            self._vs_key().set_focus("key")
+            html.hidden_fields()
 
     def _vs_key(self) -> Dictionary:
         return Dictionary(
@@ -368,12 +367,11 @@ class PageUploadKey:
         self.key_store.add(key)
 
     def page(self) -> None:
-        html.begin_form("key", method="POST")
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("key", {})
-        self._vs_key().set_focus("key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="POST"):
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("key", {})
+            self._vs_key().set_focus("key")
+            html.hidden_fields()
 
     def _vs_key(self) -> Dictionary:
         return Dictionary(
@@ -485,12 +483,11 @@ class PageDownloadKey:
                 "The key will be downloaded in encrypted form."
             )
         )
-        html.begin_form("key", method="POST")
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("key", {})
-        self._vs_key().set_focus("key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="POST"):
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("key", {})
+            self._vs_key().set_focus("key")
+            html.hidden_fields()
 
     def _vs_key(self) -> Dictionary:
         return Dictionary(

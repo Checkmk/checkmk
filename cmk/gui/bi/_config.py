@@ -390,26 +390,24 @@ class ModeBIEditPack(ABCBIMode):
         )
 
     def page(self) -> None:
-        html.begin_form("bi_pack", method="POST")
-
-        if self._bi_pack is None:
-            vs_config = self._vs_pack().from_html_vars("bi_pack")
-        else:
-            vs_config = {
-                "id": self.bi_pack.id,
-                "title": self.bi_pack.title,
-                "comment": self.bi_pack.comment,
-                "contact_groups": self.bi_pack.contact_groups,
-                "public": self.bi_pack.public,
-            }
-        self._vs_pack().render_input("bi_pack", vs_config)
-        forms.end()
-        html.hidden_fields()
-        if self._bi_pack:
-            html.set_focus("bi_pack_p_title")
-        else:
-            html.set_focus("bi_pack_p_id")
-        html.end_form()
+        with html.form_context("bi_pack", method="POST"):
+            if self._bi_pack is None:
+                vs_config = self._vs_pack().from_html_vars("bi_pack")
+            else:
+                vs_config = {
+                    "id": self.bi_pack.id,
+                    "title": self.bi_pack.title,
+                    "comment": self.bi_pack.comment,
+                    "contact_groups": self.bi_pack.contact_groups,
+                    "public": self.bi_pack.public,
+                }
+            self._vs_pack().render_input("bi_pack", vs_config)
+            forms.end()
+            html.hidden_fields()
+            if self._bi_pack:
+                html.set_focus("bi_pack_p_title")
+            else:
+                html.set_focus("bi_pack_p_id")
 
     def _vs_pack(self) -> Dictionary:
         if self._bi_pack:
@@ -907,21 +905,20 @@ class ModeBIRules(ABCBIMode):
             menu.show()
             return
 
-        html.begin_form(
+        with html.form_context(
             "bulk_action_form",
             method="POST",
             require_confirmation=RequireConfirmation(
                 html=_("Do you really want to move the selected rules?")
             ),
-        )
-        if self._view_type == "list":
-            self.render_rules(_("Rules"), only_unused=False)
-        else:
-            self.render_rules(_("Unused BI Rules"), only_unused=True)
+        ):
+            if self._view_type == "list":
+                self.render_rules(_("Rules"), only_unused=False)
+            else:
+                self.render_rules(_("Unused BI Rules"), only_unused=True)
 
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> HTML:
@@ -1257,16 +1254,15 @@ class ModeBIEditRule(ABCBIMode):
 
         self._may_use_rules_from_packs(bi_rule)
 
-        html.begin_form("birule", method="POST")
-        rule_vs_config = BIRuleSchema().dump(bi_rule)
-        self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
-        forms.end()
-        html.hidden_fields()
-        if self._new:
-            html.set_focus("rule_p_id")
-        else:
-            html.set_focus("rule_p_title")
-        html.end_form()
+        with html.form_context("birule", method="POST"):
+            rule_vs_config = BIRuleSchema().dump(bi_rule)
+            self.valuespec(rule_id=self._rule_id).render_input("rule", rule_vs_config)
+            forms.end()
+            html.hidden_fields()
+            if self._new:
+                html.set_focus("rule_p_id")
+            else:
+                html.set_focus("rule_p_title")
 
         self._add_rule_arguments_lookup()
 
@@ -1779,16 +1775,14 @@ class BIModeEditAggregation(ABCBIMode):
         return redirect(mode_url("bi_aggregations", **redirect_kwargs))
 
     def page(self) -> None:
-        html.begin_form("biaggr", method="POST")
-
-        aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
-        self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
-            "aggr", aggr_vs_config
-        )
-        forms.end()
-        html.hidden_fields()
-        html.set_focus("aggr_p_groups_0")
-        html.end_form()
+        with html.form_context("biaggr", method="POST"):
+            aggr_vs_config = BIAggregationSchema().dump(self._bi_aggregation)
+            self.get_vs_aggregation(aggregation_id=self._bi_aggregation.id).render_input(
+                "aggr", aggr_vs_config
+            )
+            forms.end()
+            html.hidden_fields()
+            html.set_focus("aggr_p_groups_0")
 
         self._add_rule_arguments_lookup()
 
@@ -2177,17 +2171,16 @@ class BIModeAggregations(ABCBIMode):
             url = mode_url(self.name(), pack=self.bi_pack.id)
             html.reload_whole_page(url)
 
-        html.begin_form(
+        with html.form_context(
             "bulk_action_form",
             method="POST",
             require_confirmation=RequireConfirmation(
                 html=_("Do you really want to move the selected aggregations?")
             ),
-        )
-        self._render_aggregations()
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+        ):
+            self._render_aggregations()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> HTML:

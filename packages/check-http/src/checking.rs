@@ -289,14 +289,14 @@ pub fn collect_response_checks(
             params.response_time_levels,
             params.timeout,
         ))
-        .chain(vec![check_document_age(
+        .chain(check_document_age(
             SystemTime::now(),
             response
                 .headers
                 .get("last-modified")
                 .or(response.headers.get("date")),
             params.document_age_levels,
-        )])
+        ))
         .flatten()
         .collect()
 }
@@ -404,29 +404,31 @@ fn check_document_age(
     now: SystemTime,
     age_header: Option<&HeaderValue>,
     document_age_levels: Option<UpperLevels<u64>>,
-) -> Option<CheckResult> {
-    let document_age_levels = document_age_levels?;
-
-    let cr_no_document_age = CheckResult::summary(State::Crit, "Can't determine document age");
-    let cr_document_age_error = CheckResult::summary(State::Crit, "Can't decode document age");
+) -> Vec<Option<CheckResult>> {
+    if document_age_levels.is_none() {
+        return vec![];
+    };
 
     let Some(age) = age_header else {
-        return cr_no_document_age;
+        return notice(State::Crit, "Can't determine document age");
     };
+    let document_age_error = "Can't decode document age";
     let Ok(age) = age.to_str() else {
-        return cr_document_age_error;
+        return notice(State::Crit, document_age_error);
     };
     let Ok(age) = parse_http_date(age) else {
-        return cr_document_age_error;
+        return notice(State::Crit, document_age_error);
     };
     let Ok(age) = now.duration_since(age) else {
-        return cr_document_age_error;
+        return notice(State::Crit, document_age_error);
     };
 
-    let state = document_age_levels.evaluate(&age.as_secs())?;
-
-    //TODO(au): Specify "too old" in Output
-    CheckResult::summary(state, "Document age too old")
+    check_levels(
+        "Document age",
+        age.as_secs(),
+        Some(" seconds"),
+        &document_age_levels,
+    )
 }
 
 #[cfg(test)]
@@ -635,6 +637,113 @@ mod test_check_response_time {
                     Some(UpperLevels::warn_crit(2., 3.)),
                     Some(0.),
                     Some(10.)
+                )
+            ]
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_check_document_age {
+    use super::*;
+
+    // All fixed timestamps at 00:00 UTC/GMT
+    const UNIX_TIME_2023_11_16: u64 = 1700092800;
+    const DATE_2023_11_15: &str = "Wed, 15 Nov 2023 00:00:00 GMT";
+    const DATE_2023_11_17: &str = "Fri, 17 Nov 2023 00:00:00 GMT";
+    const TWELVE_HOURS: u64 = 12 * 60 * 60;
+    const THIRTYSIX_HOURS: u64 = 36 * 60 * 60;
+
+    fn system_time(unix_timestamp: u64) -> SystemTime {
+        SystemTime::UNIX_EPOCH + Duration::from_secs(unix_timestamp)
+    }
+
+    fn header_date(date: &str) -> HeaderValue {
+        HeaderValue::from_str(date).unwrap()
+    }
+
+    #[test]
+    fn test_no_levels() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date("We don't care")),
+                None,
+            ) == vec![]
+        );
+    }
+
+    #[test]
+    fn test_missing_header_value() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                None,
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![
+                CheckResult::summary(State::Crit, "Can't determine document age"),
+                CheckResult::details(State::Crit, "Can't determine document age")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_erroneous_date() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date("Something wrong")),
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![
+                CheckResult::summary(State::Crit, "Can't decode document age"),
+                CheckResult::details(State::Crit, "Can't decode document age")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_date_in_future() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date(DATE_2023_11_17)),
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![
+                CheckResult::summary(State::Crit, "Can't decode document age"),
+                CheckResult::details(State::Crit, "Can't decode document age")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_ok() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date(DATE_2023_11_15)),
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![CheckResult::details(
+                State::Ok,
+                "Document age: 86400 seconds"
+            )]
+        );
+    }
+
+    #[test]
+    fn test_warn() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date(DATE_2023_11_15)),
+                Some(UpperLevels::warn(TWELVE_HOURS)),
+            ) == vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Document age: 86400 seconds (warn at 43200 seconds)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Document age: 86400 seconds (warn at 43200 seconds)"
                 )
             ]
         );

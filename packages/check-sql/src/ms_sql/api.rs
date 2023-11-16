@@ -19,6 +19,7 @@ pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 const INSTANCE_SECTION_NAME: &str = "instance";
 const COUNTERS_SECTION_NAME: &str = "counters";
+const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -102,7 +103,7 @@ impl InstanceEngine {
                                 .generate_details_entry(&mut client, instance_section.sep())
                                 .await;
                         }
-                        COUNTERS_SECTION_NAME => {
+                        COUNTERS_SECTION_NAME | BLOCKED_SESSIONS_SECTION_NAME => {
                             result += &self
                                 .generate_known_section(&mut client, &section.name)
                                 .await;
@@ -173,6 +174,14 @@ impl InstanceEngine {
                 self.generate_utc_entry(client, sep).await
                     + &self.generate_counters_entry(client, sep).await
             }
+            BLOCKED_SESSIONS_SECTION_NAME => {
+                self.generate_waiting_sessions_entry(
+                    client,
+                    &queries::get_blocked_sessions_query(),
+                    sep,
+                )
+                .await
+            }
             _ => format!("{} not implemented\n", name).to_string(),
         }
     }
@@ -195,6 +204,36 @@ impl InstanceEngine {
         let rows = &rows[0];
         let z: Vec<String> = rows.iter().map(|row| to_counter_entry(row, sep)).collect();
         Ok(z.join(""))
+    }
+
+    pub async fn generate_waiting_sessions_entry(
+        &self,
+        client: &mut Client,
+        query: &str,
+        sep: char,
+    ) -> String {
+        match run_query(client, query).await {
+            Ok(rows) => {
+                if rows.is_empty() || rows[0].is_empty() {
+                    log::info!("No blocking sessions");
+                    return format!("{}{sep}No blocking sessions\n", self.name).to_string();
+                }
+                self.process_blocked_sessions_rows(&rows, sep)
+            }
+            Err(err) => {
+                log::info!("No blocking sessions: {}", err);
+                format!("{}{sep}{err:?}\n", self.name).to_string()
+            }
+        }
+    }
+
+    fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
+        let rows = &rows[0];
+        let z: Vec<String> = rows
+            .iter()
+            .map(|row| to_blocked_session_entry(&self.name, row, sep))
+            .collect();
+        z.join("")
     }
 
     async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
@@ -268,6 +307,14 @@ fn to_counter_entry(row: &Row, sep: char) -> String {
             &instance
         }
     )
+}
+
+fn to_blocked_session_entry(instance_name: &str, row: &Row, sep: char) -> String {
+    let session_id = row.get_value_by_idx(0).trim().to_string();
+    let wait_duration_ms = row.get_bigint_by_idx(1).to_string();
+    let wait_type = row.get_value_by_idx(2).trim().to_string();
+    let blocking_session_id = row.get_value_by_idx(3).trim().to_string();
+    format!("{instance_name}{sep}{session_id}{sep}{wait_duration_ms}{sep}{wait_type}{sep}{blocking_session_id}\n",)
 }
 
 fn get_row_value(row: &Row, idx: &str) -> String {

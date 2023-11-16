@@ -4,7 +4,7 @@
 
 mod common;
 
-use check_sql::ms_sql::api::InstanceEngine;
+use check_sql::ms_sql::{api::Client, api::InstanceEngine, queries};
 use check_sql::{config::CheckConfig, ms_sql::api};
 use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
@@ -133,14 +133,6 @@ async fn test_validate_all_instances_remote() {
         for i in is {
             match i.create_client(cfg.auth(), cfg.conn()).await {
                 Ok(mut c) => {
-                    let counters = i.generate_counters_entry(&mut c, '|').await;
-                    assert!(
-                        counters.split('\n').collect::<Vec<&str>>().len() > 100,
-                        "{:?}",
-                        counters
-                    );
-                    assert!(!counters.contains(' '));
-                    assert!(!counters.contains('$'));
                     assert!(
                         tools::run_get_version(&mut c).await.is_some()
                             && api::get_computer_name(&mut c)
@@ -149,13 +141,14 @@ async fn test_validate_all_instances_remote() {
                                 .unwrap()
                                 .to_lowercase()
                                 .starts_with("agentbuild")
-                    )
-                }
-                Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
-                    panic!("Unexpected LOGIN error: `{:?}`", e);
-                }
-                Err(e) if e.to_string().starts_with(api::SQL_TCP_ERROR_TAG) => {
-                    panic!("Unexpected CONNECTION error: `{:?}`", e);
+                    );
+                    validate_counters(&i, &mut c).await;
+                    validate_blocked_sessions(&i, &mut c).await;
+                    validate_all_sessions_to_check_format(&i, &mut c).await;
+                    assert!(&i
+                        .generate_waiting_sessions_entry(&mut c, queries::BAD_QUERY, '|',)
+                        .await
+                        .contains(" error: "),);
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -164,6 +157,51 @@ async fn test_validate_all_instances_remote() {
         }
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
+    }
+}
+
+async fn validate_counters(instance: &InstanceEngine, client: &mut Client) {
+    let counters = instance.generate_counters_entry(client, '|').await;
+    assert!(
+        counters.split('\n').collect::<Vec<&str>>().len() > 100,
+        "{:?}",
+        counters
+    );
+    assert!(!counters.contains(' '));
+    assert!(!counters.contains('$'));
+}
+
+async fn validate_blocked_sessions(instance: &InstanceEngine, client: &mut Client) {
+    let blocked_sessions = &instance
+        .generate_waiting_sessions_entry(client, &queries::get_blocked_sessions_query(), '|')
+        .await;
+    assert_eq!(
+        blocked_sessions,
+        &format!("{}|No blocking sessions\n", instance.name)
+    );
+}
+
+async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client: &mut Client) {
+    let all_sessions = &instance
+        .generate_waiting_sessions_entry(client, queries::QUERY_WAITING_TASKS, '|')
+        .await;
+
+    let lines: Vec<&str> = all_sessions.split('\n').collect::<Vec<&str>>();
+    assert!(lines[lines.len() - 1].is_empty());
+    for l in lines[..lines.len() - 1].iter() {
+        assert!(
+            l.starts_with(&format!("{}|", instance.name)),
+            "bad line: {}",
+            l
+        );
+        let values = l.split('|').collect::<Vec<&str>>();
+        assert!(values[2].parse::<u64>().is_ok(), "bad line: {}", l);
+        assert!(
+            values[1].is_empty() || values[1].parse::<u64>().is_ok(),
+            "bad line: {}",
+            l
+        );
+        assert!(!values[3].is_empty(), "bad line: {}", l);
     }
 }
 

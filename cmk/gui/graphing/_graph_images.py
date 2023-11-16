@@ -12,6 +12,8 @@ import traceback
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from pydantic import ValidationError as PydanticValidationError
+
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
@@ -253,10 +255,13 @@ def graph_spec_from_request(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, Any]:
-    graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
-
     try:
+        graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
         graph_recipe = graph_recipes[0]
+
+    except PydanticValidationError as e:
+        raise MKUserError(None, str(e))
+
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 

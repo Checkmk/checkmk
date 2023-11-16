@@ -29,6 +29,21 @@ pub struct CheckResult {
     pub summary: String,
 }
 
+impl CheckResult {
+    pub fn new(state: State, summary: String) -> Self {
+        Self { state, summary }
+    }
+}
+
+impl Default for CheckResult {
+    fn default() -> Self {
+        Self {
+            state: State::Ok,
+            summary: String::from(""),
+        }
+    }
+}
+
 impl Display for CheckResult {
     fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         write!(
@@ -54,30 +69,30 @@ pub fn check_validity(url: &str, x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Ti
     std::assert!(warn >= crit);
 
     if crit >= x {
-        CheckResult {
-            state: State::Crit,
-            summary: format!(
+        CheckResult::new(
+            State::Crit,
+            format!(
                 "Certificate '{}' expires in {} day(s) ({})",
                 url,
                 diff_to_now(x),
                 x
             ),
-        }
+        )
     } else if warn >= x {
-        CheckResult {
-            state: State::Warn,
-            summary: format!(
+        CheckResult::new(
+            State::Warn,
+            format!(
                 "Certificate '{}' expires in {} day(s) ({})",
                 url,
                 diff_to_now(x),
                 x
             ),
-        }
+        )
     } else {
-        CheckResult {
-            state: State::Ok,
-            summary: format!("Certificate '{}' will expire on {}", url, x),
-        }
+        CheckResult::new(
+            State::Ok,
+            format!("Certificate '{}' will expire on {}", url, x),
+        )
     }
 }
 
@@ -100,6 +115,7 @@ mod test_diff_to_now {
         assert!(diff_to_now(days_from_now(1).as_ref()) == 1);
     }
 }
+
 #[cfg(test)]
 mod test_check_validity {
     use super::{check_validity, State};

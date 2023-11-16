@@ -707,6 +707,11 @@ div.page_menu_popup {
         background-color: $input-button-hover-bg-color;
       }
     }
+
+    span.vs_age_footer {
+      display: block;
+      margin-top: 5px;
+    }
   }
 
   form span.checkbox {

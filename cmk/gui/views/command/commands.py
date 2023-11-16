@@ -1423,13 +1423,19 @@ class CommandScheduleDowntimes(Command):
                 (
                     "_down_duration",
                     Age(
-                        display=["hours"],
+                        display=["hours", "minutes"],
                         title=_(
                             "Only start downtime if host/service goes "
                             "DOWN/UNREACH during the defined start and end time "
                             "(flexible)"
                         ),
                         cssclass="inline",
+                        label=_("Max. duration after downtime starts: "),
+                        footer="<b>"
+                        + _("Warning: ")
+                        + "</b>"
+                        + _("Downtime can extend beyond the previously defined end date and time"),
+                        default_value=7200,
                     ),
                 ),
             ],

@@ -420,6 +420,7 @@ class Age(ValueSpec[int]):
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: str | None = None,
+        footer: str | None = None,
         minvalue: int | None = None,
         maxvalue: int | None = None,
         display: Container[Literal["days", "hours", "minutes", "seconds"]] | None = None,
@@ -431,6 +432,7 @@ class Age(ValueSpec[int]):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
+        self._footer = footer
         self._bounds = Bounds[int](minvalue, maxvalue)
         self._display = display if display is not None else ["days", "hours", "minutes", "seconds"]
         self._cssclass = [] if cssclass is None else [cssclass]
@@ -463,6 +465,10 @@ class Age(ValueSpec[int]):
                 html.write_text(" %s " % title)
             else:
                 takeover = (takeover + val) * tkovr_fac
+
+        if self._footer:
+            html.span(self._footer, class_=["vs_floating_text", "vs_age_footer"])
+
         html.close_div()
 
     def from_html_vars(self, varprefix: str) -> int:

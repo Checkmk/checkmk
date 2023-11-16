@@ -1452,7 +1452,7 @@ class CommandScheduleDowntimes(Command):
             delayed_duration = self._flexible_option()
             mode = determine_downtime_mode(recurring_number, delayed_duration)
             downtime = DowntimeSchedule(start_time, end_time, mode, delayed_duration, comment)
-            cmdtag, specs = self._downtime_specs(cmdtag, row, spec)
+            cmdtag, specs, len_action_rows = self._downtime_specs(cmdtag, row, action_rows, spec)
             if "aggr_tree" in row:  # BI mode
                 node = row["aggr_tree"]
                 return (
@@ -1468,7 +1468,7 @@ class CommandScheduleDowntimes(Command):
                 self._confirm_dialog_options(
                     cmdtag,
                     row,
-                    len(action_rows),
+                    len_action_rows,
                     _("Schedule a downtime?"),
                 ),
             )
@@ -1647,8 +1647,11 @@ class CommandScheduleDowntimes(Command):
         self,
         cmdtag: Literal["HOST", "SVC"],
         row: Row,
+        action_rows: Rows,
         spec: str,
-    ) -> tuple[Literal["HOST", "SVC"], list[str]]:
+    ) -> tuple[Literal["HOST", "SVC"], list[str], int]:
+        len_action_rows = len(action_rows)
+
         vs_host_downtime = self._vs_host_downtime()
         included_from_html = vs_host_downtime.from_html_vars("_include_children")
         vs_host_downtime.validate_value(included_from_html, "_include_children")
@@ -1658,9 +1661,10 @@ class CommandScheduleDowntimes(Command):
         elif request.var("_down_host"):  # set on hosts instead of services
             specs = [spec.split(";")[0]]
             cmdtag = "HOST"
+            len_action_rows = len({row["host_name"] for row in action_rows})
         else:
             specs = [spec]
-        return cmdtag, specs
+        return cmdtag, specs, len_action_rows
 
     def _vs_down_from(self) -> AbsoluteDate:
         return AbsoluteDate(

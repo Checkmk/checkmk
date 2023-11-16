@@ -748,6 +748,11 @@ class ModeEditUser(WatoMode):
 
         if self._can_edit_users:
             self._get_identity_userattrs(user_attrs)
+
+        # We always store secrets for automation users. Also in editions that are not allowed
+        # to edit users *hust* CSE *hust*
+        is_automation_user = self._user.get("automation_secret", None) is not None
+        if is_automation_user or self._can_edit_users:
             self._get_security_userattrs(user_attrs)
 
         # Language configuration
@@ -925,6 +930,7 @@ class ModeEditUser(WatoMode):
             self._render_security(
                 {
                     "automation",
+                    "disable_password",
                 },
                 None,
                 is_automation_user,

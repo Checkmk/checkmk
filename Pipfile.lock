@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a9bd1ffc6a2cc10c4db9b592e57bc90e3e76299126760590c4e21d07323ec309"
+            "sha256": "97bfd2dabe93899b00509851518b5f7a8e106d5e6c19e34232394c91cea74bbd"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -2553,6 +2553,10 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==4.9"
+        },
+        "rulesets": {
+            "editable": true,
+            "path": "./packages/cmk-rulesets"
         },
         "s3transfer": {
             "hashes": [

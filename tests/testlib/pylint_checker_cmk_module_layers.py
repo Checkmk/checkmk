@@ -501,7 +501,6 @@ _COMPONENTS = (
     (Component("cmk.plugins"), _is_allowed_for_plugins),
     (Component("cmk.special_agents"), _is_default_allowed_import),
     (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
-    (Component("cmk.rulesets"), _in_component),
     (Component("cmk.mkp_tool"), _in_component),  # wants to grow up to be a package one day
     (Component("cmk.utils"), _is_default_allowed_import),
     (Component("cmk.cee.bakery"), _is_default_allowed_import),

@@ -710,6 +710,7 @@ class Site:
             cmk_path() + "/packages/cmk-agent-receiver",
             cmk_path() + "/packages/cmk-graphing",
             cmk_path() + "/packages/cmk-mkp-tool",
+            cmk_path() + "/packages/cmk-rulesets",
             cmk_path() + "/packages/cmk-server-side-calls",
             cmk_path() + "/packages/cmk-werks",
         ]

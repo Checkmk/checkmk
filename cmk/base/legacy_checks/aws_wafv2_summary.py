@@ -10,7 +10,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import AWSRegions
 from cmk.base.config import check_info
 
-from cmk.plugins.lib.aws import GenericAWSSection, parse_aws
+from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 
 def discover_aws_wafv2_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:

@@ -6,10 +6,9 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.plugins.lib.aws import AWSLimitsByRegion, check_aws_limits, parse_aws
-
-from .agent_based_api.v1 import register, render, Service
-from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from cmk.agent_based.v2alpha import AgentSection, CheckPlugin, render, Service
+from cmk.agent_based.v2alpha.type_defs import DiscoveryResult, StringTable
+from cmk.plugins.aws.lib import AWSLimitsByRegion, check_aws_limits, parse_aws
 
 AWS_EBS_LIMITS_DEFAULT_PARAMS = {
     "block_store_snapshots": (None, 80.0, 90.0),
@@ -57,7 +56,7 @@ def parse_aws_ebs_limits(string_table: StringTable) -> AWSLimitsByRegion:
     return limits_by_region
 
 
-register.agent_section(
+agent_section_aws_ebs_limits = AgentSection(
     name="aws_ebs_limits",
     parse_function=parse_aws_ebs_limits,
 )
@@ -74,7 +73,7 @@ def check_aws_ebs_limits(  # type: ignore[no-untyped-def]
         yield from check_aws_limits("ebs", params, region_limits)
 
 
-register.check_plugin(
+check_plugin_aws_ebs_limits = CheckPlugin(
     name="aws_ebs_limits",
     service_name="AWS/EBS Limits %s",
     discovery_function=discover_aws_ebs_limits,

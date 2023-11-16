@@ -9,16 +9,15 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.aws_ebs import (
+from cmk.agent_based.v1 import get_value_store, GetRateError, Metric, Result, Service, State
+from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.aws.agent_based.aws_ebs import (
     check_aws_ebs,
     check_aws_ebs_burst_balance,
     discover_aws_ebs,
     discover_aws_ebs_burst_balance,
     parse_aws_ebs,
 )
-
-from cmk.agent_based.v1 import get_value_store, GetRateError, Metric, Result, Service, State
-from cmk.agent_based.v1.type_defs import StringTable
 
 STRING_TABLE = [
     [

@@ -10,8 +10,8 @@ import time
 import polyfactory.factories.pydantic_factory
 import pytest
 
-from cmk.base.plugins.agent_based import aws_status
-from cmk.base.plugins.agent_based.agent_based_api import v1
+from cmk.agent_based import v2alpha
+from cmk.plugins.aws.agent_based import aws_status
 
 CURRENT_TIME = datetime.datetime.fromtimestamp(1670000000.0, tz=datetime.UTC)
 
@@ -108,7 +108,7 @@ def test_discovery_aws_status(feed_size: int) -> None:
         aws_rss_feed=aws_status.AWSRSSFeed(entries=EntryFactory.batch(size=feed_size)),
     )
     discovery_results = list(aws_status.discover_aws_status(section))
-    assert any(v1.Service(item="Global") == service for service in discovery_results)
+    assert any(v2alpha.Service(item="Global") == service for service in discovery_results)
     assert len(discovery_results) == 1 + len(regions)
 
 
@@ -271,11 +271,11 @@ def test__check_aws_status_for_service() -> None:
     # Act
     title_result, *entry_results = aws_status._check_aws_status_for_service(entries)
     # Assert
-    assert title_result == v1.Result(
+    assert title_result == v2alpha.Result(
         state=aws_status._state_from_entry(newest_entry), summary=newest_entry.title
     )
     for r, e in zip(entry_results, entries):
-        assert isinstance(r, v1.Result)
+        assert isinstance(r, v2alpha.Result)
         assert e.published in r.details
         assert e.summary in r.details
 
@@ -285,36 +285,36 @@ def test__check_aws_status_for_service() -> None:
     [
         pytest.param(
             "Service is operating normally: [RESOLVED] Connectivity issues affecting some instances",
-            v1.State.OK,
+            v2alpha.State.OK,
             id="Message retrieved from real AWS rss feed. OK message.",
         ),
         pytest.param(
             "Informational message: Connectivity issues affecting some instances",
-            v1.State.WARN,
+            v2alpha.State.WARN,
             id="Message retrieved from real AWS rss feed. Problem message.",
         ),
         pytest.param(
             "Performance issue: AWS bad!",
-            v1.State.WARN,
+            v2alpha.State.WARN,
             id="Made up based on the AWS dashboard. Problem message.",
         ),
         pytest.param(
             "Service disruption: AWS bad!",
-            v1.State.WARN,
+            v2alpha.State.WARN,
             id="Another message made up based on the AWS dashboard. Problem message.",
         ),
         pytest.param(
             "OK: AWS good!",
-            v1.State.OK,
+            v2alpha.State.OK,
             id="This is a made up based on how some others monitor the feed. OK message.",
         ),
         pytest.param(
             "AWS bad!",
-            v1.State.WARN,
+            v2alpha.State.WARN,
             id="If Checkmk does not know the message type, then it's considered a problem.",
         ),
     ],
 )
-def test__state_from_entry(title: str, expected_state: v1.State) -> None:
+def test__state_from_entry(title: str, expected_state: v2alpha.State) -> None:
     entry = EntryFactory.build(title=title)
     assert expected_state == aws_status._state_from_entry(entry)

@@ -12,7 +12,7 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
-from cmk.utils.aws_constants import AWSEC2InstTypes
+from cmk.plugins.aws.constants import AWSEC2InstTypes
 
 #   .--entities------------------------------------------------------------.
 #   |                             _   _ _   _                              |

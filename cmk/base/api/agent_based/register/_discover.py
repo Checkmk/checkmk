@@ -24,6 +24,9 @@ from ._config import (
     add_host_label_ruleset,
     add_inventory_plugin,
     add_section_plugin,
+    get_check_plugin,
+    get_inventory_plugin,
+    get_section_plugin,
     is_registered_check_plugin,
     is_registered_inventory_plugin,
     is_registered_section_plugin,
@@ -91,6 +94,15 @@ def register_agent_section(section: AgentSection, location: PluginLocation) -> N
     )
 
     if is_registered_section_plugin(section_plugin.name):
+        if get_section_plugin(section_plugin.name).location == location:
+            # This is relevant if we're loading the plugins twice:
+            # Loading of v2 plugins is *not* a no-op the second time round.
+            # But since we're storing the plugins in a global variable,
+            # we must only raise, if this is not the *exact* same plugin.
+            # once we stop storing the plugins in a global variable, this
+            # special case can go.
+            return
+
         raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
     add_section_plugin(section_plugin)
@@ -116,6 +128,14 @@ def register_snmp_section(
     )
 
     if is_registered_section_plugin(section_plugin.name):
+        if get_section_plugin(section_plugin.name).location == location:
+            # This is relevant if we're loading the plugins twice:
+            # Loading of v2 plugins is *not* a no-op the second time round.
+            # But since we're storing the plugins in a global variable,
+            # we must only raise, if this is not the *exact* same plugin.
+            # once we stop storing the plugins in a global variable, this
+            # special case can go.
+            return
         raise ValueError(f"duplicate section definition: {section_plugin.name}")
 
     add_section_plugin(section_plugin)
@@ -140,6 +160,14 @@ def register_check_plugin(check: CheckPlugin, location: PluginLocation) -> None:
     )
 
     if is_registered_check_plugin(plugin.name):
+        if (present := get_check_plugin(plugin.name)) is not None and present.location == location:
+            # This is relevant if we're loading the plugins twice:
+            # Loading of v2 plugins is *not* a no-op the second time round.
+            # But since we're storing the plugins in a global variable,
+            # we must only raise, if this is not the *exact* same plugin.
+            # once we stop storing the plugins in a global variable, this
+            # special case can go.
+            return
         raise ValueError(f"duplicate check plugin definition: {plugin.name}")
 
     add_check_plugin(plugin)
@@ -158,6 +186,16 @@ def register_inventory_plugin(inventory: InventoryPlugin, location: PluginLocati
     )
 
     if is_registered_inventory_plugin(plugin.name):
+        if (
+            present := get_inventory_plugin(plugin.name)
+        ) is not None and present.location == location:
+            # This is relevant if we're loading the plugins twice:
+            # Loading of v2 plugins is *not* a no-op the second time round.
+            # But since we're storing the plugins in a global variable,
+            # we must only raise, if this is not the *exact* same plugin.
+            # once we stop storing the plugins in a global variable, this
+            # special case can go.
+            return
         raise ValueError(f"duplicate inventory plugin definition: {plugin.name}")
 
     add_inventory_plugin(plugin)

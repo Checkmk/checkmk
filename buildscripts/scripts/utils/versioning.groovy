@@ -81,7 +81,7 @@ def safe_branch_name(scm) {
 def get_cmk_version(branch_name, branch_version, version) {
     return (
       // Experimental builds
-      branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
+      (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
       // Daily builds
       (version in ['daily', 'git']) ? "${branch_version}-${build_date}" :
       // else

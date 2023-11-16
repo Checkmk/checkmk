@@ -427,27 +427,15 @@ class CMKOpenApiSession(requests.Session):
         timeout: int,
         http_method_for_redirection: HTTPMethod,
     ) -> Iterator[None]:
-        start = time.time()
         try:
             yield None
         except Redirect as redirect:
-            redirect_url = redirect.redirect_url
-            while redirect_url:
-                if time.time() > (start + timeout):
-                    raise TimeoutError("wait for completion timed out")
-
-                response = self.request(
-                    method=http_method_for_redirection,
-                    url=redirect_url,
-                    allow_redirects=False,
-                )
-                if response.status_code == 204:  # job has finished
-                    break
-
-                if response.status_code != 302:
-                    raise UnexpectedResponse.from_response(response)
-
-                time.sleep(0.5)
+            self.request(
+                method=http_method_for_redirection,
+                url=redirect.redirect_url,
+                allow_redirects=True,
+                timeout=timeout,
+            )
 
     def get_host_services(
         self, hostname: str, pending: bool | None = None, columns: list[str] | None = None

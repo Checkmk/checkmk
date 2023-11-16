@@ -96,7 +96,7 @@ def check_mounts(item: str, params: Mapping[str, Any], section: Mapping[str, Mou
         )
 
 
-section_mounts = AgentSection(
+agent_section_mounts = AgentSection(
     name="mounts",
     parse_function=parse_mounts,
 )

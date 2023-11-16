@@ -48,9 +48,9 @@ def load_all_plugins() -> list[str]:
     discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
         "agent_based",
         {
-            SimpleSNMPSection: "section_",
-            SNMPSection: "section_",
-            AgentSection: "section_",
+            SimpleSNMPSection: "snmp_section_",
+            SNMPSection: "snmp_section_",
+            AgentSection: "agent_section_",
             CheckPlugin: "check_plugin_",
             InventoryPlugin: "inventory_plugin_",
         },

@@ -55,7 +55,8 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert len(cce_werks) > 10
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
 
-    assert len(cse_werks) >= 1
+    # We currently don't have cse werks (yet)
+    assert len(cse_werks) == 0
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
 
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))

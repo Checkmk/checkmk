@@ -3,29 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.legacy_checks.ibm_imm_temp import check_ibm_imm_temp, inventory_ibm_imm_temp
-
-STRING_TABLE = [
-    ["PCH Temp", "45", "98", "93", "0", "0"],
-    ["Ambient Temp", "17", "47", "43", "", "0"],
-    ["PCI Riser 1 Temp", "25", "80", "70", "0", "0"],
-    ["PCI Riser 2 Temp", "0", "0", "0", "0", "0"],
-    ["Mezz Card Temp", "0", "0", "0", "0", "0"],
-    ["CPU1 VR Temp", "129", "100", "95", "0", "0"],
-    ["CPU2 VR Temp", "27", "100", "95", "0", "0"],
-    ["DIMM AB VR Temp", "24", "100", "95", "0", "0"],
-    ["DIMM CD VR Temp", "25", "100", "95", "0", "0"],
-    ["DIMM EF VR Temp", "23", "100", "95", "0", "0"],
-    ["DIMM GH VR Temp", "26", "100", "95", "0", "0"],
-]
+from cmk.base.plugins.agent_based.ibm_imm_temp import parse_ibm_imm_temp, SensorTemperature
 
 
-def test_inventory_ibm_imm_temp() -> None:
-    assert list(inventory_ibm_imm_temp(STRING_TABLE)) == [
+@pytest.fixture(name="section", scope="module")
+def fixture_section() -> dict[str, SensorTemperature]:
+    return parse_ibm_imm_temp(
+        [
+            ["PCH Temp", "45", "98", "93", "0", "0"],
+            ["Ambient Temp", "17", "47", "43", "", "0"],
+            ["PCI Riser 1 Temp", "25", "80", "70", "0", "0"],
+            ["PCI Riser 2 Temp", "0", "0", "0", "0", "0"],
+            ["Mezz Card Temp", "0", "0", "0", "0", "0"],
+            ["CPU1 VR Temp", "129", "100", "95", "0", "0"],
+            ["CPU2 VR Temp", "27", "100", "95", "0", "0"],
+            ["DIMM AB VR Temp", "24", "100", "95", "0", "0"],
+            ["DIMM CD VR Temp", "25", "100", "95", "0", "0"],
+            ["DIMM EF VR Temp", "23", "100", "95", "0", "0"],
+            ["DIMM GH VR Temp", "26", "100", "95", "0", "0"],
+        ]
+    )
+
+
+def test_inventory_ibm_imm_temp(section: Mapping[str, SensorTemperature]) -> None:
+    assert list(inventory_ibm_imm_temp(section)) == [
         ("PCH Temp", {}),
         ("Ambient Temp", {}),
         ("PCI Riser 1 Temp", {}),
@@ -63,5 +69,7 @@ def test_inventory_ibm_imm_temp() -> None:
         ),
     ],
 )
-def test_check_ibm_imm_temp(item: str, expected_output: Sequence[object]) -> None:
-    assert check_ibm_imm_temp(item, None, STRING_TABLE) == expected_output
+def test_check_ibm_imm_temp(
+    section: Mapping[str, SensorTemperature], item: str, expected_output: Sequence[object]
+) -> None:
+    assert check_ibm_imm_temp(item, None, section) == expected_output

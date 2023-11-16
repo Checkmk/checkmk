@@ -111,7 +111,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
                 unit=api_v1.Localizable("days"),
-                default_value=-1,
+                prefill_value=-1,
                 custom_validate=lambda x: None,
             ),
             legacy_valuespecs.Integer(
@@ -135,7 +135,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 help_text=api_v1.Localizable("help"),
                 label=api_v1.Localizable("label"),
                 display_precision=2,
-                default_value=-1.0,
+                prefill_value=-1.0,
                 custom_validate=lambda x: None,
             ),
             legacy_valuespecs.Percentage(
@@ -159,7 +159,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 label=api_v1.Localizable("spec label"),
                 input_hint="firstname",
                 help_text=api_v1.Localizable("help text"),
-                default_value="myname",
+                prefill_value="myname",
                 custom_validate=_v1_custom_text_validate,
             ),
             legacy_valuespecs.TextInput(
@@ -217,7 +217,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("title"),
                 label=api_v1.Localizable("label"),
                 help_text=api_v1.Localizable("help text"),
-                default_element=True,
+                prefill_selection=True,
                 invalid_element_validation=api_v1.InvalidElementValidator(
                     mode=api_v1.InvalidElementMode.KEEP,
                     display=api_v1.Localizable("invalid choice title"),
@@ -240,7 +240,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="DropdownChoice",
         ),
         pytest.param(
-            api_v1.CascadingDropdown(elements=[], default_element=None),
+            api_v1.CascadingDropdown(elements=[], prefill_selection=None),
             legacy_valuespecs.CascadingDropdown(choices=[], no_preselect_title=""),
             id="minimal CascadingDropdown",
         ),
@@ -249,7 +249,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 elements=[
                     api_v1.CascadingDropdownElement(ident="first", value_spec=api_v1.TextInput())
                 ],
-                default_element=None,
+                prefill_selection=None,
             ),
             legacy_valuespecs.CascadingDropdown(
                 choices=[("first", "first", legacy_valuespecs.TextInput())],
@@ -265,7 +265,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         value_spec=api_v1.TextInput(title=api_v1.Localizable("Spec title")),
                     )
                 ],
-                default_element=None,
+                prefill_selection=None,
             ),
             legacy_valuespecs.CascadingDropdown(
                 choices=[
@@ -286,7 +286,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 title=api_v1.Localizable("parent title"),
                 help_text=api_v1.Localizable("parent help"),
                 label=api_v1.Localizable("parent label"),
-                default_element="first",
+                prefill_selection="first",
             ),
             legacy_valuespecs.CascadingDropdown(
                 choices=[("first", _("first"), legacy_valuespecs.TextInput())],

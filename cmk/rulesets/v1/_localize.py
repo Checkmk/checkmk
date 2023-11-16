@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Providing means to localize strings"""
+
 from __future__ import annotations
 
 import enum
-from typing import assert_never, Callable
+from collections.abc import Callable
+from typing import assert_never
 
 
 class _Operation(enum.Enum):
@@ -40,12 +42,12 @@ class Localizable:
         When adding localizables, you must make sure the translations of the individual
         components are available.
 
-        >>> help = Localizable("Translate this sentence. ") + Localizable("Translate this separately.")
+        >>> help = Localizable("Translate this. ") + Localizable("Translate this separately.")
 
         Sometimes you might want to format individually localized strings, to ensure
         consistent translations:
 
-        >>> help = Localizable("Please use the ruleset '%s' for configuration") % Localizable("Parameters for the thing")
+        >>> help = Localizable("Please use '%s' for foo") % Localizable("params for foo")
 
         Be aware that this does *not* result in an instance of a `Localizable`:
 

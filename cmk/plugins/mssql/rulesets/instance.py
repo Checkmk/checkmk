@@ -19,7 +19,7 @@ def _parameter_valuespec_mssql_instance() -> Dictionary:
     return Dictionary(
         elements={
             "map_connection_state": DictElement(
-                MonitoringState(title=Localizable("Connection status"), default_value=State.CRIT)
+                MonitoringState(title=Localizable("Connection status"), prefill_value=State.CRIT)
             ),
         }
     )

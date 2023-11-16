@@ -156,7 +156,7 @@ def _convert_to_legacy_valuespec(
 
         case ruleset_api_v1.Dictionary():
             elements = [
-                (key, _convert_to_legacy_valuespec(elem.spec, localizer))
+                (key, _convert_to_legacy_valuespec(elem.value_spec, localizer))
                 for key, elem in to_convert.elements.items()
             ]
 
@@ -201,8 +201,8 @@ def _convert_to_legacy_integer(
     if to_convert.unit is not None:
         converted_kwargs["unit"] = to_convert.unit.localize(localizer)
 
-    if to_convert.default_value is not None:
-        converted_kwargs["default_value"] = to_convert.default_value
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -229,8 +229,8 @@ def _convert_to_legacy_percentage(
     if to_convert.display_precision is not None:
         converted_kwargs["display_format"] = f"%.{to_convert.display_precision}f"
 
-    if to_convert.default_value is not None:
-        converted_kwargs["default_value"] = to_convert.default_value
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -252,8 +252,8 @@ def _convert_to_legacy_text_input(
     if to_convert.input_hint is not None:
         converted_kwargs["placeholder"] = to_convert.input_hint
 
-    if to_convert.default_value is not None:
-        converted_kwargs["default_value"] = to_convert.default_value
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
 
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -289,11 +289,11 @@ def _convert_to_legacy_monitoring_state(
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
     }
-    if to_convert.default_value is not None:
+    if to_convert.prefill_value is not None:
         converted_kwargs["default_value"] = (
-            to_convert.default_value.value
-            if isinstance(to_convert.default_value, enum.Enum)
-            else to_convert.default_value
+            to_convert.prefill_value.value
+            if isinstance(to_convert.prefill_value, enum.Enum)
+            else to_convert.prefill_value
         )
     return legacy_valuespecs.MonitoringState(**converted_kwargs)
 
@@ -332,11 +332,11 @@ def _convert_to_legacy_dropdown_choice(
         )
     if to_convert.deprecated_elements is not None:
         converted_kwargs["deprecated_choices"] = to_convert.deprecated_elements
-    if to_convert.default_element is not None:
+    if to_convert.prefill_selection is not None:
         converted_kwargs["default_value"] = (
-            to_convert.default_element.value
-            if isinstance(to_convert.default_element, enum.Enum)
-            else to_convert.default_element
+            to_convert.prefill_selection.value
+            if isinstance(to_convert.prefill_selection, enum.Enum)
+            else to_convert.prefill_selection
         )
     if to_convert.custom_validate is not None:
         converted_kwargs["validate"] = _convert_to_legacy_validation(
@@ -353,7 +353,7 @@ def _convert_to_legacy_cascading_dropdown(
         (
             element.ident.value if isinstance(element.ident, enum.StrEnum) else element.ident,
             element.value_spec.title.localize(localizer)
-            if element.value_spec.title is not None
+            if hasattr(element.value_spec, "title") and element.value_spec.title is not None
             else str(element.ident),
             _convert_to_legacy_valuespec(element.value_spec, localizer),
         )
@@ -365,10 +365,10 @@ def _convert_to_legacy_cascading_dropdown(
         "label": _localize_optional(to_convert.label, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
     }
-    if to_convert.default_element is None:
+    if to_convert.prefill_selection is None:
         converted_kwargs["no_preselect_title"] = ""
     else:
-        converted_kwargs["default_value"] = to_convert.default_element
+        converted_kwargs["default_value"] = to_convert.prefill_selection
     return legacy_valuespecs.CascadingDropdown(choices=legacy_choices, **converted_kwargs)
 
 

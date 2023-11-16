@@ -59,7 +59,7 @@ class CheckParameterRuleSpecWithItem:
 
     # TODO register enforced service
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert isinstance(self.item, (TextInput, DropdownChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
@@ -94,7 +94,7 @@ class EnforcedServiceRuleSpecWithItem:
     is_deprecated: bool = False
     help_text: Localizable | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert isinstance(self.item, (TextInput, DropdownChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError

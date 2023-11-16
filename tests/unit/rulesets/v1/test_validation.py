@@ -68,7 +68,7 @@ def test_in_range(
     input_args: Mapping[str, int | float],
     input_message: Localizable | None,
     test_value: int | float,
-    expected_raises: ContextManager,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
@@ -105,10 +105,10 @@ def test_in_range(
     ],
 )
 def test_match_regex(
-    input_regex: str | re.Pattern,
+    input_regex: str | re.Pattern[str],
     input_msg: Mapping[str, Localizable],
     test_value: str,
-    expected_raises: ContextManager,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:
@@ -155,7 +155,7 @@ def test_match_regex(
 def test_disallow_empty(
     input_msg: Mapping[str, Localizable],
     test_value: str | Sequence[object],
-    expected_raises: ContextManager,
+    expected_raises: ContextManager[pytest.ExceptionInfo[ValidationError]],
     expected_message: str | None,
 ) -> None:
     with expected_raises as e:

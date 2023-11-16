@@ -58,7 +58,7 @@ def in_range(
 
 
 def match_regex(
-    regex: str | re.Pattern, error_msg: Localizable | None = None
+    regex: str | re.Pattern[str], error_msg: Localizable | None = None
 ) -> Callable[[str], None]:
     def validator(value: str) -> None:
         if isinstance(regex, re.Pattern):

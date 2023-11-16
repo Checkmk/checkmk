@@ -45,7 +45,9 @@ with suppress_module_not_found("cmk.gui.cme"):
     cmk.gui.cme.registration.register()
 
 with suppress_module_not_found("cmk.gui.cce"):
-    import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
+    import cmk.gui.cce.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+
+    cmk.gui.cce.registration.register()
 
 with suppress_module_not_found("cmk.gui.cse"):
     import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
@@ -74,7 +76,7 @@ def _import_local_main_modules() -> list[ModuleType]:
     which are expected to contain the actual imports of the main modules.
 
     Please note that the built-in main modules are already loaded by the imports of
-    `cmk.gui.{cee.,cce.}plugins.main_modules` above.
+    `cmk.gui.{cee.}plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.
@@ -186,8 +188,6 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             name.startswith("cmk.gui.")
             and len(name.split(".")) == 3
             or name.startswith("cmk.gui.cee.")
-            and len(name.split(".")) == 4
-            or name.startswith("cmk.gui.cce.")
             and len(name.split(".")) == 4
             or name.startswith("cmk.gui.cse.")
             and len(name.split(".")) == 4

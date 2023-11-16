@@ -6395,6 +6395,10 @@ msgstr ""
 msgid "Archive an event"
 msgstr "Archiver un événement"
 
+#, fuzzy
+msgid "Archive current audit log"
+msgstr "Obtenir les journaux d'audit à distance"
+
 msgid "Archive event"
 msgstr "Événements d'archives"
 
@@ -6404,11 +6408,19 @@ msgstr "Événements d'archives"
 msgid "Archive events of hosts"
 msgstr "Archiver les événements des hôtes"
 
+#, fuzzy
+msgid "Archive log"
+msgstr "Archive"
+
 msgid "Archive messages that do not match any rule"
 msgstr "Archiver les messages qui ne correspondent à aucune règle"
 
 msgid "Archive this event"
 msgstr "Archiver cet événement"
+
+#, fuzzy
+msgid "Archived audit log"
+msgstr "Effacement du journal d'audit."
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Sauvegardes Arcserve (allemand) (Windows)"
@@ -11195,16 +11207,10 @@ msgstr "Messages de nettoyage"
 msgid "Cleanup when disk space is below"
 msgstr "Nettoyage lorsque l'espace disque est insuffisant"
 
-msgid "Clear"
-msgstr "Clair"
-
 msgid "Clear & Delete"
 msgstr "Effacer & ; Supprimer"
 
 msgid "Clear audit Log"
-msgstr "Effacer le journal d'audit"
-
-msgid "Clear audit log"
 msgstr "Effacer le journal d'audit"
 
 msgid "Clear failed notifications"
@@ -11228,9 +11234,6 @@ msgstr ""
 "d'audit, un utilisateur doit disposer de l'autorisation générique Setup "
 "\"Make changes, perform actions\" ;, de l'autorisation \"View audit log\" ; "
 "et de cette autorisation."
-
-msgid "Cleared audit log."
-msgstr "Effacement du journal d'audit."
 
 msgid "Click for instant reload."
 msgstr "Cliquez pour une recharge instantanée."
@@ -21447,6 +21450,10 @@ msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr ""
 "Le test de suppression de fichier pour le stockage à distance a échoué. "
 "Message d'erreur original : %s"
+
+#, fuzzy
+msgid "File selection"
+msgstr "Sélection des dossiers"
 
 msgid "File size"
 msgstr "Taille du fichier"
@@ -41368,6 +41375,10 @@ msgstr ""
 msgid "Please choose a valid PNG image."
 msgstr "Veuillez choisir une image PNG valide."
 
+#, fuzzy
+msgid "Please choose an audit log to view:"
+msgstr "Veuillez choisir un fichier à télécharger."
+
 msgid "Please choose the check plugin"
 msgstr "Veuillez choisir le plugin de vérification"
 
@@ -48675,6 +48686,14 @@ msgstr "Afficher plus / Afficher moins"
 
 msgid "Show number of groups"
 msgstr "Afficher le nombre de groupes"
+
+#, fuzzy
+msgid "Show object"
+msgstr "Afficher plus"
+
+#, fuzzy
+msgid "Show object type"
+msgstr "Aucun type d'objet"
 
 msgid "Show only modified settings"
 msgstr "Afficher uniquement les paramètres modifiés"
@@ -70363,6 +70382,9 @@ msgstr ""
 "n'utilise le Checkmk Microcore. Le graph designer ne peut être utilisé "
 "qu'avec des sites utilisant le Checkmk Microcore."
 
+msgid "You can only archive the current audit log"
+msgstr ""
+
 #, python-format
 msgid ""
 "You can only configure a local site connection for the local site. The site "
@@ -72137,6 +72159,10 @@ msgstr "critique si moins que"
 msgid "critical if older than"
 msgstr "critique si elle est plus ancienne que"
 
+#, fuzzy
+msgid "current"
+msgstr "Actuel"
+
 msgid "current events"
 msgstr "événements actuels"
 
@@ -73829,6 +73855,12 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
+#~ msgid "Clear"
+#~ msgstr "Clair"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Effacer le journal d'audit"
+
 #~ msgid "Agent based plugins (Checks, Inventory)"
 #~ msgstr "Plugins basés sur les agents (Contrôles, Inventaire)"
 
@@ -74216,9 +74248,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 #~ msgid "Found no inventory data for this host."
 #~ msgstr "Je n'ai trouvé aucune donnée d'inventaire pour cet hôte."
-
-#~ msgid "Get remote audit logs"
-#~ msgstr "Obtenir les journaux d'audit à distance"
 
 #, python-format
 #~ msgid "Graph identification: The '%s' attribute is missing"

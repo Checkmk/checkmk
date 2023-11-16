@@ -6330,6 +6330,10 @@ msgstr ""
 msgid "Archive an event"
 msgstr "Een gebeurtenis archiveren"
 
+#, fuzzy
+msgid "Archive current audit log"
+msgstr "Ontvang remote audit logs"
+
 msgid "Archive event"
 msgstr "Archief evenement"
 
@@ -6339,11 +6343,19 @@ msgstr "Archief gebeurtenissen"
 msgid "Archive events of hosts"
 msgstr "Archief gebeurtenissen van gastheren"
 
+#, fuzzy
+msgid "Archive log"
+msgstr "Archief evenement"
+
 msgid "Archive messages that do not match any rule"
 msgstr "Archiveer berichten die aan geen enkele regel voldoen"
 
 msgid "Archive this event"
 msgstr "Archiveer dit evenement"
+
+#, fuzzy
+msgid "Archived audit log"
+msgstr "Opgeruimd audit log."
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve (Duitse) back-ups (Windows)"
@@ -11088,17 +11100,11 @@ msgstr "Berichten opruimen"
 msgid "Cleanup when disk space is below"
 msgstr "Opschonen wanneer schijfruimte minder is"
 
-msgid "Clear"
-msgstr "Duidelijk"
-
 msgid "Clear & Delete"
 msgstr "Wis & Wis"
 
 msgid "Clear audit Log"
 msgstr "Duidelijk controlelogboek"
-
-msgid "Clear audit log"
-msgstr "Auditlogboek wissen"
 
 msgid "Clear failed notifications"
 msgstr "Verwijder mislukte meldingen"
@@ -11120,9 +11126,6 @@ msgstr ""
 "De items van het auditlogboek wissen. Om het auditlogboek te kunnen wissen "
 "heeft een gebruiker de generieke Setup-toestemming \"Wijzigingen aanbrengen, "
 "acties uitvoeren\", de \"Auditlogboek bekijken\" en deze toestemming nodig."
-
-msgid "Cleared audit log."
-msgstr "Opgeruimd audit log."
 
 msgid "Click for instant reload."
 msgstr "Klik voor onmiddellijk herladen."
@@ -21224,6 +21227,10 @@ msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr ""
 "Bestandsverwijderingstest voor externe opslag mislukt. Oorspronkelijke "
 "foutmelding: %s"
+
+#, fuzzy
+msgid "File selection"
+msgstr "Map Selectie"
 
 msgid "File size"
 msgstr "Bestandsgrootte"
@@ -40911,6 +40918,10 @@ msgstr "Kies een doel om de terugzetting van uit te voeren."
 msgid "Please choose a valid PNG image."
 msgstr "Kies een geldige PNG afbeelding."
 
+#, fuzzy
+msgid "Please choose an audit log to view:"
+msgstr "Kies een bestand om te uploaden."
+
 msgid "Please choose the check plugin"
 msgstr "Kies de check plugin"
 
@@ -48084,6 +48095,14 @@ msgstr "Toon meer / Toon minder"
 
 msgid "Show number of groups"
 msgstr "Toon aantal groepen"
+
+#, fuzzy
+msgid "Show object"
+msgstr "Toon meer"
+
+#, fuzzy
+msgid "Show object type"
+msgstr "Geen objecttype"
 
 msgid "Show only modified settings"
 msgstr "Toon alleen gewijzigde instellingen"
@@ -69468,6 +69487,9 @@ msgstr ""
 "Checkmk Microcore gebruikt. De grafiekontwerper kan alleen gebruikt worden "
 "met sites die de Checkmk Microcore gebruiken."
 
+msgid "You can only archive the current audit log"
+msgstr ""
+
 #, python-format
 msgid ""
 "You can only configure a local site connection for the local site. The site "
@@ -71202,6 +71224,10 @@ msgstr "kritisch indien minder dan"
 msgid "critical if older than"
 msgstr "kritisch indien ouder dan"
 
+#, fuzzy
+msgid "current"
+msgstr "Huidige"
+
 msgid "current events"
 msgstr "actuele gebeurtenissen"
 
@@ -72894,6 +72920,12 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
+#~ msgid "Clear"
+#~ msgstr "Duidelijk"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Auditlogboek wissen"
+
 #~ msgid "Agent based plugins (Checks, Inventory)"
 #~ msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
 
@@ -73279,9 +73311,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Found no inventory data for this host."
 #~ msgstr "Geen inventarisgegevens gevonden voor deze host."
-
-#~ msgid "Get remote audit logs"
-#~ msgstr "Ontvang remote audit logs"
 
 #, python-format
 #~ msgid "Graph identification: The '%s' attribute is missing"

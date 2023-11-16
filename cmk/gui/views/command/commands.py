@@ -32,6 +32,7 @@ from cmk.gui.permissions import (
 from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
@@ -1263,6 +1264,18 @@ class CommandScheduleDowntimes(Command):
                 onclick=self._get_onclick(time_range["end"]),
                 submit="_set_date_and_time",
             )
+
+        presets_url = makeuri_contextless(
+            request,
+            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
+            filename="wato.py",
+        )
+        html.a(
+            _("(Edit presets)"),
+            href=presets_url,
+            class_="down_presets",
+        )
+
         html.close_td()
         html.close_tr()
 

@@ -65,34 +65,21 @@ fn diff_to_now(x: &Asn1TimeRef) -> i32 {
     exp.days
 }
 
-pub fn check_validity(url: &str, x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> CheckResult {
+pub fn check_validity(x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> CheckResult {
     std::assert!(warn >= crit);
 
     if crit >= x {
         CheckResult::new(
             State::Crit,
-            format!(
-                "Certificate '{}' expires in {} day(s) ({})",
-                url,
-                diff_to_now(x),
-                x
-            ),
+            format!("Certificate expires in {} day(s) ({})", diff_to_now(x), x),
         )
     } else if warn >= x {
         CheckResult::new(
             State::Warn,
-            format!(
-                "Certificate '{}' expires in {} day(s) ({})",
-                url,
-                diff_to_now(x),
-                x
-            ),
+            format!("Certificate expires in {} day(s) ({})", diff_to_now(x), x),
         )
     } else {
-        CheckResult::new(
-            State::Ok,
-            format!("Certificate '{}' will expire on {}", url, x),
-        )
+        CheckResult::new(State::Ok, format!("Certificate will expire on {}", x))
     }
 }
 
@@ -129,7 +116,6 @@ mod test_check_validity {
     fn test_check_validity_ok() {
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(30).as_ref(),
                 &days_from_now(0),
                 &days_from_now(0),
@@ -139,7 +125,6 @@ mod test_check_validity {
         );
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(30).as_ref(),
                 &days_from_now(15),
                 &days_from_now(7),
@@ -153,7 +138,6 @@ mod test_check_validity {
     fn test_check_validity_warn() {
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(10).as_ref(),
                 &days_from_now(15),
                 &days_from_now(7),
@@ -167,7 +151,6 @@ mod test_check_validity {
     fn test_check_validity_crit() {
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(3).as_ref(),
                 &days_from_now(15),
                 &days_from_now(7),
@@ -177,7 +160,6 @@ mod test_check_validity {
         );
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(3).as_ref(),
                 &days_from_now(15),
                 &days_from_now(15),

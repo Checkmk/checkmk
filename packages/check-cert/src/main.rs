@@ -60,7 +60,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let cert = X509::from_der(&der)?;
     let out = output::Output::from(vec![checker::check_validity(
-        &args.url,
         cert.not_after(),
         &warn_time,
         &crit_time,

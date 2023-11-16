@@ -50,7 +50,9 @@ with suppress_module_not_found("cmk.gui.cce"):
     cmk.gui.cce.registration.register()
 
 with suppress_module_not_found("cmk.gui.cse"):
-    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
+    import cmk.gui.cse.registration  # noqa: F401 # pylint: disable=no-name-in-module,cmk-module-layer-violation
+
+    cmk.gui.cse.registration.register()
 
 
 def _imports() -> Iterator[str]:
@@ -129,9 +131,6 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     ):
         yield f"cmk.gui.cce.plugins.{main_module_name}"
 
-    if cmk_version.edition() is cmk_version.Edition.CSE:
-        yield f"cmk.gui.cse.plugins.{main_module_name}"
-
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
     # TODO: We should know this somehow by declarations without need to try this out
@@ -188,8 +187,6 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             name.startswith("cmk.gui.")
             and len(name.split(".")) == 3
             or name.startswith("cmk.gui.cee.")
-            and len(name.split(".")) == 4
-            or name.startswith("cmk.gui.cse.")
             and len(name.split(".")) == 4
         )
     ]

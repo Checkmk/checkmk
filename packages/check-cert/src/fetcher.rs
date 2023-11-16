@@ -4,7 +4,6 @@
 
 use anyhow::{Context, Result};
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
-use openssl::x509::X509;
 use std::net::TcpStream;
 use std::time::Duration;
 
@@ -13,7 +12,7 @@ pub fn fetch_server_cert(
     port: &u16,
     timeout: Option<Duration>,
     use_sni: bool,
-) -> Result<X509> {
+) -> Result<Vec<u8>> {
     let stream = TcpStream::connect(format!("{server}:{port}"))?;
     stream.set_read_timeout(timeout)?;
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
@@ -33,5 +32,5 @@ pub fn fetch_server_cert(
         .context("Failed unpacking peer cert chain")?
         .to_owned();
     stream.shutdown()?;
-    Ok(cert)
+    Ok(cert.to_der()?)
 }

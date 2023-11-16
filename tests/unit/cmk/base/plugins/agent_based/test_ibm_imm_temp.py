@@ -7,8 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.ibm_imm_temp import check_ibm_imm_temp, inventory_ibm_imm_temp
-from cmk.base.plugins.agent_based.ibm_imm_temp import parse_ibm_imm_temp, SensorTemperature
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.ibm_imm_temp import (
+    _check_ibm_imm_temp,
+    discover_ibm_imm_temp,
+    parse_ibm_imm_temp,
+    SensorTemperature,
+)
 
 
 @pytest.fixture(name="section", scope="module")
@@ -31,40 +36,60 @@ def fixture_section() -> dict[str, SensorTemperature]:
 
 
 def test_inventory_ibm_imm_temp(section: Mapping[str, SensorTemperature]) -> None:
-    assert list(inventory_ibm_imm_temp(section)) == [
-        ("PCH Temp", {}),
-        ("Ambient Temp", {}),
-        ("PCI Riser 1 Temp", {}),
-        ("CPU1 VR Temp", {}),
-        ("CPU2 VR Temp", {}),
-        ("DIMM AB VR Temp", {}),
-        ("DIMM CD VR Temp", {}),
-        ("DIMM EF VR Temp", {}),
-        ("DIMM GH VR Temp", {}),
+    assert list(discover_ibm_imm_temp(section)) == [
+        Service(item="PCH Temp"),
+        Service(item="Ambient Temp"),
+        Service(item="PCI Riser 1 Temp"),
+        Service(item="CPU1 VR Temp"),
+        Service(item="CPU2 VR Temp"),
+        Service(item="DIMM AB VR Temp"),
+        Service(item="DIMM CD VR Temp"),
+        Service(item="DIMM EF VR Temp"),
+        Service(item="DIMM GH VR Temp"),
     ]
 
 
 @pytest.mark.parametrize(
     "item, expected_output",
     [
-        pytest.param("missing", None, id="Item missing in data"),
+        pytest.param("missing", [], id="Item missing in data"),
         pytest.param(
             "DIMM AB VR Temp",
-            (0, "24.0 °C", [("temp", 24.0, 95.0, 100.0)]),
+            [
+                Metric("temp", 24.0, levels=(95.0, 100.0)),
+                Result(state=State.OK, summary="Temperature: 24.0 °C"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+            ],
             id="Item OK in data",
         ),
         pytest.param(
             "CPU1 VR Temp",
-            (
-                2,
-                "129.0 °C (device warn/crit at 95.0/100.0 °C) (device warn/crit below 0.0/0.0 °C)",
-                [("temp", 129.0, 95.0, 100.0)],
-            ),
+            [
+                Metric("temp", 129.0, levels=(95.0, 100.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Temperature: 129.0 °C (warn/crit at 95.0 °C/100.0 °C)",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+            ],
             id="Item CRIT in data",
         ),
         pytest.param(
             "Ambient Temp",
-            (0, "17.0 °C", [("temp", 17.0, 43.0, 47.0)]),
+            [
+                Metric("temp", 17.0, levels=(43.0, 47.0)),
+                Result(state=State.OK, summary="Temperature: 17.0 °C"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
+            ],
             id="Item in data with empty string",
         ),
     ],
@@ -72,4 +97,4 @@ def test_inventory_ibm_imm_temp(section: Mapping[str, SensorTemperature]) -> Non
 def test_check_ibm_imm_temp(
     section: Mapping[str, SensorTemperature], item: str, expected_output: Sequence[object]
 ) -> None:
-    assert check_ibm_imm_temp(item, None, section) == expected_output
+    assert list(_check_ibm_imm_temp(item, {}, section, {})) == expected_output

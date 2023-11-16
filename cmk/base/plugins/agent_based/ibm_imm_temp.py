@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
 from cmk.plugins.lib.ibm import DETECT_IBM_IMM
+from cmk.plugins.lib.temperature import check_temperature
+from cmk.plugins.lib.temperature import TempParamType as TempParamType
 
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import get_value_store, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,4 +59,43 @@ register.snmp_section(
         oids=["2", "3", "6", "7", "9", "10"],
     ),
     detect=DETECT_IBM_IMM,
+)
+
+
+def discover_ibm_imm_temp(section: Mapping[str, SensorTemperature]) -> DiscoveryResult:
+    yield from (Service(item=name) for name in section if section[name].temperature != 0.0)
+
+
+def _check_ibm_imm_temp(
+    item: str,
+    params: TempParamType,
+    section: Mapping[str, SensorTemperature],
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+    if not (temperature := section.get(item)):
+        return
+
+    yield from check_temperature(
+        reading=temperature.temperature,
+        params=params,
+        unique_name=item,
+        value_store=value_store,
+        dev_levels=temperature.upper_device_levels,
+        dev_levels_lower=temperature.lower_device_levels,
+    )
+
+
+def check_ibm_imm_temp(
+    item: str, params: TempParamType, section: Mapping[str, SensorTemperature]
+) -> CheckResult:
+    yield from _check_ibm_imm_temp(item, params, section, get_value_store())
+
+
+register.check_plugin(
+    name="ibm_imm_temp",
+    service_name="Temperature %s",
+    discovery_function=discover_ibm_imm_temp,
+    check_function=check_ibm_imm_temp,
+    check_ruleset_name="temperature",
+    check_default_parameters={},
 )

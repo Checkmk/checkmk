@@ -7,22 +7,15 @@ use std::fmt::{Display, Formatter, Result as FormatResult};
 
 pub struct Output {
     pub state: State,
-    check_results: Vec<CheckResult>,
+    summary: String,
 }
 
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        let summary = self
-            .check_results
-            .iter()
-            .filter(|cr| !cr.summary.is_empty())
-            .map(|cr| cr.to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        if summary.is_empty() {
+        if self.summary.is_empty() {
             write!(f, "{}", self.state)?;
         } else {
-            write!(f, "{} - {}", self.state, summary)?;
+            write!(f, "{} - {}", self.state, self.summary)?;
         }
         Ok(())
     }
@@ -35,7 +28,12 @@ impl From<Vec<CheckResult>> for Output {
                 Some(state) => state.clone(),
                 None => State::Ok,
             },
-            check_results,
+            summary: check_results
+                .iter()
+                .filter(|cr| !cr.summary.is_empty())
+                .map(|cr| cr.to_string())
+                .collect::<Vec<_>>()
+                .join(", "),
         }
     }
 }

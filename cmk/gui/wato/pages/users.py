@@ -783,15 +783,55 @@ class ModeEditUser(WatoMode):
         edit_users(user_object)
         return redirect(mode_url("users"))
 
-    def _get_identity_userattrs(  # pylint: disable=too-many-branches
-        self, user_attrs: UserSpec
-    ) -> None:
+    def _get_identity_userattrs(self, user_attrs: UserSpec) -> None:
         # Full name
         user_attrs["alias"] = request.get_str_input_mandatory("alias").strip()
 
         # Connector
         user_attrs["connector"] = self._user.get("connector")
 
+        # Email address
+        user_attrs["email"] = EmailAddress().from_html_vars("email")
+
+        idle_timeout = get_vs_user_idle_timeout().from_html_vars("idle_timeout")
+        user_attrs["idle_timeout"] = idle_timeout
+        if idle_timeout is None:
+            del user_attrs["idle_timeout"]
+
+        # Pager
+        user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
+
+        if edition() is Edition.CME:
+            customer = self._vs_customer.from_html_vars("customer")
+            self._vs_customer.validate_value(customer, "customer")
+
+            if customer != customer_api().default_customer_id():
+                user_attrs["customer"] = customer
+            elif "customer" in user_attrs:
+                del user_attrs["customer"]
+
+        vs_sites = self._vs_sites()
+        authorized_sites = vs_sites.from_html_vars("authorized_sites")
+        vs_sites.validate_value(authorized_sites, "authorized_sites")
+
+        if authorized_sites is not None:
+            user_attrs["authorized_sites"] = authorized_sites
+        elif "authorized_sites" in user_attrs:
+            del user_attrs["authorized_sites"]
+
+        # ntopng
+        if is_ntop_available():
+            ntop_connection = get_ntop_connection_mandatory()
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding Setup rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
+                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
+                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
+                    ntop_username_attribute
+                )
+
+    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Locking
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
@@ -853,48 +893,6 @@ class ModeEditUser(WatoMode):
         if increase_serial:
             user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
-        # Email address
-        user_attrs["email"] = EmailAddress().from_html_vars("email")
-
-        idle_timeout = get_vs_user_idle_timeout().from_html_vars("idle_timeout")
-        user_attrs["idle_timeout"] = idle_timeout
-        if idle_timeout is None:
-            del user_attrs["idle_timeout"]
-
-        # Pager
-        user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
-
-        if edition() is Edition.CME:
-            customer = self._vs_customer.from_html_vars("customer")
-            self._vs_customer.validate_value(customer, "customer")
-
-            if customer != customer_api().default_customer_id():
-                user_attrs["customer"] = customer
-            elif "customer" in user_attrs:
-                del user_attrs["customer"]
-
-        vs_sites = self._vs_sites()
-        authorized_sites = vs_sites.from_html_vars("authorized_sites")
-        vs_sites.validate_value(authorized_sites, "authorized_sites")
-
-        if authorized_sites is not None:
-            user_attrs["authorized_sites"] = authorized_sites
-        elif "authorized_sites" in user_attrs:
-            del user_attrs["authorized_sites"]
-
-        # ntopng
-        if is_ntop_available():
-            ntop_connection = get_ntop_connection_mandatory()
-            # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding Setup rule
-            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
-            if ntop_username_attribute:
-                # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
-                user_attrs[ntop_username_attribute] = request.get_str_input_mandatory(  # type: ignore[literal-required]
-                    ntop_username_attribute
-                )
-
-    def _get_security_userattrs(self, user_attrs: UserSpec) -> None:
         # Roles
         user_attrs["roles"] = [
             role for role in self._roles.keys() if html.get_checkbox("role_" + role)

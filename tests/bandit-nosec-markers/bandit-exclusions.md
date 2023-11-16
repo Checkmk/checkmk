@@ -28,3 +28,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:9666b8` | `B307` | Used to validate that literal_eval still replicates the desired results expected from eval. |
 | `BNS:1c6cc2` | `B307` | Literal_eval cannot be used evaluate non-string fields. |
 | `BNS:eb967b` | `B324` | Sha1 hmac is fine and is the prefered standard for totp, bandit only sees the use of sha1. |
+| `BNS:2aa916` | `B601` | nas_db_env is sanitized with shlex.quote |

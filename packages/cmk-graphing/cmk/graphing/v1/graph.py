@@ -20,8 +20,8 @@ __all__ = [
 
 @dataclass(frozen=True, kw_only=True)
 class MinimalRange:
-    upper: int | float | metric.Quantity
     lower: int | float | metric.Quantity
+    upper: int | float | metric.Quantity
 
 
 @dataclass(frozen=True)
@@ -44,5 +44,5 @@ class Bidirectional:
     name: Name
     title: Localizable
     _: KW_ONLY
-    upper: Graph
     lower: Graph
+    upper: Graph

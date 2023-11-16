@@ -34,8 +34,8 @@ class Perfometer:
     name: Name
     segments: Sequence[metric.Quantity]
     _: KW_ONLY
-    upper_bound: Closed | Open
     lower_bound: Closed | Open
+    upper_bound: Closed | Open
 
     def __post_init__(self) -> None:
         assert self.segments
@@ -53,5 +53,5 @@ class Bidirectional:
 class Stacked:
     name: Name
     _: KW_ONLY
-    upper: Perfometer
     lower: Perfometer
+    upper: Perfometer

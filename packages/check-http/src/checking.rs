@@ -19,7 +19,6 @@ use crate::http::ProcessedResponse;
 // So we're modelling exactly this.
 
 #[cfg_attr(test, derive(PartialEq))]
-#[derive(Clone)]
 pub struct UpperLevels<T> {
     pub warn: T,
     pub crit: Option<T>,
@@ -93,7 +92,7 @@ where
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum State {
     Ok,
     Warn,

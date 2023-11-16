@@ -21,9 +21,21 @@ def inventory_ibm_imm_temp(info):
 def check_ibm_imm_temp(item, params, info):
     for line in info:
         if line[0] == item:
-            temp, dev_crit, dev_warn, dev_crit_lower, dev_warn_lower = map(float, line[1:])
-            dev_levels = dev_warn, dev_crit
-            dev_levels_lower = dev_warn_lower, dev_crit_lower
+            try:
+                temp = float(line[1])
+            except ValueError:
+                return None
+
+            try:
+                dev_levels = float(line[3]), float(line[2])
+            except ValueError:
+                dev_levels = None
+
+            try:
+                dev_levels_lower = float(line[5]), float(line[4])
+            except ValueError:
+                dev_levels_lower = None
+
             return check_temperature(
                 temp,
                 params,

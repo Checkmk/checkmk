@@ -11,7 +11,7 @@ from cmk.base.legacy_checks.ibm_imm_temp import check_ibm_imm_temp, inventory_ib
 
 STRING_TABLE = [
     ["PCH Temp", "45", "98", "93", "0", "0"],
-    ["Ambient Temp", "19", "46", "43", "0", "0"],
+    ["Ambient Temp", "17", "47", "43", "", "0"],
     ["PCI Riser 1 Temp", "25", "80", "70", "0", "0"],
     ["PCI Riser 2 Temp", "0", "0", "0", "0", "0"],
     ["Mezz Card Temp", "0", "0", "0", "0", "0"],
@@ -55,6 +55,11 @@ def test_inventory_ibm_imm_temp() -> None:
                 [("temp", 129.0, 95.0, 100.0)],
             ),
             id="Item CRIT in data",
+        ),
+        pytest.param(
+            "Ambient Temp",
+            (0, "17.0 °C", [("temp", 17.0, 43.0, 47.0)]),
+            id="Item in data with empty string",
         ),
     ],
 )

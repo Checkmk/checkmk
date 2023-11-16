@@ -80,7 +80,7 @@ impl Output {
 #[cfg(test)]
 mod test_output_format {
     use super::*;
-    use crate::checking::test_helper::metric;
+    use crate::checking::UpperLevels;
 
     fn summary(state: State, text: &str) -> CheckResult {
         CheckResult::summary(state, text).unwrap()
@@ -88,6 +88,17 @@ mod test_output_format {
 
     fn details(state: State, text: &str) -> CheckResult {
         CheckResult::details(state, text).unwrap()
+    }
+
+    fn metric(
+        name: &str,
+        value: f64,
+        unit: Option<char>,
+        levels: Option<UpperLevels<f64>>,
+        lower: Option<f64>,
+        upper: Option<f64>,
+    ) -> CheckResult {
+        CheckResult::metric(name, value, unit, levels, lower, upper).unwrap()
     }
 
     #[test]
@@ -162,7 +173,7 @@ mod test_output_format {
             "my_metric",
             123.,
             Some('s'),
-            Some((1., Some(2.))),
+            Some(UpperLevels::warn_crit(1., 2.)),
             Some(0.),
             Some(100.),
         );
@@ -178,7 +189,7 @@ mod test_output_format {
             "my_metric",
             123.1,
             Some('s'),
-            Some((1.2, Some(2.3))),
+            Some(UpperLevels::warn_crit(1.2, 2.3)),
             Some(0.1),
             Some(100.2),
         );

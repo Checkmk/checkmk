@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use check_http::checking::{Bounds, CheckParameters, UpperLevels, U64};
+use check_http::checking::{Bounds, CheckParameters, UpperLevels};
 use check_http::connection::{self, ConnectionConfig};
 use check_http::http::{ClientConfig, RequestConfig};
 use check_http::output::Output;
@@ -78,7 +78,7 @@ fn make_configs(
                 (x, None) => UpperLevels::warn(x),
                 (x, Some(y)) => UpperLevels::warn_crit(x, y),
             }),
-            document_age_levels: args.document_age_levels.map(|w| UpperLevels::warn(U64(w))),
+            document_age_levels: args.document_age_levels.map(UpperLevels::warn),
             timeout: args.timeout,
         },
     )

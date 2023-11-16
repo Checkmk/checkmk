@@ -131,7 +131,7 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
                 ),
                 TopicMenuItem(
                     name="plugin_api_reference",
-                    title=_("Check plugin API reference"),
+                    title=_("Plugin API references"),
                     url="plugin-api/",
                     target="_blank",
                     sort_index=20,

@@ -257,11 +257,11 @@ class WatchLog:
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
-                return True, "\n".join(lines)
+                return True, "".join(lines)
             time.sleep(0.1)
 
         sys.stdout.write("Timed out at %d\n" % (time.time()))
-        return False, "\n".join(lines)
+        return False, "".join(lines)
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:

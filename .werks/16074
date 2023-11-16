@@ -1,0 +1,11 @@
+Title: Fix ignored filter on export of views as PDF
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1700136679
+Edition: cee
+Level: 1
+Version: 2.3.0b1
+
+If filters were set manually in views and the option "Export" -> "This view as
+PDF" was used, the filter were ignored on PDF creation.

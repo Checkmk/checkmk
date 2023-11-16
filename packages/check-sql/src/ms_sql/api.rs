@@ -8,7 +8,9 @@ use crate::ms_sql::queries;
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 
-use tiberius::{AuthMethod, Config, Query, Row, SqlBrowser};
+#[cfg(windows)]
+use tiberius::SqlBrowser;
+use tiberius::{AuthMethod, Config, Query, Row};
 use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
@@ -92,7 +94,7 @@ impl InstanceEngine {
     ) -> String {
         let mut result = String::new();
         let instance_section = Section::new(INSTANCE_SECTION_NAME); // this is important section always present
-        match self.create_client(ms_sql.auth(), ms_sql.conn()).await {
+        match self.create_client(ms_sql.auth(), ms_sql.conn(), None).await {
             Ok(mut client) => {
                 for section in sections {
                     result += &section.to_header();
@@ -128,6 +130,7 @@ impl InstanceEngine {
         &self,
         auth: &config::ms_sql::Authentication,
         conn: &config::ms_sql::Connection,
+        database: Option<String>,
     ) -> Result<Client> {
         let client = match auth.auth_type() {
             config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
@@ -136,6 +139,7 @@ impl InstanceEngine {
                         conn.hostname(),
                         self.port().unwrap_or(defaults::STANDARD_PORT),
                         credentials,
+                        database,
                     )
                     .await?
                 } else {
@@ -145,7 +149,7 @@ impl InstanceEngine {
 
             #[cfg(windows)]
             config::ms_sql::AuthType::Integrated => {
-                create_local_instance_client(&self.name, conn.sql_browser_port()).await?
+                create_local_instance_client(&self.name, conn.sql_browser_port(), None).await?
             }
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -453,14 +457,14 @@ async fn create_client_from_config(
     let client = match auth.auth_type() {
         config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
             if let Some(credentials) = obtain_config_credentials(auth) {
-                create_remote_client(conn.hostname(), conn.port(), credentials).await?
+                create_remote_client(conn.hostname(), conn.port(), credentials, None).await?
             } else {
                 anyhow::bail!("Not provided credentials")
             }
         }
 
         #[cfg(windows)]
-        config::ms_sql::AuthType::Integrated => create_local_client().await?,
+        config::ms_sql::AuthType::Integrated => create_local_client(None).await?,
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
@@ -515,12 +519,14 @@ pub async fn create_remote_client(
     host: &str,
     port: u16,
     credentials: Credentials<'_>,
+    database: Option<String>,
 ) -> Result<Client> {
     match _create_remote_client(
         host,
         port,
         &credentials,
         tiberius::EncryptionLevel::Required,
+        &database,
     )
     .await
     {
@@ -536,6 +542,7 @@ pub async fn create_remote_client(
                 port,
                 &credentials,
                 tiberius::EncryptionLevel::NotSupported,
+                &database,
             )
             .await?)
         }
@@ -555,12 +562,16 @@ pub async fn _create_remote_client(
     port: u16,
     credentials: &Credentials<'_>,
     encryption: tiberius::EncryptionLevel,
+    database: &Option<String>,
 ) -> Result<Client> {
     let mut config = Config::new();
 
     config.host(host);
     config.port(port);
     config.encryption(encryption);
+    if let Some(db) = database {
+        config.database(db);
+    }
     config.authentication(match credentials {
         Credentials::SqlServer { user, password } => AuthMethod::sql_server(user, password),
         #[cfg(windows)]
@@ -582,60 +593,14 @@ pub async fn _create_remote_client(
     Ok(Client::connect(config, tcp.compat_write()).await?)
 }
 
-/// Create `remote` connection to MS SQL `instance`
-///
-/// # Arguments
-///
-/// * `host` - Hostname of MS SQL server
-/// * `port` - Port of MS SQL server BROWSER,  1434 - default
-/// * `credentials` - defines connection type and credentials itself
-/// * `instance_name` - name of the instance to connect to
-pub async fn create_remote_instance_client(
-    instance_name: &str,
-    host: &str,
-    sql_browser_port: Option<u16>,
-    credentials: Credentials<'_>,
-) -> anyhow::Result<Client> {
-    let mut config = Config::new();
-
-    config.host(host);
-    // The default port of SQL Browser
-    config.port(sql_browser_port.unwrap_or(defaults::SQL_BROWSER_PORT));
-    config.authentication(match credentials {
-        Credentials::SqlServer { user, password } => AuthMethod::sql_server(user, password),
-        #[cfg(windows)]
-        Credentials::Windows { user, password } => AuthMethod::windows(user, password),
-        #[cfg(unix)]
-        Credentials::Windows {
-            user: _,
-            password: _,
-        } => anyhow::bail!("not supported"),
-    });
-
-    // The name of the database server instance.
-    config.instance_name(instance_name);
-
-    // on production, it is not a good idea to do this
-    config.trust_cert();
-
-    // This will create a new `TcpStream` from `async-std`, connected to the
-    // right port of the named instance.
-    let tcp = TcpStream::connect_named(&config)
-        .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_TCP_ERROR_TAG, e))?;
-
-    // And from here on continue the connection process in a normal way.
-    let s = Client::connect(config, tcp.compat_write())
-        .await
-        .map_err(|e| anyhow::anyhow!("{} {}", SQL_LOGIN_ERROR_TAG, e))?;
-    Ok(s)
-}
-
 /// Check `local` (Integrated) connection to MS SQL
 #[cfg(windows)]
-pub async fn create_local_client() -> Result<Client> {
+pub async fn create_local_client(database: Option<String>) -> Result<Client> {
     let mut config = Config::new();
 
+    if let Some(db) = database {
+        config.database(db);
+    }
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
 
@@ -649,7 +614,7 @@ pub async fn create_local_client() -> Result<Client> {
 }
 
 #[cfg(unix)]
-pub async fn create_local_client() -> Result<Client> {
+pub async fn create_local_client(_database: Option<String>) -> Result<Client> {
     anyhow::bail!("not supported");
 }
 
@@ -663,6 +628,7 @@ pub async fn create_local_client() -> Result<Client> {
 pub async fn create_local_instance_client(
     instance_name: &str,
     sql_browser_port: Option<u16>,
+    database: Option<String>,
 ) -> anyhow::Result<Client> {
     let mut config = Config::new();
 
@@ -670,6 +636,9 @@ pub async fn create_local_instance_client(
     // The default port of SQL Browser
     config.port(sql_browser_port.unwrap_or(defaults::SQL_BROWSER_PORT));
     config.authentication(AuthMethod::Integrated);
+    if let Some(db) = database {
+        config.database(db);
+    }
 
     // The name of the database server instance.
     config.instance_name(instance_name);
@@ -700,6 +669,7 @@ pub async fn create_local_instance_client(
 pub async fn create_local_instance_client(
     _instance_name: &str,
     _port: Option<u16>,
+    _database: Option<String>,
 ) -> anyhow::Result<Client> {
     anyhow::bail!("not supported");
 }

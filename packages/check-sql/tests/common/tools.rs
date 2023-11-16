@@ -82,6 +82,7 @@ pub async fn create_remote_client(endpoint: &SqlDbEndpoint) -> Result<Client> {
             user: &endpoint.user,
             password: &endpoint.pwd,
         },
+        None,
     )
     .await
 }

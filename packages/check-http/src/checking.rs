@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use bytes::Bytes;
-use http::HeaderMap;
+use http::HeaderValue;
 use httpdate::parse_http_date;
 use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
@@ -290,7 +290,11 @@ pub fn collect_response_checks(
             params.timeout,
         ))
         .chain(vec![check_document_age(
-            &response.headers,
+            SystemTime::now(),
+            response
+                .headers
+                .get("last-modified")
+                .or(response.headers.get("date")),
             params.document_age_levels,
         )])
         .flatten()
@@ -397,17 +401,15 @@ fn check_response_time(
 }
 
 fn check_document_age(
-    headers: &HeaderMap,
+    now: SystemTime,
+    age_header: Option<&HeaderValue>,
     document_age_levels: Option<UpperLevels<u64>>,
 ) -> Option<CheckResult> {
     let document_age_levels = document_age_levels?;
 
-    let now = SystemTime::now();
-
     let cr_no_document_age = CheckResult::summary(State::Crit, "Can't determine document age");
     let cr_document_age_error = CheckResult::summary(State::Crit, "Can't decode document age");
 
-    let age_header = headers.get("last-modified").or(headers.get("date"));
     let Some(age) = age_header else {
         return cr_no_document_age;
     };

@@ -12,16 +12,17 @@ pub struct Output {
 
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        write!(f, "{}", self.state)?;
-        let mut crs_iter = self
+        let summary = self
             .check_results
             .iter()
-            .filter(|cr| !cr.summary.is_empty());
-        if let Some(item) = crs_iter.next() {
-            write!(f, " - {}", item)?;
-        }
-        for item in crs_iter {
-            write!(f, ", {}", item)?;
+            .filter(|cr| !cr.summary.is_empty())
+            .map(|cr| cr.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        if summary.is_empty() {
+            write!(f, "{}", self.state)?;
+        } else {
+            write!(f, "{} - {}", self.state, summary)?;
         }
         Ok(())
     }

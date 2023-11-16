@@ -41,7 +41,6 @@ impl From<Vec<CheckResult>> for Output {
 #[cfg(test)]
 mod test_output_format {
     use super::{CheckResult, Output};
-    use crate::checker::State;
 
     fn s(s: &str) -> String {
         String::from(s)
@@ -62,9 +61,9 @@ mod test_output_format {
 
     #[test]
     fn test_merge_check_results_ok() {
-        let cr1 = CheckResult::new(State::Ok, s("summary 1"));
-        let cr2 = CheckResult::new(State::Ok, s("summary 2"));
-        let cr3 = CheckResult::new(State::Ok, s("summary 3"));
+        let cr1 = CheckResult::ok(s("summary 1"));
+        let cr2 = CheckResult::ok(s("summary 2"));
+        let cr3 = CheckResult::ok(s("summary 3"));
         assert_eq!(
             format!("{}", Output::from(vec![cr1, cr2, cr3])),
             "OK - summary 1, summary 2, summary 3"
@@ -73,9 +72,9 @@ mod test_output_format {
 
     #[test]
     fn test_merge_check_results_warn() {
-        let cr1 = CheckResult::new(State::Ok, s("summary 1"));
-        let cr2 = CheckResult::new(State::Warn, s("summary 2"));
-        let cr3 = CheckResult::new(State::Ok, s("summary 3"));
+        let cr1 = CheckResult::ok(s("summary 1"));
+        let cr2 = CheckResult::warn(s("summary 2"));
+        let cr3 = CheckResult::ok(s("summary 3"));
         assert_eq!(
             format!("{}", Output::from(vec![cr1, cr2, cr3])),
             "WARNING - summary 1, summary 2 (!), summary 3"
@@ -84,9 +83,9 @@ mod test_output_format {
 
     #[test]
     fn test_merge_check_results_crit() {
-        let cr1 = CheckResult::new(State::Ok, s("summary 1"));
-        let cr2 = CheckResult::new(State::Warn, s("summary 2"));
-        let cr3 = CheckResult::new(State::Crit, s("summary 3"));
+        let cr1 = CheckResult::ok(s("summary 1"));
+        let cr2 = CheckResult::warn(s("summary 2"));
+        let cr3 = CheckResult::crit(s("summary 3"));
         assert_eq!(
             format!("{}", Output::from(vec![cr1, cr2, cr3])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
@@ -95,10 +94,10 @@ mod test_output_format {
 
     #[test]
     fn test_merge_check_results_unknown() {
-        let cr1 = CheckResult::new(State::Ok, s("summary 1"));
-        let cr2 = CheckResult::new(State::Warn, s("summary 2"));
-        let cr3 = CheckResult::new(State::Crit, s("summary 3"));
-        let cr4 = CheckResult::new(State::Unknown, s("summary 4"));
+        let cr1 = CheckResult::ok(s("summary 1"));
+        let cr2 = CheckResult::warn(s("summary 2"));
+        let cr3 = CheckResult::crit(s("summary 3"));
+        let cr4 = CheckResult::unknown(s("summary 4"));
         assert_eq!(
             format!("{}", Output::from(vec![cr1, cr2, cr3, cr4])),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"

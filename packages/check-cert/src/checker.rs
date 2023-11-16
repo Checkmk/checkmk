@@ -33,6 +33,34 @@ impl CheckResult {
     pub fn new(state: State, summary: String) -> Self {
         Self { state, summary }
     }
+
+    pub fn ok(summary: String) -> Self {
+        Self {
+            state: State::Ok,
+            summary,
+        }
+    }
+
+    pub fn warn(summary: String) -> Self {
+        Self {
+            state: State::Warn,
+            summary,
+        }
+    }
+
+    pub fn crit(summary: String) -> Self {
+        Self {
+            state: State::Crit,
+            summary,
+        }
+    }
+
+    pub fn unknown(summary: String) -> Self {
+        Self {
+            state: State::Unknown,
+            summary,
+        }
+    }
 }
 
 impl Default for CheckResult {
@@ -69,17 +97,19 @@ pub fn check_validity(x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> Chec
     std::assert!(warn >= crit);
 
     if crit >= x {
-        CheckResult::new(
-            State::Crit,
-            format!("Certificate expires in {} day(s) ({})", diff_to_now(x), x),
-        )
+        CheckResult::crit(format!(
+            "Certificate expires in {} day(s) ({})",
+            diff_to_now(x),
+            x
+        ))
     } else if warn >= x {
-        CheckResult::new(
-            State::Warn,
-            format!("Certificate expires in {} day(s) ({})", diff_to_now(x), x),
-        )
+        CheckResult::warn(format!(
+            "Certificate expires in {} day(s) ({})",
+            diff_to_now(x),
+            x
+        ))
     } else {
-        CheckResult::new(State::Ok, format!("Certificate will expire on {}", x))
+        CheckResult::ok(format!("Certificate will expire on {}", x))
     }
 }
 

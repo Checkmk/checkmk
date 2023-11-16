@@ -84,6 +84,10 @@ def fetch_certificate_details(
 
     for result in verify_chain_results:
         crypto_cert = x509.load_pem_x509_certificate(result.cert_pem, default_backend())
+        if crypto_cert.signature_hash_algorithm is None:
+            # TODO: This could actually happen and should be allowed, e.g. for ed25519 certs
+            raise ValueError("Signature algorithm missing in certificate")
+
         yield CertificateDetails(
             issued_to=get_name(crypto_cert.subject),
             issued_by=get_name(crypto_cert.issuer),
@@ -98,17 +102,21 @@ def fetch_certificate_details(
 
 
 def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
+    # TODO: this is Certificate.may_sign_certificates
     try:
-        key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE)
-        use_key_for_signing = key_usage.value.key_cert_sign is True
+        key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE).value
+        assert isinstance(key_usage, x509.extensions.KeyUsage)
+        use_key_for_signing = key_usage.key_cert_sign is True
+
     except x509.ExtensionNotFound:
         use_key_for_signing = False
 
     try:
         basic_constraints = crypto_cert.extensions.get_extension_for_oid(
             ExtensionOID.BASIC_CONSTRAINTS
-        )
-        is_ca = basic_constraints.value.ca is True
+        ).value
+        assert isinstance(basic_constraints, x509.extensions.BasicConstraints)
+        is_ca = basic_constraints.ca is True
     except x509.ExtensionNotFound:
         is_ca = False
 

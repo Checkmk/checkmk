@@ -1325,6 +1325,8 @@ class X509ReqPEMFieldUUID(base.String):
             raise self.make_error("invalid")
         try:
             cn = value.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+            if isinstance(cn, bytes):
+                cn = cn.decode()
         except IndexError:
             raise self.make_error("no_cn")
         try:

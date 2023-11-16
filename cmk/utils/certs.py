@@ -61,6 +61,7 @@ class RootCA(CertificateWithPrivateKey):
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())
         key = load_pem_private_key(pem_bytes, None)
+        assert isinstance(key, RSAPrivateKey)
         return cls(certificate=Certificate(cert), private_key=RsaPrivateKey(key))
 
     @classmethod

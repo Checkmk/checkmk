@@ -209,54 +209,55 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
     def page(self) -> None:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
-        html.begin_form("attr")
-        forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new, is_required=True)
-        html.help(
-            _(
-                "The name of the attribute is used as an internal key. It cannot be "
-                "changed later."
+        with html.form_context("attr"):
+            forms.header(_("Properties"))
+            forms.section(_("Name"), simple=not self._new, is_required=True)
+            html.help(
+                _(
+                    "The name of the attribute is used as an internal key. It cannot be "
+                    "changed later."
+                )
             )
-        )
-        if self._new:
-            html.text_input("name", self._attr.get("name", ""), size=61)
-            html.set_focus("name")
-        else:
-            html.write_text(self._name)
-            html.set_focus("title")
+            if self._new:
+                html.text_input("name", self._attr.get("name", ""), size=61)
+                html.set_focus("name")
+            else:
+                html.write_text(self._name)
+                html.set_focus("title")
 
-        forms.section(_("Title") + "<sup>*</sup>", is_required=True)
-        html.help(_("The title is used to label this attribute."))
-        html.text_input("title", self._attr.get("title", ""), size=61)
+            forms.section(_("Title") + "<sup>*</sup>", is_required=True)
+            html.help(_("The title is used to label this attribute."))
+            html.text_input("title", self._attr.get("title", ""), size=61)
 
-        forms.section(_("Topic"))
-        html.help(_("The attribute is added to this section in the edit dialog."))
-        html.dropdown("topic", self._topics, deflt=self._attr.get("topic", self._default_topic))
+            forms.section(_("Topic"))
+            html.help(_("The attribute is added to this section in the edit dialog."))
+            html.dropdown("topic", self._topics, deflt=self._attr.get("topic", self._default_topic))
 
-        forms.section(_("Help Text") + "<sup>*</sup>")
-        html.help(_("You might want to add some helpful description for the attribute."))
-        html.text_area("help", self._attr.get("help", ""))
+            forms.section(_("Help Text") + "<sup>*</sup>")
+            html.help(_("You might want to add some helpful description for the attribute."))
+            html.text_area("help", self._attr.get("help", ""))
 
-        forms.section(_("Data type"))
-        html.help(_("The type of information to be stored in this attribute."))
-        if self._new:
-            html.dropdown("type", custom_attr_types(), deflt=self._attr.get("type", ""))
-        else:
-            html.write_text(dict(custom_attr_types())[self._attr.get("type")])
+            forms.section(_("Data type"))
+            html.help(_("The type of information to be stored in this attribute."))
+            if self._new:
+                html.dropdown("type", custom_attr_types(), deflt=self._attr.get("type", ""))
+            else:
+                html.write_text(dict(custom_attr_types())[self._attr.get("type")])
 
-        self._add_extra_form_sections()
-        self._show_in_table_option()
+            self._add_extra_form_sections()
+            self._show_in_table_option()
 
-        forms.section(_("Add to monitoring configuration"))
-        html.help(self._macro_help)
-        html.checkbox(
-            "add_custom_macro", self._attr.get("add_custom_macro", False), label=self._macro_label
-        )
+            forms.section(_("Add to monitoring configuration"))
+            html.help(self._macro_help)
+            html.checkbox(
+                "add_custom_macro",
+                self._attr.get("add_custom_macro", False),
+                label=self._macro_label,
+            )
 
-        forms.end()
-        html.show_localization_hint()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.show_localization_hint()
+            html.hidden_fields()
 
 
 class ModeEditCustomUserAttr(ModeEditCustomAttr):

@@ -893,17 +893,16 @@ class PageEditBackupJob:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
     def page(self) -> None:
-        html.begin_form("edit_job", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_job", method="POST"):
+            html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_job(Config.load())
+            vs = self.vs_backup_job(Config.load())
 
-        vs.render_input("edit_job", dict(self._job_cfg))
-        vs.set_focus("edit_job")
-        forms.end()
+            vs.render_input("edit_job", dict(self._job_cfg))
+            vs.set_focus("edit_job")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 _TBackupJob = TypeVar("_TBackupJob", bound=MKBackupJob)
@@ -1787,17 +1786,16 @@ class PageEditBackupTarget:
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_targets")]))
 
     def page(self) -> None:
-        html.begin_form("edit_target", method="POST")
-        html.prevent_password_auto_completion()
+        with html.form_context("edit_target", method="POST"):
+            html.prevent_password_auto_completion()
 
-        vs = self.vs_backup_target(Config.load())
+            vs = self.vs_backup_target(Config.load())
 
-        vs.render_input("edit_target", dict(self._target_cfg))
-        vs.set_focus("edit_target")
-        forms.end()
+            vs.render_input("edit_target", dict(self._target_cfg))
+            vs.set_focus("edit_target")
+            forms.end()
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 # .
@@ -2143,15 +2141,14 @@ class PageBackupRestore:
                 "passphrase of the encryption key."
             )
         )
-        html.begin_form("key", method="GET")
-        html.hidden_field("_action", "start")
-        html.hidden_field("_backup", backup_ident)
-        html.prevent_password_auto_completion()
-        self._vs_key().render_input("_key", {})
-        html.button("upload", _("Start restore"))
-        self._vs_key().set_focus("_key")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("key", method="GET"):
+            html.hidden_field("_action", "start")
+            html.hidden_field("_backup", backup_ident)
+            html.prevent_password_auto_completion()
+            self._vs_key().render_input("_key", {})
+            html.button("upload", _("Start restore"))
+            self._vs_key().set_focus("_key")
+            html.hidden_fields()
         html.footer()
         return FinalizeRequest(code=200)
 

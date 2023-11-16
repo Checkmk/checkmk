@@ -118,15 +118,14 @@ class ModeBulkEdit(WatoMode):
             )
         )
 
-        html.begin_form("edit_host", method="POST")
-        html.prevent_password_auto_completion()
-        html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(
-            False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
-        )
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("edit_host", method="POST"):
+            html.prevent_password_auto_completion()
+            html.hidden_field("host_hash", current_host_hash)
+            configure_attributes(
+                False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
+            )
+            forms.end()
+            html.hidden_fields()
 
 
 class ModeBulkCleanup(WatoMode):
@@ -200,11 +199,10 @@ class ModeBulkCleanup(WatoMode):
             % len(hosts)
         )
 
-        html.begin_form("bulkcleanup", method="POST")
-        forms.header(_("Attributes to remove from hosts"))
-        self._select_attributes_for_bulk_cleanup(hosts)
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("bulkcleanup", method="POST"):
+            forms.header(_("Attributes to remove from hosts"))
+            self._select_attributes_for_bulk_cleanup(hosts)
+            html.hidden_fields()
 
     def _select_attributes_for_bulk_cleanup(self, hosts: Sequence[Host]) -> None:
         attributes = self._get_attributes_for_bulk_cleanup(hosts)

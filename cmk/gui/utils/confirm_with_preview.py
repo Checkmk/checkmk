@@ -48,12 +48,11 @@ def confirm_with_preview(
             html.open_center()
         html.open_div(class_="really " + (" ".join(class_) if class_ is not None else ""))
         html.write_text(msg)
-        html.begin_form("confirm", method=method, add_transid=False)
-        html.hidden_fields(add_action_vars=True)
-        for title, varname in confirm_options:
-            html.button(varname, title, "really")
-        html.button("_do_actions", _("Cancel"))
-        html.end_form()
+        with html.form_context("confirm", method=method, add_transid=False):
+            html.hidden_fields(add_action_vars=True)
+            for title, varname in confirm_options:
+                html.button(varname, title, "really")
+            html.button("_do_actions", _("Cancel"))
         html.close_div()
         if mobile:
             html.close_center()
@@ -80,11 +79,10 @@ def command_confirm_dialog(
     if mobile:
         html.open_center()
 
-    html.begin_form("confirm", method="POST", add_transid=False)
-    html.hidden_fields(add_action_vars=True)
-    for title, varname in confirm_options:
-        html.hidden_field(varname, title)
-    html.end_form()
+    with html.form_context("confirm", method="POST", add_transid=False):
+        html.hidden_fields(add_action_vars=True)
+        for title, varname in confirm_options:
+            html.hidden_field(varname, title)
 
     # return to commands page on mobile
     cancel_url = (

@@ -817,13 +817,12 @@ class ModeEditLDAPConnection(WatoMode):
         html.open_tr()
 
         html.open_td()
-        html.begin_form("connection", method="POST")
-        html.prevent_password_auto_completion()
-        vs = self._valuespec()
-        vs.render_input("connection", self._connection_cfg)
-        vs.set_focus("connection")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("connection", method="POST"):
+            html.prevent_password_auto_completion()
+            vs = self._valuespec()
+            vs.render_input("connection", self._connection_cfg)
+            vs.set_focus("connection")
+            html.hidden_fields()
         html.close_td()
 
         html.open_td(style="padding-left:10px;vertical-align:top")

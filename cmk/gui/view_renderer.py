@@ -594,15 +594,14 @@ class GUIViewRenderer(ABCViewRenderer):
 
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
-            html.begin_form("actions")
-            # TODO: Are these variables still needed
-            html.hidden_field("_do_actions", "yes")
-            html.hidden_field("actions", "yes")
+            with html.form_context("actions"):
+                # TODO: Are these variables still needed
+                html.hidden_field("_do_actions", "yes")
+                html.hidden_field("actions", "yes")
 
-            command.render(info_name)
+                command.render(info_name)
 
-            html.hidden_fields()
-            html.end_form()
+                html.hidden_fields()
 
             return HTML(output_funnel.drain())
 

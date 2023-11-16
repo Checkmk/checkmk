@@ -254,10 +254,9 @@ class ModeBulkRenameHost(WatoMode):
         return None
 
     def page(self) -> None:
-        html.begin_form("bulk_rename_host", method="POST")
-        self._vs_renaming_config().render_input("", {})
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("bulk_rename_host", method="POST"):
+            self._vs_renaming_config().render_input("", {})
+            html.hidden_fields()
 
     def _vs_renaming_config(self):
         return Dictionary(
@@ -511,7 +510,7 @@ class ModeRenameHost(WatoMode):
             )
         )
 
-        html.begin_form(
+        with html.form_context(
             "rename_host",
             method="POST",
             require_confirmation=RequireConfirmation(
@@ -524,16 +523,15 @@ class ModeRenameHost(WatoMode):
                 confirmButtonText=_("Yes, rename"),
                 cancelButtonText=_("No, keep current name"),
             ),
-        )
-        forms.header(_("Rename host %s") % self._host.name())
-        forms.section(_("Current name"))
-        html.write_text(self._host.name())
-        forms.section(_("New name"))
-        html.text_input("newname", "")
-        forms.end()
-        html.set_focus("newname")
-        html.hidden_fields()
-        html.end_form()
+        ):
+            forms.header(_("Rename host %s") % self._host.name())
+            forms.section(_("Current name"))
+            html.write_text(self._host.name())
+            forms.section(_("New name"))
+            html.text_input("newname", "")
+            forms.end()
+            html.set_focus("newname")
+            html.hidden_fields()
 
 
 # renamings is a list of tuples of (folder, oldname, newname)

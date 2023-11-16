@@ -110,26 +110,25 @@ def _show_availability_options(
     option_type: str, what: AVObjectType, avoptions: AVOptions, valuespecs: AVOptionValueSpecs
 ) -> None:
     form_name = "avoptions_%s" % option_type
-    html.begin_form(form_name)
-    html.hidden_field("avoptions", "set")
+    with html.form_context(form_name):
+        html.hidden_field("avoptions", "set")
 
-    _show_availability_options_controls()
+        _show_availability_options_controls()
 
-    container_id = "av_options_%s" % option_type
-    html.open_div(id_=container_id, class_="side_popup_content")
-    if user_errors and html.form_submitted(form_name):
-        html.show_user_errors()
+        container_id = "av_options_%s" % option_type
+        html.open_div(id_=container_id, class_="side_popup_content")
+        if user_errors and html.form_submitted(form_name):
+            html.show_user_errors()
 
-    for name, height, _show_in_reporting, vs in valuespecs:
+        for name, height, _show_in_reporting, vs in valuespecs:
 
-        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
-            vs.render_input("avo_" + name, avoptions.get(name))
+            def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
+                vs.render_input("avo_" + name, avoptions.get(name))
 
-        html.render_floating_option(name, height, vs.title(), renderer)
-    html.close_div()
+            html.render_floating_option(name, height, vs.title(), renderer)
+        html.close_div()
 
-    html.hidden_fields()
-    html.end_form()
+        html.hidden_fields()
 
 
 def _show_availability_options_controls() -> None:
@@ -1183,10 +1182,9 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
         browser_reload=html.browser_reload,
     )
 
-    html.begin_form("editanno", method="GET")
-    _vs_annotation().render_input_as_form("_editanno", value)
-    html.hidden_fields()
-    html.end_form()
+    with html.form_context("editanno", method="GET"):
+        _vs_annotation().render_input_as_form("_editanno", value)
+        html.hidden_fields()
 
     html.body_end()
     return True

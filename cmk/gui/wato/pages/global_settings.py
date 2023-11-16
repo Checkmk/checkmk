@@ -386,50 +386,49 @@ class ABCEditGlobalSettingMode(WatoMode):
         if hint:
             html.show_warning(hint)
 
-        html.begin_form("value_editor", method="POST")
-        title = self._valuespec.title()
-        assert isinstance(title, str)
-        forms.header(title)
-        if not active_config.wato_hide_varnames:
-            forms.section(_("Configuration variable:"))
-            html.tt(self._varname)
+        with html.form_context("value_editor", method="POST"):
+            title = self._valuespec.title()
+            assert isinstance(title, str)
+            forms.header(title)
+            if not active_config.wato_hide_varnames:
+                forms.section(_("Configuration variable:"))
+                html.tt(self._varname)
 
-        if use_vue_rendering():
-            forms.section(_("Current setting as VUE"))
-            render_vue(self._valuespec, self._vue_field_id(), value)
-            forms.section(_("Legacy valuespec (input data is ignored)"))
-        else:
-            forms.section(_("Current setting"))
-        self._valuespec.render_input("ve", value)
-        self._valuespec.set_focus("ve")
-        html.help(self._valuespec.help())
-
-        if is_configured_globally:
-            self._show_global_setting()
-
-        forms.section(_("Factory setting"))
-        html.write_text(self._valuespec.value_to_html(defvalue))
-
-        forms.section(_("Current state"))
-        if is_configured_globally:
-            html.write_text(
-                _('This variable is configured in <a href="%s">global settings</a>.')
-                % ("wato.py?mode=edit_configvar&varname=%s" % self._varname)
-            )
-        elif not is_configured:
-            html.write_text(_("This variable is at factory settings."))
-        else:
-            curvalue = self._current_settings[self._varname]
-            if is_configured_globally and curvalue == self._global_settings[self._varname]:
-                html.write_text(_("Site setting and global setting are identical."))
-            elif curvalue == defvalue:
-                html.write_text(_("Your setting and factory settings are identical."))
+            if use_vue_rendering():
+                forms.section(_("Current setting as VUE"))
+                render_vue(self._valuespec, self._vue_field_id(), value)
+                forms.section(_("Legacy valuespec (input data is ignored)"))
             else:
-                html.write_text(self._valuespec.value_to_html(curvalue))
+                forms.section(_("Current setting"))
+            self._valuespec.render_input("ve", value)
+            self._valuespec.set_focus("ve")
+            html.help(self._valuespec.help())
 
-        forms.end()
-        html.hidden_fields()
-        html.end_form()
+            if is_configured_globally:
+                self._show_global_setting()
+
+            forms.section(_("Factory setting"))
+            html.write_text(self._valuespec.value_to_html(defvalue))
+
+            forms.section(_("Current state"))
+            if is_configured_globally:
+                html.write_text(
+                    _('This variable is configured in <a href="%s">global settings</a>.')
+                    % ("wato.py?mode=edit_configvar&varname=%s" % self._varname)
+                )
+            elif not is_configured:
+                html.write_text(_("This variable is at factory settings."))
+            else:
+                curvalue = self._current_settings[self._varname]
+                if is_configured_globally and curvalue == self._global_settings[self._varname]:
+                    html.write_text(_("Site setting and global setting are identical."))
+                elif curvalue == defvalue:
+                    html.write_text(_("Your setting and factory settings are identical."))
+                else:
+                    html.write_text(self._valuespec.value_to_html(curvalue))
+
+            forms.end()
+            html.hidden_fields()
 
     def _show_global_setting(self):
         pass

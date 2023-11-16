@@ -134,25 +134,24 @@ class SetupSearch(ABCMegaMenuSearch):
     def show_search_field(self) -> None:
         html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
-        html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
-        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
-        html.input(
-            id_=f"mk_side_search_field_{self.name}",
-            type_="text",
-            name="search",
-            title=tooltip,
-            autocomplete="off",
-            placeholder=_("Search in Setup"),
-            onkeydown="cmk.search.on_key_down('setup')",
-            oninput="cmk.search.on_input_search('setup');",
-        )
-        html.input(
-            id_=f"mk_side_search_field_clear_{self.name}",
-            name="reset",
-            type_="button",
-            onclick="cmk.search.on_click_reset('setup');",
-        )
-        html.end_form()
+        with html.form_context(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;"):
+            tooltip = _("Search for menu entries, settings, hosts and rulesets.")
+            html.input(
+                id_=f"mk_side_search_field_{self.name}",
+                type_="text",
+                name="search",
+                title=tooltip,
+                autocomplete="off",
+                placeholder=_("Search in Setup"),
+                onkeydown="cmk.search.on_key_down('setup')",
+                oninput="cmk.search.on_input_search('setup');",
+            )
+            html.input(
+                id_=f"mk_side_search_field_clear_{self.name}",
+                name="reset",
+                type_="button",
+                onclick="cmk.search.on_click_reset('setup');",
+            )
         html.close_div()
         html.div("", id_="mk_side_clear")
 

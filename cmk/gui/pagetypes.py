@@ -1097,7 +1097,16 @@ class ListPage(Page, Generic[_T]):
             ("builtin", _("Built-in"), builtin_instances),
         ]:
             if scope_instances:
-                self._show_table(instances, what, title, scope_instances)
+                html.h3(title, class_="table")
+
+                if what != "builtin":
+                    with html.form_context("bulk_delete", method="POST"):
+                        self._show_table(instances, scope_instances, deletable=True)
+                        html.hidden_field("selection_id", weblib.selection_id())
+                        html.hidden_fields()
+                        init_rowselect(self._type.type_name())
+                else:
+                    self._show_table(instances, scope_instances)
 
         html.footer()
 
@@ -1141,20 +1150,14 @@ class ListPage(Page, Generic[_T]):
     def _show_table(
         self,
         instances: OverridableInstances[_T],
-        what: str,
-        title: str,
         scope_instances: Sequence[_T],
+        deletable: bool = False,
     ) -> None:
-        html.h3(title, class_="table")
-
-        if what != "builtin":
-            html.begin_form("bulk_delete", method="POST")
-
         with table_element(limit=None) as table:
             for instance in scope_instances:
                 table.row()
 
-                if what != "builtin" and instance.may_delete():
+                if deletable and instance.may_delete():
                     table.cell(
                         html.render_input(
                             "_toggle_group",
@@ -1208,12 +1211,6 @@ class ListPage(Page, Generic[_T]):
                 )
                 table.cell(_("Public"), _("yes") if instance.is_public() else _("no"))
                 table.cell(_("Hidden"), _("yes") if instance.is_hidden() else _("no"))
-
-        if what != "builtin":
-            html.hidden_field("selection_id", weblib.selection_id())
-            html.hidden_fields()
-            html.end_form()
-            init_rowselect(self._type.type_name())
 
 
 class EditPage(Page, Generic[_T_OverridableSpec, _T]):
@@ -1349,13 +1346,12 @@ class EditPage(Page, Generic[_T_OverridableSpec, _T]):
 
         html.show_user_errors()
 
-        html.begin_form("edit", method="POST")
-        html.help(vs.help())
-        vs.render_input(varprefix, page_dict)
-        # Should be ignored by hidden_fields, but I do not dare to change it there
-        request.del_var("filled_in")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("edit", method="POST"):
+            html.help(vs.help())
+            vs.render_input(varprefix, page_dict)
+            # Should be ignored by hidden_fields, but I do not dare to change it there
+            request.del_var("filled_in")
+            html.hidden_fields()
         html.footer()
 
     def _collect_parameters(

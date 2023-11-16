@@ -206,20 +206,19 @@ class EditDashletPage(Page):
             except MKUserError as e:
                 html.user_error(e)
 
-        html.begin_form("dashlet", method="POST")
-        vs_general.render_input("general", dict(dashlet_spec))
-        if context_specs:
-            visuals.render_context_specs(dashlet_spec["context"], context_specs)
+        with html.form_context("dashlet", method="POST"):
+            vs_general.render_input("general", dict(dashlet_spec))
+            if context_specs:
+                visuals.render_context_specs(dashlet_spec["context"], context_specs)
 
-        if vs_type:
-            vs_type.render_input("type", dict(dashlet_spec))
-        elif render_input_func:
-            render_input_func(dashlet_spec)
+            if vs_type:
+                vs_type.render_input("type", dict(dashlet_spec))
+            elif render_input_func:
+                render_input_func(dashlet_spec)
 
-        forms.end()
-        html.show_localization_hint()
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.show_localization_hint()
+            html.hidden_fields()
 
         html.footer()
         return None

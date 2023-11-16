@@ -569,42 +569,41 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         valuespec = _vs_activation(self.title(), self.has_foreign_changes())
 
-        html.begin_form("activate", method="POST", action="")
-        html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
+        with html.form_context("activate", method="POST", action=""):
+            html.hidden_field("activate_until", self._get_last_change_id(), id_="activate_until")
 
-        if valuespec:
-            title = valuespec.title()
-            assert title is not None
-            forms.header(title)
-            valuespec.render_input("activate", self._value)
-            valuespec.set_focus("activate")
-            html.help(valuespec.help())
+            if valuespec:
+                title = valuespec.title()
+                assert title is not None
+                forms.header(title)
+                valuespec.render_input("activate", self._value)
+                valuespec.set_focus("activate")
+                html.help(valuespec.help())
 
-        if self.has_foreign_changes():
-            if user.may("wato.activateforeign"):
-                html.show_warning(
-                    _(
-                        "There are some changes made by your colleagues that you will "
-                        "activate if you proceed. You need to enable the checkbox above "
-                        "to confirm the activation of these changes."
+            if self.has_foreign_changes():
+                if user.may("wato.activateforeign"):
+                    html.show_warning(
+                        _(
+                            "There are some changes made by your colleagues that you will "
+                            "activate if you proceed. You need to enable the checkbox above "
+                            "to confirm the activation of these changes."
+                        )
                     )
-                )
-            else:
-                html.show_warning(
-                    _(
-                        "There are some changes made by your colleagues that you can not "
-                        "activate because you are not permitted to. You can only activate "
-                        "the changes on the sites that are not affected by these changes. "
-                        "<br>"
-                        "If you need to activate your changes on all sites, please contact "
-                        "a permitted user to do it for you."
+                else:
+                    html.show_warning(
+                        _(
+                            "There are some changes made by your colleagues that you can not "
+                            "activate because you are not permitted to. You can only activate "
+                            "the changes on the sites that are not affected by these changes. "
+                            "<br>"
+                            "If you need to activate your changes on all sites, please contact "
+                            "a permitted user to do it for you."
+                        )
                     )
-                )
 
-        forms.end()
-        html.hidden_field("selection_id", weblib.selection_id())
-        html.hidden_fields()
-        html.end_form()
+            forms.end()
+            html.hidden_field("selection_id", weblib.selection_id())
+            html.hidden_fields()
         init_rowselect(self.name())
 
     def _show_license_validity(self) -> None:

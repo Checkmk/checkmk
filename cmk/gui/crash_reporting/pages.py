@@ -349,15 +349,14 @@ class PageCrash(ABCCrashReportPage):
         if crash_info["crash_type"] == "gui":
             self._add_gui_user_infos_to_details(details)
 
-        html.begin_form("report", method="GET")
-        html.show_user_errors()
-        vs = self._vs_crash_report()
-        vs.render_input("_report", details)
-        vs.set_focus("report")
-        forms.end()
-        html.button("_report", _("Submit report"), cssclass="hot")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("report", method="GET"):
+            html.show_user_errors()
+            vs = self._vs_crash_report()
+            vs.render_input("_report", details)
+            vs.set_focus("report")
+            forms.end()
+            html.button("_report", _("Submit report"), cssclass="hot")
+            html.hidden_fields()
 
     def _add_gui_user_infos_to_details(self, details: ReportSubmitDetails) -> None:
         users = userdb.load_users()

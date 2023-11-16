@@ -296,26 +296,24 @@ def _extend_display_dropdown(  # type: ignore[no-untyped-def]
 
 def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
     with output_funnel.plugged():
-        html.begin_form("werks")
-        html.hidden_field("wo_set", "set")
+        with html.form_context("werks"):
+            html.hidden_field("wo_set", "set")
 
-        _show_werk_options_controls()
+            _show_werk_options_controls()
 
-        html.open_div(class_="side_popup_content")
-        for name, height, vs, _default_value in _werk_table_option_entries():
+            html.open_div(class_="side_popup_content")
+            for name, height, vs, _default_value in _werk_table_option_entries():
 
-            def renderer(
-                name: _WerkTableOptionColumns = name,
-                vs: ValueSpec = vs,
-                werk_table_options: WerkTableOptions = werk_table_options,
-            ) -> None:
-                vs.render_input("wo_" + name, werk_table_options[name])
+                def renderer(
+                    name: _WerkTableOptionColumns = name,
+                    vs: ValueSpec = vs,
+                    werk_table_options: WerkTableOptions = werk_table_options,
+                ) -> None:
+                    vs.render_input("wo_" + name, werk_table_options[name])
 
-            html.render_floating_option(name, height, vs.title(), renderer)
-        html.close_div()
-
-        html.hidden_fields()
-        html.end_form()
+                html.render_floating_option(name, height, vs.title(), renderer)
+            html.close_div()
+            html.hidden_fields()
 
         return HTML(output_funnel.drain())
 

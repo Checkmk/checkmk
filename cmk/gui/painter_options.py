@@ -186,22 +186,21 @@ class PainterOptions:
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return
 
-        html.begin_form("painteroptions")
-        forms.header("", show_table_head=False)
-        for name in self._used_option_names:
-            vs = self.get_valuespec_of(name)
-            forms.section(vs.title())
-            if name == "refresh":
-                vs.render_input("po_%s" % name, view_spec.get("browser_reload", self.get(name)))
-                continue
-            vs.render_input("po_%s" % name, self.get(name, view_spec.get(name)))
-        forms.end()
+        with html.form_context("painteroptions"):
+            forms.header("", show_table_head=False)
+            for name in self._used_option_names:
+                vs = self.get_valuespec_of(name)
+                forms.section(vs.title())
+                if name == "refresh":
+                    vs.render_input("po_%s" % name, view_spec.get("browser_reload", self.get(name)))
+                    continue
+                vs.render_input("po_%s" % name, self.get(name, view_spec.get(name)))
+            forms.end()
 
-        html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
-        html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
+            html.button(varname="_update_painter_options", title=_("Submit"), cssclass="hot submit")
+            html.button(varname="_reset_painter_options", title=_("Reset"), cssclass="submit")
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
 
 class PainterOptionRegistry(Registry[type[PainterOption]]):

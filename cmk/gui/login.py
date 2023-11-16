@@ -300,84 +300,85 @@ class LoginPage(Page):
         except LicenseStateError:
             pass
 
-        html.begin_form("login", method="POST", add_transid=False, action="login.py")
-        html.hidden_field("_login", "1")
-        html.hidden_field("_origtarget", origtarget)
+        with html.form_context("login", method="POST", add_transid=False, action="login.py"):
+            html.hidden_field("_login", "1")
+            html.hidden_field("_origtarget", origtarget)
 
-        saml2_user_error: str | None = None
-        if saml_connections := [
-            c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
-        ]:
-            saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
+            saml2_user_error: str | None = None
+            if saml_connections := [
+                c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+            ]:
+                saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
 
-        html.open_table()
-        html.open_tr()
-        html.td(
-            html.render_label(
-                "%s:" % _("Username"),
-                id_="label_user",
-                class_=["legend"],
-                for_=self._username_varname,
-            ),
-            class_="login_label",
-        )
-        html.open_td(class_="login_input")
-        html.text_input(self._username_varname, id_="input_user")
-        html.close_td()
-        html.close_tr()
-        html.open_tr()
-        html.td(
-            html.render_label(
-                "%s:" % _("Password"),
-                id_="label_pass",
-                class_=["legend"],
-                for_=self._password_varname,
-            ),
-            class_="login_label",
-        )
-        html.open_td(class_="login_input")
-        html.password_input(self._password_varname, id_="input_pass", size=None)
-        html.close_td()
-        html.close_tr()
-        html.close_table()
+            html.open_table()
+            html.open_tr()
+            html.td(
+                html.render_label(
+                    "%s:" % _("Username"),
+                    id_="label_user",
+                    class_=["legend"],
+                    for_=self._username_varname,
+                ),
+                class_="login_label",
+            )
+            html.open_td(class_="login_input")
+            html.text_input(self._username_varname, id_="input_user")
+            html.close_td()
+            html.close_tr()
+            html.open_tr()
+            html.td(
+                html.render_label(
+                    "%s:" % _("Password"),
+                    id_="label_pass",
+                    class_=["legend"],
+                    for_=self._password_varname,
+                ),
+                class_="login_label",
+            )
+            html.open_td(class_="login_input")
+            html.password_input(self._password_varname, id_="input_pass", size=None)
+            html.close_td()
+            html.close_tr()
+            html.close_table()
 
-        html.open_div(id_="button_text")
-        html.button("_login", _("Login"), cssclass=None if saml_connections else "hot")
-        html.close_div()
-
-        if user_errors and not saml2_user_error:
-            show_user_errors("login_error")
-
-        html.close_div()
-
-        html.open_div(id_="foot")
-
-        if active_config.login_screen.get("login_message"):
-            html.open_div(id_="login_message")
-            html.show_message(active_config.login_screen["login_message"])
+            html.open_div(id_="button_text")
+            html.button("_login", _("Login"), cssclass=None if saml_connections else "hot")
             html.close_div()
 
-        footer: list[HTML] = []
-        for title, url, target in active_config.login_screen.get("footer_links", []):
-            footer.append(HTMLWriter.render_a(title, href=url, target=target))
+            if user_errors and not saml2_user_error:
+                show_user_errors("login_error")
 
-        if "hide_version" not in active_config.login_screen:
-            footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
+            html.close_div()
 
-        footer.append(
-            HTML(
-                "&copy; %s"
-                % HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
+            html.open_div(id_="foot")
+
+            if active_config.login_screen.get("login_message"):
+                html.open_div(id_="login_message")
+                html.show_message(active_config.login_screen["login_message"])
+                html.close_div()
+
+            footer: list[HTML] = []
+            for title, url, target in active_config.login_screen.get("footer_links", []):
+                footer.append(HTMLWriter.render_a(title, href=url, target=target))
+
+            if "hide_version" not in active_config.login_screen:
+                footer.append(escape_to_html("Version: %s" % cmk_version.__version__))
+
+            footer.append(
+                HTML(
+                    "&copy; %s"
+                    % HTMLWriter.render_a(
+                        "Checkmk GmbH", href="https://checkmk.com", target="_blank"
+                    )
+                )
             )
-        )
 
-        html.write_html(HTML(" - ").join(footer))
+            html.write_html(HTML(" - ").join(footer))
 
-        html.close_div()
+            html.close_div()
 
-        html.set_focus(self._username_varname)
-        html.hidden_fields()
-        html.end_form()
+            html.set_focus(self._username_varname)
+            html.hidden_fields()
         html.close_div()
 
         html.footer()

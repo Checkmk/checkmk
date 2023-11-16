@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import pprint
 import re
+import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Literal, overload
@@ -63,6 +65,14 @@ def use_vue_rendering():
     )
 
 
+EncType = typing.Literal[
+    "application/x-url-encoded",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+]
+DEFAULT_ENCTYPE: EncType = "multipart/form-data"
+
+
 class HTMLGenerator(HTMLWriter):
     def __init__(
         self,
@@ -84,6 +94,8 @@ class HTMLGenerator(HTMLWriter):
         self.form_has_submit_button: bool = False
 
         self.request = request
+
+        self._current_form_enctype: EncType = DEFAULT_ENCTYPE
 
     @property
     def screenshotmode(self) -> bool:
@@ -333,6 +345,38 @@ class HTMLGenerator(HTMLWriter):
         self.close_body()
         self.close_html()
 
+    @contextlib.contextmanager
+    def form_context(
+        self,
+        name: str,
+        action: str | None = None,
+        method: str = "GET",
+        onsubmit: str | None = None,
+        add_transid: bool = True,
+        require_confirmation: RequireConfirmation | None = None,
+        only_close: bool = False,
+    ) -> typing.Iterator[None]:
+        # NOTE:
+        #   The fields (self.upload_file, etc.) will implicitly set self._current_form_enctype to
+        #   the correct value.
+        with html.output_funnel.plugged():
+            html.begin_form(
+                name=name,
+                action=action,
+                method=method,
+                onsubmit=onsubmit,
+                add_transid=add_transid,
+                require_confirmation=require_confirmation,
+            )
+            # Flushing of plugged content will happen automatically.
+            yield
+
+        if only_close:
+            html.close_form()
+        else:
+            html.end_form()
+        self.reset_enctype()
+
     def begin_form(
         self,
         name: str,
@@ -360,9 +404,8 @@ class HTMLGenerator(HTMLWriter):
             method=method,
             onsubmit=onsubmit,
             data_cmk_form_confirmation=data_cmk_form_confirmation,
-            enctype="multipart/form-data" if method.lower() == "post" else None,
+            enctype=self._current_form_enctype if method.lower() == "post" else None,
         )
-
         if hasattr(session, "session_info"):
             self.hidden_field("csrf_token", session.session_info.csrf_token)
 
@@ -373,6 +416,9 @@ class HTMLGenerator(HTMLWriter):
                 str(transactions.get()),
                 add_var=True,
             )
+
+    def reset_enctype(self) -> None:
+        self._current_form_enctype = DEFAULT_ENCTYPE
 
     def end_form(self) -> None:
         if not self.form_has_submit_button:
@@ -957,6 +1003,8 @@ class HTMLGenerator(HTMLWriter):
         self.close_select()
 
     def upload_file(self, varname: str) -> None:
+        # We need this to upload files, other enctypes won't work.
+        self._current_form_enctype = "multipart/form-data"
         error = user_errors.get(varname)
         if error:
             self.open_x(class_="inputerror")

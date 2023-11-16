@@ -274,15 +274,14 @@ class ModeAuditLog(WatoMode):
         return None
 
     def page(self) -> None:
-        html.begin_form("fileselection_form", method="POST")
-        if not request.has_var("file_selection"):
-            html.write_text(_("Please choose an audit log to view:"))
-            html.br()
-            html.br()
-        self._vs_file_selection().render_input("file_selection", None)
-        html.button(varname="_view_log", title=_("View"), cssclass="hot")
-        html.hidden_fields()
-        html.end_form()
+        with html.form_context("fileselection_form", method="POST"):
+            if not request.has_var("file_selection"):
+                html.write_text(_("Please choose an audit log to view:"))
+                html.br()
+                html.br()
+            self._vs_file_selection().render_input("file_selection", None)
+            html.button(varname="_view_log", title=_("View"), cssclass="hot")
+            html.hidden_fields()
 
         if request.var("file_selection"):
             self._options.update(self._get_audit_log_options_from_request())
@@ -533,24 +532,22 @@ class ModeAuditLog(WatoMode):
         if display_options.disabled(display_options.C):
             return
 
-        html.begin_form("options", method="GET")
+        with html.form_context("options", method="GET"):
+            self._show_audit_log_options_controls()
 
-        self._show_audit_log_options_controls()
+            html.open_div(class_="side_popup_content")
+            html.show_user_errors()
 
-        html.open_div(class_="side_popup_content")
-        html.show_user_errors()
+            for name, vs in self._audit_log_options():
 
-        for name, vs in self._audit_log_options():
+                def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
+                    vs.render_input("options_" + name, self._options[name])
 
-            def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
-                vs.render_input("options_" + name, self._options[name])
+                html.render_floating_option(name, "single", vs.title(), renderer)
 
-            html.render_floating_option(name, "single", vs.title(), renderer)
+            html.close_div()
 
-        html.close_div()
-
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
     def _show_audit_log_options_controls(self):
         html.open_div(class_="side_popup_controls")

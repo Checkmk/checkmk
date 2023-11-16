@@ -1416,19 +1416,18 @@ class ModeEditRuleset(WatoMode):
         html.write_text(_('Predefined condition: <a href="%s">%s</a>') % (url, condition["title"]))
 
     def _create_form(self) -> None:
-        html.begin_form("new_rule", add_transid=False)
-        html.hidden_field("ruleset_back_mode", self._back_mode, add_var=True)
+        with html.form_context("new_rule", add_transid=False):
+            html.hidden_field("ruleset_back_mode", self._back_mode, add_var=True)
 
-        if self._hostname:
-            html.hidden_field("host", self._hostname)
-            html.hidden_field("item", mk_repr(self._item).decode())
-            html.hidden_field("service", mk_repr(self._service).decode())
+            if self._hostname:
+                html.hidden_field("host", self._hostname)
+                html.hidden_field("item", mk_repr(self._item).decode())
+                html.hidden_field("service", mk_repr(self._service).decode())
 
-        html.hidden_field("rule_folder", self._folder.path())
-        html.hidden_field("varname", self._name)
-        html.hidden_field("mode", "new_rule")
-        html.hidden_field("folder", self._folder.path())
-        html.end_form()
+            html.hidden_field("rule_folder", self._folder.path())
+            html.hidden_field("varname", self._name)
+            html.hidden_field("mode", "new_rule")
+            html.hidden_field("folder", self._folder.path())
 
 
 class ModeRuleSearchForm(WatoMode):
@@ -1475,14 +1474,13 @@ class ModeRuleSearchForm(WatoMode):
         return menu
 
     def page(self) -> None:
-        html.begin_form("rule_search", method="POST")
-        html.hidden_field("mode", self.back_mode, add_var=True)
+        with html.form_context("rule_search", method="POST"):
+            html.hidden_field("mode", self.back_mode, add_var=True)
 
-        valuespec = self._valuespec()
-        valuespec.render_input_as_form("search", self.search_options)
+            valuespec = self._valuespec()
+            valuespec.render_input_as_form("search", self.search_options)
 
-        html.hidden_fields()
-        html.end_form()
+            html.hidden_fields()
 
     def _from_vars(self) -> None:
         if request.var("_reset_search"):
@@ -1971,8 +1969,10 @@ class ABCEditRuleMode(WatoMode):
         if help_text:
             html.div(HTML(help_text), class_="info")
 
-        html.begin_form("rule_editor", method="POST")
+        with html.form_context("rule_editor", method="POST"):
+            self._page_form()
 
+    def _page_form(self) -> None:
         # Additonal rule options
         self._vs_rule_options(self._rule).render_input("options", asdict(self._rule.rule_options))
 
@@ -2015,7 +2015,6 @@ class ABCEditRuleMode(WatoMode):
 
         html.hidden_fields()
         self._vs_rule_options(self._rule).set_focus("options")
-        html.end_form()
 
     def _show_conditions(self) -> None:
         forms.header(_("Conditions"))
@@ -2858,33 +2857,34 @@ class ModeExportRule(ABCEditRuleMode):
         content_id = "rule_representation"
         success_msg_id = "copy_success"
 
-        html.begin_form("rule_representation")
-        html.div(
-            _("Successfully copied rule value representation to the clipboard."),
-            id_=success_msg_id,
-            class_=["success", "hidden"],
-        )
-
-        html.p(
-            _(
-                "To set the value of a rule using the REST API, you need to set the "
-                "<tt>value_raw</tt> field. The value of this fields is individual for each rule set. "
-                "To help you understand what kind of data structure you need to provide, this rule "
-                "export mechanism is showing you the value you need to set for a given rule. The "
-                "value needs to be a string representation of a compatible Python data structure."
+        with html.form_context("rule_representation", only_close=True):
+            html.div(
+                _("Successfully copied rule value representation to the clipboard."),
+                id_=success_msg_id,
+                class_=["success", "hidden"],
             )
-        )
-        html.p(_("You can copy and use the data structure below in your REST API requests."))
-        forms.header(_("Rule value representation for REST API"))
-        forms.section("Rule value representation")
-        html.text_area(content_id, deflt=repr(pretty_rule_config), id_=content_id, readonly="true")
-        html.icon_button(
-            url=None,
-            title=_("Copy rule value representation to clipboard"),
-            icon="clone",
-            onclick=f"cmk.utils.copy_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg_id)})",
-        )
-        html.close_form()
+
+            html.p(
+                _(
+                    "To set the value of a rule using the REST API, you need to set the "
+                    "<tt>value_raw</tt> field. The value of this fields is individual for each rule set. "
+                    "To help you understand what kind of data structure you need to provide, this rule "
+                    "export mechanism is showing you the value you need to set for a given rule. The "
+                    "value needs to be a string representation of a compatible Python data structure."
+                )
+            )
+            html.p(_("You can copy and use the data structure below in your REST API requests."))
+            forms.header(_("Rule value representation for REST API"))
+            forms.section("Rule value representation")
+            html.text_area(
+                content_id, deflt=repr(pretty_rule_config), id_=content_id, readonly="true"
+            )
+            html.icon_button(
+                url=None,
+                title=_("Copy rule value representation to clipboard"),
+                icon="clone",
+                onclick=f"cmk.utils.copy_to_clipboard({json.dumps(content_id)}, {json.dumps(success_msg_id)})",
+            )
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return PageMenu(

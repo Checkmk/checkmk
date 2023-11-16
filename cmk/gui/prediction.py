@@ -98,19 +98,18 @@ def page_graph() -> None:
         selected_prediction_info.name
     )
 
-    html.begin_form("prediction")
-    html.write_text(_("Show prediction for "))
-    html.dropdown(
-        "timegroup",
-        (
-            (prediction_info.name, prediction_info.name.title())
-            for prediction_info in available_predictions_sorted_by_start_time
-        ),
-        deflt=selected_prediction_info.name,
-        onchange="document.prediction.submit();",
-    )
-    html.hidden_fields()
-    html.end_form()
+    with html.form_context("prediction"):
+        html.write_text(_("Show prediction for "))
+        html.dropdown(
+            "timegroup",
+            (
+                (prediction_info.name, prediction_info.name.title())
+                for prediction_info in available_predictions_sorted_by_start_time
+            ),
+            deflt=selected_prediction_info.name,
+            onchange="document.prediction.submit();",
+        )
+        html.hidden_fields()
 
     swapped = swap_and_compute_levels(selected_prediction_data, selected_prediction_info.params)
     vertical_range = compute_vertical_range(swapped)

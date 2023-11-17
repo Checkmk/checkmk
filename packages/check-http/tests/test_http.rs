@@ -4,13 +4,10 @@
 
 use anyhow::Result as AnyhowResult;
 use check_http::checking::{CheckParameters, State};
-use check_http::http::{
-    client::{ClientConfig, OnRedirect},
-    request::RequestConfig,
-};
+use check_http::http::{ClientConfig, OnRedirect, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
-use http::Method;
+use reqwest::Method;
 
 use std::io::{Read, Write};
 use std::net::TcpListener;

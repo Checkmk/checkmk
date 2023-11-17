@@ -3,15 +3,12 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use check_http::checking::{Bounds, CheckParameters, UpperLevels};
-use check_http::http::{
-    client::{self, ClientConfig},
-    request::RequestConfig,
-};
+use check_http::http::{self, ClientConfig, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
-use http::Method;
+use reqwest::Method;
 
 mod cli;
 mod pwstore;
@@ -34,18 +31,18 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
             user_agent: args.user_agent.unwrap_or(DEFAULT_USER_AGENT.to_string()),
             timeout: args.timeout,
             onredirect: match args.onredirect {
-                cli::OnRedirect::Ok => client::OnRedirect::Ok,
-                cli::OnRedirect::Warning => client::OnRedirect::Warning,
-                cli::OnRedirect::Critical => client::OnRedirect::Critical,
-                cli::OnRedirect::Follow => client::OnRedirect::Follow,
-                cli::OnRedirect::Sticky => client::OnRedirect::Sticky,
-                cli::OnRedirect::Stickyport => client::OnRedirect::Stickyport,
+                cli::OnRedirect::Ok => http::OnRedirect::Ok,
+                cli::OnRedirect::Warning => http::OnRedirect::Warning,
+                cli::OnRedirect::Critical => http::OnRedirect::Critical,
+                cli::OnRedirect::Follow => http::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => http::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => http::OnRedirect::Stickyport,
             },
             max_redirs: args.max_redirs,
             force_ip: match args.force_ip_version {
                 None => None,
-                Some(cli::ForceIP::Ipv4) => Some(client::ForceIP::Ipv4),
-                Some(cli::ForceIP::Ipv6) => Some(client::ForceIP::Ipv6),
+                Some(cli::ForceIP::Ipv4) => Some(http::ForceIP::Ipv4),
+                Some(cli::ForceIP::Ipv6) => Some(http::ForceIP::Ipv6),
             },
         },
         RequestConfig {
@@ -66,12 +63,12 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
         },
         CheckParameters {
             onredirect: match args.onredirect {
-                cli::OnRedirect::Ok => client::OnRedirect::Ok,
-                cli::OnRedirect::Warning => client::OnRedirect::Warning,
-                cli::OnRedirect::Critical => client::OnRedirect::Critical,
-                cli::OnRedirect::Follow => client::OnRedirect::Follow,
-                cli::OnRedirect::Sticky => client::OnRedirect::Sticky,
-                cli::OnRedirect::Stickyport => client::OnRedirect::Stickyport,
+                cli::OnRedirect::Ok => http::OnRedirect::Ok,
+                cli::OnRedirect::Warning => http::OnRedirect::Warning,
+                cli::OnRedirect::Critical => http::OnRedirect::Critical,
+                cli::OnRedirect::Follow => http::OnRedirect::Follow,
+                cli::OnRedirect::Sticky => http::OnRedirect::Sticky,
+                cli::OnRedirect::Stickyport => http::OnRedirect::Stickyport,
             },
             page_size: args.page_size.map(|val| match val {
                 (x, None) => Bounds::lower(x),

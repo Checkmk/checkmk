@@ -8,6 +8,28 @@ use reqwest::{
     header::CONTENT_TYPE, Client, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
 
+pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<ProcessedResponse> {
+    let fetch_body = !cfg.without_body;
+
+    let response = prepare_request(client, cfg).send().await?;
+
+    let headers = response.headers().to_owned();
+    let version = response.version();
+    let status = response.status();
+    let body = if fetch_body {
+        Some(response.bytes().await)
+    } else {
+        None
+    };
+
+    Ok(ProcessedResponse {
+        version,
+        status,
+        headers,
+        body,
+    })
+}
+
 pub struct RequestConfig {
     pub url: String,
     pub method: Method,
@@ -47,26 +69,4 @@ fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder
     } else {
         req
     }
-}
-
-pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<ProcessedResponse> {
-    let fetch_body = !cfg.without_body;
-
-    let response = prepare_request(client, cfg).send().await?;
-
-    let headers = response.headers().to_owned();
-    let version = response.version();
-    let status = response.status();
-    let body = if fetch_body {
-        Some(response.bytes().await)
-    } else {
-        None
-    };
-
-    Ok(ProcessedResponse {
-        version,
-        status,
-        headers,
-        body,
-    })
 }

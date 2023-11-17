@@ -9,7 +9,7 @@ use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
-use crate::http::{client::OnRedirect, request::ProcessedResponse};
+use crate::http::{OnRedirect, ProcessedResponse};
 
 // check_http allows specification of
 // * no levels/bounds

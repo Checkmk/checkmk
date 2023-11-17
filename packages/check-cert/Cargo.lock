@@ -163,6 +163,7 @@ dependencies = [
  "anyhow",
  "clap",
  "openssl",
+ "time",
  "x509-parser",
 ]
 

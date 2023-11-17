@@ -2,12 +2,13 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use check_cert::{checker, fetcher, output};
 use clap::Parser;
-use openssl::asn1::Asn1Time;
-use openssl::x509::X509;
-use std::time::Duration;
+use std::time::Duration as StdDuration;
+use time::Duration;
+use x509_parser::certificate::X509Certificate;
+use x509_parser::prelude::FromDer;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
@@ -40,9 +41,7 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let warn_time = Asn1Time::days_from_now(args.warn).context("Invalid warn value")?;
-    let crit_time = Asn1Time::days_from_now(args.crit).context("Invalid crit value")?;
-    if warn_time < crit_time {
+    if args.warn < args.crit {
         eprintln!("crit limit larger than warn limit");
         std::process::exit(1);
     }
@@ -53,16 +52,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if args.timeout == 0 {
             None
         } else {
-            Some(Duration::new(args.timeout, 0))
+            Some(StdDuration::new(args.timeout, 0))
         },
         !args.disable_sni,
     )?;
 
-    let cert = X509::from_der(&der)?;
-    let out = output::Output::from(vec![checker::check_validity(
-        cert.not_after(),
-        &warn_time,
-        &crit_time,
+    let (_rem, cert) = X509Certificate::from_der(&der)?;
+    let out = output::Output::from(vec![checker::check_validity_not_after(
+        cert.tbs_certificate.validity().time_to_expiration(),
+        args.warn * Duration::DAY,
+        args.crit * Duration::DAY,
+        cert.tbs_certificate.validity().not_after,
     )]);
     println!("HTTP {}", out);
     std::process::exit(match out.state {

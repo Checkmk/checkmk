@@ -26,7 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphRenderOptions, SizePT
+from cmk.gui.type_defs import SizePT
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._graph_pdf import (
@@ -35,7 +35,7 @@ from ._graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from ._graph_render_config import GraphRenderConfigImage
+from ._graph_render_config import GraphRenderConfigImage, GraphRenderOptions, GraphTitleFormat
 from ._graph_specification import (
     CombinedSingleMetricSpec,
     GraphDataRange,
@@ -146,7 +146,12 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
         font_size=SizePT(8.0),
         resizable=False,
         show_controls=False,
-        title_format=("plain", "add_service_description"),
+        title_format=GraphTitleFormat(
+            plain=True,
+            add_host_name=False,
+            add_host_alias=False,
+            add_service_description=True,
+        ),
         interaction=False,
         size=(80, 30),  # ex
         # Specific for PDF rendering.

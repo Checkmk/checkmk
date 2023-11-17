@@ -3,13 +3,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Container
 from typing import Literal, Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import GraphRenderOptions, GraphTitleFormat, SizeMM, SizePT
+from cmk.gui.type_defs import (
+    GraphRenderOptionsBase,
+    GraphRenderOptionsVS,
+    GraphTitleFormatVS,
+    SizeMM,
+    SizePT,
+)
+
+
+class GraphTitleFormat(BaseModel):
+    plain: bool
+    add_host_name: bool
+    add_host_alias: bool
+    add_service_description: bool
+
+    @classmethod
+    def from_vs(cls, title_format_vs: Container[GraphTitleFormatVS]) -> Self:
+        return cls(
+            plain="plain" in title_format_vs,
+            add_host_name="add_host_name" in title_format_vs,
+            add_host_alias="add_host_alias" in title_format_vs,
+            add_service_description="add_service_description" in title_format_vs,
+        )
+
+
+class GraphRenderOptions(GraphRenderOptionsBase, total=False):
+    title_format: GraphTitleFormat
+
+
+def graph_grender_options_from_vs(options_vs: GraphRenderOptionsVS) -> GraphRenderOptions:
+    # no assignment expressions due to https://github.com/pylint-dev/pylint/issues/8486
+    title_format_vs = options_vs.get("title_format")
+    return TypeAdapter(GraphRenderOptions).validate_python(
+        (
+            options_vs
+            | (
+                {"title_format": GraphTitleFormat.from_vs(title_format_vs)}
+                if title_format_vs is not None
+                else {}
+            )
+        )
+    )
 
 
 class GraphRenderConfigBase(BaseModel):
@@ -30,7 +71,12 @@ class GraphRenderConfigBase(BaseModel):
     show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
     show_vertical_axis: bool = True
-    title_format: Sequence[GraphTitleFormat] = ("plain",)
+    title_format: GraphTitleFormat = GraphTitleFormat(
+        plain=True,
+        add_host_name=False,
+        add_host_alias=False,
+        add_service_description=False,
+    )
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
 
 

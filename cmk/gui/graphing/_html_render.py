@@ -28,7 +28,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphRenderOptions, SizePT
+from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -47,7 +47,12 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase
+from ._graph_render_config import (
+    GraphRenderConfig,
+    GraphRenderConfigBase,
+    GraphRenderOptions,
+    GraphTitleFormat,
+)
 from ._graph_specification import (
     CombinedSingleMetricSpec,
     GraphDataRange,
@@ -56,7 +61,6 @@ from ._graph_specification import (
     GraphSpecification,
 )
 from ._utils import SizeEx
-from ._valuespecs import migrate_graph_render_options_title_format
 
 RenderOutput = HTML | str
 
@@ -228,9 +232,7 @@ def _render_graph_title_elements(
 
     title_elements: list[tuple[str, str | None]] = []
 
-    title_format = migrate_graph_render_options_title_format(graph_render_config.title_format)
-
-    if "plain" in title_format and graph_artwork.title:
+    if graph_render_config.title_format.plain and graph_artwork.title:
         title_elements.append((graph_artwork.title, None))
 
     # Only add host/service information for template based graphs
@@ -238,15 +240,15 @@ def _render_graph_title_elements(
     if not isinstance(specification, TemplateGraphSpecification):
         return title_elements
 
-    title_elements.extend(_title_info_elements(specification, title_format))
+    title_elements.extend(_title_info_elements(specification, graph_render_config.title_format))
 
     return title_elements
 
 
 def _title_info_elements(
-    spec_info: TemplateGraphSpecification, title_format: Sequence[str]
+    spec_info: TemplateGraphSpecification, title_format: GraphTitleFormat
 ) -> Iterable[tuple[str, str]]:
-    if "add_host_name" in title_format:
+    if title_format.add_host_name:
         host_url = makeuri_contextless(
             request,
             [("view_name", "hoststatus"), ("host", spec_info.host_name)],
@@ -254,7 +256,7 @@ def _title_info_elements(
         )
         yield spec_info.host_name, host_url
 
-    if "add_host_alias" in title_format:
+    if title_format.add_host_alias:
         host_alias = get_alias_of_host(spec_info.site, spec_info.host_name)
         host_url = makeuri_contextless(
             request,
@@ -263,7 +265,7 @@ def _title_info_elements(
         )
         yield host_alias, host_url
 
-    if "add_service_description" in title_format:
+    if title_format.add_service_description:
         service_description = spec_info.service_description
         if service_description != "_HOST_":
             service_url = makeuri_contextless(

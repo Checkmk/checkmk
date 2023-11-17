@@ -14,7 +14,7 @@ from cmk.utils.metrics import MetricName
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
-from cmk.gui.type_defs import GraphTitleFormat
+from cmk.gui.type_defs import GraphTitleFormatVS
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoiceValue,
@@ -47,8 +47,8 @@ def migrate_graph_render_options_title_format(
             | Literal["add_service_description"]
         ],
     ]
-    | Sequence[GraphTitleFormat],
-) -> Sequence[GraphTitleFormat]:
+    | Sequence[GraphTitleFormatVS],
+) -> Sequence[GraphTitleFormatVS]:
     # ->1.5.0i2 pnp_graph reportlet
     if p == "add_host_name":
         return ["plain", "add_host_name"]
@@ -61,7 +61,7 @@ def migrate_graph_render_options_title_format(
 
     if isinstance(p, tuple):
         if p[0] == "add_title_infos":
-            infos: Sequence[GraphTitleFormat] = ["plain"] + p[1]
+            infos: Sequence[GraphTitleFormatVS] = ["plain"] + p[1]
             return infos
         if p[0] == "plain":
             return ["plain"]

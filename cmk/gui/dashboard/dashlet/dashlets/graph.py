@@ -18,7 +18,7 @@ from cmk.utils.metrics import MetricName
 import cmk.gui.sites as sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing._graph_render_config import GraphRenderConfig
+from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
 from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
@@ -31,7 +31,7 @@ from cmk.gui.graphing._valuespecs import vs_graph_render_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import Choices, GraphRenderOptions, SingleInfos, SizePT, VisualContext
+from cmk.gui.type_defs import Choices, GraphRenderOptionsVS, SingleInfos, SizePT, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import (
@@ -292,7 +292,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             self._dashlet_id,
             self._graph_specification.model_dump_json(),
             GraphRenderConfig.from_render_options_and_context(
-                (
+                graph_grender_options_from_vs(
                     default_dashlet_graph_render_options()
                     # Something is wrong with the typing here. self._dashlet_spec is a subclass of
                     # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
@@ -414,8 +414,8 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         yield "$SITE$"
 
 
-def default_dashlet_graph_render_options() -> GraphRenderOptions:
-    return GraphRenderOptions(
+def default_dashlet_graph_render_options() -> GraphRenderOptionsVS:
+    return GraphRenderOptionsVS(
         font_size=SizePT(8),
         show_graph_time=False,
         show_margin=False,

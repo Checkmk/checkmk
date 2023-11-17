@@ -293,7 +293,7 @@ class PainterParameters(TypedDict, total=False):
     rrd_consolidation: Literal["average", "min", "max"]
     time_range: tuple[str, int]
     # From graph painters
-    graph_render_options: GraphRenderOptions
+    graph_render_options: GraphRenderOptionsVS
     set_default_time_range: int
 
 
@@ -588,9 +588,6 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 # Metric & graph specific
 
 
-GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
-
-
 class PerfDataTuple(NamedTuple):
     metric_name: MetricName
     value: float | int
@@ -612,7 +609,10 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
-class GraphRenderOptions(TypedDict, total=False):
+GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
+
+
+class GraphRenderOptionsBase(TypedDict, total=False):
     border_width: SizeMM
     color_gradient: float
     editing: bool
@@ -631,8 +631,11 @@ class GraphRenderOptions(TypedDict, total=False):
     show_title: bool | Literal["inline"]
     show_vertical_axis: bool
     size: tuple[int, int]
-    title_format: Sequence[GraphTitleFormat]
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT]
+
+
+class GraphRenderOptionsVS(GraphRenderOptionsBase, total=False):
+    title_format: Sequence[GraphTitleFormatVS]
 
 
 ActionResult = FinalizeRequest | None

@@ -12,7 +12,7 @@ from uuid import uuid4
 from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
-from cmk.gui.graphing._graph_render_config import GraphRenderConfig
+from cmk.gui.graphing._graph_render_config import graph_grender_options_from_vs, GraphRenderConfig
 from cmk.gui.graphing._graph_specification import CombinedSingleMetricSpec, GraphMetric
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import (
@@ -182,7 +182,7 @@ def paint_time_graph_cmk(
         graph_render_options.update(options)
 
     graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        graph_render_options,
+        graph_grender_options_from_vs(graph_render_options),
         user,
         theme.get(),
     )

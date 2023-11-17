@@ -4,7 +4,7 @@
 
 use reqwest::{
     redirect::{Action, Attempt, Policy},
-    Client, ClientBuilder, Result as ReqwestResult,
+    Client, Result as ReqwestResult,
 };
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::time::Duration;
@@ -34,20 +34,8 @@ pub struct ClientConfig {
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
-    let client = apply_connection_settings(client, cfg.force_ip, cfg.onredirect, cfg.max_redirs);
-    client
-        .timeout(cfg.timeout)
-        .user_agent(cfg.user_agent)
-        .build()
-}
 
-fn apply_connection_settings(
-    client: ClientBuilder,
-    force_ip: Option<ForceIP>,
-    onredirect: OnRedirect,
-    max_redirs: usize,
-) -> ClientBuilder {
-    let client = match &force_ip {
+    let client = match &cfg.force_ip {
         None => client,
         Some(ipv) => match ipv {
             ForceIP::Ipv4 => client.local_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
@@ -55,7 +43,11 @@ fn apply_connection_settings(
         },
     };
 
-    client.redirect(get_policy(onredirect, max_redirs, force_ip))
+    client
+        .timeout(cfg.timeout)
+        .user_agent(cfg.user_agent)
+        .redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+        .build()
 }
 
 fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {

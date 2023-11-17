@@ -260,6 +260,9 @@ def _convert_to_legacy_valuespec(
         case ruleset_api_v1.List():
             return _convert_to_legacy_list(to_convert, localizer)
 
+        case ruleset_api_v1.FixedValue():
+            return _convert_to_legacy_fixed_value(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -497,3 +500,16 @@ def _convert_to_legacy_list(
         converted_kwargs["default_value"] = to_convert.prefill_value
 
     return legacy_valuespecs.ListOf(**converted_kwargs)
+
+
+def _convert_to_legacy_fixed_value(
+    to_convert: ruleset_api_v1.FixedValue, localizer: Callable[[str], str]
+) -> legacy_valuespecs.FixedValue:
+    return legacy_valuespecs.FixedValue(
+        value=to_convert.value,
+        totext=_localize_optional(to_convert.label, localizer)
+        if to_convert.label is not None
+        else "",
+        title=_localize_optional(to_convert.title, localizer),
+        help=_localize_optional(to_convert.help_text, localizer),
+    )

@@ -13,6 +13,8 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
+from tests.testlib.certs import rsa_private_keys_equal
+
 from cmk.utils.crypto.certificate import (
     Certificate,
     CertificatePEM,
@@ -108,11 +110,7 @@ def test_write_and_read(tmp_path: Path, self_signed_cert: CertificateWithPrivate
     loaded = PersistedCertificateWithPrivateKey.read_files(cert_path, key_path, password)
 
     assert loaded.certificate.serial_number == self_signed_cert.certificate.serial_number
-
-    # mypy doesn't find most attributes of cryptography's RSAPrivateKey as it seems
-    loaded_nums = loaded.private_key._key.private_numbers()  # type: ignore[attr-defined]
-    orig_nums = self_signed_cert.private_key._key.private_numbers()  # type: ignore[attr-defined]
-    assert loaded_nums == orig_nums
+    assert rsa_private_keys_equal(loaded.private_key, self_signed_cert.private_key)
 
 
 def test_loading_combined_file_content(self_signed_cert: CertificateWithPrivateKey) -> None:
@@ -219,6 +217,55 @@ def test_verify_is_signed_by() -> None:
 def test_default_subject_alt_names(self_signed_cert: CertificateWithPrivateKey) -> None:
     """check that the self-signed cert does not come with SANs"""
     assert self_signed_cert.certificate.get_subject_alt_names() == []
+
+
+def test_ec_cert() -> None:
+    # a self signed P256 certificate to act as CA:
+    #   openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 \
+    #       -keyout key.pem -out cert.pem -days 365
+    ca_pem = CertificatePEM(
+        """
+-----BEGIN CERTIFICATE-----
+MIICRTCCAeugAwIBAgIUEny8ZebcY4jqZF9XHElye219vi4wCgYIKoZIzj0EAwIw
+eDELMAkGA1UEBhMCREUxEDAOBgNVBAgMB0JhdmFyaWExHDAaBgNVBAoME0NoZWNr
+bWsgVGVzdGluZyBJbmMxFzAVBgNVBAMMDnAyNTYtdGVzdC1jZXJ0MSAwHgYJKoZI
+hvcNAQkBFhFoZWxsb0BleGFtcGxlLmNvbTAeFw0yMzExMDgxMzEwMDVaFw0yNDEx
+MDcxMzEwMDVaMHgxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdCYXZhcmlhMRwwGgYD
+VQQKDBNDaGVja21rIFRlc3RpbmcgSW5jMRcwFQYDVQQDDA5wMjU2LXRlc3QtY2Vy
+dDEgMB4GCSqGSIb3DQEJARYRaGVsbG9AZXhhbXBsZS5jb20wWTATBgcqhkjOPQIB
+BggqhkjOPQMBBwNCAAT+ZbIByiW7aJLwBq3CfBNzcSs5+EvHnjRfZS1D3fHTty+G
+xslQ9dLhjEbuJET0apWkEkBXaJB6+vHpoJpOZdRlo1MwUTAdBgNVHQ4EFgQUEKFg
+CaDe8Hv5OZqdhO7ix0luLekwHwYDVR0jBBgwFoAUEKFgCaDe8Hv5OZqdhO7ix0lu
+LekwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAgNIADBFAiAqvRhu2oJCsWos
+bZf1yetY8sc2jXaDFlTTHQOp6Zx1FAIhAIjGd+50uRV66LND65uRipKkGOdNazvn
+CdnYjBDhp0Ud
+-----END CERTIFICATE-----"""
+    )
+    ca = Certificate.load_pem(ca_pem)
+    assert ca._is_self_signed()
+    ca.verify_is_signed_by(ca)
+
+    # an ed25519 certificate issued by that CA:
+    #   openssl req -newkey ed25519 -keyout ed25519-key.pem -out ed25519-csr.pem
+    #   openssl x509 -req -in ed25519-csr.pem -CA cert.pem -CAkey key.pem -CAcreateserial \
+    #       -out ed25519-cert.pem -days 365
+    child_pem = CertificatePEM(
+        """
+-----BEGIN CERTIFICATE-----
+MIIB0DCCAXYCFCQEVGZy+jv2HvByTHl3ENBZ7erjMAoGCCqGSM49BAMCMHgxCzAJ
+BgNVBAYTAkRFMRAwDgYDVQQIDAdCYXZhcmlhMRwwGgYDVQQKDBNDaGVja21rIFRl
+c3RpbmcgSW5jMRcwFQYDVQQDDA5wMjU2LXRlc3QtY2VydDEgMB4GCSqGSIb3DQEJ
+ARYRaGVsbG9AZXhhbXBsZS5jb20wHhcNMjMxMTA4MTMxNzM2WhcNMjQxMTA3MTMx
+NzM2WjCBizELMAkGA1UEBhMCREUxDzANBgNVBAgMBkJlcmxpbjEcMBoGA1UECgwT
+Q2hlY2ttayBUZXN0aW5nIEluYzEQMA4GA1UECwwHT3V0cG9zdDEbMBkGA1UEAwwS
+ZWQyNTUxOS1jaGlsZC1jZXJ0MR4wHAYJKoZIhvcNAQkBFg9ieWVAZXhhbXBsZS5j
+b20wKjAFBgMrZXADIQDGG15BAIjPlmsElcmidhhthCLuAD2uJtv6r/W9FCC0GjAK
+BggqhkjOPQQDAgNIADBFAiEA4QZF5KNx3hDIlThEOW+2o05/wCLOYtO8jJy4iuaK
+ip0CIBdH+5jSUeJjJx5LCycuvh4TO7TG33MvgZG71DxvUY6q
+-----END CERTIFICATE-----"""
+    )
+    child = Certificate.load_pem(child_pem)
+    child.verify_is_signed_by(ca)
 
 
 @pytest.mark.parametrize(

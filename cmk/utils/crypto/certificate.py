@@ -37,25 +37,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import NamedTuple
 
-import cryptography.hazmat.primitives.asymmetric.rsa as rsa
+import cryptography
+import cryptography.hazmat.primitives.asymmetric as asym
 import cryptography.x509 as x509
 from cryptography.hazmat.primitives import serialization
 from dateutil.relativedelta import relativedelta
 
 from cmk.utils.crypto.keys import (
     EncryptedPrivateKeyPEM,
+    InvalidSignatureError,
     PlaintextPrivateKeyPEM,
     PrivateKey,
     PublicKey,
 )
 from cmk.utils.crypto.password import Password
-from cmk.utils.crypto.types import (
-    HashAlgorithm,
-    InvalidPEMError,
-    MKCryptoException,
-    SerializedPEM,
-    Signature,
-)
+from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError, MKCryptoException, SerializedPEM
 from cmk.utils.site import omd_site
 
 
@@ -87,6 +83,8 @@ class CertificateWithPrivateKey(NamedTuple):
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
+        # Note: Various places in the code expect our own certs to use RSA at the moment.
+        # At least: agent bakery and backups via key_mgmt.py, as well as the license server.
         private_key = PrivateKey.generate_rsa(key_size)
         name = X509Name.create(
             common_name=common_name,
@@ -270,9 +268,6 @@ class Certificate:
 
     def __init__(self, certificate: x509.Certificate) -> None:
         """Wrap an cryptography.x509.Certificate (RSA keys only)"""
-
-        if not isinstance(certificate.public_key(), rsa.RSAPublicKey):
-            raise ValueError("Only RSA certificates are supported at this time")
         self._cert = certificate
 
     @classmethod
@@ -348,14 +343,14 @@ class Certificate:
                 critical=False,
             )
 
-        return Certificate(
+        return cls(
             builder.sign(private_key=issuer_signing_key._key, algorithm=HashAlgorithm.Sha512.value)
         )
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
         try:
-            return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
+            return cls(x509.load_pem_x509_certificate(pem_data.bytes))
         except ValueError:
             raise InvalidPEMError("Unable to load certificate.")
 
@@ -380,9 +375,9 @@ class Certificate:
 
     @property
     def public_key(self) -> PublicKey:
-        pk = self._cert.public_key()
-        assert isinstance(pk, rsa.RSAPublicKey)
-        return PublicKey(pk)
+        key = self._cert.public_key()
+        assert not isinstance(key, (asym.x448.X448PublicKey, asym.x25519.X25519PublicKey))
+        return PublicKey(key)
 
     @property
     def subject(self) -> X509Name:
@@ -420,29 +415,9 @@ class Certificate:
             * check if certs are revoked
 
         :raise: InvalidSignatureError if the signature is not valid
-        :raise: ValueError
-                 * if the `signer` certificate's Key Usage does not allow certificate signature
-                   verification (keyCertSign)
-                 * if the signature scheme is not supported, see below
-
-        We assume the signature is made with PKCS1 v1.5 padding, as this is the only scheme
-        cryptography.io supports for X.509 certificates (see `PublicKey.verify`). This is true
-        for certificates created with `Certificate._create`, but might not be true for certificates
-        loaded from elsewhere.
+        :raise: ValueError if the `signer` certificate is not marked to sign certificates
+                (see `may_sign_certificates`)
         """
-
-        # Check if PKCS1 v1.5 padding is used. The scheme is identified as <hash>WithRSAEncryption
-        # (RFC 4055 Section 5).
-        # We only accept SHA256, SHA384 and SHA512. Unsupported schemes include MD5, SHA1,
-        # RSAES-OAEP and RSASSA-PSS, and will lead to the error below.
-        if (oid := self._cert.signature_algorithm_oid.dotted_string) not in [
-            # https://oidref.com/1.2.840.113549.1.1
-            "1.2.840.113549.1.1.11",  # sha256WithRSAEncryption
-            "1.2.840.113549.1.1.12",  # sha384WithRSAEncryption
-            "1.2.840.113549.1.1.13",  # sha512WithRSAEncryption
-        ]:
-            raise ValueError(f"Unsupported signature scheme for X.509 certificate ({oid})")
-
         # Check if the signer is allowed to sign certificates. Self-signed, non-CA certificates do
         # not need to set the usage bit. See also https://github.com/openssl/openssl/issues/1418.
         if not signer.may_sign_certificates() and not self._is_self_signed():
@@ -451,16 +426,10 @@ class Certificate:
                 "(CA flag or keyCertSign bit missing)."
             )
 
-        if (hash_algo := self._cert.signature_hash_algorithm) is None:
-            # this should not happen and can be removed once we properly support other key and
-            # signature types
-            raise ValueError("Unexpected signature type (no hash algorithm)")
-
-        signer.public_key.verify(
-            Signature(self._cert.signature),
-            self._cert.tbs_certificate_bytes,
-            HashAlgorithm.from_cryptography(hash_algo),
-        )
+        try:
+            self._cert.verify_directly_issued_by(signer._cert)
+        except cryptography.exceptions.InvalidSignature as e:
+            raise InvalidSignatureError(str(e)) from e
 
     def may_sign_certificates(self) -> bool:
         """
@@ -699,9 +668,9 @@ class CertificateSigningRequest:
 
     @property
     def public_key(self) -> PublicKey:
-        pk = self.csr.public_key()
-        assert isinstance(pk, rsa.RSAPublicKey)
-        return PublicKey(pk)
+        key = self.csr.public_key()
+        assert not isinstance(key, (asym.x448.X448PublicKey, asym.x25519.X25519PublicKey))
+        return PublicKey(key)
 
     @property
     def is_signature_valid(self) -> bool:

@@ -5,6 +5,7 @@
 
 from datetime import datetime
 
+import cryptography.hazmat.primitives.asymmetric as asym
 import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
@@ -32,3 +33,13 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
 @pytest.fixture(name="rsa_key", scope="module")
 def fixture_rsa_key() -> PrivateKey:
     return PrivateKey.generate_rsa(1024)
+
+
+def rsa_private_keys_equal(key_a: PrivateKey, key_b: PrivateKey) -> bool:
+    """Check if two keys are the same RSA key"""
+    # Asserting key types here just to cut corners on type checking
+    # (ed25519 keys don't have private_numbers())
+    assert isinstance(key_a._key, asym.rsa.RSAPrivateKey) and isinstance(
+        key_b._key, asym.rsa.RSAPrivateKey
+    )
+    return key_a._key.private_numbers() == key_b._key.private_numbers()

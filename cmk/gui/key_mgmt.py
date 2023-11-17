@@ -511,6 +511,8 @@ class PageDownloadKey:
 
 
 def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id: SiteId) -> Key:
+    # Note: Verification of the signatures makes assumptions about the key (RSA) and the padding
+    # scheme (PKCS1v15). Make sure this is adjusted before changing it here.
     key_pair = CertificateWithPrivateKey.generate_self_signed(
         common_name=alias,
         organizational_unit_name=user_id,

@@ -7,7 +7,7 @@
 
 from typing import Literal
 
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
 import cmk.utils.crypto.certificate as certificate
@@ -53,6 +53,9 @@ class AesCbcCipher:
 
 def encrypt_for_rsa_key(recipient_key: keys.PublicKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
+    if not isinstance(recipient_key._key, rsa.RSAPublicKey):
+        raise ValueError("not an RSA key")
+
     return recipient_key._key.encrypt(
         data,
         padding.OAEP(
@@ -65,6 +68,9 @@ def encrypt_for_rsa_key(recipient_key: keys.PublicKey, data: bytes) -> bytes:
 
 def decrypt_with_rsa_key(recipient_key: keys.PrivateKey, data: bytes) -> bytes:
     """Deprecated. Do not use."""
+    if not isinstance(recipient_key._key, rsa.RSAPrivateKey):
+        raise ValueError("not an RSA key")
+
     return recipient_key._key.decrypt(
         data,
         padding.OAEP(

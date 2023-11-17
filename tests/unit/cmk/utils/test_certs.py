@@ -6,10 +6,12 @@
 from datetime import datetime
 from pathlib import Path
 
+import cryptography.hazmat.primitives.asymmetric.rsa as rsa
 import cryptography.x509 as x509
 from dateutil.relativedelta import relativedelta
 
 from tests.testlib import on_time
+from tests.testlib.certs import rsa_private_keys_equal
 
 from livestatus import SiteId
 
@@ -149,24 +151,29 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
     with on_time(100, "UTC"):
         ca = RootCA.load_or_create(filename, "peter", key_size=1024)
 
-    assert ca.rsa.key_size == 1024
+    assert isinstance(ca.private_key._key, rsa.RSAPrivateKey)
+    assert ca.private_key._key.key_size == 1024
     assert ca.certificate.common_name == "peter"
-    assert str(ca.cert.not_valid_before) == "1970-01-01 00:01:40", "creation time is respected"
-    assert str(ca.cert.not_valid_after) == "1980-01-01 00:01:40", "is valid for 10 years"
+    assert (
+        str(ca.certificate.not_valid_before) == "1970-01-01 00:01:40"
+    ), "creation time is respected"
+    assert str(ca.certificate.not_valid_after) == "1980-01-01 00:01:40", "is valid for 10 years"
     assert ca.certificate.public_key == ca.private_key.public_key
 
     # check extensions
-    assert ca.cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(
         x509.SubjectKeyIdentifier
     ).value == x509.SubjectKeyIdentifier.from_public_key(
-        ca.cert.public_key()
+        ca.certificate.public_key._key
     ), "subject key identifier is set and corresponds to the cert's public key"
 
-    assert ca.cert.extensions.get_extension_for_class(
+    assert ca.certificate._cert.extensions.get_extension_for_class(
         x509.BasicConstraints
     ).value == x509.BasicConstraints(ca=True, path_length=0), "is a CA certificate"
 
-    assert ca.cert.extensions.get_extension_for_class(x509.KeyUsage).value == x509.KeyUsage(
+    assert ca.certificate._cert.extensions.get_extension_for_class(
+        x509.KeyUsage
+    ).value == x509.KeyUsage(
         digital_signature=False,
         content_commitment=False,
         key_encipherment=False,
@@ -180,9 +187,8 @@ def test_create_root_ca_and_key(tmp_path: Path) -> None:
 
     assert filename.exists()
     loaded = RootCA.load(filename)
-    assert loaded.cert == ca.cert
-    # RSAPrivateKeyWithSerialization confuses mypy, RSAPrivateKey has private_numbers
-    assert loaded.rsa.private_numbers() == ca.rsa.private_numbers()  # type:ignore[attr-defined]
+    assert loaded.certificate._cert == ca.certificate._cert
+    assert rsa_private_keys_equal(loaded.private_key, ca.private_key)
 
 
 def test_sign_csr_with_local_ca() -> None:

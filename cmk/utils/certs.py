@@ -47,16 +47,6 @@ _DEFAULT_KEY_SIZE = 4096
 
 
 class RootCA(CertificateWithPrivateKey):
-    @property
-    def cert(self) -> x509.Certificate:
-        """Deprecated accessor to the underlying pyca/cryptography object"""
-        return self.certificate._cert
-
-    @property
-    def rsa(self) -> RSAPrivateKey:
-        """Deprecated accessor to the underlying pyca/cryptography object"""
-        return self.private_key._key
-
     @classmethod
     def load(cls, path: Path) -> RootCA:
         cert = x509.load_pem_x509_certificate(pem_bytes := path.read_bytes())

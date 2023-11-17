@@ -717,6 +717,11 @@ div.page_menu_popup {
       width: auto;
       height: auto;
     }
+
+    hr {
+      margin-top: 15px;
+      border: 1px solid $line-color;
+    }
   }
 
   form span.checkbox {

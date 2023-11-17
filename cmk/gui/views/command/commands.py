@@ -1237,10 +1237,22 @@ class CommandScheduleDowntimes(Command):
         return super().user_confirm_options(len_rows, cmdtag)
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        if self._adhoc_downtime_configured():
+            self._render_adhoc_comment(what)
         self._render_comment()
         self._render_date_and_time()
         self._render_advanced_options(what)
         self._render_confirm_buttons(what)
+
+    def _render_adhoc_comment(self, what) -> None:  # type: ignore[no-untyped-def]
+        adhoc_duration = active_config.adhoc_downtime.get("duration")
+        adhoc_comment = active_config.adhoc_downtime.get("comment", "")
+        html.open_div(class_="group")
+        html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
+        html.nbsp()
+        html.write_text(_("Comment") + ": " + adhoc_comment)
+        html.hr()
+        html.close_div()
 
     def _render_comment(self) -> None:
         html.open_div(class_="group")
@@ -1383,17 +1395,6 @@ class CommandScheduleDowntimes(Command):
             title=_("Advanced options"),
             indent=False,
         ):
-            # TODO this can be removed? What about the global config option?
-            # if self._adhoc_downtime_configured():
-            #    adhoc_duration = active_config.adhoc_downtime.get("duration")
-            #    adhoc_comment = active_config.adhoc_downtime.get("comment", "")
-            #    html.open_div(class_="group")
-            #    html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
-            #    html.nbsp()
-            #    html.write_text(_("with comment") + ": ")
-            #    html.write_text(adhoc_comment)
-            #    html.close_div()
-
             if what == "host":
                 html.open_div(class_="group")
                 self._vs_host_downtime().render_input("_include_children", None)
@@ -1466,13 +1467,17 @@ class CommandScheduleDowntimes(Command):
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
         recurring_number = self.recurring_downtimes.number()
-        if varprefix := request.var("_down_host", request.var("_down_service")):
-            start_time = self._custom_start_time()
-            end_time = self._custom_end_time(start_time)
+        if request.var("_down_host", request.var("_down_service", request.var("_down_adhoc"))):
+            if request.var("_down_adhoc"):
+                start_time = self._current_local_time()
+                end_time = self._get_adhoc_end_time(start_time)
+            else:
+                start_time = self._custom_start_time()
+                end_time = self._custom_end_time(start_time)
 
             if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
                 raise MKUserError(
-                    varprefix,
+                    None,
                     _(
                         "The start of a recurring downtime can only be set for "
                         "days 1-28 of a month."
@@ -1535,7 +1540,11 @@ class CommandScheduleDowntimes(Command):
 
     def _get_end_msg(self, start_at: float) -> str:
         end_weekday, end_month, end_day, end_time, end_year = time.asctime(
-            time.localtime(self._custom_end_time(start_at))
+            time.localtime(
+                self._get_adhoc_end_time(start_at)
+                if request.var("_down_adhoc")
+                else self._custom_end_time(start_at)
+            )
         ).split()
         return _("End: %s, %s. %s %s at %s") % (
             end_weekday,
@@ -1544,6 +1553,9 @@ class CommandScheduleDowntimes(Command):
             end_year,
             end_time,
         )
+
+    def _get_adhoc_end_time(self, start_time: float) -> float:
+        return start_time + active_config.adhoc_downtime.get("duration", 0) * 60
 
     def confirm_dialog_additions(
         self,

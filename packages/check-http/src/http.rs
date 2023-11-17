@@ -2,34 +2,20 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::Result as AnyhowResult;
 use bytes::Bytes;
-use http::{HeaderMap, HeaderName, HeaderValue};
+use http::{HeaderMap, HeaderName, HeaderValue, Method};
 use reqwest::{
-    header::{CONTENT_TYPE, USER_AGENT},
-    Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
+    header::CONTENT_TYPE, Client, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
-use std::time::Duration;
 
-use crate::connection::{apply_connection_settings, ConnectionConfig};
-
-pub struct ClientConfig {
+pub struct RequestConfig {
     pub url: String,
     pub method: Method,
-    pub user_agent: Option<HeaderValue>,
     pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
-    pub timeout: Duration,
-    pub auth_user: Option<String>,
-    pub auth_pw: Option<String>,
     pub body: Option<String>,
     pub content_type: Option<HeaderValue>,
-}
-
-// TODO(au): This seems a bit misplaced.
-// When doing the request with one entry point instead of two,
-// this can go to ClientConfig (that could be named RequestConfig again),
-// but this needs some preparation.
-pub struct RequestConfig {
+    pub auth_user: Option<String>,
+    pub auth_pw: Option<String>,
     pub without_body: bool,
 }
 
@@ -40,54 +26,44 @@ pub struct ProcessedResponse {
     pub body: Option<ReqwestResult<Bytes>>,
 }
 
-pub fn prepare_request(
-    cfg: ClientConfig,
-    conn_cfg: ConnectionConfig,
-) -> AnyhowResult<RequestBuilder> {
+fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder {
     let mut headers = HeaderMap::new();
-    if let Some(ua) = cfg.user_agent {
-        headers.insert(USER_AGENT, ua);
-    }
-    if let Some(content_type) = cfg.content_type {
+    if let Some(content_type) = request_cfg.content_type {
         headers.insert(CONTENT_TYPE, content_type);
     }
-    if let Some(hds) = cfg.headers {
-        headers.extend(hds);
-    }
 
-    let client = reqwest::Client::builder();
-    let client = apply_connection_settings(conn_cfg, client);
-    let client = client
-        .timeout(cfg.timeout)
-        .default_headers(headers)
-        .build()?;
+    let req = client
+        .request(request_cfg.method, request_cfg.url)
+        .headers(headers);
 
-    let req = client.request(cfg.method, cfg.url);
-    let req = if let Some(body) = cfg.body {
+    let req = if let Some(body) = request_cfg.body {
         req.body(body)
     } else {
         req
     };
 
-    if let Some(user) = cfg.auth_user {
-        Ok(req.basic_auth(user, cfg.auth_pw))
+    if let Some(user) = request_cfg.auth_user {
+        req.basic_auth(user, request_cfg.auth_pw)
     } else {
-        Ok(req)
+        req
     }
 }
 
 pub async fn perform_request(
-    request: RequestBuilder,
+    client: Client,
     cfg: RequestConfig,
-) -> Result<ProcessedResponse, ReqwestError> {
-    let response = request.send().await?;
+) -> ReqwestResult<ProcessedResponse> {
+    let fetch_body = !cfg.without_body;
+
+    let response = prepare_request(client, cfg).send().await?;
 
     let headers = response.headers().to_owned();
     let version = response.version();
     let status = response.status();
-    let body = match cfg.without_body {
-        false => Some(response.bytes().await),
-        true => None,
+    let body = if fetch_body {
+        Some(response.bytes().await)
+    } else {
+        None
     };
 
     Ok(ProcessedResponse {

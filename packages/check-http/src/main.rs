@@ -3,8 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use check_http::checking::{Bounds, CheckParameters, UpperLevels};
-use check_http::connection::{self, ConnectionConfig};
-use check_http::http::{ClientConfig, RequestConfig};
+use check_http::connection::{self, ClientConfig};
+use check_http::http::RequestConfig;
 use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
@@ -17,41 +17,18 @@ mod pwstore;
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
-    let (client_cfg, connection_cfg, request_cfg, check_params) = make_configs(args);
-    let output = Output::from_check_results(
-        collect_checks(client_cfg, connection_cfg, request_cfg, check_params).await,
-    );
+    let (client_cfg, request_cfg, check_params) = make_configs(args);
+    let output =
+        Output::from_check_results(collect_checks(client_cfg, request_cfg, check_params).await);
     println!("{}", output);
     std::process::exit(output.worst_state.into());
 }
 
-fn make_configs(
-    args: Cli,
-) -> (
-    ClientConfig,
-    ConnectionConfig,
-    RequestConfig,
-    CheckParameters,
-) {
+fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
     (
         ClientConfig {
-            url: args.url,
-            method: args.method.unwrap_or_else(|| {
-                if args.body.is_some() {
-                    Method::POST
-                } else {
-                    Method::GET
-                }
-            }),
             user_agent: args.user_agent,
-            headers: args.headers,
             timeout: args.timeout,
-            auth_user: args.auth_user,
-            auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
-            body: args.body,
-            content_type: args.content_type,
-        },
-        ConnectionConfig {
             onredirect: match args.onredirect {
                 cli::OnRedirect::Ok => connection::OnRedirect::Ok,
                 cli::OnRedirect::Warning => connection::OnRedirect::Warning,
@@ -68,6 +45,19 @@ fn make_configs(
             },
         },
         RequestConfig {
+            url: args.url,
+            headers: args.headers,
+            method: args.method.unwrap_or_else(|| {
+                if args.body.is_some() {
+                    Method::POST
+                } else {
+                    Method::GET
+                }
+            }),
+            body: args.body,
+            auth_user: args.auth_user,
+            auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
+            content_type: args.content_type,
             without_body: args.without_body,
         },
         CheckParameters {

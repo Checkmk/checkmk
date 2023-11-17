@@ -2,11 +2,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use http::{HeaderMap, HeaderValue};
 use reqwest::{
+    header::USER_AGENT,
     redirect::{Action, Attempt, Policy},
-    ClientBuilder,
+    Client, ClientBuilder, Result as ReqwestResult,
 };
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::time::Duration;
 
 pub enum OnRedirect {
     Ok,
@@ -23,14 +26,33 @@ pub enum ForceIP {
     Ipv6,
 }
 
-pub struct ConnectionConfig {
+pub struct ClientConfig {
+    pub user_agent: Option<HeaderValue>,
+    pub timeout: Duration,
     pub onredirect: OnRedirect,
     pub max_redirs: usize,
     pub force_ip: Option<ForceIP>,
 }
 
-pub fn apply_connection_settings(cfg: ConnectionConfig, client: ClientBuilder) -> ClientBuilder {
-    let client = match &cfg.force_ip {
+pub fn get_client(cfg: ClientConfig) -> ReqwestResult<Client> {
+    let client = reqwest::Client::builder();
+
+    let mut headers = HeaderMap::new();
+    if let Some(ua) = cfg.user_agent {
+        headers.insert(USER_AGENT, ua);
+    }
+
+    let client = apply_connection_settings(client, cfg.force_ip, cfg.onredirect, cfg.max_redirs);
+    client.timeout(cfg.timeout).default_headers(headers).build()
+}
+
+fn apply_connection_settings(
+    client: ClientBuilder,
+    force_ip: Option<ForceIP>,
+    onredirect: OnRedirect,
+    max_redirs: usize,
+) -> ClientBuilder {
+    let client = match &force_ip {
         None => client,
         Some(ipv) => match ipv {
             ForceIP::Ipv4 => client.local_address(IpAddr::V4(Ipv4Addr::UNSPECIFIED)),
@@ -38,7 +60,7 @@ pub fn apply_connection_settings(cfg: ConnectionConfig, client: ClientBuilder) -
         },
     };
 
-    client.redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+    client.redirect(get_policy(onredirect, max_redirs, force_ip))
 }
 
 fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {

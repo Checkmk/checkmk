@@ -5,21 +5,20 @@
 use std::time::Instant;
 
 use crate::checking::{self, CheckParameters, CheckResult, State};
-use crate::connection::ConnectionConfig;
-use crate::http::{self, ClientConfig, RequestConfig};
+use crate::connection::{self, ClientConfig};
+use crate::http::{self, RequestConfig};
 
 pub async fn collect_checks(
     client_config: ClientConfig,
-    connection_cfg: ConnectionConfig,
     request_cfg: RequestConfig,
     check_params: CheckParameters,
 ) -> Vec<CheckResult> {
-    let Ok(request) = http::prepare_request(client_config, connection_cfg) else {
+    let Ok(client) = connection::get_client(client_config) else {
         return vec![CheckResult::summary(State::Unknown, "Error building the request").unwrap()];
     };
 
     let now = Instant::now();
-    let response = match http::perform_request(request, request_cfg).await {
+    let response = match http::perform_request(client, request_cfg).await {
         Ok(resp) => resp,
         Err(err) => {
             if err.is_timeout() {

@@ -3,11 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.rulesets.v1._form_spec import (
+    CascadingDropdown,
+    CascadingDropdownElement,
+    DictElement,
+    Dictionary,
+    DropdownChoice,
+    DropdownChoiceElement,
+    FormSpec,
+    Integer,
+    InvalidElementMode,
+    InvalidElementValidator,
+    ItemFormSpec,
+    List,
+    MonitoringState,
+    Percentage,
+    State,
+    TextInput,
+    Tuple,
+)
 from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
 
 # TODO localize will probably not stay here, but we want to find a consistent solution for all apis
 from cmk.rulesets.v1._localize import Localizable
-from cmk.rulesets.v1._rulespec import (
+from cmk.rulesets.v1._rule_spec import (
     ActiveChecksRuleSpec,
     AgentConfigRuleSpec,
     CheckParameterRuleSpecWithItem,
@@ -23,25 +42,6 @@ from cmk.rulesets.v1._rulespec import (
     SpecialAgentRuleSpec,
 )
 from cmk.rulesets.v1._validation import disallow_empty, in_range, match_regex, ValidationError
-from cmk.rulesets.v1._valuespec import (
-    CascadingDropdown,
-    CascadingDropdownElement,
-    DictElement,
-    Dictionary,
-    DropdownChoice,
-    DropdownChoiceElement,
-    Integer,
-    InvalidElementMode,
-    InvalidElementValidator,
-    ItemSpec,
-    List,
-    MonitoringState,
-    Percentage,
-    State,
-    TextInput,
-    Tuple,
-    ValueSpec,
-)
 
 __all__ = [
     "ActiveChecksRuleSpec",
@@ -63,9 +63,9 @@ __all__ = [
     "Topic",
     "Dictionary",
     "DictElement",
-    "ItemSpec",
+    "ItemFormSpec",
     "TextInput",
-    "ValueSpec",
+    "FormSpec",
     "Localizable",
     "MonitoringState",
     "State",

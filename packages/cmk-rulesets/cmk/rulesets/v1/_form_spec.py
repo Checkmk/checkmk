@@ -89,7 +89,7 @@ class TextInput:
 
 @dataclass(frozen=True)
 class Tuple:
-    elements: Sequence["ValueSpec"]
+    elements: Sequence["FormSpec"]
 
     title: Localizable | None = None
     help_text: Localizable | None = None
@@ -157,7 +157,7 @@ class DropdownChoice:
 @dataclass(frozen=True)
 class CascadingDropdownElement:
     ident: str
-    value_spec: "ValueSpec"
+    parameter_form: "FormSpec"
 
 
 @dataclass(frozen=True)
@@ -190,14 +190,14 @@ class CascadingDropdown:
 class DictElement:
     """
     Args:
-        value_spec: Configuration specification of this entry
+        parameter_form: Configuration specification of this entry
         required: Whether the user has to configure the value in question. If set to False, it may
                   be omitted.
         read_only: Element that can't be edited. Can be used to store the discovered parameters.
         show_more: Only show if "show more" is activated
     """
 
-    value_spec: "ValueSpec"
+    parameter_form: "FormSpec"
     required: bool | None = False
     read_only: bool | None = False
     show_more: bool | None = False
@@ -277,7 +277,7 @@ class List:
         order_editable: Can the elements be reordered in the UI
     """
 
-    value_spec: "ValueSpec"
+    parameter_form: "FormSpec"
     title: Localizable | None = None
     help_text: Localizable | None = None
 
@@ -286,10 +286,10 @@ class List:
     order_editable: bool = True
 
 
-ItemSpec = TextInput | DropdownChoice
+ItemFormSpec = TextInput | DropdownChoice
 
 
-ValueSpec = (
+FormSpec = (
     Integer
     | Percentage
     | TextInput

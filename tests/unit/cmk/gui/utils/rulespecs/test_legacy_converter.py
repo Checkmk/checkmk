@@ -13,12 +13,12 @@ import cmk.gui.watolib.rulespecs as legacy_rulespecs
 from cmk.gui import wato, watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.utils.rulespecs.legacy_converter import (
+from cmk.gui.utils.rule_specs.legacy_converter import (
     _convert_to_legacy_rulespec_group,
     _convert_to_legacy_valuespec,
     convert_to_legacy_rulespec,
 )
-from cmk.gui.utils.rulespecs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 
 import cmk.rulesets.v1 as api_v1
 
@@ -247,7 +247,9 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
         pytest.param(
             api_v1.CascadingDropdown(
                 elements=[
-                    api_v1.CascadingDropdownElement(ident="first", value_spec=api_v1.TextInput())
+                    api_v1.CascadingDropdownElement(
+                        ident="first", parameter_form=api_v1.TextInput()
+                    )
                 ],
                 prefill_selection=None,
             ),
@@ -262,7 +264,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 elements=[
                     api_v1.CascadingDropdownElement(
                         ident="first",
-                        value_spec=api_v1.TextInput(title=api_v1.Localizable("Spec title")),
+                        parameter_form=api_v1.TextInput(title=api_v1.Localizable("Spec title")),
                     )
                 ],
                 prefill_selection=None,
@@ -280,7 +282,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                 elements=[
                     api_v1.CascadingDropdownElement(
                         ident="first",
-                        value_spec=api_v1.TextInput(),
+                        parameter_form=api_v1.TextInput(),
                     )
                 ],
                 title=api_v1.Localizable("parent title"),
@@ -298,13 +300,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             id="CascadingDropdown",
         ),
         pytest.param(
-            api_v1.List(value_spec=api_v1.Tuple(elements=[])),
+            api_v1.List(parameter_form=api_v1.Tuple(elements=[])),
             legacy_valuespecs.ListOf(valuespec=legacy_valuespecs.Tuple(elements=[])),
             id="minimal ListOf",
         ),
         pytest.param(
             api_v1.List(
-                value_spec=api_v1.Tuple(
+                parameter_form=api_v1.Tuple(
                     elements=[api_v1.TextInput(), api_v1.Integer(unit=api_v1.Localizable("km"))]
                 ),
                 title=api_v1.Localizable("list title"),
@@ -329,7 +331,7 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
     ],
 )
 def test_convert_to_legacy_valuespec(
-    new_valuespec: api_v1.ValueSpec, expected: legacy_valuespecs.ValueSpec
+    new_valuespec: api_v1.FormSpec, expected: legacy_valuespecs.ValueSpec
 ) -> None:
     _compare_specs(_convert_to_legacy_valuespec(new_valuespec, _), expected)
 
@@ -361,8 +363,8 @@ def test_convert_to_legacy_rulespec_group(
                 name="test_rulespec",
                 title=api_v1.Localizable("rulespec title"),
                 topic=api_v1.Topic.APPLICATIONS,
-                item=api_v1.TextInput(title=api_v1.Localizable("item title")),
-                value_spec=partial(
+                item_form=api_v1.TextInput(title=api_v1.Localizable("item title")),
+                parameter_form=partial(
                     api_v1.Dictionary,
                     elements={
                         "key": api_v1.DictElement(
@@ -486,7 +488,7 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
             raise api_v1.ValidationError(api_v1.Localizable("Duplicate elements"))
 
     v1_api_list = api_v1.List(
-        value_spec=api_v1.Tuple(elements=[api_v1.TextInput()]),
+        parameter_form=api_v1.Tuple(elements=[api_v1.TextInput()]),
         custom_validate=_v1_custom_list_validate,
     )
 

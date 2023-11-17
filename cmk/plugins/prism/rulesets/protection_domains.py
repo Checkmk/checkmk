@@ -15,11 +15,11 @@ from cmk.rulesets.v1 import (
 )
 
 
-def _parameter_valuespec_prism_protection_domains() -> Dictionary:
+def _parameter_form_prism_protection_domains() -> Dictionary:
     return Dictionary(
         elements={
             "sync_state": DictElement(
-                value_spec=DropdownChoice(
+                parameter_form=DropdownChoice(
                     title=Localizable("Target sync state"),
                     help_text=Localizable(
                         "Configure the target state of the protection domain sync state."
@@ -42,10 +42,10 @@ def _parameter_valuespec_prism_protection_domains() -> Dictionary:
     )
 
 
-rulespec_prims_protection_domains = CheckParameterRuleSpecWithItem(
+rule_spec_prims_protection_domains = CheckParameterRuleSpecWithItem(
     name="prism_protection_domains",
     title=Localizable("Nutanix Prism MetroAvail Sync State"),
     topic=Topic.VIRTUALIZATION,
-    item=TextInput(title=Localizable("Protection Domain")),
-    value_spec=_parameter_valuespec_prism_protection_domains,
+    item_form=TextInput(title=Localizable("Protection Domain")),
+    parameter_form=_parameter_form_prism_protection_domains,
 )

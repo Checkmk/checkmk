@@ -37,24 +37,24 @@ RuleSpec = (
 )
 
 
-def load_api_v1_rulespecs(
+def load_api_v1_rule_specs(
     raise_errors: bool,
 ) -> tuple[Sequence[str], Sequence[RuleSpec]]:
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         "rulesets",
         {
-            HostRuleSpec: "rulespec_",
-            ServiceRuleSpec: "rulespec_",
-            CheckParameterRuleSpecWithItem: "rulespec_",
-            CheckParameterRuleSpecWithoutItem: "rulespec_",
-            EnforcedServiceRuleSpecWithItem: "rulespec_",
-            EnforcedServiceRuleSpecWithoutItem: "rulespec_",
-            InventoryParameterRuleSpec: "rulespec_",
-            ActiveChecksRuleSpec: "rulespec_",
-            AgentConfigRuleSpec: "rulespec_",
-            SpecialAgentRuleSpec: "rulespec_",
-            ExtraHostConfRuleSpec: "rulespec_",
-            ExtraServiceConfRuleSpec: "rulespec_",
+            HostRuleSpec: "rule_spec_",
+            ServiceRuleSpec: "rule_spec_",
+            CheckParameterRuleSpecWithItem: "rule_spec_",
+            CheckParameterRuleSpecWithoutItem: "rule_spec_",
+            EnforcedServiceRuleSpecWithItem: "rule_spec_",
+            EnforcedServiceRuleSpecWithoutItem: "rule_spec_",
+            InventoryParameterRuleSpec: "rule_spec_",
+            ActiveChecksRuleSpec: "rule_spec_",
+            AgentConfigRuleSpec: "rule_spec_",
+            SpecialAgentRuleSpec: "rule_spec_",
+            ExtraHostConfRuleSpec: "rule_spec_",
+            ExtraServiceConfRuleSpec: "rule_spec_",
         },
         raise_errors=raise_errors,
     )
@@ -79,8 +79,8 @@ def _generate_additional_plugins(
                 EnforcedServiceRuleSpecWithItem(
                     title=plugin.title,
                     topic=plugin.topic,
-                    value_spec=plugin.value_spec,
-                    item=plugin.item,
+                    parameter_form=plugin.parameter_form,
+                    item_form=plugin.item_form,
                     name=plugin.name,
                     is_deprecated=plugin.is_deprecated,
                     help_text=plugin.help_text,
@@ -93,7 +93,7 @@ def _generate_additional_plugins(
                 EnforcedServiceRuleSpecWithoutItem(
                     title=plugin.title,
                     topic=plugin.topic,
-                    value_spec=plugin.value_spec,
+                    parameter_form=plugin.parameter_form,
                     name=plugin.name,
                     is_deprecated=plugin.is_deprecated,
                     help_text=plugin.help_text,

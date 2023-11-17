@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from enum import auto, Enum
 from typing import Callable
 
+from cmk.rulesets.v1._form_spec import Dictionary, DropdownChoice, FormSpec, ItemFormSpec, TextInput
 from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
 from cmk.rulesets.v1._localize import Localizable
-from cmk.rulesets.v1._valuespec import Dictionary, DropdownChoice, ItemSpec, TextInput, ValueSpec
 
 
 class RuleEvalType(Enum):
@@ -23,7 +23,7 @@ class HostRuleSpec:
     topic: Topic | CustomTopic
     # TODO: fix functionality to specific RuleSpecFunctionality
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -35,7 +35,7 @@ class ServiceRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -46,8 +46,8 @@ class ServiceRuleSpec:
 class CheckParameterRuleSpecWithItem:
     title: Localizable
     topic: Topic | CustomTopic
-    value_spec: Callable[[], Dictionary]
-    item: ItemSpec
+    parameter_form: Callable[[], Dictionary]
+    item_form: ItemFormSpec
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
@@ -58,7 +58,7 @@ class CheckParameterRuleSpecWithItem:
         return Functionality.MONITORING_CONFIGURATION
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item, (TextInput, DropdownChoice))
+        assert isinstance(self.item_form, (TextInput, DropdownChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
@@ -67,7 +67,7 @@ class CheckParameterRuleSpecWithItem:
 class CheckParameterRuleSpecWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
-    value_spec: Callable[[], Dictionary]
+    parameter_form: Callable[[], Dictionary]
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
@@ -82,8 +82,8 @@ class CheckParameterRuleSpecWithoutItem:
 class EnforcedServiceRuleSpecWithItem:
     title: Localizable
     topic: Topic | CustomTopic
-    value_spec: Callable[[], ValueSpec]
-    item: ItemSpec
+    parameter_form: Callable[[], FormSpec]
+    item_form: ItemFormSpec
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
@@ -93,7 +93,7 @@ class EnforcedServiceRuleSpecWithItem:
         return Functionality.ENFORCED_SERVICES
 
     def __post_init__(self) -> None:
-        assert isinstance(self.item, (TextInput, DropdownChoice))
+        assert isinstance(self.item_form, (TextInput, DropdownChoice))
         if not isinstance(self.topic, (Topic, CustomTopic)):
             raise ValueError
 
@@ -102,7 +102,7 @@ class EnforcedServiceRuleSpecWithItem:
 class EnforcedServiceRuleSpecWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
-    value_spec: Callable[[], ValueSpec]
+    parameter_form: Callable[[], FormSpec]
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
@@ -121,7 +121,7 @@ class InventoryParameterRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    item_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -133,7 +133,7 @@ class ActiveChecksRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    item_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -145,7 +145,7 @@ class AgentConfigRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    item_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -157,7 +157,7 @@ class SpecialAgentRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    item_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -169,7 +169,7 @@ class ExtraHostConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    item_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -181,7 +181,7 @@ class ExtraServiceConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    value_spec: Callable[[], ValueSpec]
+    item_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False

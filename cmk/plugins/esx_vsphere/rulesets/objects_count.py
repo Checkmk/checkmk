@@ -18,25 +18,27 @@ from cmk.rulesets.v1 import (
 )
 
 
-def _parameter_valuespec_esx_vsphere_objects_count():
+def _parameter_form_esx_vsphere_objects_count() -> Dictionary:
     return Dictionary(
         elements={
             "distribution": DictElement(
-                value_spec=List(
-                    value_spec=Dictionary(
+                parameter_form=List(
+                    parameter_form=Dictionary(
                         elements={
                             "vm_names": DictElement(
-                                value_spec=List(value_spec=TextInput(), title=Localizable("VMs")),
+                                parameter_form=List(
+                                    parameter_form=TextInput(), title=Localizable("VMs")
+                                ),
                                 required=True,
                             ),
                             "hosts_count": DictElement(
-                                value_spec=Integer(
+                                parameter_form=Integer(
                                     title=Localizable("Number of hosts"), prefill_value=2
                                 ),
                                 required=True,
                             ),
                             "state": DictElement(
-                                value_spec=MonitoringState(
+                                parameter_form=MonitoringState(
                                     title=Localizable("State if violated"), prefill_value=State.WARN
                                 ),
                                 required=True,
@@ -57,9 +59,9 @@ def _parameter_valuespec_esx_vsphere_objects_count():
     )
 
 
-rulespec_esx_vsphere_objects_count = CheckParameterRuleSpecWithoutItem(
+rule_spec_esx_vsphere_objects_count = CheckParameterRuleSpecWithoutItem(
     name="esx_vsphere_objects_count",
     topic=Topic.APPLICATIONS,
-    value_spec=_parameter_valuespec_esx_vsphere_objects_count,
+    parameter_form=_parameter_form_esx_vsphere_objects_count,
     title=Localizable("ESX hosts: distribution of virtual machines"),
 )

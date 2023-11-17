@@ -12,7 +12,7 @@ from typing import Any, assert_never, Callable, TypeVar
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.rulespecs.loader import RuleSpec as APIV1RuleSpec
+from cmk.gui.utils.rule_specs.loader import RuleSpec as APIV1RuleSpec
 from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib.rulespecs import (
@@ -40,7 +40,7 @@ def convert_to_legacy_rulespec(
         case ruleset_api_v1.CheckParameterRuleSpecWithoutItem():
             return _convert_to_legacy_check_parameter_without_item_rulespec(to_convert, localizer)
         case ruleset_api_v1.EnforcedServiceRuleSpecWithItem():
-            item_spec = partial(_convert_to_legacy_item_spec, to_convert.item, localizer)
+            item_spec = partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer)
             return _convert_to_legacy_manual_check_parameter_rulespec(
                 to_convert, localizer, item_spec
             )
@@ -61,10 +61,10 @@ def _convert_to_legacy_check_parameter_with_item_rulespec(
         group=_convert_to_legacy_rulespec_group(
             to_convert.functionality, to_convert.topic, localizer
         ),
-        item_spec=partial(_convert_to_legacy_item_spec, to_convert.item, localizer),
+        item_spec=partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer),
         match_type="dict",
         parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
+            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
         ),
         is_deprecated=to_convert.is_deprecated,
         create_manual_check=False,
@@ -82,7 +82,7 @@ def _convert_to_legacy_check_parameter_without_item_rulespec(
         ),
         match_type="dict",
         parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
+            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
         ),
         create_manual_check=False,
     )
@@ -100,7 +100,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         ),
         check_group_name=to_convert.name,
         parameter_valuespec=partial(
-            _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
+            _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
         ),
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=False,
@@ -213,7 +213,7 @@ def _extract_dictionary_key_props(
 
 
 def _convert_to_legacy_valuespec(
-    to_convert: ruleset_api_v1.ValueSpec, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     match to_convert:
         case ruleset_api_v1.Integer():
@@ -230,7 +230,7 @@ def _convert_to_legacy_valuespec(
 
         case ruleset_api_v1.Dictionary():
             elements = [
-                (key, _convert_to_legacy_valuespec(elem.value_spec, localizer))
+                (key, _convert_to_legacy_valuespec(elem.parameter_form, localizer))
                 for key, elem in to_convert.elements.items()
             ]
 
@@ -433,10 +433,10 @@ def _convert_to_legacy_cascading_dropdown(
     legacy_choices = [
         (
             element.ident.value if isinstance(element.ident, enum.StrEnum) else element.ident,
-            element.value_spec.title.localize(localizer)
-            if hasattr(element.value_spec, "title") and element.value_spec.title is not None
+            element.parameter_form.title.localize(localizer)
+            if hasattr(element.parameter_form, "title") and element.parameter_form.title is not None
             else str(element.ident),
-            _convert_to_legacy_valuespec(element.value_spec, localizer),
+            _convert_to_legacy_valuespec(element.parameter_form, localizer),
         )
         for element in to_convert.elements
     ]
@@ -454,7 +454,7 @@ def _convert_to_legacy_cascading_dropdown(
 
 
 def _convert_to_legacy_item_spec(
-    to_convert: ruleset_api_v1.ItemSpec, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.ItemFormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.TextInput | legacy_valuespecs.DropdownChoice:
     if isinstance(to_convert, ruleset_api_v1.TextInput):
         return _convert_to_legacy_text_input(to_convert, localizer)
@@ -484,7 +484,7 @@ def _convert_to_legacy_list(
     to_convert: ruleset_api_v1.List, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ListOf | legacy_valuespecs.ListOfStrings:
     converted_kwargs: MutableMapping[str, Any] = {
-        "valuespec": _convert_to_legacy_valuespec(to_convert.value_spec, localizer),
+        "valuespec": _convert_to_legacy_valuespec(to_convert.parameter_form, localizer),
         "title": _localize_optional(to_convert.title, localizer),
         "help": _localize_optional(to_convert.help_text, localizer),
         "movable": to_convert.order_editable,

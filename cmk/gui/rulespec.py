@@ -9,28 +9,28 @@ from cmk.utils.debug import enabled as debug_enabled
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.utils.rulespecs.legacy_converter import convert_to_legacy_rulespec
-from cmk.gui.utils.rulespecs.loader import load_api_v1_rulespecs, RuleSpec
+from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_rulespec
+from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, RuleSpec
 from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
 def load_plugins() -> None:
-    errors, loaded_rulespecs = load_api_v1_rulespecs(debug_enabled())
+    errors, loaded_rule_specs = load_api_v1_rule_specs(debug_enabled())
     if errors:
         logger.error("Error loading rulespecs: %s", errors)
 
-    register_plugins(loaded_rulespecs)
+    register_plugins(loaded_rule_specs)
 
 
-def register_plugins(loaded_rulespecs: Sequence[RuleSpec]) -> None:
-    for rulespec in loaded_rulespecs:
+def register_plugins(loaded_rule_specs: Sequence[RuleSpec]) -> None:
+    for rule_spec in loaded_rule_specs:
         try:
-            legacy_rulespec = convert_to_legacy_rulespec(rulespec, _)
+            legacy_rulespec = convert_to_legacy_rulespec(rule_spec, _)
             if legacy_rulespec.name in rulespec_registry.keys():
                 logger.debug(
-                    "Duplicate rulespec '%s', keeping legacy rulespec", legacy_rulespec.name
+                    "Duplicate rule_spec '%s', keeping legacy rulespec", legacy_rulespec.name
                 )
                 continue
             rulespec_registry.register(legacy_rulespec)
         except Exception as e:
-            logger.error("Error converting to legacy rulespec '%s' : %s", rulespec.name, e)
+            logger.error("Error converting to legacy rulespec '%s' : %s", rule_spec.name, e)

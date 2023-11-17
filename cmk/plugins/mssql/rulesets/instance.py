@@ -15,7 +15,7 @@ from cmk.rulesets.v1 import (
 )
 
 
-def _parameter_valuespec_mssql_instance() -> Dictionary:
+def _parameter_form_mssql_instance() -> Dictionary:
     return Dictionary(
         elements={
             "map_connection_state": DictElement(
@@ -25,10 +25,10 @@ def _parameter_valuespec_mssql_instance() -> Dictionary:
     )
 
 
-rulespec_mssql_instance = CheckParameterRuleSpecWithItem(
+rule_spec_mssql_instance = CheckParameterRuleSpecWithItem(
     name="mssql_instance",
     title=Localizable("MSSQL Instance"),
     topic=Topic.APPLICATIONS,
-    item=TextInput(title=Localizable("Instance identifier")),
-    value_spec=_parameter_valuespec_mssql_instance,
+    item_form=TextInput(title=Localizable("Instance identifier")),
+    parameter_form=_parameter_form_mssql_instance,
 )

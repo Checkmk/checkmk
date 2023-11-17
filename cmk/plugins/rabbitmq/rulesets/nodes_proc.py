@@ -18,10 +18,10 @@ from cmk.rulesets.v1 import (
 )
 
 
-def _parameter_valuespec_rabbitmq_nodes_proc() -> Dictionary:
+def _parameter_form_rabbitmq_nodes_proc() -> Dictionary:
     fd_perc = CascadingDropdownElement(
         ident="fd_perc",
-        value_spec=Tuple(
+        parameter_form=Tuple(
             title=Localizable("Percentual levels for used processes"),
             elements=[
                 Percentage(title=Localizable("Warning at usage of"), prefill_value=80.0),
@@ -31,7 +31,7 @@ def _parameter_valuespec_rabbitmq_nodes_proc() -> Dictionary:
     )
     fd_abs = CascadingDropdownElement(
         ident="fd_abs",
-        value_spec=Tuple(
+        parameter_form=Tuple(
             title=Localizable("Absolute levels for total number of used processes"),
             elements=[
                 Integer(title=Localizable("Warning at"), unit=Localizable("processes")),
@@ -43,7 +43,7 @@ def _parameter_valuespec_rabbitmq_nodes_proc() -> Dictionary:
     return Dictionary(
         elements={
             "levels": DictElement(
-                value_spec=CascadingDropdown(
+                parameter_form=CascadingDropdown(
                     title=Localizable("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],
                     prefill_selection="fd_perc",
@@ -53,10 +53,10 @@ def _parameter_valuespec_rabbitmq_nodes_proc() -> Dictionary:
     )
 
 
-rulespec_rabbitmq_nodes_proc = CheckParameterRuleSpecWithItem(
+rule_spec_rabbitmq_nodes_proc = CheckParameterRuleSpecWithItem(
     name="rabbitmq_nodes_proc",
     topic=Topic.APPLICATIONS,
-    item=TextInput(title=Localizable("Node name")),
-    value_spec=_parameter_valuespec_rabbitmq_nodes_proc,
+    item_form=TextInput(title=Localizable("Node name")),
+    parameter_form=_parameter_form_rabbitmq_nodes_proc,
     title=Localizable("RabbitMQ nodes processes"),
 )

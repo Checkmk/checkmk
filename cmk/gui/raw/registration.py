@@ -82,6 +82,3 @@ def register() -> None:
 
     register_pages()
     register_painters()
-
-
-register()

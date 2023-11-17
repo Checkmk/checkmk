@@ -110,6 +110,7 @@ register.agent_section(
 
 class RCCSetupFailures(BaseModel, frozen=True):
     telemetry_disabling: Sequence[str]
+    long_path_support: Sequence[str]
     shared_holotree: Sequence[str]
     holotree_init: Sequence[str]
 
@@ -320,6 +321,7 @@ def _check_rcc_setup_failures(rcc_setup_failures: RCCSetupFailures) -> CheckResu
         )
         for label, failures in [
             ("Disabling RCC telemetry", rcc_setup_failures.telemetry_disabling),
+            ("Enabling RCC long path support", rcc_setup_failures.long_path_support),
             ("Enabling RCC shared holotree", rcc_setup_failures.shared_holotree),
             ("RCC holotree initialization", rcc_setup_failures.holotree_init),
         ]

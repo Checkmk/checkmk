@@ -1153,10 +1153,24 @@ class RecurringDowntimes(Protocol):
 
 class NoRecurringDowntimes:
     def choices(self) -> Choices:
-        return []
+        return [("0", "never")]
 
     def show_input_elements(self, default: str) -> None:
-        pass
+        html.open_div(class_="group")
+        html.dropdown(
+            "_down_recurring",
+            self.choices(),
+            deflt=default,
+            read_only=True,
+        )
+        html.icon_button(
+            url="https://checkmk.com/pricing?services=3000?utm_source=checkmk_product&utm_medium=referral&utm_campaign=commercial_editions_link",
+            title=_("Upgrade to Cloud or Enterprise edition to use this feature"),
+            icon="upgrade",
+            target="_blank",
+            cssclass="upgrade",
+        )
+        html.close_div()
 
     def number(self) -> int:
         return 0
@@ -1327,14 +1341,15 @@ class CommandScheduleDowntimes(Command):
         html.close_td()
         html.open_td()
         self.recurring_downtimes.show_input_elements(default="0")
+
         html.close_td()
-        html.close_table()
 
         html.open_tr()
         html.open_td()
         html.br()
         html.close_td()
         html.close_tr()
+        html.close_table()
         html.close_div()
 
     def _vs_date(self) -> DatePicker:

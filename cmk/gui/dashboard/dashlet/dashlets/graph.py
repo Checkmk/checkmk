@@ -291,16 +291,16 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
             self._graph_specification.model_dump_json(),
-            GraphRenderConfig.from_render_options_and_context(
-                graph_grender_options_from_vs(
+            GraphRenderConfig.from_user_context_and_options(
+                user,
+                theme.get(),
+                **graph_grender_options_from_vs(
                     default_dashlet_graph_render_options()
                     # Something is wrong with the typing here. self._dashlet_spec is a subclass of
                     # ABCGraphDashlet, so self._dashlet_spec.get("graph_render_options", {}) should be
                     # a dict ...
                     | self._dashlet_spec.get("graph_render_options", {})  # type: ignore[operator]
                 ),
-                user,
-                theme.get(),
             ).model_dump_json(),
             json.dumps(self._dashlet_spec["timerange"]),
         )

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Container
-from typing import Literal, Self
+from typing import Literal, Self, Unpack
 
 from pydantic import BaseModel, TypeAdapter
 
@@ -71,6 +71,7 @@ class GraphRenderConfigBase(BaseModel):
     show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
     show_vertical_axis: bool = True
+    size: tuple[int, int] = (70, 16)
     title_format: GraphTitleFormat = GraphTitleFormat(
         plain=True,
         add_host_name=False,
@@ -84,14 +85,13 @@ class GraphRenderConfig(GraphRenderConfigBase):
     explicit_title: str | None = None
     foreground_color: str
     onclick: str | None = None
-    size: tuple[int, int]
 
     @classmethod
-    def from_render_options_and_context(
+    def from_user_context_and_options(
         cls,
-        options: GraphRenderOptions,
         user: LoggedInUser,
         theme_id: str,
+        **options: Unpack[GraphRenderOptions],
     ) -> Self:
         return cls(
             foreground_color="#ffffff" if theme_id == "modern-dark" else "#000000",
@@ -103,13 +103,12 @@ class GraphRenderConfigImage(GraphRenderConfigBase):
     background_color: str = "#f8f4f0"
     canvas_color: str = "#ffffff"
     foreground_color: str = "#000000"
-    size: tuple[int, int]
 
     @classmethod
-    def from_render_options_and_context(
+    def from_user_context_and_options(
         cls,
-        options: GraphRenderOptions,
         user: LoggedInUser,
+        **options: Unpack[GraphRenderOptions],
     ) -> Self:
         return cls(**_set_user_specific_size(options, user))
 
@@ -117,4 +116,6 @@ class GraphRenderConfigImage(GraphRenderConfigBase):
 def _set_user_specific_size(options: GraphRenderOptions, user: LoggedInUser) -> GraphRenderOptions:
     if "size" in options:
         return options
-    return options | GraphRenderOptions(size=user.load_file("graph_size", (70, 16)))
+    if user_specific_size := user.load_file("graph_size", None):
+        return options | GraphRenderOptions(size=user_specific_size)
+    return options

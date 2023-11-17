@@ -98,9 +98,9 @@ def _answer_graph_image_request(
         end_time = int(time.time())
         start_time = end_time - (25 * 3600)
 
-        graph_render_config = GraphRenderConfigImage.from_render_options_and_context(
-            graph_image_render_options(),
+        graph_render_config = GraphRenderConfigImage.from_user_context_and_options(
             user,
+            **graph_image_render_options(),
         )
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)

@@ -181,10 +181,10 @@ def paint_time_graph_cmk(
     if options is not None:
         graph_render_options.update(options)
 
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        graph_grender_options_from_vs(graph_render_options),
+    graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
+        **graph_grender_options_from_vs(graph_render_options),
     )
 
     now = int(time.time())

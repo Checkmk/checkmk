@@ -47,12 +47,7 @@ from ._artwork import (
     save_graph_pin,
 )
 from ._color import render_color_icon
-from ._graph_render_config import (
-    GraphRenderConfig,
-    GraphRenderConfigBase,
-    GraphRenderOptions,
-    GraphTitleFormat,
-)
+from ._graph_render_config import GraphRenderConfig, GraphRenderConfigBase, GraphTitleFormat
 from ._graph_specification import (
     CombinedSingleMetricSpec,
     GraphDataRange,
@@ -101,18 +96,16 @@ def host_service_graph_popup_cmk(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> None:
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        GraphRenderOptions(
-            size=(30, 10),
-            font_size=SizePT(6.0),
-            resizable=False,
-            show_controls=False,
-            show_legend=False,
-            interaction=False,
-            show_time_range_previews=False,
-        ),
+    graph_render_config = GraphRenderConfig.from_user_context_and_options(
         user,
         theme.get(),
+        size=(30, 10),
+        font_size=SizePT(6.0),
+        resizable=False,
+        show_controls=False,
+        show_legend=False,
+        interaction=False,
+        show_time_range_previews=False,
     )
 
     graph_data_range = make_graph_data_range(

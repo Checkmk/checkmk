@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class MinimalRange:
     lower: int | float | metric.Quantity
     upper: int | float | metric.Quantity

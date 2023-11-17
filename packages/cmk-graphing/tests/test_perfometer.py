@@ -15,7 +15,6 @@ def test_name_error() -> None:
 
 def test_perfometer_error_missing_segments() -> None:
     name = perfometer.Name("perfometer-name")
-    upper_bound = perfometer.Closed(100)
-    lower_bound = perfometer.Closed(0)
+    focus_range = perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100))
     with pytest.raises(AssertionError):
-        perfometer.Perfometer(name, [], upper_bound=upper_bound, lower_bound=lower_bound)
+        perfometer.Perfometer(name, focus_range, [])

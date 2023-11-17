@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
@@ -284,6 +285,38 @@ class List:
     order_editable: bool = True
 
 
+@dataclass(frozen=True)
+class FixedValue:
+    """
+    Specifies a fixed non-editable value
+
+    Can be used in a CascadingDropdown and Dictionary to represent a fixed value option.
+
+    Args:
+        value: Atomic value produced by the form spec
+        title: Human readable title
+        label: Text displayed underneath the title
+        help_text: Description to help the user with the configuration
+    """
+
+    value: int | float | str | bool | None
+    title: Localizable | None = None
+    label: Localizable | None = None
+    help_text: Localizable | None = None
+
+    def __post_init__(self) -> None:
+        try:
+            ast.literal_eval(repr(self.value))
+        except (
+            ValueError,
+            TypeError,
+            SyntaxError,
+            MemoryError,
+            RecursionError,
+        ) as exc:
+            raise ValueError(Localizable("FixedValue value is not serializable.")) from exc
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -297,4 +330,5 @@ FormSpec = (
     | Dictionary
     | MonitoringState
     | List
+    | FixedValue
 )

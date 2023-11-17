@@ -10,6 +10,7 @@ from cmk.rulesets.v1._form_spec import (
     Dictionary,
     DropdownChoice,
     DropdownChoiceElement,
+    FixedValue,
     FormSpec,
     Integer,
     InvalidElementMode,
@@ -83,4 +84,5 @@ __all__ = [
     "CascadingDropdown",
     "CascadingDropdownElement",
     "List",
+    "FixedValue",
 ]

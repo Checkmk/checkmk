@@ -323,6 +323,26 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="ListOf",
         ),
+        pytest.param(
+            api_v1.FixedValue(value=True),
+            legacy_valuespecs.FixedValue(value=True, totext=""),
+            id="minimal FixedValue",
+        ),
+        pytest.param(
+            api_v1.FixedValue(
+                value="enabled",
+                title=api_v1.Localizable("Enable the option"),
+                label=api_v1.Localizable("The option is enabled"),
+                help_text=api_v1.Localizable("Help text"),
+            ),
+            legacy_valuespecs.FixedValue(
+                value="enabled",
+                title=_("Enable the option"),
+                totext=_("The option is enabled"),
+                help=_("Help text"),
+            ),
+            id="FixedValue",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(

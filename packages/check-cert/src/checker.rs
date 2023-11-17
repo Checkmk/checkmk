@@ -8,8 +8,8 @@ use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
 pub struct LowerLevels<T> {
-    pub warn: T,
-    pub crit: T,
+    warn: T,
+    crit: T,
 }
 
 impl<T> LowerLevels<T>
@@ -33,8 +33,8 @@ where
 }
 
 pub struct UpperLevels<T> {
-    pub warn: T,
-    pub crit: T,
+    warn: T,
+    crit: T,
 }
 
 impl<T> UpperLevels<T>

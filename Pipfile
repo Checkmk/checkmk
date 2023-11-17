@@ -208,6 +208,4 @@ typing-extensions = "*"
 xmltodict = "==0.13.0" # used for parsing robotmk test results
 
 [requires]
-# As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,
-# we do not require a python_version here and defines.make is our single point of truth.
-# the PYTHON_VERSION will be injected during pipenv calls in Makefile.
+python_version = "3.11"

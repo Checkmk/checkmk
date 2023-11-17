@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 mod common;
+use std::collections::HashSet;
 
 use check_sql::ms_sql::{api::Client, api::InstanceEngine, queries};
 use check_sql::{config::ms_sql::Endpoint, config::CheckConfig, ms_sql::api};
@@ -151,6 +152,7 @@ async fn test_validate_all_instances_remote() {
                         .await
                         .contains(" error: "),);
                     validate_table_spaces(&i, &mut c, &cfg.endpoint()).await;
+                    validate_backup(&i, &mut c).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -226,7 +228,7 @@ async fn validate_table_spaces(
     );
 
     let result = instance
-        .generate_table_spaces_section(client, endpoint, ' ')
+        .generate_table_spaces_section(endpoint, &databases, ' ')
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
@@ -241,6 +243,32 @@ async fn validate_table_spaces(
         assert!(values[10].parse::<u32>().is_ok(), "bad line: {}", l);
         assert!(values[12].parse::<u32>().is_ok(), "bad line: {}", l);
     }
+}
+
+async fn validate_backup(instance: &InstanceEngine, client: &mut Client) {
+    let databases = instance.generate_databases(client).await;
+    let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
+
+    let result = instance
+        .generate_backup_section(client, &databases, '|')
+        .await;
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= (to_be_found.len() + 1), "{:?}", lines);
+
+    assert!(lines[lines.len() - 1].is_empty());
+    for l in lines[..lines.len() - 2].iter() {
+        let values = l.split('|').collect::<Vec<&str>>();
+        assert_eq!(values.len(), 5, "bad line: {}", l);
+        assert_eq!(values[0], instance.mssql_name(), "bad line: {}", l);
+        if to_be_found.contains(values[1]) {
+            to_be_found.remove(values[1]);
+        }
+    }
+    assert_eq!(
+        lines[lines.len() - 2],
+        format!("{}|tempdb|-|-|-|No backup found", instance.mssql_name())
+    );
+    assert!(to_be_found.is_empty());
 }
 
 /// This test is ignored because it requires real credentials and real server

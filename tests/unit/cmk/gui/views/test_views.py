@@ -189,7 +189,7 @@ def test_registered_commands() -> None:
         },
         "remove_downtimes": {
             "permission": "action.downtimes",
-            "tables": ["downtime"],
+            "tables": ["host", "service", "downtime"],
             "title": "Remove downtimes",
         },
         "schedule_downtimes": {

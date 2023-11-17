@@ -1465,9 +1465,6 @@ class CommandScheduleDowntimes(Command):
         action_rows: Rows,
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
-        if request.var("_down_remove"):
-            return self._remove_downtime_details(cmdtag, row, action_rows)
-
         recurring_number = self.recurring_downtimes.number()
         if varprefix := request.var("_down_host", request.var("_down_service")):
             start_time = self._custom_start_time()
@@ -1604,35 +1601,6 @@ class CommandScheduleDowntimes(Command):
                 if cmdtag == "HOST"
                 else _("Downtime does not apply to host.")
             )
-        )
-
-    def _remove_downtime_details(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
-    ) -> tuple[list[str], CommandConfirmDialogOptions] | None:
-        if not user.may("action.remove_all_downtimes"):
-            return None
-        if request.var("_down_host"):
-            raise MKUserError(
-                "_on_hosts",
-                _("The checkbox for setting host downtimes does not work when removing downtimes."),
-            )
-        downtime_ids = []
-        if cmdtag == "HOST":
-            prefix = "host_"
-        else:
-            prefix = "service_"
-        for id_ in row[prefix + "downtimes"]:
-            if id_ != "":
-                downtime_ids.append(int(id_))
-        commands = []
-        for dtid in downtime_ids:
-            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
-        title = _("Remove all scheduled downtimes?")
-        return commands, self._confirm_dialog_options(
-            cmdtag,
-            row,
-            len(action_rows),
-            title,
         )
 
     def _flexible_option(self) -> int:
@@ -1887,7 +1855,7 @@ class CommandRemoveDowntime(Command):
 
     @property
     def tables(self):
-        return ["downtime"]
+        return ["host", "service", "downtime"]
 
     @property
     def is_shortcut(self) -> bool:
@@ -1897,22 +1865,73 @@ class CommandRemoveDowntime(Command):
     def is_suggested(self) -> bool:
         return True
 
+    def _confirm_dialog_options(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+        title: str,
+    ) -> CommandConfirmDialogOptions:
+        return CommandConfirmDialogOptions(
+            title,
+            self.affected(len_action_rows, cmdtag),
+            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
+            self.confirm_dialog_icon_class(),
+            self.confirm_button,
+        )
+
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_remove_downtimes", _("Remove"))
 
-    def _action(
+    def _action(  # pylint: disable=too-many-arguments
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
-            return (
-                f"DEL_{cmdtag}_DOWNTIME;{spec}",
-                self.confirm_dialog_options(
-                    cmdtag,
-                    row,
-                    len(action_rows),
-                ),
-            )
+            if "downtime_id" in row:
+                return self._rm_downtime_from_downtime_datasource(cmdtag, spec, row, action_rows)
+            return self._rm_downtime_from_hst_or_svc_datasource(cmdtag, row, action_rows)
         return None
+
+    def _rm_downtime_from_downtime_datasource(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        action_rows: Rows,
+    ) -> CommandActionResult:
+        return (
+            f"DEL_{cmdtag}_DOWNTIME;{spec}",
+            self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            ),
+        )
+
+    def _rm_downtime_from_hst_or_svc_datasource(
+        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
+    ) -> tuple[list[str], CommandConfirmDialogOptions] | None:
+        if not user.may("action.remove_all_downtimes"):
+            return None
+
+        downtime_ids = []
+        if cmdtag == "HOST":
+            prefix = "host_"
+        else:
+            prefix = "service_"
+        for id_ in row[prefix + "downtimes"]:
+            if id_ != "":
+                downtime_ids.append(int(id_))
+        commands = []
+        for dtid in downtime_ids:
+            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
+        title = _("Remove scheduled downtimes?")
+        return commands, self._confirm_dialog_options(
+            cmdtag,
+            row,
+            len(action_rows),
+            title,
+        )
 
 
 class CommandRemoveComments(Command):

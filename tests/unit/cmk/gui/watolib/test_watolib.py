@@ -199,6 +199,7 @@ def test_registered_configvars() -> None:
         "agent_controller_certificates",
         "rest_api_etag_locking",
         "enable_login_via_get",
+        "enable_deprecated_automation_user_authentication",
         "enable_community_translations",
         "default_language",
         "default_temperature_unit",

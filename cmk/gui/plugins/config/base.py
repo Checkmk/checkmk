@@ -561,6 +561,7 @@ class CREConfig:
     #   '------------------------------------------------------------------------------------'
 
     enable_login_via_get: bool = False
+    enable_deprecated_automation_user_authentication: bool = True
 
     # .
     #   .--REST API------------------------------------------------------------.

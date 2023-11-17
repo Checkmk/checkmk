@@ -147,6 +147,7 @@ def test_default_config_from_plugins() -> None:
         "config_storage_format",
         "tags",
         "enable_login_via_get",
+        "enable_deprecated_automation_user_authentication",
         "enable_community_translations",
         "default_temperature_unit",
         "experimental_features",

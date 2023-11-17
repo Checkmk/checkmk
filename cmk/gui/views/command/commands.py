@@ -1509,17 +1509,42 @@ class CommandScheduleDowntimes(Command):
             self.confirm_button,
         )
 
+    def _get_start_msg(self, start_at: float) -> str:
+        start_weekday, start_month, start_day, start_time, start_year = time.asctime(
+            time.localtime(start_at)
+        ).split()
+        return _("Start: %s, %s. %s %s at %s") % (
+            start_weekday,
+            start_day,
+            start_month,
+            start_year,
+            start_time,
+        )
+
+    def _get_end_msg(self, start_at: float) -> str:
+        end_weekday, end_month, end_day, end_time, end_year = time.asctime(
+            time.localtime(self._custom_end_time(start_at))
+        ).split()
+        return _("End: %s, %s. %s %s at %s") % (
+            end_weekday,
+            end_day,
+            end_month,
+            end_year,
+            end_time,
+        )
+
     def confirm_dialog_additions(
         self,
         cmdtag: Literal["HOST", "SVC"],
         row: Row,
         len_action_rows: int,
     ) -> HTML:
+        start_at = self._custom_start_time()
         additions = (
             "<br><br>"
-            + _("Start: %s") % time.asctime(time.localtime(start_time := self._custom_start_time()))
+            + self._get_start_msg(start_at)
             + "<br>"
-            + _("End: %s") % time.asctime(time.localtime(self._custom_end_time(start_time)))
+            + self._get_end_msg(start_at)
             + "<br><br>"
         )
 

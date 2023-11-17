@@ -212,20 +212,20 @@ class MetricometerRendererRegistry(plugin_registry.Registry[type[MetricometerRen
         self, perfometer: PerfometerSpec, translated_metrics: Mapping[str, TranslatedMetric]
     ) -> MetricometerRenderer:
         if perfometer["type"] == "logarithmic":
-            return MetricometerRendererLogarithmic(perfometer, translated_metrics)
+            return MetricometerRendererLegacyLogarithmic(perfometer, translated_metrics)
         if perfometer["type"] == "linear":
-            return MetricometerRendererLinear(perfometer, translated_metrics)
+            return MetricometerRendererLegacyLinear(perfometer, translated_metrics)
         if perfometer["type"] == "dual":
-            return MetricometerRendererDual(perfometer, translated_metrics)
+            return MetricometerRendererLegacyDual(perfometer, translated_metrics)
         if perfometer["type"] == "stacked":
-            return MetricometerRendererStacked(perfometer, translated_metrics)
+            return MetricometerRendererLegacyStacked(perfometer, translated_metrics)
         raise ValueError(perfometer["type"])
 
 
 renderer_registry = MetricometerRendererRegistry()
 
 
-class MetricometerRendererLogarithmic(MetricometerRenderer):
+class MetricometerRendererLegacyLogarithmic(MetricometerRenderer):
     def __init__(
         self,
         perfometer: LogarithmicPerfometerSpec,
@@ -243,7 +243,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
 
     @classmethod
     def type_name(cls) -> str:
-        return "logarithmic"
+        return "legacy_logarithmic"
 
     def get_stack(self) -> MetricRendererStack:
         result = self._metric.evaluate(self._translated_metrics)
@@ -326,7 +326,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         )
 
 
-class MetricometerRendererLinear(MetricometerRenderer):
+class MetricometerRendererLegacyLinear(MetricometerRenderer):
     def __init__(
         self,
         perfometer: _LinearPerfometerSpec,
@@ -344,7 +344,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
     @classmethod
     def type_name(cls) -> str:
-        return "linear"
+        return "legacy_linear"
 
     def get_stack(self) -> MetricRendererStack:
         entry = []
@@ -398,7 +398,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
         return sum(segment.evaluate(self._translated_metrics).value for segment in self._segments)
 
 
-class MetricometerRendererStacked(MetricometerRenderer):
+class MetricometerRendererLegacyStacked(MetricometerRenderer):
     def __init__(
         self,
         perfometer: _StackedPerfometerSpec,
@@ -414,7 +414,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
 
     @classmethod
     def type_name(cls) -> str:
-        return "stacked"
+        return "legacy_stacked"
 
     def get_stack(self) -> MetricRendererStack:
         stack = []
@@ -447,7 +447,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
         return renderer.get_sort_value()
 
 
-class MetricometerRendererDual(MetricometerRenderer):
+class MetricometerRendererLegacyDual(MetricometerRenderer):
     def __init__(
         self,
         perfometer: _DualPerfometerSpec,
@@ -463,7 +463,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
     @classmethod
     def type_name(cls) -> str:
-        return "dual"
+        return "legacy_dual"
 
     def get_stack(self) -> MetricRendererStack:
         content: list[tuple[int | float, str]] = []
@@ -512,7 +512,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 
 
 def register() -> None:
-    renderer_registry.register(MetricometerRendererLogarithmic)
-    renderer_registry.register(MetricometerRendererLinear)
-    renderer_registry.register(MetricometerRendererStacked)
-    renderer_registry.register(MetricometerRendererDual)
+    renderer_registry.register(MetricometerRendererLegacyLogarithmic)
+    renderer_registry.register(MetricometerRendererLegacyLinear)
+    renderer_registry.register(MetricometerRendererLegacyStacked)
+    renderer_registry.register(MetricometerRendererLegacyDual)

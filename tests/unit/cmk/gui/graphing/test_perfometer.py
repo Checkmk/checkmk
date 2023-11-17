@@ -10,14 +10,14 @@ import pytest
 
 from cmk.gui.graphing import (
     get_first_matching_perfometer,
-    MetricometerRendererLogarithmic,
+    MetricometerRendererLegacyLogarithmic,
     perfometer_info,
     PerfometerSpec,
     renderer_registry,
 )
 from cmk.gui.graphing._perfometer import (
     _perfometer_possible,
-    MetricometerRendererLinear,
+    MetricometerRendererLegacyLinear,
     MetricRendererStack,
 )
 from cmk.gui.graphing._type_defs import TranslatedMetric, UnitInfo
@@ -174,15 +174,20 @@ def test_get_first_matching_perfometer(
 
 def test_registered_renderers() -> None:
     registered_plugins = sorted(renderer_registry.keys())
-    assert registered_plugins == ["dual", "linear", "logarithmic", "stacked"]
+    assert registered_plugins == [
+        "legacy_dual",
+        "legacy_linear",
+        "legacy_logarithmic",
+        "legacy_stacked",
+    ]
 
 
-class TestMetricometerRendererLinear:
+class TestMetricometerRendererLegacyLinear:
     def _renderer(
         self,
         unit_info: UnitInfo,
-    ) -> MetricometerRendererLinear:
-        return MetricometerRendererLinear(
+    ) -> MetricometerRendererLegacyLinear:
+        return MetricometerRendererLegacyLinear(
             {
                 "type": "linear",
                 "segments": ["my_metric"],
@@ -277,12 +282,12 @@ class TestMetricometerRendererLinear:
         assert self._renderer(unit_info).get_label() == expected_result
 
 
-class TestMetricometerRendererLogarithmic:
+class TestMetricometerRendererLegacyLogarithmic:
     def _renderer(
         self,
         unit_info: UnitInfo,
-    ) -> MetricometerRendererLogarithmic:
-        return MetricometerRendererLogarithmic(
+    ) -> MetricometerRendererLegacyLogarithmic:
+        return MetricometerRendererLegacyLogarithmic(
             {
                 "type": "logarithmic",
                 "metric": "my_metric",

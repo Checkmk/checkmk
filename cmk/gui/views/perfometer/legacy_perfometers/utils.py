@@ -16,7 +16,7 @@ from typing import Literal
 
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.graphing import MetricometerRendererLogarithmic
+from cmk.gui.graphing import MetricometerRendererLegacyLogarithmic
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import Perfdata, Row
@@ -86,7 +86,11 @@ def perfometer_linear(perc: float, color: str) -> HTML:
 # displayed at 50% of the width
 def perfometer_logarithmic(value: float, half_value: float, base: float, color: str) -> HTML:
     return render_metricometer(
-        [MetricometerRendererLogarithmic.get_stack_from_values(value, half_value, base, color)]
+        [
+            MetricometerRendererLegacyLogarithmic.get_stack_from_values(
+                value, half_value, base, color
+            )
+        ]
     )
 
 

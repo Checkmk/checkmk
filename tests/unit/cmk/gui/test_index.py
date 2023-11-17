@@ -38,6 +38,9 @@ def test_get_start_url_user_config(set_config: SetConfig) -> None:
         def start_url(self) -> str:
             return "correct_url.py"
 
+        def is_automation_user(self) -> bool:
+            return False
+
     with set_config(start_url="wrong_url.py"):
         session.user = MockUser()  # type: ignore[assignment]
         assert cmk.gui.main._get_start_url() == "correct_url.py"

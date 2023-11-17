@@ -1,0 +1,19 @@
+Title: Automationuser login must not open full session
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1700382222
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Checkmk offers a method to authenticate single web requests with URL parameters (<tt>_username</tt> and <tt>_secret</tt>).
+
+Due to some refactoring of the session handling with Checkmk 2.2 such automation requests initiated a full session.
+
+The login for automation users was still blocked in the login screen but an authenticated request initiated a full session that could than be used to browse the Checkmk GUI like a regular user.
+
+With this Werk that is no longer the case.
+
+If you use this authentication method you should check if you rely on sessions for your automation users.

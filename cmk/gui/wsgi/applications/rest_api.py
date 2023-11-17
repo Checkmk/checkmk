@@ -309,8 +309,8 @@ class ServeSwaggerUI(AbstractWSGIApp):
         )
 
 
-def ensure_authenticated(persist: bool = True) -> None:
-    session.session.persist_session = persist
+def _ensure_authenticated() -> None:
+    session.session.is_gui_session = False
     if session.session.user is None or isinstance(session.session.user, LoggedInNobody):
         # As a user we want the most specific error messages. Due to the errors being
         # generated at the start of the request, where it isn't clear if Checkmk or RESTAPI
@@ -428,7 +428,7 @@ class CheckmkRESTAPI(AbstractWSGIApp):
             # credentials, but accessing the REST API will never touch the session store. We also
             # don't want to have cookies sent to the HTTP client whenever one is logged in using
             # the header methods.
-            ensure_authenticated(persist=False)
+            _ensure_authenticated()
             return wsgi_endpoint(environ, start_response)
 
         except ProblemException as exc:

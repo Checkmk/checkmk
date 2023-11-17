@@ -102,7 +102,7 @@ impl InstanceEngine {
         let endpoint = &ms_sql.endpoint();
         match self.create_client(endpoint, None).await {
             Ok(mut client) => {
-                for section in sections {
+                for section in sections.iter() {
                     result += &section.to_header();
                     match section.name.as_str() {
                         INSTANCE_SECTION_NAME => {
@@ -158,7 +158,7 @@ impl InstanceEngine {
 
             #[cfg(windows)]
             config::ms_sql::AuthType::Integrated => {
-                create_local_instance_client(&self.name, conn.sql_browser_port(), None).await?
+                create_local_instance_client(&self.name, conn.sql_browser_port(), database).await?
             }
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -254,7 +254,7 @@ impl InstanceEngine {
     pub async fn generate_table_spaces_section(
         &self,
         endpoint: &config::ms_sql::Endpoint,
-        databases: &[String],
+        databases: &Vec<String>,
         sep: char,
     ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
@@ -383,7 +383,7 @@ impl InstanceEngine {
         }
     }
 
-    fn process_backup_rows(&self, rows: &[Vec<Row>], databases: &[String], sep: char) -> String {
+    fn process_backup_rows(&self, rows: &Vec<Vec<Row>>, databases: &[String], sep: char) -> String {
         let (mut ready, missing_data) = self.process_backup_rows_partly(rows, databases, sep);
         let missing: Vec<String> = self.process_missing_backup_rows(&missing_data, sep);
         ready.extend(missing);
@@ -393,7 +393,7 @@ impl InstanceEngine {
     /// generates lit of correct backup entries + list of missing required backups
     fn process_backup_rows_partly(
         &self,
-        rows: &[Vec<Row>],
+        rows: &Vec<Vec<Row>>,
         databases: &[String],
         sep: char,
     ) -> (Vec<String>, HashSet<String>) {

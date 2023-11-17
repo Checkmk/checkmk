@@ -1362,7 +1362,12 @@ class CommandECChangeState(ECCommand):
     def permission(self) -> Permission:
         return PermissionECChangeEventState
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
         return HTML(
             "<br><br>"
             + _("New state: %s")
@@ -1530,7 +1535,12 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def tables(self):
         return ["service"]
 
-    def confirm_dialog_additions(self, row: Row, len_action_rows: int) -> HTML:
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
         return HTML(
             _(
                 "All events of the host '%s' will be removed from the open events list. You can still access them in the archive."

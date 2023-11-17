@@ -45,7 +45,8 @@ class R4R:
     def read(cls, uuid: UUID4) -> Self:
         for status in R4RStatus:
             if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
-                request = RequestForRegistration.parse_file(path)
+                with open(path, encoding="utf-8") as file:
+                    request = RequestForRegistration.model_validate_json(file.read())
                 # access time is used to determine when to remove registration request file
                 with suppress(OSError):
                     os.utime(path, None)
@@ -58,7 +59,10 @@ class R4R:
             parents=True,
             exist_ok=True,
         )
-        (target_path := target_dir / f"{self.request.uuid}.json").write_text(self.request.json())
+        (target_path := target_dir / f"{self.request.uuid}.json").write_text(
+            self.request.model_dump_json(),
+            encoding="utf-8",
+        )
         target_path.chmod(0o660)
 
 

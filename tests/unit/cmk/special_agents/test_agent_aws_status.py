@@ -42,7 +42,9 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
     captured = capsys.readouterr()
     assert captured.out.split("\n") == [
         "<<<aws_status:sep(0)>>>",
-        agent_aws_status.AgentOutput(discovery_param=discovery_param, rss_str=RSS_STR).json(),
+        agent_aws_status.AgentOutput(
+            discovery_param=discovery_param, rss_str=RSS_STR
+        ).model_dump_json(),
         "",
     ]
     assert captured.err == ""

@@ -36,9 +36,10 @@ False
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.cisco_wlc import CISCO_WLC_OIDS
+
 from .agent_based_api.v1 import any_of, equals, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cisco_wlc import CISCO_WLC_OIDS
 
 Section = dict[str, str]
 

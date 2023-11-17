@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping, Sequence
 
+from cmk.plugins.lib import bonding
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import bonding
 
 # <<<lnx_bonding:sep(58)>>>
 # ==> bond0 <==

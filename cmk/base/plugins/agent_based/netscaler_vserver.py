@@ -8,6 +8,8 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.netscaler import SNMP_DETECT
+
 from .agent_based_api.v1 import (
     check_levels,
     register,
@@ -18,7 +20,6 @@ from .agent_based_api.v1 import (
     State,
     type_defs,
 )
-from .utils.netscaler import SNMP_DETECT
 
 netscaler_vserver_states = {
     "0": (1, "unknown"),

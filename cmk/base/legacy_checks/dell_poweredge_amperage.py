@@ -12,7 +12,8 @@ from cmk.base.check_legacy_includes.dell_poweredge import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
+
+from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
 
 check_info["dell_poweredge_amperage"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,

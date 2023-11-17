@@ -6,6 +6,8 @@
 from collections.abc import Generator, Mapping
 from typing import Any
 
+from cmk.plugins.lib import pulse_secure
+
 from .agent_based_api.v1 import (
     check_levels,
     clusterize,
@@ -16,7 +18,6 @@ from .agent_based_api.v1 import (
     SNMPTree,
     type_defs,
 )
-from .utils import pulse_secure
 
 Section = Mapping[str, int]
 CheckOutput = Generator[Result | Metric, None, None]

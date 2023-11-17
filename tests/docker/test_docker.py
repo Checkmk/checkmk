@@ -659,35 +659,14 @@ def test_update(
     # Later this site is being updated to the current daily build
     old_version = CMKVersion(
         version_spec="2.2.0p8",
-        branch="2.2.0",
         edition=Edition.CRE,
+        branch="2.2.0",
+        branch_version="2.2.0",
     )
 
     assert isinstance(
         versions_compatible(
             Version.from_str(old_version.version), Version.from_str(version.version)
-        ),
-        VersionsCompatible,
-    )
-    # Currently, in the master branch, we can't derive the future major version from the daily
-    # build version. So we hack around a bit to gather it from the git. In the future we plan to
-    # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
-    # additional check can be removed.
-    branch_version = subprocess.check_output(
-        [
-            "make",
-            "-s",
-            "-C",
-            str(testlib.repo_path()),
-            "-f",
-            "defines.make",
-            "print-BRANCH_VERSION",
-        ],
-        encoding="utf-8",
-    ).rstrip()
-    assert isinstance(
-        versions_compatible(
-            Version.from_str(old_version.version), Version.from_str(branch_version)
         ),
         VersionsCompatible,
     )

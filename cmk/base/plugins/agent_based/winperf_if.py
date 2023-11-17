@@ -7,11 +7,12 @@ from collections.abc import Collection, Iterator, Mapping, MutableMapping, Seque
 from dataclasses import asdict
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
+from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
+
 from .agent_based_api.v1 import get_value_store, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
-from .utils import interfaces
-from .utils.inventory_interfaces import Interface as InterfaceInv
-from .utils.inventory_interfaces import inventorize_interfaces
 
 Line = Sequence[str]
 Lines = Iterator[Line]

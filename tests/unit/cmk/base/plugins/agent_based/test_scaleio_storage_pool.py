@@ -21,8 +21,9 @@ from cmk.base.plugins.agent_based.scaleio_storage_pool import (
     ScaleioStoragePoolSection,
     StoragePool,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.base.plugins.agent_based.utils.scaleio import DiskReadWrite, StorageConversionError
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.scaleio import DiskReadWrite, StorageConversionError
 
 SECTION = {
     "4e9a44c700000000": StoragePool(

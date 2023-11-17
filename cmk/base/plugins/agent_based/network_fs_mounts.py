@@ -7,15 +7,16 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import Any, Final, NamedTuple
 
-from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_single,
     FILESYSTEM_DEFAULT_LEVELS,
     MAGIC_FACTOR_DEFAULT_PARAMS,
     SHOW_LEVELS_DEFAULT,
     TREND_DEFAULT_PARAMS,
 )
+
+from .agent_based_api.v1 import get_value_store, Metric, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 DEFAULT_NETWORK_FS_MOUNT_PARAMETERS: Final = {
     **FILESYSTEM_DEFAULT_LEVELS,

@@ -354,7 +354,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 ),
             )
 
-        if not content.startswith(b"BEGIN:VCALENDAR") or not content.endswith(b"END:VCALENDAR"):
+        if not content.startswith(b"BEGIN:VCALENDAR") or not content.endswith(
+            (b"END:VCALENDAR", b"END:VCALENDAR\r\n")
+        ):
             raise MKUserError(varprefix, _("The file does not seem to be a valid iCalendar file."))
 
     def page(self) -> None:

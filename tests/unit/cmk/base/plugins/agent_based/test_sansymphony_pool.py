@@ -14,11 +14,8 @@ from cmk.base.plugins.agent_based.sansymphony_pool import (
     SimpleUsage,
     Usage,
 )
-from cmk.base.plugins.agent_based.utils.df import (
-    Bytes,
-    FILESYSTEM_DEFAULT_LEVELS,
-    MAGIC_FACTOR_DEFAULT_PARAMS,
-)
+
+from cmk.plugins.lib.df import Bytes, FILESYSTEM_DEFAULT_LEVELS, MAGIC_FACTOR_DEFAULT_PARAMS
 
 
 def test_parse_sansymphony_pool_no_agent_output() -> None:

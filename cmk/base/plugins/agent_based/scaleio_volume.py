@@ -11,7 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.scaleio import (
+
+from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.scaleio import (
     create_disk_read_write,
     DiskReadWrite,
     parse_scaleio,
@@ -19,7 +21,6 @@ from cmk.base.plugins.agent_based.utils.scaleio import (
 )
 
 from .agent_based_api.v1 import get_value_store, register, Result, Service, State
-from .utils.diskstat import check_diskstat_dict
 
 # <<<scaleio_volume>>>
 # VOLUME f6a9425800000002:

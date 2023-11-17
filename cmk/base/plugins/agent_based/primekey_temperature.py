@@ -6,10 +6,11 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.primekey import DETECT_PRIMEKEY
-from .utils.temperature import check_temperature, TempParamDict
 
 _Section = Mapping[str, float]
 

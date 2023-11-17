@@ -11,7 +11,8 @@ import typing
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
-from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
+
+from cmk.plugins.lib.hp_proliant import DETECT
 
 
 class HpProRaid(typing.NamedTuple):

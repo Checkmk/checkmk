@@ -6,11 +6,11 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
+from cmk.plugins.lib.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
+from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 from .agent_based_api.v1 import check_levels, get_rate, get_value_store, register, render
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
 
 Section = Mapping[str, Mapping[str, float]]
 

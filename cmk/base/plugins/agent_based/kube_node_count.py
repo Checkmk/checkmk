@@ -10,9 +10,10 @@ from typing import Literal
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.kube import CountableNode, NodeCount
+
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.kube import CountableNode, NodeCount
 
 OptionalLevels = Literal["no_levels"] | tuple[Literal["levels"], tuple[int, int]]
 
@@ -80,7 +81,7 @@ class KubeNodeCountVSResult(TypedDict):
 
 
 def parse(string_table: StringTable) -> NodeCount:
-    return NodeCount.parse_raw(string_table[0][0])
+    return NodeCount.model_validate_json(string_table[0][0])
 
 
 def discovery(section: NodeCount) -> DiscoveryResult:

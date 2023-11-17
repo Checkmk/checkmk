@@ -160,7 +160,8 @@ def _create_cpu_rate_metrics(
 def _load_containers_store(container_store_path: Path) -> ContainersStore:
     common.LOGGER.debug("Load previous cycle containers store from %s", container_store_path)
     try:
-        return ContainersStore.parse_file(container_store_path)
+        with open(container_store_path, encoding="utf-8") as file:
+            return ContainersStore.model_validate_json(file.read())
     except FileNotFoundError as e:
         common.LOGGER.info("Could not find metrics file. This is expected if the first run.")
         common.LOGGER.debug("Exception: %s", e)
@@ -175,8 +176,8 @@ def _persist_containers_store(
 ) -> None:
     common.LOGGER.debug("Persisting current containers store under %s", container_store_path)
     container_store_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(container_store_path, "w") as f:
-        f.write(containers_store.json(by_alias=True))
+    with open(container_store_path, "w", encoding="utf-8") as f:
+        f.write(containers_store.model_dump_json(by_alias=True))
 
 
 def _determine_cpu_rate_metrics(

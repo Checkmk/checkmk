@@ -34,7 +34,7 @@ from ._config import (
     set_discovery_ruleset,
     set_host_label_ruleset,
 )
-from ._discover import load_all_plugins
+from ._discover import load_all_plugins, register_plugin_by_type
 
 __all__ = [
     "add_check_plugin",
@@ -65,6 +65,7 @@ __all__ = [
     "len_snmp_sections",
     "load_all_plugins",
     "needs_redetection",
+    "register_plugin_by_type",
     "set_discovery_ruleset",
     "set_host_label_ruleset",
 ]

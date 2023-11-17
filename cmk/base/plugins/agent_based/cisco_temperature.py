@@ -28,8 +28,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamDict
+
+from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
 
 Section = Mapping[str, Mapping[str, Mapping[str, Any]]]  # oh boy.
 

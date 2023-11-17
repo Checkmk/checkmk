@@ -6,9 +6,10 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib import interfaces, uptime
+
 from .agent_based_api.v1 import Attributes, register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import interfaces, uptime
 
 Section = Mapping[str, str]
 

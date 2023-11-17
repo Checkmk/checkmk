@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.ups_modulys import DETECT_UPS_MODULYS
+
+from cmk.plugins.lib.ups_modulys import DETECT_UPS_MODULYS
 
 
 def inventory_ups_modulys_alarms(info):

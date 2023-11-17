@@ -6,6 +6,8 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.plugins.lib.livestatus_status import LivestatusSection
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.livestatus_status import LivestatusSection
 
 # Example output from agent:
 # <<<livestatus_status:sep(59)>>>

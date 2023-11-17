@@ -7,7 +7,8 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils import postgres
+
+from cmk.plugins.lib import postgres
 
 # OLD FORMAT - with idle filter
 # <<<postgres_connections:sep(59)>>>

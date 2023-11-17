@@ -5,13 +5,14 @@
 
 import pytest
 
-import cmk.base.plugins.agent_based.utils.docker as docker
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_docker_container_network import (
     inventory_docker_container_network,
     parse_docker_container_network,
 )
+
+import cmk.plugins.lib.docker as docker
 
 AGENT_OUTPUT = [
     [

@@ -6377,6 +6377,10 @@ msgstr ""
 msgid "Archive an event"
 msgstr "Arhivați un eveniment"
 
+#, fuzzy
+msgid "Archive current audit log"
+msgstr "Obțineți jurnalele de audit la distanță"
+
 msgid "Archive event"
 msgstr "Eveniment de arhivă"
 
@@ -6386,11 +6390,19 @@ msgstr "Arhiva evenimentelor"
 msgid "Archive events of hosts"
 msgstr "Arhiva evenimentelor de gazde"
 
+#, fuzzy
+msgid "Archive log"
+msgstr "Arhiva"
+
 msgid "Archive messages that do not match any rule"
 msgstr "Arhivați mesajele care nu corespund niciunei reguli"
 
 msgid "Archive this event"
 msgstr "Arhivați acest eveniment"
+
+#, fuzzy
+msgid "Archived audit log"
+msgstr "A șters jurnalul de audit."
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Copii de rezervă Arcserve (germană) (Windows)"
@@ -11165,16 +11177,10 @@ msgstr "Mesaje de curățare"
 msgid "Cleanup when disk space is below"
 msgstr "Curățare atunci când spațiul pe disc este sub"
 
-msgid "Clear"
-msgstr "Clar"
-
 msgid "Clear & Delete"
 msgstr "Ștergeți & Ștergeți"
 
 msgid "Clear audit Log"
-msgstr "Ștergeți jurnalul de audit"
-
-msgid "Clear audit log"
 msgstr "Ștergeți jurnalul de audit"
 
 msgid "Clear failed notifications"
@@ -11198,9 +11204,6 @@ msgstr ""
 "jurnalul de audit, un utilizator are nevoie de permisiunea generică Setup "
 "\"Make changes, perform actions\", de permisiunea \"View audit log\" și de "
 "această permisiune."
-
-msgid "Cleared audit log."
-msgstr "A șters jurnalul de audit."
 
 msgid "Click for instant reload."
 msgstr "Faceți clic pentru reîncărcare instantanee."
@@ -21356,6 +21359,10 @@ msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr ""
 "Testul de eliminare a fișierelor pentru stocarea la distanță a eșuat. Mesaj "
 "de eroare original: %s."
+
+#, fuzzy
+msgid "File selection"
+msgstr "Selecție de dosare"
 
 msgid "File size"
 msgstr "Dimensiunea fișierului"
@@ -32662,6 +32669,12 @@ msgstr "Niveluri mai mici pentru durata de viață a sănătății"
 msgid "Lower levels for hit ratio"
 msgstr "Niveluri mai mici pentru raportul de succes"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"cereri primite de un server de aplicații JVM."
+
 msgid "Lower levels for number of requests"
 msgstr "Niveluri inferioare pentru numărul de cereri"
 
@@ -41123,6 +41136,10 @@ msgstr "Vă rugăm să alegeți o țintă de la care să efectuați restaurarea.
 msgid "Please choose a valid PNG image."
 msgstr "Vă rugăm să alegeți o imagine PNG validă."
 
+#, fuzzy
+msgid "Please choose an audit log to view:"
+msgstr "Vă rugăm să alegeți un fișier de încărcat."
+
 msgid "Please choose the check plugin"
 msgstr "Vă rugăm să alegeți plugin-ul de verificare"
 
@@ -48380,6 +48397,14 @@ msgstr "Arată mai mult / Arată mai puțin"
 
 msgid "Show number of groups"
 msgstr "Afișați numărul de grupuri"
+
+#, fuzzy
+msgid "Show object"
+msgstr "Arată mai mult"
+
+#, fuzzy
+msgid "Show object type"
+msgstr "Nici un tip de obiect"
 
 msgid "Show only modified settings"
 msgstr "Afișați numai setările modificate"
@@ -60710,13 +60735,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "Această regulă stabilește starea necesară a unui contact de comutație"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
-"cereri primite de un server de aplicații JVM."
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -64701,6 +64719,12 @@ msgstr "Nivelurile superioare pentru primul element de ieșire"
 
 msgid "Upper levels for hit ratio"
 msgstr "Niveluri superioare pentru raportul de succes"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Această regulă stabilește nivelurile de avertizare și crit pentru numărul de "
+"cereri primite de un server de aplicații JVM."
 
 msgid "Upper levels for indexes"
 msgstr "Niveluri superioare pentru indici"
@@ -69918,6 +69942,9 @@ msgstr ""
 "nu utilizează Checkmk Microcore. Designerul grafic poate fi utilizat numai "
 "cu site-uri care utilizează Checkmk Microcore."
 
+msgid "You can only archive the current audit log"
+msgstr ""
+
 #, python-format
 msgid ""
 "You can only configure a local site connection for the local site. The site "
@@ -71669,6 +71696,10 @@ msgstr "critică dacă este mai mică decât"
 msgid "critical if older than"
 msgstr "critică dacă este mai veche de"
 
+#, fuzzy
+msgid "current"
+msgstr "Curent"
+
 msgid "current events"
 msgstr "evenimente curente"
 
@@ -73360,6 +73391,12 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
+#~ msgid "Clear"
+#~ msgstr "Clar"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Ștergeți jurnalul de audit"
+
 #~ msgid "Agent based plugins (Checks, Inventory)"
 #~ msgstr "Plugin-uri bazate pe agenți (Verificări, Inventar)"
 
@@ -73746,9 +73783,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Found no inventory data for this host."
 #~ msgstr "Nu s-au găsit date de inventar pentru această gazdă."
-
-#~ msgid "Get remote audit logs"
-#~ msgstr "Obțineți jurnalele de audit la distanță"
 
 #, python-format
 #~ msgid "Graph identification: The '%s' attribute is missing"

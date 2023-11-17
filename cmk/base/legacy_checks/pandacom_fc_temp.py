@@ -11,7 +11,8 @@ from cmk.base.check_legacy_includes.pandacom_temp import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
+
+from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 
 # .1.3.6.1.4.1.3652.3.3.3.1.1.2.2 2 --> SPEED-DUALLINE-FC::speedDuallineFCMSlot.2
 # .1.3.6.1.4.1.3652.3.3.3.1.1.2.3 3 --> SPEED-DUALLINE-FC::speedDuallineFCMSlot.3

@@ -10,9 +10,10 @@ from typing import Any, Iterable, MutableMapping, NamedTuple, Sequence
 
 import pydantic
 
+from cmk.plugins.lib import interfaces
+
 from .agent_based_api.v1 import get_value_store, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import interfaces
 
 
 class Stats(pydantic.BaseModel):

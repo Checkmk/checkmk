@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use bytes::Bytes;
-use http::HeaderMap;
+use http::HeaderValue;
 use httpdate::parse_http_date;
 use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
@@ -18,6 +18,7 @@ use crate::http::ProcessedResponse;
 // * warn/lower and crit/upper
 // So we're modelling exactly this.
 
+#[cfg_attr(test, derive(PartialEq))]
 pub struct UpperLevels<T> {
     pub warn: T,
     pub crit: Option<T>,
@@ -46,6 +47,15 @@ where
             } if value >= crit => Some(State::Crit),
             Self { warn, crit: _ } if value >= warn => Some(State::Warn),
             _ => None,
+        }
+    }
+}
+
+impl From<UpperLevels<u64>> for UpperLevels<f64> {
+    fn from(value: UpperLevels<u64>) -> Self {
+        Self {
+            warn: value.warn as f64,
+            crit: value.crit.map(|c| c as f64),
         }
     }
 }
@@ -82,7 +92,7 @@ where
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum State {
     Ok,
     Warn,
@@ -112,11 +122,12 @@ impl From<State> for i32 {
     }
 }
 
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Metric {
     pub name: String,
     pub value: f64,
-    pub unit: Option<&'static str>,
-    pub levels: Option<(f64, Option<f64>)>,
+    pub unit: Option<char>,
+    pub levels: Option<UpperLevels<f64>>,
     pub lower: Option<f64>,
     pub upper: Option<f64>,
 }
@@ -133,7 +144,7 @@ impl Display for Metric {
         write!(f, "{}={}", self.name, self.value)?;
         write_optional(f, self.unit)?;
         let (warn, crit) = match self.levels {
-            Some((warn, opt_crit)) => (Some(warn), opt_crit),
+            Some(UpperLevels { warn, crit }) => (Some(warn), crit),
             None => (None, None),
         };
         write!(f, ";")?;
@@ -148,6 +159,7 @@ impl Display for Metric {
     }
 }
 
+#[cfg_attr(test, derive(Eq, PartialEq))]
 pub struct CheckItem {
     pub state: State,
     text: String,
@@ -182,6 +194,7 @@ impl CheckItem {
     }
 }
 
+#[cfg_attr(test, derive(PartialEq))]
 pub enum CheckResult {
     Summary(CheckItem),
     Details(CheckItem),
@@ -196,6 +209,24 @@ impl CheckResult {
     pub fn details(state: State, text: &str) -> Option<CheckResult> {
         CheckItem::new(state, text).map(Self::Details)
     }
+
+    pub fn metric(
+        name: &str,
+        value: f64,
+        unit: Option<char>,
+        levels: Option<UpperLevels<f64>>,
+        lower: Option<f64>,
+        upper: Option<f64>,
+    ) -> Option<CheckResult> {
+        Some(CheckResult::Metric(Metric {
+            name: name.to_string(),
+            value,
+            unit,
+            levels,
+            lower,
+            upper,
+        }))
+    }
 }
 
 pub fn notice(state: State, text: &str) -> Vec<Option<CheckResult>> {
@@ -206,11 +237,43 @@ pub fn notice(state: State, text: &str) -> Vec<Option<CheckResult>> {
     }
 }
 
+pub fn check_levels<T: Display + Copy + PartialOrd>(
+    description: &str,
+    value: T,
+    unit: Option<&'static str>,
+    upper_levels: &Option<UpperLevels<T>>,
+) -> Vec<Option<CheckResult>> {
+    let state = match &upper_levels {
+        Some(ul) => ul.evaluate(&value).unwrap_or(State::Ok),
+        None => State::Ok,
+    };
+
+    let opt_unit = unit.unwrap_or_default();
+    let warn_crit_info = if let State::Warn | State::Crit = state {
+        match &upper_levels {
+            Some(UpperLevels { warn, crit: None }) => format!(" (warn at {}{})", warn, opt_unit),
+            Some(UpperLevels {
+                warn,
+                crit: Some(crit),
+            }) => format!(" (warn/crit at {}{}/{}{})", warn, opt_unit, crit, opt_unit),
+            _ => "".to_string(),
+        }
+    } else {
+        "".to_string()
+    };
+
+    notice(
+        state,
+        &format!("{}: {}{}{}", description, value, opt_unit, warn_crit_info),
+    )
+}
+
 pub struct CheckParameters {
     pub onredirect: OnRedirect,
     pub page_size: Option<Bounds<usize>>,
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
+    pub timeout: Duration,
 }
 
 pub fn collect_response_checks(
@@ -221,10 +284,19 @@ pub fn collect_response_checks(
     check_status(response.status, response.version, params.onredirect)
         .into_iter()
         .chain(check_body(response.body, params.page_size))
-        .chain(vec![
-            check_response_time(response_time, params.response_time_levels),
-            check_document_age(&response.headers, params.document_age_levels),
-        ])
+        .chain(check_response_time(
+            response_time,
+            params.response_time_levels,
+            params.timeout,
+        ))
+        .chain(check_document_age(
+            SystemTime::now(),
+            response
+                .headers
+                .get("last-modified")
+                .or(response.headers.get("date")),
+            params.document_age_levels,
+        ))
         .flatten()
         .collect()
 }
@@ -274,184 +346,449 @@ fn check_page_size(
     page_size_limits: Option<Bounds<usize>>,
 ) -> Vec<Option<CheckResult>> {
     let state = page_size_limits
+        .as_ref()
         .and_then(|bounds| bounds.evaluate(&page_size, State::Warn))
         .unwrap_or(State::Ok);
 
-    notice(state, &format!("Page size: {} bytes", page_size))
+    let bounds_info = if let State::Warn = state {
+        match page_size_limits {
+            Some(Bounds { lower, upper: None }) => format!(" (warn below {} Bytes)", lower),
+            Some(Bounds {
+                lower,
+                upper: Some(upper),
+            }) => format!(" (warn below/above {} Bytes/{} Bytes)", lower, upper),
+            _ => "".to_string(),
+        }
+    } else {
+        "".to_string()
+    };
+
+    let mut res = notice(
+        state,
+        &format!("Page size: {} Bytes{}", page_size, bounds_info),
+    );
+    res.push(CheckResult::metric(
+        "size",
+        page_size as f64,
+        Some('B'),
+        None,
+        Some(0.),
+        None,
+    ));
+    res
 }
 
 fn check_response_time(
     response_time: Duration,
     response_time_levels: Option<UpperLevels<f64>>,
-) -> Option<CheckResult> {
-    let state = response_time_levels
-        .and_then(|levels| levels.evaluate(&response_time.as_secs_f64()))
-        .unwrap_or(State::Ok);
-
-    CheckResult::summary(
-        state,
-        &format!(
-            "Response time: {}.{}s",
-            response_time.as_secs(),
-            response_time.subsec_millis()
-        ),
-    )
+    timeout: Duration,
+) -> Vec<Option<CheckResult>> {
+    let mut ret = check_levels(
+        "Response time",
+        response_time.as_secs_f64(),
+        Some(" seconds"),
+        &response_time_levels,
+    );
+    ret.push(CheckResult::metric(
+        "time",
+        response_time.as_secs_f64(),
+        Some('s'),
+        response_time_levels,
+        Some(0.),
+        Some(timeout.as_secs_f64()),
+    ));
+    ret
 }
 
 fn check_document_age(
-    headers: &HeaderMap,
+    now: SystemTime,
+    age_header: Option<&HeaderValue>,
     document_age_levels: Option<UpperLevels<u64>>,
-) -> Option<CheckResult> {
-    let document_age_levels = document_age_levels?;
-
-    let now = SystemTime::now();
-
-    let cr_no_document_age = CheckResult::summary(State::Crit, "Can't determine document age");
-    let cr_document_age_error = CheckResult::summary(State::Crit, "Can't decode document age");
-
-    let age_header = headers.get("last-modified").or(headers.get("date"));
-    let Some(age) = age_header else {
-        return cr_no_document_age;
+) -> Vec<Option<CheckResult>> {
+    if document_age_levels.is_none() {
+        return vec![];
     };
+
+    let Some(age) = age_header else {
+        return notice(State::Crit, "Can't determine document age");
+    };
+    let document_age_error = "Can't decode document age";
     let Ok(age) = age.to_str() else {
-        return cr_document_age_error;
+        return notice(State::Crit, document_age_error);
     };
     let Ok(age) = parse_http_date(age) else {
-        return cr_document_age_error;
+        return notice(State::Crit, document_age_error);
     };
     let Ok(age) = now.duration_since(age) else {
-        return cr_document_age_error;
+        return notice(State::Crit, document_age_error);
     };
 
-    let state = document_age_levels.evaluate(&age.as_secs())?;
-
-    //TODO(au): Specify "too old" in Output
-    CheckResult::summary(state, "Document age too old")
-}
-
-#[cfg(test)]
-mod test_helper {
-    use super::CheckResult;
-    use crate::checking::State;
-
-    pub fn has_state(crs: Vec<Option<CheckResult>>, state: State) -> bool {
-        crs.iter().any(|cr| is_state(cr, &state))
-    }
-
-    pub fn is_state(cr: &Option<CheckResult>, state: &State) -> bool {
-        let Some(cr) = cr else { return false };
-        match cr {
-            CheckResult::Details(ci) | CheckResult::Summary(ci) => &ci.state == state,
-            _ => false,
-        }
-    }
+    check_levels(
+        "Document age",
+        age.as_secs(),
+        Some(" seconds"),
+        &document_age_levels,
+    )
 }
 
 #[cfg(test)]
 mod test_check_page_size {
-    use super::test_helper::has_state;
-    use crate::checking::check_page_size;
-    use crate::checking::Bounds;
-    use crate::checking::State;
+    use super::*;
 
     #[test]
     fn test_without_bounds() {
-        assert!(has_state(check_page_size(42, None), State::Ok));
+        assert!(
+            check_page_size(42, None)
+                == vec![
+                    CheckResult::details(State::Ok, "Page size: 42 Bytes"),
+                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                ]
+        )
     }
 
     #[test]
     fn test_lower_within_bounds() {
-        assert!(has_state(
-            check_page_size(42, Some(Bounds::lower(12))),
-            State::Ok
-        ));
+        assert!(
+            check_page_size(42, Some(Bounds::lower(12)))
+                == vec![
+                    CheckResult::details(State::Ok, "Page size: 42 Bytes"),
+                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                ]
+        );
     }
 
     #[test]
     fn test_lower_out_of_bounds() {
-        assert!(has_state(
-            check_page_size(42, Some(Bounds::lower(56))),
-            State::Warn
-        ));
-    }
-
-    #[test]
-    fn test_lower_and_higher_within_bounds() {
-        assert!(has_state(
-            check_page_size(56, Some(Bounds::lower_upper(42, 100))),
-            State::Ok
-        ));
+        assert!(
+            check_page_size(42, Some(Bounds::lower(56)))
+                == vec![
+                    CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                    CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                ]
+        );
     }
 
     #[test]
     fn test_lower_and_higher_too_low() {
-        assert!(has_state(
-            check_page_size(42, Some(Bounds::lower_upper(56, 100))),
-            State::Warn
-        ));
+        assert!(
+            check_page_size(42, Some(Bounds::lower_upper(56, 100)))
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                ]
+        );
     }
 
     #[test]
     fn test_lower_and_higher_too_high() {
-        assert!(has_state(
-            check_page_size(142, Some(Bounds::lower_upper(56, 100))),
-            State::Warn
-        ));
+        assert!(
+            check_page_size(142, Some(Bounds::lower_upper(56, 100)))
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
+                ]
+        );
     }
 }
 
 #[cfg(test)]
 mod test_check_response_time {
-    use super::test_helper::is_state;
-    use crate::checking::check_response_time;
-    use crate::checking::{State, UpperLevels};
+    use super::*;
     use std::time::Duration;
 
     #[test]
     fn test_unbounded() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), None),
-            &State::Ok
-        ),);
+        assert!(
+            check_response_time(Duration::new(5, 0), None, Duration::from_secs(10))
+                == vec![
+                    CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                    CheckResult::metric("time", 5., Some('s'), None, Some(0.), Some(10.))
+                ]
+        );
     }
 
     #[test]
     fn test_warn_within_bounds() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(6.))),
-            &State::Ok
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn(6.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                CheckResult::metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some(UpperLevels::warn(6.)),
+                    Some(0.),
+                    Some(10.)
+                )
+            ]
+        );
     }
 
     #[test]
     fn test_warn_is_warn() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn(4.))),
-            &State::Warn
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn(4.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
+                CheckResult::details(State::Warn, "Response time: 5 seconds (warn at 4 seconds)"),
+                CheckResult::metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some(UpperLevels::warn(4.)),
+                    Some(0.),
+                    Some(10.)
+                )
+            ]
+        );
     }
 
     #[test]
     fn test_warncrit_within_bounds() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(6., 7.))),
-            &State::Ok
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn_crit(6., 7.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::details(State::Ok, "Response time: 5 seconds"),
+                CheckResult::metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some(UpperLevels::warn_crit(6., 7.)),
+                    Some(0.),
+                    Some(10.)
+                )
+            ]
+        );
     }
 
     #[test]
     fn test_warncrit_is_warn() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(4., 6.))),
-            &State::Warn
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn_crit(4., 6.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Response time: 5 seconds (warn/crit at 4 seconds/6 seconds)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Response time: 5 seconds (warn/crit at 4 seconds/6 seconds)"
+                ),
+                CheckResult::metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some(UpperLevels::warn_crit(4., 6.)),
+                    Some(0.),
+                    Some(10.)
+                )
+            ]
+        );
     }
 
     #[test]
     fn test_warncrit_is_crit() {
-        assert!(is_state(
-            &check_response_time(Duration::new(5, 0), Some(UpperLevels::warn_crit(2., 3.))),
-            &State::Crit
-        ));
+        assert!(
+            check_response_time(
+                Duration::new(5, 0),
+                Some(UpperLevels::warn_crit(2., 3.)),
+                Duration::from_secs(10)
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Response time: 5 seconds (warn/crit at 2 seconds/3 seconds)"
+                ),
+                CheckResult::metric(
+                    "time",
+                    5.,
+                    Some('s'),
+                    Some(UpperLevels::warn_crit(2., 3.)),
+                    Some(0.),
+                    Some(10.)
+                )
+            ]
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_check_document_age {
+    use super::*;
+
+    // All fixed timestamps at 00:00 UTC/GMT
+    const UNIX_TIME_2023_11_16: u64 = 1700092800;
+    const DATE_2023_11_15: &str = "Wed, 15 Nov 2023 00:00:00 GMT";
+    const DATE_2023_11_17: &str = "Fri, 17 Nov 2023 00:00:00 GMT";
+    const TWELVE_HOURS: u64 = 12 * 60 * 60;
+    const THIRTYSIX_HOURS: u64 = 36 * 60 * 60;
+
+    fn system_time(unix_timestamp: u64) -> SystemTime {
+        SystemTime::UNIX_EPOCH + Duration::from_secs(unix_timestamp)
+    }
+
+    fn header_date(date: &str) -> HeaderValue {
+        HeaderValue::from_str(date).unwrap()
+    }
+
+    #[test]
+    fn test_no_levels() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date("We don't care")),
+                None,
+            ) == vec![]
+        );
+    }
+
+    #[test]
+    fn test_missing_header_value() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                None,
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![
+                CheckResult::summary(State::Crit, "Can't determine document age"),
+                CheckResult::details(State::Crit, "Can't determine document age")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_erroneous_date() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date("Something wrong")),
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![
+                CheckResult::summary(State::Crit, "Can't decode document age"),
+                CheckResult::details(State::Crit, "Can't decode document age")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_date_in_future() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date(DATE_2023_11_17)),
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![
+                CheckResult::summary(State::Crit, "Can't decode document age"),
+                CheckResult::details(State::Crit, "Can't decode document age")
+            ]
+        );
+    }
+
+    #[test]
+    fn test_ok() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date(DATE_2023_11_15)),
+                Some(UpperLevels::warn(THIRTYSIX_HOURS)),
+            ) == vec![CheckResult::details(
+                State::Ok,
+                "Document age: 86400 seconds"
+            )]
+        );
+    }
+
+    #[test]
+    fn test_warn() {
+        assert!(
+            check_document_age(
+                system_time(UNIX_TIME_2023_11_16),
+                Some(&header_date(DATE_2023_11_15)),
+                Some(UpperLevels::warn(TWELVE_HOURS)),
+            ) == vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Document age: 86400 seconds (warn at 43200 seconds)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Document age: 86400 seconds (warn at 43200 seconds)"
+                )
+            ]
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_check_levels {
+    use super::*;
+
+    #[test]
+    fn test_basic() {
+        assert!(
+            check_levels("test", 0, None, &None)
+                == vec![CheckResult::details(State::Ok, "test: 0")]
+        )
+    }
+
+    #[test]
+    fn test_warn_level_inactive() {
+        assert!(
+            check_levels("test", 0, Some(" Bytes"), &Some(UpperLevels::warn(10)))
+                == vec![CheckResult::details(State::Ok, "test: 0 Bytes")]
+        )
+    }
+
+    #[test]
+    fn test_warn_level_active() {
+        assert!(
+            check_levels("test", 20, Some("%"), &Some(UpperLevels::warn(10)))
+                == vec![
+                    CheckResult::summary(State::Warn, "test: 20% (warn at 10%)"),
+                    CheckResult::details(State::Warn, "test: 20% (warn at 10%)")
+                ]
+        )
+    }
+
+    #[test]
+    fn test_warn_crit_levels() {
+        assert!(
+            check_levels("test", 20, Some("%"), &Some(UpperLevels::warn_crit(10, 20)))
+                == vec![
+                    CheckResult::summary(State::Crit, "test: 20% (warn/crit at 10%/20%)"),
+                    CheckResult::details(State::Crit, "test: 20% (warn/crit at 10%/20%)")
+                ]
+        )
     }
 }

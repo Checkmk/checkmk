@@ -101,7 +101,7 @@ def write_section(args: Args) -> int:
     azure_status = AzureStatus(link=feed.feed.link, regions=selected_regions, issues=azure_issues)
 
     with SectionWriter("azure_status") as writer:
-        writer.append_json(azure_status.dict())
+        writer.append_json(azure_status.model_dump())
     return 0
 
 

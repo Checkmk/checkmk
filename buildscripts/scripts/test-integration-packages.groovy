@@ -22,7 +22,8 @@ def main() {
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
     def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_version = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def docker_tag = versioning.select_docker_tag(
         branch_name,
         env.DOCKER_TAG,  // FIXME

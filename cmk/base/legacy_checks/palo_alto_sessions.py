@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.palo_alto import DETECT_PALO_ALTO
+
+from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
 
 
 def inventory_palo_alto_sessions(info):

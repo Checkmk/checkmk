@@ -101,6 +101,7 @@ fn make_standard_configs(
             page_size: None,
             response_time_levels: None,
             document_age_levels: None,
+            timeout: Duration::from_secs(1),
         },
     )
 }

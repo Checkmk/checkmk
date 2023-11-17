@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.emc import DETECT_VPLEX
+
+from cmk.plugins.lib.emc import DETECT_VPLEX
 
 emc_vplex_cpu_default_levels = (90.0, 95.0)
 

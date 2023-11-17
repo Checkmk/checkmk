@@ -15,16 +15,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     IgnoreResultsError,
 )
-from cmk.base.plugins.agent_based.utils.temperature import _migrate_params
-from cmk.base.plugins.agent_based.utils.temperature import (
-    fahrenheit_to_celsius as fahrenheit_to_celsius,
-)
-from cmk.base.plugins.agent_based.utils.temperature import render_temp as render_temp
-from cmk.base.plugins.agent_based.utils.temperature import StatusType as StatusType
-from cmk.base.plugins.agent_based.utils.temperature import temp_unitsym as temp_unitsym
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
-from cmk.base.plugins.agent_based.utils.temperature import to_celsius as to_celsius
-from cmk.base.plugins.agent_based.utils.temperature import TwoLevelsType as TwoLevelsType
+
+from cmk.plugins.lib.temperature import _migrate_params
+from cmk.plugins.lib.temperature import fahrenheit_to_celsius as fahrenheit_to_celsius
+from cmk.plugins.lib.temperature import render_temp as render_temp
+from cmk.plugins.lib.temperature import StatusType as StatusType
+from cmk.plugins.lib.temperature import temp_unitsym as temp_unitsym
+from cmk.plugins.lib.temperature import TempParamType as TempParamType
+from cmk.plugins.lib.temperature import to_celsius as to_celsius
+from cmk.plugins.lib.temperature import TwoLevelsType as TwoLevelsType
 
 Number = int | float
 

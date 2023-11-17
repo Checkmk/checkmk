@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.netapp_api_luns import (
     discover_netapp_api_luns,
     parse_netapp_api_luns,
 )
-from cmk.base.plugins.agent_based.utils.netapp_api import SectionSingleInstance
+
+from cmk.plugins.lib.netapp_api import SectionSingleInstance
 
 STRING_TABLE = [
     [

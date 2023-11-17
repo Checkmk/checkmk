@@ -6384,6 +6384,10 @@ msgstr ""
 msgid "Archive an event"
 msgstr "Archivar un evento"
 
+#, fuzzy
+msgid "Archive current audit log"
+msgstr "Obtener registros de auditoría remotos"
+
 msgid "Archive event"
 msgstr "Archivo de eventos"
 
@@ -6393,11 +6397,19 @@ msgstr "Archivo de eventos"
 msgid "Archive events of hosts"
 msgstr "Archivo de eventos de los hosts"
 
+#, fuzzy
+msgid "Archive log"
+msgstr "Evento archivado"
+
 msgid "Archive messages that do not match any rule"
 msgstr "Archivar los mensajes que no coinciden con ninguna regla"
 
 msgid "Archive this event"
 msgstr "Archivar este evento"
+
+#, fuzzy
+msgid "Archived audit log"
+msgstr "Registro de auditoría borrado."
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Copias de seguridad de Arcserve (en alemán) (Windows)"
@@ -11177,16 +11189,10 @@ msgstr "Mensajes de limpieza"
 msgid "Cleanup when disk space is below"
 msgstr "Limpieza cuando el espacio en disco es inferior a"
 
-msgid "Clear"
-msgstr "Claro"
-
 msgid "Clear & Delete"
 msgstr "Borrar & Suprimir"
 
 msgid "Clear audit Log"
-msgstr "Borrar registro de auditoría"
-
-msgid "Clear audit log"
 msgstr "Borrar registro de auditoría"
 
 msgid "Clear failed notifications"
@@ -11210,9 +11216,6 @@ msgstr ""
 "de auditoría, un usuario necesita el permiso genérico Configuración "
 "\"Realizar cambios, realizar acciones\", el permiso \"Ver registro de "
 "auditoría\" y este permiso."
-
-msgid "Cleared audit log."
-msgstr "Registro de auditoría borrado."
 
 msgid "Click for instant reload."
 msgstr "Haga clic para una recarga instantánea."
@@ -21396,6 +21399,10 @@ msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr ""
 "Error en la prueba de eliminación de archivos del almacenamiento remoto. "
 "Mensaje de error original: %s"
+
+#, fuzzy
+msgid "File selection"
+msgstr "Selección de carpetas"
 
 msgid "File size"
 msgstr "Tamaño del archivo"
@@ -32718,6 +32725,12 @@ msgstr "Niveles más bajos para la salud de por vida"
 msgid "Lower levels for hit ratio"
 msgstr "Niveles más bajos para la proporción de aciertos"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"Esta regla establece los niveles de advertencia y crítica para el número de "
+"solicitudes entrantes a un servidor de aplicaciones JVM."
+
 msgid "Lower levels for number of requests"
 msgstr "Niveles inferiores para el número de solicitudes"
 
@@ -41221,6 +41234,10 @@ msgstr "Por favor, elija un destino para realizar la restauración."
 msgid "Please choose a valid PNG image."
 msgstr "Por favor, elija una imagen PNG válida."
 
+#, fuzzy
+msgid "Please choose an audit log to view:"
+msgstr "Por favor, elija un archivo para cargar."
+
 msgid "Please choose the check plugin"
 msgstr "Por favor, elija el plugin de verificación"
 
@@ -48502,6 +48519,14 @@ msgstr "Mostrar más / Mostrar menos"
 
 msgid "Show number of groups"
 msgstr "Mostrar número de grupos"
+
+#, fuzzy
+msgid "Show object"
+msgstr "Mostrar más"
+
+#, fuzzy
+msgid "Show object type"
+msgstr "Ningún tipo de objeto"
 
 msgid "Show only modified settings"
 msgstr "Mostrar sólo los ajustes modificados"
@@ -60810,13 +60835,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "Esta regla establece el estado requerido de un contacto de interruptor"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"Esta regla establece los niveles de advertencia y crítica para el número de "
-"solicitudes entrantes a un servidor de aplicaciones JVM."
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -64803,6 +64821,12 @@ msgstr "Niveles superiores para el primer elemento de salida"
 
 msgid "Upper levels for hit ratio"
 msgstr "Niveles superiores para la proporción de aciertos"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"Esta regla establece los niveles de advertencia y crítica para el número de "
+"solicitudes entrantes a un servidor de aplicaciones JVM."
 
 msgid "Upper levels for indexes"
 msgstr "Niveles superiores de los índices"
@@ -70025,6 +70049,9 @@ msgstr ""
 "utiliza Checkmk Microcore. El diseñador de gráficos sólo puede utilizarse "
 "con sitios que utilicen Checkmk Microcore."
 
+msgid "You can only archive the current audit log"
+msgstr ""
+
 #, python-format
 msgid ""
 "You can only configure a local site connection for the local site. The site "
@@ -71774,6 +71801,10 @@ msgstr "crítico si es menor que"
 msgid "critical if older than"
 msgstr "crítico si es mayor de"
 
+#, fuzzy
+msgid "current"
+msgstr "Actual"
+
 msgid "current events"
 msgstr "acontecimientos actuales"
 
@@ -73470,6 +73501,12 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
+#~ msgid "Clear"
+#~ msgstr "Claro"
+
+#~ msgid "Clear audit log"
+#~ msgstr "Borrar registro de auditoría"
+
 #~ msgid "Agent based plugins (Checks, Inventory)"
 #~ msgstr "Plugins basados en agentes (Cheques, Inventario)"
 
@@ -73858,9 +73895,6 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 #~ msgid "Found no inventory data for this host."
 #~ msgstr "No se han encontrado datos de inventario para este host."
-
-#~ msgid "Get remote audit logs"
-#~ msgstr "Obtener registros de auditoría remotos"
 
 #, python-format
 #~ msgid "Graph identification: The '%s' attribute is missing"

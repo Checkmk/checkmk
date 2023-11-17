@@ -10,7 +10,8 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.graylog import deserialize_and_merge_json, GraylogSection
+
+from cmk.plugins.lib.graylog import deserialize_and_merge_json, GraylogSection
 
 # <<<graylog_cluster_stats>>>
 # [[u'{"stream_rule_count": 7, "input_count_by_type":

@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.cpu import Load, Section, Threads
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.cpu import Load, Section, Threads
 
 
 def parse_cpu(string_table: StringTable) -> Section | None:

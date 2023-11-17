@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import bonding
+
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import bonding
 
 
 def _discovery_params(bond: bonding.Bond) -> dict[str, str]:

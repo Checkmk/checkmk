@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.perle import DETECT_PERLE
+
+from cmk.plugins.lib.perle import DETECT_PERLE
 
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.2.1.1 1 --> PERLE-MCR-MGT-MIB::mcrMgtSlotIndex.1.1
 # .1.3.6.1.4.1.1966.21.1.1.1.1.4.5.1.1.3.1.1 MCR-MGT --> PERLE-MCR-MGT-MIB::mcrMgtModelName.1.1

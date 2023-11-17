@@ -1778,7 +1778,7 @@ class ConfigVariableUserDowntimeTimeranges(ConfigVariable):
                 ],
                 optional_keys=[],
             ),
-            title=_("Custom Downtime Timeranges"),
+            title=_("Downtime duration presets"),
             movable=True,
             totext=_("%d timeranges"),
         )

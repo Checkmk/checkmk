@@ -5,9 +5,10 @@
 
 from typing import NamedTuple
 
+from cmk.plugins.lib.primekey import DETECT_PRIMEKEY
+
 from .agent_based_api.v1 import Attributes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.primekey import DETECT_PRIMEKEY
 
 
 class _Section(NamedTuple):

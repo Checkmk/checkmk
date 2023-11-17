@@ -9,7 +9,8 @@
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.barracuda import DETECT_BARRACUDA
+
+from cmk.plugins.lib.barracuda import DETECT_BARRACUDA
 
 
 def inventory_barracuda_mail_latency(info):

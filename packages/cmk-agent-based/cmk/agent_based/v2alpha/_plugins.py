@@ -182,7 +182,7 @@ class SNMPSection:
       fetch:               The specification of snmp data that should be fetched from the device.
                            It must be a non-empty list of :class:`SNMPTree` objects.
                            The parse function will be passed a non-empty list of
-                           :class:`StringTable`s accordingly.
+                           :class:`StringTable` instances accordingly.
 
       parse_function:      The function responsible for parsing the raw snmp data.
                            It must accept exactly one argument by the name 'string_table'.

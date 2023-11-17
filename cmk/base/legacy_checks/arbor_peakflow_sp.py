@@ -14,7 +14,8 @@ from cmk.base.check_legacy_includes.arbor import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 # .1.3.6.1.4.1.9694.1.4.2.1.1.0 796 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg1min.0
 # .1.3.6.1.4.1.9694.1.4.2.1.2.0 742 --> PEAKFLOW-SP-MIB::deviceCpuLoadAvg5min.0

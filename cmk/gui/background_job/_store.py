@@ -106,7 +106,7 @@ class JobStatusStore:
         return self._jobstatus_path.exists()
 
     def write(self, status: JobStatusSpec) -> None:
-        store.save_object_to_file(self._jobstatus_path, status.dict())
+        store.save_object_to_file(self._jobstatus_path, status.model_dump())
 
     def update(self, params: JobStatusSpecUpdate) -> None:
         if not self._jobstatus_path.parent.exists():

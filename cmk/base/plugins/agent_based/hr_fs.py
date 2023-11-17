@@ -6,16 +6,17 @@
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from .agent_based_api.v1 import get_value_store, register, SNMPTree
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import (
+from cmk.plugins.lib.df import (
     df_check_filesystem_list,
     df_discovery,
     EXCLUDED_MOUNTPOINTS,
     FILESYSTEM_DEFAULT_PARAMS,
     FSBlock,
 )
-from .utils.ucd_hr_detection import HR
+from cmk.plugins.lib.ucd_hr_detection import HR
+
+from .agent_based_api.v1 import get_value_store, register, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
 # .1.3.6.1.2.1.25.2.3.1.2.3 .1.3.6.1.2.1.25.2.1.3 --> HOST-RESOURCES-MIB::hrStorageType.3

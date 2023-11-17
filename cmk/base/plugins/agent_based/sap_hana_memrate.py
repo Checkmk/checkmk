@@ -6,10 +6,11 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import sap_hana
+from cmk.plugins.lib.memory import check_element
+
 from .agent_based_api.v1 import IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import sap_hana
-from .utils.memory import check_element
 
 
 def parse_sap_hana_memrate(string_table: StringTable) -> sap_hana.ParsedSection:

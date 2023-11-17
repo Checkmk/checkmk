@@ -8,8 +8,9 @@ from collections import defaultdict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, SNMPTree
 
+from cmk.plugins.lib.cisco_ucs import DETECT, Fault, FaultSeverity
+
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.cisco_ucs import DETECT, Fault, FaultSeverity
 
 
 def parse_cisco_ucs_fault(string_table: StringTable) -> dict[str, list[Fault]]:

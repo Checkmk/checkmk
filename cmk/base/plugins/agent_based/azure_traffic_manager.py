@@ -6,9 +6,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.azure import create_discover_by_metrics_function, parse_resources, Section
+
 from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult
-from .utils.azure import create_discover_by_metrics_function, parse_resources, Section
 
 register.agent_section(
     name="azure_trafficmanagerprofiles",

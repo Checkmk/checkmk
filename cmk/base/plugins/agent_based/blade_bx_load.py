@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib.cpu import Load, Section
+from cmk.plugins.lib.cpu_load import check_cpu_load
+
 from .agent_based_api.v1 import contains, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
-from .utils.cpu import Load, Section
-from .utils.cpu_load import check_cpu_load
 
 
 def parse_blade_bx_load(string_table: StringTable) -> Section | None:

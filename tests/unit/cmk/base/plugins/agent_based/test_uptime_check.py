@@ -11,9 +11,9 @@ from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import uptime
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils import uptime as uptime_utils
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib import uptime as uptime_utils
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.prism_storage_pools import (
     check_prism_storage_pools,
     discovery_prism_storage_pools,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 SECTION = {
     "StoragePool": {

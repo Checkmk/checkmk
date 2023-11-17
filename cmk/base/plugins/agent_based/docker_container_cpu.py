@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from cmk.plugins.lib import docker
+from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import docker
-from .utils.cpu_utilization_os import SectionCpuUtilizationOs
 
 
 def __parse_docker_container_cpu(info):

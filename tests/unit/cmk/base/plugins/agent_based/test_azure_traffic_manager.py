@@ -15,7 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.azure_traffic_manager import check_probe_state, check_qps
-from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Section
+
+from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 
 @pytest.mark.parametrize(

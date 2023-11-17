@@ -13,7 +13,8 @@ from cmk.base.plugins.agent_based.inventory_snmp_extended_info import (
     inventory_snmp_extended_info,
     parse_snmp_extended_info,
 )
-from cmk.base.plugins.agent_based.utils.device_types import get_device_type_label
+
+from cmk.plugins.lib.device_types import get_device_type_label
 
 from .utils_inventory import sort_inventory_result
 

@@ -62,7 +62,7 @@ class Section:
 
 
 def parse(string_table: StringTable) -> Section:
-    output = AgentOutput.parse_raw(string_table[0][0])
+    output = AgentOutput.model_validate_json(string_table[0][0])
     data: dict[str, list[Incident]] = {}
     for incident in output.health_info:
         for location in incident.currently_affected_locations:

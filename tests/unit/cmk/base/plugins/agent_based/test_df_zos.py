@@ -7,7 +7,8 @@ import pytest
 
 from cmk.base.plugins.agent_based import df_zos
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     line.split()

@@ -6,13 +6,14 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.kube import DeploymentInfo, UpdateStrategy
-from cmk.base.plugins.agent_based.utils.kube_inventory import (
+
+from cmk.plugins.lib.kube import DeploymentInfo, UpdateStrategy
+from cmk.plugins.lib.kube_inventory import (
     labels_to_table,
     match_expressions_to_str,
     match_labels_to_str,
 )
-from cmk.base.plugins.agent_based.utils.kube_strategy import strategy_text
+from cmk.plugins.lib.kube_strategy import strategy_text
 
 
 def inventory_kube_deployment(

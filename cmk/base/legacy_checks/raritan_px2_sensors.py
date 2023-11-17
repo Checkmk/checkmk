@@ -13,7 +13,8 @@ from cmk.base.check_legacy_includes.raritan import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
+
+from cmk.plugins.lib.raritan import DETECT_RARITAN
 
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |

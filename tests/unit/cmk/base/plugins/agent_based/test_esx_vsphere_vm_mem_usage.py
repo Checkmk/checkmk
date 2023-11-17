@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils import esx_vsphere
+
+from cmk.plugins.lib import esx_vsphere
 
 
 @pytest.mark.parametrize(

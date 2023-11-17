@@ -8,9 +8,10 @@ from collections.abc import Callable
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
+from cmk.plugins.lib.checkmk import Plugin, PluginSection
+
 from .agent_based_api.v1 import register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils.checkmk import Plugin, PluginSection
 
 
 def _extract_cache_interval(path: str) -> int | None:

@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
+
+from cmk.plugins.lib.hitachi_hnas import DETECT
 
 
 def hitachi_hnas_vnode_combine_item(id_, name):

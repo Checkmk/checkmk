@@ -18,7 +18,8 @@ from cmk.base.check_api import (
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.mongodb import parse_date
+
+from cmk.plugins.lib.mongodb import parse_date
 
 
 def parse_mongodb_collections(string_table):

@@ -5,12 +5,9 @@
 
 from pathlib import Path
 
-import pytest
-
 from cmk.mkp_tool import PathConfig
 
 
-@pytest.mark.skip(reason="typing is broken, PathConfig's paths are plain strings")
 def test_config_from_toml() -> None:
     assert (
         PathConfig.from_toml(

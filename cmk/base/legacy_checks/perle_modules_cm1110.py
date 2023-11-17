@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.perle import check_perle_cm_modules, inventory_perle_cm_modules
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.perle import DETECT_PERLE
+
+from cmk.plugins.lib.perle import DETECT_PERLE
 
 check_info["perle_modules_cm1110"] = LegacyCheckDefinition(
     detect=DETECT_PERLE,

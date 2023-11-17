@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.prism_host_networks import (
     discovery_prism_host_networks,
     parse_prism_host_networks,
 )
-from cmk.base.plugins.agent_based.utils import interfaces
+
+from cmk.plugins.lib import interfaces
 
 RAW = [
     {

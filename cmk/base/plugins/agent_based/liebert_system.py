@@ -14,9 +14,10 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5074 Reason Unknown
 
 
+from cmk.plugins.lib import liebert
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import liebert
 
 
 def parse_liebert_system(string_table: list[StringTable]) -> liebert.SystemSection:

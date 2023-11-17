@@ -127,6 +127,7 @@ def test_check_scheduler_status_standard() -> None:
             section_robotmk_scheduler_phase=SchedulerPhase.Scheduling,
             section_robotmk_rcc_setup_failures=RCCSetupFailures(
                 telemetry_disabling=[],
+                long_path_support=[],
                 shared_holotree=[],
                 holotree_init=[],
             ),
@@ -168,6 +169,7 @@ def test_check_scheduler_rcc_setup_failures() -> None:
             section_robotmk_scheduler_phase=SchedulerPhase.Scheduling,
             section_robotmk_rcc_setup_failures=RCCSetupFailures(
                 telemetry_disabling=["rcc"],
+                long_path_support=[],
                 shared_holotree=[],
                 holotree_init=["piggyback"],
             ),
@@ -211,6 +213,7 @@ def test_check_scheduler_status_environment_building_in_progress() -> None:
             section_robotmk_scheduler_phase=SchedulerPhase.EnvironmentBuilding,
             section_robotmk_rcc_setup_failures=RCCSetupFailures(
                 telemetry_disabling=[],
+                long_path_support=[],
                 shared_holotree=[],
                 holotree_init=[],
             ),
@@ -255,6 +258,7 @@ def test_check_scheduler_status_environment_building_failures() -> None:
             section_robotmk_scheduler_phase=SchedulerPhase.Scheduling,
             section_robotmk_rcc_setup_failures=RCCSetupFailures(
                 telemetry_disabling=[],
+                long_path_support=[],
                 shared_holotree=[],
                 holotree_init=[],
             ),

@@ -6,14 +6,15 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import (
+from cmk.plugins.lib.mssql_counters import (
     discovery_mssql_counters_generic,
     get_item,
     get_rate_or_none,
     Section,
 )
+
+from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:

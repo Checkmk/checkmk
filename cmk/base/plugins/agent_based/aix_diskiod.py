@@ -24,8 +24,9 @@
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
 
+from cmk.plugins.lib import diskstat
+
 from .agent_based_api.v1 import register, type_defs
-from .utils import diskstat
 
 
 def parse_aix_diskiod(string_table: type_defs.StringTable) -> diskstat.Section | None:

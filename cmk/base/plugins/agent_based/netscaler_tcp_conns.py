@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
+from cmk.plugins.lib.netscaler import SNMP_DETECT
 
 
 @dataclass(frozen=True)

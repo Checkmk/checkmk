@@ -7,7 +7,8 @@ import pytest
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
+
+from cmk.plugins.lib.cache_helper import CacheInfo
 
 
 def test_invalid_metric_name_does_not_crash() -> None:

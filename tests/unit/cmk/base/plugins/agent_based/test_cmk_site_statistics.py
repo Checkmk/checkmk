@@ -15,7 +15,8 @@ from cmk.base.plugins.agent_based.cmk_site_statistics import (
     parse_cmk_site_statistics,
     ServiceStatistics,
 )
-from cmk.base.plugins.agent_based.utils.livestatus_status import LivestatusSection
+
+from cmk.plugins.lib.livestatus_status import LivestatusSection
 
 _SECTION_CMK_SITE_STATISTICS = {
     "heute": (

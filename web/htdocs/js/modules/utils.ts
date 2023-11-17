@@ -486,6 +486,12 @@ export function add_height_to_simple_bar_content_of_iframe(
     simple_bar_content.style.height = "100%";
 }
 
+export function update_time(target: string, time: string) {
+    const container = document.getElementById(target) as HTMLInputElement;
+    if (container) {
+        container.value = time;
+    }
+}
 //#.
 //#   .-Page Reload--------------------------------------------------------.
 //#   |        ____                    ____      _                 _       |

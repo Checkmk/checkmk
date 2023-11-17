@@ -6,10 +6,11 @@
 import dataclasses
 from collections.abc import Mapping
 
+from cmk.plugins.lib.liebert import DETECT_LIEBERT, parse_liebert, temperature_to_celsius
+from cmk.plugins.lib.temperature import check_temperature, TempParamDict
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert, temperature_to_celsius
-from .utils.temperature import check_temperature, TempParamDict
 
 
 @dataclasses.dataclass(frozen=True)

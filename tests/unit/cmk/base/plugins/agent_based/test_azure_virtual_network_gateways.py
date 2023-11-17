@@ -26,7 +26,8 @@ from cmk.base.plugins.agent_based.azure_virtual_network_gateways import (
     VNetGWHealth,
     VNetGWSettings,
 )
-from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource
+
+from cmk.plugins.lib.azure import AzureMetric, Resource
 
 SECTION: Section = {
     "vpn-001": VNetGateway(

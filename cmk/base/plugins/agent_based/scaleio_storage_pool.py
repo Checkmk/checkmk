@@ -12,10 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from .utils.diskstat import check_diskstat_dict
-from .utils.scaleio import (
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.diskstat import check_diskstat_dict
+from cmk.plugins.lib.scaleio import (
     convert_scaleio_space_into_mb,
     create_disk_read_write,
     DiskReadWrite,
@@ -23,6 +22,8 @@ from .utils.scaleio import (
     parse_scaleio,
     StorageConversionError,
 )
+
+from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 
 # <<<scaleio_storage_pool>>>
 # STORAGE_POOL 59c7748300000000:

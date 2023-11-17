@@ -7,9 +7,10 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from cmk.plugins.lib.palo_alto import DETECT_PALO_ALTO
+
 from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.palo_alto import DETECT_PALO_ALTO
 
 
 @dataclass(frozen=True)

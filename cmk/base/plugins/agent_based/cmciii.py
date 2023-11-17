@@ -4,17 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from .agent_based_api.v1 import (
-    contains,
-    OIDEnd,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-    type_defs,
-)
-from .utils.cmciii import (
+from cmk.plugins.lib.cmciii import (
     CheckParams,
     Devices,
     discovery_default_parameters,
@@ -24,6 +14,17 @@ from .utils.cmciii import (
     Sensors,
     SensorType,
     Variable,
+)
+
+from .agent_based_api.v1 import (
+    contains,
+    OIDEnd,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+    type_defs,
 )
 
 MAP_STATES = {

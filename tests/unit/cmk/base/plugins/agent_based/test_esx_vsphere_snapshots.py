@@ -21,7 +21,8 @@ from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
     Snapshot,
 )
 from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
-from cmk.base.plugins.agent_based.utils.esx_vsphere import ESXVm
+
+from cmk.plugins.lib.esx_vsphere import ESXVm
 
 
 def test_parse_esx_vsphere_snapshots():

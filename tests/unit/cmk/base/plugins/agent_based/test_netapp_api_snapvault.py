@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.netapp_api_snapvault import (
     discover_netapp_api_snapvault,
     parse_netapp_api_snapvault,
 )
-from cmk.base.plugins.agent_based.utils.netapp_api import SectionSingleInstance
+
+from cmk.plugins.lib.netapp_api import SectionSingleInstance
 
 
 @pytest.mark.parametrize(

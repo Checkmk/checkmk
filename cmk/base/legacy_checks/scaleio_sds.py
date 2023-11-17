@@ -9,7 +9,8 @@ from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYST
 from cmk.base.check_legacy_includes.scaleio import convert_scaleio_space
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.scaleio import parse_scaleio, ScaleioSection
+
+from cmk.plugins.lib.scaleio import parse_scaleio, ScaleioSection
 
 # example output
 # <<<scaleio_sds>>>

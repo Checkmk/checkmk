@@ -7,6 +7,18 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.azure import (
+    create_check_metrics_function_single,
+    create_discover_by_metrics_function,
+    create_discover_by_metrics_function_single,
+    iter_resource_attributes,
+    MetricData,
+    parse_resources,
+    Resource,
+    Section,
+)
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -18,17 +30,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import interfaces
-from .utils.azure import (
-    create_check_metrics_function_single,
-    create_discover_by_metrics_function,
-    create_discover_by_metrics_function_single,
-    iter_resource_attributes,
-    MetricData,
-    parse_resources,
-    Resource,
-    Section,
-)
 
 _MAP_STATES = {
     # Provisioning states

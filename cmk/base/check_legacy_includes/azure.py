@@ -15,11 +15,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     render,
 )
-from cmk.base.plugins.agent_based.utils.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
-from cmk.base.plugins.agent_based.utils.azure import (
-    iter_resource_attributes as iter_resource_attributes,
-)
-from cmk.base.plugins.agent_based.utils.azure import parse_resources as parse_resources
+
+from cmk.plugins.lib.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
+from cmk.plugins.lib.azure import iter_resource_attributes as iter_resource_attributes
+from cmk.plugins.lib.azure import parse_resources as parse_resources
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,

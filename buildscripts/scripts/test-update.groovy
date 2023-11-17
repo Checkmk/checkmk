@@ -5,6 +5,7 @@
 def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+    def branch_version = versioning.get_branch_version(checkout_dir);
 
     check_environment_variables([
         "DOCKER_TAG",
@@ -18,7 +19,7 @@ def main() {
         DOCKER_TAG: "master-latest",
         MAKE_TARGET: "test-update-docker",
         BRANCH: "master",
-        cmk_version: versioning.get_cmk_version("master", "daily"),
+        cmk_version: versioning.get_cmk_version("master", branch_version, "daily"),
     );
 }
 return this;

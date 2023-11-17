@@ -7,7 +7,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.alcatel import check_alcatel_fans, inventory_alcatel_fans
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
+
+from cmk.plugins.lib.alcatel import DETECT_ALCATEL_AOS7
 
 check_info["alcatel_fans_aos7"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL_AOS7,

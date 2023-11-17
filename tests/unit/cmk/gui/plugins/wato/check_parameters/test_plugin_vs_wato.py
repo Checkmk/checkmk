@@ -462,11 +462,6 @@ class ErrorReporter:
         ("check", "db2_mem", RuleGroup.CheckgroupParameters("db2_mem")),
         (
             "check",
-            "ddn_s2a_faultsbasic_fans",
-            RuleGroup.CheckgroupParameters("fan_failures"),
-        ),
-        (
-            "check",
             "ddn_s2a_stats_io",
             RuleGroup.CheckgroupParameters("storage_iops"),
         ),
@@ -508,7 +503,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("vm_heartbeat"),
         ),
         ("check", "f5_bigip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
-        ("check", "f5_bigip_pool", RuleGroup.CheckgroupParameters("f5_pools")),
         (
             "check",
             "fortigate_antivirus",
@@ -560,16 +554,6 @@ class ErrorReporter:
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
         ("check", "inotify", RuleGroup.CheckgroupParameters("inotify")),
-        (
-            "check",
-            "juniper_screenos_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
-        (
-            "check",
-            "juniper_trpz_mem",
-            RuleGroup.CheckgroupParameters("juniper_mem"),
-        ),
         ("check", "keepalived", RuleGroup.CheckgroupParameters("keepalived")),
         (
             "check",

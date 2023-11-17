@@ -19,8 +19,8 @@ from cmk.base.plugins.agent_based.gcp_gce_storage import (
     discover,
     parse,
 )
-from cmk.base.plugins.agent_based.utils import gcp
 
+from cmk.plugins.lib import gcp
 from cmk.special_agents.agent_gcp import GCE_STORAGE
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin

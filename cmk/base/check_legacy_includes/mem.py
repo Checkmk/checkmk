@@ -7,8 +7,9 @@ import collections
 
 from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
-from cmk.base.plugins.agent_based.utils.memory import compute_state
-from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
+
+from cmk.plugins.lib.memory import compute_state
+from cmk.plugins.lib.memory import normalize_levels as normalize_mem_levels
 
 memused_default_levels = (150.0, 200.0)
 

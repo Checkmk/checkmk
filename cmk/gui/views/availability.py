@@ -445,7 +445,7 @@ def _page_menu_entries_av_mode(
         )
         return
 
-    if what != "bi" and not av_object:
+    if what != "bi":
         yield PageMenuEntry(
             title=_("Timeline"),
             icon_name="timeline",
@@ -454,16 +454,6 @@ def _page_menu_entries_av_mode(
             shortcut_title=_("View timeline"),
         )
         return
-
-    if av_mode == "timeline" and what != "bi":
-        history_url = availability.history_url_of(av_object, time_range)
-        yield PageMenuEntry(
-            title=_("History"),
-            icon_name="history",
-            item=make_simple_link(history_url),
-            is_shortcut=True,
-            shortcut_title=_("View history"),
-        )
 
 
 def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:

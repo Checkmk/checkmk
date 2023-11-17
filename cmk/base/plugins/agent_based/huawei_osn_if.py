@@ -7,9 +7,10 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import huawei, interfaces
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import huawei, interfaces
 
 Section = Mapping[str, interfaces.InterfaceWithCounters]
 

@@ -12,7 +12,8 @@ from cmk.base.plugins.agent_based.prism_host_usage import (
     check_prism_host_usage,
     discovery_prism_host_usage,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 SECTION = {
     "state": "NORMAL",

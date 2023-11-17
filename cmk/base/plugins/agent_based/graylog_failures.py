@@ -8,9 +8,10 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 
 from pydantic import BaseModel, Field
 
+from cmk.plugins.lib.graylog import deserialize_and_merge_json
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.graylog import deserialize_and_merge_json
 
 
 class FailureMessage(BaseModel):
@@ -20,7 +21,7 @@ class FailureMessage(BaseModel):
     def to_human_readable(self) -> Iterable[str]:
         yield from (
             f"{field_name.title()}: {field_value}"
-            for field_name, field_value in self.dict(exclude_none=True).items()
+            for field_name, field_value in self.model_dump(exclude_none=True).items()
         )
 
 

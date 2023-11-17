@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.viprinet import DETECT_VIPRINET
+
+from cmk.plugins.lib.viprinet import DETECT_VIPRINET
 
 
 def check_viprinet_temp(item, params, info):

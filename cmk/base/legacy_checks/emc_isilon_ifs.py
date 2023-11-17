@@ -9,7 +9,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.df import FSBlock
+
+from cmk.plugins.lib.df import FSBlock
 
 
 def inventory_emc_isilon_ifs(section: FSBlock):

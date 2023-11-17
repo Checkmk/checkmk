@@ -7,7 +7,8 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.emc import DETECT_ISILON
+
+from cmk.plugins.lib.emc import DETECT_ISILON
 
 
 # Power Supply 1 Input Voltage --> Power Supply 1 Input

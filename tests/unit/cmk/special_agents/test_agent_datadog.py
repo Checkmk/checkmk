@@ -187,7 +187,7 @@ class TestEventsQuerier:
     ) -> MockDatadogAPI:
         return MockDatadogAPI(
             page_to_data={
-                0: {"events": [event.dict() for event in events]},
+                0: {"events": [event.model_dump() for event in events]},
                 1: {"events": []},
             }
         )
@@ -323,11 +323,11 @@ class TestLogsQuerier:
         return MockDatadogAPI(
             page_to_data={
                 None: {
-                    "data": [log.dict() for log in logs[:3]],
+                    "data": [log.model_dump() for log in logs[:3]],
                     "meta": {"page": {"after": "next"}},
                 },
                 "next": {
-                    "data": [log.dict() for log in logs[3:]],
+                    "data": [log.model_dump() for log in logs[3:]],
                 },
             }
         )

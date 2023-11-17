@@ -7,10 +7,11 @@ import time
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+from cmk.plugins.lib import diskstat, esx_vsphere, interfaces
+from cmk.plugins.lib.esx_vsphere import Section, SubSectionCounter
+
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import diskstat, esx_vsphere, interfaces
-from .utils.esx_vsphere import Section, SubSectionCounter
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>

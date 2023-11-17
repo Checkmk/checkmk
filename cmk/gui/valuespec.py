@@ -55,6 +55,7 @@ from typing import (
     TypeVar,
 )
 
+import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
 from OpenSSL import crypto
@@ -8368,3 +8369,91 @@ def _type_name(v):
         return type(v).__name__
     except Exception:
         return escaping.escape_attribute(str(type(v)))
+
+
+class DatePicker(ValueSpec[str]):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[str] | None = None,
+    ):
+        super().__init__(
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
+    def render_input(self, varprefix: str, value: str) -> None:
+        html.date(
+            var=varprefix,
+            value=value,
+            id_="date_" + varprefix,
+        )
+
+    def canonical_value(self) -> str:
+        return ""
+
+    def from_html_vars(self, varprefix: str) -> str:
+        return request.get_str_input_mandatory(varprefix)
+
+    def mask(self, value: str) -> str:
+        return value
+
+    def value_from_json(self, json_value: JSONValue) -> str:
+        return json_value
+
+    def value_to_json(self, value: T) -> JSONValue:
+        return value
+
+    def validate_value(self, value: str, varprefix: str) -> None:
+        try:
+            dateutil.parser.isoparse(value)
+        except ValueError as e:
+            raise MKUserError(varprefix, _("Invalid date format: %s") % e) from e
+
+
+class TimePicker(ValueSpec[str]):
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[str] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[str] | None = None,
+    ):
+        super().__init__(
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
+    def render_input(self, varprefix: str, value: str) -> None:
+        html.time(
+            var=varprefix,
+            value=value,
+            id_="time_" + varprefix,
+        )
+
+    def canonical_value(self) -> str:
+        return ""
+
+    def from_html_vars(self, varprefix: str) -> str:
+        return request.get_str_input_mandatory(varprefix)
+
+    def mask(self, value: str) -> str:
+        return value
+
+    def value_from_json(self, json_value: JSONValue) -> str:
+        return json_value
+
+    def value_to_json(self, value: T) -> JSONValue:
+        return value
+
+    def validate_value(self, value: str, varprefix: str) -> None:
+        try:
+            time.strptime(value, "%H:%M")
+        except ValueError as e:
+            raise MKUserError(varprefix, _("Invalid time format: %s") % e) from e

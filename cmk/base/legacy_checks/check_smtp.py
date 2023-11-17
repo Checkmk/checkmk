@@ -4,29 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.check_api import host_name, is_ipv6_primary, passwordstore_get_cmdline
 from cmk.base.config import active_check_info
 
 
 def check_smtp_arguments(params):  # pylint: disable=too-many-branches
-    _description, settings = params
     args = []
 
-    if "expect" in settings:
-        args += ["-e", settings["expect"]]
+    if "expect" in params:
+        args += ["-e", params["expect"]]
 
-    if "port" in settings:
-        port = int(settings["port"])  # ValueSpec was broken, convert to int
-        args += ["-p", port]
-
-    # Be compatible to legacy option
-    if "ip_version" in settings:
-        settings["address_family"] = settings.pop("ip_version")
+    if "port" in params:
+        args += ["-p", params["port"]]
 
     # Use the address family of the monitored host by default
-    address_family = settings.get("address_family")
+    address_family = params.get("address_family")
     if address_family is None:
         address_family = "ipv6" if is_ipv6_primary(HostName(host_name())) else "ipv4"
 
@@ -37,43 +31,39 @@ def check_smtp_arguments(params):  # pylint: disable=too-many-branches
         args.append("-4")
         address = "$_HOSTADDRESS_4$"
 
-    for s in settings.get("commands", []):
+    for s in params.get("commands", []):
         args += ["-C", s]
 
-    for s in settings.get("command_responses", []):
+    for s in params.get("command_responses", []):
         args += ["-R", s]
 
-    if settings.get("from"):
-        args += ["-f", settings["from"]]
+    if params.get("from"):
+        args += ["-f", params["from"]]
 
-    if "response_time" in settings:
-        warn, crit = settings["response_time"]
+    if "response_time" in params:
+        warn, crit = params["response_time"]
         args += ["-w", "%0.4f" % warn]
         args += ["-c", "%0.4f" % crit]
 
-    if "timeout" in settings:
-        args += ["-t", settings["timeout"]]
+    if "timeout" in params:
+        args += ["-t", params["timeout"]]
 
-    if "auth" in settings:
-        username, password = settings["auth"]
+    if "auth" in params:
+        username, password = params["auth"]
         args += ["-A", "LOGIN", "-U", username, "-P", passwordstore_get_cmdline("%s", password)]
 
-    if settings.get("starttls", False):
+    if params.get("starttls", False):
         args.append("-S")
 
-    if "fqdn" in settings:
-        args += ["-F", settings["fqdn"]]
+    if "fqdn" in params:
+        args += ["-F", params["fqdn"]]
 
-    if "cert_days" in settings:
-        # legacy behavior
-        if isinstance(settings["cert_days"], int):
-            args += ["-D", settings["cert_days"]]
-        else:
-            warn, crit = settings["cert_days"]
-            args += ["-D", "%d,%d" % (warn, crit)]
+    if "cert_days" in params:
+        warn, crit = params["cert_days"]
+        args += ["-D", "%d,%d" % (warn, crit)]
 
-    if "hostname" in settings:
-        args += ["-H", settings["hostname"]]
+    if "hostname" in params:
+        args += ["-H", params["hostname"]]
     else:
         args += ["-H", address]
 
@@ -81,9 +71,9 @@ def check_smtp_arguments(params):  # pylint: disable=too-many-branches
 
 
 def check_smtp_desc(params):
-    if params[0].startswith("^"):
-        return params[0][1:]
-    return "SMTP %s" % params[0]
+    if (name := params["name"]).startswith("^"):
+        return name[1:]
+    return f"SMTP {name}"
 
 
 active_check_info["smtp"] = {

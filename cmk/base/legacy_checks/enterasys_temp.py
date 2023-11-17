@@ -8,7 +8,8 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.enterasys import DETECT_ENTERASYS
+
+from cmk.plugins.lib.enterasys import DETECT_ENTERASYS
 
 
 def inventory_enterasys_temp(info):

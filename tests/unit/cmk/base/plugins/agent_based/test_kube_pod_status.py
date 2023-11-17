@@ -15,7 +15,8 @@ from cmk.base.plugins.agent_based.kube_pod_status import (
     DEFAULT_PARAMS,
     ValueStore,
 )
-from cmk.base.plugins.agent_based.utils.kube import (
+
+from cmk.plugins.lib.kube import (
     ContainerRunningState,
     ContainerStateType,
     ContainerStatus,

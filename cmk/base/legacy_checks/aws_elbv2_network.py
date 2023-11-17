@@ -14,7 +14,8 @@ from cmk.base.check_legacy_includes.aws import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+
+from cmk.plugins.lib.aws import extract_aws_metrics_by_labels, parse_aws
 
 
 def parse_aws_elbv2_network(string_table):

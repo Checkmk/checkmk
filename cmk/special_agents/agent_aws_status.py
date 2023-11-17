@@ -64,7 +64,7 @@ def write_section(args: Args, get_rss: typing.Callable[[], requests.Response] = 
         rss_str=response.text,
     )
     with agent_common.SectionWriter("aws_status") as writer:
-        writer.append(section.json())
+        writer.append(section.model_dump_json())
     return 0
 
 

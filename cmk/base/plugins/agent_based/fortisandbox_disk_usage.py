@@ -7,10 +7,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.fortinet import DETECT_FORTISANDBOX
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from .utils.fortinet import DETECT_FORTISANDBOX
 
 
 @dataclass(frozen=True)

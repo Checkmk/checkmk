@@ -7,10 +7,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from cmk.plugins.lib.cpu_util import check_cpu_util
+from cmk.plugins.lib.netextreme import DETECT_NETEXTREME
+
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.cpu_util import check_cpu_util
-from .utils.netextreme import DETECT_NETEXTREME
 
 
 @dataclass

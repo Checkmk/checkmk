@@ -36,18 +36,19 @@ IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {
-    repo_path() / "packages/cmk-graphing/build",
-    repo_path() / "packages/cmk-server-side-calls/build",
-    repo_path() / "packages/cmk-werks/build",
-    repo_path() / "packages/cmk-agent-based/build",
     # This directory needs to be ignored for a few days (until all workspaces were cleared)
     repo_path() / "agent-receiver/build",
-    repo_path() / "packages/cmk-agent-receiver/build",
-    repo_path() / "packages/cmk-mkp-tool/build",
     repo_path() / "bazel-check_mk",
     repo_path() / "omd/build",
     repo_path() / "packages/cmc/build",
     repo_path() / "packages/cmc/test",
+    repo_path() / "packages/cmk-agent-based/build",
+    repo_path() / "packages/cmk-agent-receiver/build",
+    repo_path() / "packages/cmk-graphing/build",
+    repo_path() / "packages/cmk-server-side-calls/build",
+    repo_path() / "packages/cmk-rulesets/build",
+    repo_path() / "packages/cmk-mkp-tool/build",
+    repo_path() / "packages/cmk-werks/build",
     repo_path() / "packages/livestatus/build",
     repo_path() / "packages/neb/build",
 }

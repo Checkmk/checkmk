@@ -8,7 +8,8 @@ from cmk.base.check_legacy_includes.pandacom_temp import PANDACOM_TEMP_CHECK_DEF
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
+
+from cmk.plugins.lib.pandacom import DETECT_PANDACOM
 
 # .1.3.6.1.4.1.3652.3.1.1.6.0 27
 

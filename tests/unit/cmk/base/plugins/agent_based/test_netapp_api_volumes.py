@@ -11,7 +11,8 @@ from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import netapp_api_volumes as nav
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.df import (
+
+from cmk.plugins.lib.df import (
     FILESYSTEM_DEFAULT_LEVELS,
     INODES_DEFAULT_PARAMS,
     MAGIC_FACTOR_DEFAULT_PARAMS,

@@ -10,7 +10,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.azure_postgresql import check_replication
-from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Section
+
+from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 
 @pytest.mark.parametrize(

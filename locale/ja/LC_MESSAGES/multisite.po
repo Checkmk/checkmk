@@ -6162,6 +6162,10 @@ msgstr ""
 msgid "Archive an event"
 msgstr "イベントのアーカイブ"
 
+#, fuzzy
+msgid "Archive current audit log"
+msgstr "リモート監査ログを取得"
+
 msgid "Archive event"
 msgstr "イベントのアーカイブ"
 
@@ -6171,11 +6175,19 @@ msgstr "イベントのアーカイブ"
 msgid "Archive events of hosts"
 msgstr "ホストのイベントをアーカイブする"
 
+#, fuzzy
+msgid "Archive log"
+msgstr "アーカイブ"
+
 msgid "Archive messages that do not match any rule"
 msgstr "どのルールにも一致しないメッセージをアーカイブする"
 
 msgid "Archive this event"
 msgstr "このイベントをアーカイブする"
+
+#, fuzzy
+msgid "Archived audit log"
+msgstr "監査ログをクリアしました。"
 
 msgid "Arcserve (German) backups (Windows)"
 msgstr "Arcserve(ドイツ語)バックアップ(Windows)"
@@ -10792,16 +10804,10 @@ msgstr "クリーンアップメッセージ"
 msgid "Cleanup when disk space is below"
 msgstr "ディスク容量が次の値を下回るとクリーンアップ"
 
-msgid "Clear"
-msgstr "クリアする"
-
 msgid "Clear & Delete"
 msgstr "クリアと削除"
 
 msgid "Clear audit Log"
-msgstr "監査ログをクリア"
-
-msgid "Clear audit log"
 msgstr "監査ログをクリア"
 
 msgid "Clear failed notifications"
@@ -10824,9 +10830,6 @@ msgstr ""
 "監査ログのエントリをクリアする。監査ログをクリアするためには、ユーザーは一般"
 "的なセットアップ権限「変更を加える、アクションを実行する」、「監査ログを表示"
 "する」、およびこの権限が必要です。"
-
-msgid "Cleared audit log."
-msgstr "監査ログをクリアしました。"
 
 msgid "Click for instant reload."
 msgstr "クリックしてインスタントリロードします。"
@@ -20750,6 +20753,10 @@ msgstr "ファイルパターンは、<tt>/</tt>で始まり、スペースを�
 #, python-format
 msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr "リモートストレージのファイル削除テストに失敗。元のエラーメッセージ: %s"
+
+#, fuzzy
+msgid "File selection"
+msgstr "フォルダの選択"
 
 msgid "File size"
 msgstr "ファイルサイズ"
@@ -31708,6 +31715,12 @@ msgstr "ヘルスライフタイムの下位レベル"
 msgid "Lower levels for hit ratio"
 msgstr "ヒット比率の下位レベル"
 
+#, fuzzy
+msgid "Lower levels for incoming requests to a JVM application server"
+msgstr ""
+"このルールは、JVMアプリケーションサーバーへの着信要求の数の警告レベルとクリ"
+"ティカルレベルを設定します。"
+
 msgid "Lower levels for number of requests"
 msgstr "リクエスト数の下位レベル"
 
@@ -39952,6 +39965,10 @@ msgstr "復元を実行するターゲットを選択してください。"
 msgid "Please choose a valid PNG image."
 msgstr "有効なPNG画像を選択してください。"
 
+#, fuzzy
+msgid "Please choose an audit log to view:"
+msgstr "アップロードするファイルを選択してください。"
+
 msgid "Please choose the check plugin"
 msgstr "チェックプラグインを選択してください"
 
@@ -47010,6 +47027,14 @@ msgstr "もっと表示/少なく表示"
 
 msgid "Show number of groups"
 msgstr "グループの数を表示する"
+
+#, fuzzy
+msgid "Show object"
+msgstr "もっと見る"
+
+#, fuzzy
+msgid "Show object type"
+msgstr "オブジェクトタイプなし"
 
 msgid "Show only modified settings"
 msgstr "変更した設定のみを表示する"
@@ -58673,13 +58698,6 @@ msgid "This rule sets the required state of a switch contact"
 msgstr "このルールは、スイッチ接点の必要な状態を設定します"
 
 msgid ""
-"This rule sets the warn and crit levels for the number of incoming requests "
-"to a JVM application server."
-msgstr ""
-"このルールは、JVMアプリケーションサーバーへの着信要求の数の警告レベルとクリ"
-"ティカルレベルを設定します。"
-
-msgid ""
 "This rule sets the warn and crit levels for the uptime of a JVM. Other "
 "keywords for this rule: Tomcat, Jolokia, JMX. "
 msgstr ""
@@ -62534,6 +62552,12 @@ msgstr "最初の出力項目の上位レベル"
 
 msgid "Upper levels for hit ratio"
 msgstr "ヒット比率の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for incoming requests to a JVM application server"
+msgstr ""
+"このルールは、JVMアプリケーションサーバーへの着信要求の数の警告レベルとクリ"
+"ティカルレベルを設定します。"
 
 msgid "Upper levels for indexes"
 msgstr "インデックスの上位レベル"
@@ -67499,6 +67523,9 @@ msgstr ""
 "とはできません。グラフデザイナは、Checkmk Microcoreを使用するサイトでのみ使用"
 "できます。"
 
+msgid "You can only archive the current audit log"
+msgstr ""
+
 #, python-format
 msgid ""
 "You can only configure a local site connection for the local site. The site "
@@ -69161,6 +69188,10 @@ msgstr "未満の場合はクリティカル"
 
 msgid "critical if older than"
 msgstr "より古い場合は重要"
+
+#, fuzzy
+msgid "current"
+msgstr "電流"
 
 msgid "current events"
 msgstr "現在のイベント"
@@ -70832,6 +70863,12 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
+#~ msgid "Clear"
+#~ msgstr "クリアする"
+
+#~ msgid "Clear audit log"
+#~ msgstr "監査ログをクリア"
+
 #~ msgid "Agent based plugins (Checks, Inventory)"
 #~ msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
 
@@ -71209,9 +71246,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Found no inventory data for this host."
 #~ msgstr "このホストのインベントリデータが見つかりませんでした。"
-
-#~ msgid "Get remote audit logs"
-#~ msgstr "リモート監査ログを取得"
 
 #, python-format
 #~ msgid "Graph identification: The '%s' attribute is missing"

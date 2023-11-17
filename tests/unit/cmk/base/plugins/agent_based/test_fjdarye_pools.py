@@ -18,7 +18,8 @@ from cmk.base.plugins.agent_based.fjdarye_pools import (
     parse_fjdarye_pools,
     PoolEntry,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 
 @pytest.mark.parametrize(

@@ -29,6 +29,49 @@ pub struct CheckResult {
     pub summary: String,
 }
 
+impl CheckResult {
+    pub fn new(state: State, summary: String) -> Self {
+        Self { state, summary }
+    }
+
+    pub fn ok(summary: String) -> Self {
+        Self {
+            state: State::Ok,
+            summary,
+        }
+    }
+
+    pub fn warn(summary: String) -> Self {
+        Self {
+            state: State::Warn,
+            summary,
+        }
+    }
+
+    pub fn crit(summary: String) -> Self {
+        Self {
+            state: State::Crit,
+            summary,
+        }
+    }
+
+    pub fn unknown(summary: String) -> Self {
+        Self {
+            state: State::Unknown,
+            summary,
+        }
+    }
+}
+
+impl Default for CheckResult {
+    fn default() -> Self {
+        Self {
+            state: State::Ok,
+            summary: String::from(""),
+        }
+    }
+}
+
 impl Display for CheckResult {
     fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
         write!(
@@ -50,34 +93,23 @@ fn diff_to_now(x: &Asn1TimeRef) -> i32 {
     exp.days
 }
 
-pub fn check_validity(url: &str, x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> CheckResult {
+pub fn check_validity(x: &Asn1TimeRef, warn: &Asn1Time, crit: &Asn1Time) -> CheckResult {
     std::assert!(warn >= crit);
 
     if crit >= x {
-        CheckResult {
-            state: State::Crit,
-            summary: format!(
-                "Certificate '{}' expires in {} day(s) ({})",
-                url,
-                diff_to_now(x),
-                x
-            ),
-        }
+        CheckResult::crit(format!(
+            "Certificate expires in {} day(s) ({})",
+            diff_to_now(x),
+            x
+        ))
     } else if warn >= x {
-        CheckResult {
-            state: State::Warn,
-            summary: format!(
-                "Certificate '{}' expires in {} day(s) ({})",
-                url,
-                diff_to_now(x),
-                x
-            ),
-        }
+        CheckResult::warn(format!(
+            "Certificate expires in {} day(s) ({})",
+            diff_to_now(x),
+            x
+        ))
     } else {
-        CheckResult {
-            state: State::Ok,
-            summary: format!("Certificate '{}' will expire on {}", url, x),
-        }
+        CheckResult::ok(format!("Certificate will expire on {}", x))
     }
 }
 
@@ -100,6 +132,7 @@ mod test_diff_to_now {
         assert!(diff_to_now(days_from_now(1).as_ref()) == 1);
     }
 }
+
 #[cfg(test)]
 mod test_check_validity {
     use super::{check_validity, State};
@@ -113,7 +146,6 @@ mod test_check_validity {
     fn test_check_validity_ok() {
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(30).as_ref(),
                 &days_from_now(0),
                 &days_from_now(0),
@@ -123,7 +155,6 @@ mod test_check_validity {
         );
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(30).as_ref(),
                 &days_from_now(15),
                 &days_from_now(7),
@@ -137,7 +168,6 @@ mod test_check_validity {
     fn test_check_validity_warn() {
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(10).as_ref(),
                 &days_from_now(15),
                 &days_from_now(7),
@@ -151,7 +181,6 @@ mod test_check_validity {
     fn test_check_validity_crit() {
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(3).as_ref(),
                 &days_from_now(15),
                 &days_from_now(7),
@@ -161,7 +190,6 @@ mod test_check_validity {
         );
         assert!(
             check_validity(
-                "example.com",
                 days_from_now(3).as_ref(),
                 &days_from_now(15),
                 &days_from_now(15),

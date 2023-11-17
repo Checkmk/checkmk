@@ -7,6 +7,8 @@ import time
 from collections.abc import Mapping
 from typing import NamedTuple
 
+from cmk.plugins.lib import memory
+
 from .agent_based_api.v1 import (
     Attributes,
     get_average,
@@ -19,7 +21,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult
-from .utils import memory
 
 
 class MemBytes(

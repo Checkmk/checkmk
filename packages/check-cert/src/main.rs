@@ -6,6 +6,7 @@ use anyhow::{Context, Result};
 use check_cert::{checker, fetcher, output};
 use clap::Parser;
 use openssl::asn1::Asn1Time;
+use openssl::x509::X509;
 use std::time::Duration;
 
 #[derive(Parser, Debug)]
@@ -46,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::process::exit(1);
     }
 
-    let cert = fetcher::fetch_server_cert(
+    let der = fetcher::fetch_server_cert(
         &args.url,
         &args.port,
         if args.timeout == 0 {
@@ -57,8 +58,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         !args.disable_sni,
     )?;
 
+    let cert = X509::from_der(&der)?;
     let out = output::Output::from(vec![checker::check_validity(
-        &args.url,
         cert.not_after(),
         &warn_time,
         &crit_time,

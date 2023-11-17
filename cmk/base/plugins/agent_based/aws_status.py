@@ -116,7 +116,7 @@ class Section:
 
 
 def parse_string_table(string_table: type_defs.StringTable) -> Section:
-    agent_output = AgentOutput.parse_raw(string_table[0][0])
+    agent_output = AgentOutput.model_validate_json(string_table[0][0])
     return Section(
         discovery_param=agent_output.discovery_param,
         aws_rss_feed=AWSRSSFeed.parse_rss(agent_output.rss_str),

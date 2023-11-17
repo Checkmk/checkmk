@@ -8,9 +8,7 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.azure import (
+from cmk.plugins.lib.azure import (
     create_check_metrics_function,
     iter_resource_attributes,
     MetricData,
@@ -18,6 +16,9 @@ from .utils.azure import (
     parse_resources,
     Resource,
 )
+
+from .agent_based_api.v1 import register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class PeeringAddresses(BaseModel):

@@ -148,6 +148,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_MKP_TOOL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-mkp-tool/' || true"
 
+    - NAME: CHANGED_RULESETS_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-rulesets/' || true"
+
     - NAME: CHANGED_CMK_SERVER_SIDE_CALLS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-server-side-calls/' || true"
 
@@ -420,6 +423,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
       TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
+
+    - NAME: 'Package cmk-rulesets'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_RULESETS_FILES
+      DIR: 'packages/cmk-rulesets'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-rulesets.txt"
+      TEXT_ON_SKIP: 'No cmk-rulesets files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-rulesets.txt"
 
     - NAME: 'Package cmk-server-side-calls'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_SERVER_SIDE_CALLS_FILES

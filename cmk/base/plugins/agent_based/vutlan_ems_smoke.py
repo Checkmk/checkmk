@@ -11,9 +11,10 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
+from cmk.plugins.lib.vutlan import DETECT_VUTLAN_EMS
+
 from .agent_based_api.v1 import OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.vutlan import DETECT_VUTLAN_EMS
 
 
 class SmokeSensor(NamedTuple):

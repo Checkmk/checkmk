@@ -46,9 +46,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import entity_sensors as utils
-from cmk.base.plugins.agent_based.utils.entity_sensors import EntitySensorSection, OIDSysDescr
-from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
+
+from cmk.plugins.lib import entity_sensors as utils
+from cmk.plugins.lib.entity_sensors import EntitySensorSection, OIDSysDescr
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 
 def parse_entity_sensors(string_table: list[StringTable]) -> EntitySensorSection:

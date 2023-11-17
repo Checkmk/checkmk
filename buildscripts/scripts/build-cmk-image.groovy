@@ -35,9 +35,10 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def package_dir = "${checkout_dir}/download";
+    def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
-    def branch_name = (VERSION == "daily") ? versioning.safe_branch_name(scm) : versioning.get_branch_version(checkout_dir);
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
+    def branch_name = (VERSION == "daily") ? versioning.safe_branch_name(scm) : branch_version;
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def source_dir = package_dir + "/" + cmk_version_rc_aware
     def docker_args = "--ulimit nofile=1024:1024 --group-add=${get_docker_group_id()} -v /var/run/docker.sock:/var/run/docker.sock";

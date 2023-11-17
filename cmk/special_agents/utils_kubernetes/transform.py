@@ -9,11 +9,12 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
+import typing
 from collections.abc import Iterable, Mapping, Sequence
 from typing import cast, Literal, TypeAlias, TypeVar
 
+import pydantic
 from kubernetes import client  # type: ignore[import]
-from pydantic import parse_obj_as
 
 from . import transform_json
 from .schemata import api
@@ -72,6 +73,13 @@ def expect_value(v: T | None) -> T:
 
 def pod_spec(pod: client.V1Pod) -> api.PodSpec:
     spec: client.V1PodSpec = expect_value(pod.spec)
+
+    def _parse_obj_as(
+        model: type[list[T]], expr: typing.Sequence[T] | None
+    ) -> typing.Sequence[T] | None:
+        adapter = pydantic.TypeAdapter(model)
+        return adapter.validate_python(expr)
+
     return api.PodSpec(
         node=spec.node_name,
         host_network=spec.host_network,
@@ -83,7 +91,7 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
         ),
         priority_class_name=spec.priority_class_name,
         active_deadline_seconds=spec.active_deadline_seconds,
-        volumes=parse_obj_as(list[api.Volume], spec.volumes) if spec.volumes else None,
+        volumes=_parse_obj_as(list[api.Volume], spec.volumes) if spec.volumes else None,
     )
 
 

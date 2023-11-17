@@ -31,9 +31,15 @@ from itertools import islice
 from re import Pattern
 from typing import Any, ClassVar, NamedTuple
 
+from cmk.plugins.lib.apt import (
+    ESM_ENABLED,
+    ESM_NOT_ENABLED,
+    NOTHING_PENDING_FOR_INSTALLATION,
+    UBUNTU_PRO,
+)
+
 from .agent_based_api.v1 import Metric, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.apt import ESM_ENABLED, ESM_NOT_ENABLED, NOTHING_PENDING_FOR_INSTALLATION, UBUNTU_PRO
 
 
 class Section(NamedTuple):

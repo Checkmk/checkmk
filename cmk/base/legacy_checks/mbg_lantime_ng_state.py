@@ -11,7 +11,8 @@ from cmk.base.check_legacy_includes.mbg_lantime import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
+
+from cmk.plugins.lib.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 
 def inventory_mbg_lantime_ng_state(info):

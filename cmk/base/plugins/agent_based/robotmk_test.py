@@ -14,14 +14,15 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
     service_description,
 )
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.robotmk_parse_xml import extract_tests_with_full_names, Outcome, Test
-from .utils.robotmk_suite_execution_report import (
+from cmk.plugins.lib.robotmk_parse_xml import extract_tests_with_full_names, Outcome, Test
+from cmk.plugins.lib.robotmk_suite_execution_report import (
     ExecutionReport,
     ExecutionReportAlreadyRunning,
     RebotOutcomeResult,
 )
+
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 class Params(TypedDict):
@@ -75,13 +76,14 @@ def check(
 def _check_test(params: Params, test: Test) -> CheckResult:
     yield Result(state=State.OK, summary=test.name)
     yield Result(state=_remap_state(test.status.status), summary=f"{test.status.status.value}")
-    yield from check_levels(
-        (test.status.endtime - test.status.starttime).total_seconds(),
-        label="Test runtime",
-        levels_upper=params["test_runtime"],
-        metric_name="test_runtime",
-        render_func=render.timespan,
-    )
+    if (runtime := test.status.runtime()) is not None:
+        yield from check_levels(
+            runtime,
+            label="Test runtime",
+            levels_upper=params["test_runtime"],
+            metric_name="test_runtime",
+            render_func=render.timespan,
+        )
 
 
 def _transmit_to_livestatus(

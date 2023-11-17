@@ -18,9 +18,10 @@ from collections.abc import Iterable, Mapping, Sequence
 # P No-Text hirn=-8;-20
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.cache_helper import CacheInfo, render_cache_info
+
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
-from .utils.cache_helper import CacheInfo, render_cache_info
 
 # we don't have IgnoreResults and thus don't want to handle them
 LocalCheckResult = Iterable[Metric | Result]

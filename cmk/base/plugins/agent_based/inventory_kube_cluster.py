@@ -5,7 +5,8 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.utils.kube import ClusterInfo
+
+from cmk.plugins.lib.kube import ClusterInfo
 
 
 def inventory_kube_cluster(

@@ -235,7 +235,7 @@ def graph_recipes_for_api_request(
 
     if consolidation_function := api_request.get("consolidation_function"):
         graph_recipes = [
-            graph_recipe.copy(update={"consolidation_function": consolidation_function})
+            graph_recipe.model_copy(update={"consolidation_function": consolidation_function})
             for graph_recipe in graph_recipes
         ]
 

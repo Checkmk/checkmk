@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib.ups import DETECT_UPS_GENERIC
+
 from .agent_based_api.v1 import (
     check_levels,
     OIDEnd,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.ups import DETECT_UPS_GENERIC
 
 
 class UpsPowerVoltage(NamedTuple):

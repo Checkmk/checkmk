@@ -6,10 +6,16 @@
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.plugins.lib.liebert import (
+    DETECT_LIEBERT,
+    parse_liebert,
+    SystemSection,
+    temperature_to_celsius,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
 from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert, SystemSection, temperature_to_celsius
-from .utils.temperature import check_temperature, TempParamType
 
 ParsedSection = Mapping[str, tuple[str, str]]
 

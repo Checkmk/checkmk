@@ -6,7 +6,8 @@
 from collections.abc import Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils.citrix_state import Section
+
+from cmk.plugins.lib.citrix_state import Section
 
 Params = Mapping[str, Mapping[str, int]]
 DEFAULT_PARAMS = {

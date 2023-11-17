@@ -6,6 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib import esx_vsphere
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -16,7 +18,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils import esx_vsphere
 
 
 def discovery_mem_usage(section: esx_vsphere.SectionVM) -> DiscoveryResult:

@@ -19,8 +19,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import gcp
-from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
+
+from cmk.plugins.lib import gcp
+from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 
 def parse(string_table: StringTable) -> gcp.Section:

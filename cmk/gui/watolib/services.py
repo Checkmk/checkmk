@@ -857,7 +857,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             "JobException": [],
             "JobResult": job_status.loginfo["JobResult"],
         }
-        return job_status.copy(
+        return job_status.model_copy(
             update={"state": JobStatusStates.FINISHED, "loginfo": new_loginfo},
             deep=True,  # not sure, better play it safe.
         )

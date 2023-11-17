@@ -5,9 +5,10 @@
 import time
 from collections.abc import Iterable, Sequence
 
+from cmk.plugins.lib import ps
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import ps
 
 # First generation of agents output only the process command line:
 # /usr/sbin/xinetd -pidfile /var/run/xinetd.pid -stayalive -inetd_compat -inetd_ipv6

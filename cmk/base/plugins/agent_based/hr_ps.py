@@ -7,10 +7,11 @@ from collections.abc import Mapping, Sequence
 from re import Match
 from typing import Any, NamedTuple
 
+from cmk.plugins.lib import ps
+from cmk.plugins.lib.ucd_hr_detection import HR
+
 from .agent_based_api.v1 import check_levels, regex, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import ps
-from .utils.ucd_hr_detection import HR
 
 _HR_PS_STATUS_MAP = {
     "1": ("running", "running", ""),

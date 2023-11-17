@@ -8,7 +8,8 @@ from collections.abc import Iterable
 
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
+
+from cmk.plugins.lib.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]
 

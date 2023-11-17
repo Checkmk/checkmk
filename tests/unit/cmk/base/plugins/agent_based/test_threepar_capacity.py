@@ -16,9 +16,9 @@ from cmk.base.plugins.agent_based.threepar_capacity import (
     discover_threepar_capacity,
     parse_threepar_capacity,
 )
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 from cmk.agent_based.v1.type_defs import StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     [

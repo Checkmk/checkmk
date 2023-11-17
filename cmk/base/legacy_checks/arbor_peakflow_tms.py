@@ -16,7 +16,8 @@ from cmk.base.check_legacy_includes.arbor import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
+
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 # .1.3.6.1.4.1.9694.1.5.2.1.0 No Fault --> PEAKFLOW-TMS-MIB::tmsHostFault.0
 # .1.3.6.1.4.1.9694.1.5.2.2.0 101420100 --> PEAKFLOW-TMS-MIB::tmsHostUpTime.0

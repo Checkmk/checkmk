@@ -7,12 +7,13 @@ from collections.abc import Iterable, Mapping, MutableMapping, MutableSequence, 
 from dataclasses import dataclass, field, replace
 from typing import Any, Literal
 
+from cmk.plugins.lib import bonding, interfaces
+from cmk.plugins.lib.interfaces import InterfaceWithCounters
+from cmk.plugins.lib.inventory_interfaces import Interface as InterfaceInv
+from cmk.plugins.lib.inventory_interfaces import inventorize_interfaces
+
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
-from .utils import bonding, interfaces
-from .utils.interfaces import InterfaceWithCounters
-from .utils.inventory_interfaces import Interface as InterfaceInv
-from .utils.inventory_interfaces import inventorize_interfaces
 
 # Example output from agent:
 

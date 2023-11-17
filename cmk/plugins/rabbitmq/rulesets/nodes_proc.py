@@ -18,14 +18,14 @@ from cmk.rulesets.v1 import (
 )
 
 
-def _parameter_valuespec_rabbitmq_nodes_proc():
+def _parameter_valuespec_rabbitmq_nodes_proc() -> Dictionary:
     fd_perc = CascadingDropdownElement(
         ident="fd_perc",
         value_spec=Tuple(
             title=Localizable("Percentual levels for used processes"),
             elements=[
-                Percentage(title=Localizable("Warning at usage of"), default_value=80.0),
-                Percentage(title=Localizable("Critical at usage of"), default_value=90.0),
+                Percentage(title=Localizable("Warning at usage of"), prefill_value=80.0),
+                Percentage(title=Localizable("Critical at usage of"), prefill_value=90.0),
             ],
         ),
     )
@@ -43,13 +43,13 @@ def _parameter_valuespec_rabbitmq_nodes_proc():
     return Dictionary(
         elements={
             "levels": DictElement(
-                spec=CascadingDropdown(
+                value_spec=CascadingDropdown(
                     title=Localizable("Levels for erlang process usage"),
                     elements=[fd_perc, fd_abs],
-                    default_element="fd_perc",
+                    prefill_selection="fd_perc",
                 )
             )
-        }
+        },
     )
 
 

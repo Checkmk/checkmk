@@ -7,8 +7,9 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
-from cmk.base.plugins.agent_based.utils.cisco import DETECT_CISCO
-from cmk.base.plugins.agent_based.utils.cisco_sensor_item import cisco_sensor_item
+
+from cmk.plugins.lib.cisco import DETECT_CISCO
+from cmk.plugins.lib.cisco_sensor_item import cisco_sensor_item
 
 cisco_fan_state_mapping = {
     "1": (0, "normal"),

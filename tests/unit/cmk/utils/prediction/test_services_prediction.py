@@ -193,7 +193,7 @@ def test_calculate_data_for_prediction(
 
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
-    expected_reference = _prediction.PredictionData.parse_raw(
+    expected_reference = _prediction.PredictionData.model_validate_json(
         (
             repo_path()
             / "tests/unit/cmk/utils/prediction/test-files/output"
@@ -202,7 +202,9 @@ def test_calculate_data_for_prediction(
         ).read_text()
     )
 
-    assert expected_reference.dict(exclude={"points"}) == data_for_pred.dict(exclude={"points"})
+    assert expected_reference.model_dump(exclude={"points"}) == data_for_pred.model_dump(
+        exclude={"points"}
+    )
     assert len(expected_reference.points) == len(data_for_pred.points)
     for cal, ref in zip(data_for_pred.points, expected_reference.points):
         assert cal == pytest.approx(ref, rel=1e-12, abs=1e-12)

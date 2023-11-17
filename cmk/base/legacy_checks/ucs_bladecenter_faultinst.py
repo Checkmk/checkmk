@@ -6,9 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+
+import cmk.plugins.lib.ucs_bladecenter as ucs_bladecenter
 
 # <<<ucs_bladecenter_faultinst:sep(9)>>>
 # faultInst   Dn sys/chassis-2/bl...ault-F1256 Descr Local disk 2 missing on server 2/3    Severity info

@@ -7,8 +7,17 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.utils.cpu_util import check_cpu_util
-from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
+from cmk.plugins.lib import interfaces
+from cmk.plugins.lib.aws import (
+    aws_get_counts_rate_human_readable,
+    aws_rds_service_item,
+    AWSSectionMetrics,
+    discover_aws_generic,
+    extract_aws_metrics_by_labels,
+    parse_aws,
+)
+from cmk.plugins.lib.cpu_util import check_cpu_util
+from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -20,15 +29,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import interfaces
-from .utils.aws import (
-    aws_get_counts_rate_human_readable,
-    aws_rds_service_item,
-    AWSSectionMetrics,
-    discover_aws_generic,
-    extract_aws_metrics_by_labels,
-    parse_aws,
-)
 
 
 def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:

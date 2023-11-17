@@ -19,8 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.gcp_assets import parse_assets
-from cmk.base.plugins.agent_based.utils import gcp
 
+from cmk.plugins.lib import gcp
 from cmk.special_agents import agent_gcp
 
 

@@ -22,13 +22,9 @@ from cmk.base.plugins.agent_based.azure_load_balancer import (
     check_snat,
     parse_load_balancer,
 )
-from cmk.base.plugins.agent_based.utils.azure import (
-    AzureMetric,
-    FrontendIpConfiguration,
-    PublicIP,
-    Resource,
-)
-from cmk.base.plugins.agent_based.utils.azure_load_balancer import (
+
+from cmk.plugins.lib.azure import AzureMetric, FrontendIpConfiguration, PublicIP, Resource
+from cmk.plugins.lib.azure_load_balancer import (
     BackendIpConfiguration,
     InboundNatRule,
     LoadBalancer,

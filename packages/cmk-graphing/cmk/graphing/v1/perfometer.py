@@ -13,6 +13,7 @@ __all__ = [
     "Name",
     "Closed",
     "Open",
+    "FocusRange",
     "Perfometer",
     "Bidirectional",
     "Stacked",
@@ -21,21 +22,25 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Closed:
-    bound: int | float | metric.Quantity
+    value: int | float | metric.Quantity
 
 
 @dataclass(frozen=True)
 class Open:
-    bound: int | float | metric.Quantity
+    value: int | float | metric.Quantity
+
+
+@dataclass(frozen=True)
+class FocusRange:
+    lower: Closed | Open
+    upper: Closed | Open
 
 
 @dataclass(frozen=True)
 class Perfometer:
     name: Name
+    focus_range: FocusRange
     segments: Sequence[metric.Quantity]
-    _: KW_ONLY
-    upper_bound: Closed | Open
-    lower_bound: Closed | Open
 
     def __post_init__(self) -> None:
         assert self.segments
@@ -53,5 +58,5 @@ class Bidirectional:
 class Stacked:
     name: Name
     _: KW_ONLY
-    upper: Perfometer
     lower: Perfometer
+    upper: Perfometer

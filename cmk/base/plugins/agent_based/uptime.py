@@ -10,9 +10,10 @@
 import datetime
 import re
 
+from cmk.plugins.lib import uptime
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils import uptime
 
 
 def parse_human_read_uptime(string: str) -> int:

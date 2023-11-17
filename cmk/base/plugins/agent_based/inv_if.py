@@ -6,11 +6,12 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 
+from cmk.plugins.lib import uptime
+from cmk.plugins.lib.interfaces import render_mac_address
+from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
+
 from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
-from .utils import uptime
-from .utils.interfaces import render_mac_address
-from .utils.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
 
 
 @dataclass

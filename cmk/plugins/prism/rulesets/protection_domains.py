@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.rulesets.v1 import (
     CheckParameterRuleSpecWithItem,
     DictElement,
@@ -16,11 +15,11 @@ from cmk.rulesets.v1 import (
 )
 
 
-def _parameter_valuespec_prism_protection_domains():
+def _parameter_valuespec_prism_protection_domains() -> Dictionary:
     return Dictionary(
         elements={
             "sync_state": DictElement(
-                spec=DropdownChoice(
+                value_spec=DropdownChoice(
                     title=Localizable("Target sync state"),
                     help_text=Localizable(
                         "Configure the target state of the protection domain sync state."
@@ -36,7 +35,7 @@ def _parameter_valuespec_prism_protection_domains():
                             choice="Synchronizing", display=Localizable("Syncing")
                         ),
                     ],
-                    default_element="Disabled",
+                    prefill_selection="Disabled",
                 )
             )
         },

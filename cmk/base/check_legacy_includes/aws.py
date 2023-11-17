@@ -6,11 +6,12 @@
 import functools
 from collections.abc import Callable, Iterable
 
-import cmk.utils.aws_constants as agent_aws_types
+import cmk.utils.aws_constants as agent_aws_types  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.check_api import check_levels, ServiceCheckResult, state_markers
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils import aws
+
+from cmk.plugins.lib import aws  # pylint: disable=cmk-module-layer-violation
 
 AWSRegions = dict(agent_aws_types.AWSRegions)
 

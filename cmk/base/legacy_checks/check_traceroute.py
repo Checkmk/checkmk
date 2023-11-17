@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.check_api import host_name, is_ipv6_primary
 from cmk.base.config import active_check_info

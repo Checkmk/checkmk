@@ -79,6 +79,7 @@ fn make_configs(
                 (x, Some(y)) => UpperLevels::warn_crit(x, y),
             }),
             document_age_levels: args.document_age_levels.map(UpperLevels::warn),
+            timeout: args.timeout,
         },
     )
 }

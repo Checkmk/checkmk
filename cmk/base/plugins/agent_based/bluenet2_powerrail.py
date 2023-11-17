@@ -5,11 +5,12 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.plugins.lib.elphase import check_elphase
+from cmk.plugins.lib.humidity import check_humidity
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
+
 from .agent_based_api.v1 import contains, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.elphase import check_elphase
-from .utils.humidity import check_humidity
-from .utils.temperature import check_temperature, TempParamType
 
 #   .--output--------------------------------------------------------------.
 #   |                               _               _                      |

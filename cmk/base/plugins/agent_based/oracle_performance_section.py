@@ -5,9 +5,10 @@
 
 from typing import Any
 
+from cmk.plugins.lib.oracle import SectionPerformance
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.oracle import SectionPerformance
 
 
 def parse_oracle_performance(string_table: StringTable) -> SectionPerformance:

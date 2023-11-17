@@ -14,7 +14,8 @@ from cmk.base.plugins.agent_based.extreme_vsp_switches_temperature import (
     discover_vsp_switches_temperature,
     parse_vsp_switches_temperature,
 )
-from cmk.base.plugins.agent_based.utils.temperature import TempParamType
+
+from cmk.plugins.lib.temperature import TempParamType
 
 _STRING_TABLE = [
     ["INTERNAL MAC", "61"],

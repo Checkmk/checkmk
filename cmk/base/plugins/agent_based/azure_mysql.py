@@ -6,9 +6,7 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from .agent_based_api.v1 import register, render
-from .agent_based_api.v1.type_defs import CheckResult
-from .utils.azure import (
+from cmk.plugins.lib.azure import (
     check_connections,
     check_cpu,
     check_memory,
@@ -19,6 +17,9 @@ from .utils.azure import (
     MetricData,
     Section,
 )
+
+from .agent_based_api.v1 import register, render
+from .agent_based_api.v1.type_defs import CheckResult
 
 DB_MYSQL_RESOURCE_NAME = "Microsoft.DBforMySQL/servers"
 

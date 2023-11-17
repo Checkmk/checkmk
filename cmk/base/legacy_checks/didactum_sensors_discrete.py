@@ -11,7 +11,8 @@ from cmk.base.check_legacy_includes.didactum import (
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.didactum import DETECT_DIDACTUM
+
+from cmk.plugins.lib.didactum import DETECT_DIDACTUM
 
 # .1.3.6.1.4.1.46501.5.1.1.4.101001 dry --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType.101001
 # .1.3.6.1.4.1.46501.5.1.1.4.101002 dry --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType.101002

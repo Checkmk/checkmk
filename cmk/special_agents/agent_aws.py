@@ -5830,7 +5830,7 @@ class ECSSummary(AWSSection):
         return AWSComputedContent(clusters, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", [c.dict() for c in computed_content.content])]
+        return [AWSSectionResult("", [c.model_dump() for c in computed_content.content])]
 
 
 class ECS(AWSSectionCloudwatch):
@@ -6179,7 +6179,7 @@ class ElastiCacheSummary(AWSSection):
         return AWSComputedContent((clusters, nodes), raw_content.cache_timestamp)
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", [c.dict() for c in computed_content.content[0]])]
+        return [AWSSectionResult("", [c.model_dump() for c in computed_content.content[0]])]
 
 
 class ElastiCache(AWSSectionCloudwatch):

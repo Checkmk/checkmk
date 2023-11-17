@@ -296,7 +296,7 @@ def _parse_error_response_body(body: str) -> str:
     'Insufficient permissions - Details: You need permission xyz.'
     """
     try:
-        error_descr = _RestApiErrorDescr.parse_raw(body)
+        error_descr = _RestApiErrorDescr.model_validate_json(body)
     except Exception:  # pylint: disable=broad-exception-caught
         return body
     return error_descr.title + (f" - Details: {error_descr.detail}" if error_descr.detail else "")

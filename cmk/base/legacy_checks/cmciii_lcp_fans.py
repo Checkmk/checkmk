@@ -9,7 +9,8 @@ import re
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.cmciii import DETECT_CMCIII_LCP
+
+from cmk.plugins.lib.cmciii import DETECT_CMCIII_LCP
 
 
 def inventory_cmciii_lcp_fans(info):

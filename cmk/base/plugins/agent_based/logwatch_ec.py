@@ -40,12 +40,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.utils import logwatch
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogForwarderUnixSocket,
     SyslogMessage,
 )
+
+from .utils import logwatch
 
 ClusterSection = dict[str | None, logwatch.Section]
 _MAX_SPOOL_SIZE = 1024**2

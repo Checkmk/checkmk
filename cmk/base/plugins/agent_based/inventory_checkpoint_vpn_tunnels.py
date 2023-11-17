@@ -5,9 +5,10 @@
 
 from typing import NamedTuple
 
+from cmk.plugins.lib import checkpoint
+
 from .agent_based_api.v1 import register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-from .utils import checkpoint
 
 
 class VPNTunnel(NamedTuple):

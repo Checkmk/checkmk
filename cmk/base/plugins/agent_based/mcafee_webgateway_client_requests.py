@@ -7,7 +7,8 @@ import time
 import typing
 
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.utils.mcafee_gateway import (
+
+from cmk.plugins.lib.mcafee_gateway import (
     compute_rate,
     DETECT_WEB_GATEWAY,
     MISC_DEFAULT_PARAMS,

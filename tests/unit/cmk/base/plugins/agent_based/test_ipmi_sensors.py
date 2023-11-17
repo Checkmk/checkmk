@@ -15,7 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.utils import ipmi as ipmi_utils
+
+from cmk.plugins.lib import ipmi as ipmi_utils
 
 _STRING_TABLES = [
     [

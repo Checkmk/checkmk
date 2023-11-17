@@ -5,7 +5,8 @@
 import pydantic
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, type_defs
-from cmk.base.plugins.agent_based.utils import uptime
+
+from cmk.plugins.lib import uptime
 
 
 class Uptime(pydantic.BaseModel):
@@ -19,7 +20,7 @@ def parse(string_table: type_defs.StringTable) -> uptime.Section:
     >>> parse([['{"seconds": 2117}']])
     Section(uptime_sec=2117, message=None)
     """
-    seconds = Uptime.parse_raw(string_table[0][0]).seconds
+    seconds = Uptime.model_validate_json(string_table[0][0]).seconds
     return uptime.Section(uptime_sec=seconds, message=None)
 
 

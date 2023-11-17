@@ -10,8 +10,8 @@ from tests.unit.conftest import FixRegister
 from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.base.api.agent_based.plugin_classes import AgentParseFunction, AgentSectionPlugin
-from cmk.base.plugins.agent_based.utils import kube as check
 
+from cmk.plugins.lib import kube as check
 from cmk.special_agents.utils_kubernetes.schemata import section as agent
 
 

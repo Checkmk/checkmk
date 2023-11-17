@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+
 from .agent_based_api.v1 import (
     get_value_store,
     GetRateError,
@@ -17,7 +19,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 
 Section = Mapping[str, Any]
 

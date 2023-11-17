@@ -20,6 +20,8 @@ from typing import Literal
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.oracle_instance import GeneralError, Instance, InvalidData, Section
+
 from .agent_based_api.v1 import (
     check_levels,
     IgnoreResultsError,
@@ -30,7 +32,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.oracle_instance import GeneralError, Instance, InvalidData, Section
 
 
 class _Params(TypedDict, total=True):

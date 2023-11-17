@@ -5,9 +5,10 @@
 
 from collections.abc import Mapping
 
+from cmk.plugins.lib import storeonce
+
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils import storeonce
 
 Section = Mapping[str, Mapping[str, str]]
 

@@ -219,7 +219,7 @@ def _command_inspect(
 
     manifest = extract_manifest(file_content)
 
-    sys.stdout.write(f"{manifest.json() if args.json else _to_text(manifest)}\n")
+    sys.stdout.write(f"{manifest.model_dump_json() if args.json else _to_text(manifest)}\n")
     return 0
 
 
@@ -247,7 +247,7 @@ def _command_show_all(
     )
 
     if args.json:
-        sys.stdout.write(f"{stored_manifests.json()}\n")
+        sys.stdout.write(f"{stored_manifests.model_dump_json()}\n")
         return 0
 
     # I don't think this is very useful, but we include it for consistency.
@@ -282,7 +282,7 @@ def _command_show(
     manifest = extract_manifest(
         package_store.read_bytes(_get_package_id(args.name, args.version, package_store))
     )
-    sys.stdout.write(f"{manifest.json() if args.json else _to_text(manifest)}\n")
+    sys.stdout.write(f"{manifest.model_dump_json() if args.json else _to_text(manifest)}\n")
     return 0
 
 
@@ -339,7 +339,7 @@ def _command_list(
     )
 
     if args.json:
-        sys.stdout.write(f"{classified_manifests.json()}\n")
+        sys.stdout.write(f"{classified_manifests.model_dump_json()}\n")
         return 0
 
     enabled_ids = {m.id for m in classified_manifests.enabled}

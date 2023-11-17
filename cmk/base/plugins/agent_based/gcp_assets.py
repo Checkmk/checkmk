@@ -7,9 +7,10 @@ import json
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 
+from cmk.plugins.lib.gcp import AssetSection, AssetType, AssetTypeSection, Config, GCPAsset, Item
+
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.gcp import AssetSection, AssetType, AssetTypeSection, Config, GCPAsset, Item
 
 
 def parse_assets(string_table: StringTable) -> AssetSection:

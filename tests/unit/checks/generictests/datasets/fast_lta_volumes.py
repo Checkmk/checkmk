@@ -5,7 +5,7 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS
 
 checkname = "fast_lta_volumes"
 

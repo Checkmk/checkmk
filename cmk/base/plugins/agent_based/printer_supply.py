@@ -6,6 +6,9 @@
 from collections.abc import Mapping
 from typing import Any, Final, NamedTuple
 
+from cmk.plugins.lib.constants import OID_SYS_OBJ
+from cmk.plugins.lib.printer import DETECT_PRINTER
+
 from .agent_based_api.v1 import (
     all_of,
     check_levels,
@@ -20,8 +23,6 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.constants import OID_SYS_OBJ
-from .utils.printer import DETECT_PRINTER
 
 MAP_UNIT: Final = {
     "3": "ten thousandths of inches",

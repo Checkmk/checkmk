@@ -9,8 +9,8 @@ from typing import Any, Final
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, register, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-from .utils.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
-from .utils.esx_vsphere import SectionCounter
+from cmk.plugins.lib.df import df_check_filesystem_list, df_discovery, FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lib.esx_vsphere import SectionCounter
 
 # We assume that all ramdisks have the same size (in mb) on all hosts
 # -> To get size infos about unknown ramdisks, connect to the ESX host via

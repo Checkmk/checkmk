@@ -267,7 +267,7 @@ metric_info["engine_cpu_util"] = {
 metric_info["util_numcpu_as_max"] = {
     "title": _l("CPU utilization"),
     "unit": "%",
-    "color": "#004080",
+    "color": "#7fff00",
 }
 
 metric_info["util_average"] = {
@@ -587,7 +587,7 @@ graph_info["cpu_utilization_numcpus"] = {
     "metrics": [
         ("user", "area"),
         ("util_numcpu_as_max,user,-#ff6000", "stack", _l("Privileged")),
-        ("util_numcpu_as_max#004080", "line", _l("Total")),
+        ("util_numcpu_as_max#7fff00", "line", _l("Total")),
     ],
     "scalars": [
         "util_numcpu_as_max:warn",
@@ -603,7 +603,7 @@ graph_info["cpu_utilization_simple"] = {
         ("user", "area"),
         ("system", "stack"),
         ("util_average", "line"),
-        ("util#004080", "line", _l("Total")),
+        ("util#7fff00", "line", _l("Total")),
     ],
     "conflicting_metrics": [
         "idle",
@@ -651,7 +651,7 @@ graph_info["cpu_utilization_5"] = {
         ("system", "stack"),
         ("io_wait", "stack"),
         ("util_average", "line"),
-        ("user,system,io_wait,+,+#004080", "line", _l("Total")),
+        ("user,system,io_wait,+,+#7fff00", "line", _l("Total")),
     ],
     "conflicting_metrics": [
         "util",
@@ -670,7 +670,7 @@ graph_info["cpu_utilization_5_util"] = {
         ("system", "stack"),
         ("io_wait", "stack"),
         ("util_average", "line"),
-        ("util#004080", "line", _l("Total")),
+        ("util#7fff00", "line", _l("Total")),
     ],
     "scalars": [
         "util:warn",
@@ -693,7 +693,7 @@ graph_info["cpu_utilization_6_steal"] = {
         ("io_wait", "stack"),
         ("cpu_util_steal", "stack"),
         ("util_average", "line"),
-        ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _l("Total")),
+        ("user,system,io_wait,cpu_util_steal,+,+,+#7fff00", "line", _l("Total")),
     ],
     "conflicting_metrics": [
         "util",
@@ -712,7 +712,7 @@ graph_info["cpu_utilization_6_steal_util"] = {
         ("io_wait", "stack"),
         ("cpu_util_steal", "stack"),
         ("util_average", "line"),
-        ("util#004080", "line", _l("Total")),
+        ("util#7fff00", "line", _l("Total")),
     ],
     "scalars": [
         "util:warn",
@@ -734,7 +734,7 @@ graph_info["cpu_utilization_6_guest"] = {
         ("io_wait", "stack"),
         ("cpu_util_guest", "stack"),
         ("util_average", "line"),
-        ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _l("Total")),
+        ("user,system,io_wait,cpu_util_steal,+,+,+#7fff00", "line", _l("Total")),
     ],
     "conflicting_metrics": [
         "util",
@@ -752,7 +752,7 @@ graph_info["cpu_utilization_6_guest_util"] = {
         ("io_wait", "stack"),
         ("cpu_util_guest", "stack"),
         ("util_average", "line"),
-        ("util#004080", "line", _l("Total")),
+        ("util#7fff00", "line", _l("Total")),
     ],
     "scalars": [
         "util:warn",
@@ -776,7 +776,7 @@ graph_info["cpu_utilization_7"] = {
         ("cpu_util_guest", "stack"),
         ("cpu_util_steal", "stack"),
         ("util_average", "line"),
-        ("user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _l("Total")),
+        ("user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#7fff00", "line", _l("Total")),
     ],
     "conflicting_metrics": [
         "util",
@@ -795,7 +795,7 @@ graph_info["cpu_utilization_7_util"] = {
         ("cpu_util_guest", "stack"),
         ("cpu_util_steal", "stack"),
         ("util_average", "line"),
-        ("util#004080", "line", _l("Total")),
+        ("util#7fff00", "line", _l("Total")),
     ],
     "scalars": [
         "util:warn",

@@ -29,9 +29,7 @@ from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer
 # I currently see no better soluton than this API violation.
 from cmk.base.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
-from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.checkmk import (
+from cmk.plugins.lib.checkmk import (
     CachedPlugin,
     CachedPluginsSection,
     CachedPluginType,
@@ -41,6 +39,9 @@ from .utils.checkmk import (
     Plugin,
     PluginSection,
 )
+
+from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:

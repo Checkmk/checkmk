@@ -8,8 +8,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
-from cmk.base.plugins.agent_based.utils.df import EXCLUDED_MOUNTPOINTS
-from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
+
+from cmk.plugins.lib.df import EXCLUDED_MOUNTPOINTS
+from cmk.plugins.lib.emc import DETECT_DATADOMAIN
 
 
 def inventory_emc_datadomain_fs(info):

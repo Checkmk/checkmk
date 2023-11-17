@@ -25,8 +25,9 @@ from typing import Final
 
 from typing_extensions import TypedDict
 
+from cmk.plugins.lib.esx_vsphere import Section
+
 from .agent_based_api.v1 import Attributes, register, type_defs
-from .utils.esx_vsphere import Section
 
 FIRST_ELEMENT: Final = lambda v: v[0]
 FIRST_ELEMENT_AS_FLOAT: Final = lambda v: float(v[0])

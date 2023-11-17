@@ -27,6 +27,7 @@ DECLARE @GetAll TABLE
  VersionNames nvarchar(100),
  ClusterNames nvarchar(100),
  Ports nvarchar(100),
+ DynamicPorts nvarchar(100),
  Data nvarchar(100))
 
 Insert into @GetInstances
@@ -85,11 +86,18 @@ BEGIN
     DECLARE @Port NVARCHAR(100);
     EXECUTE xp_regread
         @rootkey = 'HKEY_LOCAL_MACHINE',
-        @key = @cluster_key,
+        @key = @port_key,
         @value_name = 'tcpPort',
         @value = @Port OUTPUT;
 
-	insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port )
+    DECLARE @DynamicPort NVARCHAR(100);
+    EXECUTE xp_regread
+        @rootkey = 'HKEY_LOCAL_MACHINE',
+        @key = @port_key,
+        @value_name = 'TcpDynamicPorts',
+        @value = @DynamicPort OUTPUT;
+    
+    insert into @GetAll(InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames, Ports, DynamicPorts) Values( @InstanceName, @InstanceId, @Edition, @Version, @ClusterName, @Port, @DynamicPort )
     
     -- Get the next instance
     FETCH NEXT FROM instance_cursor INTO @InstanceName;
@@ -98,12 +106,51 @@ END
 CLOSE instance_cursor;
 DEALLOCATE instance_cursor;
 
-SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports FROM @GetAll;";
+SELECT InstanceNames, InstanceIds, EditionNames, VersionNames, ClusterNames,Ports, DynamicPorts FROM @GetAll;";
+
+pub const QUERY_UTC: &str = "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date";
+pub const QUERY_UTC_TIME_PARAM: &str = "utc_date";
+
+pub const QUERY_COUNTERS: &str = "SELECT counter_name, object_name, instance_name, cntr_value \
+     FROM sys.dm_os_performance_counters \
+     WHERE object_name NOT LIKE '%Deprecated%'";
+
+/// used only for testing: it is difficult to get blocked tasks in reality
+pub const QUERY_WAITING_TASKS: &str = "SELECT cast(session_id as varchar) as session_id, \
+            cast(wait_duration_ms as bigint) as wait_duration_ms, \
+            wait_type, \
+            cast(blocking_session_id as varchar) as blocking_session_id \
+    FROM sys.dm_os_waiting_tasks";
+
+pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
+pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
+pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";
 
 pub const SYS_DATABASES: &str = "SELECT name FROM sys.databases";
+pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";
 
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()
+}
+
+// production
+pub fn get_blocked_sessions_query() -> String {
+    format!("{} WHERE blocking_session_id <> 0 ", QUERY_WAITING_TASKS).to_string()
+}
+
+pub fn get_details_query() -> String {
+    format!(
+        "SELECT cast(SERVERPROPERTY('{}') as varchar) as {}, \
+         cast(SERVERPROPERTY ('{}') as varchar) as {}, \
+         cast(SERVERPROPERTY ('{}') as varchar) as {}",
+        "productversion",
+        QUERY_DETAILS_VERSION_PARAM,
+        "productlevel",
+        QUERY_DETAILS_LEVEL_PARAM,
+        "edition",
+        QUERY_DETAILS_EDITION_PARAM,
+    )
+    .to_string()
 }
 
 pub fn get_32bit_instances_query() -> String {

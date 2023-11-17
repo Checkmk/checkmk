@@ -31,10 +31,179 @@ def test_session_cookie(site: Site) -> None:
     if not site.version.is_saas_edition():
         web.login()
 
-    for cookie in web.session.cookies:
-        if not cookie.name == f"auth_{site.id}":
-            continue
-        assert cookie.path == f"/{site.id}/"
-        # This is ugly but IMHO the only way...
-        assert "HttpOnly" in cookie.__dict__.get("_rest", {})
-        assert cookie.__dict__.get("_rest", {}).get("SameSite") == "Lax"
+    cookie = web.get_auth_cookie()
+    assert cookie is not None
+    assert cookie.path == f"/{site.id}/"
+    # This is ugly but IMHO the only way...
+    assert "HttpOnly" in cookie.__dict__.get("_rest", {})
+    assert cookie.__dict__.get("_rest", {}).get("SameSite") == "Lax"
+
+
+def test_automation_user_gui(site: Site) -> None:
+    """test authenticated request of an automation user to the gui
+
+    - the HTTP param login must work in Checkmk 2.3
+    - a session must not be established
+    """
+    username = "automation"
+    password = site.get_automation_secret()
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        params={
+            "_username": username,
+            "_secret": password,
+        },
+    )
+    assert "Dashboard" in response.text
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        auth=(username, password),
+    )
+    assert "Dashboard" in response.text
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        headers={
+            "Authorization": f"Bearer {username} {password}",
+        },
+    )
+    assert "Dashboard" in response.text
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+
+def test_automation_user_rest_api(site: Site) -> None:
+    """test authenticated request of an automation user to the rest api
+
+    - the HTTP param login must work in Checkmk 2.3
+    - a session must not be established
+    """
+    username = "automation"
+    password = site.get_automation_secret()
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        params={
+            "_username": username,
+            "_secret": password,
+        },
+    )
+    assert "site" in response.json()
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        auth=(username, password),
+    )
+    assert "site" in response.json()
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        headers={
+            "Authorization": f"Bearer {username} {password}",
+        },
+    )
+    assert "site" in response.json()
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+
+def test_human_user_gui(site: Site) -> None:
+    """test authenticated request of a "normal"/"human" user to the gui
+
+    - the HTTP param login must not work
+    - a session must be established
+    """
+    username = "cmkadmin"
+    password = site.admin_password
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        params={
+            "_username": username,
+            "_secret": password,
+        },
+        allow_redirect_to_login=True,
+    )
+    assert "Dashboard" not in response.text
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        auth=(username, password),
+    )
+    assert "Dashboard" in response.text
+    assert session.is_logged_in()
+    assert session.get_auth_cookie() is not None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        "dashboard.py",
+        headers={
+            "Authorization": f"Bearer {username} {password}",
+        },
+    )
+    assert "Dashboard" in response.text
+    assert session.is_logged_in()
+    assert session.get_auth_cookie() is not None
+
+
+def test_human_user_restapi(site: Site) -> None:
+    """test authenticated request of a "normal"/"human" user to the rest api
+
+    - the HTTP param login must not work
+    - a session must not be established
+    """
+
+    username = "cmkadmin"
+    password = site.admin_password
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        params={
+            "_username": username,
+            "_secret": password,
+        },
+        expected_code=401,
+    )
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        auth=(username, password),
+    )
+    assert "site" in response.json()
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None
+
+    session = CMKWebSession(site)
+    response = session.get(
+        f"/{site.id}/check_mk/api/1.0/version",
+        headers={
+            "Authorization": f"Bearer {username} {password}",
+        },
+    )
+    assert "site" in response.json()
+    assert not session.is_logged_in()
+    assert session.get_auth_cookie() is None

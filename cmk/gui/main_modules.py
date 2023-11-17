@@ -37,7 +37,9 @@ with suppress_module_not_found("cmk.gui.raw"):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import,cmk-module-layer-violation
 
 with suppress_module_not_found("cmk.gui.cee"):
-    import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import,cmk-module-layer-violation
+    import cmk.gui.cee.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
+
+    cmk.gui.cee.registration.register()
 
 with suppress_module_not_found("cmk.gui.cme"):
     import cmk.gui.cme.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation

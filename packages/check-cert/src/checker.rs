@@ -16,9 +16,12 @@ impl<T> LowerLevels<T>
 where
     T: PartialOrd,
 {
-    pub fn warn_crit(warn: T, crit: T) -> Self {
-        std::assert!(warn >= crit);
-        Self { warn, crit }
+    pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
+        if warn >= crit {
+            Ok(Self { warn, crit })
+        } else {
+            Err(Box::from("bad values"))
+        }
     }
 
     pub fn evaluate(&self, value: &T) -> State {
@@ -41,9 +44,12 @@ impl<T> UpperLevels<T>
 where
     T: PartialOrd,
 {
-    pub fn warn_crit(warn: T, crit: T) -> Self {
-        std::assert!(crit >= warn);
-        Self { warn, crit }
+    pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
+        if crit >= warn {
+            Ok(Self { warn, crit })
+        } else {
+            Err(Box::from("bad values"))
+        }
     }
 
     pub fn evaluate(&self, value: &T) -> State {

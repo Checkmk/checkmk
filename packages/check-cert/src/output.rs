@@ -10,6 +10,23 @@ pub struct Output {
     summary: String,
 }
 
+impl Output {
+    pub fn bye(&self) -> ! {
+        std::process::exit(match self.state {
+            State::Ok => 0,
+            State::Warn => 1,
+            State::Crit => 2,
+            State::Unknown => 3,
+        })
+    }
+
+    pub fn bail_out(message: &str) -> ! {
+        let out = Self::from(CheckResult::unknown(String::from(message)));
+        eprintln!("{}", out);
+        out.bye()
+    }
+}
+
 impl Display for Output {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         if self.summary.is_empty() {
@@ -18,6 +35,15 @@ impl Display for Output {
             write!(f, "{} - {}", self.state, self.summary)?;
         }
         Ok(())
+    }
+}
+
+impl From<CheckResult> for Output {
+    fn from(check_result: CheckResult) -> Self {
+        Self {
+            state: check_result.state,
+            summary: check_result.summary,
+        }
     }
 }
 

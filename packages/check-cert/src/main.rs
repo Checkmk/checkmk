@@ -61,15 +61,19 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    if args.not_after_warn < args.not_after_crit {
-        eprintln!("not after crit limit larger than warn limit");
-        std::process::exit(1);
-    }
+    let Ok(not_after_levels) = checker::LowerLevels::try_new(
+        args.not_after_warn * Duration::DAY,
+        args.not_after_crit * Duration::DAY,
+    ) else {
+        output::Output::bail_out("invalid args: not after crit level larger than warn");
+    };
 
-    if args.response_time_warn > args.response_time_crit {
-        eprintln!("response time crit limit lower than warn limit");
-        std::process::exit(1);
-    }
+    let Ok(response_time_levels) = checker::UpperLevels::try_new(
+        args.response_time_warn * Duration::MILLISECOND,
+        args.response_time_crit * Duration::MILLISECOND,
+    ) else {
+        output::Output::bail_out("invalid args: response time crit higher than warn");
+    };
 
     let start = Instant::now();
     let der = fetcher::fetch_server_cert(
@@ -86,13 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = output::Output::from(vec![
-        checker::check_response_time(
-            response_time,
-            checker::UpperLevels::warn_crit(
-                args.response_time_warn * Duration::MILLISECOND,
-                args.response_time_crit * Duration::MILLISECOND,
-            ),
-        ),
+        checker::check_response_time(response_time, response_time_levels),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
             .unwrap_or_default(),
         checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)
@@ -101,18 +99,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_default(),
         checker::check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),
-            checker::LowerLevels::warn_crit(
-                args.not_after_warn * Duration::DAY,
-                args.not_after_crit * Duration::DAY,
-            ),
+            not_after_levels,
             cert.tbs_certificate.validity().not_after,
         ),
     ]);
     println!("HTTP {}", out);
-    std::process::exit(match out.state {
-        checker::State::Ok => 0,
-        checker::State::Warn => 1,
-        checker::State::Crit => 2,
-        checker::State::Unknown => 3,
-    })
+    out.bye()
 }

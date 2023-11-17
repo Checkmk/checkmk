@@ -27,6 +27,7 @@ const COUNTERS_SECTION_NAME: &str = "counters";
 const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
 const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
 const BACKUP_SECTION_NAME: &str = "backup";
+const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -59,6 +60,7 @@ impl Section {
 
 pub trait Column {
     fn get_bigint_by_idx(&self, idx: usize) -> i64;
+    fn get_bigint_by_name(&self, idx: &str) -> i64;
     fn get_value_by_idx(&self, idx: usize) -> String;
     fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
     fn get_value_by_name(&self, idx: &str) -> String;
@@ -114,7 +116,8 @@ impl InstanceEngine {
                         COUNTERS_SECTION_NAME
                         | BLOCKED_SESSIONS_SECTION_NAME
                         | TABLE_SPACES_SECTION_NAME
-                        | BACKUP_SECTION_NAME => {
+                        | BACKUP_SECTION_NAME
+                        | TRANSACTION_LOG_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -206,6 +209,10 @@ impl InstanceEngine {
                     .await
             }
             BACKUP_SECTION_NAME => self.generate_backup_section(client, &databases, sep).await,
+            TRANSACTION_LOG_SECTION_NAME => {
+                self.generate_transaction_logs_section(endpoint, &databases, sep)
+                    .await
+            }
             _ => format!("{} not implemented\n", name).to_string(),
         }
     }
@@ -310,6 +317,38 @@ impl InstanceEngine {
                     .join("")
             }
         }
+    }
+
+    pub async fn generate_transaction_logs_section(
+        &self,
+        endpoint: &config::ms_sql::Endpoint,
+        databases: &Vec<String>,
+        sep: char,
+    ) -> String {
+        let format_error = |d: &str, e: &anyhow::Error| {
+            format!(
+                "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
+                self.mssql_name(),
+                d.replace(' ', "_"),
+                e
+            )
+            .to_string()
+        };
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_query(&mut c, queries::QUERY_TRANSACTION_LOGS)
+                        .await
+                        .map(|rows| to_transaction_logs_entries(&self.mssql_name(), d, &rows, sep))
+                        .unwrap_or_else(|e| format_error(d, &e));
+                }
+                Err(err) => {
+                    result += &format_error(d, &err);
+                }
+            }
+        }
+        result
     }
 
     /// doesn't return error - the same behavior as plugin
@@ -474,6 +513,47 @@ fn to_table_spaces_entry(
     )
 }
 
+fn to_transaction_logs_entries(
+    instance_name: &str,
+    database_name: &str,
+    rows: &[Vec<Row>],
+    sep: char,
+) -> String {
+    if rows.is_empty() {
+        return String::new();
+    }
+    rows[0]
+        .iter()
+        .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
+        .collect::<Vec<String>>()
+        .join("")
+}
+
+fn to_transaction_logs_entry(
+    row: &Row,
+    instance_name: &str,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = row.get_value_by_name("name");
+    let physical_name = row.get_value_by_name("physical_name");
+    let max_size = row.get_bigint_by_name("MaxSize");
+    let allocated_size = row.get_bigint_by_name("AllocatedSize");
+    let used_size = row.get_bigint_by_name("UsedSize");
+    let unlimited = row.get_bigint_by_name("Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name,
+        physical_name,
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
 fn to_backup_entry(
     instance_name: &str,
     database_name: &str,
@@ -546,6 +626,12 @@ fn get_row_value(row: &Row, idx: &str) -> String {
 impl Column for Row {
     fn get_bigint_by_idx(&self, idx: usize) -> i64 {
         self.try_get::<i64, usize>(idx)
+            .unwrap_or_default()
+            .unwrap_or_default()
+    }
+
+    fn get_bigint_by_name(&self, idx: &str) -> i64 {
+        self.try_get::<i64, &str>(idx)
             .unwrap_or_default()
             .unwrap_or_default()
     }
@@ -654,7 +740,7 @@ async fn generate_result(
     // place all futures now in vector for future asynchronous processing
     let tasks = instances
         .iter()
-        .map(move |instance| instance.generate_sections(ms_sql, sections.clone()));
+        .map(move |instance| instance.generate_sections(ms_sql, sections));
 
     // processing here
     let results = stream::iter(tasks)

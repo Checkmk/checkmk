@@ -49,6 +49,7 @@ fn make_configs(
             auth_user: args.auth_user,
             auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
             body: args.body,
+            content_type: args.content_type,
         },
         ConnectionConfig {
             onredirect: match args.onredirect {

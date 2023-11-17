@@ -88,6 +88,7 @@ fn make_standard_configs(
             auth_user: None,
             auth_pw: None,
             body: None,
+            content_type: None,
         },
         ConnectionConfig {
             onredirect: OnRedirect::Follow,

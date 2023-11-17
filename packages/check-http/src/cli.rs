@@ -69,11 +69,16 @@ pub struct Cli {
     #[arg(long)]
     pub document_age_levels: Option<u64>,
 
-    /// Text to send in HTTP Body. This will set the HTTP Method to POST if unset,
+    /// Text to send in HTTP body. This will set the HTTP method to POST if unset,
     /// but will not overwrite the method specified with --method.
     /// Also, no encoding (like url-encoding) will be applied.
-    #[arg(long)]
+    #[arg(long, group = "body_text")]
     pub body: Option<String>,
+
+    /// Specify Content-Type header when sending HTTP body.
+    /// This does not encode the specified body text automatically.
+    #[arg(short = 'T', long, requires = "body_text")]
+    pub content_type: Option<HeaderValue>,
 }
 
 type PageSizeLimits = (usize, Option<usize>);

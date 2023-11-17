@@ -6,8 +6,8 @@ use anyhow::Result as AnyhowResult;
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{
-    header::USER_AGENT, Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult,
-    StatusCode, Version,
+    header::{CONTENT_TYPE, USER_AGENT},
+    Error as ReqwestError, Method, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
 use std::time::Duration;
 
@@ -22,6 +22,7 @@ pub struct ClientConfig {
     pub auth_user: Option<String>,
     pub auth_pw: Option<String>,
     pub body: Option<String>,
+    pub content_type: Option<HeaderValue>,
 }
 
 // TODO(au): This seems a bit misplaced.
@@ -46,6 +47,9 @@ pub fn prepare_request(
     let mut headers = HeaderMap::new();
     if let Some(ua) = cfg.user_agent {
         headers.insert(USER_AGENT, ua);
+    }
+    if let Some(content_type) = cfg.content_type {
+        headers.insert(CONTENT_TYPE, content_type);
     }
     if let Some(hds) = cfg.headers {
         headers.extend(hds);

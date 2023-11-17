@@ -149,6 +149,24 @@ pub fn check_details_subject(subject: &X509Name, expected: Option<String>) -> Op
     }
 }
 
+pub fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Option<CheckResult> {
+    match expected {
+        None => None,
+        Some(expected) => {
+            let issuer = issuer.to_string();
+
+            if issuer == expected {
+                Some(CheckResult::ok(format!("Issuer {}", issuer)))
+            } else {
+                Some(CheckResult::warn(format!(
+                    "Issuer is {} but expected {}",
+                    issuer, expected
+                )))
+            }
+        }
+    }
+}
+
 pub fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
     levels: LowerLevels<Duration>,

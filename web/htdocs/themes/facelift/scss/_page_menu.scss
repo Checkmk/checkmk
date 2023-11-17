@@ -615,6 +615,15 @@ div#page_menu_popups {
     font-size: $font-size-large;
     padding: 0;
     text-align: left;
+
+    table {
+      margin-left: -3px;
+      &:before {
+        content: "";
+        display: block;
+        margin-top: 5px;
+      }
+    }
   }
 
   .confirm_title {

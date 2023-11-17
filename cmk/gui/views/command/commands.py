@@ -19,6 +19,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
@@ -1530,7 +1531,7 @@ class CommandScheduleDowntimes(Command):
         start_weekday, start_month, start_day, start_time, start_year = time.asctime(
             time.localtime(start_at)
         ).split()
-        return _("Start: %s, %s. %s %s at %s") % (
+        return _("%s, %s. %s %s at %s") % (
             start_weekday,
             start_day,
             start_month,
@@ -1546,7 +1547,7 @@ class CommandScheduleDowntimes(Command):
                 else self._custom_end_time(start_at)
             )
         ).split()
-        return _("End: %s, %s. %s %s at %s") % (
+        return _("%s, %s. %s %s at %s") % (
             end_weekday,
             end_day,
             end_month,
@@ -1564,23 +1565,21 @@ class CommandScheduleDowntimes(Command):
         len_action_rows: int,
     ) -> HTML:
         start_at = self._custom_start_time()
-        additions = (
-            "<br><br>"
-            + self._get_start_msg(start_at)
-            + "<br>"
-            + self._get_end_msg(start_at)
-            + "<br><br>"
+        additions = HTMLWriter.render_table(
+            HTMLWriter.render_tr(
+                HTMLWriter.render_td(_("Start:"))
+                + HTMLWriter.render_td(self._get_start_msg(start_at))
+            )
+            + HTMLWriter.render_tr(
+                HTMLWriter.render_td(_("End:")) + HTMLWriter.render_td(self._get_end_msg(start_at))
+            )
         )
 
-        attributes = ""
-
-        recurring_number_from_html = self.recurring_downtimes.number()
-        if recurring_number_from_html:
-            attributes += (
-                "<li>"
-                + _("Repeats every %s")
+        attributes = HTML("")
+        if recurring_number_from_html := self.recurring_downtimes.number():
+            attributes += HTMLWriter.render_li(
+                _("Repeats every %s")
                 % self.recurring_downtimes.choices()[recurring_number_from_html][1]
-                + "</li>"
             )
 
         vs_host_downtime = self._vs_host_downtime()
@@ -1588,31 +1587,29 @@ class CommandScheduleDowntimes(Command):
         vs_host_downtime.validate_value(included_from_html, "_include_children")
         if "_include_children" in included_from_html:
             if included_from_html.get("_include_children") is True:
-                attributes += "<li>" + _("Child hosts also go in downtime (recursively).") + "</li>"
+                attributes += HTMLWriter.render_li(
+                    _("Child hosts also go in downtime (recursively).")
+                )
             else:
-                attributes += "<li>" + _("Child hosts also go in downtime.") + "</li>"
+                attributes += HTMLWriter.render_li(_("Child hosts also go in downtime."))
 
         if duration := self._flexible_option():
-            attributes += (
-                "<li>"
-                + _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
+            attributes += HTMLWriter.render_li(
+                _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
                 % (duration / 3600)
-                + "</li>"
             )
 
         if attributes:
-            additions = additions + _("Downtime attributes:") + "<ul>" + attributes + "</ul>"
-
-        return HTML(
-            additions
-            + "<u>"
-            + _("Info:")
-            + "</u> "
-            + (
-                _("Downtime also applies to services.")
-                if cmdtag == "HOST"
-                else _("Downtime does not apply to host.")
+            additions = (
+                additions
+                + HTMLWriter.render_p(_("Downtime attributes:"))
+                + HTMLWriter.render_ul(attributes)
             )
+
+        return additions + HTMLWriter.render_p(
+            _("<u>Info</u>: Downtime also applies to services.")
+            if cmdtag == "HOST"
+            else _("Info: Downtime does not apply to host.")
         )
 
     def _flexible_option(self) -> int:

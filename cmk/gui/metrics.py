@@ -45,9 +45,6 @@ from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.http import request
 
-PerfometerExpression = str | int | float
-RequiredMetricNames = set[str]
-
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

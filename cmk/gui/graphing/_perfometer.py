@@ -27,15 +27,6 @@ from ._expression import (
 from ._type_defs import TranslatedMetric, UnitInfo
 from ._unit_info import unit_info
 
-LegacyPerfometer = tuple[str, Any]
-
-
-def register() -> None:
-    renderer_registry.register(MetricometerRendererLogarithmic)
-    renderer_registry.register(MetricometerRendererLinear)
-    renderer_registry.register(MetricometerRendererStacked)
-    renderer_registry.register(MetricometerRendererDual)
-
 
 class _LinearPerfometerSpec(TypedDict):
     type: Literal["linear"]
@@ -62,10 +53,12 @@ class _StackedPerfometerSpec(TypedDict):
     perfometers: Sequence[_LinearPerfometerSpec | LogarithmicPerfometerSpec]
 
 
+LegacyPerfometer = tuple[str, Any]
 PerfometerSpec: TypeAlias = (
     _LinearPerfometerSpec | LogarithmicPerfometerSpec | _DualPerfometerSpec | _StackedPerfometerSpec
 )
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
+MetricRendererStack = list[list[tuple[int | float, str]]]
 
 
 def _parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> None:
@@ -174,9 +167,6 @@ def get_first_matching_perfometer(
         if _perfometer_possible(perfometer, translated_metrics):
             return perfometer
     return None
-
-
-MetricRendererStack = list[list[tuple[int | float, str]]]
 
 
 class MetricometerRenderer(abc.ABC):
@@ -519,3 +509,10 @@ class MetricometerRendererDual(MetricometerRenderer):
             sub_sort_values.append(renderer.get_sort_value())
 
         return max(*sub_sort_values)
+
+
+def register() -> None:
+    renderer_registry.register(MetricometerRendererLogarithmic)
+    renderer_registry.register(MetricometerRendererLinear)
+    renderer_registry.register(MetricometerRendererStacked)
+    renderer_registry.register(MetricometerRendererDual)

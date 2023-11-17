@@ -29,10 +29,9 @@ from cmk.gui.wsgi.utils import dict_property
 
 class CheckmkFileBasedSession(dict, SessionMixin):
     new = True
-
     session_info = dict_property[SessionInfo]()
-    persist_session = dict_property[bool]()
     exc = dict_property[MKException | None](default=None)
+    is_gui_session = dict_property[bool](default=True)
 
     def update_cookie(self) -> None:
         # Cookies only get set when the session is new, so we make ourselves new again.
@@ -56,11 +55,21 @@ class CheckmkFileBasedSession(dict, SessionMixin):
     def user_id(self):
         raise AttributeError("Don't set user_id please.")
 
+    @property
+    def persist_session(self) -> bool:
+        if isinstance(self.user, LoggedInNobody):
+            return False
+
+        if not self.is_gui_session:
+            # No persistant sessions for RestAPI
+            return False
+
+        return not self.user.is_automation_user()
+
     def initialize(
         self,
         user_name: UserId | None,
         auth_type: AuthType | None,
-        persist: bool = True,
     ) -> None:
         now = datetime.now()
         if user_name is not None:
@@ -68,7 +77,7 @@ class CheckmkFileBasedSession(dict, SessionMixin):
             self.user = LoggedInUser(user_name)
         else:
             self.user = LoggedInNobody()
-        self.persist_session = persist
+            # This seems weird. But the unittest go beserk if we change that...
         self.session_info = SessionInfo(
             session_id=userdb.session.create_session_id(),
             started_at=int(now.timestamp()),
@@ -93,13 +102,11 @@ class CheckmkFileBasedSession(dict, SessionMixin):
         cls,
         user_name: UserId,
         auth_type: AuthType,
-        persist: bool = True,
     ) -> CheckmkFileBasedSession:
         sess = cls()
         sess.initialize(
             user_name,
             auth_type,
-            persist=persist,
         )
         return sess
 
@@ -134,7 +141,6 @@ class CheckmkFileBasedSession(dict, SessionMixin):
 
         sess = cls()
         sess.user = LoggedInUser(user_name)
-        sess.persist_session = True
         sess.session_info = info
         # NOTE: This is only called from a "cookie" auth location. If you add more, refactor.
         sess.session_info.auth_type = "cookie"

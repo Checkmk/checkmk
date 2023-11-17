@@ -115,6 +115,9 @@ class LoggedInUser:
     def reset_language(self) -> None:
         self._unset_attribute("language")
 
+    def is_automation_user(self) -> bool:
+        return (cmk.utils.paths.profile_dir / self.ident / "automation.secret").exists()
+
     @property
     def show_mode(self) -> str:
         return self.get_attribute("show_mode") or active_config.show_mode

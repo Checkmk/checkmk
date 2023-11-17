@@ -8,6 +8,7 @@ import os
 import re
 import urllib.parse
 from collections.abc import Collection, Container
+from http.cookiejar import Cookie
 
 import requests
 from bs4 import BeautifulSoup  # type: ignore[import]
@@ -217,3 +218,19 @@ class CMKWebSession:
     def logout(self) -> None:
         r = self.get("logout.py", allow_redirect_to_login=True)
         assert 'action="login.py"' in r.text
+
+    def is_logged_in(self) -> bool:
+        r = self.get("info.py", allow_redirect_to_login=True)
+        return all(x in r.text for x in ("About Checkmk", "Your IT monitoring platform"))
+
+    def get_auth_cookie(self) -> Cookie | None:
+        """return the auth cookie
+
+        apparently the get on these cookies return a str with only some information, also this is
+        untyped and mypy would need some suppressions.
+        We usually get two cookies so this for loop should not hurt too much"""
+
+        for cookie in self.session.cookies:
+            if cookie.name == f"auth_{self.site.id}":
+                return cookie
+        return None

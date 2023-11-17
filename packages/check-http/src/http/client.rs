@@ -34,7 +34,7 @@ pub struct ClientConfig {
     pub force_ip: Option<ForceIP>,
 }
 
-pub fn get_client(cfg: ClientConfig) -> ReqwestResult<Client> {
+pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
 
     let mut headers = HeaderMap::new();
@@ -139,9 +139,7 @@ fn contains_unchanged_addr(old: &[SocketAddr], new: &[SocketAddr]) -> bool {
 mod tests {
     use std::net::SocketAddr;
 
-    use crate::connection::{
-        contains_unchanged_addr, contains_unchanged_ip, filter_socket_addrs, ForceIP,
-    };
+    use super::*;
 
     #[test]
     fn test_contains_unchanged_ip() {

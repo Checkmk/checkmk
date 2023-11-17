@@ -4,8 +4,10 @@
 
 use anyhow::Result as AnyhowResult;
 use check_http::checking::{CheckParameters, State};
-use check_http::connection::{ClientConfig, OnRedirect};
-use check_http::http::RequestConfig;
+use check_http::http::{
+    client::{ClientConfig, OnRedirect},
+    request::RequestConfig,
+};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
 use http::Method;

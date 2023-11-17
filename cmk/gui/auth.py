@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import hmac
 import re
+import secrets
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -330,7 +331,10 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     if not path.is_file():
         return False
 
-    return path.read_text().strip() == secret
+    return secrets.compare_digest(
+        path.read_text().strip().encode("utf-8"),
+        secret.encode("utf-8"),
+    )
 
 
 def _verify_user_login(user_id: UserId, password: Password) -> bool:

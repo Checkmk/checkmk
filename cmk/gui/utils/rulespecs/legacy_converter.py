@@ -17,6 +17,7 @@ from cmk.gui.watolib import rulespec_groups as legacy_rulespec_groups
 from cmk.gui.watolib import rulespecs as legacy_rulespecs
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
     ManualCheckParameterRulespec,
     rulespec_group_registry,
 )
@@ -36,6 +37,8 @@ def convert_to_legacy_rulespec(
     match to_convert:
         case ruleset_api_v1.CheckParameterRuleSpecWithItem():
             return _convert_to_legacy_check_parameter_with_item_rulespec(to_convert, localizer)
+        case ruleset_api_v1.CheckParameterRuleSpecWithoutItem():
+            return _convert_to_legacy_check_parameter_without_item_rulespec(to_convert, localizer)
         case ruleset_api_v1.EnforcedServiceRuleSpecWithItem():
             item_spec = partial(_convert_to_legacy_item_spec, to_convert.item, localizer)
             return _convert_to_legacy_manual_check_parameter_rulespec(
@@ -64,6 +67,23 @@ def _convert_to_legacy_check_parameter_with_item_rulespec(
             _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
         ),
         is_deprecated=to_convert.is_deprecated,
+        create_manual_check=False,
+    )
+
+
+def _convert_to_legacy_check_parameter_without_item_rulespec(
+    to_convert: ruleset_api_v1.CheckParameterRuleSpecWithoutItem, localizer: Callable[[str], str]
+) -> CheckParameterRulespecWithoutItem:
+    return CheckParameterRulespecWithoutItem(
+        check_group_name=to_convert.name,
+        title=partial(to_convert.title.localize, localizer),
+        group=_convert_to_legacy_rulespec_group(
+            to_convert.functionality, to_convert.topic, localizer
+        ),
+        match_type="dict",
+        parameter_valuespec=partial(
+            _convert_to_legacy_valuespec, to_convert.value_spec(), localizer
+        ),
         create_manual_check=False,
     )
 

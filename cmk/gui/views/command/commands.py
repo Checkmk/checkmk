@@ -1271,48 +1271,22 @@ class CommandScheduleDowntimes(Command):
     def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
         html.open_div(class_="group")
         html.heading("Date and time")
-        html.br()
 
-        html.open_table()
+        html.open_table(class_=["down_date_and_time"])
 
         # Duration section
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Duration"))
-        html.close_td()
-        html.open_td()
-        for time_range in active_config.user_downtime_timeranges:
-            html.input(
-                name=(varname := f'_downrange__{time_range["end"]}'),
-                type_="button",
-                id_=varname,
-                class_=["button", "duration"],
-                value=_u(time_range["title"]),
-                onclick=self._get_onclick(time_range["end"]),
-                submit="_set_date_and_time",
+        html.tr(
+            HTMLWriter.render_td(_("Duration"))
+            + HTMLWriter.render_td(self._get_duration_options())
+            + HTMLWriter.render_td(
+                html.render_a(
+                    _("(Edit presets)"),
+                    href=self._get_presets_url(),
+                    class_="down_presets",
+                )
             )
-
-        presets_url = makeuri_contextless(
-            request,
-            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
-            filename="wato.py",
-        )
-        html.a(
-            _("(Edit presets)"),
-            href=presets_url,
-            class_="down_presets",
         )
 
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.br()
-        html.close_td()
-        html.close_tr()
-
-        # Start section
         html.open_tr()
         html.open_td()
         html.write_text(_("Start"))
@@ -1320,12 +1294,6 @@ class CommandScheduleDowntimes(Command):
         html.open_td()
         self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
         self._vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.br()
         html.close_td()
         html.close_tr()
 
@@ -1341,12 +1309,6 @@ class CommandScheduleDowntimes(Command):
         )
         html.close_td()
 
-        html.open_tr()
-        html.open_td()
-        html.br()
-        html.close_td()
-        html.close_tr()
-
         # Repeat section
         html.open_tr()
         html.open_td()
@@ -1357,13 +1319,29 @@ class CommandScheduleDowntimes(Command):
 
         html.close_td()
 
-        html.open_tr()
-        html.open_td()
-        html.br()
-        html.close_td()
-        html.close_tr()
         html.close_table()
         html.close_div()
+
+    def _get_duration_options(self) -> HTML:
+        duration_options = HTML("")
+        for time_range in active_config.user_downtime_timeranges:
+            duration_options += html.render_input(
+                name=(varname := f'_downrange__{time_range["end"]}'),
+                type_="button",
+                id_=varname,
+                class_=["button", "duration"],
+                value=_u(time_range["title"]),
+                onclick=self._get_onclick(time_range["end"]),
+                submit="_set_date_and_time",
+            )
+        return duration_options
+
+    def _get_presets_url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
+            filename="wato.py",
+        )
 
     def _vs_date(self) -> DatePicker:
         return DatePicker(

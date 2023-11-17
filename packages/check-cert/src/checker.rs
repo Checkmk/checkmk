@@ -114,6 +114,22 @@ impl Display for CheckResult {
     }
 }
 
+pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<CheckResult> {
+    match expected {
+        None => None,
+        Some(expected) => {
+            if serial == expected {
+                Some(CheckResult::ok(format!("Serial {}", serial)))
+            } else {
+                Some(CheckResult::warn(format!(
+                    "Serial is {} but expected {}",
+                    serial, expected
+                )))
+            }
+        }
+    }
+}
+
 pub fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
     levels: LowerLevels<Duration>,

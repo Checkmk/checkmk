@@ -6,7 +6,7 @@ use anyhow::Result;
 use check_cert::{checker, fetcher, output};
 use clap::Parser;
 use std::time::Duration as StdDuration;
-use time::Duration;
+use time::{Duration, Instant};
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::FromDer;
 
@@ -45,6 +45,14 @@ struct Args {
     #[arg(long, default_value_t = 0)]
     not_after_crit: u32,
 
+    /// Warn if response time is higher (milliseconds)
+    #[arg(long, default_value_t = 60_000)]
+    response_time_warn: u32,
+
+    /// Crit if response time is higher (milliseconds)
+    #[arg(long, default_value_t = 90_000)]
+    response_time_crit: u32,
+
     /// Disable SNI extension
     #[arg(long, action = clap::ArgAction::SetTrue)]
     disable_sni: bool,
@@ -54,10 +62,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     if args.not_after_warn < args.not_after_crit {
-        eprintln!("crit limit larger than warn limit");
+        eprintln!("not after crit limit larger than warn limit");
         std::process::exit(1);
     }
 
+    if args.response_time_warn > args.response_time_crit {
+        eprintln!("response time crit limit lower than warn limit");
+        std::process::exit(1);
+    }
+
+    let start = Instant::now();
     let der = fetcher::fetch_server_cert(
         &args.url,
         &args.port,
@@ -68,9 +82,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
         !args.disable_sni,
     )?;
+    let response_time = start.elapsed();
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = output::Output::from(vec![
+        checker::check_response_time(
+            response_time,
+            checker::UpperLevels::warn_crit(
+                args.response_time_warn * Duration::MILLISECOND,
+                args.response_time_crit * Duration::MILLISECOND,
+            ),
+        ),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
             .unwrap_or_default(),
         checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)

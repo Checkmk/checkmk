@@ -32,6 +32,31 @@ where
     }
 }
 
+pub struct UpperLevels<T> {
+    pub warn: T,
+    pub crit: T,
+}
+
+impl<T> UpperLevels<T>
+where
+    T: PartialOrd,
+{
+    pub fn warn_crit(warn: T, crit: T) -> Self {
+        std::assert!(crit >= warn);
+        Self { warn, crit }
+    }
+
+    pub fn evaluate(&self, value: &T) -> State {
+        if value >= &self.crit {
+            State::Crit
+        } else if value >= &self.warn {
+            State::Warn
+        } else {
+            State::Ok
+        }
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum State {
     Ok,
@@ -165,6 +190,16 @@ pub fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Opti
             }
         }
     }
+}
+
+pub fn check_response_time(response_time: Duration, levels: UpperLevels<Duration>) -> CheckResult {
+    CheckResult::new(
+        levels.evaluate(&response_time),
+        format!(
+            "Certificate obtained in {} ms",
+            response_time.whole_milliseconds()
+        ),
+    )
 }
 
 pub fn check_validity_not_after(

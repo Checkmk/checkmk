@@ -27,11 +27,11 @@ struct Args {
 
     /// Warn if certificate expires in n days
     #[arg(long, default_value_t = 30)]
-    warn: u32,
+    not_after_warn: u32,
 
     /// Crit if certificate expires in n days
     #[arg(long, default_value_t = 0)]
-    crit: u32,
+    not_after_crit: u32,
 
     /// Disable SNI extension
     #[arg(long, action = clap::ArgAction::SetTrue)]
@@ -41,7 +41,7 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    if args.warn < args.crit {
+    if args.not_after_warn < args.not_after_crit {
         eprintln!("crit limit larger than warn limit");
         std::process::exit(1);
     }
@@ -60,7 +60,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = output::Output::from(vec![checker::check_validity_not_after(
         cert.tbs_certificate.validity().time_to_expiration(),
-        checker::LowerLevels::warn_crit(args.warn * Duration::DAY, args.crit * Duration::DAY),
+        checker::LowerLevels::warn_crit(
+            args.not_after_warn * Duration::DAY,
+            args.not_after_crit * Duration::DAY,
+        ),
         cert.tbs_certificate.validity().not_after,
     )]);
     println!("HTTP {}", out);

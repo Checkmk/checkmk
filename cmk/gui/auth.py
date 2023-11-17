@@ -336,7 +336,7 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     return (
         secret != ""
         and (stored_secret := AutomationUserSecret(user_id)).exists()
-        and stored_secret.read() == secret
+        and stored_secret.check(secret)
     )
 
 

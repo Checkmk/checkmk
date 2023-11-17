@@ -16,6 +16,8 @@ use http::Method;
 mod cli;
 mod pwstore;
 
+const DEFAULT_USER_AGENT: &str = "Checkmk/check_http";
+
 #[tokio::main]
 async fn main() {
     let args = Cli::parse();
@@ -29,7 +31,7 @@ async fn main() {
 fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
     (
         ClientConfig {
-            user_agent: args.user_agent,
+            user_agent: args.user_agent.unwrap_or(DEFAULT_USER_AGENT.to_string()),
             timeout: args.timeout,
             onredirect: match args.onredirect {
                 cli::OnRedirect::Ok => client::OnRedirect::Ok,

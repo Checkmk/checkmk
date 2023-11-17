@@ -70,7 +70,7 @@ async fn check_http_output(
 fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParameters) {
     (
         ClientConfig {
-            user_agent: None,
+            user_agent: "test_http".to_string(),
             timeout: Duration::from_secs(1),
             onredirect: OnRedirect::Follow,
             max_redirs: 10,

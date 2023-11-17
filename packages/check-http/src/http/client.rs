@@ -2,9 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use http::{HeaderMap, HeaderValue};
 use reqwest::{
-    header::USER_AGENT,
     redirect::{Action, Attempt, Policy},
     Client, ClientBuilder, Result as ReqwestResult,
 };
@@ -27,7 +25,7 @@ pub enum ForceIP {
 }
 
 pub struct ClientConfig {
-    pub user_agent: Option<HeaderValue>,
+    pub user_agent: String,
     pub timeout: Duration,
     pub onredirect: OnRedirect,
     pub max_redirs: usize,
@@ -36,14 +34,11 @@ pub struct ClientConfig {
 
 pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
     let client = reqwest::Client::builder();
-
-    let mut headers = HeaderMap::new();
-    if let Some(ua) = cfg.user_agent {
-        headers.insert(USER_AGENT, ua);
-    }
-
     let client = apply_connection_settings(client, cfg.force_ip, cfg.onredirect, cfg.max_redirs);
-    client.timeout(cfg.timeout).default_headers(headers).build()
+    client
+        .timeout(cfg.timeout)
+        .user_agent(cfg.user_agent)
+        .build()
 }
 
 fn apply_connection_settings(

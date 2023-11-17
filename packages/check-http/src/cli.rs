@@ -36,7 +36,7 @@ pub struct Cli {
 
     /// Set user-agent
     #[arg(long)]
-    pub user_agent: Option<HeaderValue>,
+    pub user_agent: Option<String>,
 
     /// Set HTTP method. If no body text is specified with --body, this defaults to GET,
     /// otherwise to POST.

@@ -49,11 +49,11 @@ def test_translations_error_missing_check_commands() -> None:
         translation.Name("old-name"): translation.Renaming(translation.Name("new-name"))
     }
     with pytest.raises(AssertionError):
-        translation.Translations(name, [], translations)
+        translation.Translation(name, [], translations)
 
 
 def test_translations_error_missing_translations() -> None:
     name = translation.Name("name")
     check_commands = [translation.PassiveCheck("check-command-name")]
     with pytest.raises(AssertionError):
-        translation.Translations(name, check_commands, {})
+        translation.Translation(name, check_commands, {})

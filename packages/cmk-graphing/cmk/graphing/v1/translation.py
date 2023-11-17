@@ -5,7 +5,6 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import TypeAlias
 
 from . import metric
 from ._name import Name
@@ -16,11 +15,9 @@ __all__ = [
     "ActiveCheck",
     "HostCheckCommand",
     "NagiosPlugin",
-    "CheckCommandType",
     "Renaming",
     "Scaling",
     "RenamingAndScaling",
-    "TranslationType",
 ]
 
 
@@ -60,9 +57,6 @@ class NagiosPlugin:
         assert self.name
 
 
-CheckCommandType: TypeAlias = PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin
-
-
 @dataclass(frozen=True)
 class Renaming:
     rename_to: metric.Name
@@ -85,14 +79,11 @@ class RenamingAndScaling:
         assert self.scale_by
 
 
-TranslationType: TypeAlias = Renaming | Scaling | RenamingAndScaling
-
-
 @dataclass(frozen=True)
-class Translations:
+class Translation:
     name: Name
-    check_commands: Sequence[CheckCommandType]
-    translations: Mapping[metric.Name, TranslationType]
+    check_commands: Sequence[PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin]
+    translations: Mapping[metric.Name, Renaming | Scaling | RenamingAndScaling]
 
     def __post_init__(self) -> None:
         assert self.check_commands and self.translations

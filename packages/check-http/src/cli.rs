@@ -38,9 +38,10 @@ pub struct Cli {
     #[arg(long)]
     pub user_agent: Option<HeaderValue>,
 
-    /// Set HTTP method. Default: GET
-    #[arg(short='j', long, default_value_t=Method::GET)]
-    pub method: Method,
+    /// Set HTTP method. If no body text is specified with --body, this defaults to GET,
+    /// otherwise to POST.
+    #[arg(short = 'j', long)]
+    pub method: Option<Method>,
 
     /// How to handle redirected pages. sticky is like follow but stick to the
     /// specified IP address. stickyport also ensures port stays the same.
@@ -67,6 +68,12 @@ pub struct Cli {
     /// If document age is not set, setting this option will also lead to state CRIT
     #[arg(long)]
     pub document_age_levels: Option<u64>,
+
+    /// Text to send in HTTP Body. This will set the HTTP Method to POST if unset,
+    /// but will not overwrite the method specified with --method.
+    /// Also, no encoding (like url-encoding) will be applied.
+    #[arg(long)]
+    pub body: Option<String>,
 }
 
 type PageSizeLimits = (usize, Option<usize>);

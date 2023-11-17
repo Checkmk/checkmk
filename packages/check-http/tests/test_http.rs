@@ -87,6 +87,7 @@ fn make_standard_configs(
             timeout: Duration::from_secs(1),
             auth_user: None,
             auth_pw: None,
+            body: None,
         },
         ConnectionConfig {
             onredirect: OnRedirect::Follow,

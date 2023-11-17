@@ -21,6 +21,7 @@ pub struct ClientConfig {
     pub timeout: Duration,
     pub auth_user: Option<String>,
     pub auth_pw: Option<String>,
+    pub body: Option<String>,
 }
 
 // TODO(au): This seems a bit misplaced.
@@ -58,6 +59,12 @@ pub fn prepare_request(
         .build()?;
 
     let req = client.request(cfg.method, cfg.url);
+    let req = if let Some(body) = cfg.body {
+        req.body(body)
+    } else {
+        req
+    };
+
     if let Some(user) = cfg.auth_user {
         Ok(req.basic_auth(user, cfg.auth_pw))
     } else {

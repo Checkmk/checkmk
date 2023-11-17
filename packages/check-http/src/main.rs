@@ -9,6 +9,7 @@ use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
+use http::Method;
 
 mod cli;
 mod pwstore;
@@ -35,12 +36,19 @@ fn make_configs(
     (
         ClientConfig {
             url: args.url,
-            method: args.method,
+            method: args.method.unwrap_or_else(|| {
+                if args.body.is_some() {
+                    Method::POST
+                } else {
+                    Method::GET
+                }
+            }),
             user_agent: args.user_agent,
             headers: args.headers,
             timeout: args.timeout,
             auth_user: args.auth_user,
             auth_pw: args.auth_pw.auth_pw_plain.or(args.auth_pw.auth_pwstore),
+            body: args.body,
         },
         ConnectionConfig {
             onredirect: match args.onredirect {

@@ -7,8 +7,9 @@
 
 # pylint: disable=too-many-instance-attributes
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Generic, TypeVar
 
 from ..v1 import SNMPTree
 from ..v1._detection import SNMPDetectSpecification  # sorry
@@ -22,24 +23,16 @@ from ..v1.type_defs import (
     StringTable,
 )
 
+_Section = TypeVar("_Section", bound=object)  # yes, object.
+
 InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]
 
 CheckFunction = Callable[..., CheckResult]  # type: ignore[misc]
 DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]
 
-AgentParseFunction = Callable[[StringTable], object]
-
-HostLabelFunction = Callable[..., HostLabelGenerator]  # type: ignore[misc]
-
-SNMPParseFunction = (
-    Callable[[list[StringTable]], object] | Callable[[list[StringByteTable]], object]
-)
-
-SimpleSNMPParseFunction = Callable[[StringTable], object] | Callable[[StringByteTable], object]
-
 
 @dataclass(frozen=True, kw_only=True)
-class AgentSection:
+class AgentSection(Generic[_Section]):
     """An AgentSection to plug into Checkmk
 
     The section marked by '<<<name>>>' in the raw agent output will be processed
@@ -84,9 +77,13 @@ class AgentSection:
     """
 
     name: str
-    parse_function: AgentParseFunction | None = None
+    parse_function: Callable[[StringTable], _Section | None]
     parsed_section_name: str | None = None
-    host_label_function: HostLabelFunction | None = None
+    host_label_function: (
+        Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
+        | Callable[[_Section], HostLabelGenerator]
+        | None
+    ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
     host_label_ruleset_name: str | None = None
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
@@ -94,7 +91,7 @@ class AgentSection:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SimpleSNMPSection:
+class SimpleSNMPSection(Generic[_Section]):
     """A SimpleSNMPSection to plug into Checkmk
 
     The snmp information will be gathered and parsed according to the functions and
@@ -152,9 +149,15 @@ class SimpleSNMPSection:
     name: str
     detect: SNMPDetectSpecification
     fetch: SNMPTree
-    parse_function: SimpleSNMPParseFunction | None = None
+    parse_function: Callable[[StringTable], _Section | None] | Callable[
+        [StringByteTable], _Section | None
+    ]
     parsed_section_name: str | None = None
-    host_label_function: HostLabelFunction | None = None
+    host_label_function: (
+        Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
+        | Callable[[_Section], HostLabelGenerator]
+        | None
+    ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
     host_label_ruleset_name: str | None = None
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
@@ -162,7 +165,7 @@ class SimpleSNMPSection:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SNMPSection:
+class SNMPSection(Generic[_Section]):
     """An SNMPSection to plug into Checkmk
 
     The snmp information will be gathered and parsed according to the functions and
@@ -222,9 +225,16 @@ class SNMPSection:
     name: str
     detect: SNMPDetectSpecification
     fetch: list[SNMPTree]
-    parse_function: SNMPParseFunction | None = None
+    parse_function: (
+        Callable[[Sequence[StringTable]], _Section | None]
+        | Callable[[Sequence[StringByteTable]], _Section | None]
+    )
     parsed_section_name: str | None = None
-    host_label_function: HostLabelFunction | None = None
+    host_label_function: (
+        Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
+        | Callable[[_Section], HostLabelGenerator]
+        | None
+    ) = None
     host_label_default_parameters: Mapping[str, object] | None = None
     host_label_ruleset_name: str | None = None
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED

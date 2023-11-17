@@ -39,7 +39,7 @@ def parse_dummy(string_table):  # pylint: disable=unused-argument
 )
 def test_validate_parse_function_type(parse_function: object) -> None:
     with pytest.raises(TypeError):
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             parse_function,  # type:ignore[arg-type]
             expected_annotations={(str, "str")},  # irrelevant for test
         )
@@ -56,7 +56,7 @@ def test_validate_parse_function_type(parse_function: object) -> None:
 )
 def test_validate_parse_function_value(parse_function: Callable[..., None]) -> None:
     with pytest.raises(ValueError):
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             parse_function,
             expected_annotations={(str, "str")},  # ignored
         )
@@ -67,12 +67,12 @@ def test_validate_parse_function_annotation_string_table() -> None:
         return string_table
 
     with pytest.raises(TypeError):
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             _parse_function,
             expected_annotations={(StringByteTable, "StringByteTable")},
         )
 
-    section_plugins._validate_parse_function(
+    section_plugins.validate_parse_function(
         _parse_function,
         expected_annotations={(list[StringTable], "List[StringTable]")},
     )

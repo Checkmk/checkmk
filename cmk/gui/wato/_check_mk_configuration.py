@@ -158,6 +158,7 @@ def register(
     config_variable_registry.register(ConfigVariableiAdHocDowntime)
     config_variable_registry.register(ConfigVariableAuthByHTTPHeader)
     config_variable_registry.register(EnableLoginViaGet)
+    config_variable_registry.register(EnableDeprecatedAutomationuserAuthentication)
     config_variable_registry.register(ConfigVariableStalenessThreshold)
     config_variable_registry.register(ConfigVariableLoginScreen)
     config_variable_registry.register(ConfigVariableUserLocalizations)
@@ -1348,6 +1349,32 @@ class EnableLoginViaGet(ConfigVariable):
                 "in via this method by default. Use this property to enable logging in via the "
                 "GET method for all users."
             ),
+        )
+
+
+class EnableDeprecatedAutomationuserAuthentication(ConfigVariable):
+    """See Werk #16223"""
+
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "enable_deprecated_automation_user_authentication"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("Enable automation user authentication via HTTP parameters"),
+            help=_(
+                "In previous Checkmk versions it was possible to use an automation user to display "
+                "specific pages within Checkmk. To authenticate these requests it was possible to "
+                "add the _username and _secret parameters to the parameters (e.g. append them to the "
+                "URL). GET parameters are usually logged by proxies and webservers and are not "
+                "deemed secure for secrets. See Werk  #16223 for more information."
+            ),
+            default_value=True,
         )
 
 

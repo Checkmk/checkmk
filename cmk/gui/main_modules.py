@@ -80,7 +80,7 @@ def _import_local_main_modules() -> list[ModuleType]:
     which are expected to contain the actual imports of the main modules.
 
     Please note that the built-in main modules are already loaded by the imports of
-    `cmk.gui.{cee.}plugins.main_modules` above.
+    `cmk.gui.plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.

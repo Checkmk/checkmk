@@ -276,10 +276,14 @@ pub struct CheckParameters {
 }
 
 pub fn collect_response_checks(
-    response: ProcessedResponse,
-    response_time: Duration,
+    response: Result<(ProcessedResponse, Duration), reqwest::Error>,
     params: CheckParameters,
 ) -> Vec<CheckResult> {
+    let (response, response_time) = match response {
+        Ok(resp) => resp,
+        Err(err) => return check_reqwest_error(err),
+    };
+
     check_status(response.status, response.version, params.onredirect)
         .into_iter()
         .chain(check_body(response.body, params.page_size))
@@ -298,6 +302,26 @@ pub fn collect_response_checks(
         ))
         .flatten()
         .collect()
+}
+
+fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
+    if err.is_builder() {
+        notice(State::Unknown, "Error building the request")
+    } else if err.is_request() {
+        notice(State::Unknown, "Error while sending request")
+    } else if err.is_timeout() {
+        notice(State::Crit, "timeout")
+    } else if err.is_connect() {
+        notice(State::Crit, "Failed to connect")
+    } else if err.is_redirect() {
+        // Hit one of max_redirs, sticky, stickyport
+        notice(State::Crit, &err.to_string())
+    } else {
+        notice(State::Unknown, "Unknown error")
+    }
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 fn check_status(

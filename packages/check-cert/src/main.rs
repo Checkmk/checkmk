@@ -60,8 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = output::Output::from(vec![checker::check_validity_not_after(
         cert.tbs_certificate.validity().time_to_expiration(),
-        args.warn * Duration::DAY,
-        args.crit * Duration::DAY,
+        checker::LowerLevels::warn_crit(args.warn * Duration::DAY, args.crit * Duration::DAY),
         cert.tbs_certificate.validity().not_after,
     )]);
     println!("HTTP {}", out);

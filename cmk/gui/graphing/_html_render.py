@@ -1091,19 +1091,13 @@ def _graph_title_height_ex(config: GraphRenderConfig) -> SizeEx:
 
 def host_service_graph_dashlet_cmk(
     graph_specification: GraphSpecification,
-    graph_render_options: GraphRenderOptions,
+    graph_render_config: GraphRenderConfig,
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
     *,
     graph_display_id: str = "",
 ) -> HTML | None:
-    graph_render_config = GraphRenderConfig.from_render_options_and_context(
-        graph_render_options,
-        user,
-        theme.get(),
-    )
-
     width_var = request.get_float_input_mandatory("width", 0.0)
     width = int(width_var / html_size_per_ex)
 

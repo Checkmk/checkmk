@@ -5,6 +5,7 @@
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use time::Duration;
 use x509_parser::time::ASN1Time;
+use x509_parser::x509::X509Name;
 
 pub struct LowerLevels<T> {
     pub warn: T,
@@ -124,6 +125,24 @@ pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<
                 Some(CheckResult::warn(format!(
                     "Serial is {} but expected {}",
                     serial, expected
+                )))
+            }
+        }
+    }
+}
+
+pub fn check_details_subject(subject: &X509Name, expected: Option<String>) -> Option<CheckResult> {
+    match expected {
+        None => None,
+        Some(expected) => {
+            let subject = subject.to_string();
+            // subject string has the form: `CN=domain`
+            if subject == expected {
+                Some(CheckResult::ok(subject.to_string()))
+            } else {
+                Some(CheckResult::warn(format!(
+                    "Subject is {} but expected {}",
+                    subject, expected
                 )))
             }
         }

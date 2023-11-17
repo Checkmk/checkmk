@@ -29,6 +29,10 @@ struct Args {
     #[arg(long)]
     pub serial: Option<String>,
 
+    /// Expected subject
+    #[arg(long)]
+    pub subject: Option<String>,
+
     /// Warn if certificate expires in n days
     #[arg(long, default_value_t = 30)]
     not_after_warn: u32,
@@ -64,6 +68,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = output::Output::from(vec![
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
+            .unwrap_or_default(),
+        checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)
             .unwrap_or_default(),
         checker::check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),

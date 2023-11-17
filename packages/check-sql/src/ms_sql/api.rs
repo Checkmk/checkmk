@@ -94,7 +94,7 @@ impl InstanceEngine {
     ) -> String {
         let mut result = String::new();
         let instance_section = Section::new(INSTANCE_SECTION_NAME); // this is important section always present
-        match self.create_client(ms_sql.auth(), ms_sql.conn(), None).await {
+        match self.create_client(&ms_sql.endpoint(), None).await {
             Ok(mut client) => {
                 for section in sections {
                     result += &section.to_header();
@@ -128,10 +128,10 @@ impl InstanceEngine {
     /// Create a client for an Instance based on Config
     pub async fn create_client(
         &self,
-        auth: &config::ms_sql::Authentication,
-        conn: &config::ms_sql::Connection,
+        endpoint: &config::ms_sql::Endpoint,
         database: Option<String>,
     ) -> Result<Client> {
+        let (auth, conn) = endpoint.split();
         let client = match auth.auth_type() {
             config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
                 if let Some(credentials) = obtain_config_credentials(auth) {
@@ -414,7 +414,7 @@ async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<Stri
 
     let mut result = Section::new(INSTANCE_SECTION_NAME).to_header(); // as in old plugin
     let sections = get_work_sections(ms_sql);
-    let all = get_instance_engines(ms_sql.auth(), ms_sql.conn()).await?;
+    let all = get_instance_engines(&ms_sql.endpoint()).await?;
     let instances: Vec<InstanceEngine> = [&all.0[..], &all.1[..]].concat();
 
     for instance in &instances {
@@ -450,10 +450,8 @@ async fn generate_result(
     Ok(results.join(""))
 }
 
-async fn create_client_from_config(
-    auth: &config::ms_sql::Authentication,
-    conn: &config::ms_sql::Connection,
-) -> Result<Client> {
+async fn create_client_from_config(endpoint: &config::ms_sql::Endpoint) -> Result<Client> {
+    let (auth, conn) = endpoint.split();
     let client = match auth.auth_type() {
         config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
             if let Some(credentials) = obtain_config_credentials(auth) {
@@ -683,10 +681,9 @@ pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Vec<Row>>
 
 /// return all MS SQL instances installed
 pub async fn get_instance_engines(
-    auth: &config::ms_sql::Authentication,
-    conn: &config::ms_sql::Connection,
+    endpoint: &config::ms_sql::Endpoint,
 ) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
-    let mut client = create_client_from_config(auth, conn).await?;
+    let mut client = create_client_from_config(endpoint).await?;
     detect_instance_engines(&mut client).await
 }
 
@@ -754,7 +751,7 @@ mssql:
     #[tokio::test(flavor = "multi_thread")]
     async fn test_create_client_from_config_for_error() {
         let config = make_config_with_auth_type("token");
-        assert!(create_client_from_config(config.auth(), config.conn())
+        assert!(create_client_from_config(&config.endpoint())
             .await
             .unwrap_err()
             .to_string()

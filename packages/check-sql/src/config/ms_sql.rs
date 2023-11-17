@@ -146,6 +146,9 @@ impl Config {
             instances: instances?,
         }))
     }
+    pub fn endpoint(&self) -> Endpoint {
+        Endpoint::new(&self.auth, &self.conn)
+    }
     pub fn auth(&self) -> &Authentication {
         &self.auth
     }
@@ -325,6 +328,32 @@ impl ConnectionTls {
     }
     pub fn client_certificate(&self) -> &Path {
         &self.client_certificate
+    }
+}
+
+#[derive(PartialEq, Debug, Clone)]
+pub struct Endpoint {
+    auth: Authentication,
+    conn: Connection,
+}
+
+impl Endpoint {
+    pub fn new(auth: &Authentication, conn: &Connection) -> Self {
+        Self {
+            auth: auth.clone(),
+            conn: conn.clone(),
+        }
+    }
+    pub fn auth(&self) -> &Authentication {
+        &self.auth
+    }
+
+    pub fn conn(&self) -> &Connection {
+        &self.conn
+    }
+
+    pub fn split(&self) -> (&Authentication, &Connection) {
+        (self.auth(), self.conn())
     }
 }
 

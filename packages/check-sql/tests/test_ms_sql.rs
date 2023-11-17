@@ -132,7 +132,7 @@ async fn test_validate_all_instances_remote() {
             .unwrap()
             .unwrap();
         for i in is {
-            match i.create_client(cfg.auth(), cfg.conn(), None).await {
+            match i.create_client(&cfg.endpoint(), None).await {
                 Ok(mut c) => {
                     assert!(
                         tools::run_get_version(&mut c).await.is_some()
@@ -237,7 +237,7 @@ mssql:
         .unwrap();
 
         for i in is {
-            let c = i.create_client(ms_sql.auth(), ms_sql.conn(), None).await;
+            let c = i.create_client(&ms_sql.endpoint(), None).await;
             match c {
                 Ok(mut c) => assert!(
                     tools::run_get_version(&mut c).await.is_some()

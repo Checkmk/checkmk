@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::vec;
+
 use crate::config::{self, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
@@ -22,6 +24,7 @@ pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 const INSTANCE_SECTION_NAME: &str = "instance";
 const COUNTERS_SECTION_NAME: &str = "counters";
 const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
+const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -94,7 +97,8 @@ impl InstanceEngine {
     ) -> String {
         let mut result = String::new();
         let instance_section = Section::new(INSTANCE_SECTION_NAME); // this is important section always present
-        match self.create_client(&ms_sql.endpoint(), None).await {
+        let endpoint = &ms_sql.endpoint();
+        match self.create_client(endpoint, None).await {
             Ok(mut client) => {
                 for section in sections {
                     result += &section.to_header();
@@ -105,9 +109,11 @@ impl InstanceEngine {
                                 .generate_details_entry(&mut client, instance_section.sep())
                                 .await;
                         }
-                        COUNTERS_SECTION_NAME | BLOCKED_SESSIONS_SECTION_NAME => {
+                        COUNTERS_SECTION_NAME
+                        | BLOCKED_SESSIONS_SECTION_NAME
+                        | TABLE_SPACES_SECTION_NAME => {
                             result += &self
-                                .generate_known_section(&mut client, &section.name)
+                                .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
                         }
                         _ => {
@@ -171,7 +177,12 @@ impl InstanceEngine {
         format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
     }
 
-    pub async fn generate_known_section(&self, client: &mut Client, name: &str) -> String {
+    pub async fn generate_known_sections(
+        &self,
+        client: &mut Client,
+        endpoint: &config::ms_sql::Endpoint,
+        name: &str,
+    ) -> String {
         let sep = Section::new(name).sep();
         match name {
             COUNTERS_SECTION_NAME => {
@@ -179,12 +190,16 @@ impl InstanceEngine {
                     + &self.generate_counters_entry(client, sep).await
             }
             BLOCKED_SESSIONS_SECTION_NAME => {
-                self.generate_waiting_sessions_entry(
+                self.generate_blocking_sessions_section(
                     client,
-                    &queries::get_blocked_sessions_query(),
+                    &queries::get_blocking_sessions_query(),
                     sep,
                 )
                 .await
+            }
+            TABLE_SPACES_SECTION_NAME => {
+                self.generate_table_spaces_section(client, endpoint, sep)
+                    .await
             }
             _ => format!("{} not implemented\n", name).to_string(),
         }
@@ -210,7 +225,7 @@ impl InstanceEngine {
         Ok(z.join(""))
     }
 
-    pub async fn generate_waiting_sessions_entry(
+    pub async fn generate_blocking_sessions_section(
         &self,
         client: &mut Client,
         query: &str,
@@ -231,6 +246,53 @@ impl InstanceEngine {
         }
     }
 
+    pub async fn generate_table_spaces_section(
+        &self,
+        client: &mut Client,
+        endpoint: &config::ms_sql::Endpoint,
+        sep: char,
+    ) -> String {
+        let format_error = |d: &str, e: &anyhow::Error| {
+            format!(
+                "{}{sep}{} - - - - - - - - - - - - {:?}\n",
+                self.mssql_name(),
+                d.replace(' ', "_"),
+                e
+            )
+            .to_string()
+        };
+        let databases = self.generate_databases(client).await;
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_query(&mut c, queries::QUERY_SPACE_USED)
+                        .await
+                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), &d, &rows, sep))
+                        .unwrap_or_else(|e| format_error(&d, &e));
+                }
+                Err(err) => {
+                    result += &format_error(&d, &err);
+                }
+            }
+        }
+        result
+    }
+
+    /// doesn't return error - the same behavior as plugin
+    pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
+        let result = run_query(client, queries::QUERY_DATABASES)
+            .await
+            .and_then(validate_rows)
+            .map(|rows| self.process_databases_rows(&rows));
+        match result {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get databases: {}", err);
+                vec![]
+            }
+        }
+    }
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
         let rows = &rows[0];
         let z: Vec<String> = rows
@@ -241,11 +303,11 @@ impl InstanceEngine {
     }
 
     async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
-        let x = run_query(client, queries::QUERY_UTC)
+        let result = run_query(client, queries::QUERY_UTC)
             .await
             .and_then(validate_rows)
             .and_then(|rows| self.process_utc_rows(&rows, sep));
-        match x {
+        match result {
             Ok(result) => result,
             Err(err) => {
                 log::error!("Failed to get UTC: {}", err);
@@ -258,6 +320,13 @@ impl InstanceEngine {
         let row = &rows[0];
         let utc = row[0].get_value_by_name(queries::QUERY_UTC_TIME_PARAM);
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
+    }
+
+    fn process_databases_rows(&self, rows: &[Vec<Row>]) -> Vec<String> {
+        let row = &rows[0];
+        row.iter()
+            .map(|row| row.get_value_by_idx(0))
+            .collect::<Vec<String>>()
     }
 
     fn process_details_rows(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
@@ -292,6 +361,38 @@ fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
     } else {
         Ok(rows)
     }
+}
+
+fn to_table_spaces_entry(
+    instance_name: &str,
+    database_name: &str,
+    rows: &Vec<Vec<Row>>,
+    sep: char,
+) -> String {
+    let extract = |rows: &Vec<Vec<Row>>, part: usize, name: &str| {
+        if (rows.len() < part) || rows[part].is_empty() {
+            String::new()
+        } else {
+            rows[part][0].get_value_by_name(name).trim().to_string()
+        }
+    };
+    let db_size = extract(rows, 0, "database_size");
+    let unallocated = extract(rows, 0, "unallocated space");
+    let reserved = extract(rows, 1, "reserved");
+    let data = extract(rows, 1, "data");
+    let index_size = extract(rows, 1, "index_size");
+    let unused = extract(rows, 1, "unused");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        db_size,
+        unallocated,
+        reserved,
+        data,
+        index_size,
+        unused
+    )
 }
 
 fn to_counter_entry(row: &Row, sep: char) -> String {

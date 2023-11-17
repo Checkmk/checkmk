@@ -5,7 +5,7 @@
 mod common;
 
 use check_sql::ms_sql::{api::Client, api::InstanceEngine, queries};
-use check_sql::{config::CheckConfig, ms_sql::api};
+use check_sql::{config::ms_sql::Endpoint, config::CheckConfig, ms_sql::api};
 use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
 use yaml_rust::YamlLoader;
@@ -147,9 +147,10 @@ async fn test_validate_all_instances_remote() {
                     validate_blocked_sessions(&i, &mut c).await;
                     validate_all_sessions_to_check_format(&i, &mut c).await;
                     assert!(&i
-                        .generate_waiting_sessions_entry(&mut c, queries::BAD_QUERY, '|',)
+                        .generate_blocking_sessions_section(&mut c, queries::BAD_QUERY, '|',)
                         .await
                         .contains(" error: "),);
+                    validate_table_spaces(&i, &mut c, &cfg.endpoint()).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -174,7 +175,7 @@ async fn validate_counters(instance: &InstanceEngine, client: &mut Client) {
 
 async fn validate_blocked_sessions(instance: &InstanceEngine, client: &mut Client) {
     let blocked_sessions = &instance
-        .generate_waiting_sessions_entry(client, &queries::get_blocked_sessions_query(), '|')
+        .generate_blocking_sessions_section(client, &queries::get_blocking_sessions_query(), '|')
         .await;
     assert_eq!(
         blocked_sessions,
@@ -184,7 +185,7 @@ async fn validate_blocked_sessions(instance: &InstanceEngine, client: &mut Clien
 
 async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client: &mut Client) {
     let all_sessions = &instance
-        .generate_waiting_sessions_entry(client, queries::QUERY_WAITING_TASKS, '|')
+        .generate_blocking_sessions_section(client, queries::QUERY_WAITING_TASKS, '|')
         .await;
 
     let lines: Vec<&str> = all_sessions.split('\n').collect::<Vec<&str>>();
@@ -203,6 +204,42 @@ async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client
             l
         );
         assert!(!values[3].is_empty(), "bad line: {}", l);
+    }
+}
+
+async fn validate_table_spaces(
+    instance: &InstanceEngine,
+    client: &mut Client,
+    endpoint: &Endpoint,
+) {
+    let databases = instance.generate_databases(client).await;
+    let expected = vec!["master", "tempdb", "model", "msdb"];
+    // O^2, but enough good for testing
+    assert!(
+        expected
+            .iter()
+            .map(|&s| s.to_string())
+            .all(|item| databases.contains(&item)),
+        "{:?} {:?}",
+        databases,
+        expected
+    );
+
+    let result = instance
+        .generate_table_spaces_section(client, endpoint, ' ')
+        .await;
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= expected.len(), "{:?}", lines);
+    assert!(lines[lines.len() - 1].is_empty());
+    for l in lines[..lines.len() - 1].iter() {
+        let values = l.split(' ').collect::<Vec<&str>>();
+        assert_eq!(values[0], instance.mssql_name(), "bad line: {}", l);
+        assert!(values[2].parse::<f64>().is_ok(), "bad line: {}", l);
+        assert!(values[4].parse::<f64>().is_ok(), "bad line: {}", l);
+        assert!(values[6].parse::<u32>().is_ok(), "bad line: {}", l);
+        assert!(values[8].parse::<u32>().is_ok(), "bad line: {}", l);
+        assert!(values[10].parse::<u32>().is_ok(), "bad line: {}", l);
+        assert!(values[12].parse::<u32>().is_ok(), "bad line: {}", l);
     }
 }
 

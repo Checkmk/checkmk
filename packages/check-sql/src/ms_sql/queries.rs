@@ -126,7 +126,8 @@ pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
 pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
 pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";
 
-pub const SYS_DATABASES: &str = "SELECT name FROM sys.databases";
+pub const QUERY_DATABASES: &str = "SELECT name FROM sys.databases";
+pub const QUERY_SPACE_USED: &str = "EXEC sp_spaceused";
 pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";
 
 pub fn get_instances_query() -> String {
@@ -134,7 +135,7 @@ pub fn get_instances_query() -> String {
 }
 
 // production
-pub fn get_blocked_sessions_query() -> String {
+pub fn get_blocking_sessions_query() -> String {
     format!("{} WHERE blocking_session_id <> 0 ", QUERY_WAITING_TASKS).to_string()
 }
 

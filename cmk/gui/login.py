@@ -7,6 +7,7 @@
 import contextlib
 import http.client
 import os
+import secrets
 import traceback
 from contextlib import suppress
 from hashlib import sha256
@@ -374,7 +375,10 @@ def verify_automation_secret(user_id: UserId, secret: str) -> bool:
             return False
 
         with path.open(encoding="utf-8") as f:
-            return f.read().strip() == secret
+            return secrets.compare_digest(
+                f.read().strip().encode("utf-8"),
+                secret.encode("utf-8"),
+            )
 
     return False
 

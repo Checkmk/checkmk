@@ -713,6 +713,7 @@ class Site:
             cmk_path() + "/packages/cmk-rulesets",
             cmk_path() + "/packages/cmk-server-side-calls",
             cmk_path() + "/packages/cmk-werks",
+            cmk_path() + "/packages/cmk-livestatus-client",
         ]
 
         if self.version.is_raw_edition():

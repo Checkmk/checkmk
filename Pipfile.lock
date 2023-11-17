@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "27a5076ee9fb882d4dd569c630c7d214629b0b85ae41f3209c06d6d45fd97c56"
+            "sha256": "795c0a6977731e0481606dd8999d6529857403a7be768b61f9e4950346b182ac"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -587,6 +587,10 @@
         "cmk-graphing": {
             "editable": true,
             "path": "./packages/cmk-graphing"
+        },
+        "cmk-livestatus-client": {
+            "editable": true,
+            "path": "./packages/cmk-livestatus-client"
         },
         "cmk-mkp-tool": {
             "editable": true,

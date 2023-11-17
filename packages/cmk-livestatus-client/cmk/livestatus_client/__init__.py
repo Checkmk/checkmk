@@ -4,6 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """MK Livestatus Python API"""
 
+# pylint: disable=broad-exception-caught,raise-missing-from,consider-using-f-string
+# pylint: disable=too-many-lines,too-many-ancestors,too-many-arguments,too-many-locals
+# pylint: disable=too-many-instance-attributes,too-many-statements
+# pylint: disable=too-many-public-methods
+
 from __future__ import annotations
 
 import ast
@@ -455,25 +460,25 @@ DeadSite = dict[str, str | int | Exception | SiteConfiguration]
 #   '----------------------------------------------------------------------'
 
 
-def _parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, int]]:
+def parse_socket_url(url: str) -> tuple[socket.AddressFamily, str | tuple[str, int]]:
     """Parses a Livestatus socket URL to address family and address
 
     Examples:
 
-        >>> _parse_socket_url('unix:/tmp/sock')
+        >>> parse_socket_url('unix:/tmp/sock')
         (<AddressFamily.AF_UNIX: 1>, '/tmp/sock')
 
-        >>> _parse_socket_url('tcp:192.168.0.1:8080')
+        >>> parse_socket_url('tcp:192.168.0.1:8080')
         (<AddressFamily.AF_INET: 2>, ('192.168.0.1', 8080))
 
-        >>> _parse_socket_url('tcp6:::1:8080')
+        >>> parse_socket_url('tcp6:::1:8080')
         (<AddressFamily.AF_INET6: 10>, ('::1', 8080))
 
-        >>> _parse_socket_url('Hallo Welt!')
+        >>> parse_socket_url('Hallo Welt!')
         Traceback (most recent call last):
         ...
-        livestatus.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. Must begin with \
-'tcp:', 'tcp6:' or 'unix:'
+        cmk.livestatus_client.MKLivestatusConfigError: Invalid livestatus URL 'Hallo Welt!'. \
+Must begin with 'tcp:', 'tcp6:' or 'unix:'
 
     """
     if ":" in url:
@@ -566,7 +571,7 @@ class SingleSiteConnection(Helpers):
 
     def _create_new_socket_connection(self) -> socket.socket:
         self.successful_persistence = False
-        family, address = _parse_socket_url(self.socketurl)
+        family, address = parse_socket_url(self.socketurl)
         site_socket = self._create_socket(family, self.site_name)
 
         # If a timeout is set, then we retry after a failure with mild
@@ -621,7 +626,7 @@ class SingleSiteConnection(Helpers):
     def _create_socket(
         self,
         family: socket.AddressFamily,
-        site_name: SiteId | None = None,
+        site_name: SiteId | None = None,  # pylint: disable=unused-argument
     ) -> socket.socket:
         """Creates the Livestatus client socket
 
@@ -746,7 +751,8 @@ class SingleSiteConnection(Helpers):
             except Exception:
                 self.disconnect()
                 raise MKLivestatusSocketError(
-                    f"Malformed response header {resp!r}. Livestatus TCP socket might be unreachable or wrong encryption settings are used."
+                    f"Malformed response header {resp!r}. Livestatus TCP socket might be "
+                    "unreachable or wrong encryption settings are used."
                 )
 
             # Apply a lower timeout for the content because the data is already available
@@ -847,7 +853,9 @@ class SingleSiteConnection(Helpers):
                 row.insert(0, b"")
         return response
 
-    def command(self, command: str, site: SiteId | None = None) -> None:
+    def command(
+        self, command: str, site: SiteId | None = None  # pylint: disable=unused-argument
+    ) -> None:
         command_str = command.rstrip("\n")
         if not command_str.startswith("["):
             command_str = f"[{int(time.time())}] {command_str}"
@@ -972,7 +980,8 @@ class MultiSiteConnection(Helpers):
             if status_host:
                 if not isinstance(status_host, tuple) or len(status_host) != 2:
                     raise MKLivestatusConfigError(
-                        f"Status host of site {sitename} is {status_host!r}, but must be pair of site and host"
+                        f"Status host of site {sitename} is {status_host!r}, "
+                        "but must be pair of site and host"
                     )
                 s, h = status_host
                 status_hosts[s] = status_hosts.get(s, []) + [h]
@@ -1238,7 +1247,7 @@ class MultiSiteConnection(Helpers):
                 }
 
         # Convert responses to python format
-        result = LivestatusResponse([])
+        result: list[LivestatusRow] = []
         for connected_site, raw_response in site_responses:
             try:
                 rows = connected_site.connection.parse_raw_response(raw_response, query)
@@ -1260,7 +1269,7 @@ class MultiSiteConnection(Helpers):
                 }
 
         self.connections = stillalive
-        return result
+        return LivestatusResponse(result)
 
     def command(self, command: str, sitename: SiteId | None = SiteId("local")) -> None:
         if sitename in self.deadsites:

@@ -6,4 +6,5 @@ exports_files([
     "cmk-rulesets",
     "cmk-server-side-calls",
     "cmk-werks",
+    "cmk-livestatus-client",
 ])

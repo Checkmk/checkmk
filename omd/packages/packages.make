@@ -170,7 +170,6 @@ endif
 ifeq ($(EDITION),managed)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/cloud/cloud.make \
     $(REPO_PATH)/managed/managed.make
 endif
 ifeq ($(EDITION),cloud)

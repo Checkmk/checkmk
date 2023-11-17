@@ -64,7 +64,7 @@ def _load_plugins() -> PluginFailures:
     yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
     if edition() is not Edition.CRE:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-    if edition() in (Edition.CME, Edition.CCE):
+    if edition() is Edition.CCE:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
 
 

@@ -3111,7 +3111,7 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
         return Transform(
             valuespec=DropdownChoice(
                 title=cmk_version.mark_edition_only(
-                    _("Choose SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+                    _("Choose SNMP Backend"), cmk_version.Edition.CEE
                 ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
@@ -3158,9 +3158,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Changes to this option will have no effect to the behaviour of "
                 "Checkmk"
             )
-            % cmk_version.mark_edition_only(
-                _("Choose SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
-            ),
+            % cmk_version.mark_edition_only(_("Choose SNMP Backend"), cmk_version.Edition.CEE),
         )
 
 
@@ -4805,7 +4803,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if edition() in (Edition.CME, Edition.CCE)
+            if edition() is Edition.CCE
             else ""
         ),
         sorted=False,
@@ -5347,7 +5345,7 @@ SnmpBackendHosts = HostRulespec(
     help_func=_help_snmp_backend,
     name="snmp_backend_hosts",
     title=lambda: cmk_version.mark_edition_only(
-        _("Hosts using a specific SNMP Backend"), [cmk_version.Edition.CME, cmk_version.Edition.CEE]
+        _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
     ),
 )
 

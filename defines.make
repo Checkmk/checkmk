@@ -17,20 +17,20 @@ else
 ENTERPRISE         := no
 endif
 
-ifneq (,$(wildcard $(REPO_PATH)/cloud))
-CLOUD              := yes
-EDITION            := cloud
-EDITION_SHORT      := cce
-else
-CLOUD              := no
-endif
-
 ifneq (,$(wildcard $(REPO_PATH)/managed))
 MANAGED            := yes
 EDITION            := managed
 EDITION_SHORT      := cme
 else
 MANAGED            := no
+endif
+
+ifneq (,$(wildcard $(REPO_PATH)/cloud))
+CLOUD              := yes
+EDITION            := cloud
+EDITION_SHORT      := cce
+else
+CLOUD              := no
 endif
 
 ifneq (,$(wildcard $(REPO_PATH)/saas))

@@ -137,8 +137,8 @@ def _tcp_timeouts():
     )
 
 
-def _usage_endpoint() -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
-    if edition() in (Edition.CCE, Edition.CME):
+def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
+    if cloud_edition:
         return (
             "usage_endpoint",
             CascadingDropdown(
@@ -171,11 +171,7 @@ def _is_cre_spec(k: str, vs: object) -> bool:
 
 
 def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
-    return (
-        p
-        if edition() in (Edition.CME, Edition.CCE)
-        else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
-    )
+    return p if edition() is Edition.CCE else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
 
 
 def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
@@ -187,7 +183,7 @@ def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
 def _openshift() -> tuple[str, str, Migrate]:
     return (
         "prometheus",
-        mark_edition_only(_("Use data from OpenShift"), [Edition.CME, Edition.CCE]),
+        mark_edition_only(_("Use data from OpenShift"), Edition.CCE),
         Migrate(
             valuespec=Dictionary(
                 elements=[
@@ -310,7 +306,7 @@ def _valuespec_special_agents_kube():
                     ),
                 ),
                 _api_endpoint(),
-                _usage_endpoint(),
+                _usage_endpoint(edition() is Edition.CCE),
                 (
                     "monitored-objects",
                     ListChoice(

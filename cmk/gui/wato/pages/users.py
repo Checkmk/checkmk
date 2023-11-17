@@ -899,9 +899,10 @@ class ModeEditUser(WatoMode):
             user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
         # Roles
-        user_attrs["roles"] = [
-            role for role in self._roles.keys() if html.get_checkbox("role_" + role)
-        ]
+        if edition() != Edition.CSE:
+            user_attrs["roles"] = [
+                role for role in self._roles.keys() if html.get_checkbox("role_" + role)
+            ]
 
     def page(self) -> None:  # pylint: disable=too-many-branches
         # Let exceptions from loading notification scripts happen now

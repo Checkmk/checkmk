@@ -91,6 +91,7 @@ def register_agent_section(section: AgentSection, location: PluginLocation) -> N
         host_label_ruleset_type=section.host_label_ruleset_type,
         supersedes=section.supersedes,
         location=location,
+        validate_creation_kwargs=cmk.utils.debug.enabled(),
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -125,6 +126,7 @@ def register_snmp_section(
         fetch=section.fetch,
         supersedes=section.supersedes,
         location=location,
+        validate_creation_kwargs=cmk.utils.debug.enabled(),
     )
 
     if is_registered_section_plugin(section_plugin.name):

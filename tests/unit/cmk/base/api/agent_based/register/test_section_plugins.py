@@ -100,6 +100,7 @@ def test_create_agent_section_plugin() -> None:
         parsed_section_name="chuck",
         parse_function=parse_dummy,
         supersedes=["foo", "bar"],
+        validate_creation_kwargs=True,
     )
 
     assert isinstance(plugin, AgentSectionPlugin)
@@ -131,6 +132,7 @@ def test_create_snmp_section_plugin() -> None:
         fetch=trees,
         detect_spec=detect,
         supersedes=["foo", "bar"],
+        validate_creation_kwargs=True,
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
@@ -156,6 +158,7 @@ def test_create_snmp_section_plugin_single_tree() -> None:
         # just one, no list:
         fetch=single_tree,
         detect_spec=matches(".1.2.3.4.5", "Foo.*"),
+        validate_creation_kwargs=True,
     )
 
     assert plugin.trees == [single_tree]

@@ -237,7 +237,7 @@ def create_agent_section_plugin(
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
     location: PluginLocation | None = None,
-    validate_creation_kwargs: bool = True,
+    validate_creation_kwargs: bool,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
@@ -285,7 +285,7 @@ def create_snmp_section_plugin(
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: list[str] | None = None,
     location: PluginLocation | None = None,
-    validate_creation_kwargs: bool = True,
+    validate_creation_kwargs: bool,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 

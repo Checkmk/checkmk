@@ -9,7 +9,7 @@
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, overload, TypeVar
 
 from ..v1 import SNMPTree
 from ..v1._detection import SNMPDetectSpecification  # sorry
@@ -31,7 +31,7 @@ CheckFunction = Callable[..., CheckResult]  # type: ignore[misc]
 DiscoveryFunction = Callable[..., DiscoveryResult]  # type: ignore[misc]
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass
 class AgentSection(Generic[_Section]):
     """An AgentSection to plug into Checkmk
 
@@ -89,8 +89,63 @@ class AgentSection(Generic[_Section]):
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
     supersedes: list[str] | None = None
 
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        parse_function: Callable[[StringTable], _Section | None],
+        host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
+        host_label_default_parameters: None = None,
+        host_label_ruleset_name: None = None,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ):
+        ...
 
-@dataclass(frozen=True, kw_only=True)
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        parse_function: Callable[[StringTable], _Section | None],
+        host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
+        host_label_default_parameters: Mapping[str, object],
+        host_label_ruleset_name: str,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ):
+        ...
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        parse_function: Callable[[StringTable], _Section | None],
+        parsed_section_name: str | None = None,
+        host_label_function: (
+            Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
+            | Callable[[_Section], HostLabelGenerator]
+            | None
+        ) = None,
+        host_label_default_parameters: Mapping[str, object] | None = None,
+        host_label_ruleset_name: str | None = None,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        supersedes: list[str] | None = None,
+    ) -> None:
+        self.name = name
+        self.parse_function = parse_function
+        self.parsed_section_name = parsed_section_name
+        self.host_label_function = host_label_function
+        self.host_label_default_parameters = host_label_default_parameters
+        self.host_label_ruleset_name = host_label_ruleset_name
+        self.host_label_ruleset_type = host_label_ruleset_type
+        self.supersedes = supersedes
+
+
+@dataclass
 class SimpleSNMPSection(Generic[_Section]):
     """A SimpleSNMPSection to plug into Checkmk
 
@@ -163,8 +218,74 @@ class SimpleSNMPSection(Generic[_Section]):
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
     supersedes: list[str] | None = None
 
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: SNMPTree,
+        parse_function: Callable[[StringTable], _Section | None]
+        | Callable[[StringByteTable], _Section | None],
+        host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
+        host_label_default_parameters: None = None,
+        host_label_ruleset_name: None = None,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ):
+        ...
 
-@dataclass(frozen=True, kw_only=True)
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: SNMPTree,
+        parse_function: Callable[[StringTable], _Section | None]
+        | Callable[[StringByteTable], _Section | None],
+        host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
+        host_label_default_parameters: Mapping[str, object],
+        host_label_ruleset_name: str,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ):
+        ...
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: SNMPTree,
+        parse_function: Callable[[StringTable], _Section | None]
+        | Callable[[StringByteTable], _Section | None],
+        parsed_section_name: str | None = None,
+        host_label_function: (
+            Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
+            | Callable[[_Section], HostLabelGenerator]
+            | None
+        ) = None,
+        host_label_default_parameters: Mapping[str, object] | None = None,
+        host_label_ruleset_name: str | None = None,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        supersedes: list[str] | None = None,
+    ) -> None:
+        self.name = name
+        self.detect = detect
+        self.fetch = fetch
+        self.parse_function = parse_function
+        self.parsed_section_name = parsed_section_name
+        self.host_label_function = host_label_function
+        self.host_label_default_parameters = host_label_default_parameters
+        self.host_label_ruleset_name = host_label_ruleset_name
+        self.host_label_ruleset_type = host_label_ruleset_type
+        self.supersedes = supersedes
+
+
+@dataclass
 class SNMPSection(Generic[_Section]):
     """An SNMPSection to plug into Checkmk
 
@@ -239,6 +360,78 @@ class SNMPSection(Generic[_Section]):
     host_label_ruleset_name: str | None = None
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
     supersedes: list[str] | None = None
+
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: list[SNMPTree],
+        parse_function: (
+            Callable[[Sequence[StringTable]], _Section | None]
+            | Callable[[Sequence[StringByteTable]], _Section | None]
+        ),
+        host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
+        host_label_default_parameters: None = None,
+        host_label_ruleset_name: None = None,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ):
+        ...
+
+    @overload
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: list[SNMPTree],
+        parse_function: (
+            Callable[[Sequence[StringTable]], _Section | None]
+            | Callable[[Sequence[StringByteTable]], _Section | None]
+        ),
+        host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
+        host_label_default_parameters: Mapping[str, object],
+        host_label_ruleset_name: str,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        parsed_section_name: str | None = None,
+        supersedes: list[str] | None = None,
+    ):
+        ...
+
+    def __init__(  # pylint: disable=too-many-arguments
+        self,
+        *,
+        name: str,
+        detect: SNMPDetectSpecification,
+        fetch: list[SNMPTree],
+        parse_function: (
+            Callable[[Sequence[StringTable]], _Section | None]
+            | Callable[[Sequence[StringByteTable]], _Section | None]
+        ),
+        parsed_section_name: str | None = None,
+        host_label_function: (
+            Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
+            | Callable[[_Section], HostLabelGenerator]
+            | None
+        ) = None,
+        host_label_default_parameters: Mapping[str, object] | None = None,
+        host_label_ruleset_name: str | None = None,
+        host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+        supersedes: list[str] | None = None,
+    ) -> None:
+        self.name = name
+        self.detect = detect
+        self.fetch = fetch
+        self.parse_function = parse_function
+        self.parsed_section_name = parsed_section_name
+        self.host_label_function = host_label_function
+        self.host_label_default_parameters = host_label_default_parameters
+        self.host_label_ruleset_name = host_label_ruleset_name
+        self.host_label_ruleset_type = host_label_ruleset_type
+        self.supersedes = supersedes
 
 
 @dataclass(frozen=True, kw_only=True)

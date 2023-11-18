@@ -7,9 +7,17 @@ use time::Duration;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
+pub struct Levels<T> {
+    pub warn: T,
+    pub crit: T,
+}
+
 pub struct LowerLevels<T> {
-    warn: T,
-    crit: T,
+    pub levels: Levels<T>,
+}
+
+pub struct UpperLevels<T> {
+    pub levels: Levels<T>,
 }
 
 impl<T> LowerLevels<T>
@@ -18,26 +26,23 @@ where
 {
     pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
         if warn >= crit {
-            Ok(Self { warn, crit })
+            Ok(Self {
+                levels: Levels { warn, crit },
+            })
         } else {
             Err(Box::from("bad values"))
         }
     }
 
     pub fn evaluate(&self, value: &T) -> State {
-        if value < &self.crit {
+        if value < &self.levels.crit {
             State::Crit
-        } else if value < &self.warn {
+        } else if value < &self.levels.warn {
             State::Warn
         } else {
             State::Ok
         }
     }
-}
-
-pub struct UpperLevels<T> {
-    warn: T,
-    crit: T,
 }
 
 impl<T> UpperLevels<T>
@@ -46,16 +51,18 @@ where
 {
     pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
         if crit >= warn {
-            Ok(Self { warn, crit })
+            Ok(Self {
+                levels: Levels { warn, crit },
+            })
         } else {
             Err(Box::from("bad values"))
         }
     }
 
     pub fn evaluate(&self, value: &T) -> State {
-        if value >= &self.crit {
+        if value >= &self.levels.crit {
             State::Crit
-        } else if value >= &self.warn {
+        } else if value >= &self.levels.warn {
             State::Warn
         } else {
             State::Ok

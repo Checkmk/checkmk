@@ -806,6 +806,10 @@ msgstr ""
 msgid "(0 is current period)"
 msgstr "(0は現在の期間です)"
 
+#, fuzzy
+msgid "(Edit presets)"
+msgstr "レポートを編集する"
+
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(最大提案数到達、より具体的に）"
 
@@ -1170,10 +1174,6 @@ msgstr ""
 #, python-format
 msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%sの長さの%%s </b>"
-
-#, python-format
-msgid "<b>%s for the next %d minutes</b>?"
-msgstr "<b>%s for the next %d minutes</b>?"
 
 #, python-format
 msgid "<b>%s until 24:00:00</b>?"
@@ -4116,10 +4116,6 @@ msgstr "アドホックコメント"
 msgid "Adhoc downtime"
 msgstr "アドホックダウンタイム"
 
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "アドホック %d 分間"
-
 msgid "Admin"
 msgstr "管理者"
 
@@ -4170,6 +4166,10 @@ msgstr "管理者（「すべての定義済み条件への書き込みアクセ
 
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
+
+#, fuzzy
+msgid "Advanced options"
+msgstr "利用可能なオプション"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr "詳細:SSL / TLSホスト名拡張サポート(SNI)を無効にする"
@@ -5532,9 +5532,6 @@ msgstr "Checkmkエージェントにも連絡してください"
 
 msgid "Also search in subfolders"
 msgstr "サブフォルダも検索"
-
-msgid "Also set downtime on child hosts"
-msgstr "また、子ホストのダウンタイムを設定します"
 
 msgid ""
 "Also use these contact groups in eventually notifications created by this "
@@ -10440,6 +10437,13 @@ msgstr "子条件"
 msgid "Child Node Generation"
 msgstr "子ノードの生成"
 
+msgid "Child hosts also go in downtime (recursively)."
+msgstr ""
+
+#, fuzzy
+msgid "Child hosts also go in downtime."
+msgstr "すべてのホストのダウンタイムを一覧表示します。"
+
 msgid "Child report"
 msgstr "子レポート"
 
@@ -13608,9 +13612,6 @@ msgstr "現在、有効化されていない保留中の変更が1つありま�
 msgid "Custom Action"
 msgstr "カスタムアクション"
 
-msgid "Custom Downtime Timeranges"
-msgstr "カスタムダウンタイムの時間範囲"
-
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "カスタムGUIデザイン %s"
@@ -13762,9 +13763,6 @@ msgstr "サイドバーのカスタマイズ"
 
 msgid "Custom states"
 msgstr "カスタム状態"
-
-msgid "Custom time range"
-msgstr "カスタム時間範囲"
 
 msgid "Custom time span"
 msgstr "カスタム期間"
@@ -17248,9 +17246,6 @@ msgstr "予約済みのスペースを表示する"
 msgid "Do status data inventory"
 msgstr "ステータスデータのインベントリを行う"
 
-msgid "Do this recursively"
-msgstr "これを再帰的に実行します"
-
 msgid "Do transfer context"
 msgstr "コンテキストを転送する"
 
@@ -17506,6 +17501,14 @@ msgstr "ダウンタイムID（完全一致）"
 msgid "Downtime active or pending"
 msgstr "ダウンタイムがアクティブまたは保留中"
 
+#, fuzzy
+msgid "Downtime also applies to services."
+msgstr "サービスのダウンタイム"
+
+#, fuzzy
+msgid "Downtime attributes:"
+msgstr "変更された属性"
+
 msgid "Downtime author"
 msgstr "ダウンタイムの作者"
 
@@ -17518,7 +17521,19 @@ msgstr "ダウンタイムコメント"
 msgid "Downtime comment (regex)"
 msgstr "ダウンタイムコメント（正規表現）"
 
+#, fuzzy
+msgid "Downtime datepicker"
+msgstr "ダウンタイム終了時間"
+
+#, fuzzy
+msgid "Downtime does not apply to host."
+msgstr "ホストのダウンタイム"
+
 msgid "Downtime duration (if flexible)"
+msgstr "ダウンタイム期間(フレキシブルな場合)"
+
+#, fuzzy
+msgid "Downtime duration presets"
 msgstr "ダウンタイム期間(フレキシブルな場合)"
 
 msgid "Downtime end"
@@ -17556,6 +17571,10 @@ msgstr "ダウンタイム開始時間"
 
 msgid "Downtime stopped"
 msgstr "ダウンタイムが停止しました"
+
+#, fuzzy
+msgid "Downtime timepicker"
+msgstr "ダウンタイム終了時間"
 
 msgid "Downtime will not start anymore after"
 msgstr "ダウンタイムはその後開始されません"
@@ -18850,6 +18869,10 @@ msgstr "終了時間"
 
 msgid "End-to-end latency"
 msgstr "エンドツーエンドのレイテンシ"
+
+#, python-format
+msgid "End: %s"
+msgstr "End: %s"
 
 msgid "Ended"
 msgstr "終了しました"
@@ -21064,6 +21087,10 @@ msgstr "柔軟なダウンタイム"
 msgid "Flexible downtime duration:"
 msgstr "柔軟なダウンタイム期間:"
 
+#, fuzzy
+msgid "Flexible downtime options"
+msgstr "柔軟なダウンタイム期間:"
+
 msgid "Floating point number"
 msgstr "浮動小数点数"
 
@@ -21755,9 +21782,6 @@ msgstr "インベントリテーブルから"
 
 msgid "From left of the page"
 msgstr "ページの左から"
-
-msgid "From now for"
-msgstr "今から"
 
 msgid "From password store"
 msgstr "パスワードストアから"
@@ -27581,6 +27605,9 @@ msgstr "空のプールを監視に含める"
 msgid "Include full path"
 msgstr "フルパスを含める"
 
+msgid "Include indirectly connected hosts (recursively)"
+msgstr ""
+
 msgid "Include per-process arguments (security risk!)"
 msgstr "プロセスごとの引数を含める(セキュリティリスク!)"
 
@@ -28357,6 +28384,10 @@ msgid "Invalid datatype of timestamp: must be int or float."
 msgstr ""
 "タイムスタンプのデータ型が無効です:intまたはfloatである必要があります。"
 
+#, fuzzy, python-format
+msgid "Invalid date format: %s"
+msgstr "無効なデータソース: %s"
+
 msgid "Invalid end time given"
 msgstr "無効な終了時刻が指定されました"
 
@@ -28535,6 +28566,10 @@ msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 "時刻のフォーマット'<tt>%s</tt>'が無効です。<tt>24:00</tt> を使用してくださ"
 "い。"
+
+#, fuzzy, python-format
+msgid "Invalid time format: %s"
+msgstr "無効なID: %s"
 
 msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -37696,6 +37731,10 @@ msgstr "最初の10個のソートされた結果のみ"
 msgid "Only first 20 sorted results"
 msgstr "最初の20のソートされた結果のみ"
 
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime"
+msgstr "ホストがダウンタイムになっていない場合のみ"
+
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
 "configuration and that have registered for updates."
@@ -37793,6 +37832,11 @@ msgstr "この状態のサービスのみを表示する"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "show moreがアクティブな場合にのみ %s を表示します"
+
+msgid ""
+"Only start downtime if host/service goes DOWN/UNREACH during the defined "
+"start and end time (flexible)"
+msgstr ""
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -40042,9 +40086,6 @@ msgstr ""
 
 msgid "Please enter a filename."
 msgstr "ファイル名を入力してください。"
-
-msgid "Please enter a positive number of minutes."
-msgstr "正の分数を入力してください。"
 
 msgid "Please enter a time."
 msgstr "時間を入力してください。"
@@ -42651,9 +42692,6 @@ msgstr "承認を削除する"
 msgid "Remove acknowledgement?"
 msgstr "承認を削除しますか?"
 
-msgid "Remove all"
-msgstr "すべて削除する"
-
 msgid "Remove all and find new"
 msgstr "全て削除し再スキャン"
 
@@ -42904,6 +42942,10 @@ msgstr "要素の上にタイトルとリンクを含むタイトルバーをレ
 msgid "Render vertical rules between columns"
 msgstr "列間に垂直ルールをレンダリングする"
 
+#, fuzzy
+msgid "Repeat"
+msgstr "繰り返す:"
+
 msgid "Repeat query and allow more results."
 msgstr "クエリを繰り返して、より多くの結果を許可します。"
 
@@ -42913,8 +42955,9 @@ msgstr "無制限にクエリを繰り返します。"
 msgid "Repeat this downtime"
 msgstr "このダウンタイムを繰り返す"
 
-msgid "Repeat this downtime on a regular basis every"
-msgstr "このダウンタイムを定期的に繰り返します"
+#, fuzzy, python-format
+msgid "Repeats every %s"
+msgstr "20行ごとに繰り返す"
 
 #, python-brace-format
 msgid "Repetition change for item {diff_path}."
@@ -43790,6 +43833,10 @@ msgstr "Robotmk"
 #, fuzzy
 msgid "Robotmk (Windows)"
 msgstr "RobotMKのログ"
+
+#, fuzzy
+msgid "Robotmk Suite Status"
+msgstr "サイトステータス"
 
 msgid "Role"
 msgstr "役割"
@@ -44721,9 +44768,9 @@ msgstr "スキャン間隔"
 msgid "Schedule"
 msgstr "スケジュール"
 
-#, python-format
-msgid "Schedule a downtime from %s to %s?"
-msgstr "%sから%sまでのダウンタイムをスケジュールしますか?"
+#, fuzzy
+msgid "Schedule a downtime?"
+msgstr "ダウンタイムをスケジュールしますか?"
 
 #, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -44740,6 +44787,10 @@ msgid "Schedule downtime for %d %s"
 msgstr "%d%sのダウンタイムをスケジュールする"
 
 msgid "Schedule downtime on host"
+msgstr "ホストでのダウンタイムのスケジュール"
+
+#, fuzzy
+msgid "Schedule downtime on service"
 msgstr "ホストでのダウンタイムのスケジュール"
 
 msgid "Schedule downtime?"
@@ -49082,6 +49133,10 @@ msgstr "開始!"
 msgid "Start-Time"
 msgstr "始まる時間"
 
+#, python-format
+msgid "Start: %s"
+msgstr "開始: %s"
+
 msgid "Started"
 msgstr "開始"
 
@@ -49118,6 +49173,11 @@ msgstr "起動"
 
 msgid "Starting with entry"
 msgstr "エントリーから"
+
+#, python-format
+msgid ""
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+msgstr ""
 
 msgid "Startup overhead in shared pool"
 msgstr "共有プールの起動オーバーヘッド"
@@ -50311,6 +50371,13 @@ msgstr "署名の検証に成功"
 
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
+
+msgid "Suite"
+msgstr ""
+
+#, fuzzy
+msgid "Suite runtime"
+msgstr "サイト名"
 
 msgid "Sum"
 msgstr "和"
@@ -54723,6 +54790,12 @@ msgid ""
 msgstr ""
 "ルールセット名は、Checkmk 内のルールセットを識別します。ルールおよびルール"
 "セット REST API コールを使用する場合は、この名前を使用します。"
+
+msgid ""
+"The runtime of a suite is limited by the maximum number of attempts "
+"multiplied by the timeout per attempt. This settings configures thresholds "
+"on the suite runtime with respect to this overall limit."
+msgstr ""
 
 msgid "The schedule you are trying to clone does not exist."
 msgstr "クローンしようとしているスケジュールが存在しない。"
@@ -62775,6 +62848,10 @@ msgstr "ポイントツーサイト接続数の上位レベル"
 msgid "Upper levels on percentage of %s requests"
 msgstr "%sリクエストの割合の上位レベル"
 
+#, fuzzy
+msgid "Upper levels on suite runtime relative to overall timeout"
+msgstr "タイムアウトの継続時間の上限レベル(%)"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "最も古いレプリケーションスロットラグの上位レベル"
 
@@ -64559,9 +64636,6 @@ msgstr "このサービスのパラメーターを表示および編集する"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集する"
 
-msgid "View history"
-msgstr "履歴表示"
-
 msgid "View layout"
 msgstr "レイアウトを表示"
 
@@ -65238,6 +65312,9 @@ msgstr "%sのみに関するwerk"
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What is the occasion?"
+msgstr ""
 
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
@@ -69465,9 +69542,6 @@ msgstr "固定ページ要素"
 msgid "flexible"
 msgstr "フレキシブル"
 
-msgid "flexible with max. duration"
-msgstr "最大で柔軟。デュレーション"
-
 msgid "folder"
 msgstr "フォルダ"
 
@@ -70004,6 +70078,10 @@ msgstr "該当なし"
 
 msgid "negate"
 msgstr "否定する"
+
+#, fuzzy
+msgid "never"
+msgstr "(決してない)"
 
 msgid "new element"
 msgstr "新しい要素"
@@ -70805,9 +70883,6 @@ msgstr "幅"
 msgid "with a timeout of"
 msgstr "のタイムアウトで"
 
-msgid "with comment"
-msgstr "コメント付き"
-
 msgid "with context"
 msgstr "コンテキスト付き"
 
@@ -70862,6 +70937,51 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s for the next %d minutes</b>?"
+
+#, python-format
+#~ msgid "Adhoc for %d minutes"
+#~ msgstr "アドホック %d 分間"
+
+#~ msgid "Also set downtime on child hosts"
+#~ msgstr "また、子ホストのダウンタイムを設定します"
+
+#~ msgid "Custom Downtime Timeranges"
+#~ msgstr "カスタムダウンタイムの時間範囲"
+
+#~ msgid "Custom time range"
+#~ msgstr "カスタム時間範囲"
+
+#~ msgid "Do this recursively"
+#~ msgstr "これを再帰的に実行します"
+
+#~ msgid "From now for"
+#~ msgstr "今から"
+
+#~ msgid "Please enter a positive number of minutes."
+#~ msgstr "正の分数を入力してください。"
+
+#~ msgid "Remove all"
+#~ msgstr "すべて削除する"
+
+#~ msgid "Repeat this downtime on a regular basis every"
+#~ msgstr "このダウンタイムを定期的に繰り返します"
+
+#, python-format
+#~ msgid "Schedule a downtime from %s to %s?"
+#~ msgstr "%sから%sまでのダウンタイムをスケジュールしますか?"
+
+#~ msgid "View history"
+#~ msgstr "履歴表示"
+
+#~ msgid "flexible with max. duration"
+#~ msgstr "最大で柔軟。デュレーション"
+
+#~ msgid "with comment"
+#~ msgstr "コメント付き"
 
 #~ msgid "Clear"
 #~ msgstr "クリアする"
@@ -71079,9 +71199,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Custom notification"
 #~ msgstr "カスタム通知"
-
-#~ msgid "Modified attributes"
-#~ msgstr "変更された属性"
 
 #~ msgid "Remove comments"
 #~ msgstr "コメントを削除する"
@@ -71817,16 +71934,8 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 #~ msgstr "アプリケーション"
 
 #, python-format
-#~ msgid "End: %s"
-#~ msgstr "End: %s"
-
-#, python-format
 #~ msgid "Limit: %s"
 #~ msgstr "制限: %s"
-
-#, python-format
-#~ msgid "Start: %s"
-#~ msgstr "開始: %s"
 
 #~ msgid "Create random secret"
 #~ msgstr "ランダムな秘密を作成する"

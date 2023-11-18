@@ -808,6 +808,10 @@ msgstr ""
 msgid "(0 is current period)"
 msgstr "(0 is huidige periode)"
 
+#, fuzzy
+msgid "(Edit presets)"
+msgstr "Rapporten bewerken"
+
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Max suggesties bereikt, wees specifieker)"
 
@@ -1174,10 +1178,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s van %s lengte</b>"
-
-#, fuzzy, python-format
-msgid "<b>%s for the next %d minutes</b>?"
-msgstr "<b>%s voor de volgende %d minuten</b>"
 
 #, fuzzy, python-format
 msgid "<b>%s until 24:00:00</b>?"
@@ -4210,10 +4210,6 @@ msgstr "Adhoc commentaar"
 msgid "Adhoc downtime"
 msgstr "Adhoc-uitvaltijd"
 
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "Adhoc voor %d minuten"
-
 msgid "Admin"
 msgstr "Admin"
 
@@ -4267,6 +4263,10 @@ msgstr ""
 
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optisch Transport Laservermogen"
+
+#, fuzzy
+msgid "Advanced options"
+msgstr "Beschikbare opties"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
@@ -5686,9 +5686,6 @@ msgstr "Neem ook contact op met Checkmk agent"
 
 msgid "Also search in subfolders"
 msgstr "Zoek ook in submappen"
-
-msgid "Also set downtime on child hosts"
-msgstr "Stel ook downtime in op child hosts"
 
 msgid ""
 "Also use these contact groups in eventually notifications created by this "
@@ -10721,6 +10718,13 @@ msgstr "Voorwaarden voor kinderen"
 msgid "Child Node Generation"
 msgstr "Child Node Generatie"
 
+msgid "Child hosts also go in downtime (recursively)."
+msgstr ""
+
+#, fuzzy
+msgid "Child hosts also go in downtime."
+msgstr "Toont alle host downtimes."
+
 msgid "Child report"
 msgstr "Kind rapport"
 
@@ -13978,9 +13982,6 @@ msgstr ""
 msgid "Custom Action"
 msgstr "Aangepaste actie"
 
-msgid "Custom Downtime Timeranges"
-msgstr "Aangepaste stilstandtijdvakken"
-
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Aangepast GUI ontwerp van %s"
@@ -14132,9 +14133,6 @@ msgstr "Aangepaste zijbalk elementen"
 
 msgid "Custom states"
 msgstr "Aangepaste staten"
-
-msgid "Custom time range"
-msgstr "Aangepast tijdbereik"
 
 msgid "Custom time span"
 msgstr "Aangepaste tijdspanne"
@@ -17667,9 +17665,6 @@ msgstr "Toon nu gereserveerde ruimte"
 msgid "Do status data inventory"
 msgstr "Inventarisatie statusgegevens"
 
-msgid "Do this recursively"
-msgstr "Doe dit recursief"
-
 msgid "Do transfer context"
 msgstr "Draag context over"
 
@@ -17926,6 +17921,14 @@ msgstr "Hostnaam (exacte match)"
 msgid "Downtime active or pending"
 msgstr "Stilstand actief of in afwachting"
 
+#, fuzzy
+msgid "Downtime also applies to services."
+msgstr "Onderbrekingen van de dienst"
+
+#, fuzzy
+msgid "Downtime attributes:"
+msgstr "Gewijzigde attributen"
+
 msgid "Downtime author"
 msgstr "Auteur van Downtime"
 
@@ -17940,7 +17943,19 @@ msgstr "Commentaar bij stilstand"
 msgid "Downtime comment (regex)"
 msgstr "Commentaar bij stilstand"
 
+#, fuzzy
+msgid "Downtime datepicker"
+msgstr "Eindtijd downtime"
+
+#, fuzzy
+msgid "Downtime does not apply to host."
+msgstr "Downtimes van host"
+
 msgid "Downtime duration (if flexible)"
+msgstr "Duur van de stilstand (indien flexibel)"
+
+#, fuzzy
+msgid "Downtime duration presets"
 msgstr "Duur van de stilstand (indien flexibel)"
 
 msgid "Downtime end"
@@ -17978,6 +17993,10 @@ msgstr "Begintijd downtime"
 
 msgid "Downtime stopped"
 msgstr "Downtime gestopt"
+
+#, fuzzy
+msgid "Downtime timepicker"
+msgstr "Eindtijd downtime"
 
 msgid "Downtime will not start anymore after"
 msgstr "Downtime zal niet meer starten na"
@@ -19301,6 +19320,10 @@ msgstr "Eindtijd"
 
 msgid "End-to-end latency"
 msgstr "End-to-end latentie"
+
+#, fuzzy, python-format
+msgid "End: %s"
+msgstr "Bewerken %s: %s"
 
 msgid "Ended"
 msgstr "Beëindigd"
@@ -21538,6 +21561,10 @@ msgstr "Flexibele uitvaltijd"
 msgid "Flexible downtime duration:"
 msgstr "Flexibele stilstandsduur:"
 
+#, fuzzy
+msgid "Flexible downtime options"
+msgstr "Flexibele stilstandsduur:"
+
 msgid "Floating point number"
 msgstr "Drijvend komma getal"
 
@@ -22253,9 +22280,6 @@ msgstr "Uit de inventarislijst"
 
 msgid "From left of the page"
 msgstr "Van links op de pagina"
-
-msgid "From now for"
-msgstr "Vanaf nu voor"
 
 msgid "From password store"
 msgstr "Van wachtwoord opslag"
@@ -28262,6 +28286,9 @@ msgstr "Neem lege zwembaden op in de bewaking"
 msgid "Include full path"
 msgstr "Volledig pad opnemen"
 
+msgid "Include indirectly connected hosts (recursively)"
+msgstr ""
+
 msgid "Include per-process arguments (security risk!)"
 msgstr "Neem per-proces argumenten op (veiligheidsrisico!)"
 
@@ -29049,6 +29076,10 @@ msgstr "Ongeldige datasource '%s' geconfigureerd."
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ongeldig datatype van timestamp: moet int of float zijn."
 
+#, fuzzy, python-format
+msgid "Invalid date format: %s"
+msgstr "Ongeldige gegevensbron: %s"
+
 msgid "Invalid end time given"
 msgstr "Ongeldige eindtijd gegeven"
 
@@ -29233,6 +29264,10 @@ msgstr "Ongeldige test."
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 "Ongeldig tijdformaat '<tt>%s</tt>', gebruik het formaat <tt>24:00</tt>."
+
+#, fuzzy, python-format
+msgid "Invalid time format: %s"
+msgstr "Ongeldige ident: %s"
 
 msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -38594,6 +38629,10 @@ msgstr "Alleen de eerste 10 gesorteerde resultaten"
 msgid "Only first 20 sorted results"
 msgstr "Alleen de eerste 20 gesorteerde resultaten"
 
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime"
+msgstr "alleen wanneer de host niet in downtime is"
+
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
 "configuration and that have registered for updates."
@@ -38694,6 +38733,11 @@ msgstr "Toon alleen diensten in deze staten"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "Laat de %s alleen zien als show more actief is"
+
+msgid ""
+"Only start downtime if host/service goes DOWN/UNREACH during the defined "
+"start and end time (flexible)"
+msgstr ""
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -40994,9 +41038,6 @@ msgstr ""
 
 msgid "Please enter a filename."
 msgstr "Voer een bestandsnaam in."
-
-msgid "Please enter a positive number of minutes."
-msgstr "Voer een positief aantal minuten in."
 
 msgid "Please enter a time."
 msgstr "Geef een tijd op."
@@ -43648,9 +43689,6 @@ msgstr "Bevestiging verwijderen"
 msgid "Remove acknowledgement?"
 msgstr "Bevestiging verwijderen"
 
-msgid "Remove all"
-msgstr "Verwijder alle"
-
 msgid "Remove all and find new"
 msgstr "Verwijder alles en zoek een nieuwe"
 
@@ -43899,6 +43937,10 @@ msgstr "Render de titelbalk inclusief titel en link boven het element."
 msgid "Render vertical rules between columns"
 msgstr "Verticale regels tussen kolommen weergeven"
 
+#, fuzzy
+msgid "Repeat"
+msgstr "herhalen:"
+
 msgid "Repeat query and allow more results."
 msgstr "Herhaal de query en laat meer resultaten zien."
 
@@ -43908,8 +43950,9 @@ msgstr "Herhaal de vraag zonder limiet."
 msgid "Repeat this downtime"
 msgstr "Herhaal deze downtime"
 
-msgid "Repeat this downtime on a regular basis every"
-msgstr "Herhaal deze onderbreking op regelmatige basis elke"
+#, fuzzy, python-format
+msgid "Repeats every %s"
+msgstr "herhaal elke 20ste rij"
 
 #, python-brace-format
 msgid "Repetition change for item {diff_path}."
@@ -44787,6 +44830,10 @@ msgstr "Verslag indienen"
 #, fuzzy
 msgid "Robotmk (Windows)"
 msgstr "RobotMK logboeken"
+
+#, fuzzy
+msgid "Robotmk Suite Status"
+msgstr "Status van de site"
 
 msgid "Role"
 msgstr "Rol"
@@ -45724,9 +45771,9 @@ msgstr "Scan interval"
 msgid "Schedule"
 msgstr "Schema"
 
-#, fuzzy, python-format
-msgid "Schedule a downtime from %s to %s?"
-msgstr "<b>plan een downtime van %s tot %s</b>"
+#, fuzzy
+msgid "Schedule a downtime?"
+msgstr "Uitvaltijden plannen"
 
 #, fuzzy, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -45744,6 +45791,10 @@ msgid "Schedule downtime for %d %s"
 msgstr "Geplande uitvaltijd voor %d %s"
 
 msgid "Schedule downtime on host"
+msgstr "Plan downtime op host"
+
+#, fuzzy
+msgid "Schedule downtime on service"
 msgstr "Plan downtime op host"
 
 #, fuzzy
@@ -50226,6 +50277,10 @@ msgstr "Start!"
 msgid "Start-Time"
 msgstr "Starttijd"
 
+#, fuzzy, python-format
+msgid "Start: %s"
+msgstr "Begonnen op: %s."
+
 msgid "Started"
 msgstr "Begonnen met"
 
@@ -50262,6 +50317,11 @@ msgstr "Opstarten"
 
 msgid "Starting with entry"
 msgstr "Beginnend met binnenkomst"
+
+#, python-format
+msgid ""
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+msgstr ""
 
 msgid "Startup overhead in shared pool"
 msgstr "Opstartoverhead in gedeelde pool"
@@ -51474,6 +51534,13 @@ msgstr "Succesvol geverifieerde handtekening"
 
 msgid "Suggested tutorial videos"
 msgstr "Voorgestelde instructievideo's"
+
+msgid "Suite"
+msgstr ""
+
+#, fuzzy
+msgid "Suite runtime"
+msgstr "Naam site"
 
 msgid "Sum"
 msgstr "Som"
@@ -56134,6 +56201,12 @@ msgid ""
 msgstr ""
 "De regelsetnaam identificeert de regelset binnen Checkmk. Gebruik deze naam "
 "bij het werken met de regels en regelset REST API-aanroepen."
+
+msgid ""
+"The runtime of a suite is limited by the maximum number of attempts "
+"multiplied by the timeout per attempt. This settings configures thresholds "
+"on the suite runtime with respect to this overall limit."
+msgstr ""
 
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Het schema dat u probeert te klonen bestaat niet."
@@ -64521,6 +64594,10 @@ msgstr "Bovenste niveaus op aantal Point-to-site verbindingen"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Bovenste niveaus op percentage van %s verzoeken"
 
+#, fuzzy
+msgid "Upper levels on suite runtime relative to overall timeout"
+msgstr "Bovenste niveaus voor duur in procent van de time-out"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "Bovenste niveaus op de oudste replicatiesleuf achterstand"
 
@@ -66362,9 +66439,6 @@ msgstr "Bekijk en bewerk de parameters voor deze dienst"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "De regels en aggregaties in dit BI-pakket bekijken en bewerken"
 
-msgid "View history"
-msgstr "Geschiedenis bekijken"
-
 msgid "View layout"
 msgstr "Bekijk lay-out"
 
@@ -67054,6 +67128,9 @@ msgstr "Werkt alleen aan de %s"
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What is the occasion?"
+msgstr ""
 
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
@@ -71503,9 +71580,6 @@ msgstr "vast pagina-element"
 msgid "flexible"
 msgstr "flexibel"
 
-msgid "flexible with max. duration"
-msgstr "flexibel met max. duur"
-
 msgid "folder"
 msgstr "map"
 
@@ -72049,6 +72123,10 @@ msgstr "n.v.t."
 
 msgid "negate"
 msgstr "ontkennen"
+
+#, fuzzy
+msgid "never"
+msgstr "(nooit)"
 
 msgid "new element"
 msgstr "nieuw onderdeel"
@@ -72862,9 +72940,6 @@ msgstr "breedte"
 msgid "with a timeout of"
 msgstr "met een time-out van"
 
-msgid "with comment"
-msgstr "met commentaar"
-
 msgid "with context"
 msgstr "met context"
 
@@ -72919,6 +72994,53 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy, python-format
+#~| msgid "<b>%s for the next %d minutes</b>"
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s voor de volgende %d minuten</b>"
+
+#, python-format
+#~ msgid "Adhoc for %d minutes"
+#~ msgstr "Adhoc voor %d minuten"
+
+#~ msgid "Also set downtime on child hosts"
+#~ msgstr "Stel ook downtime in op child hosts"
+
+#~ msgid "Custom Downtime Timeranges"
+#~ msgstr "Aangepaste stilstandtijdvakken"
+
+#~ msgid "Custom time range"
+#~ msgstr "Aangepast tijdbereik"
+
+#~ msgid "Do this recursively"
+#~ msgstr "Doe dit recursief"
+
+#~ msgid "From now for"
+#~ msgstr "Vanaf nu voor"
+
+#~ msgid "Please enter a positive number of minutes."
+#~ msgstr "Voer een positief aantal minuten in."
+
+#~ msgid "Remove all"
+#~ msgstr "Verwijder alle"
+
+#~ msgid "Repeat this downtime on a regular basis every"
+#~ msgstr "Herhaal deze onderbreking op regelmatige basis elke"
+
+#, fuzzy, python-format
+#~| msgid "<b>schedule a downtime from %s to %s</b>"
+#~ msgid "Schedule a downtime from %s to %s?"
+#~ msgstr "<b>plan een downtime van %s tot %s</b>"
+
+#~ msgid "View history"
+#~ msgstr "Geschiedenis bekijken"
+
+#~ msgid "flexible with max. duration"
+#~ msgstr "flexibel met max. duur"
+
+#~ msgid "with comment"
+#~ msgstr "met commentaar"
 
 #~ msgid "Clear"
 #~ msgstr "Duidelijk"
@@ -73144,9 +73266,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Custom notification"
 #~ msgstr "Aangepaste kennisgeving"
-
-#~ msgid "Modified attributes"
-#~ msgstr "Gewijzigde attributen"
 
 #~ msgid "Remove comments"
 #~ msgstr "Opmerkingen verwijderen"
@@ -73928,19 +74047,9 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 #~ msgstr "Toepassing"
 
 #, fuzzy, python-format
-#~| msgid "Edit %s: %s"
-#~ msgid "End: %s"
-#~ msgstr "Bewerken %s: %s"
-
-#, fuzzy, python-format
 #~| msgid "Limits"
 #~ msgid "Limit: %s"
 #~ msgstr "Grenzen"
-
-#, fuzzy, python-format
-#~| msgid "Started at: %s."
-#~ msgid "Start: %s"
-#~ msgstr "Begonnen op: %s."
 
 #~ msgid "Create random secret"
 #~ msgstr "Creëer willekeurig geheim"

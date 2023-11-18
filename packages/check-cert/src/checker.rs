@@ -89,6 +89,87 @@ impl Display for State {
     }
 }
 
+pub struct Metric<T> {
+    label: String,
+    value: T,
+    uom: Option<String>,
+    warn: Option<T>,
+    crit: Option<T>,
+    min: Option<T>,
+    max: Option<T>,
+}
+
+impl<T: Default + Display> Metric<T> {
+    pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
+        MetricBuilder::new(label, value)
+    }
+}
+
+impl<T: Display> Display for Metric<T> {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        write!(
+            f,
+            "{}={}{};{};{};{};{}",
+            self.label,
+            self.value,
+            self.uom.clone().unwrap_or_default(),
+            self.warn.as_ref().map_or(String::new(), |v| v.to_string()),
+            self.crit.as_ref().map_or(String::new(), |v| v.to_string()),
+            self.min.as_ref().map_or(String::new(), |v| v.to_string()),
+            self.max.as_ref().map_or(String::new(), |v| v.to_string()),
+        )
+    }
+}
+
+pub struct MetricBuilder<T> {
+    label: String,
+    value: T,
+    uom: Option<String>,
+    warn: Option<T>,
+    crit: Option<T>,
+    min: Option<T>,
+    max: Option<T>,
+}
+
+impl<T> MetricBuilder<T> {
+    pub fn new(label: &str, value: T) -> Self {
+        Self {
+            label: label.to_string(),
+            value,
+            uom: None,
+            warn: None,
+            crit: None,
+            min: None,
+            max: None,
+        }
+    }
+
+    pub fn uom(mut self, uom: &str) -> Self {
+        self.uom = Some(uom.to_string());
+        self
+    }
+
+    pub fn levels(mut self, levels: Levels<T>) -> Self {
+        self.warn = Some(levels.warn);
+        self.crit = Some(levels.crit);
+        self
+    }
+
+    // pub fn bounds(mut self, bounds: &Bounds) -> Self
+
+    pub fn build(self) -> Metric<T> {
+        Metric {
+            label: self.label,
+            value: self.value,
+            uom: self.uom,
+            warn: self.warn,
+            crit: self.crit,
+            min: self.min,
+            max: self.max,
+        }
+    }
+}
+
 pub struct CheckResult {
     pub state: State,
     pub summary: String,
@@ -230,5 +311,61 @@ pub fn check_validity_not_after(
                 not_after
             ),
         ),
+    }
+}
+
+#[cfg(test)]
+mod test_metrics_display {
+    use super::{Levels, Metric, MetricBuilder};
+
+    #[test]
+    fn test_default() {
+        assert_eq!(
+            format!("{}", Metric::<u32>::builder("name", 42).build()),
+            "name=42;;;;"
+        );
+        assert_eq!(
+            format!("{}", MetricBuilder::<u32>::new("name", 42).build()),
+            "name=42;;;;"
+        );
+    }
+
+    #[test]
+    fn test_uom() {
+        assert_eq!(
+            format!(
+                "{}",
+                MetricBuilder::<u32>::new("name", 42).uom("ms").build()
+            ),
+            "name=42ms;;;;"
+        );
+    }
+
+    #[test]
+    fn test_levels() {
+        assert_eq!(
+            format!(
+                "{}",
+                MetricBuilder::<u32>::new("name", 42)
+                    .levels(Levels { warn: 24, crit: 42 })
+                    .build()
+            ),
+            "name=42;24;42;;"
+        );
+    }
+
+    #[test]
+    fn test_chain_all() {
+        // We have no Bounds implementation, yet
+        assert_eq!(
+            format!(
+                "{}",
+                MetricBuilder::<u32>::new("name", 42)
+                    .uom("ms")
+                    .levels(Levels { warn: 24, crit: 42 })
+                    .build()
+            ),
+            "name=42ms;24;42;;"
+        );
     }
 }

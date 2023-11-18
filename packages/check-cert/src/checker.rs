@@ -7,6 +7,11 @@ use time::Duration;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
+pub struct Bounds<T> {
+    pub min: T,
+    pub max: T,
+}
+
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
@@ -93,10 +98,8 @@ pub struct Metric<T> {
     label: String,
     value: T,
     uom: Option<String>,
-    warn: Option<T>,
-    crit: Option<T>,
-    min: Option<T>,
-    max: Option<T>,
+    levels: Option<Levels<T>>,
+    bounds: Option<Bounds<T>>,
 }
 
 impl<T: Default + Display> Metric<T> {
@@ -113,10 +116,18 @@ impl<T: Display> Display for Metric<T> {
             self.label,
             self.value,
             self.uom.clone().unwrap_or_default(),
-            self.warn.as_ref().map_or(String::new(), |v| v.to_string()),
-            self.crit.as_ref().map_or(String::new(), |v| v.to_string()),
-            self.min.as_ref().map_or(String::new(), |v| v.to_string()),
-            self.max.as_ref().map_or(String::new(), |v| v.to_string()),
+            self.levels
+                .as_ref()
+                .map_or(String::new(), |v| v.warn.to_string()),
+            self.levels
+                .as_ref()
+                .map_or(String::new(), |v| v.crit.to_string()),
+            self.bounds
+                .as_ref()
+                .map_or(String::new(), |v| v.min.to_string()),
+            self.bounds
+                .as_ref()
+                .map_or(String::new(), |v| v.max.to_string()),
         )
     }
 }
@@ -125,10 +136,8 @@ pub struct MetricBuilder<T> {
     label: String,
     value: T,
     uom: Option<String>,
-    warn: Option<T>,
-    crit: Option<T>,
-    min: Option<T>,
-    max: Option<T>,
+    levels: Option<Levels<T>>,
+    bounds: Option<Bounds<T>>,
 }
 
 impl<T> MetricBuilder<T> {
@@ -137,10 +146,8 @@ impl<T> MetricBuilder<T> {
             label: label.to_string(),
             value,
             uom: None,
-            warn: None,
-            crit: None,
-            min: None,
-            max: None,
+            levels: None,
+            bounds: None,
         }
     }
 
@@ -150,22 +157,22 @@ impl<T> MetricBuilder<T> {
     }
 
     pub fn levels(mut self, levels: Levels<T>) -> Self {
-        self.warn = Some(levels.warn);
-        self.crit = Some(levels.crit);
+        self.levels = Some(levels);
         self
     }
 
-    // pub fn bounds(mut self, bounds: &Bounds) -> Self
+    pub fn bounds(mut self, bounds: Bounds<T>) -> Self {
+        self.bounds = Some(bounds);
+        self
+    }
 
     pub fn build(self) -> Metric<T> {
         Metric {
             label: self.label,
             value: self.value,
             uom: self.uom,
-            warn: self.warn,
-            crit: self.crit,
-            min: self.min,
-            max: self.max,
+            levels: self.levels,
+            bounds: self.bounds,
         }
     }
 }

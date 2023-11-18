@@ -6,7 +6,7 @@
 
 from collections.abc import Iterator
 
-from cmk.agent_based.v2alpha import TableRow
+from cmk.agent_based.v2 import TableRow
 
 from .kube import Labels, MatchExpressions, MatchLabels
 

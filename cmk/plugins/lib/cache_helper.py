@@ -5,7 +5,7 @@
 
 from typing import NamedTuple
 
-from cmk.agent_based.v2alpha.render import percent, timespan
+from cmk.agent_based.v2.render import percent, timespan
 
 
 class CacheInfo(

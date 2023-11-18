@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v2alpha import check_levels, Metric, Result, Service, State, type_defs
+from cmk.agent_based.v2 import check_levels, Metric, Result, Service, State, type_defs
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 

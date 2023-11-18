@@ -12,8 +12,8 @@ from tests.testlib import on_time
 
 from tests.unit.cmk.base.plugins.agent_based.utils_inventory import sort_inventory_result
 
-from cmk.agent_based.v2alpha import Attributes, TableRow
-from cmk.agent_based.v2alpha.type_defs import InventoryResult
+from cmk.agent_based.v2 import Attributes, TableRow
+from cmk.agent_based.v2.type_defs import InventoryResult
 from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfaces, InventoryParams
 
 

@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2alpha import IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.aws.agent_based.aws_ec2 import (
     check_aws_ec2_cpu_credits,
     check_aws_ec2_cpu_util,

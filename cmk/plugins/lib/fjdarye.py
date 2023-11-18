@@ -17,8 +17,8 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
-from cmk.agent_based.v2alpha import any_of, equals, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import any_of, equals, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 FJDARYE_SUPPORTED_DEVICES = [
     ".1.3.6.1.4.1.211.1.21.1.60",  # fjdarye60

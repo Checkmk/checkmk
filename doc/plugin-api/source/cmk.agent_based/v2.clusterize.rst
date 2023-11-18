@@ -2,5 +2,5 @@
 cmk.agent_based.v2.clusterize
 =============================
 
-.. automodule:: cmk.agent_based.v2alpha.clusterize
+.. automodule:: cmk.agent_based.v2.clusterize
    :members:

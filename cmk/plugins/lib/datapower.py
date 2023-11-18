@@ -10,7 +10,7 @@
 #  1.3.6.1.4.1.14685.1.7    XG45     6.0.1.0
 #  1.3.6.1.4.1.14685.1.8    Gateway  7.2.0.2
 
-from cmk.agent_based.v2alpha import any_of, equals
+from cmk.agent_based.v2 import any_of, equals
 
 DETECT = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14685.1.8"),

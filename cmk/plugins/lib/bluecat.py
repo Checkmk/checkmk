@@ -6,8 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2alpha import equals, IgnoreResults, Metric, Result, State, type_defs
-from cmk.agent_based.v2alpha.clusterize import make_node_notice_results
+from cmk.agent_based.v2 import equals, IgnoreResults, Metric, Result, State, type_defs
+from cmk.agent_based.v2.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
 ClusterSection = Mapping[str, Section | None]

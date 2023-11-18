@@ -7,7 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     get_value_store,
@@ -15,7 +15,7 @@ from cmk.agent_based.v2alpha import (
     Result,
     State,
 )
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.aws.lib import (
     AWSMetric,
     check_aws_metrics,

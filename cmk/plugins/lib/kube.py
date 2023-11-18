@@ -11,8 +11,8 @@ from typing import assert_never, Literal, NewType, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import HostLabel
-from cmk.agent_based.v2alpha.type_defs import CheckResult, HostLabelGenerator
+from cmk.agent_based.v2 import HostLabel
+from cmk.agent_based.v2.type_defs import CheckResult, HostLabelGenerator
 
 COLLECTOR_SERVICE_NAME = "Cluster collector"
 

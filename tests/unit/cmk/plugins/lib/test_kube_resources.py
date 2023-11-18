@@ -5,7 +5,7 @@
 
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.agent_based.v2alpha import Result, State
+from cmk.agent_based.v2 import Result, State
 from cmk.plugins.lib import kube_resources
 
 

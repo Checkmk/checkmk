@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Final, NamedTuple, TypeVar
 
-from cmk.agent_based.v2alpha import Result, State
+from cmk.agent_based.v2 import Result, State
 
 _ABBREVIATIONS: Final = {
     "awb": "Always WriteBack",

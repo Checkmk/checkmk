@@ -7,7 +7,7 @@ from collections.abc import Iterable, Sequence
 FSBlock = tuple[str, float, float, str]
 FSBlocks = Sequence[FSBlock]
 
-from cmk.agent_based.v2alpha import all_of, any_of, exists, startswith
+from cmk.agent_based.v2 import all_of, any_of, exists, startswith
 
 DETECT = any_of(
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11096.6"),

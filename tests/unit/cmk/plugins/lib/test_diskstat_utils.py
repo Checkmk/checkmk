@@ -13,8 +13,8 @@ from tests.testlib import on_time
 
 from tests.unit.cmk.plugins.lib.diskstat import LEVELS
 
-from cmk.agent_based.v2alpha import get_rate, IgnoreResultsError, Metric, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import get_rate, IgnoreResultsError, Metric, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult
 from cmk.plugins.lib import diskstat
 
 

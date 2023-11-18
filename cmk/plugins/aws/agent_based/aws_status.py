@@ -15,7 +15,7 @@ import feedparser  # type: ignore[import]
 import pydantic
 from pydantic import ConfigDict
 
-from cmk.agent_based.v2alpha import AgentSection, CheckPlugin, Result, Service, State, type_defs
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State, type_defs
 from cmk.plugins.aws import constants as aws_constants
 
 

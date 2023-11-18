@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
 
-from cmk.agent_based.v2alpha import any_of, contains
+from cmk.agent_based.v2 import any_of, contains
 
 MAP_TYPES_MEMORY: Final = {
     "1": "other",

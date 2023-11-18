@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import check_levels, Metric, render
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import check_levels, Metric, render
+from cmk.agent_based.v2.type_defs import CheckResult
 
 _Levels = tuple[float, float]
 

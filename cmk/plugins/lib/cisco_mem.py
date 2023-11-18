@@ -7,16 +7,8 @@ from collections.abc import Mapping, MutableMapping
 from contextlib import suppress
 from typing import Any
 
-from cmk.agent_based.v2alpha import (
-    all_of,
-    contains,
-    exists,
-    GetRateError,
-    not_contains,
-    Result,
-    State,
-)
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import all_of, contains, exists, GetRateError, not_contains, Result, State
+from cmk.agent_based.v2.type_defs import CheckResult
 
 from .memory import check_element, get_levels_mode_from_value
 from .size_trend import size_trend

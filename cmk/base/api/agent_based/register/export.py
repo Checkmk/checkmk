@@ -17,7 +17,7 @@ from cmk.agent_based.v1.type_defs import (
     StringByteTable,
     StringTable,
 )
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     InventoryPlugin,

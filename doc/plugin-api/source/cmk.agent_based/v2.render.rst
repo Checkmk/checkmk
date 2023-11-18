@@ -1,6 +1,6 @@
 ==============================
-cmk.agent_based.v2alpha.render
+cmk.agent_based.v2.render
 ==============================
 
-.. automodule:: cmk.agent_based.v2alpha.render
+.. automodule:: cmk.agent_based.v2.render
    :members:

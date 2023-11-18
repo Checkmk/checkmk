@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from enum import IntEnum, unique
 from typing import Any, NewType
 
-from cmk.agent_based.v2alpha import check_levels, check_levels_predictive, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import check_levels, check_levels_predictive, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Project = str
 

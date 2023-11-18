@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     check_levels,
     check_levels_predictive,
     get_average,
@@ -14,7 +14,7 @@ from cmk.agent_based.v2alpha import (
     Metric,
     render,
 )
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2.type_defs import CheckResult
 
 
 class CPUInfo(

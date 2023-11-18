@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2alpha import HostLabel, Result, State
+from cmk.agent_based.v2 import HostLabel, Result, State
 from cmk.plugins.lib import ps
 
 pytestmark = pytest.mark.checks

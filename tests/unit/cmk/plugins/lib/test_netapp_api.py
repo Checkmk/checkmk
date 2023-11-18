@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.agent_based.v2alpha.type_defs import StringTable
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.netapp_api import parse_netapp_api_multiple_instances, SectionMultipleInstances
 
 pytestmark = pytest.mark.checks

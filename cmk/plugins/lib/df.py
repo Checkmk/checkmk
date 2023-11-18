@@ -8,8 +8,8 @@ from collections.abc import Callable, Generator, Iterable, Mapping, MutableMappi
 from enum import Enum
 from typing import Any, Literal, NamedTuple, NewType
 
-from cmk.agent_based.v2alpha import check_levels, Metric, render, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import check_levels, Metric, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 
 from .size_trend import size_trend
 

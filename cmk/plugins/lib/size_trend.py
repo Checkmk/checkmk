@@ -7,8 +7,8 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import check_levels, get_average, get_rate, Metric, render
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import check_levels, get_average, get_rate, Metric, render
+from cmk.agent_based.v2.type_defs import CheckResult
 
 Levels = tuple[float, float]
 
@@ -80,7 +80,7 @@ def size_trend(
 
     Yields:
       Result- and Metric- instances for the trend computation.
-    >>> from cmk.agent_based.v2alpha import GetRateError, Result
+    >>> from cmk.agent_based.v2 import GetRateError, Result
     >>> vs = {}
     >>> t0 = time.time()
     >>> for i in range(2):

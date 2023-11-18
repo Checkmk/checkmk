@@ -1,6 +1,6 @@
 =================================
-cmk.agent_based.v2alpha.type_defs
+cmk.agent_based.v2.type_defs
 =================================
 
-.. automodule:: cmk.agent_based.v2alpha.type_defs
+.. automodule:: cmk.agent_based.v2.type_defs
    :members:

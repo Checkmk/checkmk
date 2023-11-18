@@ -5,8 +5,8 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2alpha import contains
-from cmk.agent_based.v2alpha.type_defs import StringTable
+from cmk.agent_based.v2 import contains
+from cmk.agent_based.v2.type_defs import StringTable
 
 DETECT_PULSE_SECURE = contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12532")
 

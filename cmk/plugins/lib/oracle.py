@@ -8,7 +8,7 @@ from typing import Any, NamedTuple
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import State
+from cmk.agent_based.v2 import State
 
 
 class OraErrors:

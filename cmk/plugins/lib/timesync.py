@@ -7,8 +7,8 @@ import time
 from collections.abc import MutableMapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import check_levels, render, Result, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import check_levels, render, Result, State
+from cmk.agent_based.v2.type_defs import CheckResult
 
 
 def store_sync_time(

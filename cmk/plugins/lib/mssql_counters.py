@@ -15,8 +15,8 @@ from collections.abc import MutableMapping
 from contextlib import suppress
 from typing import Any
 
-from cmk.agent_based.v2alpha import get_rate, GetRateError, IgnoreResultsError, Service
-from cmk.agent_based.v2alpha.type_defs import DiscoveryResult
+from cmk.agent_based.v2 import get_rate, GetRateError, IgnoreResultsError, Service
+from cmk.agent_based.v2.type_defs import DiscoveryResult
 
 Counters = dict[str, float]
 Section = dict[tuple[str, str], Counters]

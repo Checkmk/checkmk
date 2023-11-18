@@ -233,6 +233,19 @@ rulespec_registry.register(
 )
 
 
+def _match_method(x: object) -> int:
+    match x:
+        case tuple():
+            return 4
+        case "":
+            return 0
+        case "spool:":
+            return 2
+        case str() as local if local.startswith("spool:"):
+            return 3
+    return 1
+
+
 def _parameter_valuespec_logwatch_ec() -> Alternative:
     return Alternative(
         title=_("Forwarding"),
@@ -386,13 +399,7 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
                                     ],
                                 ),
                             ],
-                            match=lambda x: 4
-                            if isinstance(x, tuple)
-                            else (
-                                0
-                                if not x
-                                else (2 if x == "spool:" else (3 if x.startswith("spool:") else 1))
-                            ),
+                            match=_match_method,
                         ),
                     ),
                     (
@@ -489,9 +496,9 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
                     "facility",
                     "restrict_logfiles",
                     "monitor_logfilelist",
-                    "monitor_logfile_access_state",
                     "expected_logfiles",
                     "logwatch_reclassify",
+                    "monitor_logfile_access_state",
                     "separate_checks",
                 ],
                 ignored_keys=["service_level"],

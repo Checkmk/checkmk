@@ -4,6 +4,9 @@ package lib
 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
 downloads_path = "/var/downloads/checkmk/"
 hashfile_extension = ".hash"
+// This corresponds to internal_distros from editions.yml in 2.2/2.3 etc., but is already a string
+// formatted to be used for rsync's --exclude parameter
+internal_distros = "{}"
 
 def upload(Map args) {
     // needed args + desc:
@@ -47,6 +50,7 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
             sh("mkdir -p ${DOWNLOAD_DEST}")
             sh """
                 rsync --recursive --links --perms --times --verbose \
+		    --exclude ${internal_distros} \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
                     ${DOWNLOAD_SOURCE}/${CMK_VERSION}/${PATTERN} \
                     ${DOWNLOAD_DEST}/
@@ -62,6 +66,7 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
             sh """
                 rsync -av \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
+		    --exclude ${internal_distros} \
                     ${SOURCE_PATH} \
                     ${UPLOAD_DEST}
             """

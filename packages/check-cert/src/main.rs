@@ -65,14 +65,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         args.not_after_warn * Duration::DAY,
         args.not_after_crit * Duration::DAY,
     ) else {
-        check::Output::bail_out("invalid args: not after crit level larger than warn");
+        check::Writer::bail_out("invalid args: not after crit level larger than warn");
     };
 
     let Ok(response_time_levels) = check::UpperLevels::try_new(
         args.response_time_warn * Duration::MILLISECOND,
         args.response_time_crit * Duration::MILLISECOND,
     ) else {
-        check::Output::bail_out("invalid args: response time crit higher than warn");
+        check::Writer::bail_out("invalid args: response time crit higher than warn");
     };
 
     let start = Instant::now();
@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response_time = start.elapsed();
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
-    let out = check::Output::from(vec![
+    let out = check::Writer::from(vec![
         checker::check_response_time(response_time, response_time_levels),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
             .unwrap_or_default(),

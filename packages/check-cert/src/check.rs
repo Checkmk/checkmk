@@ -227,12 +227,12 @@ impl Display for CheckResult {
     }
 }
 
-pub struct Output {
+pub struct Writer {
     pub state: State,
     summary: String,
 }
 
-impl Output {
+impl Writer {
     pub fn bye(&self) -> ! {
         std::process::exit(match self.state {
             State::Ok => 0,
@@ -249,7 +249,7 @@ impl Output {
     }
 }
 
-impl Display for Output {
+impl Display for Writer {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         if self.summary.is_empty() {
             write!(f, "{}", self.state)?;
@@ -260,7 +260,7 @@ impl Display for Output {
     }
 }
 
-impl From<CheckResult> for Output {
+impl From<CheckResult> for Writer {
     fn from(check_result: CheckResult) -> Self {
         Self {
             state: check_result.state,
@@ -269,7 +269,7 @@ impl From<CheckResult> for Output {
     }
 }
 
-impl From<Vec<CheckResult>> for Output {
+impl From<Vec<CheckResult>> for Writer {
     fn from(check_results: Vec<CheckResult>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.state).max() {
@@ -343,8 +343,8 @@ mod test_metrics_display {
 }
 
 #[cfg(test)]
-mod test_output_format {
-    use super::{CheckResult, Output};
+mod test_writer_format {
+    use super::{CheckResult, Writer};
 
     fn s(s: &str) -> String {
         String::from(s)
@@ -352,7 +352,7 @@ mod test_output_format {
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Output::from(vec![])), "OK");
+        assert_eq!(format!("{}", Writer::from(vec![])), "OK");
     }
 
     #[test]
@@ -360,7 +360,7 @@ mod test_output_format {
         let cr1 = CheckResult::default();
         let cr2 = CheckResult::default();
         let cr3 = CheckResult::default();
-        assert_eq!(format!("{}", Output::from(vec![cr1, cr2, cr3])), "OK");
+        assert_eq!(format!("{}", Writer::from(vec![cr1, cr2, cr3])), "OK");
     }
 
     #[test]
@@ -369,7 +369,7 @@ mod test_output_format {
         let cr2 = CheckResult::ok(s("summary 2"));
         let cr3 = CheckResult::ok(s("summary 3"));
         assert_eq!(
-            format!("{}", Output::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
             "OK - summary 1, summary 2, summary 3"
         );
     }
@@ -380,7 +380,7 @@ mod test_output_format {
         let cr2 = CheckResult::warn(s("summary 2"));
         let cr3 = CheckResult::ok(s("summary 3"));
         assert_eq!(
-            format!("{}", Output::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
             "WARNING - summary 1, summary 2 (!), summary 3"
         );
     }
@@ -391,7 +391,7 @@ mod test_output_format {
         let cr2 = CheckResult::warn(s("summary 2"));
         let cr3 = CheckResult::crit(s("summary 3"));
         assert_eq!(
-            format!("{}", Output::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
     }
@@ -403,7 +403,7 @@ mod test_output_format {
         let cr3 = CheckResult::crit(s("summary 3"));
         let cr4 = CheckResult::unknown(s("summary 4"));
         assert_eq!(
-            format!("{}", Output::from(vec![cr1, cr2, cr3, cr4])),
+            format!("{}", Writer::from(vec![cr1, cr2, cr3, cr4])),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }

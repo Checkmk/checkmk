@@ -192,40 +192,25 @@ impl CheckResult {
     }
 
     pub fn ok(summary: String) -> Self {
-        Self {
-            state: State::Ok,
-            summary,
-        }
+        Self::new(State::Ok, summary)
     }
 
     pub fn warn(summary: String) -> Self {
-        Self {
-            state: State::Warn,
-            summary,
-        }
+        Self::new(State::Warn, summary)
     }
 
     pub fn crit(summary: String) -> Self {
-        Self {
-            state: State::Crit,
-            summary,
-        }
+        Self::new(State::Crit, summary)
     }
 
     pub fn unknown(summary: String) -> Self {
-        Self {
-            state: State::Unknown,
-            summary,
-        }
+        Self::new(State::Unknown, summary)
     }
 }
 
 impl Default for CheckResult {
     fn default() -> Self {
-        Self {
-            state: State::Ok,
-            summary: String::from(""),
-        }
+        Self::new(State::Ok, String::from(""))
     }
 }
 

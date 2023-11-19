@@ -45,6 +45,10 @@ where
             State::Ok
         }
     }
+
+    pub fn check(&self, value: &T, summary: String) -> CheckResult {
+        CheckResult::new(self.evaluate(value), summary)
+    }
 }
 
 impl<T> UpperLevels<T>
@@ -69,6 +73,10 @@ where
         } else {
             State::Ok
         }
+    }
+
+    pub fn check(&self, value: &T, summary: String) -> CheckResult {
+        CheckResult::new(self.evaluate(value), summary)
     }
 }
 

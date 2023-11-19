@@ -60,8 +60,8 @@ pub fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Opti
 }
 
 pub fn check_response_time(response_time: Duration, levels: UpperLevels<Duration>) -> CheckResult {
-    CheckResult::new(
-        levels.evaluate(&response_time),
+    levels.check(
+        &response_time,
         format!(
             "Certificate obtained in {} ms",
             response_time.whole_milliseconds()
@@ -76,8 +76,8 @@ pub fn check_validity_not_after(
 ) -> CheckResult {
     match time_to_expiration {
         None => CheckResult::crit(format!("Certificate expired ({})", not_after)),
-        Some(time_to_expiration) => CheckResult::new(
-            levels.evaluate(&time_to_expiration),
+        Some(time_to_expiration) => levels.check(
+            &time_to_expiration,
             format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),

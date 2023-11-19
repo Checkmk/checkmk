@@ -188,7 +188,7 @@ impl<T: Into<f64>> MetricBuilder<T> {
 
 pub struct CheckResult {
     state: State,
-    pub summary: String,
+    summary: String,
 }
 
 impl CheckResult {

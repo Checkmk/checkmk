@@ -84,11 +84,10 @@ def discover_logwatch_single(
     params: AllParams,
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    not_forwarded_logs = logwatch.select_forwarded(
-        logwatch.discoverable_items(section),
-        logwatch.get_ec_rule_params(),
-        invert=True,
-    )
+    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    not_forwarded_logs = {
+        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
+    }
     inventory_groups = _get_discovery_groups(params)
 
     for logfile in not_forwarded_logs:
@@ -102,11 +101,10 @@ def discover_logwatch_groups(
     params: AllParams,
     section: logwatch.Section,
 ) -> DiscoveryResult:
-    not_forwarded_logs = logwatch.select_forwarded(
-        logwatch.discoverable_items(section),
-        logwatch.get_ec_rule_params(),
-        invert=True,
-    )
+    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    not_forwarded_logs = {
+        item for item in logwatch.discoverable_items(section) if not log_filter.is_forwarded(item)
+    }
     inventory_groups = _get_discovery_groups(params)
     inventory: dict[str, set[GroupingPattern]] = {}
 

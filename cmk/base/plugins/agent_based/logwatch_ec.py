@@ -217,9 +217,12 @@ def discover_logwatch_ec_common(
     params: Sequence[logwatch.ParameterLogwatchEc],
     use_mode: str,
 ) -> DiscoveryResult:
-    discoverable_items = logwatch.discoverable_items(section)
-    forwarded_logs = logwatch.select_forwarded(discoverable_items, params)
-    if not forwarded_logs:
+    log_filter = logwatch.LogFileFilter(logwatch.get_ec_rule_params())
+    if not (
+        forwarded_logs := {
+            item for item in logwatch.discoverable_items(section) if log_filter.is_forwarded(item)
+        }
+    ):
         return
 
     mode, merged_rules = _logwatch_inventory_mode_rules(params)
@@ -314,11 +317,13 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
     # but if it doesn't, `if params["monitor_logfilelist"]` would crash.
     assert params
 
+    log_filter = logwatch.LogFileFilter([params])
+
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log
         if not any(
             item in node_data.logfiles for node_data in parsed.values()
-        ) or not logwatch.ec_forwarding_enabled(params, item):
+        ) or not log_filter.is_forwarded(item):
             return
 
         used_logfiles: UsedLogFiles = defaultdict(list)
@@ -336,7 +341,7 @@ def check_logwatch_ec_common(  # pylint: disable=too-many-branches
         # Filter logfiles if some should be excluded
         for node_name, node_data in parsed.items():
             for name, data in node_data.logfiles.items():
-                if logwatch.ec_forwarding_enabled(params, name):
+                if log_filter.is_forwarded(name):
                     used_logfiles[name].append((node_name, data["attr"]))
         used_logfiles = dict(sorted(used_logfiles.items()))
 

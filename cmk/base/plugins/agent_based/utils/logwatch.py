@@ -15,8 +15,8 @@
 
 import re
 from collections import Counter
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-from typing import Any, Literal, NamedTuple, TypedDict
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from typing import Any, Literal, NamedTuple, Pattern, TypedDict
 
 from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
@@ -98,27 +98,33 @@ def discoverable_items(*sections: Section) -> list[str]:
     )
 
 
-def ec_forwarding_enabled(params: DictLogwatchEc, item: str) -> bool:
-    if "restrict_logfiles" not in params:
-        return True  # matches all logs on this host
+class LogFileFilter:
+    @staticmethod
+    def _match_all(_logfile: str) -> Literal[True]:
+        return True
 
-    # only logs which match the specified patterns
-    return any(re.match(pattern, item) for pattern in params["restrict_logfiles"])
+    @staticmethod
+    def _match_nothing(_logfile: str) -> Literal[False]:
+        return False
 
+    def __init__(self, rules: Sequence[ParameterLogwatchEc]) -> None:
+        self._expressions: tuple[Pattern[str], ...] = ()
+        self.is_forwarded: Callable[[str], bool]
+        if not rules or not (params := rules[0]):
+            # forwarding disabled
+            self.is_forwarded = self._match_nothing
+            return
 
-def select_forwarded(
-    items: Sequence[str],
-    forward_settings: Sequence[ParameterLogwatchEc],
-    *,
-    invert: bool = False,
-) -> set[str]:
-    # Is forwarding enabled in general?
-    if not (forward_settings and forward_settings[0]):
-        return set(items) if invert else set()
+        if "restrict_logfiles" not in params:
+            # matches all logs on this host
+            self.is_forwarded = self._match_all
+            return
 
-    return {
-        item for item in items if ec_forwarding_enabled(forward_settings[0], item) is not invert
-    }
+        self._expressions = tuple(re.compile(pattern) for pattern in params["restrict_logfiles"])
+        self.is_forwarded = self._match_patterns
+
+    def _match_patterns(self, logfile: str) -> bool:
+        return any(rgx.match(logfile) for rgx in self._expressions)
 
 
 def reclassify(

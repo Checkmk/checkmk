@@ -505,7 +505,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        if edition() is Edition.CCE:
+        if edition() in (Edition.CME, Edition.CCE):
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -618,7 +618,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         ).block:
             errors.append(block_effect.message_html)
 
-        if edition() is Edition.CCE:
+        if edition() in (Edition.CME, Edition.CCE):
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity

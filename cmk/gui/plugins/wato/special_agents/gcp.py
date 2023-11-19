@@ -31,7 +31,7 @@ CCE_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[tuple[str, str]]:
-    if edition() is Edition.CCE:
+    if edition() in (Edition.CME, Edition.CCE):
         return RAW_GCP_SERVICES + CCE_GCP_SERVICES
 
     return RAW_GCP_SERVICES

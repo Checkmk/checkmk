@@ -36,7 +36,7 @@ where
         }
     }
 
-    pub fn evaluate(&self, value: &T) -> State {
+    fn evaluate(&self, value: &T) -> State {
         if value < &self.levels.crit {
             State::Crit
         } else if value < &self.levels.warn {
@@ -65,7 +65,7 @@ where
         }
     }
 
-    pub fn evaluate(&self, value: &T) -> State {
+    fn evaluate(&self, value: &T) -> State {
         if value >= &self.levels.crit {
             State::Crit
         } else if value >= &self.levels.warn {
@@ -80,8 +80,8 @@ where
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
-pub enum State {
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum State {
     Ok,
     Warn,
     Crit,
@@ -187,12 +187,12 @@ impl<T: Into<f64>> MetricBuilder<T> {
 }
 
 pub struct CheckResult {
-    pub state: State,
+    state: State,
     pub summary: String,
 }
 
 impl CheckResult {
-    pub fn new(state: State, summary: String) -> Self {
+    fn new(state: State, summary: String) -> Self {
         Self { state, summary }
     }
 
@@ -236,7 +236,7 @@ impl Display for CheckResult {
 }
 
 pub struct Writer {
-    pub state: State,
+    state: State,
     summary: String,
 }
 

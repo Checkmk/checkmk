@@ -171,67 +171,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
 
 	# cmk needs to be a namespace package (CMK-3979)
-	rm -f \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/special_agents/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/check_legacy_includes/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/post_rename_site/plugins/actions/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/raw/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/raw/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/dashboard/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/config/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/cron/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/userdb/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/bi/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/watolib/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/openapi/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/openapi/endpoints/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/sidebar/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/icons/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/views/perfometers/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/visuals/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/wato/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/update_config/plugins/actions/__init__.py \
-	    \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/dcd/plugins/connectors/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/post_rename_site/plugins/actions/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/cee/update_config/plugins/actions/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/plugins/bakery/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cee/bakery/core_bakelets/cce/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/sla/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cee/plugins/reporting/__init__.py \
-	    \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py
+        grep -R 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm -f
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk

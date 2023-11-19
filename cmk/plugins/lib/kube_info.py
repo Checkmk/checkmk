@@ -4,17 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping
-from typing import Any, Literal, NewType, Protocol
+from typing import Any, Literal, NewType
 
 from cmk.agent_based.v2 import HostLabel, render, Result, State
 from cmk.agent_based.v2.type_defs import CheckResult, HostLabelGenerator
 
 from .kube import (
     ControlChain,
-    FilteredAnnotations,
+    DaemonSetInfo,
+    DeploymentInfo,
     kube_annotations_to_cmk_labels,
     kube_labels_to_cmk_labels,
-    Labels,
+    StatefulSetInfo,
 )
 
 
@@ -104,13 +105,7 @@ def check_info(info: Mapping[InfoTypes, Any]) -> CheckResult:
             yield function(info[info_type])
 
 
-class Info(Protocol):
-    cluster: str
-    namespace: str
-    name: str
-    kubernetes_cluster_hostname: str
-    annotations: FilteredAnnotations
-    labels: Labels
+Info = StatefulSetInfo | DeploymentInfo | DaemonSetInfo
 
 
 def host_labels(

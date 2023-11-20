@@ -90,9 +90,9 @@ def _parse_counters(
                     alias=name,
                     type="loopback" in name.lower() and "24" or "6",
                     speed=counters["10"],
-                    oper_status=None,
+                    oper_status="1",
                     out_qlen=counters["34"],
-                    oper_status_name=interfaces.MISSING_OPER_STATUS,
+                    oper_status_name="Connected",
                 ),
                 interfaces.Counters(
                     in_octets=counters["-246"],
@@ -645,9 +645,7 @@ def inventory_winperf_if(
                 alias=interface.attributes.alias,
                 type=interface.attributes.type,
                 speed=int(interface.attributes.speed),
-                oper_status=int(interface.attributes.oper_status[0])
-                if isinstance(interface.attributes.oper_status, str)
-                else None,
+                oper_status=int(interface.attributes.oper_status[0]),
                 phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
             )
             for interface in sorted(

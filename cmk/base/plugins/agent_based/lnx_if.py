@@ -365,9 +365,7 @@ def _make_inventory_interface(
         alias=interface.attributes.alias,
         type=interface.attributes.type,
         speed=int(interface.attributes.speed),
-        oper_status=int(interface.attributes.oper_status)
-        if isinstance(interface.attributes.oper_status, str)
-        else None,
+        oper_status=int(interface.attributes.oper_status),
         phys_address=mac,
         bond=bond_map.get(mac),
     )

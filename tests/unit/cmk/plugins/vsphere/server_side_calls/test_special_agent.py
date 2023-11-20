@@ -3,42 +3,52 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import SpecialAgent
-
-pytestmark = pytest.mark.checks
+from cmk.plugins.vsphere.server_side_calls.special_agent import commands_function, Params
+from cmk.server_side_calls.v1 import (
+    HostConfig,
+    IPAddressFamily,
+    PlainTextSecret,
+    Secret,
+    SpecialAgentCommand,
+    StoredSecret,
+)
 
 
 @pytest.mark.parametrize(
-    "params,expected_args",
+    ["params", "expected_arguments"],
     [
-        (
+        pytest.param(
             {
                 "tcp_port": 443,
                 "direct": True,
                 "skip_placeholder_vms": True,
                 "ssl": False,
-                "secret": "secret",
+                "secret": ("password", "secret"),
                 "spaces": "cut",
                 "user": "username",
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
+                "snapshots_on_host": False,
             },
             [
-                "-p",
-                "443",
+                "1.2.3.4",
                 "-u",
                 "username",
-                "-s=secret",
+                "-s",
+                PlainTextSecret(value="secret", format="%s"),
                 "-i",
                 "hostsystem,virtualmachine,datastore,counters",
+                "--spaces",
+                "cut",
+                "-p",
+                "443",
                 "--direct",
                 "--hostname",
                 "host",
                 "-P",
-                "--spaces",
-                "cut",
                 "--no-cert-check",
             ],
         ),
@@ -55,42 +65,45 @@ pytestmark = pytest.mark.checks
                 "spaces": "cut",
                 "user": "username",
                 "infos": ["hostsystem", "virtualmachine", "datastore", "counters"],
+                "snapshots_on_host": True,
             },
             [
-                "-p",
-                "443",
+                "1.2.3.4",
                 "-u",
                 "username",
-                ("store", "stored_secret", "-s=%s"),
+                "-s",
+                StoredSecret(value="stored_secret", format="%s"),
                 "-i",
                 "hostsystem,virtualmachine,datastore,counters",
+                "--spaces",
+                "cut",
+                "-p",
+                "443",
                 "--direct",
                 "--hostname",
                 "host",
                 "-P",
-                "--spaces",
-                "cut",
                 "--vm_piggyname",
                 "alias",
+                "--snapshots-on-host",
                 "--no-cert-check",
             ],
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "ip_address, expected_host_address",
-    [
-        (None, "host"),
-        ("1.2.3.4", "1.2.3.4"),
-    ],
-)
-def test_vsphere_argument_parsing(
-    params: dict,
-    expected_args: list[str],
-    ip_address: str | None,
-    expected_host_address: str,
+def test_commands_function(
+    params: Mapping[str, object],
+    expected_arguments: Sequence[str | Secret],
 ) -> None:
-    """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_vsphere")
-    arguments = agent.argument_func(params, "host", ip_address)
-    assert arguments == expected_args + [expected_host_address]
+    assert list(
+        commands_function(
+            Params.model_validate(params),
+            HostConfig(
+                name="host",
+                address="1.2.3.4",
+                alias="host",
+                ip_family=IPAddressFamily.IPV4,
+            ),
+            {},
+        )
+    ) == [SpecialAgentCommand(command_arguments=expected_arguments)]

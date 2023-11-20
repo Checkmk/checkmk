@@ -316,7 +316,7 @@ impl From<Vec<CheckResult>> for Writer {
 
 #[cfg(test)]
 mod test_metrics_display {
-    use super::{Levels, Metric, MetricBuilder};
+    use super::{Bounds, Levels, Metric, MetricBuilder};
 
     #[test]
     fn test_default() {
@@ -356,16 +356,16 @@ mod test_metrics_display {
 
     #[test]
     fn test_chain_all() {
-        // We have no Bounds implementation, yet
         assert_eq!(
             format!(
                 "{}",
                 MetricBuilder::<u32>::new("name", 42)
                     .uom("ms")
                     .levels(Levels { warn: 24, crit: 42 })
+                    .bounds(Bounds { min: 0, max: 100 })
                     .build()
             ),
-            "name=42ms;24;42;;"
+            "name=42ms;24;42;0;100"
         );
     }
 }

@@ -70,16 +70,11 @@ def test_create_snmp_parse_function() -> None:
             expected_annotations={(str, "str")},  # irrelevant in test
         )
 
-    section_plugins.validate_parse_function(
-        compliant_parse_function,
-        expected_annotations={(str, "str")},  # irrel. in test, SNMP parse function is not annotated
-    )
-
     arbitrary_non_empty_input = [[["moo"]]]
     assert compliant_parse_function([[]]) is None
-    assert compliant_parse_function(
-        arbitrary_non_empty_input  # type: ignore[arg-type]
-    ) == old_school_parse_function(arbitrary_non_empty_input)
+    assert compliant_parse_function(arbitrary_non_empty_input) == old_school_parse_function(
+        arbitrary_non_empty_input
+    )
 
 
 def test_create_snmp_parse_function_handle_empty() -> None:
@@ -100,7 +95,6 @@ def test_create_snmp_section_plugin_from_legacy() -> None:
             "detect": startswith(".1.2.3.4.5", "norris"),
             "fetch": SNMPTree(base=".1.2.3.4.5", oids=["2", "3"]),
         },
-        validate_creation_kwargs=True,
     )
 
     assert plugin.name == SectionName("norris")

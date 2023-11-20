@@ -8,7 +8,7 @@ import functools
 import inspect
 import itertools
 from collections.abc import Generator
-from typing import Any, cast, List
+from typing import Any, List, Sequence
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.exceptions import MKGeneralException
@@ -37,6 +37,7 @@ from cmk.base.api.agent_based.register.utils import (
 from cmk.agent_based.v1 import HostLabel, SNMPTree
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
+from cmk.agent_based.v2 import AgentSection, SimpleSNMPSection, SNMPSection
 from cmk.discover_plugins import PluginLocation
 
 
@@ -176,14 +177,14 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
             )
 
 
-def _validate_type_list_snmp_trees(trees: list[SNMPTree]) -> None:
+def _validate_type_list_snmp_trees(trees: Sequence[SNMPTree]) -> None:
     """Validate that we have a list of SNMPTree instances"""
     if isinstance(trees, list) and trees and all(isinstance(t, SNMPTree) for t in trees):
         return
     raise TypeError("value of 'fetch' keyword must be SNMPTree or non-empty list of SNMPTrees")
 
 
-def _validate_fetch_spec(trees: list[SNMPTree]) -> None:
+def _validate_fetch_spec(trees: Sequence[SNMPTree]) -> None:
     _validate_type_list_snmp_trees(trees)
     for tree in trees:
         tree.validate()
@@ -227,110 +228,92 @@ def _create_supersedes(
 
 
 def create_agent_section_plugin(
+    agent_section_spec: AgentSection,
+    location: PluginLocation | None,
     *,
-    name: str,
-    parsed_section_name: str | None = None,
-    parse_function: AgentParseFunction,
-    host_label_function: HostLabelFunction | None = None,
-    host_label_default_parameters: ParametersTypeAlias | None = None,
-    host_label_ruleset_name: str | None = None,
-    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: list[str] | None = None,
-    location: PluginLocation | None = None,
-    validate_creation_kwargs: bool,
+    validate: bool,
 ) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    section_name = SectionName(name)
+    section_name = SectionName(agent_section_spec.name)
 
-    if validate_creation_kwargs:
-        if host_label_function is not None:
+    if validate:
+        if agent_section_spec.host_label_function is not None:
             _validate_host_label_kwargs(
-                host_label_function=host_label_function,
-                host_label_default_parameters=host_label_default_parameters,
-                host_label_ruleset_name=host_label_ruleset_name,
-                host_label_ruleset_type=host_label_ruleset_type,
+                host_label_function=agent_section_spec.host_label_function,
+                host_label_default_parameters=agent_section_spec.host_label_default_parameters,
+                host_label_ruleset_name=agent_section_spec.host_label_ruleset_name,
+                host_label_ruleset_type=agent_section_spec.host_label_ruleset_type,
             )
 
     return AgentSectionPlugin(
         name=section_name,
-        parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
-        parse_function=noop_agent_parse_function if parse_function is None else parse_function,
-        host_label_function=_create_host_label_function(host_label_function),
-        host_label_default_parameters=host_label_default_parameters,
+        parsed_section_name=ParsedSectionName(
+            agent_section_spec.parsed_section_name or str(section_name)
+        ),
+        parse_function=agent_section_spec.parse_function,
+        host_label_function=_create_host_label_function(agent_section_spec.host_label_function),
+        host_label_default_parameters=agent_section_spec.host_label_default_parameters,
         host_label_ruleset_name=(
-            None if host_label_ruleset_name is None else RuleSetName(host_label_ruleset_name)
+            None
+            if agent_section_spec.host_label_ruleset_name is None
+            else RuleSetName(agent_section_spec.host_label_ruleset_name)
         ),
         host_label_ruleset_type=(
-            "merged" if host_label_ruleset_type is RuleSetType.MERGED else "all"
+            "merged" if agent_section_spec.host_label_ruleset_type is RuleSetType.MERGED else "all"
         ),
-        supersedes=_create_supersedes(section_name, supersedes),
+        supersedes=_create_supersedes(section_name, agent_section_spec.supersedes),
         location=location,
     )
 
 
 def create_snmp_section_plugin(
+    snmp_section_spec: SimpleSNMPSection | SNMPSection,
+    location: PluginLocation | None,
     *,
-    name: str,
-    detect_spec: SNMPDetectBaseType,
-    fetch: SNMPTree | list[SNMPTree],
-    parsed_section_name: str | None = None,
-    parse_function: SimpleSNMPParseFunction | SNMPParseFunction,
-    host_label_function: HostLabelFunction | None = None,
-    host_label_default_parameters: ParametersTypeAlias | None = None,
-    host_label_ruleset_name: str | None = None,
-    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: list[str] | None = None,
-    location: PluginLocation | None = None,
-    validate_creation_kwargs: bool,
+    validate: bool,
 ) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    section_name = SectionName(name)
+    section_name = SectionName(snmp_section_spec.name)
 
-    # normalize to List[SNMPTree]
-    tree_list = [fetch] if isinstance(fetch, SNMPTree) else fetch
+    if validate:
+        _validate_detect_spec(snmp_section_spec.detect)
+        _validate_fetch_spec(snmp_section_spec.fetch)
 
-    if validate_creation_kwargs:
-        _validate_detect_spec(detect_spec)
-        _validate_fetch_spec(tree_list)
-
-        if host_label_function is not None:
+        if snmp_section_spec.host_label_function is not None:
             _validate_host_label_kwargs(
-                host_label_function=host_label_function,
-                host_label_default_parameters=host_label_default_parameters,
-                host_label_ruleset_name=host_label_ruleset_name,
-                host_label_ruleset_type=host_label_ruleset_type,
+                host_label_function=snmp_section_spec.host_label_function,
+                host_label_default_parameters=snmp_section_spec.host_label_default_parameters,
+                host_label_ruleset_name=snmp_section_spec.host_label_ruleset_name,
+                host_label_ruleset_type=snmp_section_spec.host_label_ruleset_type,
             )
-
-    # Now ensure we have a SNMPParseFunction, not a SimpleSNMPParseFunction.
-    # This is a mess, agent_based.v2 should allow us to clean this up at least a bit.
-    if isinstance(fetch, SNMPTree):
-        parse_function = wrap_in_unpacker(cast(SimpleSNMPParseFunction, parse_function))
-    else:
-        parse_function = cast(SNMPParseFunction, parse_function)
 
     return SNMPSectionPlugin(
         name=section_name,
-        parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
-        parse_function=parse_function,
-        host_label_function=_create_host_label_function(host_label_function),
-        host_label_default_parameters=host_label_default_parameters,
+        parsed_section_name=ParsedSectionName(
+            snmp_section_spec.parsed_section_name or str(section_name)
+        ),
+        parse_function=snmp_section_spec.parse_function,
+        host_label_function=_create_host_label_function(snmp_section_spec.host_label_function),
+        host_label_default_parameters=snmp_section_spec.host_label_default_parameters,
         host_label_ruleset_name=(
-            None if host_label_ruleset_name is None else RuleSetName(host_label_ruleset_name)
+            None
+            if snmp_section_spec.host_label_ruleset_name is None
+            else RuleSetName(snmp_section_spec.host_label_ruleset_name)
         ),
         host_label_ruleset_type=(
-            "merged" if host_label_ruleset_type is RuleSetType.MERGED else "all"
+            "merged" if snmp_section_spec.host_label_ruleset_type is RuleSetType.MERGED else "all"
         ),
-        supersedes=_create_supersedes(section_name, supersedes),
-        detect_spec=detect_spec,
-        trees=tree_list,
+        supersedes=_create_supersedes(section_name, snmp_section_spec.supersedes),
+        detect_spec=snmp_section_spec.detect,
+        trees=snmp_section_spec.fetch,
         location=location,
     )
 

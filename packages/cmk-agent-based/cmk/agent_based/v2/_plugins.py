@@ -7,6 +7,7 @@
 
 # pylint: disable=too-many-instance-attributes
 
+import functools
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Generic, overload, TypeVar
@@ -24,6 +25,7 @@ from ..v1.type_defs import (
 )
 
 _Section = TypeVar("_Section", bound=object)  # yes, object.
+_TableTypeT = TypeVar("_TableTypeT", StringByteTable, StringTable)
 
 InventoryFunction = Callable[..., InventoryResult]  # type: ignore[misc]
 
@@ -146,7 +148,7 @@ class AgentSection(Generic[_Section]):
 
 
 @dataclass
-class SimpleSNMPSection(Generic[_Section]):
+class SimpleSNMPSection(Generic[_TableTypeT, _Section]):
     """A SimpleSNMPSection to plug into Checkmk
 
     The snmp information will be gathered and parsed according to the functions and
@@ -203,10 +205,8 @@ class SimpleSNMPSection(Generic[_Section]):
 
     name: str
     detect: SNMPDetectSpecification
-    fetch: SNMPTree
-    parse_function: Callable[[StringTable], _Section | None] | Callable[
-        [StringByteTable], _Section | None
-    ]
+    fetch: Sequence[SNMPTree]
+    parse_function: Callable[[Sequence[_TableTypeT]], _Section | None]
     parsed_section_name: str | None = None
     host_label_function: (
         Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
@@ -218,6 +218,16 @@ class SimpleSNMPSection(Generic[_Section]):
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED
     supersedes: list[str] | None = None
 
+    @staticmethod
+    def _wrap_in_upacker(
+        parse_function: Callable[[_TableTypeT], _Section | None]
+    ) -> Callable[[Sequence[_TableTypeT]], _Section | None]:
+        @functools.wraps(parse_function)
+        def unpacking_parse_function(string_table: Sequence[_TableTypeT]) -> _Section | None:
+            return parse_function(string_table[0])
+
+        return unpacking_parse_function
+
     @overload
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -225,8 +235,7 @@ class SimpleSNMPSection(Generic[_Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[StringTable], _Section | None]
-        | Callable[[StringByteTable], _Section | None],
+        parse_function: Callable[[_TableTypeT], _Section | None],
         host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
@@ -243,8 +252,7 @@ class SimpleSNMPSection(Generic[_Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[StringTable], _Section | None]
-        | Callable[[StringByteTable], _Section | None],
+        parse_function: Callable[[_TableTypeT], _Section | None],
         host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
@@ -260,8 +268,7 @@ class SimpleSNMPSection(Generic[_Section]):
         name: str,
         detect: SNMPDetectSpecification,
         fetch: SNMPTree,
-        parse_function: Callable[[StringTable], _Section | None]
-        | Callable[[StringByteTable], _Section | None],
+        parse_function: Callable[[_TableTypeT], _Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
             Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
@@ -275,8 +282,8 @@ class SimpleSNMPSection(Generic[_Section]):
     ) -> None:
         self.name = name
         self.detect = detect
-        self.fetch = fetch
-        self.parse_function = parse_function
+        self.fetch = [fetch]
+        self.parse_function = self._wrap_in_upacker(parse_function)
         self.parsed_section_name = parsed_section_name
         self.host_label_function = host_label_function
         self.host_label_default_parameters = host_label_default_parameters
@@ -286,7 +293,7 @@ class SimpleSNMPSection(Generic[_Section]):
 
 
 @dataclass
-class SNMPSection(Generic[_Section]):
+class SNMPSection(Generic[_TableTypeT, _Section]):
     """An SNMPSection to plug into Checkmk
 
     The snmp information will be gathered and parsed according to the functions and
@@ -345,11 +352,8 @@ class SNMPSection(Generic[_Section]):
 
     name: str
     detect: SNMPDetectSpecification
-    fetch: list[SNMPTree]
-    parse_function: (
-        Callable[[Sequence[StringTable]], _Section | None]
-        | Callable[[Sequence[StringByteTable]], _Section | None]
-    )
+    fetch: Sequence[SNMPTree]
+    parse_function: (Callable[[Sequence[_TableTypeT]], _Section | None])
     parsed_section_name: str | None = None
     host_label_function: (
         Callable[[_Section, Mapping[str, object]], HostLabelGenerator]
@@ -367,11 +371,8 @@ class SNMPSection(Generic[_Section]):
         *,
         name: str,
         detect: SNMPDetectSpecification,
-        fetch: list[SNMPTree],
-        parse_function: (
-            Callable[[Sequence[StringTable]], _Section | None]
-            | Callable[[Sequence[StringByteTable]], _Section | None]
-        ),
+        fetch: Sequence[SNMPTree],
+        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
         host_label_function: (Callable[[_Section], HostLabelGenerator] | None) = None,
         host_label_default_parameters: None = None,
         host_label_ruleset_name: None = None,
@@ -387,11 +388,8 @@ class SNMPSection(Generic[_Section]):
         *,
         name: str,
         detect: SNMPDetectSpecification,
-        fetch: list[SNMPTree],
-        parse_function: (
-            Callable[[Sequence[StringTable]], _Section | None]
-            | Callable[[Sequence[StringByteTable]], _Section | None]
-        ),
+        fetch: Sequence[SNMPTree],
+        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
         host_label_function: Callable[[_Section, Mapping[str, object]], HostLabelGenerator],
         host_label_default_parameters: Mapping[str, object],
         host_label_ruleset_name: str,
@@ -406,11 +404,8 @@ class SNMPSection(Generic[_Section]):
         *,
         name: str,
         detect: SNMPDetectSpecification,
-        fetch: list[SNMPTree],
-        parse_function: (
-            Callable[[Sequence[StringTable]], _Section | None]
-            | Callable[[Sequence[StringByteTable]], _Section | None]
-        ),
+        fetch: Sequence[SNMPTree],
+        parse_function: Callable[[Sequence[_TableTypeT]], _Section | None],
         parsed_section_name: str | None = None,
         host_label_function: (
             Callable[[_Section, Mapping[str, object]], HostLabelGenerator]

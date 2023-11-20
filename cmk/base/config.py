@@ -1471,9 +1471,9 @@ def load_checks(  # pylint: disable=too-many-branches
 
     legacy_check_plugin_names.update({CheckPluginName(maincheckify(n)): n for n in check_info})
 
-    return _extract_agent_and_snmp_sections(
-        validate_creation_kwargs=did_compile
-    ) + _extract_check_plugins(validate_creation_kwargs=did_compile, contexts=contexts)
+    return _extract_agent_and_snmp_sections() + _extract_check_plugins(
+        validate_creation_kwargs=did_compile, contexts=contexts
+    )
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
@@ -1584,10 +1584,7 @@ AUTO_MIGRATION_ERR_MSG = (
 )
 
 
-def _extract_agent_and_snmp_sections(
-    *,
-    validate_creation_kwargs: bool,
-) -> list[str]:
+def _extract_agent_and_snmp_sections() -> list[str]:
     """Here comes the next layer of converting-to-"new"-api.
 
     For the new check-API in cmk/base/api/agent_based, we use the accumulated information
@@ -1608,7 +1605,6 @@ def _extract_agent_and_snmp_sections(
                     create_snmp_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        validate_creation_kwargs=validate_creation_kwargs,
                     )
                 )
             else:
@@ -1616,7 +1612,6 @@ def _extract_agent_and_snmp_sections(
                     create_agent_section_plugin_from_legacy(
                         section_name,
                         check_info_dict,
-                        validate_creation_kwargs=validate_creation_kwargs,
                     )
                 )
         except (NotImplementedError, KeyError, AssertionError, ValueError) as exc:

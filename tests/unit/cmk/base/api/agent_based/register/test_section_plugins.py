@@ -14,8 +14,15 @@ from cmk.checkengine.sectionparser import ParsedSectionName
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.plugin_classes import AgentSectionPlugin, SNMPSectionPlugin
 
-from cmk.agent_based.v1 import matches, OIDEnd, SNMPTree
-from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    matches,
+    OIDEnd,
+    SimpleSNMPSection,
+    SNMPSection,
+    SNMPTree,
+)
+from cmk.agent_based.v2.type_defs import StringByteTable, StringTable
 
 
 def _generator_function():
@@ -96,11 +103,14 @@ def test_validate_supersedings_raise_self_superseding() -> None:
 
 def test_create_agent_section_plugin() -> None:
     plugin = section_plugins.create_agent_section_plugin(
-        name="norris",
-        parsed_section_name="chuck",
-        parse_function=parse_dummy,
-        supersedes=["foo", "bar"],
-        validate_creation_kwargs=True,
+        AgentSection(
+            name="norris",
+            parsed_section_name="chuck",
+            parse_function=parse_dummy,
+            supersedes=["foo", "bar"],
+        ),
+        location=None,
+        validate=True,
     )
 
     assert isinstance(plugin, AgentSectionPlugin)
@@ -126,13 +136,16 @@ def test_create_snmp_section_plugin() -> None:
     detect = matches(".1.2.3.4.5", "Foo.*")
 
     plugin = section_plugins.create_snmp_section_plugin(
-        name="norris",
-        parsed_section_name="chuck",
-        parse_function=parse_dummy,
-        fetch=trees,
-        detect_spec=detect,
-        supersedes=["foo", "bar"],
-        validate_creation_kwargs=True,
+        SNMPSection(
+            name="norris",
+            parsed_section_name="chuck",
+            parse_function=parse_dummy,
+            fetch=trees,
+            detect=detect,
+            supersedes=["foo", "bar"],
+        ),
+        location=None,
+        validate=True,
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
@@ -153,12 +166,15 @@ def test_create_snmp_section_plugin_single_tree() -> None:
     single_tree = SNMPTree(base=".1.2.3", oids=[OIDEnd(), "2.3"])
 
     plugin = section_plugins.create_snmp_section_plugin(
-        name="norris",
-        parse_function=lambda string_table: string_table,
-        # just one, no list:
-        fetch=single_tree,
-        detect_spec=matches(".1.2.3.4.5", "Foo.*"),
-        validate_creation_kwargs=True,
+        SimpleSNMPSection(
+            name="norris",
+            parse_function=lambda string_table: string_table,
+            # just one, no list:
+            fetch=single_tree,
+            detect=matches(".1.2.3.4.5", "Foo.*"),
+        ),
+        location=None,
+        validate=True,
     )
 
     assert plugin.trees == [single_tree]

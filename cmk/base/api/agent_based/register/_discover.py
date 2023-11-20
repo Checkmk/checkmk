@@ -82,16 +82,7 @@ def register_plugin_by_type(
 
 def register_agent_section(section: AgentSection, location: PluginLocation) -> None:
     section_plugin = create_agent_section_plugin(
-        name=section.name,
-        parsed_section_name=section.parsed_section_name,
-        parse_function=section.parse_function,
-        host_label_function=section.host_label_function,
-        host_label_default_parameters=section.host_label_default_parameters,
-        host_label_ruleset_name=section.host_label_ruleset_name,
-        host_label_ruleset_type=section.host_label_ruleset_type,
-        supersedes=section.supersedes,
-        location=location,
-        validate_creation_kwargs=cmk.utils.debug.enabled(),
+        section, location, validate=cmk.utils.debug.enabled()
     )
 
     if is_registered_section_plugin(section_plugin.name):
@@ -115,18 +106,7 @@ def register_snmp_section(
     section: SimpleSNMPSection | SNMPSection, location: PluginLocation
 ) -> None:
     section_plugin = create_snmp_section_plugin(
-        name=section.name,
-        parsed_section_name=section.parsed_section_name,
-        parse_function=section.parse_function,
-        host_label_function=section.host_label_function,
-        host_label_default_parameters=section.host_label_default_parameters,
-        host_label_ruleset_name=section.host_label_ruleset_name,
-        host_label_ruleset_type=section.host_label_ruleset_type,
-        detect_spec=section.detect,
-        fetch=section.fetch,
-        supersedes=section.supersedes,
-        location=location,
-        validate_creation_kwargs=cmk.utils.debug.enabled(),
+        section, location, validate=cmk.utils.debug.enabled()
     )
 
     if is_registered_section_plugin(section_plugin.name):

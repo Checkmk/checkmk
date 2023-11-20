@@ -2954,7 +2954,7 @@ def test__extract_agent_and_snmp_sections(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
-    config._extract_agent_and_snmp_sections(validate_creation_kwargs=False)
+    config._extract_agent_and_snmp_sections()
     assert (
         agent_based_register.get_section_plugin(SectionName("duplicate_plugin"))
         == registered_section

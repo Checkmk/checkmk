@@ -62,17 +62,16 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let Ok(not_after_levels) = LowerLevels::try_new(Levels {
-        warn: args.not_after_warn * Duration::DAY,
-        crit: args.not_after_crit * Duration::DAY,
-    }) else {
+    let Ok(not_after_levels) = LowerLevels::try_new(
+        Levels::from(&[args.not_after_warn, args.not_after_crit]).map(&|v| v * Duration::DAY),
+    ) else {
         Writer::bail_out("invalid args: not after crit level larger than warn");
     };
 
-    let Ok(response_time_levels) = UpperLevels::try_new(Levels {
-        warn: args.response_time_warn * Duration::MILLISECOND,
-        crit: args.response_time_crit * Duration::MILLISECOND,
-    }) else {
+    let Ok(response_time_levels) = UpperLevels::try_new(
+        Levels::from(&[args.response_time_warn, args.response_time_crit])
+            .map(&|v| v * Duration::MILLISECOND),
+    ) else {
         Writer::bail_out("invalid args: response time crit higher than warn");
     };
 

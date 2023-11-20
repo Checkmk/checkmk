@@ -4,16 +4,54 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Bounds<T> {
     pub min: T,
     pub max: T,
+}
+
+impl<T> Bounds<T> {
+    pub fn map<F, U>(self, f: F) -> Bounds<U>
+    where
+        F: FnMut(T) -> U,
+        U: Clone,
+    {
+        Bounds::from(&[self.min, self.max].map(f))
+    }
+}
+
+impl<T: Clone> From<&[T; 2]> for Bounds<T> {
+    fn from(arr: &[T; 2]) -> Self {
+        Self {
+            min: arr[0].clone(),
+            max: arr[1].clone(),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
+}
+
+impl<T> Levels<T> {
+    pub fn map<F, U>(self, f: F) -> Levels<U>
+    where
+        F: FnMut(T) -> U,
+        U: Clone,
+    {
+        Levels::from(&[self.warn, self.crit].map(f))
+    }
+}
+
+impl<T: Clone> From<&[T; 2]> for Levels<T> {
+    fn from(arr: &[T; 2]) -> Self {
+        Self {
+            warn: arr[0].clone(),
+            crit: arr[1].clone(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -107,7 +145,7 @@ impl Display for State {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Metric<T> {
     label: String,
     value: T,
@@ -119,6 +157,23 @@ pub struct Metric<T> {
 impl<T: Default + Display> Metric<T> {
     pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
         MetricBuilder::new(label, value)
+    }
+}
+
+impl<T> Metric<T> {
+    pub fn map<F, U>(self, mut f: F) -> Metric<U>
+    where
+        F: FnMut(T) -> U,
+        F: Copy,
+        U: Clone,
+    {
+        Metric {
+            label: self.label,
+            value: f(self.value),
+            uom: self.uom,
+            levels: self.levels.map(|v| v.map(f)),
+            bounds: self.bounds.map(|v| v.map(f)),
+        }
     }
 }
 
@@ -303,6 +358,69 @@ impl From<Vec<CheckResult>> for Writer {
                 .collect::<Vec<_>>()
                 .join(", "),
         }
+    }
+}
+
+#[cfg(test)]
+mod test_metrics_map {
+    use super::{Bounds, Levels, Metric};
+
+    #[test]
+    fn test_bounds() {
+        assert_eq!(
+            Bounds { min: 1, max: 10 }.map(&|v| v * 10),
+            Bounds { min: 10, max: 100 }
+        );
+        assert_eq!(
+            Bounds::from(&[1, 10]).map(&|v| v * 10),
+            Bounds { min: 10, max: 100 }
+        );
+    }
+
+    #[test]
+    fn test_levels() {
+        assert_eq!(
+            Levels { warn: 1, crit: 10 }.map(&|v| v * 10),
+            Levels {
+                warn: 10,
+                crit: 100
+            }
+        );
+        assert_eq!(
+            Levels::from(&[1, 10]).map(&|v| v * 10),
+            Levels {
+                warn: 10,
+                crit: 100,
+            }
+        );
+    }
+
+    fn s(s: &str) -> String {
+        String::from(s)
+    }
+
+    #[test]
+    fn test_metric() {
+        assert_eq!(
+            Metric {
+                label: s("Label"),
+                value: 42,
+                uom: Some(s("unit")),
+                levels: Some(Levels { warn: 5, crit: 10 }),
+                bounds: Some(Bounds { min: 1, max: 10 })
+            }
+            .map(|v| v * 10),
+            Metric {
+                label: s("Label"),
+                value: 420,
+                uom: Some(s("unit")),
+                levels: Some(Levels {
+                    warn: 50,
+                    crit: 100,
+                }),
+                bounds: Some(Bounds { min: 10, max: 100 })
+            }
+        );
     }
 }
 

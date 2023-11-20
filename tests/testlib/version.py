@@ -86,6 +86,9 @@ class CMKVersion:
     def is_installed(self) -> bool:
         return os.path.exists(self.version_path())
 
+    def __repr__(self) -> str:
+        return f"CMKVersion([{self.version}][{self.edition.long}][{self.branch}])"
+
 
 def version_from_env(
     *,

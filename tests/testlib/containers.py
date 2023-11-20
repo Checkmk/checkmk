@@ -134,6 +134,7 @@ def execute_tests_in_container(
         exit_code = _exec_run(
             container,
             command,
+            check=False,
             environment=_container_env(version),
             workdir="/git",
             stream=True,
@@ -188,6 +189,7 @@ def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) ->
 def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) -> Image | None:
     try:
         registry_data = client.images.get_registry_data(image_name_with_tag)
+        logger.info("  pull '%s'", image_name_with_tag)
         return registry_data.pull()
     except docker.errors.NotFound:
         logger.info("  Not available from registry")
@@ -216,19 +218,24 @@ def _create_cmk_image(
     client: docker.DockerClient, base_image_name: str, docker_tag: str, version: CMKVersion
 ) -> str:
     base_image_name_with_tag = f"{base_image_name}:{docker_tag}"
-    logger.info("Preparing base image [%s]", base_image_name_with_tag)
-    base_image = _get_or_load_image(client, base_image_name_with_tag)
+    logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
+    if not (base_image := _get_or_load_image(client, base_image_name_with_tag)):
+        raise RuntimeError(
+            'Image [%s] is not available locally and the registry "%s" is not reachable. It is '
+            "not implemented yet to build the image locally. Terminating."
+            % (base_image_name_with_tag, _DOCKER_REGISTRY_URL)
+        )
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
-    image_name = f"{base_image_name}-{version.edition.short}-{version.version}"
-    image_name_with_tag = f"{image_name}:{docker_tag}"
+    image_name_with_tag = (
+        f"{base_image_name}-{version.edition.short}-{version.version}:{docker_tag}"
+    )
 
-    logger.info("Preparing image [%s]", image_name_with_tag)
+    logger.info("Check for available test-image [%s]", image_name_with_tag)
     # First try to get the pre-built image from the local or remote registry
-    image = _get_or_load_image(client, image_name_with_tag)
     if (
-        image
+        (image := _get_or_load_image(client, image_name_with_tag))
         and _is_based_on_current_base_image(image, base_image)
         and _is_using_current_cmk_package(image, version)
     ):
@@ -237,19 +244,12 @@ def _create_cmk_image(
         # skip it. The following code will re-build one based on the current base image
         return image_name_with_tag  # already found, nothing to do.
 
-    logger.info("Build image from [%s]", base_image_name_with_tag)
-    if base_image is None:
-        raise Exception(
-            'Image [%s] is not available locally and the registry "%s" is not reachable. It is '
-            "not implemented yet to build the image locally. Terminating."
-            % (base_image_name_with_tag, _DOCKER_REGISTRY_URL)
-        )
-    container: docker.Container
+    logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
     with _start(
         client,
         image=base_image_name_with_tag,
         labels={
-            "org.tribe29.build_time": "%d" % time.time(),
+            "org.tribe29.build_time": f"{int(time.time()):d}",
             "org.tribe29.build_id": base_image.short_id,
             "org.tribe29.base_image": base_image_name_with_tag,
             "org.tribe29.base_image_hash": base_image.short_id,
@@ -272,7 +272,7 @@ def _create_cmk_image(
             "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
         )
 
-        assert _exec_run(container, ["mkdir", "-p", "/results"]) == 0
+        _exec_run(container, ["mkdir", "-p", "/results"])
 
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
@@ -280,27 +280,23 @@ def _create_cmk_image(
         _persist_virtual_environment(container, version)
 
         logger.info("Install Checkmk version")
-        assert (
-            _exec_run(
-                container,
-                ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
-                workdir="/git",
-                environment=_container_env(version),
-                stream=True,
-            )
-            == 0
+        _exec_run(
+            container,
+            ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
+            workdir="/git",
+            environment=_container_env(version),
+            stream=True,
         )
 
         logger.info("Check whether or not installation was OK")
-        assert _exec_run(container, ["ls", "/omd/versions/default"], workdir="/") == 0
+        _exec_run(container, ["ls", "/omd/versions/default"], workdir="/")
 
         # Now get the hash of the used Checkmk package from the container image and add it to the
         # image labels.
         logger.info("Get Checkmk package hash")
-        exit_code, output = container.exec_run(
+        _exit_code, output = container.exec_run(
             ["cat", str(testlib.utils.package_hash_path(version.version, version.edition))],
         )
-        assert exit_code == 0
         hash_entry = output.decode("ascii").strip()
         logger.info("Checkmk package hash entry: %s", hash_entry)
 
@@ -403,10 +399,14 @@ def _image_build_volumes() -> Mapping[str, _VolumeInfo]:
         ),
     }
     if "WORKSPACE" in os.environ:
+        logger.info("WORKSPACE set to %s", os.environ["WORKSPACE"])
         volumes[os.path.join(os.environ["WORKSPACE"], "packages")] = _VolumeInfo(
             bind="/packages",
             mode="ro",
         )
+    else:
+        logger.info("WORKSPACE not set")
+
     volumes.update(_git_repos())
     return volumes
 
@@ -500,7 +500,7 @@ def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:
 
 
 # pep-0692 is not yet finished in mypy...
-def _exec_run(c: docker.Container, cmd: list[str], **kwargs) -> int:  # type: ignore[no-untyped-def]
+def _exec_run(c: docker.Container, cmd: list[str], check: bool = True, **kwargs) -> int:  # type: ignore[no-untyped-def]
     if kwargs:
         logger.info(
             "Execute in container %s: %r (kwargs: %r)",
@@ -523,7 +523,10 @@ def _exec_run(c: docker.Container, cmd: list[str], **kwargs) -> int:  # type: ig
     if printed_dot:
         sys.stdout.write("\n")
 
-    return result.poll()
+    returncode = result.poll()
+    if check and returncode != 0:
+        raise RuntimeError(f"Command `{' '.join(cmd)}` returned with nonzero exit code")
+    return returncode
 
 
 def container_exec(
@@ -633,52 +636,40 @@ def _prepare_git_overlay(container: docker.Container, lower_path: str, target_pa
     workdir_path = "%s/workdir" % tmpfs_path
 
     # Create mountpoints
-    assert _exec_run(container, ["mkdir", "-p", tmpfs_path, target_path]) == 0
+    _exec_run(container, ["mkdir", "-p", tmpfs_path, target_path])
 
     # Prepare the tmpfs as base for the rw-overlay and workdir
-    assert (
-        _exec_run(
-            container,
-            ["mount", "-t", "tmpfs", "tmpfs", tmpfs_path],
-        )
-        == 0
-    )
+    _exec_run(container, ["mount", "-t", "tmpfs", "tmpfs", tmpfs_path])
 
     # Create directory structure for the overlay
-    assert _exec_run(container, ["mkdir", "-p", upperdir_path, workdir_path]) == 0
+    _exec_run(container, ["mkdir", "-p", upperdir_path, workdir_path])
 
     # Finally add the overlay mount
-    assert (
-        _exec_run(
-            container,
-            [
-                "mount",
-                "-t",
-                "overlay",
-                "overlay",
-                "-o",
-                f"lowerdir={lower_path},upperdir={upperdir_path},workdir={workdir_path}",
-                target_path,
-            ],
-        )
-        == 0
+    _exec_run(
+        container,
+        [
+            "mount",
+            "-t",
+            "overlay",
+            "overlay",
+            "-o",
+            f"lowerdir={lower_path},upperdir={upperdir_path},workdir={workdir_path}",
+            target_path,
+        ],
     )
 
     # target_path belongs to root, but its content belong to jenkins. Newer git versions don't like
     # that by default, so we explicitly say that this is ok.
-    assert (
-        _exec_run(
-            container,
-            [
-                "git",
-                "config",
-                "--global",
-                "--add",
-                "safe.directory",
-                target_path,
-            ],
-        )
-        == 0
+    _exec_run(
+        container,
+        [
+            "git",
+            "config",
+            "--global",
+            "--add",
+            "safe.directory",
+            target_path,
+        ],
     )
 
 
@@ -695,18 +686,15 @@ def _prepare_virtual_environment(container: docker.Container, version: CMKVersio
 
 def _setup_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     logger.info("Prepare virtual environment")
-    assert (
-        _exec_run(
-            container,
-            ["make", ".venv"],
-            workdir="/git",
-            environment=_container_env(version),
-            stream=True,
-        )
-        == 0
+    _exec_run(
+        container,
+        ["make", ".venv"],
+        workdir="/git",
+        environment=_container_env(version),
+        stream=True,
     )
 
-    assert _exec_run(container, ["test", "-d", "/git/.venv"]) == 0
+    _exec_run(container, ["test", "-d", "/git/.venv"])
 
 
 def _cleanup_previous_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
@@ -719,18 +707,15 @@ def _cleanup_previous_virtual_environment(container: docker.Container, version: 
     The copied .venv will be used by _reuse_persisted_virtual_environment().
     """
     logger.info("Cleanup previous virtual environments")
-    assert (
-        _exec_run(
-            container,
-            ["rm", "-rf", ".venv"],
-            workdir="/git",
-            environment=_container_env(version),
-            stream=True,
-        )
-        == 0
+    _exec_run(
+        container,
+        ["rm", "-rf", ".venv"],
+        workdir="/git",
+        environment=_container_env(version),
+        stream=True,
     )
 
-    assert _exec_run(container, ["test", "-n", "/.venv"]) == 0
+    _exec_run(container, ["test", "-n", "/.venv"])
 
 
 def _persist_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
@@ -740,38 +725,36 @@ def _persist_virtual_environment(container: docker.Container, version: CMKVersio
     to /.venv (persisted in image). This will be reused later during test executions.
     """
     logger.info("Persisting virtual environments for later use")
-    assert (
-        _exec_run(
-            container,
-            ["rsync", "-aR", ".venv", "/"],
-            workdir="/git",
-            environment=_container_env(version),
-            stream=True,
-        )
-        == 0
+    _exec_run(
+        container,
+        ["rsync", "-aR", ".venv", "/"],
+        workdir="/git",
+        environment=_container_env(version),
+        stream=True,
     )
 
-    assert _exec_run(container, ["test", "-d", "/.venv"]) == 0
+    _exec_run(container, ["test", "-d", "/.venv"])
 
 
 def _reuse_persisted_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     """Copy /.venv to /git/.venv to reuse previous venv during testing"""
     if (
         _exec_run(
-            container, ["test", "-d", "/.venv"], workdir="/git", environment=_container_env(version)
+            container,
+            ["test", "-d", "/.venv"],
+            workdir="/git",
+            environment=_container_env(version),
+            check=False,
         )
         == 0
     ):
         logger.info("Restore previously created virtual environment")
-        assert (
-            _exec_run(
-                container,
-                ["rsync", "-a", "/.venv", "/git"],
-                workdir="/git",
-                environment=_container_env(version),
-                stream=True,
-            )
-            == 0
+        _exec_run(
+            container,
+            ["rsync", "-a", "/.venv", "/git"],
+            workdir="/git",
+            environment=_container_env(version),
+            stream=True,
         )
 
     if _mirror_reachable():

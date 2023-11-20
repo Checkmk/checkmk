@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 @pytest.fixture(name="site_factory", scope="function")
 def _site_factory() -> SiteFactory:
     base_version = CMKVersion(
-        "2.2.0", Edition.CEE, current_base_branch_name(), current_branch_version()
+        "2.2.0p8", Edition.CEE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -73,9 +73,6 @@ def _base_site_demo(site_factory_demo):
     yield from site_factory_demo.get_test_site(site_name, save_results=False)
 
 
-@pytest.mark.skip(
-    reason="Backup currently using v2.2.0. It needs to be re-generated with at least 2.2.0p8"
-)  # TODO: re-generate backup file
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
     reason="Test currently failing for missing `php7`. "

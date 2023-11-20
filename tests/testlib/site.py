@@ -1419,7 +1419,8 @@ class SiteFactory:
         )
 
         pexpect_dialogs = []
-        if self._version_supported(test_site.version.version, min_version.version):
+        version_supported = self._version_supported(test_site.version.version, min_version.version)
+        if version_supported:
             logger.info("Updating to a supported version.")
             pexpect_dialogs.extend(
                 [
@@ -1439,6 +1440,7 @@ class SiteFactory:
                 min_version,
                 target_version,
             )
+
             pexpect_dialogs.extend(
                 [
                     PExpectDialog(
@@ -1469,7 +1471,11 @@ class SiteFactory:
             dialogs=pexpect_dialogs,
             logfile_path=logfile_path,
         )
-        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+        if version_supported:
+            assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+        else:
+            assert rc == 256, f"Executed command returned {rc} exit status. Expected: 256"
+            pytest.skip(f"{test_site.version} is not a supported version for {target_version}")
 
         with open(logfile_path) as logfile:
             logger.debug("OMD automation logfile: %s", logfile.read())

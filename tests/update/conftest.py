@@ -168,8 +168,6 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
     logger.info("Updating existing site" if update else "Creating new site")
 
     if interactive:
-        source_version = base_site.version.version_directory() if base_site else ""
-        target_version = version.version_directory()
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
 
         if not os.getenv("CI", "").strip().lower() == "true":
@@ -193,9 +191,6 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
                     current_branch_version(),
                 ),
             )
-            if not version_supported(source_version):
-                pytest.skip(f"{source_version} is not a supported version for {target_version}")
-
         else:  # interactive site creation
             site = sf.interactive_create(site.id, logfile_path)
 

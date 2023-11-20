@@ -108,11 +108,7 @@ impl Display for State {
 }
 
 #[derive(Debug)]
-pub struct Metric<T>
-where
-    // hack to bound T to numeric values
-    T: Into<f64>,
-{
+pub struct Metric<T> {
     label: String,
     value: T,
     uom: Option<String>,
@@ -120,13 +116,13 @@ where
     bounds: Option<Bounds<T>>,
 }
 
-impl<T: Into<f64> + Default + Display> Metric<T> {
+impl<T: Default + Display> Metric<T> {
     pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
         MetricBuilder::new(label, value)
     }
 }
 
-impl<T: Into<f64> + Display> Display for Metric<T> {
+impl<T: Display> Display for Metric<T> {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(
             f,
@@ -151,7 +147,7 @@ impl<T: Into<f64> + Display> Display for Metric<T> {
 }
 
 #[derive(Debug)]
-pub struct MetricBuilder<T: Into<f64>> {
+pub struct MetricBuilder<T> {
     label: String,
     value: T,
     uom: Option<String>,
@@ -159,7 +155,7 @@ pub struct MetricBuilder<T: Into<f64>> {
     bounds: Option<Bounds<T>>,
 }
 
-impl<T: Into<f64>> MetricBuilder<T> {
+impl<T> MetricBuilder<T> {
     pub fn new(label: &str, value: T) -> Self {
         Self {
             label: label.to_string(),

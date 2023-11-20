@@ -30,6 +30,7 @@ const BACKUP_SECTION_NAME: &str = "backup";
 const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
 const DATAFILES_SECTION_NAME: &str = "datafiles";
 const DATABASES_SECTION_NAME: &str = "databases";
+const CLUSTERS_SECTION_NAME: &str = "clusters";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -121,7 +122,8 @@ impl InstanceEngine {
                         | BACKUP_SECTION_NAME
                         | TRANSACTION_LOG_SECTION_NAME
                         | DATAFILES_SECTION_NAME
-                        | DATABASES_SECTION_NAME => {
+                        | DATABASES_SECTION_NAME
+                        | CLUSTERS_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -224,6 +226,10 @@ impl InstanceEngine {
             }
             DATABASES_SECTION_NAME => {
                 self.generate_databases_section(client, queries::QUERY_DATABASES, sep, &databases)
+                    .await
+            }
+            CLUSTERS_SECTION_NAME => {
+                self.generate_clusters_section(endpoint, &databases, sep)
                     .await
             }
             _ => format!("{} not implemented\n", name).to_string(),
@@ -345,20 +351,20 @@ impl InstanceEngine {
                     result += &run_query(&mut c, queries::QUERY_TRANSACTION_LOGS)
                         .await
                         .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
-                        .unwrap_or_else(|e| self.format_error(d, &e, sep));
+                        .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
                 }
                 Err(err) => {
-                    result += &self.format_error(d, &err, sep);
+                    result += &self.format_some_file_error(d, &err, sep);
                 }
             }
         }
         result
     }
 
-    fn format_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
+    fn format_some_file_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
         format!(
             "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
-            self.mssql_name(),
+            self.name,
             d.replace(' ', "_"),
             e
         )
@@ -378,10 +384,10 @@ impl InstanceEngine {
                     result += &run_query(&mut c, queries::QUERY_DATAFILES)
                         .await
                         .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
-                        .unwrap_or_else(|e| self.format_error(d, &e, sep));
+                        .unwrap_or_else(|e| self.format_some_file_error(d, &e, sep));
                 }
                 Err(err) => {
-                    result += &self.format_error(d, &err, sep);
+                    result += &self.format_some_file_error(d, &err, sep);
                 }
             }
         }
@@ -431,13 +437,94 @@ impl InstanceEngine {
             }
         }
     }
+
+    /// Todo(sk): write a test
+    pub async fn generate_clusters_section(
+        &self,
+        endpoint: &config::ms_sql::Endpoint,
+        databases: &Vec<String>,
+        sep: char,
+    ) -> String {
+        let format_error = |d: &str, e: &anyhow::Error| {
+            format!(
+                "{}{sep}{}{sep}{sep}{sep}{:?}\n",
+                self.name,
+                d.replace(' ', "_"),
+                e
+            )
+        };
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => match self.generate_clusters_entry(&mut c, d, sep).await {
+                    Ok(None) => {}
+                    Ok(Some(entry)) => result += &entry,
+                    Err(err) => result += &format_error(d, &err),
+                },
+                Err(err) => {
+                    result += &format_error(d, &err);
+                }
+            }
+        }
+        result
+    }
+
+    async fn generate_clusters_entry(
+        &self,
+        client: &mut Client,
+        d: &str,
+        sep: char,
+    ) -> Result<Option<String>> {
+        if !self.is_database_clustered(client).await? {
+            return Ok(None);
+        }
+        let nodes = self.get_database_cluster_nodes(client).await?;
+        let active_node = self.get_database_cluster_active_node(client).await?;
+        Ok(Some(format!(
+            "{}{sep}{}{sep}{}{sep}{}",
+            self.name,
+            d.replace(' ', "_"),
+            active_node,
+            nodes
+        )))
+    }
+
+    async fn is_database_clustered(&self, client: &mut Client) -> Result<bool> {
+        let rows = &run_query(client, queries::QUERY_IS_CLUSTERED)
+            .await
+            .and_then(validate_rows)?;
+        Ok(&rows[0][0].get_value_by_name("is_clustered") != "0")
+    }
+
+    async fn get_database_cluster_nodes(&self, client: &mut Client) -> Result<String> {
+        let rows = &run_query(client, queries::QUERY_CLUSTER_NODES).await?;
+        if !rows.is_empty() && !rows[0].is_empty() {
+            return Ok(rows[0]
+                .iter()
+                .map(|r| r.get_value_by_name("nodename"))
+                .collect::<Vec<String>>()
+                .join(","));
+        }
+        Ok("".to_string())
+    }
+
+    async fn get_database_cluster_active_node(&self, client: &mut Client) -> Result<String> {
+        let rows = &run_query(client, queries::QUERY_CLUSTER_ACTIVE_NODES).await?;
+        if !rows.is_empty() && !rows[0].is_empty() {
+            return Ok(rows[0]
+                .last() // as in legacy plugin
+                .expect("impossible")
+                .get_value_by_name("active_node"));
+        }
+        Ok("-".to_string())
+    }
+
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
         let rows = &rows[0];
-        let z: Vec<String> = rows
-            .iter()
+        rows.iter()
             .map(|row| to_blocked_session_entry(&self.name, row, sep))
-            .collect();
-        z.join("")
+            .collect::<Vec<String>>()
+            .join("")
     }
 
     async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
@@ -929,7 +1016,7 @@ pub fn get_work_sections(ms_sql: &config::ms_sql::Config) -> Vec<Section> {
 fn get_section_separator(name: &str) -> Option<char> {
     match name {
         "instance" | "databases" | "counters" | "blocked_sessions" | "transactionlogs"
-        | "datafiles" | "cluster" | "clusters" | "backup" => Some('|'),
+        | "datafiles" | "clusters" | "backup" => Some('|'),
         "jobs" | "mirroring" | "availability_groups" => Some('\t'),
         "tablespaces" | "connections" => None,
         _ => None,

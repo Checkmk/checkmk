@@ -174,6 +174,12 @@ cast(DATABASEPROPERTYEX(name, 'Status') as varchar) AS Status, \
   cast(DATABASEPROPERTYEX(name, 'IsAutoShrink') as bigint) AS auto_shrink \
 FROM master.dbo.sysdatabases";
 
+pub const QUERY_IS_CLUSTERED: &str =
+    "SELECT cast( SERVERPROPERTY('IsClustered') as varchar) AS is_clustered";
+pub const QUERY_CLUSTER_NODES: &str = "SELECT nodename FROM sys.dm_os_cluster_nodes";
+pub const QUERY_CLUSTER_ACTIVE_NODES: &str =
+    "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as varchar) AS active_node";
+
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()
 }

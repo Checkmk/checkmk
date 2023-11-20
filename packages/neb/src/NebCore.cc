@@ -9,7 +9,6 @@
 #include <atomic>
 #include <cstdlib>
 #include <iterator>
-#include <list>
 #include <sstream>
 #include <stdexcept>
 #include <system_error>
@@ -92,7 +91,7 @@ NebCore::NebCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
                  std::chrono::system_clock::time_point state_file_created)
     : _downtimes{downtimes}
     , _comments{comments}
-    , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
+    , _logger(Logger::getLogger("cmk.livestatus"))
     , _paths(std::move(paths))
     , _limits(limits)
     , _authorization(authorization)
@@ -477,9 +476,9 @@ size_t NebCore::maxCachedMessages() const {
     return _limits._max_cached_messages;
 }
 
-Logger *NebCore::loggerCore() const { return _logger_livestatus; }
-Logger *NebCore::loggerLivestatus() const { return _logger_livestatus; }
-Logger *NebCore::loggerRRD() const { return _logger_livestatus; }
+Logger *NebCore::loggerCore() const { return _logger; }
+Logger *NebCore::loggerLivestatus() const { return _logger; }
+Logger *NebCore::loggerRRD() const { return _logger; }
 
 Triggers &NebCore::triggers() { return _triggers; }
 
@@ -631,12 +630,13 @@ std::list<std::string> getLines(InputBuffer &input) {
     }
     return lines;
 }
+}  // namespace
 
-void logRequest(Logger *logger, const std::string &line,
-                const std::list<std::string> &lines) {
-    Informational log(logger);
+void NebCore::logRequest(const std::string &line,
+                         const std::list<std::string> &lines) {
+    Informational log(_logger);
     log << "request: " << line;
-    if (logger->isLoggable(LogLevel::debug)) {
+    if (_logger->isLoggable(LogLevel::debug)) {
         for (const auto &l : lines) {
             log << R"(\n)" << l;
         }
@@ -649,11 +649,9 @@ void logRequest(Logger *logger, const std::string &line,
     }
 }
 
-}  // namespace
-
 bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     // Precondition: output has been reset
-    InputBuffer::Result const res = input.readRequest();
+    const InputBuffer::Result res = input.readRequest();
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
             std::ostringstream os;
@@ -665,29 +663,23 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     }
     const std::string line = input.nextLine();
     if (line.starts_with("GET ")) {
-        auto lines = getLines(input);
-        logRequest(_logger_livestatus, line, lines);
-        return _store.answerGetRequest(lines, output,
-                                       mk::lstrip(line.substr(4)));
+        return handleGet(input, output, line, mk::lstrip(line.substr(4)));
     }
     if (line.starts_with("GET")) {
-        // only to get error message
-        auto lines = getLines(input);
-        logRequest(_logger_livestatus, line, lines);
-        return _store.answerGetRequest(lines, output, "");
+        return handleGet(input, output, line, "");  // only to get error message
     }
     if (line.starts_with("COMMAND ")) {
-        logRequest(_logger_livestatus, line, {});
+        logRequest(line, {});
         try {
             answerCommandRequest(ExternalCommand(mk::lstrip(line.substr(8))));
         } catch (const std::invalid_argument &err) {
-            Warning(_logger_livestatus) << err.what();
+            Warning(_logger) << err.what();
         }
         return true;
     }
     if (line.starts_with("LOGROTATE")) {
-        logRequest(_logger_livestatus, line, {});
-        Informational(_logger_livestatus) << "Forcing logfile rotation";
+        logRequest(line, {});
+        Informational(_logger) << "Forcing logfile rotation";
         rotate_log_file(std::chrono::system_clock::to_time_t(
             std::chrono::system_clock::now()));
         schedule_new_event(
@@ -698,11 +690,19 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
             nullptr, 0);
         return false;
     }
-    logRequest(_logger_livestatus, line, {});
-    Warning(_logger_livestatus) << "Invalid request '" << line << "'";
+    logRequest(line, {});
+    Warning(_logger) << "Invalid request '" << line << "'";
     output.setError(OutputBuffer::ResponseCode::invalid_request,
                     "Invalid request method");
     return false;
+}
+
+bool NebCore::handleGet(InputBuffer &input, OutputBuffer &output,
+                        const std::string &line,
+                        const std::string &table_name) {
+    auto lines = getLines(input);
+    logRequest(line, lines);
+    return _store.answerGetRequest(lines, output, table_name);
 }
 
 void NebCore::answerCommandRequest(const ExternalCommand &command) {
@@ -730,22 +730,21 @@ void NebCore::answerCommandMkLogwatchAcknowledge(
     // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
     auto args = command.args();
     if (args.size() != 2) {
-        Warning(_logger_livestatus)
-            << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
+        Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         return;
     }
-    mk_logwatch_acknowledge(_logger_livestatus, _paths.logwatch_directory,
-                            args[0], args[1]);
+    mk_logwatch_acknowledge(_logger, _paths.logwatch_directory, args[0],
+                            args[1]);
 }
 
 void NebCore::answerCommandDelCrashReport(const ExternalCommand &command) {
     auto args = command.args();
     if (args.size() != 1) {
-        Warning(_logger_livestatus) << "DEL_CRASH_REPORT expects 1 argument";
+        Warning(_logger) << "DEL_CRASH_REPORT expects 1 argument";
         return;
     }
     mk::crash_report::delete_id(_paths.crash_reports_directory, args[0],
-                                _logger_livestatus);
+                                _logger);
 }
 
 namespace {
@@ -764,8 +763,8 @@ private:
 
 void NebCore::answerCommandEventConsole(const std::string &command) {
     if (!mkeventdEnabled()) {
-        Notice(_logger_livestatus)
-            << "event console disabled, ignoring command '" << command << "'";
+        Notice(_logger) << "event console disabled, ignoring command '"
+                        << command << "'";
         return;
     }
     try {
@@ -773,7 +772,7 @@ void NebCore::answerCommandEventConsole(const std::string &command) {
                           _paths.event_console_status_socket, command)
             .run();
     } catch (const std::runtime_error &err) {
-        Alert(_logger_livestatus) << err.what();
+        Alert(_logger) << err.what();
     }
 }
 

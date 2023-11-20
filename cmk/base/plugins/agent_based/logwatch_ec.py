@@ -815,7 +815,7 @@ def logwatch_spool_path(hostname: HostName, item: str | None) -> Path:
     result = Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
     if item is not None:
         # hash the item, so we don't have to worry about file path escapes and special characters.
-        h = hashlib.new("sha1")
+        h = hashlib.new("sha1", usedforsecurity=False)
         h.update(item.encode("utf-8"))
         result = result / h.hexdigest()
     return result

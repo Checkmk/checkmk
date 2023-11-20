@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
+use check_cert::check::CheckResult;
 use check_cert::{check, checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
@@ -90,7 +91,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = check::Writer::from(vec![
-        checker::check_response_time(response_time, response_time_levels),
+        CheckResult::from_levels(
+            &response_time_levels,
+            &response_time,
+            format!(
+                "Certificate obtained in {} ms",
+                response_time.whole_milliseconds()
+            ),
+        ),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
             .unwrap_or_default(),
         checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)

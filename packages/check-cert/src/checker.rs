@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, LowerLevels, UpperLevels};
+use crate::check::{CheckResult, LowerLevels};
 use time::Duration;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
@@ -57,17 +57,6 @@ pub fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Opti
             }
         }
     }
-}
-
-pub fn check_response_time(response_time: Duration, levels: UpperLevels<Duration>) -> CheckResult {
-    CheckResult::from_levels(
-        &levels,
-        &response_time,
-        format!(
-            "Certificate obtained in {} ms",
-            response_time.whole_milliseconds()
-        ),
-    )
 }
 
 pub fn check_validity_not_after(

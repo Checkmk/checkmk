@@ -799,16 +799,20 @@ def test_forward_tcp_message_update_old_spoolfiles(
     assert list(f.name for f in spool_dir.iterdir() if f.is_file()) == [
         "spool.1698768180.00",
     ]
-    # and a hash folder which held the spooled message for a short time
+    # and a folder which held the spooled message for a short time
     assert list(f.name for f in spool_dir.iterdir() if f.is_dir()) == [
-        "6428c17de91d8ad76a2d3f693e36bf708ca2f62c",
+        "item_item_name_1",
     ]
     # but is should now be empty as we sent both messages successfully:
-    assert (
-        list(
-            f.name
-            for f in (spool_dir / "6428c17de91d8ad76a2d3f693e36bf708ca2f62c").iterdir()
-            if f.is_dir()
-        )
-        == []
-    )
+    assert list(f.name for f in (spool_dir / "item_item_name_1").iterdir()) == []
+
+
+def test_logwatch_spool_path_is_escaped():
+    # item may contain slashes or other stuff, we want to make sure
+    # that this is transformed to a single folder name:
+    result = logwatch_ec.logwatch_spool_path(HostName("some_host_name"), "some/log/path")
+    assert result.name == "item_some%2Flog%2Fpath"
+    assert result.parent.name == "some_host_name"
+
+    assert logwatch_ec.logwatch_spool_path(HostName("short"), ".").name == "item_."
+    assert logwatch_ec.logwatch_spool_path(HostName("short"), "..").name == "item_.."

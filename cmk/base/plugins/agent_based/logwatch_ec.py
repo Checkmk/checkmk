@@ -14,7 +14,6 @@
 #########################################################################################
 
 import ast
-import hashlib
 import socket
 import time
 from collections import defaultdict
@@ -34,6 +33,7 @@ from typing import (
     Sequence,
     Tuple,
 )
+from urllib.parse import quote as url_quote
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
@@ -814,8 +814,5 @@ def logwatch_spool_drop_messages(path: Path, result) -> int:  # type:ignore[no-u
 def logwatch_spool_path(hostname: HostName, item: str | None) -> Path:
     result = Path(cmk.utils.paths.var_dir, "logwatch_spool", hostname)
     if item is not None:
-        # hash the item, so we don't have to worry about file path escapes and special characters.
-        h = hashlib.new("sha1", usedforsecurity=False)
-        h.update(item.encode("utf-8"))
-        result = result / h.hexdigest()
+        result = result / "item_{}".format(url_quote(item, safe=""))
     return result

@@ -1,0 +1,19 @@
+Title: event console: rule changes now only apply to the customer sites that were changed
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700545690
+Edition: cme
+Level: 1
+Version: 2.3.0b1
+
+
+Previously when changes were made to rulepack rules for the event console,
+all sites received this change and therefore activate changes had to be
+applied to all sites.
+
+This werk introduces a change whereby any modifications to rulepacks
+or rulepack rules are only applied to the customer's sites that they
+are configured for.
+
+

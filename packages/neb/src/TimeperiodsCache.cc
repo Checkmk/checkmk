@@ -6,6 +6,7 @@
 #include "neb/TimeperiodsCache.h"
 
 #include <compare>
+#include <ratio>
 #include <utility>
 
 #include "livestatus/Logger.h"

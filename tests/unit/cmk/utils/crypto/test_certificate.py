@@ -8,6 +8,7 @@ from contextlib import nullcontext as does_not_raise
 from datetime import datetime
 from pathlib import Path
 
+import cryptography.x509 as x509
 import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
@@ -303,3 +304,38 @@ def test_subject_alt_names(
         ).get_subject_alt_names()
         == expected
     )
+
+
+def test_may_sign_certificates() -> None:
+    pem = CertificatePEM(
+        # openssl req -x509 -newkey rsa:1024 -sha256 -nodes -keyout key.pem -out cert.pem -days 365
+        """-----BEGIN CERTIFICATE-----
+MIIC3jCCAkegAwIBAgIUFfy37IHOcIANa5IVx93DEmYO0zowDQYJKoZIhvcNAQEL
+BQAwgYAxCzAJBgNVBAYTAkRFMRAwDgYDVQQIDAdCYXZhcmlhMSEwHwYDVQQKDBhJ
+bnRlcm5ldCBXaWRnaXRzIFB0eSBMdGQxGDAWBgNVBAMMD2NoZWNrbWtfdGVzdF9j
+YTEiMCAGCSqGSIb3DQEJARYTdGVzdGluZ0BleGFtcGxlLmNvbTAeFw0yMzExMTcx
+NTIxMjhaFw0yNDExMTYxNTIxMjhaMIGAMQswCQYDVQQGEwJERTEQMA4GA1UECAwH
+QmF2YXJpYTEhMB8GA1UECgwYSW50ZXJuZXQgV2lkZ2l0cyBQdHkgTHRkMRgwFgYD
+VQQDDA9jaGVja21rX3Rlc3RfY2ExIjAgBgkqhkiG9w0BCQEWE3Rlc3RpbmdAZXhh
+bXBsZS5jb20wgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBANR+1oqFEX52v9ZJ
+xyEh93DnV5Zp9H3scxeFnnjpK0epFFCM/J6yiggws845+MYv7tvVM2rQHO8ud/2i
+fpe5yuqcWtFfgm9UDHqsndiANyFKjkJ6PDfPLeyWmmXZuoHMPK3He/5usP6ovxYb
+5OfqM2ZwleMoMSrVmjGHv5rfvYdXAgMBAAGjUzBRMB0GA1UdDgQWBBSQSbT3kTAg
+QKpT/KrKFerYoxe17DAfBgNVHSMEGDAWgBSQSbT3kTAgQKpT/KrKFerYoxe17DAP
+BgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4GBABmlbyhZeb7sx3BH3C0h
+JPEGQcTEa+Xvh3EFz2mMldkkZP1hXqkiFMTHZGJ2Q3HXrUJ/jFUGUKRnWAmxUfu/
+/pUPP2kOchlsjMPP6JCeZLsB6N/3fIRqHhamI5jr6KyBB0eJnR7QgB3sG8liPFbQ
+JxDm8nhVOD3txg6wadiqhhdB
+-----END CERTIFICATE-----
+"""
+    )
+    cert = Certificate.load_pem(pem)
+    with pytest.raises(x509.ExtensionNotFound):
+        # The tested cert does not set the key usage extension at all,
+        # this should not prevent certificate signing.
+        # Only if the extension is there but the key_cert_sign bit is missing the cert should not be
+        # used for signing.
+        # This is a regression test.
+        cert._cert.extensions.get_extension_for_class(x509.KeyUsage)
+
+    assert cert.may_sign_certificates()

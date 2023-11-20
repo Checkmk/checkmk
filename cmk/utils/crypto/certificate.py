@@ -31,7 +31,6 @@ RsaPublicKey/RsaPrivateKey
 
 from __future__ import annotations
 
-import contextlib
 import re
 from datetime import datetime
 from pathlib import Path
@@ -458,21 +457,25 @@ class Certificate:
     def may_sign_certificates(self) -> bool:
         """
         Check if this certificate may be used to sign other certificates, that is, has the
-        cA flag set and allows key usage KeyCertSign.
+        cA flag set and allows key usage KeyCertSign (or does not restrict usage).
 
         Note that self-signed, non-CA end entity certificates may self-sign without this.
         """
-        is_ca = False
-        with contextlib.suppress(x509.ExtensionNotFound):
-            is_ca = self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+        try:
+            if not self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca:
+                return False
+        except x509.ExtensionNotFound:
+            # This extension and flag MUST be set for a CA
+            return False
 
-        has_key_sign_bit = False
-        with contextlib.suppress(x509.ExtensionNotFound):
-            has_key_sign_bit = self._cert.extensions.get_extension_for_class(
-                x509.KeyUsage
-            ).value.key_cert_sign
+        try:
+            if not self._cert.extensions.get_extension_for_class(x509.KeyUsage).value.key_cert_sign:
+                return False
+        except x509.ExtensionNotFound:
+            # If key usage is not restricted, that's ok
+            pass
 
-        return is_ca and has_key_sign_bit
+        return True
 
     def _is_self_signed(self) -> bool:
         """Is the issuer the same as the subject?"""

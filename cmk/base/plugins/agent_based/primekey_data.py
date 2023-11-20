@@ -25,11 +25,13 @@ def parse(string_table: StringTable) -> _Section | None:
     """
     >>> parse([['0','1','0','0','1']])
     {'VMs': <Status.OK: 0>, 'RAID': <Status.NOT_OK: 1>, 'EJBCA': <Status.OK: 0>, 'Signserver': <Status.OK: 0>, 'HSM': <Status.NOT_OK: 1>}
+    >>> parse([['0','1','0','0','']])
+    {'VMs': <Status.OK: 0>, 'RAID': <Status.NOT_OK: 1>, 'EJBCA': <Status.OK: 0>, 'Signserver': <Status.OK: 0>}
     """
     if not string_table:
         return None
     item_names = ["VMs", "RAID", "EJBCA", "Signserver", "HSM"]
-    return dict(zip(item_names, [Status(int(i)) for i in string_table[0]]))
+    return dict((item, Status(int(i))) for item, i in zip(item_names, string_table[0]) if i)
 
 
 register.snmp_section(

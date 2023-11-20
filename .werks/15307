@@ -31,6 +31,6 @@ manually consult the following folder for <tt>spoolfile.*</tt> files:
 
 If there are any spoolfiles in this folder, they could not be assigned to a
 logwatch service. If you still want them to be forwarded, move them to one of
-the hash folders, otherwise they can be deleted.
+the folders, otherwise they can be deleted.
 
-<tt>./var/check_mk/logwatch_spool/&lt;hostname&gt;/<&lt;sha1_hash_of_item&gt;</tt>
+<tt>./var/check_mk/logwatch_spool/&lt;hostname&gt;/item_&lt;url_encode(item)&gt;</tt>

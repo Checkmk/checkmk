@@ -8,6 +8,24 @@ use reqwest::{
     header::CONTENT_TYPE, Client, RequestBuilder, Result as ReqwestResult, StatusCode, Version,
 };
 
+pub struct RequestConfig {
+    pub url: String,
+    pub method: Method,
+    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
+    pub body: Option<String>,
+    pub content_type: Option<HeaderValue>,
+    pub auth_user: Option<String>,
+    pub auth_pw: Option<String>,
+    pub without_body: bool,
+}
+
+pub struct ProcessedResponse {
+    pub version: Version,
+    pub status: StatusCode,
+    pub headers: HeaderMap,
+    pub body: Option<ReqwestResult<Bytes>>,
+}
+
 pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<ProcessedResponse> {
     let fetch_body = !cfg.without_body;
 
@@ -28,24 +46,6 @@ pub async fn send(client: Client, cfg: RequestConfig) -> ReqwestResult<Processed
         headers,
         body,
     })
-}
-
-pub struct RequestConfig {
-    pub url: String,
-    pub method: Method,
-    pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
-    pub body: Option<String>,
-    pub content_type: Option<HeaderValue>,
-    pub auth_user: Option<String>,
-    pub auth_pw: Option<String>,
-    pub without_body: bool,
-}
-
-pub struct ProcessedResponse {
-    pub version: Version,
-    pub status: StatusCode,
-    pub headers: HeaderMap,
-    pub body: Option<ReqwestResult<Bytes>>,
 }
 
 fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder {

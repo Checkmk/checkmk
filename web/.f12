@@ -26,7 +26,6 @@ echo "Update site $SITE..."
 echo "Copy CRE files..."
 # shellcheck disable=SC2046 # yes, we want word splitting for the loops below
 sudo rsync -arxR \
-    app \
     htdocs/css \
     htdocs/images \
     htdocs/jquery \

@@ -35,6 +35,7 @@ class SkippedChecks:
         "ontapi_9_10_cmk_2_2:Systemtime netapp1-01",  # problems with timezone. TODO: investigate
         "ontapi_9_10_cmk_2_2:Systemtime netapp1-02",  # problems with timezone. TODO: investigate
         "rhel9_2_cmk_2_2_0p6:OMD monitoring backup midnight-backup",  # problems with timezone. TODO: investigate
+        "snmp-fw-fortigate:Signatures",  # TODO: dynamic data need to be regexed
     ]
 
 

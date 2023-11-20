@@ -45,10 +45,6 @@ where
             State::Ok
         }
     }
-
-    pub fn check(&self, value: &T, summary: String) -> CheckResult {
-        CheckResult::new(self.evaluate(value), summary)
-    }
 }
 
 impl<T> UpperLevels<T>
@@ -74,8 +70,20 @@ where
             State::Ok
         }
     }
+}
 
-    pub fn check(&self, value: &T, summary: String) -> CheckResult {
+pub trait LevelsCheck<T> {
+    fn check(&self, value: &T, summary: String) -> CheckResult;
+}
+
+impl<T: PartialOrd> LevelsCheck<T> for LowerLevels<T> {
+    fn check(&self, value: &T, summary: String) -> CheckResult {
+        CheckResult::new(self.evaluate(value), summary)
+    }
+}
+
+impl<T: PartialOrd> LevelsCheck<T> for UpperLevels<T> {
+    fn check(&self, value: &T, summary: String) -> CheckResult {
         CheckResult::new(self.evaluate(value), summary)
     }
 }
@@ -210,6 +218,10 @@ impl CheckResult {
 
     pub fn unknown(summary: String) -> Self {
         Self::new(State::Unknown, summary)
+    }
+
+    pub fn from_levels<T>(levels: &impl LevelsCheck<T>, value: &T, summary: String) -> Self {
+        levels.check(value, summary)
     }
 }
 

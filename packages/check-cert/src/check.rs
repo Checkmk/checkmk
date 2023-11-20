@@ -4,20 +4,24 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
+#[derive(Debug)]
 pub struct Bounds<T> {
     pub min: T,
     pub max: T,
 }
 
+#[derive(Debug)]
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
 }
 
+#[derive(Debug)]
 pub struct LowerLevels<T> {
     pub levels: Levels<T>,
 }
 
+#[derive(Debug)]
 pub struct UpperLevels<T> {
     pub levels: Levels<T>,
 }
@@ -88,7 +92,7 @@ impl<T: PartialOrd> LevelsCheck<T> for UpperLevels<T> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
     Ok,
     Warn,
@@ -107,6 +111,7 @@ impl Display for State {
     }
 }
 
+#[derive(Debug)]
 pub struct Metric<T>
 where
     // hack to bound T to numeric values
@@ -149,6 +154,7 @@ impl<T: Into<f64> + Display> Display for Metric<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct MetricBuilder<T: Into<f64>> {
     label: String,
     value: T,
@@ -194,6 +200,7 @@ impl<T: Into<f64>> MetricBuilder<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct CheckResult {
     state: State,
     summary: String,
@@ -247,6 +254,7 @@ impl Display for CheckResult {
     }
 }
 
+#[derive(Debug)]
 pub struct Writer {
     state: State,
     summary: String,

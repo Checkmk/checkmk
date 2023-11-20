@@ -1,0 +1,14 @@
+Title: Allow CA certificates without key usage restrictions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700470697
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk, certificates that did not include the KeyUsage extension were not considered CA certificates by Checkmk, as they lack the keyCertSign bit.
+
+While CAs conforming with RFC 5280 MUST include the extension and set this bit, not all do in practice. Recommendation ITU-T X.509 considers only the basicConstraint "cA" required for CAs.
+
+With this Werk, Checkmk will consider setting the cA basicConstraint but not the KeyUsage extension as valid for CA certificates. Note that certificates that do set the KeyUsage extension but lack the keyCertSign bit may still not be used for certificate signing.

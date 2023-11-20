@@ -19,9 +19,10 @@ from typing import NamedTuple
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.x509.oid import ExtensionOID, NameOID
+from cryptography.x509.oid import NameOID
 from OpenSSL import crypto, SSL
 
+from cmk.utils.crypto.certificate import Certificate
 from cmk.utils.crypto.secrets import EncrypterSecret
 from cmk.utils.crypto.symmetric import aes_gcm_decrypt, aes_gcm_encrypt, TaggedCiphertext
 from cmk.utils.exceptions import MKGeneralException
@@ -96,31 +97,9 @@ def fetch_certificate_details(
             signature_algorithm=crypto_cert.signature_hash_algorithm.name,
             digest_sha256=binascii.hexlify(crypto_cert.fingerprint(hashes.SHA256())).decode(),
             serial_number=crypto_cert.serial_number,
-            is_ca=_is_ca_certificate(crypto_cert),
+            is_ca=Certificate(crypto_cert).may_sign_certificates(),
             verify_result=result,
         )
-
-
-def _is_ca_certificate(crypto_cert: x509.Certificate) -> bool:
-    # TODO: this is Certificate.may_sign_certificates
-    try:
-        key_usage = crypto_cert.extensions.get_extension_for_oid(ExtensionOID.KEY_USAGE).value
-        assert isinstance(key_usage, x509.extensions.KeyUsage)
-        use_key_for_signing = key_usage.key_cert_sign is True
-
-    except x509.ExtensionNotFound:
-        use_key_for_signing = False
-
-    try:
-        basic_constraints = crypto_cert.extensions.get_extension_for_oid(
-            ExtensionOID.BASIC_CONSTRAINTS
-        ).value
-        assert isinstance(basic_constraints, x509.extensions.BasicConstraints)
-        is_ca = basic_constraints.ca is True
-    except x509.ExtensionNotFound:
-        is_ca = False
-
-    return is_ca and use_key_for_signing
 
 
 def _fetch_certificate_chain_verify_results(

@@ -1,0 +1,21 @@
+Title: broken autocomplete select fields
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1700476403
+Edition: cre
+Level: 2
+Version: 2.1.0p37
+
+When a configuration form page is loaded with lots of selects, it could take
+a very long time for the page to load. To gain more performance, the conversion
+of select-fields to more user-friendly ones would be skipped whenever the
+conversion would have taken longer than 3 seconds.
+
+This lead to the bug that in this situation, autocomplete fields would stop
+working completely.
+
+This is fixed with this werk. While regular select fields can still be skipped
+to gain page-load performance, autocomplete will never be skipped now.
+
+There are no manual changes necessary by the user for this to take effect.

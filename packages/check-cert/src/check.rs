@@ -10,7 +10,7 @@ pub struct Bounds<T> {
     pub max: T,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
@@ -30,11 +30,9 @@ impl<T> LowerLevels<T>
 where
     T: PartialOrd,
 {
-    pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
-        if warn >= crit {
-            Ok(Self {
-                levels: Levels { warn, crit },
-            })
+    pub fn try_new(levels: Levels<T>) -> Result<Self, Box<dyn std::error::Error>> {
+        if levels.warn >= levels.crit {
+            Ok(Self { levels })
         } else {
             Err(Box::from("bad values"))
         }
@@ -55,11 +53,9 @@ impl<T> UpperLevels<T>
 where
     T: PartialOrd,
 {
-    pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
-        if crit >= warn {
-            Ok(Self {
-                levels: Levels { warn, crit },
-            })
+    pub fn try_new(levels: Levels<T>) -> Result<Self, Box<dyn std::error::Error>> {
+        if levels.crit >= levels.warn {
+            Ok(Self { levels })
         } else {
             Err(Box::from("bad values"))
         }

@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{CheckResult, LowerLevels, UpperLevels, Writer};
+use check_cert::check::{CheckResult, Levels, LowerLevels, UpperLevels, Writer};
 use check_cert::{checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
@@ -62,17 +62,17 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let Ok(not_after_levels) = LowerLevels::try_new(
-        args.not_after_warn * Duration::DAY,
-        args.not_after_crit * Duration::DAY,
-    ) else {
+    let Ok(not_after_levels) = LowerLevels::try_new(Levels {
+        warn: args.not_after_warn * Duration::DAY,
+        crit: args.not_after_crit * Duration::DAY,
+    }) else {
         Writer::bail_out("invalid args: not after crit level larger than warn");
     };
 
-    let Ok(response_time_levels) = UpperLevels::try_new(
-        args.response_time_warn * Duration::MILLISECOND,
-        args.response_time_crit * Duration::MILLISECOND,
-    ) else {
+    let Ok(response_time_levels) = UpperLevels::try_new(Levels {
+        warn: args.response_time_warn * Duration::MILLISECOND,
+        crit: args.response_time_crit * Duration::MILLISECOND,
+    }) else {
         Writer::bail_out("invalid args: response time crit higher than warn");
     };
 

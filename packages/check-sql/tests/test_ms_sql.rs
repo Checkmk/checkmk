@@ -154,6 +154,7 @@ async fn test_validate_all_instances_remote() {
                     validate_table_spaces(&i, &mut c, &cfg.endpoint()).await;
                     validate_backup(&i, &mut c).await;
                     validate_transaction_logs(&i, &mut c, &cfg.endpoint()).await;
+                    validate_datafiles(&i, &mut c, &cfg.endpoint()).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -292,7 +293,37 @@ async fn validate_transaction_logs(
     assert!(lines[lines.len() - 1].is_empty());
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
-        assert_eq!(values[0], instance.mssql_name(), "bad line: {}", l);
+        assert_eq!(values[0], instance.name, "bad line: {}", l);
+        if expected.contains(&values[1].to_string()) {
+            found.insert(values[1].to_string());
+        }
+        assert!(values[2].to_lowercase().ends_with("log"), "bad line: {}", l);
+        assert!(values[3].starts_with("C:\\Program"), "bad line: {}", l);
+        assert!(values[4].parse::<u64>().is_ok(), "bad line: {}", l);
+        assert!(values[5].parse::<u64>().is_ok(), "bad line: {}", l);
+        assert!(values[6].parse::<u64>().is_ok(), "bad line: {}", l);
+        assert!(values[7].parse::<u64>().is_ok(), "bad line: {}", l);
+    }
+    assert_eq!(found, expected);
+}
+
+async fn validate_datafiles(instance: &InstanceEngine, client: &mut Client, endpoint: &Endpoint) {
+    let databases = instance.generate_databases(client).await;
+    let expected: HashSet<String> = ["master", "tempdb", "model", "msdb"]
+        .iter()
+        .map(|&s| s.to_string())
+        .collect();
+    let mut found: HashSet<String> = HashSet::new();
+
+    let result = instance
+        .generate_transaction_logs_section(endpoint, &databases, '|')
+        .await;
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= expected.len(), "{:?}", lines);
+    assert!(lines[lines.len() - 1].is_empty());
+    for l in lines[..lines.len() - 1].iter() {
+        let values = l.split('|').collect::<Vec<&str>>();
+        assert_eq!(values[0], instance.name, "bad line: {}", l);
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }

@@ -28,6 +28,7 @@ const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
 const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
 const BACKUP_SECTION_NAME: &str = "backup";
 const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
+const DATAFILES_SECTION_NAME: &str = "datafiles";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -117,7 +118,8 @@ impl InstanceEngine {
                         | BLOCKED_SESSIONS_SECTION_NAME
                         | TABLE_SPACES_SECTION_NAME
                         | BACKUP_SECTION_NAME
-                        | TRANSACTION_LOG_SECTION_NAME => {
+                        | TRANSACTION_LOG_SECTION_NAME
+                        | DATAFILES_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -211,6 +213,10 @@ impl InstanceEngine {
             BACKUP_SECTION_NAME => self.generate_backup_section(client, &databases, sep).await,
             TRANSACTION_LOG_SECTION_NAME => {
                 self.generate_transaction_logs_section(endpoint, &databases, sep)
+                    .await
+            }
+            DATAFILES_SECTION_NAME => {
+                self.generate_datafiles_section(endpoint, &databases, sep)
                     .await
             }
             _ => format!("{} not implemented\n", name).to_string(),
@@ -325,26 +331,50 @@ impl InstanceEngine {
         databases: &Vec<String>,
         sep: char,
     ) -> String {
-        let format_error = |d: &str, e: &anyhow::Error| {
-            format!(
-                "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
-                self.mssql_name(),
-                d.replace(' ', "_"),
-                e
-            )
-            .to_string()
-        };
         let mut result = String::new();
         for d in databases {
             match self.create_client(endpoint, Some(d.clone())).await {
                 Ok(mut c) => {
                     result += &run_query(&mut c, queries::QUERY_TRANSACTION_LOGS)
                         .await
-                        .map(|rows| to_transaction_logs_entries(&self.mssql_name(), d, &rows, sep))
-                        .unwrap_or_else(|e| format_error(d, &e));
+                        .map(|rows| to_transaction_logs_entries(&self.name, d, &rows, sep))
+                        .unwrap_or_else(|e| self.format_error(d, &e, sep));
                 }
                 Err(err) => {
-                    result += &format_error(d, &err);
+                    result += &self.format_error(d, &err, sep);
+                }
+            }
+        }
+        result
+    }
+
+    fn format_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
+        format!(
+            "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
+            self.mssql_name(),
+            d.replace(' ', "_"),
+            e
+        )
+        .to_string()
+    }
+
+    pub async fn generate_datafiles_section(
+        &self,
+        endpoint: &config::ms_sql::Endpoint,
+        databases: &Vec<String>,
+        sep: char,
+    ) -> String {
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_query(&mut c, queries::QUERY_DATAFILES)
+                        .await
+                        .map(|rows| to_datafiles_entries(&self.name, d, &rows, sep))
+                        .unwrap_or_else(|e| self.format_error(d, &e, sep));
+                }
+                Err(err) => {
+                    result += &self.format_error(d, &err, sep);
                 }
             }
         }
@@ -535,6 +565,42 @@ fn to_transaction_logs_entry(
     database_name: &str,
     sep: char,
 ) -> String {
+    let name = row.get_value_by_name("name");
+    let physical_name = row.get_value_by_name("physical_name");
+    let max_size = row.get_bigint_by_name("MaxSize");
+    let allocated_size = row.get_bigint_by_name("AllocatedSize");
+    let used_size = row.get_bigint_by_name("UsedSize");
+    let unlimited = row.get_bigint_by_name("Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name,
+        physical_name,
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
+fn to_datafiles_entries(
+    instance_name: &str,
+    database_name: &str,
+    rows: &[Vec<Row>],
+    sep: char,
+) -> String {
+    if rows.is_empty() {
+        return String::new();
+    }
+    rows[0]
+        .iter()
+        .map(|row| to_datafiles_entry(row, instance_name, database_name, sep))
+        .collect::<Vec<String>>()
+        .join("")
+}
+
+fn to_datafiles_entry(row: &Row, instance_name: &str, database_name: &str, sep: char) -> String {
     let name = row.get_value_by_name("name");
     let physical_name = row.get_value_by_name("physical_name");
     let max_size = row.get_bigint_by_name("MaxSize");

@@ -1563,7 +1563,7 @@ run_remote_plugins() {
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
-            run_cached "mrpe_${descr}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            run_cached "mrpe_${descr}" "${interval}" "run_mrpe \"${descr}\" \"${cmdline}\""
         fi
 
     done

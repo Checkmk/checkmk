@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import subprocess
 import sys
 import tarfile
@@ -214,6 +215,36 @@ def _handle_api_error(e: docker.errors.APIError) -> None:
     raise e
 
 
+def check_for_local_package(version: CMKVersion) -> bool:
+    """Checks package_download folder for a Checkmk package and returns True if
+    exactly one package is available and meets some requirements. If there are
+    invalid packages, the application terminates."""
+    packages_dir = testlib.repo_path() / "package_download"
+    if available_packages := [
+        p for p in packages_dir.glob("*") if re.match("^.*check-mk.*(rpm|deb)$", p.name)
+    ]:
+        if len(available_packages) > 1:
+            logger.error(
+                "Error: There must be exactly one Checkmk package in %s, but there are %d:",
+                packages_dir,
+                len(available_packages),
+            )
+            for path in available_packages:
+                logger.error("Error:   %s", path)
+            raise SystemExit(1)
+
+        package_name = available_packages[0].name
+        package_pattern = rf"check-mk-{version.edition.long}-{version.version}.*\.(deb|rpm)"
+        if not re.match(f"^{package_pattern}$", package_name):
+            logger.error("Error: '%s' does not match version=%s", package_name, version)
+            logger.error("Error:  (must be '%s')", package_pattern)
+            raise SystemExit(1)
+
+        logger.info("found %s", available_packages[0])
+        return True
+    return False
+
+
 def _create_cmk_image(
     client: docker.DockerClient, base_image_name: str, docker_tag: str, version: CMKVersion
 ) -> str:
@@ -232,17 +263,26 @@ def _create_cmk_image(
         f"{base_image_name}-{version.edition.short}-{version.version}:{docker_tag}"
     )
 
-    logger.info("Check for available test-image [%s]", image_name_with_tag)
-    # First try to get the pre-built image from the local or remote registry
-    if (
-        (image := _get_or_load_image(client, image_name_with_tag))
-        and _is_based_on_current_base_image(image, base_image)
-        and _is_using_current_cmk_package(image, version)
-    ):
-        # We found something locally or remote and ensured it's available locally.
-        # Only use it when it's based on the latest available base image. Otherwise
-        # skip it. The following code will re-build one based on the current base image
-        return image_name_with_tag  # already found, nothing to do.
+    if use_local_package := check_for_local_package(version):
+        logger.info("+====================================================================+")
+        logger.info("| Use locally available package (i.e. don't try to fetch test-image) |")
+        logger.info("+====================================================================+")
+    else:
+        logger.info("+====================================+")
+        logger.info("| No locally available package found |")
+        logger.info("+====================================+")
+
+        logger.info("Check for available test-image [%s]", image_name_with_tag)
+        # First try to get the pre-built image from the local or remote registry
+        if (
+            (image := _get_or_load_image(client, image_name_with_tag))
+            and _is_based_on_current_base_image(image, base_image)
+            and _is_using_current_cmk_package(image, version)
+        ):
+            # We found something locally or remote and ensured it's available locally.
+            # Only use it when it's based on the latest available base image. Otherwise
+            # skip it. The following code will re-build one based on the current base image
+            return image_name_with_tag  # already found, nothing to do.
 
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
     with _start(
@@ -314,13 +354,14 @@ def _create_cmk_image(
 
         logger.info("Commited image [%s] (%s)", image_name_with_tag, image.short_id)
 
-        try:
-            logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
-            client.images.push(image_name_with_tag)
-            logger.info("  Upload complete")
-        except docker.errors.APIError as e:
-            logger.warning("  An error occurred")
-            _handle_api_error(e)
+        if not use_local_package:
+            try:
+                logger.info("Uploading [%s] to registry (%s)", image_name_with_tag, image.short_id)
+                client.images.push(image_name_with_tag)
+                logger.info("  Upload complete")
+            except docker.errors.APIError as e:
+                logger.warning("  An error occurred")
+                _handle_api_error(e)
 
     return image_name_with_tag
 

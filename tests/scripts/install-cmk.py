@@ -137,8 +137,13 @@ class ABCPackageManager(abc.ABC):
     def install(self, version: str, edition: Edition) -> None:
         package_name = self._package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
+        packages_dir = Path(__file__).parent.parent.parent / "package_download"
+        if (package_path := packages_dir / package_name).exists():
+            logger.info("Install from locally available package %s", package_path)
+            self._write_package_hash(version, edition, package_path)
+            self._install_package(package_path)
 
-        if build_system_path.exists():
+        elif build_system_path.exists():
             logger.info("Install from build system package (%s)", build_system_path)
             self._write_package_hash(version, edition, build_system_path)
             self._install_package(build_system_path)

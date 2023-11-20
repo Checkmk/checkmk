@@ -19,16 +19,8 @@ include(ExternalProject)
 # <test> target
 enable_testing()
 
-add_executable(
-  test
-  DummyNagios.cc
-  TableQueryHelper.cc
-  TableQueryHelper.h
-  test_CrashReport.cc
-  test_DictFilter.cc
-  test_MacroExpander.cc
-  test_utilities.cc
-  test_utilities.h)
+add_executable(test DummyNagios.cc test_CrashReport.cc test_DictFilter.cc
+                    test_MacroExpander.cc test_utilities.cc test_utilities.h)
 
 add_executable(NagiosMockup NagiosMockup.cc)
 target_include_directories(NagiosMockup PRIVATE ../include)

@@ -52,6 +52,7 @@ from ..v1 import (
     TableRow,
 )
 from ..v1._detection import SNMPDetectSpecification  # sorry
+from ..v1.register import RuleSetType
 from . import clusterize, render, type_defs
 from ._plugins import AgentSection, CheckPlugin, InventoryPlugin, SimpleSNMPSection, SNMPSection
 
@@ -94,6 +95,7 @@ __all__ = [
     "OIDEnd",
     "render",
     "Result",
+    "RuleSetType",
     "Service",
     "ServiceLabel",
     "SNMPTree",

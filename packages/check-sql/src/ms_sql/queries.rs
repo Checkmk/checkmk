@@ -126,7 +126,7 @@ pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
 pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
 pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";
 
-pub const QUERY_DATABASES: &str = "SELECT name FROM sys.databases";
+pub const QUERY_DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
 pub const QUERY_SPACE_USED: &str = "EXEC sp_spaceused";
 pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";
 
@@ -166,6 +166,13 @@ pub const QUERY_DATAFILES: &str = "SELECT name, physical_name,\
   cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize,\
   case when max_size = '-1' then '1' else '0' end as Unlimited \
 FROM sys.database_files WHERE type_desc = 'ROWS'";
+
+pub const QUERY_DATABASES: &str = "SELECT name, \
+cast(DATABASEPROPERTYEX(name, 'Status') as varchar) AS Status, \
+  cast(DATABASEPROPERTYEX(name, 'Recovery') as varchar) AS Recovery, \
+  cast(DATABASEPROPERTYEX(name, 'IsAutoClose') as bigint) AS auto_close, \
+  cast(DATABASEPROPERTYEX(name, 'IsAutoShrink') as bigint) AS auto_shrink \
+FROM master.dbo.sysdatabases";
 
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()

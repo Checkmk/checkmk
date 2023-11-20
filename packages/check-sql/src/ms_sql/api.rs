@@ -29,6 +29,7 @@ const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
 const BACKUP_SECTION_NAME: &str = "backup";
 const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
 const DATAFILES_SECTION_NAME: &str = "datafiles";
+const DATABASES_SECTION_NAME: &str = "databases";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -119,7 +120,8 @@ impl InstanceEngine {
                         | TABLE_SPACES_SECTION_NAME
                         | BACKUP_SECTION_NAME
                         | TRANSACTION_LOG_SECTION_NAME
-                        | DATAFILES_SECTION_NAME => {
+                        | DATAFILES_SECTION_NAME
+                        | DATABASES_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -185,6 +187,7 @@ impl InstanceEngine {
         format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
     }
 
+    /// TODO(sk). Remove it(inline at call-site)
     pub async fn generate_known_sections(
         &self,
         client: &mut Client,
@@ -217,6 +220,10 @@ impl InstanceEngine {
             }
             DATAFILES_SECTION_NAME => {
                 self.generate_datafiles_section(endpoint, &databases, sep)
+                    .await
+            }
+            DATABASES_SECTION_NAME => {
+                self.generate_databases_section(client, queries::QUERY_DATABASES, sep, &databases)
                     .await
             }
             _ => format!("{} not implemented\n", name).to_string(),
@@ -381,9 +388,38 @@ impl InstanceEngine {
         result
     }
 
+    pub async fn generate_databases_section(
+        &self,
+        client: &mut Client,
+        query: &str,
+        sep: char,
+        databases: &[String],
+    ) -> String {
+        run_query(client, query)
+            .await
+            .map(|rows| to_databases_entries(&self.name, &rows, sep))
+            .unwrap_or_else(|e| {
+                databases
+                    .iter()
+                    .map(|d| self.format_databases_error(d, &e, sep))
+                    .collect::<Vec<String>>()
+                    .join("")
+            })
+    }
+
+    fn format_databases_error(&self, d: &str, e: &anyhow::Error, sep: char) -> String {
+        format!(
+            "{}{sep}{}{sep}{:?}{}\n",
+            self.name,
+            d.replace(' ', "_"),
+            e,
+            format!("{sep}-").repeat(3),
+        )
+    }
+
     /// doesn't return error - the same behavior as plugin
     pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
-        let result = run_query(client, queries::QUERY_DATABASES)
+        let result = run_query(client, queries::QUERY_DATABASE_NAMES)
             .await
             .and_then(validate_rows)
             .map(|rows| self.process_databases_rows(&rows));
@@ -611,12 +647,40 @@ fn to_datafiles_entry(row: &Row, instance_name: &str, database_name: &str, sep: 
         "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
         instance_name,
         database_name.replace(' ', "_"),
-        name,
-        physical_name,
+        name.replace(' ', "_"),
+        physical_name.replace(' ', "_"),
         max_size,
         allocated_size,
         used_size,
         unlimited
+    )
+}
+
+fn to_databases_entries(instance_name: &str, rows: &[Vec<Row>], sep: char) -> String {
+    if rows.is_empty() {
+        return String::new();
+    }
+    rows[0]
+        .iter()
+        .map(|row| to_databases_entry(row, instance_name, sep))
+        .collect::<Vec<String>>()
+        .join("")
+}
+
+fn to_databases_entry(row: &Row, instance_name: &str, sep: char) -> String {
+    let name = row.get_value_by_name("name");
+    let status = row.get_value_by_name("Status");
+    let recovery = row.get_value_by_name("Recovery");
+    let auto_close = row.get_bigint_by_name("auto_close");
+    let auto_shrink = row.get_bigint_by_name("auto_shrink");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        name.replace(' ', "_").trim(),
+        status.trim(),
+        recovery.trim(),
+        auto_close,
+        auto_shrink,
     )
 }
 

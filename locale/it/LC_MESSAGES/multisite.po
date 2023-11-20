@@ -806,6 +806,10 @@ msgstr ""
 msgid "(0 is current period)"
 msgstr "(0 è il periodo corrente)"
 
+#, fuzzy
+msgid "(Edit presets)"
+msgstr "Modificare i rapporti"
+
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Suggerimenti massimi raggiunti, essere più specifici)"
 
@@ -1171,10 +1175,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s di %s di lunghezza</b>"
-
-#, fuzzy, python-format
-msgid "<b>%s for the next %d minutes</b>?"
-msgstr "<b>%s per i prossimi %d minuti</b>"
 
 #, fuzzy, python-format
 msgid "<b>%s until 24:00:00</b>?"
@@ -4212,10 +4212,6 @@ msgstr "Commento ad hoc"
 msgid "Adhoc downtime"
 msgstr "Tempo di inattività adhoc"
 
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "Adhoc per %d minuti"
-
 msgid "Admin"
 msgstr "Admin"
 
@@ -4270,6 +4266,10 @@ msgstr ""
 
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
+
+#, fuzzy
+msgid "Advanced options"
+msgstr "Opzioni disponibili"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
@@ -5703,9 +5703,6 @@ msgstr "Contatta anche l'agente Checkmk"
 
 msgid "Also search in subfolders"
 msgstr "Cerca anche nelle sottocartelle"
-
-msgid "Also set downtime on child hosts"
-msgstr "Impostare anche il tempo di inattività sugli host figli"
 
 msgid ""
 "Also use these contact groups in eventually notifications created by this "
@@ -10756,6 +10753,13 @@ msgstr "Condizioni del bambino"
 msgid "Child Node Generation"
 msgstr "Generazione di nodi figli"
 
+msgid "Child hosts also go in downtime (recursively)."
+msgstr ""
+
+#, fuzzy
+msgid "Child hosts also go in downtime."
+msgstr "Elenca tutti i tempi di inattività degli host."
+
 msgid "Child report"
 msgstr "Rapporto bambino"
 
@@ -14022,9 +14026,6 @@ msgstr "Attualmente c'è una modifica in sospeso non ancora attivata."
 msgid "Custom Action"
 msgstr "Azione personalizzata"
 
-msgid "Custom Downtime Timeranges"
-msgstr "Intervalli di tempo di inattività personalizzati"
-
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Design GUI personalizzato di %s"
@@ -14176,9 +14177,6 @@ msgstr "Elementi della barra laterale personalizzata"
 
 msgid "Custom states"
 msgstr "Stati personalizzati"
-
-msgid "Custom time range"
-msgstr "Intervallo di tempo personalizzato"
 
 msgid "Custom time span"
 msgstr "Intervallo di tempo personalizzato"
@@ -17735,9 +17733,6 @@ msgstr "Ora mostra lo spazio riservato"
 msgid "Do status data inventory"
 msgstr "Fare l'inventario dei dati di stato"
 
-msgid "Do this recursively"
-msgstr "Fate questo ricorsivamente"
-
 msgid "Do transfer context"
 msgstr "Trasferire il contesto"
 
@@ -17993,6 +17988,14 @@ msgstr "Nome host (corrispondenza esatta)"
 msgid "Downtime active or pending"
 msgstr "Tempo di inattività attivo o in sospeso"
 
+#, fuzzy
+msgid "Downtime also applies to services."
+msgstr "Tempi di inattività del servizio"
+
+#, fuzzy
+msgid "Downtime attributes:"
+msgstr "Attributi modificati"
+
 msgid "Downtime author"
 msgstr "Autore dei tempi morti"
 
@@ -18007,7 +18010,19 @@ msgstr "Commento sui tempi di inattività"
 msgid "Downtime comment (regex)"
 msgstr "Commento sui tempi di inattività"
 
+#, fuzzy
+msgid "Downtime datepicker"
+msgstr "Orario di fine del tempo di inattività"
+
+#, fuzzy
+msgid "Downtime does not apply to host."
+msgstr "Tempi di inattività dell'host"
+
 msgid "Downtime duration (if flexible)"
+msgstr "Durata del tempo di inattività (se flessibile)"
+
+#, fuzzy
+msgid "Downtime duration presets"
 msgstr "Durata del tempo di inattività (se flessibile)"
 
 msgid "Downtime end"
@@ -18045,6 +18060,10 @@ msgstr "Ora di inizio del tempo di inattività"
 
 msgid "Downtime stopped"
 msgstr "Tempo di inattività fermato"
+
+#, fuzzy
+msgid "Downtime timepicker"
+msgstr "Orario di fine del tempo di inattività"
 
 msgid "Downtime will not start anymore after"
 msgstr "Il tempo di inattività non inizierà più dopo"
@@ -19369,6 +19388,10 @@ msgstr "End-Time"
 
 msgid "End-to-end latency"
 msgstr "Latenza end-to-end"
+
+#, python-format
+msgid "End: %s"
+msgstr "Fine %s"
 
 msgid "Ended"
 msgstr "Finito"
@@ -21621,6 +21644,10 @@ msgstr "Tempo di inattività flessibile"
 msgid "Flexible downtime duration:"
 msgstr "Durata flessibile del tempo di inattività:"
 
+#, fuzzy
+msgid "Flexible downtime options"
+msgstr "Durata flessibile del tempo di inattività:"
+
 msgid "Floating point number"
 msgstr "Numero in virgola mobile"
 
@@ -22336,9 +22363,6 @@ msgstr "Dalla tabella dell'inventario"
 
 msgid "From left of the page"
 msgstr "Da sinistra della pagina"
-
-msgid "From now for"
-msgstr "Da ora per"
 
 msgid "From password store"
 msgstr "Dal negozio di password"
@@ -28361,6 +28385,9 @@ msgstr "Includere le piscine vuote nel monitoraggio"
 msgid "Include full path"
 msgstr "Includi il percorso completo"
 
+msgid "Include indirectly connected hosts (recursively)"
+msgstr ""
+
 msgid "Include per-process arguments (security risk!)"
 msgstr "Includere argomenti per processo (rischio per la sicurezza!)"
 
@@ -29148,6 +29175,10 @@ msgstr "Sorgente dati non valida '%s' configurata."
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipo di dato non valido del timestamp: deve essere int o float."
 
+#, fuzzy, python-format
+msgid "Invalid date format: %s"
+msgstr "Origine dati non valida: %s"
+
 msgid "Invalid end time given"
 msgstr "Orario di fine non valido dato"
 
@@ -29333,6 +29364,10 @@ msgstr "Test non valido."
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 "Formato orario non valido '<tt>%s</tt>', usa il formato <tt>24:00</tt>."
+
+#, fuzzy, python-format
+msgid "Invalid time format: %s"
+msgstr "Identità non valida: %s"
 
 msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -38732,6 +38767,10 @@ msgstr "Solo i primi 10 risultati ordinati"
 msgid "Only first 20 sorted results"
 msgstr "Solo i primi 20 risultati ordinati"
 
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime"
+msgstr "solo quando l'host non è in downtime"
+
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
 "configuration and that have registered for updates."
@@ -38831,6 +38870,11 @@ msgstr "Mostra solo i servizi in questo stato"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "Mostra il %s solo se show more è attivo"
+
+msgid ""
+"Only start downtime if host/service goes DOWN/UNREACH during the defined "
+"start and end time (flexible)"
+msgstr ""
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -41143,9 +41187,6 @@ msgstr ""
 
 msgid "Please enter a filename."
 msgstr "Inserisci un nome di file."
-
-msgid "Please enter a positive number of minutes."
-msgstr "Si prega di inserire un numero positivo di minuti."
 
 msgid "Please enter a time."
 msgstr "Si prega di inserire un orario."
@@ -43811,9 +43852,6 @@ msgstr "Rimuovere il riconoscimento"
 msgid "Remove acknowledgement?"
 msgstr "Rimuovere il riconoscimento"
 
-msgid "Remove all"
-msgstr "Rimuovere tutti"
-
 msgid "Remove all and find new"
 msgstr "Rimuovi tutto e trova il nuovo"
 
@@ -44066,6 +44104,10 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Rendere le regole verticali tra le colonne"
 
+#, fuzzy
+msgid "Repeat"
+msgstr "ripetizione:"
+
 msgid "Repeat query and allow more results."
 msgstr "Ripetere la query e permettere più risultati."
 
@@ -44075,8 +44117,9 @@ msgstr "Ripeti la domanda senza limiti."
 msgid "Repeat this downtime"
 msgstr "Ripetere questo tempo di inattività"
 
-msgid "Repeat this downtime on a regular basis every"
-msgstr "Ripetere questo tempo di inattività su base regolare ogni"
+#, fuzzy, python-format
+msgid "Repeats every %s"
+msgstr "ripetere ogni 20° fila"
 
 #, python-brace-format
 msgid "Repetition change for item {diff_path}."
@@ -44981,6 +45024,10 @@ msgstr "Invia rapporto"
 #, fuzzy
 msgid "Robotmk (Windows)"
 msgstr "Registri di RobotMK"
+
+#, fuzzy
+msgid "Robotmk Suite Status"
+msgstr "Stato del sito"
 
 msgid "Role"
 msgstr "Ruolo"
@@ -45922,9 +45969,9 @@ msgstr "Intervallo di scansione"
 msgid "Schedule"
 msgstr "Programma"
 
-#, fuzzy, python-format
-msgid "Schedule a downtime from %s to %s?"
-msgstr "<b>programmare un tempo di inattività da %s a %s</b>"
+#, fuzzy
+msgid "Schedule a downtime?"
+msgstr "Programmare i tempi di inattività"
 
 #, fuzzy, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -45942,6 +45989,10 @@ msgid "Schedule downtime for %d %s"
 msgstr "Tempo di inattività programmato per %d %s"
 
 msgid "Schedule downtime on host"
+msgstr "Programmare il tempo di inattività sull'host"
+
+#, fuzzy
+msgid "Schedule downtime on service"
 msgstr "Programmare il tempo di inattività sull'host"
 
 #, fuzzy
@@ -50437,6 +50488,10 @@ msgstr "Iniziare!"
 msgid "Start-Time"
 msgstr "Start-Time"
 
+#, fuzzy, python-format
+msgid "Start: %s"
+msgstr "Iniziato a: %s."
+
 msgid "Started"
 msgstr "Iniziato"
 
@@ -50473,6 +50528,11 @@ msgstr "Avvio"
 
 msgid "Starting with entry"
 msgstr "A partire dall'ingresso"
+
+#, python-format
+msgid ""
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+msgstr ""
 
 msgid "Startup overhead in shared pool"
 msgstr "Spese generali di avvio in un pool condiviso"
@@ -51688,6 +51748,13 @@ msgstr "Firma verificata con successo"
 
 msgid "Suggested tutorial videos"
 msgstr "Video tutorial consigliati"
+
+msgid "Suite"
+msgstr ""
+
+#, fuzzy
+msgid "Suite runtime"
+msgstr "Nome del sito"
 
 msgid "Sum"
 msgstr "Somma"
@@ -56345,6 +56412,12 @@ msgstr ""
 "Il nome del ruleset identifica il ruleset all'interno di Checkmk. Utilizzare "
 "questo nome quando si lavora con le regole e le chiamate API REST del "
 "ruleset."
+
+msgid ""
+"The runtime of a suite is limited by the maximum number of attempts "
+"multiplied by the timeout per attempt. This settings configures thresholds "
+"on the suite runtime with respect to this overall limit."
+msgstr ""
 
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Il programma che stai cercando di clonare non esiste."
@@ -64761,6 +64834,10 @@ msgstr "Livelli superiori sul numero di connessioni Point-to-site"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Livelli superiori sulla percentuale di richieste %s"
 
+#, fuzzy
+msgid "Upper levels on suite runtime relative to overall timeout"
+msgstr "Livelli superiori per la durata in percentuale del timeout"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "Livelli superiori sul ritardo dello slot di replica più vecchio"
 
@@ -66615,9 +66692,6 @@ msgid "View and edit the rules and aggregations in this BI pack"
 msgstr ""
 "Visualizzare e modificare le regole e le aggregazioni in questo pacchetto BI"
 
-msgid "View history"
-msgstr "Visualizza la storia"
-
 msgid "View layout"
 msgstr "Visualizza il layout"
 
@@ -67307,6 +67381,9 @@ msgstr "Funziona solo per %s"
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What is the occasion?"
+msgstr ""
 
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
@@ -71742,9 +71819,6 @@ msgstr "elemento di pagina fisso"
 msgid "flexible"
 msgstr "flessibile"
 
-msgid "flexible with max. duration"
-msgstr "flessibile con durata massima"
-
 msgid "folder"
 msgstr "cartella"
 
@@ -72288,6 +72362,10 @@ msgstr "n/a"
 
 msgid "negate"
 msgstr "negare"
+
+#, fuzzy
+msgid "never"
+msgstr "(mai)"
 
 msgid "new element"
 msgstr "nuovo elemento"
@@ -73103,9 +73181,6 @@ msgstr "larghezza"
 msgid "with a timeout of"
 msgstr "con un timeout di"
 
-msgid "with comment"
-msgstr "con commento"
-
 msgid "with context"
 msgstr "con contesto"
 
@@ -73160,6 +73235,53 @@ msgstr "{actual} è troppo basso. Il valore minimo consentito è {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
+
+#, fuzzy, python-format
+#~| msgid "<b>%s for the next %d minutes</b>"
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s per i prossimi %d minuti</b>"
+
+#, python-format
+#~ msgid "Adhoc for %d minutes"
+#~ msgstr "Adhoc per %d minuti"
+
+#~ msgid "Also set downtime on child hosts"
+#~ msgstr "Impostare anche il tempo di inattività sugli host figli"
+
+#~ msgid "Custom Downtime Timeranges"
+#~ msgstr "Intervalli di tempo di inattività personalizzati"
+
+#~ msgid "Custom time range"
+#~ msgstr "Intervallo di tempo personalizzato"
+
+#~ msgid "Do this recursively"
+#~ msgstr "Fate questo ricorsivamente"
+
+#~ msgid "From now for"
+#~ msgstr "Da ora per"
+
+#~ msgid "Please enter a positive number of minutes."
+#~ msgstr "Si prega di inserire un numero positivo di minuti."
+
+#~ msgid "Remove all"
+#~ msgstr "Rimuovere tutti"
+
+#~ msgid "Repeat this downtime on a regular basis every"
+#~ msgstr "Ripetere questo tempo di inattività su base regolare ogni"
+
+#, fuzzy, python-format
+#~| msgid "<b>schedule a downtime from %s to %s</b>"
+#~ msgid "Schedule a downtime from %s to %s?"
+#~ msgstr "<b>programmare un tempo di inattività da %s a %s</b>"
+
+#~ msgid "View history"
+#~ msgstr "Visualizza la storia"
+
+#~ msgid "flexible with max. duration"
+#~ msgstr "flessibile con durata massima"
+
+#~ msgid "with comment"
+#~ msgstr "con commento"
 
 #~ msgid "Clear"
 #~ msgstr "Libero"
@@ -73383,9 +73505,6 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
 #~ msgid "Custom notification"
 #~ msgstr "Notifica personalizzata"
-
-#~ msgid "Modified attributes"
-#~ msgstr "Attributi modificati"
 
 #~ msgid "Remove comments"
 #~ msgstr "Rimuovere i commenti"
@@ -74168,17 +74287,8 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 #~ msgstr "Applicazione"
 
 #, python-format
-#~ msgid "End: %s"
-#~ msgstr "Fine %s"
-
-#, python-format
 #~ msgid "Limit: %s"
 #~ msgstr "Limitare: %s"
-
-#, fuzzy, python-format
-#~| msgid "Started at: %s."
-#~ msgid "Start: %s"
-#~ msgstr "Iniziato a: %s."
 
 #~ msgid "Create random secret"
 #~ msgstr "Creare un segreto casuale"

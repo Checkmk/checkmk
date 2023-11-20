@@ -5,13 +5,6 @@
 
 from collections.abc import Callable, Iterable
 
-from cmk.utils.aws_constants import (
-    AWSEC2InstFamilies,
-    AWSEC2InstTypes,
-    AWSEC2LimitsDefault,
-    AWSEC2LimitsSpecial,
-)
-
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
@@ -34,6 +27,13 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
     ValueSpec,
+)
+
+from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
+    AWSEC2InstFamilies,
+    AWSEC2InstTypes,
+    AWSEC2LimitsDefault,
+    AWSEC2LimitsSpecial,
 )
 
 
@@ -640,9 +640,9 @@ def _vs_limits_vcpu_families():
             choices=[
                 (
                     "%s_vcpu" % inst_fam,
-                    fam_name,
+                    fam_name.localize(_),
                     vs_aws_limits(
-                        fam_name,
+                        fam_name.localize(_),
                         AWSEC2LimitsSpecial.get("%s_vcpu" % inst_fam, AWSEC2LimitsDefault)[0],
                     ),
                 )

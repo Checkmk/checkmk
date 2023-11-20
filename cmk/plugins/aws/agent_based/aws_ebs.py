@@ -6,11 +6,17 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.plugins.lib.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
+from cmk.agent_based.v2alpha import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    get_rate,
+    get_value_store,
+    render,
+)
+from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.aws.lib import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
 from cmk.plugins.lib.diskstat import check_diskstat_dict
-
-from .agent_based_api.v1 import check_levels, get_rate, get_value_store, register, render
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, Mapping[str, float]]
 
@@ -41,7 +47,7 @@ def parse_aws_ebs(string_table: StringTable) -> Section:
     )
 
 
-register.agent_section(
+agent_section_aws_ebs = AgentSection(
     name="aws_ebs",
     parse_function=parse_aws_ebs,
 )
@@ -117,7 +123,7 @@ def check_aws_ebs(item: str, params: Mapping[str, Any], section: Section) -> Che
     )
 
 
-register.check_plugin(
+check_plugin_aws_ebs = CheckPlugin(
     name="aws_ebs",
     service_name="AWS/EBS Disk IO %s",
     discovery_function=discover_aws_ebs,
@@ -161,7 +167,7 @@ def check_aws_ebs_burst_balance(
     )
 
 
-register.check_plugin(
+check_plugin_aws_ebs_burst_balance = CheckPlugin(
     name="aws_ebs_burst_balance",
     check_function=check_aws_ebs_burst_balance,
     discovery_function=discover_aws_ebs_burst_balance,

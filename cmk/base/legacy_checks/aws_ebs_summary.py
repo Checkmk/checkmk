@@ -12,7 +12,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import inventory_aws_generic
 from cmk.base.config import check_info
 
-from cmk.plugins.lib.aws import GenericAWSSection, parse_aws
+from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 AWSEBSStorageTypes = {
     "standard": "Magnetic volumes",

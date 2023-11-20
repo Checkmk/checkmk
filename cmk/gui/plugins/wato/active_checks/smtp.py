@@ -98,7 +98,7 @@ def _valuespec_active_checks_smtp() -> Migrate:
                     ),
                 ),
                 (
-                    "from",
+                    "from_address",
                     TextInput(
                         title=_("FROM-Address"),
                         help=_(
@@ -199,8 +199,21 @@ def _valuespec_active_checks_smtp() -> Migrate:
                 "timeout",
             ],
         ),
-        migrate=lambda p: p if isinstance(p, dict) else {**p[1], "name": p[0]},
+        migrate=_migrate,
     )
+
+
+def _migrate(p: tuple[str, dict[str, object]] | dict[str, object]) -> dict[str, object]:
+    """
+    >>> _migrate(("my_name", {"from": "1.2.3.4"}))
+    {'from_address': '1.2.3.4', 'name': 'my_name'}
+    """
+    if isinstance(p, dict):
+        return p
+    name, old_p = p
+    new_p = {"from_address" if k == "from" else k: v for k, v in old_p.items()}
+    new_p["name"] = name
+    return new_p
 
 
 rulespec_registry.register(

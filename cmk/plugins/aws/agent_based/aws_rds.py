@@ -7,8 +7,18 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.aws import (
+from cmk.agent_based.v2alpha import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+    Result,
+    State,
+)
+from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.aws.lib import (
     aws_get_counts_rate_human_readable,
     aws_rds_service_item,
     AWSSectionMetrics,
@@ -16,19 +26,9 @@ from cmk.plugins.lib.aws import (
     extract_aws_metrics_by_labels,
     parse_aws,
 )
+from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.diskstat import check_diskstat_dict
-
-from .agent_based_api.v1 import (
-    check_levels,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    render,
-    Result,
-    State,
-)
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
@@ -76,7 +76,7 @@ def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
     return section
 
 
-register.agent_section(
+agent_section_aws_rds = AgentSection(
     name="aws_rds",
     parse_function=parse_aws_rds,
 )
@@ -132,7 +132,7 @@ def check_aws_rds_network_io(
     yield from interfaces.check_single_interface(item, params, interface)
 
 
-register.check_plugin(
+check_plugin_aws_rds_network_io = CheckPlugin(
     name="aws_rds_network_io",
     sections=["aws_rds"],
     service_name="AWS/RDS %s Network IO",
@@ -198,7 +198,7 @@ def check_aws_rds_disk_io(
     )
 
 
-register.check_plugin(
+check_plugin_aws_rds_disk_io = CheckPlugin(
     name="aws_rds_disk_io",
     service_name="AWS/RDS %s Disk IO",
     check_function=check_aws_rds_disk_io,
@@ -238,7 +238,7 @@ def check_aws_rds(item: str, params: Mapping[str, Any], section: AWSSectionMetri
     )
 
 
-register.check_plugin(
+check_plugin_aws_rds = CheckPlugin(
     name="aws_rds",
     service_name="AWS/RDS %s CPU Utilization",
     check_default_parameters={"levels": (80.0, 90.0)},
@@ -283,7 +283,7 @@ def check_aws_rds_agent_jobs(item: str, section: AWSSectionMetrics) -> CheckResu
     )
 
 
-register.check_plugin(
+check_plugin_aws_rds_agent_jobs = CheckPlugin(
     name="aws_rds_agent_jobs",
     service_name="AWS/RDS %s SQL Server Agent Jobs",
     check_function=check_aws_rds_agent_jobs,
@@ -356,7 +356,7 @@ def check_aws_rds_cpu_credits(
         )
 
 
-register.check_plugin(
+check_plugin_aws_rds_cpu_credits = CheckPlugin(
     name="aws_rds_cpu_credits",
     service_name="AWS/RDS %s CPU Credits",
     check_function=check_aws_rds_cpu_credits,
@@ -408,7 +408,7 @@ def check_aws_rds_bin_log_usage(
     )
 
 
-register.check_plugin(
+check_plugin_aws_rds_bin_log_usage = CheckPlugin(
     name="aws_rds_bin_log_usage",
     check_function=check_aws_rds_bin_log_usage,
     discovery_function=discover_aws_rds_bin_log_usage,
@@ -478,7 +478,7 @@ def check_aws_rds_transaction_logs_usage(
         )
 
 
-register.check_plugin(
+check_plugin_aws_rds_transaction_logs_usage = CheckPlugin(
     name="aws_rds_transaction_logs_usage",
     service_name="AWS/RDS %s Transaction Logs Usage",
     check_function=check_aws_rds_transaction_logs_usage,
@@ -536,7 +536,7 @@ def check_aws_rds_replication_slot_usage(
     )
 
 
-register.check_plugin(
+check_plugin_aws_rds_replication_slot_usage = CheckPlugin(
     name="aws_rds_replication_slot_usage",
     service_name="AWS/RDS %s Replication Slot Usage",
     check_function=check_aws_rds_replication_slot_usage,
@@ -580,7 +580,7 @@ def check_aws_rds_connections(
     )
 
 
-register.check_plugin(
+check_plugin_aws_rds_connections = CheckPlugin(
     name="aws_rds_connections",
     service_name="AWS/RDS %s Connections",
     sections=["aws_rds"],
@@ -634,7 +634,7 @@ def check_aws_rds_replica_lag(
         )
 
 
-register.check_plugin(
+check_plugin_aws_rds_replica_lag = CheckPlugin(
     name="aws_rds_replica_lag",
     service_name="AWS/RDS %s Replica Lag",
     check_function=check_aws_rds_replica_lag,

@@ -478,11 +478,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "domino_users",
-            RuleGroup.CheckgroupParameters("domino_users"),
-        ),
-        (
-            "check",
             "eltek_fans",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),

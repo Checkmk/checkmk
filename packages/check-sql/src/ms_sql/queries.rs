@@ -126,15 +126,46 @@ pub const QUERY_DETAILS_VERSION_PARAM: &str = "prod_version";
 pub const QUERY_DETAILS_LEVEL_PARAM: &str = "prod_level";
 pub const QUERY_DETAILS_EDITION_PARAM: &str = "prod_edition";
 
-pub const SYS_DATABASES: &str = "SELECT name FROM sys.databases";
+pub const QUERY_DATABASES: &str = "SELECT name FROM sys.databases";
+pub const QUERY_SPACE_USED: &str = "EXEC sp_spaceused";
 pub const BAD_QUERY: &str = "SELEC name FROM sys.databases";
+
+pub const QUERY_BACKUP: &str = r"DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max);
+SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled'));
+IF (@HADRStatus IS NULL or @HADRStatus <> 1)
+BEGIN
+    SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date,
+    type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset
+    WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR))
+    GROUP BY type, machine_name,database_name '
+END
+ELSE
+BEGIN
+    SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,
+    b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name 
+    FROM msdb.dbo.backupset b
+    LEFT OUTER JOIN sys.databases db ON b.database_name = db.name
+    LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id
+    WHERE (rep.is_local is null or rep.is_local = 1)
+    AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR))
+    GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health'
+END
+EXEC (@SQLCommand)
+";
+
+pub const QUERY_TRANSACTION_LOGS: &str = "SELECT name, physical_name,\
+  cast(max_size/128 as bigint) as MaxSize,\
+  cast(size/128 as bigint) as AllocatedSize,\
+  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize,\
+  case when max_size = '-1' then '1' else '0' end as Unlimited \
+ FROM sys.database_files WHERE type_desc = 'LOG'";
 
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()
 }
 
 // production
-pub fn get_blocked_sessions_query() -> String {
+pub fn get_blocking_sessions_query() -> String {
     format!("{} WHERE blocking_session_id <> 0 ", QUERY_WAITING_TASKS).to_string()
 }
 

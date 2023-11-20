@@ -6,8 +6,6 @@
 
 from typing import Any
 
-from cmk.utils import aws_constants
-
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_yes
@@ -23,6 +21,8 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.wato import MigrateToIndividualOrStoredPassword
+
+from cmk.plugins.aws import constants as aws_constants  # pylint: disable=cmk-module-layer-violation
 
 
 def api_request_authentication() -> DictionaryEntry:

@@ -9,7 +9,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import check_aws_elb_summary_generic
 from cmk.base.config import check_info
 
-from cmk.plugins.lib.aws import GenericAWSSection, parse_aws
+from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 
 def discover_aws_elb_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:

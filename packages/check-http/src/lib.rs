@@ -3,7 +3,6 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub mod checking;
-pub mod connection;
 pub mod http;
 pub mod output;
 pub mod runner;

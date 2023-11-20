@@ -33,7 +33,10 @@ from typing_extensions import TypedDict
 
 import cmk.utils.password_store
 import cmk.utils.store as store
-from cmk.utils.aws_constants import (
+from cmk.utils.exceptions import MKException
+from cmk.utils.paths import tmp_dir
+
+from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
     AWSEC2InstFamilies,
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
@@ -42,9 +45,6 @@ from cmk.utils.aws_constants import (
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.utils.exceptions import MKException
-from cmk.utils.paths import tmp_dir
-
 from cmk.special_agents.utils import (
     DataCache,
     datetime_serializer,
@@ -1206,7 +1206,10 @@ class EC2Limits(AWSSectionLimits):
             )
             if inst_type.endswith("_vcpu"):
                 # Maybe should raise instead of unknown family
-                inst_fam_name = AWSEC2InstFamilies.get(inst_type[0], "Unknown Instance Family")
+                try:
+                    inst_fam_name = AWSEC2InstFamilies[inst_type[0]].localize(lambda x: x)
+                except KeyError:
+                    inst_fam_name = "Unknown Instance Family"
                 ondemand_limit = instance_quotas.get(inst_fam_name, ondemand_limit)
                 self._add_limit(
                     "",

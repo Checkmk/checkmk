@@ -486,10 +486,15 @@ class Certificate:
                 "(CA flag or keyCertSign bit missing)."
             )
 
+        if (hash_algo := self._cert.signature_hash_algorithm) is None:
+            # this should not happen and can be removed once we properly support other key and
+            # signature types
+            raise ValueError("Unexpected signature type (no hash algorithm)")
+
         signer.public_key.verify(
             Signature(self._cert.signature),
             self._cert.tbs_certificate_bytes,
-            HashAlgorithm.from_cryptography(self._cert.signature_hash_algorithm),
+            HashAlgorithm.from_cryptography(hash_algo),
         )
 
     def may_sign_certificates(self) -> bool:
@@ -579,15 +584,15 @@ class Certificate:
 
     def get_subject_alt_names(self) -> list[str]:
         try:
-            sans = self._cert.extensions.get_extension_for_oid(
+            ext = self._cert.extensions.get_extension_for_oid(
                 x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
-            ).value.get_values_for_type(x509.DNSName)
+            ).value
+            assert isinstance(ext, x509.extensions.SubjectAlternativeName)
+            sans = ext.get_values_for_type(x509.DNSName)
         except x509.ExtensionNotFound:
             return []
 
-        assert all(isinstance(x, str) for x in sans)
-        # Well look at that assert...
-        return sans  # type: ignore[no-any-return]
+        return sans
 
     @staticmethod
     def _is_timezone_aware(dt: datetime) -> bool:
@@ -685,7 +690,9 @@ class RsaPrivateKey:
 
         pw = password.raw_bytes if password is not None else None
         try:
-            return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
+            deserialized = serialization.load_pem_private_key(pem_data.bytes, password=pw)
+            assert isinstance(deserialized, rsa.RSAPrivateKey)
+            return RsaPrivateKey(deserialized)
         except ValueError as exception:
             if str(exception) == "Bad decrypt. Incorrect password?":
                 raise WrongPasswordError
@@ -709,8 +716,7 @@ class RsaPrivateKey:
         (i.e. '-----BEGIN ENCRYPTED PRIVATE KEY-----...').
         """
 
-        # mypy is convinced private_bytes() doesn't exist, I don't know why
-        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
+        bytes_ = self._key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
             encryption_algorithm=serialization.BestAvailableEncryption(password.raw_bytes)
@@ -727,7 +733,7 @@ class RsaPrivateKey:
         Encode the private key without encryption in PKCS#1 / OpenSSL format
         (i.e. '-----BEGIN RSA PRIVATE KEY-----...').
         """
-        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
+        bytes_ = self._key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.TraditionalOpenSSL,
             encryption_algorithm=serialization.NoEncryption(),
@@ -750,7 +756,9 @@ class RsaPublicKey:
 
     @classmethod
     def load_pem(cls, pem_data: PublicKeyPEM) -> RsaPublicKey:
-        return RsaPublicKey(serialization.load_pem_public_key(pem_data.bytes))
+        deserialized = serialization.load_pem_public_key(pem_data.bytes)
+        assert isinstance(deserialized, rsa.RSAPublicKey)
+        return RsaPublicKey(deserialized)
 
     def dump_pem(self) -> PublicKeyPEM:
         # TODO: Use SubjectPublicKeyInfo format rather than PKCS1. PKCS1 doesn't include an
@@ -818,7 +826,10 @@ class X509Name:
         return cls(x509.Name(attributes))
 
     def _get_name_attributes(self, attribute: x509.ObjectIdentifier) -> list[str]:
-        return [attr.value for attr in self.name.get_attributes_for_oid(attribute)]
+        return [
+            val.decode("utf-8") if isinstance(val := attr.value, bytes) else val
+            for attr in self.name.get_attributes_for_oid(attribute)
+        ]
 
     @property
     def common_name(self) -> str:

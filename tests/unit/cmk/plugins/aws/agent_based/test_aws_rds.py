@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.aws_rds import (
+from cmk.agent_based.v2alpha import Metric, Result, Service, State
+from cmk.plugins.aws.agent_based.aws_rds import (
     check_aws_rds,
     check_aws_rds_agent_jobs,
     check_aws_rds_bin_log_usage,
@@ -30,8 +30,7 @@ from cmk.base.plugins.agent_based.aws_rds import (
     discover_aws_rds_transaction_logs_usage,
     parse_aws_rds,
 )
-
-from cmk.plugins.lib.aws import AWSSectionMetrics
+from cmk.plugins.aws.lib import AWSSectionMetrics
 
 SECTION = {
     "database-1 [eu-central-1]": {

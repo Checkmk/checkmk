@@ -56,7 +56,6 @@ telnetlib3 = "*"  # used by Windows Agent tests
 schemathesis = "*"  # used for openapi tests
 ruff = "*"
 types-beautifulsoup4 = "*"  # used for type checking
-types-cryptography = "*"  # used for type checking
 types-docutils = "*"  # used for type checking
 types-jmespath = "*"  # used for type checking
 types-jsonschema = "*"  # used for type checking
@@ -97,7 +96,7 @@ types-xmltodict = "*" # used by xmltodict
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py
-six = "==1.16.0"  # direct dependency + needed by bcrypt, cryptography, pynacl, python-dateutil, vcrpy, python-active-directory
+six = "==1.16.0"  # direct dependency + needed by python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.2"  # direct dependency
 pyyaml = "==6.0.1"  # needed by vcrpy
 wrapt = "==1.15.0"  # needed by vcrpy
@@ -106,8 +105,8 @@ multidict = "==6.0.4"  # needed by yarl
 idna = "==3.4"  # needed by yarl
 vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions in some special agents (only)
 pycparser = "==2.21"  # needed by cffi
-cryptography = "~=41.0"  # needed by paramiko.
-bcrypt = "*"  # needed by paramiko.
+cryptography = "*"
+bcrypt = "*"
 paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
@@ -209,6 +208,4 @@ typing-extensions = "*"
 xmltodict = "==0.13.0" # used for parsing robotmk test results
 
 [requires]
-# As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,
-# we do not require a python_version here and defines.make is our single point of truth.
-# the PYTHON_VERSION will be injected during pipenv calls in Makefile.
+python_version = "3.11"

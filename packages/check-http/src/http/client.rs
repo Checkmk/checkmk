@@ -4,9 +4,10 @@
 
 use reqwest::{
     redirect::{Action, Attempt, Policy},
-    ClientBuilder,
+    Client, Result as ReqwestResult,
 };
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::time::Duration;
 
 pub enum OnRedirect {
     Ok,
@@ -23,13 +24,17 @@ pub enum ForceIP {
     Ipv6,
 }
 
-pub struct ConnectionConfig {
+pub struct ClientConfig {
+    pub user_agent: String,
+    pub timeout: Duration,
     pub onredirect: OnRedirect,
     pub max_redirs: usize,
     pub force_ip: Option<ForceIP>,
 }
 
-pub fn apply_connection_settings(cfg: ConnectionConfig, client: ClientBuilder) -> ClientBuilder {
+pub fn build(cfg: ClientConfig) -> ReqwestResult<Client> {
+    let client = reqwest::Client::builder();
+
     let client = match &cfg.force_ip {
         None => client,
         Some(ipv) => match ipv {
@@ -38,7 +43,11 @@ pub fn apply_connection_settings(cfg: ConnectionConfig, client: ClientBuilder) -
         },
     };
 
-    client.redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+    client
+        .timeout(cfg.timeout)
+        .user_agent(cfg.user_agent)
+        .redirect(get_policy(cfg.onredirect, cfg.max_redirs, cfg.force_ip))
+        .build()
 }
 
 fn get_policy(onredirect: OnRedirect, max_redirs: usize, force_ip: Option<ForceIP>) -> Policy {
@@ -117,9 +126,7 @@ fn contains_unchanged_addr(old: &[SocketAddr], new: &[SocketAddr]) -> bool {
 mod tests {
     use std::net::SocketAddr;
 
-    use crate::connection::{
-        contains_unchanged_addr, contains_unchanged_ip, filter_socket_addrs, ForceIP,
-    };
+    use super::*;
 
     #[test]
     fn test_contains_unchanged_ip() {

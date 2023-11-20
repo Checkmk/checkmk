@@ -5,10 +5,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-10-20 17:46+0000\n"
-"Last-Translator: Martin Hirschvogel <martin.hirschvogel@checkmk.com>\n"
+"PO-Revision-Date: 2023-11-18 00:08+0000\n"
+"Last-Translator: Marius Pana <mp@spearhead.systems>\n"
 "Language-Team: Romanian <https://translate.checkmk.com/projects/checkmk/"
 "software/ro/>\n"
 "Language: ro\n"
@@ -456,11 +456,11 @@ msgstr "%d deschide lucrări incompatibile"
 msgid "%d rows"
 msgstr "%d rânduri"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
 msgstr[0] "%d site-ul este %s."
-msgstr[1] ""
+msgstr[1] "%d site-urile sunt %s."
 msgstr[2] "%d site-urile sunt %s."
 
 #, python-format
@@ -817,6 +817,10 @@ msgstr ""
 
 msgid "(0 is current period)"
 msgstr "(0 reprezintă perioada curentă)"
+
+#, fuzzy
+msgid "(Edit presets)"
+msgstr "Editarea rapoartelor"
 
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(sugestii maxime atinse, fiți mai specific)"
@@ -1183,10 +1187,6 @@ msgstr ""
 #, python-format
 msgid "<b>%%s of %s length</b>?"
 msgstr "<b>%%s de %s lungime</b>?"
-
-#, python-format
-msgid "<b>%s for the next %d minutes</b>?"
-msgstr "<b>%s pentru următoarele %d minute</b>?"
 
 #, python-format
 msgid "<b>%s until 24:00:00</b>?"
@@ -4232,10 +4232,6 @@ msgstr "Comentariu adhoc"
 msgid "Adhoc downtime"
 msgstr "Întreruperi adhoc"
 
-#, python-format
-msgid "Adhoc for %d minutes"
-msgstr "Adhoc pentru %d minute"
-
 msgid "Admin"
 msgstr "Admin"
 
@@ -4289,6 +4285,10 @@ msgstr ""
 
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Power"
+
+#, fuzzy
+msgid "Advanced options"
+msgstr "Opțiuni disponibile"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
@@ -5722,9 +5722,6 @@ msgstr "De asemenea, contactați agentul Checkmk"
 
 msgid "Also search in subfolders"
 msgstr "Căutați și în subfoldere"
-
-msgid "Also set downtime on child hosts"
-msgstr "De asemenea, setați timpul de nefuncționare pe gazdele copil"
 
 msgid ""
 "Also use these contact groups in eventually notifications created by this "
@@ -10790,6 +10787,13 @@ msgstr "Condiții pentru copii"
 msgid "Child Node Generation"
 msgstr "Generarea nodurilor copil"
 
+msgid "Child hosts also go in downtime (recursively)."
+msgstr ""
+
+#, fuzzy
+msgid "Child hosts also go in downtime."
+msgstr "Listează toate timpii de nefuncționare a gazdelor."
+
 msgid "Child report"
 msgstr "Raportul copilului"
 
@@ -14072,9 +14076,6 @@ msgstr ""
 msgid "Custom Action"
 msgstr "Acțiune personalizată"
 
-msgid "Custom Downtime Timeranges"
-msgstr "Timerange de timp de oprire personalizate"
-
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Proiectare GUI personalizată de %s"
@@ -14226,9 +14227,6 @@ msgstr "Elemente personalizate pentru bara laterală"
 
 msgid "Custom states"
 msgstr "State personalizate"
-
-msgid "Custom time range"
-msgstr "Interval de timp personalizat"
 
 msgid "Custom time span"
 msgstr "Interval de timp personalizat"
@@ -17783,9 +17781,6 @@ msgstr "Afișați acum spațiul rezervat"
 msgid "Do status data inventory"
 msgstr "Efectuați inventarierea datelor de stare"
 
-msgid "Do this recursively"
-msgstr "Faceți acest lucru în mod recursiv"
-
 msgid "Do transfer context"
 msgstr "Transferați contextul"
 
@@ -18041,6 +18036,14 @@ msgstr "ID-ul de întrerupere a activității (potrivire exactă)"
 msgid "Downtime active or pending"
 msgstr "Timp de oprire activ sau în așteptare"
 
+#, fuzzy
+msgid "Downtime also applies to services."
+msgstr "Întreruperi de serviciu"
+
+#, fuzzy
+msgid "Downtime attributes:"
+msgstr "Atribute modificate"
+
 msgid "Downtime author"
 msgstr "Autorul Downtime"
 
@@ -18053,7 +18056,19 @@ msgstr "Comentariu privind timpul de nefuncționare"
 msgid "Downtime comment (regex)"
 msgstr "Comentariu privind timpul de întrerupere (regex)"
 
+#, fuzzy
+msgid "Downtime datepicker"
+msgstr "Ora de sfârșit a timpului de oprire"
+
+#, fuzzy
+msgid "Downtime does not apply to host."
+msgstr "Timpii de întrerupere a gazdei"
+
 msgid "Downtime duration (if flexible)"
+msgstr "Durata timpului de oprire (dacă este flexibil)"
+
+#, fuzzy
+msgid "Downtime duration presets"
 msgstr "Durata timpului de oprire (dacă este flexibil)"
 
 msgid "Downtime end"
@@ -18091,6 +18106,10 @@ msgstr "Ora de începere a timpului de oprire"
 
 msgid "Downtime stopped"
 msgstr "Timpul de oprire a oprit"
+
+#, fuzzy
+msgid "Downtime timepicker"
+msgstr "Ora de sfârșit a timpului de oprire"
 
 msgid "Downtime will not start anymore after"
 msgstr "Timpul de nefuncționare nu va mai începe după"
@@ -19414,6 +19433,10 @@ msgstr "Sfârșitul timpului"
 
 msgid "End-to-end latency"
 msgstr "Latență de la un capăt la altul"
+
+#, fuzzy, python-format
+msgid "End: %s"
+msgstr "Adăugat %s"
 
 msgid "Ended"
 msgstr "S-a încheiat"
@@ -21670,6 +21693,10 @@ msgstr "Timp de oprire flexibil"
 msgid "Flexible downtime duration:"
 msgstr "Durata flexibilă a timpului de oprire:"
 
+#, fuzzy
+msgid "Flexible downtime options"
+msgstr "Durata flexibilă a timpului de oprire:"
+
 msgid "Floating point number"
 msgstr "Număr în virgulă mobilă"
 
@@ -22388,9 +22415,6 @@ msgstr "Din tabelul de inventar"
 
 msgid "From left of the page"
 msgstr "Din stânga paginii"
-
-msgid "From now for"
-msgstr "De acum înainte pentru"
 
 msgid "From password store"
 msgstr "Din magazinul de parole"
@@ -28440,6 +28464,9 @@ msgstr "Includeți bazinele goale în monitorizare"
 msgid "Include full path"
 msgstr "Includeți calea completă"
 
+msgid "Include indirectly connected hosts (recursively)"
+msgstr ""
+
 msgid "Include per-process arguments (security risk!)"
 msgstr "Includeți argumente per-proces (risc de securitate!)"
 
@@ -29241,6 +29268,10 @@ msgstr "Sursă de date invalidă '%s' configurată."
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Tipul de date invalid al timestamp-ului: trebuie să fie int sau float."
 
+#, fuzzy, python-format
+msgid "Invalid date format: %s"
+msgstr "Sursă de date invalidă: %s"
+
 msgid "Invalid end time given"
 msgstr "Ora de încheiere invalidă dată"
 
@@ -29424,6 +29455,10 @@ msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 "Format de oră invalid '<tt>%s</tt>', vă rugăm să utilizați formatul "
 "<tt>24:00</tt>."
+
+#, fuzzy, python-format
+msgid "Invalid time format: %s"
+msgstr "Identificator invalid: %s"
 
 msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -38808,6 +38843,10 @@ msgstr "Doar primele 10 rezultate sortate"
 msgid "Only first 20 sorted results"
 msgstr "Doar primele 20 de rezultate sortate"
 
+#, fuzzy
+msgid "Only for hosts: Set child hosts in downtime"
+msgstr "numai atunci când gazda nu este în timp de nefuncționare"
+
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
 "configuration and that have registered for updates."
@@ -38907,6 +38946,11 @@ msgstr "Afișați numai serviciile din aceste state"
 #, python-format
 msgid "Only show the %s if show more is active"
 msgstr "Afișează %s numai dacă este activată opțiunea \"Show more\"."
+
+msgid ""
+"Only start downtime if host/service goes DOWN/UNREACH during the defined "
+"start and end time (flexible)"
+msgstr ""
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -41218,9 +41262,6 @@ msgstr ""
 
 msgid "Please enter a filename."
 msgstr "Vă rugăm să introduceți un nume de fișier."
-
-msgid "Please enter a positive number of minutes."
-msgstr "Vă rugăm să introduceți un număr pozitiv de minute."
 
 msgid "Please enter a time."
 msgstr "Vă rugăm să introduceți o oră."
@@ -43896,9 +43937,6 @@ msgstr "Eliminarea confirmării"
 msgid "Remove acknowledgement?"
 msgstr "Îndepărtați confirmarea?"
 
-msgid "Remove all"
-msgstr "Eliminați toate"
-
 msgid "Remove all and find new"
 msgstr "Îndepărtați totul și găsiți unul nou"
 
@@ -44149,6 +44187,10 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Redă regulile verticale între coloane"
 
+#, fuzzy
+msgid "Repeat"
+msgstr "repetați:"
+
 msgid "Repeat query and allow more results."
 msgstr "Repetați interogarea și permiteți mai multe rezultate."
 
@@ -44158,8 +44200,9 @@ msgstr "Repetați interogarea fără limită."
 msgid "Repeat this downtime"
 msgstr "Repetați acest timp de oprire"
 
-msgid "Repeat this downtime on a regular basis every"
-msgstr "Repetați acest timp de nefuncționare în mod regulat în fiecare"
+#, fuzzy, python-format
+msgid "Repeats every %s"
+msgstr "se repetă la fiecare 20'th rând"
 
 #, python-brace-format
 msgid "Repetition change for item {diff_path}."
@@ -45050,6 +45093,10 @@ msgstr "Robotmk"
 
 msgid "Robotmk (Windows)"
 msgstr "Robotmk (Windows)"
+
+#, fuzzy
+msgid "Robotmk Suite Status"
+msgstr "Starea sitului"
 
 msgid "Role"
 msgstr "Rol"
@@ -45991,9 +46038,9 @@ msgstr "Interval de scanare"
 msgid "Schedule"
 msgstr "Programare"
 
-#, python-format
-msgid "Schedule a downtime from %s to %s?"
-msgstr "Programați o perioadă de întrerupere de la %s la %s?"
+#, fuzzy
+msgid "Schedule a downtime?"
+msgstr "Programarea timpilor morți?"
 
 #, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -46011,6 +46058,10 @@ msgid "Schedule downtime for %d %s"
 msgstr "Programarea timpului de oprire pentru %d %s"
 
 msgid "Schedule downtime on host"
+msgstr "Programarea timpului de oprire pe gazdă"
+
+#, fuzzy
+msgid "Schedule downtime on service"
 msgstr "Programarea timpului de oprire pe gazdă"
 
 msgid "Schedule downtime?"
@@ -50550,6 +50601,10 @@ msgstr "Începeți!"
 msgid "Start-Time"
 msgstr "Ora de începere"
 
+#, fuzzy, python-format
+msgid "Start: %s"
+msgstr "Setari"
+
 msgid "Started"
 msgstr "A început cu"
 
@@ -50586,6 +50641,11 @@ msgstr "Pornirea"
 
 msgid "Starting with entry"
 msgstr "Începând cu intrarea"
+
+#, python-format
+msgid ""
+"Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
+msgstr ""
 
 msgid "Startup overhead in shared pool"
 msgstr "Cheltuieli generale de pornire în pool partajat"
@@ -51812,6 +51872,13 @@ msgstr "Semnătură verificată cu succes"
 
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
+
+msgid "Suite"
+msgstr ""
+
+#, fuzzy
+msgid "Suite runtime"
+msgstr "Numele sitului"
 
 msgid "Sum"
 msgstr "Suma"
@@ -56494,6 +56561,12 @@ msgstr ""
 "Numele setului de reguli identifică setul de reguli în cadrul Checkmk. "
 "Utilizați acest nume atunci când lucrați cu regulile și cu apelurile API "
 "REST pentru setul de reguli."
+
+msgid ""
+"The runtime of a suite is limited by the maximum number of attempts "
+"multiplied by the timeout per attempt. This settings configures thresholds "
+"on the suite runtime with respect to this overall limit."
+msgstr ""
 
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Programul pe care încercați să îl clonați nu există."
@@ -64957,6 +65030,10 @@ msgstr "Niveluri superioare ale numărului de conexiuni punct-la-sediu"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Niveluri superioare la procentul de cereri %s"
 
+#, fuzzy
+msgid "Upper levels on suite runtime relative to overall timeout"
+msgstr "Niveluri superioare pentru durata în procente din timeout"
+
 msgid "Upper levels on the oldest replication slot lag"
 msgstr ""
 "Nivelurile superioare pe cel mai vechi decalaj al slotului de replicare"
@@ -66823,9 +66900,6 @@ msgstr "Vizualizați și editați parametrii pentru acest serviciu"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Vizualizați și editați regulile și agregările din acest pachet BI"
 
-msgid "View history"
-msgstr "Vezi istoricul"
-
 msgid "View layout"
 msgstr "Vizualizați aspectul"
 
@@ -67512,6 +67586,9 @@ msgstr "Lucrări doar în ceea ce privește %s."
 
 msgid "Wh"
 msgstr "Wh"
+
+msgid "What is the occasion?"
+msgstr ""
 
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
@@ -71974,9 +72051,6 @@ msgstr "element de pagină fix"
 msgid "flexible"
 msgstr "flexibil"
 
-msgid "flexible with max. duration"
-msgstr "flexibil cu durata maximă."
-
 msgid "folder"
 msgstr "dosar"
 
@@ -72521,6 +72595,10 @@ msgstr "n/a"
 
 msgid "negate"
 msgstr "nega"
+
+#, fuzzy
+msgid "never"
+msgstr "(niciodată)"
 
 msgid "new element"
 msgstr "element nou"
@@ -73333,9 +73411,6 @@ msgstr "latime"
 msgid "with a timeout of"
 msgstr "cu un timeout de"
 
-msgid "with comment"
-msgstr "cu comentariu"
-
 msgid "with context"
 msgstr "cu context"
 
@@ -73390,6 +73465,51 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#, python-format
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s pentru următoarele %d minute</b>?"
+
+#, python-format
+#~ msgid "Adhoc for %d minutes"
+#~ msgstr "Adhoc pentru %d minute"
+
+#~ msgid "Also set downtime on child hosts"
+#~ msgstr "De asemenea, setați timpul de nefuncționare pe gazdele copil"
+
+#~ msgid "Custom Downtime Timeranges"
+#~ msgstr "Timerange de timp de oprire personalizate"
+
+#~ msgid "Custom time range"
+#~ msgstr "Interval de timp personalizat"
+
+#~ msgid "Do this recursively"
+#~ msgstr "Faceți acest lucru în mod recursiv"
+
+#~ msgid "From now for"
+#~ msgstr "De acum înainte pentru"
+
+#~ msgid "Please enter a positive number of minutes."
+#~ msgstr "Vă rugăm să introduceți un număr pozitiv de minute."
+
+#~ msgid "Remove all"
+#~ msgstr "Eliminați toate"
+
+#~ msgid "Repeat this downtime on a regular basis every"
+#~ msgstr "Repetați acest timp de nefuncționare în mod regulat în fiecare"
+
+#, python-format
+#~ msgid "Schedule a downtime from %s to %s?"
+#~ msgstr "Programați o perioadă de întrerupere de la %s la %s?"
+
+#~ msgid "View history"
+#~ msgstr "Vezi istoricul"
+
+#~ msgid "flexible with max. duration"
+#~ msgstr "flexibil cu durata maximă."
+
+#~ msgid "with comment"
+#~ msgstr "cu comentariu"
 
 #~ msgid "Clear"
 #~ msgstr "Clar"
@@ -73614,9 +73734,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Custom notification"
 #~ msgstr "Notificare personalizată"
-
-#~ msgid "Modified attributes"
-#~ msgstr "Atribute modificate"
 
 #~ msgid "Remove comments"
 #~ msgstr "Eliminați comentariile"
@@ -74284,17 +74401,8 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 #~ msgstr "Numele Aplicatiei"
 
 #, fuzzy, python-format
-#~| msgid "Added: %s"
-#~ msgid "End: %s"
-#~ msgstr "Adăugat %s"
-
-#, fuzzy, python-format
 #~ msgid "Limit: %s"
 #~ msgstr "Adaugă limite"
-
-#, fuzzy, python-format
-#~ msgid "Start: %s"
-#~ msgstr "Setari"
 
 #, fuzzy
 #~ msgid "New collection"

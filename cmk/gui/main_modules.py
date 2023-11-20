@@ -34,7 +34,9 @@ def suppress_module_not_found(name: str) -> Iterator[None]:
 import cmk.gui.plugins.main_modules  # pylint: disable=cmk-module-layer-violation
 
 with suppress_module_not_found("cmk.gui.raw"):
-    import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import,cmk-module-layer-violation
+    import cmk.gui.raw.registration
+
+    cmk.gui.raw.registration.register()
 
 with suppress_module_not_found("cmk.gui.cee"):
     import cmk.gui.cee.registration  # pylint: disable=no-name-in-module,cmk-module-layer-violation
@@ -80,7 +82,7 @@ def _import_local_main_modules() -> list[ModuleType]:
     which are expected to contain the actual imports of the main modules.
 
     Please note that the built-in main modules are already loaded by the imports of
-    `cmk.gui.{cee.}plugins.main_modules` above.
+    `cmk.gui.plugins.main_modules` above.
 
     Note: Once we have PEP 420 namespace support, we can deprecate this and leave it to the imports
     above. Until then we'll have to live with it.

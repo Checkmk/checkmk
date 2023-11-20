@@ -15,10 +15,8 @@ import feedparser  # type: ignore[import]
 import pydantic
 from pydantic import ConfigDict
 
-from cmk.utils import aws_constants  # pylint: disable=[cmk-module-layer-violation]
-
-from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
+from cmk.agent_based.v2alpha import AgentSection, CheckPlugin, Result, Service, State, type_defs
+from cmk.plugins.aws import constants as aws_constants
 
 
 class TitleType(enum.StrEnum):
@@ -39,8 +37,8 @@ class TitleType(enum.StrEnum):
 
 
 _IGNORE_ENTRIES_OLDER_THAN = datetime.timedelta(days=3)  # Product-Management decision
-_NO_ISSUES = v1.Result(
-    state=v1.State.OK, summary="No known issues. Details: http://status.aws.amazon.com"
+_NO_ISSUES = Result(
+    state=State.OK, summary="No known issues. Details: http://status.aws.amazon.com"
 )
 AWS_REGIONS_MAP: typing.Final = dict(aws_constants.AWSRegions)
 
@@ -130,16 +128,16 @@ class SortedEntries(list[Entry]):
     """
 
 
-v1.register.agent_section(
+agent_section_aws_status = AgentSection(
     name="aws_status",
     parse_function=parse_string_table,
 )
 
 
 def discover_aws_status(section: Section) -> type_defs.DiscoveryResult:
-    yield v1.Service(item="Global")
+    yield Service(item="Global")
     for region in section.discovery_param.regions:
-        yield v1.Service(item=AWS_REGIONS_MAP[region])
+        yield Service(item=AWS_REGIONS_MAP[region])
 
 
 def check_aws_status(item: str, section: Section) -> type_defs.CheckResult:
@@ -204,18 +202,18 @@ def _group_by_service_identifier(entries: SortedEntries) -> list[SortedEntries]:
 
 def _check_aws_status_for_service(entries: SortedEntries) -> type_defs.CheckResult:
     newest_entry = entries[0]
-    yield v1.Result(state=_state_from_entry(newest_entry), summary=newest_entry.title)
+    yield Result(state=_state_from_entry(newest_entry), summary=newest_entry.title)
     for entry in entries:
-        yield v1.Result(state=v1.State.OK, notice=f"{entry.published}: {entry.summary}")
+        yield Result(state=State.OK, notice=f"{entry.published}: {entry.summary}")
 
 
-def _state_from_entry(entry: Entry) -> v1.State:
+def _state_from_entry(entry: Entry) -> State:
     if entry.title.startswith(TitleType.ok) or entry.title.startswith(TitleType.normal):
-        return v1.State.OK
-    return v1.State.WARN
+        return State.OK
+    return State.WARN
 
 
-v1.register.check_plugin(
+check_plugin_aws_status = CheckPlugin(
     name="aws_status",
     service_name="AWS Status %s",
     discovery_function=discover_aws_status,

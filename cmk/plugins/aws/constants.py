@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.i18n import _
+from cmk.rulesets.v1 import Localizable
 
 # .
 #   .--for imports---------------------------------------------------------.
@@ -505,12 +505,12 @@ AWSEC2InstTypes = [
 ]
 
 AWSEC2InstFamilies = {
-    "f": _("Running On-Demand F instances"),
-    "g": _("Running On-Demand G instances"),
-    "inf": _("Running On-Demand Inf instances"),
-    "p": _("Running On-Demand P instances"),
-    "x": _("Running On-Demand X instances"),
-    "_": _("Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"),
+    "f": Localizable("Running On-Demand F instances"),
+    "g": Localizable("Running On-Demand G instances"),
+    "inf": Localizable("Running On-Demand Inf instances"),
+    "p": Localizable("Running On-Demand P instances"),
+    "x": Localizable("Running On-Demand X instances"),
+    "_": Localizable("Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances"),
 }
 
 # (On-Demand, Reserved, Spot)

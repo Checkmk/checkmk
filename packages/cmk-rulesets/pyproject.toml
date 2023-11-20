@@ -1,5 +1,5 @@
 [project]
-name = "rulesets"
+name = "cmk-rulesets"
 version = "1.0.0"
 dependencies = []
 

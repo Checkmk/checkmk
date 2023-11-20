@@ -2,11 +2,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use std::vec;
+
 use crate::config::{self, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
+use std::collections::HashSet;
 
 #[cfg(windows)]
 use tiberius::SqlBrowser;
@@ -22,6 +25,9 @@ pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
 const INSTANCE_SECTION_NAME: &str = "instance";
 const COUNTERS_SECTION_NAME: &str = "counters";
 const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
+const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
+const BACKUP_SECTION_NAME: &str = "backup";
+const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -54,6 +60,7 @@ impl Section {
 
 pub trait Column {
     fn get_bigint_by_idx(&self, idx: usize) -> i64;
+    fn get_bigint_by_name(&self, idx: &str) -> i64;
     fn get_value_by_idx(&self, idx: usize) -> String;
     fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
     fn get_value_by_name(&self, idx: &str) -> String;
@@ -94,9 +101,10 @@ impl InstanceEngine {
     ) -> String {
         let mut result = String::new();
         let instance_section = Section::new(INSTANCE_SECTION_NAME); // this is important section always present
-        match self.create_client(&ms_sql.endpoint(), None).await {
+        let endpoint = &ms_sql.endpoint();
+        match self.create_client(endpoint, None).await {
             Ok(mut client) => {
-                for section in sections {
+                for section in sections.iter() {
                     result += &section.to_header();
                     match section.name.as_str() {
                         INSTANCE_SECTION_NAME => {
@@ -105,9 +113,13 @@ impl InstanceEngine {
                                 .generate_details_entry(&mut client, instance_section.sep())
                                 .await;
                         }
-                        COUNTERS_SECTION_NAME | BLOCKED_SESSIONS_SECTION_NAME => {
+                        COUNTERS_SECTION_NAME
+                        | BLOCKED_SESSIONS_SECTION_NAME
+                        | TABLE_SPACES_SECTION_NAME
+                        | BACKUP_SECTION_NAME
+                        | TRANSACTION_LOG_SECTION_NAME => {
                             result += &self
-                                .generate_known_section(&mut client, &section.name)
+                                .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
                         }
                         _ => {
@@ -149,7 +161,7 @@ impl InstanceEngine {
 
             #[cfg(windows)]
             config::ms_sql::AuthType::Integrated => {
-                create_local_instance_client(&self.name, conn.sql_browser_port(), None).await?
+                create_local_instance_client(&self.name, conn.sql_browser_port(), database).await?
             }
 
             _ => anyhow::bail!("Not supported authorization type"),
@@ -171,20 +183,35 @@ impl InstanceEngine {
         format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
     }
 
-    pub async fn generate_known_section(&self, client: &mut Client, name: &str) -> String {
+    pub async fn generate_known_sections(
+        &self,
+        client: &mut Client,
+        endpoint: &config::ms_sql::Endpoint,
+        name: &str,
+    ) -> String {
         let sep = Section::new(name).sep();
+        let databases = self.generate_databases(client).await;
         match name {
             COUNTERS_SECTION_NAME => {
                 self.generate_utc_entry(client, sep).await
                     + &self.generate_counters_entry(client, sep).await
             }
             BLOCKED_SESSIONS_SECTION_NAME => {
-                self.generate_waiting_sessions_entry(
+                self.generate_blocking_sessions_section(
                     client,
-                    &queries::get_blocked_sessions_query(),
+                    &queries::get_blocking_sessions_query(),
                     sep,
                 )
                 .await
+            }
+            TABLE_SPACES_SECTION_NAME => {
+                self.generate_table_spaces_section(endpoint, &databases, sep)
+                    .await
+            }
+            BACKUP_SECTION_NAME => self.generate_backup_section(client, &databases, sep).await,
+            TRANSACTION_LOG_SECTION_NAME => {
+                self.generate_transaction_logs_section(endpoint, &databases, sep)
+                    .await
             }
             _ => format!("{} not implemented\n", name).to_string(),
         }
@@ -210,7 +237,7 @@ impl InstanceEngine {
         Ok(z.join(""))
     }
 
-    pub async fn generate_waiting_sessions_entry(
+    pub async fn generate_blocking_sessions_section(
         &self,
         client: &mut Client,
         query: &str,
@@ -231,6 +258,113 @@ impl InstanceEngine {
         }
     }
 
+    pub async fn generate_table_spaces_section(
+        &self,
+        endpoint: &config::ms_sql::Endpoint,
+        databases: &Vec<String>,
+        sep: char,
+    ) -> String {
+        let format_error = |d: &str, e: &anyhow::Error| {
+            format!(
+                "{}{sep}{} - - - - - - - - - - - - {:?}\n",
+                self.mssql_name(),
+                d.replace(' ', "_"),
+                e
+            )
+            .to_string()
+        };
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_query(&mut c, queries::QUERY_SPACE_USED)
+                        .await
+                        .map(|rows| to_table_spaces_entry(&self.mssql_name(), d, &rows, sep))
+                        .unwrap_or_else(|e| format_error(d, &e));
+                }
+                Err(err) => {
+                    result += &format_error(d, &err);
+                }
+            }
+        }
+        result
+    }
+
+    pub async fn generate_backup_section(
+        &self,
+        client: &mut Client,
+        databases: &[String],
+        sep: char,
+    ) -> String {
+        let result = run_query(client, queries::QUERY_BACKUP)
+            .await
+            .map(|rows| self.process_backup_rows(&rows, databases, sep));
+        match result {
+            Ok(output) => output,
+            Err(err) => {
+                log::error!("Failed to get backup: {}", err);
+                databases
+                    .iter()
+                    .map(|d| {
+                        format!(
+                            "{}{sep}{}{sep}-{sep}-{sep}-{sep}{:?}\n",
+                            self.mssql_name(),
+                            d.replace(' ', "_"),
+                            err
+                        )
+                    })
+                    .collect::<Vec<String>>()
+                    .join("")
+            }
+        }
+    }
+
+    pub async fn generate_transaction_logs_section(
+        &self,
+        endpoint: &config::ms_sql::Endpoint,
+        databases: &Vec<String>,
+        sep: char,
+    ) -> String {
+        let format_error = |d: &str, e: &anyhow::Error| {
+            format!(
+                "{}{sep}{}|-|-|-|-|-|-|{:?}\n",
+                self.mssql_name(),
+                d.replace(' ', "_"),
+                e
+            )
+            .to_string()
+        };
+        let mut result = String::new();
+        for d in databases {
+            match self.create_client(endpoint, Some(d.clone())).await {
+                Ok(mut c) => {
+                    result += &run_query(&mut c, queries::QUERY_TRANSACTION_LOGS)
+                        .await
+                        .map(|rows| to_transaction_logs_entries(&self.mssql_name(), d, &rows, sep))
+                        .unwrap_or_else(|e| format_error(d, &e));
+                }
+                Err(err) => {
+                    result += &format_error(d, &err);
+                }
+            }
+        }
+        result
+    }
+
+    /// doesn't return error - the same behavior as plugin
+    pub async fn generate_databases(&self, client: &mut Client) -> Vec<String> {
+        let result = run_query(client, queries::QUERY_DATABASES)
+            .await
+            .and_then(validate_rows)
+            .map(|rows| self.process_databases_rows(&rows));
+        match result {
+            Ok(result) => result,
+            Err(err) => {
+                log::error!("Failed to get databases: {}", err);
+                vec![]
+            }
+        }
+    }
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
         let rows = &rows[0];
         let z: Vec<String> = rows
@@ -241,11 +375,11 @@ impl InstanceEngine {
     }
 
     async fn generate_utc_entry(&self, client: &mut Client, sep: char) -> String {
-        let x = run_query(client, queries::QUERY_UTC)
+        let result = run_query(client, queries::QUERY_UTC)
             .await
             .and_then(validate_rows)
             .and_then(|rows| self.process_utc_rows(&rows, sep));
-        match x {
+        match result {
             Ok(result) => result,
             Err(err) => {
                 log::error!("Failed to get UTC: {}", err);
@@ -258,6 +392,13 @@ impl InstanceEngine {
         let row = &rows[0];
         let utc = row[0].get_value_by_name(queries::QUERY_UTC_TIME_PARAM);
         Ok(format!("None{sep}utc_time{sep}None{sep}{utc}\n"))
+    }
+
+    fn process_databases_rows(&self, rows: &[Vec<Row>]) -> Vec<String> {
+        let row = &rows[0];
+        row.iter()
+            .map(|row| row.get_value_by_idx(0))
+            .collect::<Vec<String>>()
     }
 
     fn process_details_rows(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
@@ -281,6 +422,52 @@ impl InstanceEngine {
         }
     }
 
+    fn process_backup_rows(&self, rows: &Vec<Vec<Row>>, databases: &[String], sep: char) -> String {
+        let (mut ready, missing_data) = self.process_backup_rows_partly(rows, databases, sep);
+        let missing: Vec<String> = self.process_missing_backup_rows(&missing_data, sep);
+        ready.extend(missing);
+        ready.join("")
+    }
+
+    /// generates lit of correct backup entries + list of missing required backups
+    fn process_backup_rows_partly(
+        &self,
+        rows: &Vec<Vec<Row>>,
+        databases: &[String],
+        sep: char,
+    ) -> (Vec<String>, HashSet<String>) {
+        let mut only_databases: HashSet<String> = databases.iter().cloned().collect();
+        let s: Vec<String> = if !rows.is_empty() {
+            rows[0]
+                .iter()
+                .filter_map(|row| {
+                    let backup_database = row.get_value_by_name("database_name");
+                    if only_databases.contains(&backup_database) {
+                        only_databases.remove(&backup_database);
+                        to_backup_entry(&self.mssql_name(), &backup_database, row, sep)
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        } else {
+            vec![]
+        };
+        (s, only_databases)
+    }
+
+    fn process_missing_backup_rows(&self, data: &HashSet<String>, sep: char) -> Vec<String> {
+        data.iter()
+            .map(|db| {
+                format!(
+                    "{}{sep}{}{sep}-{sep}-{sep}-{sep}No backup found\n",
+                    self.mssql_name(),
+                    db.replace(' ', "_")
+                )
+            })
+            .collect()
+    }
+
     pub fn port(&self) -> Option<u16> {
         self.port.or(self.dynamic_port)
     }
@@ -291,6 +478,114 @@ fn validate_rows(rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
         Err(anyhow::anyhow!("No output from query"))
     } else {
         Ok(rows)
+    }
+}
+
+fn to_table_spaces_entry(
+    instance_name: &str,
+    database_name: &str,
+    rows: &Vec<Vec<Row>>,
+    sep: char,
+) -> String {
+    let extract = |rows: &Vec<Vec<Row>>, part: usize, name: &str| {
+        if (rows.len() < part) || rows[part].is_empty() {
+            String::new()
+        } else {
+            rows[part][0].get_value_by_name(name).trim().to_string()
+        }
+    };
+    let db_size = extract(rows, 0, "database_size");
+    let unallocated = extract(rows, 0, "unallocated space");
+    let reserved = extract(rows, 1, "reserved");
+    let data = extract(rows, 1, "data");
+    let index_size = extract(rows, 1, "index_size");
+    let unused = extract(rows, 1, "unused");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        db_size,
+        unallocated,
+        reserved,
+        data,
+        index_size,
+        unused
+    )
+}
+
+fn to_transaction_logs_entries(
+    instance_name: &str,
+    database_name: &str,
+    rows: &[Vec<Row>],
+    sep: char,
+) -> String {
+    if rows.is_empty() {
+        return String::new();
+    }
+    rows[0]
+        .iter()
+        .map(|row| to_transaction_logs_entry(row, instance_name, database_name, sep))
+        .collect::<Vec<String>>()
+        .join("")
+}
+
+fn to_transaction_logs_entry(
+    row: &Row,
+    instance_name: &str,
+    database_name: &str,
+    sep: char,
+) -> String {
+    let name = row.get_value_by_name("name");
+    let physical_name = row.get_value_by_name("physical_name");
+    let max_size = row.get_bigint_by_name("MaxSize");
+    let allocated_size = row.get_bigint_by_name("AllocatedSize");
+    let used_size = row.get_bigint_by_name("UsedSize");
+    let unlimited = row.get_bigint_by_name("Unlimited");
+    format!(
+        "{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}{sep}{}\n",
+        instance_name,
+        database_name.replace(' ', "_"),
+        name,
+        physical_name,
+        max_size,
+        allocated_size,
+        used_size,
+        unlimited
+    )
+}
+
+fn to_backup_entry(
+    instance_name: &str,
+    database_name: &str,
+    row: &Row,
+    sep: char,
+) -> Option<String> {
+    let last_backup_date = row.get_value_by_name("last_backup_date").trim().to_string();
+    if last_backup_date.is_empty() {
+        return None;
+    }
+    let backup_type = row.get_value_by_name("type").trim().to_string();
+    let backup_type = if backup_type.is_empty() {
+        "-".to_string()
+    } else {
+        backup_type
+    };
+    let replica_id = row.get_value_by_name("replica_id").trim().to_string();
+    let is_primary_replica = row
+        .get_value_by_name("is_primary_replica")
+        .trim()
+        .to_string();
+    if replica_id.is_empty() && is_primary_replica == "True" {
+        format!(
+            "{}{sep}{}{sep}{}{sep}{}\n",
+            instance_name,
+            database_name.replace(' ', "_"),
+            last_backup_date.replace(' ', "|"),
+            backup_type,
+        )
+        .into()
+    } else {
+        None
     }
 }
 
@@ -331,6 +626,12 @@ fn get_row_value(row: &Row, idx: &str) -> String {
 impl Column for Row {
     fn get_bigint_by_idx(&self, idx: usize) -> i64 {
         self.try_get::<i64, usize>(idx)
+            .unwrap_or_default()
+            .unwrap_or_default()
+    }
+
+    fn get_bigint_by_name(&self, idx: &str) -> i64 {
+        self.try_get::<i64, &str>(idx)
             .unwrap_or_default()
             .unwrap_or_default()
     }
@@ -439,7 +740,7 @@ async fn generate_result(
     // place all futures now in vector for future asynchronous processing
     let tasks = instances
         .iter()
-        .map(move |instance| instance.generate_sections(ms_sql, sections.clone()));
+        .map(move |instance| instance.generate_sections(ms_sql, sections));
 
     // processing here
     let results = stream::iter(tasks)

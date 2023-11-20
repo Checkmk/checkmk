@@ -5,12 +5,15 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.aws_constants import AWSEC2InstFamilies, AWSEC2InstTypes
-
 from cmk.gui.graphing._color import indexed_color
 from cmk.gui.graphing._type_defs import LineType
 from cmk.gui.graphing._utils import graph_info, metric_info
 from cmk.gui.i18n import _l
+
+from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-violation
+    AWSEC2InstFamilies,
+    AWSEC2InstTypes,
+)
 
 # .
 #   .--Metrics-------------------------------------------------------------.

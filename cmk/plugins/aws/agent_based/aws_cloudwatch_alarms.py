@@ -5,10 +5,9 @@
 from collections.abc import Mapping
 from typing import Final
 
-from cmk.plugins.lib.aws import GenericAWSSection, parse_aws
-
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2alpha import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult
+from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
 
 _AWS_CLOUDWATCH_ALARM_STATES: Final[Mapping[str, State]] = {
     "no_alarms": State.OK,
@@ -44,12 +43,12 @@ def check_aws_cloudwatch_alarms(section: GenericAWSSection) -> CheckResult:
     yield from (_make_result(alarm["StateValue"].lower(), alarm["AlarmName"]) for alarm in section)
 
 
-register.agent_section(
+agent_section_aws_cloudwatch_alarms = AgentSection(
     name="aws_cloudwatch_alarms",
     parse_function=parse_aws,
 )
 
-register.check_plugin(
+check_plugin_aws_cloudwatch_alarms = CheckPlugin(
     name="aws_cloudwatch_alarms",
     service_name="AWS/CloudWatch Alarms",
     discovery_function=discover_aws_cloudwatch_alarms,

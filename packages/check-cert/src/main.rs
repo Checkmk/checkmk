@@ -2,12 +2,13 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{Context, Result};
-use check_cert::{checker, fetcher, output};
+use anyhow::Result;
+use check_cert::{check, checker, fetcher};
 use clap::Parser;
-use openssl::asn1::Asn1Time;
-use openssl::x509::X509;
-use std::time::Duration;
+use std::time::Duration as StdDuration;
+use time::{Duration, Instant};
+use x509_parser::certificate::X509Certificate;
+use x509_parser::prelude::FromDer;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
@@ -24,13 +25,33 @@ struct Args {
     #[arg(long, default_value_t = 10)]
     timeout: u64,
 
+    /// Expected serial
+    #[arg(long)]
+    pub serial: Option<String>,
+
+    /// Expected subject
+    #[arg(long)]
+    pub subject: Option<String>,
+
+    /// Expected issuer
+    #[arg(long)]
+    pub issuer: Option<String>,
+
     /// Warn if certificate expires in n days
     #[arg(long, default_value_t = 30)]
-    warn: u32,
+    not_after_warn: u32,
 
     /// Crit if certificate expires in n days
     #[arg(long, default_value_t = 0)]
-    crit: u32,
+    not_after_crit: u32,
+
+    /// Warn if response time is higher (milliseconds)
+    #[arg(long, default_value_t = 60_000)]
+    response_time_warn: u32,
+
+    /// Crit if response time is higher (milliseconds)
+    #[arg(long, default_value_t = 90_000)]
+    response_time_crit: u32,
 
     /// Disable SNI extension
     #[arg(long, action = clap::ArgAction::SetTrue)]
@@ -40,35 +61,48 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let warn_time = Asn1Time::days_from_now(args.warn).context("Invalid warn value")?;
-    let crit_time = Asn1Time::days_from_now(args.crit).context("Invalid crit value")?;
-    if warn_time < crit_time {
-        eprintln!("crit limit larger than warn limit");
-        std::process::exit(1);
-    }
+    let Ok(not_after_levels) = check::LowerLevels::try_new(
+        args.not_after_warn * Duration::DAY,
+        args.not_after_crit * Duration::DAY,
+    ) else {
+        check::Writer::bail_out("invalid args: not after crit level larger than warn");
+    };
 
+    let Ok(response_time_levels) = check::UpperLevels::try_new(
+        args.response_time_warn * Duration::MILLISECOND,
+        args.response_time_crit * Duration::MILLISECOND,
+    ) else {
+        check::Writer::bail_out("invalid args: response time crit higher than warn");
+    };
+
+    let start = Instant::now();
     let der = fetcher::fetch_server_cert(
         &args.url,
         &args.port,
         if args.timeout == 0 {
             None
         } else {
-            Some(Duration::new(args.timeout, 0))
+            Some(StdDuration::new(args.timeout, 0))
         },
         !args.disable_sni,
     )?;
+    let response_time = start.elapsed();
 
-    let cert = X509::from_der(&der)?;
-    let out = output::Output::from(vec![checker::check_validity(
-        cert.not_after(),
-        &warn_time,
-        &crit_time,
-    )]);
+    let (_rem, cert) = X509Certificate::from_der(&der)?;
+    let out = check::Writer::from(vec![
+        checker::check_response_time(response_time, response_time_levels),
+        checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
+            .unwrap_or_default(),
+        checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)
+            .unwrap_or_default(),
+        checker::check_details_issuer(cert.tbs_certificate.issuer(), args.issuer)
+            .unwrap_or_default(),
+        checker::check_validity_not_after(
+            cert.tbs_certificate.validity().time_to_expiration(),
+            not_after_levels,
+            cert.tbs_certificate.validity().not_after,
+        ),
+    ]);
     println!("HTTP {}", out);
-    std::process::exit(match out.state {
-        checker::State::Ok => 0,
-        checker::State::Warn => 1,
-        checker::State::Crit => 2,
-        checker::State::Unknown => 3,
-    })
+    out.bye()
 }

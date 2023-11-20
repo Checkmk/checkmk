@@ -4,11 +4,10 @@
 
 use anyhow::Result as AnyhowResult;
 use check_http::checking::{CheckParameters, State};
-use check_http::connection::{ConnectionConfig, OnRedirect};
-use check_http::http::{ClientConfig, RequestConfig};
+use check_http::http::{ClientConfig, OnRedirect, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;
-use http::Method;
+use reqwest::Method;
 
 use std::io::{Read, Write};
 use std::net::TcpListener;
@@ -50,14 +49,9 @@ async fn check_http_output(
     expected_summary_start: &str,
 ) -> AnyhowResult<()> {
     let (port, listener) = tcp_listener("0.0.0.0");
-    let (client_cfg, connection_cfg, request_cfg, check_params) = make_standard_configs(port);
+    let (client_cfg, request_cfg, check_params) = make_standard_configs(port);
 
-    let check_http_thread = tokio::spawn(collect_checks(
-        client_cfg,
-        connection_cfg,
-        request_cfg,
-        check_params,
-    ));
+    let check_http_thread = tokio::spawn(collect_checks(client_cfg, request_cfg, check_params));
 
     let check_http_payload = process_http(listener, http_response)?;
 
@@ -70,30 +64,23 @@ async fn check_http_output(
     Ok(())
 }
 
-fn make_standard_configs(
-    port: u16,
-) -> (
-    ClientConfig,
-    ConnectionConfig,
-    RequestConfig,
-    CheckParameters,
-) {
+fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParameters) {
     (
         ClientConfig {
-            url: format!("http://{}:{}", LOCALHOST_DNS, port),
-            method: Method::GET,
-            user_agent: None,
-            headers: None,
+            user_agent: "test_http".to_string(),
             timeout: Duration::from_secs(1),
-            auth_user: None,
-            auth_pw: None,
-        },
-        ConnectionConfig {
             onredirect: OnRedirect::Follow,
             max_redirs: 10,
             force_ip: None,
         },
         RequestConfig {
+            url: format!("http://{}:{}", LOCALHOST_DNS, port),
+            method: Method::GET,
+            headers: None,
+            body: None,
+            content_type: None,
+            auth_user: None,
+            auth_pw: None,
             without_body: false,
         },
         CheckParameters {

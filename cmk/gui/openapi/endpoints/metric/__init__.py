@@ -18,7 +18,7 @@ from cmk.gui.openapi.endpoints.metric.common import (
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import serve_json
-from cmk.gui.raw.plugins.main_modules.registration import resolve_combined_single_metric_spec
+from cmk.gui.raw.registration import resolve_combined_single_metric_spec
 
 
 # This is the only endpoint that is available in the raw edition

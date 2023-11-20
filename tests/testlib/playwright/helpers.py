@@ -168,7 +168,7 @@ class MainMenu(LocatorHelper):
 
     @property
     def help_plugin_api_docs(self) -> Locator:
-        return self.help_menu.get_by_text("Check plugin API reference")
+        return self.help_menu.get_by_text("Plugin API references")
 
     @property
     def help_rest_api_intro(self) -> Locator:

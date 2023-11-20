@@ -7,8 +7,16 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from cmk.plugins.lib import interfaces
-from cmk.plugins.lib.aws import (
+from cmk.agent_based.v2alpha import (
+    AgentSection,
+    CheckPlugin,
+    get_value_store,
+    IgnoreResultsError,
+    Result,
+    State,
+)
+from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.aws.lib import (
     AWSMetric,
     check_aws_metrics,
     discover_aws_generic,
@@ -16,11 +24,9 @@ from cmk.plugins.lib.aws import (
     extract_aws_metrics_by_labels,
     parse_aws,
 )
+from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.cpu_util import check_cpu_util
 from cmk.plugins.lib.diskstat import check_diskstat_dict
-
-from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, float]
 
@@ -60,7 +66,7 @@ def parse_aws_ec2(string_table: StringTable) -> Section:
     return inst_metrics
 
 
-register.agent_section(
+agent_section_aws_ec2 = AgentSection(
     name="aws_ec2",
     parse_function=parse_aws_ec2,
 )
@@ -111,7 +117,7 @@ def check_aws_ec2_status_check(
         raise IgnoreResultsError("Currently no data from AWS")
 
 
-register.check_plugin(
+check_plugin_aws_ec2 = CheckPlugin(
     name="aws_ec2",
     check_function=check_aws_ec2_status_check,
     discovery_function=discover_aws_ec2,
@@ -166,7 +172,7 @@ def check_aws_ec2_network_io(
     yield from interfaces.check_single_interface(item, params, interface)
 
 
-register.check_plugin(
+check_plugin_aws_ec2_network_io = CheckPlugin(
     name="aws_ec2_network_io",
     sections=["aws_ec2"],
     service_name="AWS/EC2 Network IO %s",
@@ -243,7 +249,7 @@ def check_aws_ec2_disk_io(
     )
 
 
-register.check_plugin(
+check_plugin_aws_ec2_disk_io = CheckPlugin(
     name="aws_ec2_disk_io",
     check_function=check_aws_ec2_disk_io,
     discovery_function=discover_aws_ec2_disk_io,
@@ -283,7 +289,7 @@ def check_aws_ec2_cpu_util(params: Mapping[str, Any], section: Section) -> Check
     )
 
 
-register.check_plugin(
+check_plugin_aws_ec2_cpu_util = CheckPlugin(
     name="aws_ec2_cpu_util",
     check_function=check_aws_ec2_cpu_util,
     discovery_function=discover_aws_ec2_cpu_util,
@@ -331,7 +337,7 @@ def check_aws_ec2_cpu_credits(params: Mapping[str, Any], section: Section) -> Ch
     )
 
 
-register.check_plugin(
+check_plugin_aws_ec2_cpu_credits = CheckPlugin(
     name="aws_ec2_cpu_credits",
     service_name="AWS/EC2 CPU Credits",
     check_function=check_aws_ec2_cpu_credits,

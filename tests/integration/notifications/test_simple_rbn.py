@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
+import time
 from collections.abc import Iterator
 from typing import Final
 
@@ -48,13 +49,8 @@ def fixture_test_user(site: Site) -> Iterator[None]:
 
 
 @pytest.fixture(name="test_log")
-def fixture_test_log(
-    site: Site,
-    fake_sendmail: None,
-    test_user: None,
-    disable_checks: None,
-    disable_flap_detection: None,
-) -> Iterator[WatchLog]:
+def fixture_test_log(site: Site) -> Iterator[WatchLog]:
+    # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
     site.openapi.create_host(
         "notify-test",
         attributes={
@@ -71,11 +67,13 @@ def fixture_test_log(
         site.activate_changes_and_wait_for_core_reload()
 
 
+@pytest.mark.usefixtures("fake_sendmail")
+@pytest.mark.usefixtures("test_user")
+@pytest.mark.usefixtures("disable_checks")
+@pytest.mark.usefixtures("disable_flap_detection")
 def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
 
-    # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
-    # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
         "] HOST NOTIFICATION: check-mk-notify;notify-test;DOWN;check-mk-notify;FAKE DOWN"
     )
@@ -85,17 +83,25 @@ def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     )
 
 
-@pytest.mark.skip("test is wrong, code is correct")
+@pytest.mark.usefixtures("fake_sendmail")
+@pytest.mark.usefixtures("test_user")
+@pytest.mark.usefixtures("disable_flap_detection")
 def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
-    flatten = itertools.chain.from_iterable
+    service: Final = "Check_MK"  # Site has 'Check_MK' and 'Check_MK Discovery'.
+    assert service in itertools.chain.from_iterable(
+        site.live.query("GET services\nColumns: description\n")
+    )
 
-    service: Final = "Check_MK"
-    assert service in flatten(site.live.query("GET services\nColumns: description\n"))
+    # Trigger a check cycle
+    site.send_host_check_result("notify-test", 1, "FAKE DOWN", expected_state=1)
+    time.sleep(0.1)
+    # But keep the site up or the service notifications will be postponed.
+    site.send_host_check_result("notify-test", 0, "FAKE UP", expected_state=0)
 
+    # Now generate the service notification.
     site.send_service_check_result("notify-test", service, 2, "FAKE CRIT")
 
-    # This checks the following log files: `var/log/nagios.log` or `var/check_mk/core/history`.
-    # NOTE: "] " is necessary to get the actual log line and not the external command execution
+    # And check that the notifications are recorded in the log.
     test_log.check_logged(
         f"] SERVICE NOTIFICATION: check-mk-notify;notify-test;{service};CRITICAL;check-mk-notify;FAKE CRIT"
     )

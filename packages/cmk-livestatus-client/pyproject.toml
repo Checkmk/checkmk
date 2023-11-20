@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 # cmk.livestatus_client was exposed as livestatus from the beginning of Checkmk.
 # We keep deploying it with the old name for compatibility for now.
-packages = ["cmk", "livestatus"]
+packages = ["cmk", "cmk.livestatus_client", "livestatus"]
 
 [tool.setuptools.package-data]
 "cmk.livestatus_client" = ["py.typed"]

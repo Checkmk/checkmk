@@ -44,13 +44,13 @@ class NodeCustomConditionsFactory(ModelFactory):
     )
 
 
-PARAMS = {
-    "ready": int(State.CRIT),
-    "memorypressure": int(State.CRIT),
-    "diskpressure": int(State.CRIT),
-    "pidpressure": int(State.CRIT),
-    "networkunavailable": int(State.CRIT),
-}
+PARAMS = kube_node_conditions.Params(
+    ready=int(State.CRIT),
+    memorypressure=int(State.CRIT),
+    diskpressure=int(State.CRIT),
+    pidpressure=int(State.CRIT),
+    networkunavailable=int(State.CRIT),
+)
 
 
 @pytest.fixture

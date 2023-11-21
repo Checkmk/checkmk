@@ -317,6 +317,40 @@ class FixedValue:
             raise ValueError(Localizable("FixedValue value is not serializable.")) from exc
 
 
+class DisplayUnits(enum.Enum):
+    SECONDS = "seconds"
+    MINUTES = "minutes"
+    HOURS = "hours"
+    DAYS = "days"
+
+
+@dataclass(frozen=True)
+class TimeSpan:
+    """Specifies an input field for time span
+
+    Args:
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        label: Text displayed as an extension to the input field
+        displayed_units: Units that can be configured in the UI. All of the listed units can be
+                        configured and the value is the sum of the configured fields in seconds.
+        prefill_value: Value in seconds to pre-populate the form fields with. If None, the backend
+                        will decide whether to leave the field empty or to prefill it with
+                        a canonical value.
+        custom_validate: Custom validation function. Will be executed in addition to any
+                         builtin validation logic. Needs to raise a ValidationError in case
+                         validation fails. The return value of the function will not be used.
+    """
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    label: Localizable | None = None
+    displayed_units: Sequence[DisplayUnits] | None = None
+    prefill_value: int | None = None
+
+    custom_validate: Callable[[int], object] | None = None
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -331,4 +365,5 @@ FormSpec = (
     | MonitoringState
     | List
     | FixedValue
+    | TimeSpan
 )

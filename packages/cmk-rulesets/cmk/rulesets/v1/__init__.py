@@ -8,6 +8,7 @@ from cmk.rulesets.v1._form_spec import (
     CascadingDropdownElement,
     DictElement,
     Dictionary,
+    DisplayUnits,
     DropdownChoice,
     DropdownChoiceElement,
     FixedValue,
@@ -21,6 +22,7 @@ from cmk.rulesets.v1._form_spec import (
     Percentage,
     State,
     TextInput,
+    TimeSpan,
     Tuple,
 )
 from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
@@ -85,4 +87,6 @@ __all__ = [
     "CascadingDropdownElement",
     "List",
     "FixedValue",
+    "TimeSpan",
+    "DisplayUnits",
 ]

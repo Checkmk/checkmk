@@ -263,6 +263,9 @@ def _convert_to_legacy_valuespec(
         case ruleset_api_v1.FixedValue():
             return _convert_to_legacy_fixed_value(to_convert, localizer)
 
+        case ruleset_api_v1.TimeSpan():
+            return _convert_to_legacy_age(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -513,3 +516,26 @@ def _convert_to_legacy_fixed_value(
         title=_localize_optional(to_convert.title, localizer),
         help=_localize_optional(to_convert.help_text, localizer),
     )
+
+
+def _convert_to_legacy_age(
+    to_convert: ruleset_api_v1.TimeSpan, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Age:
+    converted_kwargs: MutableMapping[str, Any] = {
+        "title": _localize_optional(to_convert.title, localizer),
+        "help": _localize_optional(to_convert.help_text, localizer),
+        "label": _localize_optional(to_convert.label, localizer),
+    }
+
+    if to_convert.displayed_units is not None:
+        converted_kwargs["display"] = [u.value for u in to_convert.displayed_units]
+
+    if to_convert.prefill_value is not None:
+        converted_kwargs["default_value"] = to_convert.prefill_value
+
+    if to_convert.custom_validate is not None:
+        converted_kwargs["validate"] = _convert_to_legacy_validation(
+            to_convert.custom_validate, localizer
+        )
+
+    return legacy_valuespecs.Age(**converted_kwargs)

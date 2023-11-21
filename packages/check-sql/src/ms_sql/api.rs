@@ -11,7 +11,7 @@ use std::collections::HashSet;
 
 #[cfg(windows)]
 use tiberius::SqlBrowser;
-use tiberius::{AuthMethod, ColumnType, Config, Query, Row};
+use tiberius::{AuthMethod, ColumnData, Config, Query, Row};
 use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
@@ -61,14 +61,14 @@ impl Section {
     }
 }
 
-pub trait Column {
+pub trait Column<'a> {
     fn get_bigint_by_idx(&self, idx: usize) -> i64;
     fn get_bigint_by_name(&self, idx: &str) -> i64;
     fn get_value_by_idx(&self, idx: usize) -> String;
     fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
     fn get_value_by_name(&self, idx: &str) -> String;
     fn get_optional_value_by_name(&self, idx: &str) -> Option<String>;
-    fn get_all(&self, sep: char) -> String;
+    fn get_all(self, sep: char) -> String;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -117,17 +117,16 @@ impl InstanceEngine {
                                 .generate_details_entry(&mut client, instance_section.sep())
                                 .await;
                         }
-                        //COUNTERS_SECTION_NAME
-                        //| BLOCKED_SESSIONS_SECTION_NAME
-                        //| TABLE_SPACES_SECTION_NAME
-                        //| BACKUP_SECTION_NAME
-                        //| TRANSACTION_LOG_SECTION_NAME
-                        //| DATAFILES_SECTION_NAME
-                        //| DATABASES_SECTION_NAME
-                        //| CLUSTERS_SECTION_NAME
-                        //| CONNECTIONS_SECTION_NAME
-                        //|
-                        JOBS_SECTION_NAME => {
+                        COUNTERS_SECTION_NAME
+                        | BLOCKED_SESSIONS_SECTION_NAME
+                        | TABLE_SPACES_SECTION_NAME
+                        | BACKUP_SECTION_NAME
+                        | TRANSACTION_LOG_SECTION_NAME
+                        | DATAFILES_SECTION_NAME
+                        | DATABASES_SECTION_NAME
+                        | CLUSTERS_SECTION_NAME
+                        | CONNECTIONS_SECTION_NAME
+                        | JOBS_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -572,16 +571,16 @@ impl InstanceEngine {
             Ok(mut c) => run_query(&mut c, query)
                 .await
                 .and_then(validate_rows)
-                .map(|rows| format!("{}\n{}\n", self.name, self.to_jobs_entry(&rows, sep)))
+                .map(|rows| format!("{}\n{}\n", self.name, self.to_jobs_entry(rows, sep)))
                 .unwrap_or_else(|e| format!("{} {:?}\n", self.name, e)),
             Err(err) => format!("{} {:?}\n", self.name, err),
         }
     }
 
     /// rows must be not empty
-    fn to_jobs_entry(&self, rows: &[Vec<Row>], sep: char) -> String {
-        let rows = &rows[0];
-        rows[0].get_all(sep)
+    fn to_jobs_entry(&self, mut rows: Vec<Vec<Row>>, sep: char) -> String {
+        let mut rows = rows.remove(0);
+        rows.remove(0).get_all(sep)
     }
 
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
@@ -905,7 +904,7 @@ fn get_row_value(row: &Row, idx: &str) -> String {
     })
 }
 
-impl Column for Row {
+impl<'a> Column<'a> for Row {
     fn get_bigint_by_idx(&self, idx: usize) -> i64 {
         self.try_get::<i64, usize>(idx)
             .unwrap_or_default()
@@ -944,28 +943,23 @@ impl Column for Row {
             .map(str::to_string)
     }
 
-    fn get_all(&self, sep: char) -> String {
-        let columns = self.columns();
-        columns
-            .iter()
-            .map(|c| match c.column_type() {
-                ColumnType::Int1
-                | ColumnType::Int2
-                | ColumnType::Int4
-                | ColumnType::Int8
-                | ColumnType::Intn => self.get_bigint_by_name(c.name()).to_string(),
-                ColumnType::Guid => format!(
-                    "{{{}}}",
-                    self.try_get::<tiberius::Uuid, &str>(c.name())
-                        .unwrap_or_default()
-                        .unwrap_or_default()
-                        .to_string()
-                        .to_ascii_uppercase()
-                ),
-                ColumnType::BigChar | ColumnType::BigVarChar | ColumnType::NVarchar => {
-                    self.get_value_by_name(c.name())
-                }
-                _ => format!("Unsupported '{:?}'", c.column_type()),
+    /// more or less correct method to extract all data from the tiberius.Row
+    /// unfortunately tiberius::Row implements only into_iter -> we are using `self``, not `&self``
+    fn get_all(self, sep: char) -> String {
+        self.into_iter()
+            .map(|c| match c {
+                ColumnData::Guid(v) => v
+                    .map(|v| format!("{{{}}}", v.to_string().to_uppercase()))
+                    .unwrap_or_default(),
+                ColumnData::I16(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::I32(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::F32(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::F64(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::Bit(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::U8(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::String(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                ColumnData::Numeric(v) => v.map(|v| v.to_string()).unwrap_or_default(),
+                _ => format!("Unsupported '{:?}'", c),
             })
             .collect::<Vec<String>>()
             .join(&sep.to_string())

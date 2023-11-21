@@ -47,7 +47,10 @@ impl<T> Bounds<T> {
     }
 }
 
-impl<T: Clone> From<&[T; 2]> for Bounds<T> {
+impl<T> From<&[T; 2]> for Bounds<T>
+where
+    T: Clone,
+{
     fn from(arr: &[T; 2]) -> Self {
         Self {
             min: arr[0].clone(),
@@ -72,7 +75,10 @@ impl<T> Levels<T> {
     }
 }
 
-impl<T: Clone> From<&[T; 2]> for Levels<T> {
+impl<T> From<&[T; 2]> for Levels<T>
+where
+    T: Clone,
+{
     fn from(arr: &[T; 2]) -> Self {
         Self {
             warn: arr[0].clone(),
@@ -141,13 +147,19 @@ pub trait LevelsCheck<T> {
     fn check(&self, value: &T, summary: String) -> CheckResult;
 }
 
-impl<T: PartialOrd> LevelsCheck<T> for LowerLevels<T> {
+impl<T> LevelsCheck<T> for LowerLevels<T>
+where
+    T: PartialOrd,
+{
     fn check(&self, value: &T, summary: String) -> CheckResult {
         CheckResult::new(self.evaluate(value), summary)
     }
 }
 
-impl<T: PartialOrd> LevelsCheck<T> for UpperLevels<T> {
+impl<T> LevelsCheck<T> for UpperLevels<T>
+where
+    T: PartialOrd,
+{
     fn check(&self, value: &T, summary: String) -> CheckResult {
         CheckResult::new(self.evaluate(value), summary)
     }
@@ -182,7 +194,10 @@ pub struct Metric<T> {
     bounds: Option<Bounds<T>>,
 }
 
-impl<T: Display> Metric<T> {
+impl<T> Metric<T>
+where
+    T: Display,
+{
     pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
         MetricBuilder::new(label, value)
     }
@@ -205,7 +220,10 @@ impl<T> Metric<T> {
     }
 }
 
-impl<T: Display> Display for Metric<T> {
+impl<T> Display for Metric<T>
+where
+    T: Display,
+{
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(
             f,

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Generator, Mapping, MutableSequence
+from collections.abc import Iterator, MutableSequence
+from typing import Literal, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -31,6 +32,14 @@ from cmk.plugins.lib.kube import (
 )
 
 
+class Params(TypedDict):
+    ready: int
+    memorypressure: int
+    diskpressure: int
+    pidpressure: int
+    networkunavailable: int
+
+
 def parse_node_conditions(string_table: StringTable) -> NodeConditions:
     """Parses `string_table` into a NodeConditions instance"""
     return NodeConditions(**json.loads(string_table[0][0]))
@@ -49,7 +58,7 @@ def discovery(
 
 
 def check(
-    params: Mapping[str, int],
+    params: Params,
     section_kube_node_conditions: NodeConditions | None,
     section_kube_node_custom_conditions: NodeCustomConditions | None,
 ) -> CheckResult:
@@ -91,24 +100,32 @@ def check(
             yield from _check_node_custom_conditions(section_kube_node_custom_conditions)
 
 
-def _check_node_conditions(
-    params: Mapping[str, int], section: NodeConditions
-) -> Generator[Result, None, None]:
-    cond: FalsyNodeCondition | TruthyNodeCondition | None = None
-    for name, cond in section:
-        if not cond:
-            continue
-        if EXPECTED_CONDITION_STATES[name] == cond.status:
-            yield Result(
-                state=State.OK,
-                summary=condition_short_description(name, cond.status),
-                details=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
-            )
-        else:
-            yield Result(
-                state=State(params[name]),
-                summary=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
-            )
+def _check_node_conditions(params: Params, section: NodeConditions) -> Iterator[Result]:
+    yield from _check_condition("ready", params, section.ready)
+    yield from _check_condition("memorypressure", params, section.memorypressure)
+    yield from _check_condition("diskpressure", params, section.diskpressure)
+    yield from _check_condition("pidpressure", params, section.pidpressure)
+    yield from _check_condition("networkunavailable", params, section.networkunavailable)
+
+
+def _check_condition(
+    name: Literal["ready", "memorypressure", "diskpressure", "pidpressure", "networkunavailable"],
+    params: Params,
+    cond: FalsyNodeCondition | TruthyNodeCondition | None,
+) -> Iterator[Result]:
+    if cond is None:
+        return
+    if EXPECTED_CONDITION_STATES[name] == cond.status:
+        yield Result(
+            state=State.OK,
+            summary=condition_short_description(name, cond.status),
+            details=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
+        )
+    else:
+        yield Result(
+            state=State(params[name]),
+            summary=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
+        )
 
 
 def _check_node_custom_conditions(section: NodeCustomConditions):  # type: ignore[no-untyped-def]

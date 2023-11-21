@@ -19,6 +19,7 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
@@ -1153,10 +1154,24 @@ class RecurringDowntimes(Protocol):
 
 class NoRecurringDowntimes:
     def choices(self) -> Choices:
-        return []
+        return [("0", "never")]
 
     def show_input_elements(self, default: str) -> None:
-        pass
+        html.open_div(class_="group")
+        html.dropdown(
+            "_down_recurring",
+            self.choices(),
+            deflt=default,
+            read_only=True,
+        )
+        html.icon_button(
+            url="https://checkmk.com/pricing?services=3000?utm_source=checkmk_product&utm_medium=referral&utm_campaign=commercial_editions_link",
+            title=_("Upgrade to Cloud or Enterprise edition to use this feature"),
+            icon="upgrade",
+            target="_blank",
+            cssclass="upgrade",
+        )
+        html.close_div()
 
     def number(self) -> int:
         return 0
@@ -1223,10 +1238,22 @@ class CommandScheduleDowntimes(Command):
         return super().user_confirm_options(len_rows, cmdtag)
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        if self._adhoc_downtime_configured():
+            self._render_adhoc_comment(what)
         self._render_comment()
         self._render_date_and_time()
         self._render_advanced_options(what)
         self._render_confirm_buttons(what)
+
+    def _render_adhoc_comment(self, what) -> None:  # type: ignore[no-untyped-def]
+        adhoc_duration = active_config.adhoc_downtime.get("duration")
+        adhoc_comment = active_config.adhoc_downtime.get("comment", "")
+        html.open_div(class_="group")
+        html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
+        html.nbsp()
+        html.write_text(_("Comment") + ": " + adhoc_comment)
+        html.hr()
+        html.close_div()
 
     def _render_comment(self) -> None:
         html.open_div(class_="group")
@@ -1244,48 +1271,22 @@ class CommandScheduleDowntimes(Command):
     def _render_date_and_time(self) -> None:  # pylint: disable=too-many-statements
         html.open_div(class_="group")
         html.heading("Date and time")
-        html.br()
 
-        html.open_table()
+        html.open_table(class_=["down_date_and_time"])
 
         # Duration section
-        html.open_tr()
-        html.open_td()
-        html.write_text(_("Duration"))
-        html.close_td()
-        html.open_td()
-        for time_range in active_config.user_downtime_timeranges:
-            html.input(
-                name=(varname := f'_downrange__{time_range["end"]}'),
-                type_="button",
-                id_=varname,
-                class_=["button", "duration"],
-                value=_u(time_range["title"]),
-                onclick=self._get_onclick(time_range["end"]),
-                submit="_set_date_and_time",
+        html.tr(
+            HTMLWriter.render_td(_("Duration"))
+            + HTMLWriter.render_td(self._get_duration_options())
+            + HTMLWriter.render_td(
+                html.render_a(
+                    _("(Edit presets)"),
+                    href=self._get_presets_url(),
+                    class_="down_presets",
+                )
             )
-
-        presets_url = makeuri_contextless(
-            request,
-            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
-            filename="wato.py",
-        )
-        html.a(
-            _("(Edit presets)"),
-            href=presets_url,
-            class_="down_presets",
         )
 
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.br()
-        html.close_td()
-        html.close_tr()
-
-        # Start section
         html.open_tr()
         html.open_td()
         html.write_text(_("Start"))
@@ -1293,12 +1294,6 @@ class CommandScheduleDowntimes(Command):
         html.open_td()
         self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
         self._vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.br()
         html.close_td()
         html.close_tr()
 
@@ -1314,12 +1309,6 @@ class CommandScheduleDowntimes(Command):
         )
         html.close_td()
 
-        html.open_tr()
-        html.open_td()
-        html.br()
-        html.close_td()
-        html.close_tr()
-
         # Repeat section
         html.open_tr()
         html.open_td()
@@ -1327,15 +1316,32 @@ class CommandScheduleDowntimes(Command):
         html.close_td()
         html.open_td()
         self.recurring_downtimes.show_input_elements(default="0")
-        html.close_td()
-        html.close_table()
 
-        html.open_tr()
-        html.open_td()
-        html.br()
         html.close_td()
-        html.close_tr()
+
+        html.close_table()
         html.close_div()
+
+    def _get_duration_options(self) -> HTML:
+        duration_options = HTML("")
+        for time_range in active_config.user_downtime_timeranges:
+            duration_options += html.render_input(
+                name=(varname := f'_downrange__{time_range["end"]}'),
+                type_="button",
+                id_=varname,
+                class_=["button", "duration"],
+                value=_u(time_range["title"]),
+                onclick=self._get_onclick(time_range["end"], varname),
+                submit="_set_date_and_time",
+            )
+        return duration_options
+
+    def _get_presets_url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [("mode", "edit_configvar"), ("varname", "user_downtime_timeranges")],
+            filename="wato.py",
+        )
 
     def _vs_date(self) -> DatePicker:
         return DatePicker(
@@ -1348,12 +1354,15 @@ class CommandScheduleDowntimes(Command):
         )
 
     def _get_onclick(
-        self, time_range: int | Literal["next_day", "next_week", "next_month", "next_year"]
+        self,
+        time_range: int | Literal["next_day", "next_week", "next_month", "next_year"],
+        id_: str,
     ) -> str:
         start_time = self._current_local_time()
         end_time = time_interval_end(time_range, self._current_local_time())
 
         return (
+            f'cmk.page_menu.toggle_down_duration_button("{id_}");'
             f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d",time.localtime(start_time))}");'
             f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M",time.localtime(start_time))}");'
             f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'
@@ -1368,17 +1377,6 @@ class CommandScheduleDowntimes(Command):
             title=_("Advanced options"),
             indent=False,
         ):
-            # TODO this can be removed? What about the global config option?
-            # if self._adhoc_downtime_configured():
-            #    adhoc_duration = active_config.adhoc_downtime.get("duration")
-            #    adhoc_comment = active_config.adhoc_downtime.get("comment", "")
-            #    html.open_div(class_="group")
-            #    html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
-            #    html.nbsp()
-            #    html.write_text(_("with comment") + ": ")
-            #    html.write_text(adhoc_comment)
-            #    html.close_div()
-
             if what == "host":
                 html.open_div(class_="group")
                 self._vs_host_downtime().render_input("_include_children", None)
@@ -1423,13 +1421,19 @@ class CommandScheduleDowntimes(Command):
                 (
                     "_down_duration",
                     Age(
-                        display=["hours"],
+                        display=["hours", "minutes"],
                         title=_(
                             "Only start downtime if host/service goes "
                             "DOWN/UNREACH during the defined start and end time "
                             "(flexible)"
                         ),
                         cssclass="inline",
+                        label=_("Max. duration after downtime starts: "),
+                        footer="<b>"
+                        + _("Warning: ")
+                        + "</b>"
+                        + _("Downtime can extend beyond the previously defined end date and time"),
+                        default_value=7200,
                     ),
                 ),
             ],
@@ -1444,17 +1448,18 @@ class CommandScheduleDowntimes(Command):
         action_rows: Rows,
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
-        if request.var("_down_remove"):
-            return self._remove_downtime_details(cmdtag, row, action_rows)
-
         recurring_number = self.recurring_downtimes.number()
-        if varprefix := request.var("_down_host", request.var("_down_service")):
-            start_time = self._custom_start_time()
-            end_time = self._custom_end_time(start_time)
+        if request.var("_down_host", request.var("_down_service", request.var("_down_adhoc"))):
+            if request.var("_down_adhoc"):
+                start_time = self._current_local_time()
+                end_time = self._get_adhoc_end_time(start_time)
+            else:
+                start_time = self._custom_start_time()
+                end_time = self._custom_end_time(start_time)
 
             if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
                 raise MKUserError(
-                    varprefix,
+                    None,
                     _(
                         "The start of a recurring downtime can only be set for "
                         "days 1-28 of a month."
@@ -1503,29 +1508,59 @@ class CommandScheduleDowntimes(Command):
             self.confirm_button,
         )
 
+    def _get_start_msg(self, start_at: float) -> str:
+        start_weekday, start_month, start_day, start_time, start_year = time.asctime(
+            time.localtime(start_at)
+        ).split()
+        return _("%s, %s. %s %s at %s") % (
+            start_weekday,
+            start_day,
+            start_month,
+            start_year,
+            start_time,
+        )
+
+    def _get_end_msg(self, start_at: float) -> str:
+        end_weekday, end_month, end_day, end_time, end_year = time.asctime(
+            time.localtime(
+                self._get_adhoc_end_time(start_at)
+                if request.var("_down_adhoc")
+                else self._custom_end_time(start_at)
+            )
+        ).split()
+        return _("%s, %s. %s %s at %s") % (
+            end_weekday,
+            end_day,
+            end_month,
+            end_year,
+            end_time,
+        )
+
+    def _get_adhoc_end_time(self, start_time: float) -> float:
+        return start_time + active_config.adhoc_downtime.get("duration", 0) * 60
+
     def confirm_dialog_additions(
         self,
         cmdtag: Literal["HOST", "SVC"],
         row: Row,
         len_action_rows: int,
     ) -> HTML:
-        additions = (
-            "<br><br>"
-            + _("Start: %s") % time.asctime(time.localtime(start_time := self._custom_start_time()))
-            + "<br>"
-            + _("End: %s") % time.asctime(time.localtime(self._custom_end_time(start_time)))
-            + "<br><br>"
+        start_at = self._custom_start_time()
+        additions = HTMLWriter.render_table(
+            HTMLWriter.render_tr(
+                HTMLWriter.render_td(_("Start:"))
+                + HTMLWriter.render_td(self._get_start_msg(start_at))
+            )
+            + HTMLWriter.render_tr(
+                HTMLWriter.render_td(_("End:")) + HTMLWriter.render_td(self._get_end_msg(start_at))
+            )
         )
 
-        attributes = ""
-
-        recurring_number_from_html = self.recurring_downtimes.number()
-        if recurring_number_from_html:
-            attributes += (
-                "<li>"
-                + _("Repeats every %s")
+        attributes = HTML("")
+        if recurring_number_from_html := self.recurring_downtimes.number():
+            attributes += HTMLWriter.render_li(
+                _("Repeats every %s")
                 % self.recurring_downtimes.choices()[recurring_number_from_html][1]
-                + "</li>"
             )
 
         vs_host_downtime = self._vs_host_downtime()
@@ -1533,60 +1568,29 @@ class CommandScheduleDowntimes(Command):
         vs_host_downtime.validate_value(included_from_html, "_include_children")
         if "_include_children" in included_from_html:
             if included_from_html.get("_include_children") is True:
-                attributes += "<li>" + _("Child hosts also go in downtime (recursively).") + "</li>"
+                attributes += HTMLWriter.render_li(
+                    _("Child hosts also go in downtime (recursively).")
+                )
             else:
-                attributes += "<li>" + _("Child hosts also go in downtime.") + "</li>"
+                attributes += HTMLWriter.render_li(_("Child hosts also go in downtime."))
 
         if duration := self._flexible_option():
-            attributes += (
-                "<li>"
-                + _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
+            attributes += HTMLWriter.render_li(
+                _("Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours.")
                 % (duration / 3600)
-                + "</li>"
             )
 
         if attributes:
-            additions = additions + _("Downtime attributes:") + "<ul>" + attributes + "</ul>"
-
-        return HTML(
-            additions
-            + "<u>"
-            + _("Info:")
-            + "</u> "
-            + (
-                _("Downtime also applies to services.")
-                if cmdtag == "HOST"
-                else _("Downtime does not apply to host.")
+            additions = (
+                additions
+                + HTMLWriter.render_p(_("Downtime attributes:"))
+                + HTMLWriter.render_ul(attributes)
             )
-        )
 
-    def _remove_downtime_details(
-        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
-    ) -> tuple[list[str], CommandConfirmDialogOptions] | None:
-        if not user.may("action.remove_all_downtimes"):
-            return None
-        if request.var("_down_host"):
-            raise MKUserError(
-                "_on_hosts",
-                _("The checkbox for setting host downtimes does not work when removing downtimes."),
-            )
-        downtime_ids = []
-        if cmdtag == "HOST":
-            prefix = "host_"
-        else:
-            prefix = "service_"
-        for id_ in row[prefix + "downtimes"]:
-            if id_ != "":
-                downtime_ids.append(int(id_))
-        commands = []
-        for dtid in downtime_ids:
-            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
-        title = _("Remove all scheduled downtimes?")
-        return commands, self._confirm_dialog_options(
-            cmdtag,
-            row,
-            len(action_rows),
-            title,
+        return additions + HTMLWriter.render_p(
+            _("<u>Info</u>: Downtime also applies to services.")
+            if cmdtag == "HOST"
+            else _("Info: Downtime does not apply to host.")
         )
 
     def _flexible_option(self) -> int:
@@ -1841,7 +1845,7 @@ class CommandRemoveDowntime(Command):
 
     @property
     def tables(self):
-        return ["downtime"]
+        return ["host", "service", "downtime"]
 
     @property
     def is_shortcut(self) -> bool:
@@ -1851,22 +1855,73 @@ class CommandRemoveDowntime(Command):
     def is_suggested(self) -> bool:
         return True
 
+    def _confirm_dialog_options(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+        title: str,
+    ) -> CommandConfirmDialogOptions:
+        return CommandConfirmDialogOptions(
+            title,
+            self.affected(len_action_rows, cmdtag),
+            self.confirm_dialog_additions(cmdtag, row, len_action_rows),
+            self.confirm_dialog_icon_class(),
+            self.confirm_button,
+        )
+
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_remove_downtimes", _("Remove"))
 
-    def _action(
+    def _action(  # pylint: disable=too-many-arguments
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
-            return (
-                f"DEL_{cmdtag}_DOWNTIME;{spec}",
-                self.confirm_dialog_options(
-                    cmdtag,
-                    row,
-                    len(action_rows),
-                ),
-            )
+            if "downtime_id" in row:
+                return self._rm_downtime_from_downtime_datasource(cmdtag, spec, row, action_rows)
+            return self._rm_downtime_from_hst_or_svc_datasource(cmdtag, row, action_rows)
         return None
+
+    def _rm_downtime_from_downtime_datasource(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: Row,
+        action_rows: Rows,
+    ) -> CommandActionResult:
+        return (
+            f"DEL_{cmdtag}_DOWNTIME;{spec}",
+            self.confirm_dialog_options(
+                cmdtag,
+                row,
+                len(action_rows),
+            ),
+        )
+
+    def _rm_downtime_from_hst_or_svc_datasource(
+        self, cmdtag: Literal["HOST", "SVC"], row: Row, action_rows: Rows
+    ) -> tuple[list[str], CommandConfirmDialogOptions] | None:
+        if not user.may("action.remove_all_downtimes"):
+            return None
+
+        downtime_ids = []
+        if cmdtag == "HOST":
+            prefix = "host_"
+        else:
+            prefix = "service_"
+        for id_ in row[prefix + "downtimes"]:
+            if id_ != "":
+                downtime_ids.append(int(id_))
+        commands = []
+        for dtid in downtime_ids:
+            commands.append(f"DEL_{cmdtag}_DOWNTIME;{dtid}\n")
+        title = _("Remove scheduled downtimes?")
+        return commands, self._confirm_dialog_options(
+            cmdtag,
+            row,
+            len(action_rows),
+            title,
+        )
 
 
 class CommandRemoveComments(Command):

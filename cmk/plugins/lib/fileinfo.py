@@ -11,8 +11,8 @@ from enum import Enum
 from re import Match
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2alpha import check_levels, Metric, render, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import check_levels, Metric, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 from . import eval_regex
 from .interfaces import saveint

@@ -6,8 +6,8 @@
 from collections.abc import Callable, Mapping
 from typing import Any, Literal, NewType, Protocol
 
-from cmk.agent_based.v2alpha import HostLabel, render, Result, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, HostLabelGenerator
+from cmk.agent_based.v2 import HostLabel, render, Result, State
+from cmk.agent_based.v2.type_defs import CheckResult, HostLabelGenerator
 
 from .kube import (
     ControlChain,

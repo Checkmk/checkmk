@@ -6,7 +6,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2alpha import State
+from cmk.agent_based.v2 import State
 
 DEVICE_STATES_V4: Mapping[int, tuple[State, str]] = {
     0: (State.OK, "normal"),

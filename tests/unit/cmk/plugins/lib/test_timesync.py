@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from cmk.agent_based.v2alpha import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.lib.timesync import store_sync_time, tolerance_check
 
 

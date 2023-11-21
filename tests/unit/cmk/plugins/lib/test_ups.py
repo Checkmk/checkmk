@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.agent_based.v2alpha import Metric, Result, State, type_defs
+from cmk.agent_based.v2 import Metric, Result, State, type_defs
 from cmk.plugins.lib.ups import (
     Battery,
     CHECK_DEFAULT_PARAMETERS,

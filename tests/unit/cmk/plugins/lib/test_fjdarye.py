@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.agent_based.v2alpha import Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.fjdarye import (
     check_fjdarye_item,
     discover_fjdarye_item,

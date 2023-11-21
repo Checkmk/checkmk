@@ -9,7 +9,7 @@ from typing import Final
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     any_of,
     check_levels,
     equals,
@@ -20,7 +20,7 @@ from cmk.agent_based.v2alpha import (
     State,
     type_defs,
 )
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2.type_defs import CheckResult
 
 DETECT_UPS_GENERIC = any_of(
     equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.165.3"),

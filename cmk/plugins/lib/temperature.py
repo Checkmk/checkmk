@@ -9,9 +9,9 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import check_levels, get_average, get_rate, Result, State
-from cmk.agent_based.v2alpha.render import timespan
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import check_levels, get_average, get_rate, Result, State
+from cmk.agent_based.v2.render import timespan
+from cmk.agent_based.v2.type_defs import CheckResult
 
 StatusType = int
 TempUnitType = str

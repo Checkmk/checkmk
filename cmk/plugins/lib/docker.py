@@ -6,7 +6,7 @@ import json
 from collections.abc import Iterable
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2alpha.type_defs import StringTable
+from cmk.agent_based.v2.type_defs import StringTable
 
 from .memory import SectionMemUsed
 

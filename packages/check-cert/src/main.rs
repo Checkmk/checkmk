@@ -3,7 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::{check, checker, fetcher};
+use check_cert::check::{CheckResult, Levels, LowerLevels, UpperLevels, Writer};
+use check_cert::{checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
@@ -61,18 +62,18 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let Ok(not_after_levels) = check::LowerLevels::try_new(
-        args.not_after_warn * Duration::DAY,
-        args.not_after_crit * Duration::DAY,
-    ) else {
-        check::Writer::bail_out("invalid args: not after crit level larger than warn");
+    let Ok(not_after_levels) = LowerLevels::try_new(Levels {
+        warn: args.not_after_warn * Duration::DAY,
+        crit: args.not_after_crit * Duration::DAY,
+    }) else {
+        Writer::bail_out("invalid args: not after crit level larger than warn");
     };
 
-    let Ok(response_time_levels) = check::UpperLevels::try_new(
-        args.response_time_warn * Duration::MILLISECOND,
-        args.response_time_crit * Duration::MILLISECOND,
-    ) else {
-        check::Writer::bail_out("invalid args: response time crit higher than warn");
+    let Ok(response_time_levels) = UpperLevels::try_new(Levels {
+        warn: args.response_time_warn * Duration::MILLISECOND,
+        crit: args.response_time_crit * Duration::MILLISECOND,
+    }) else {
+        Writer::bail_out("invalid args: response time crit higher than warn");
     };
 
     let start = Instant::now();
@@ -89,8 +90,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response_time = start.elapsed();
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
-    let out = check::Writer::from(vec![
-        checker::check_response_time(response_time, response_time_levels),
+    let out = Writer::from(vec![
+        CheckResult::from_levels(
+            &response_time_levels,
+            &response_time,
+            format!(
+                "Certificate obtained in {} ms",
+                response_time.whole_milliseconds()
+            ),
+        ),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
             .unwrap_or_default(),
         checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)

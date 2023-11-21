@@ -19,7 +19,7 @@ Version 1
 Version 2 ALPHA - unstable
 ==========================
 
-.. automodule:: cmk.agent_based.v2alpha
+.. automodule:: cmk.agent_based.v2
    :members:
 
 .. toctree::

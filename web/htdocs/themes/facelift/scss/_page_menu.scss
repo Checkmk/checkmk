@@ -615,6 +615,15 @@ div#page_menu_popups {
     font-size: $font-size-large;
     padding: 0;
     text-align: left;
+
+    table {
+      margin-left: -3px;
+      &:before {
+        content: "";
+        display: block;
+        margin-top: 5px;
+      }
+    }
   }
 
   .confirm_title {
@@ -702,10 +711,30 @@ div.page_menu_popup {
         margin-left: 10px !important;
       }
       margin: 0px;
-      &:active,
+
+      &.active,
       &:focus {
         background-color: $input-button-hover-bg-color;
       }
+    }
+
+    span.vs_age_footer {
+      display: block;
+      margin-top: 5px;
+    }
+
+    a.upgrade img.iconbutton {
+      width: auto;
+      height: auto;
+    }
+
+    hr {
+      margin-top: 15px;
+      border: 1px solid $line-color;
+    }
+
+    table.down_date_and_time {
+      border-spacing: 0px 10px;
     }
   }
 

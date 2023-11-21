@@ -36,6 +36,11 @@ def test_automation_user_secret() -> None:
         aus.read()
 
     aus.path.parent.mkdir()  # profile dir of the test user
-    aus.save(secret := "this is a test")
+    aus.save(secret := "this is a test 🤡")
+
     assert aus.exists()
     assert aus.read() == secret
+
+    assert not aus.check("")
+    assert not aus.check("wrong")
+    assert aus.check(secret)

@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2alpha import IgnoreResultsError, Metric, render, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib.azure import (
     _get_metrics,
     _get_metrics_number,

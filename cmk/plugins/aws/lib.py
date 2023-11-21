@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     check_levels,
     IgnoreResultsError,
     Metric,
@@ -17,7 +17,7 @@ from cmk.agent_based.v2alpha import (
     Service,
     State,
 )
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 GenericAWSSection = Sequence[Any]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]

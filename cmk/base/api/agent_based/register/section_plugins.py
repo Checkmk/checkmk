@@ -8,7 +8,7 @@ import functools
 import inspect
 import itertools
 from collections.abc import Generator
-from typing import Any, List
+from typing import Any, cast, List
 
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.exceptions import MKGeneralException
@@ -40,7 +40,7 @@ from cmk.agent_based.v1.type_defs import StringByteTable, StringTable
 from cmk.discover_plugins import PluginLocation
 
 
-def _create_parse_annotation(
+def create_parse_annotation(
     *,
     needs_bytes: bool = False,
     is_list: bool = False,
@@ -61,7 +61,7 @@ def _create_parse_annotation(
     return {(StringTable, "StringTable")}
 
 
-def _validate_parse_function(
+def validate_parse_function(
     parse_function: AgentParseFunction | SimpleSNMPParseFunction | SNMPParseFunction,
     *,
     expected_annotations: set[tuple[type, str]],
@@ -117,28 +117,17 @@ def _validate_host_label_kwargs(
     )
 
 
-def _create_agent_parse_function(
-    parse_function: AgentParseFunction | None,
-) -> AgentParseFunction:
-    if parse_function is None:
-        return lambda string_table: string_table
-
-    return parse_function
+def noop_agent_parse_function(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def _create_snmp_parse_function(
-    parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None,
-    needs_unpacking: bool,
-) -> SNMPParseFunction:
-    if parse_function is None:
-        if needs_unpacking:
-            return lambda string_table: string_table[0]
-        return lambda string_table: string_table
+def noop_snmp_parse_function(
+    string_table: StringByteTable,
+) -> Any:
+    return string_table
 
-    if not needs_unpacking:
-        # _validate_parse_function should have ensured this is the correct type:
-        return parse_function  # type: ignore[return-value]
 
+def wrap_in_unpacker(parse_function: SimpleSNMPParseFunction) -> SNMPParseFunction:
     @functools.wraps(parse_function)
     def unpacking_parse_function(string_table):
         return parse_function(string_table[0])
@@ -241,7 +230,7 @@ def create_agent_section_plugin(
     *,
     name: str,
     parsed_section_name: str | None = None,
-    parse_function: AgentParseFunction | None = None,
+    parse_function: AgentParseFunction,
     host_label_function: HostLabelFunction | None = None,
     host_label_default_parameters: ParametersTypeAlias | None = None,
     host_label_ruleset_name: str | None = None,
@@ -258,12 +247,6 @@ def create_agent_section_plugin(
     section_name = SectionName(name)
 
     if validate_creation_kwargs:
-        if parse_function is not None:
-            _validate_parse_function(
-                parse_function,
-                expected_annotations=_create_parse_annotation(),
-            )
-
         if host_label_function is not None:
             _validate_host_label_kwargs(
                 host_label_function=host_label_function,
@@ -275,7 +258,7 @@ def create_agent_section_plugin(
     return AgentSectionPlugin(
         name=section_name,
         parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
-        parse_function=_create_agent_parse_function(parse_function),
+        parse_function=noop_agent_parse_function if parse_function is None else parse_function,
         host_label_function=_create_host_label_function(host_label_function),
         host_label_default_parameters=host_label_default_parameters,
         host_label_ruleset_name=(
@@ -295,7 +278,7 @@ def create_snmp_section_plugin(
     detect_spec: SNMPDetectBaseType,
     fetch: SNMPTree | list[SNMPTree],
     parsed_section_name: str | None = None,
-    parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None = None,
+    parse_function: SimpleSNMPParseFunction | SNMPParseFunction,
     host_label_function: HostLabelFunction | None = None,
     host_label_default_parameters: ParametersTypeAlias | None = None,
     host_label_ruleset_name: str | None = None,
@@ -318,16 +301,6 @@ def create_snmp_section_plugin(
         _validate_detect_spec(detect_spec)
         _validate_fetch_spec(tree_list)
 
-        if parse_function is not None:
-            needs_bytes = any(oid.encoding == "binary" for tree in tree_list for oid in tree.oids)
-            _validate_parse_function(
-                parse_function,
-                expected_annotations=_create_parse_annotation(
-                    needs_bytes=needs_bytes,
-                    is_list=isinstance(fetch, list),
-                ),
-            )
-
         if host_label_function is not None:
             _validate_host_label_kwargs(
                 host_label_function=host_label_function,
@@ -336,10 +309,17 @@ def create_snmp_section_plugin(
                 host_label_ruleset_type=host_label_ruleset_type,
             )
 
+    # Now ensure we have a SNMPParseFunction, not a SimpleSNMPParseFunction.
+    # This is a mess, agent_based.v2 should allow us to clean this up at least a bit.
+    if isinstance(fetch, SNMPTree):
+        parse_function = wrap_in_unpacker(cast(SimpleSNMPParseFunction, parse_function))
+    else:
+        parse_function = cast(SNMPParseFunction, parse_function)
+
     return SNMPSectionPlugin(
         name=section_name,
         parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
-        parse_function=_create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
+        parse_function=parse_function,
         host_label_function=_create_host_label_function(host_label_function),
         host_label_default_parameters=host_label_default_parameters,
         host_label_ruleset_name=(

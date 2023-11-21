@@ -7,8 +7,8 @@ import json
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any, cast, Literal, TypedDict
 
-from cmk.agent_based.v2alpha import check_levels, Metric, render, Result
-from cmk.agent_based.v2alpha.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import check_levels, Metric, render, Result
+from cmk.agent_based.v2.type_defs import CheckResult, StringTable
 
 from .kube import PerformanceUsage, Section
 

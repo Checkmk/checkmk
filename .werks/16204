@@ -1,0 +1,12 @@
+Title: metrics: Fix Internal Server Error when decimal timestamps are provided
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1700216654
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, when a timestamp contained decimal values the endpoint would return status 500 (Internal server error). This change fixes that and now it returns 400 (Bad Request) and a brief explanation of the error.
+
+

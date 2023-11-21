@@ -6,8 +6,8 @@
 from collections.abc import Callable, Mapping
 from typing import TypeVar
 
-from cmk.agent_based.v2alpha import startswith
-from cmk.agent_based.v2alpha.type_defs import StringTable
+from cmk.agent_based.v2 import startswith
+from cmk.agent_based.v2.type_defs import StringTable
 
 from .temperature import to_celsius
 

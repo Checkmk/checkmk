@@ -9,7 +9,7 @@ from typing import assert_never
 import cmk.utils.debug
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     InventoryPlugin,

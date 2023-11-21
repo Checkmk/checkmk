@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2alpha import all_of, contains, equals, exists, startswith
+from cmk.agent_based.v2 import all_of, contains, equals, exists, startswith
 
 DETECT_VPLEX = all_of(
     equals(".1.3.6.1.2.1.1.1.0", ""),

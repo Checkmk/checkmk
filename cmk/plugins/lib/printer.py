@@ -9,16 +9,8 @@
 """
 
 
-from cmk.agent_based.v2alpha import (
-    all_of,
-    any_of,
-    check_levels,
-    contains,
-    exists,
-    Service,
-    startswith,
-)
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import all_of, any_of, check_levels, contains, exists, Service, startswith
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 
 Section = dict[str, int]
 

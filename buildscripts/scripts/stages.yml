@@ -148,6 +148,9 @@ VARIABLES:
     - NAME: CHANGED_CMK_MKP_TOOL_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-mkp-tool/' || true"
 
+    - NAME: CHANGED_CMK_LIVESTATUS_CLIENT_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-livestatus-client/' || true"
+
     - NAME: CHANGED_RULESETS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmk-rulesets/' || true"
 
@@ -423,6 +426,13 @@ STAGES:
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-mkp-tool.txt"
       TEXT_ON_SKIP: 'No cmk-mkp-tool files changed'
       RESULT_CHECK_FILE_PATTERN: "results/cmk-mkp-tool.txt"
+
+    - NAME: 'Package cmk-livestatus-client'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMK_LIVESTATUS_CLIENT_FILES
+      DIR: 'packages/cmk-livestatus-client'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmk-livestatus-client.txt"
+      TEXT_ON_SKIP: 'No cmk-livestatus-client files changed'
+      RESULT_CHECK_FILE_PATTERN: "results/cmk-livestatus-client.txt"
 
     - NAME: 'Package cmk-rulesets'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_RULESETS_FILES

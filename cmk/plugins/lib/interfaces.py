@@ -25,7 +25,7 @@ from typing import Any, assert_never, Literal, ParamSpec, TypeVar
 import pydantic
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     check_levels,
     check_levels_predictive,
     get_average,

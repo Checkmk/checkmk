@@ -4,20 +4,24 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
+#[derive(Debug)]
 pub struct Bounds<T> {
     pub min: T,
     pub max: T,
 }
 
+#[derive(Debug, PartialEq)]
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
 }
 
+#[derive(Debug)]
 pub struct LowerLevels<T> {
     pub levels: Levels<T>,
 }
 
+#[derive(Debug)]
 pub struct UpperLevels<T> {
     pub levels: Levels<T>,
 }
@@ -26,11 +30,9 @@ impl<T> LowerLevels<T>
 where
     T: PartialOrd,
 {
-    pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
-        if warn >= crit {
-            Ok(Self {
-                levels: Levels { warn, crit },
-            })
+    pub fn try_new(levels: Levels<T>) -> Result<Self, Box<dyn std::error::Error>> {
+        if levels.warn >= levels.crit {
+            Ok(Self { levels })
         } else {
             Err(Box::from("bad values"))
         }
@@ -45,21 +47,15 @@ where
             State::Ok
         }
     }
-
-    pub fn check(&self, value: &T, summary: String) -> CheckResult {
-        CheckResult::new(self.evaluate(value), summary)
-    }
 }
 
 impl<T> UpperLevels<T>
 where
     T: PartialOrd,
 {
-    pub fn try_new(warn: T, crit: T) -> Result<Self, Box<dyn std::error::Error>> {
-        if crit >= warn {
-            Ok(Self {
-                levels: Levels { warn, crit },
-            })
+    pub fn try_new(levels: Levels<T>) -> Result<Self, Box<dyn std::error::Error>> {
+        if levels.crit >= levels.warn {
+            Ok(Self { levels })
         } else {
             Err(Box::from("bad values"))
         }
@@ -74,13 +70,25 @@ where
             State::Ok
         }
     }
+}
 
-    pub fn check(&self, value: &T, summary: String) -> CheckResult {
+pub trait LevelsCheck<T> {
+    fn check(&self, value: &T, summary: String) -> CheckResult;
+}
+
+impl<T: PartialOrd> LevelsCheck<T> for LowerLevels<T> {
+    fn check(&self, value: &T, summary: String) -> CheckResult {
         CheckResult::new(self.evaluate(value), summary)
     }
 }
 
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+impl<T: PartialOrd> LevelsCheck<T> for UpperLevels<T> {
+    fn check(&self, value: &T, summary: String) -> CheckResult {
+        CheckResult::new(self.evaluate(value), summary)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
     Ok,
     Warn,
@@ -99,11 +107,8 @@ impl Display for State {
     }
 }
 
-pub struct Metric<T>
-where
-    // hack to bound T to numeric values
-    T: Into<f64>,
-{
+#[derive(Debug)]
+pub struct Metric<T> {
     label: String,
     value: T,
     uom: Option<String>,
@@ -111,13 +116,13 @@ where
     bounds: Option<Bounds<T>>,
 }
 
-impl<T: Into<f64> + Default + Display> Metric<T> {
+impl<T: Default + Display> Metric<T> {
     pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
         MetricBuilder::new(label, value)
     }
 }
 
-impl<T: Into<f64> + Display> Display for Metric<T> {
+impl<T: Display> Display for Metric<T> {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(
             f,
@@ -141,7 +146,8 @@ impl<T: Into<f64> + Display> Display for Metric<T> {
     }
 }
 
-pub struct MetricBuilder<T: Into<f64>> {
+#[derive(Debug)]
+pub struct MetricBuilder<T> {
     label: String,
     value: T,
     uom: Option<String>,
@@ -149,7 +155,7 @@ pub struct MetricBuilder<T: Into<f64>> {
     bounds: Option<Bounds<T>>,
 }
 
-impl<T: Into<f64>> MetricBuilder<T> {
+impl<T> MetricBuilder<T> {
     pub fn new(label: &str, value: T) -> Self {
         Self {
             label: label.to_string(),
@@ -186,6 +192,7 @@ impl<T: Into<f64>> MetricBuilder<T> {
     }
 }
 
+#[derive(Debug)]
 pub struct CheckResult {
     state: State,
     summary: String,
@@ -211,6 +218,10 @@ impl CheckResult {
     pub fn unknown(summary: String) -> Self {
         Self::new(State::Unknown, summary)
     }
+
+    pub fn from_levels<T>(levels: &impl LevelsCheck<T>, value: &T, summary: String) -> Self {
+        levels.check(value, summary)
+    }
 }
 
 impl Default for CheckResult {
@@ -235,6 +246,7 @@ impl Display for CheckResult {
     }
 }
 
+#[derive(Debug)]
 pub struct Writer {
     state: State,
     summary: String,
@@ -296,7 +308,7 @@ impl From<Vec<CheckResult>> for Writer {
 
 #[cfg(test)]
 mod test_metrics_display {
-    use super::{Levels, Metric, MetricBuilder};
+    use super::{Bounds, Levels, Metric, MetricBuilder};
 
     #[test]
     fn test_default() {
@@ -336,16 +348,16 @@ mod test_metrics_display {
 
     #[test]
     fn test_chain_all() {
-        // We have no Bounds implementation, yet
         assert_eq!(
             format!(
                 "{}",
                 MetricBuilder::<u32>::new("name", 42)
                     .uom("ms")
                     .levels(Levels { warn: 24, crit: 42 })
+                    .bounds(Bounds { min: 0, max: 100 })
                     .build()
             ),
-            "name=42ms;24;42;;"
+            "name=42ms;24;42;0;100"
         );
     }
 }

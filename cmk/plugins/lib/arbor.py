@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2alpha import startswith
-from cmk.agent_based.v2alpha.type_defs import StringTable
+from cmk.agent_based.v2 import startswith
+from cmk.agent_based.v2.type_defs import StringTable
 
 from .cpu import Load, Section
 

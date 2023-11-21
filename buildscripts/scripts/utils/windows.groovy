@@ -69,10 +69,12 @@ def build(Map args) {
         if (artifacts != '') {
             dir(artifacts_dir) {
                 if (args.STASH_NAME == null ) {
-                    archiveArtifacts(
-                        artifacts: artifacts,
-                        fingerprint: true,
-                    );
+                    show_duration("archiveArtifacts") {
+                        archiveArtifacts(
+                            artifacts: artifacts,
+                            fingerprint: true,
+                        );
+                    }
                 } else {
                     stash(
                         name: args.STASH_NAME,

@@ -16,7 +16,9 @@ def main() {
         }
 
         stage("Archive reports") {
-            archiveArtifacts(artifacts: "mypy_reports/**");
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(artifacts: "mypy_reports/**");
+            }
         }
 
         stage("Analyse Issues") {

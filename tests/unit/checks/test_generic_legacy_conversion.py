@@ -801,7 +801,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "hyperv_vmstatus",
         "ibm_imm_fan",
         "ibm_imm_health",
-        "ibm_imm_temp",
         "ibm_imm_voltage",
         "ibm_mq_channels",
         "ibm_mq_managers",

@@ -165,10 +165,10 @@ def test_single_site_connection_socketurl(
 ) -> None:
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
-            livestatus._parse_socket_url(socket_url)
+            livestatus.parse_socket_url(socket_url)
         return
 
-    assert livestatus._parse_socket_url(socket_url) == result
+    assert livestatus.parse_socket_url(socket_url) == result
 
 
 @pytest.mark.parametrize("tls", [True, False])

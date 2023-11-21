@@ -8,8 +8,8 @@ from typing import Literal
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import Metric, render, Result, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import Metric, render, Result, State
+from cmk.agent_based.v2.type_defs import CheckResult
 
 _LevelsMode = Literal["abs_used", "abs_free", "perc_used", "perc_free"]
 MemoryLevels = tuple[_LevelsMode, tuple[float | None, float | None]]

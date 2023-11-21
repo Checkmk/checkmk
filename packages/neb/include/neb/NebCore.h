@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -247,7 +248,7 @@ public:
     std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
 
 private:
-    Logger *_logger_livestatus;
+    Logger *_logger;
     const NagiosPathConfig _paths;
     const NagiosLimits _limits;
     const NagiosAuthorization _authorization;
@@ -279,6 +280,10 @@ private:
 
     void *implInternal() const override { return const_cast<NebCore *>(this); }
 
+    void logRequest(const std::string &line,
+                    const std::list<std::string> &lines);
+    bool handleGet(InputBuffer &input, OutputBuffer &output,
+                   const std::string &line, const std::string &table_name);
     void answerCommandRequest(const ExternalCommand &command);
     void answerCommandMkLogwatchAcknowledge(const ExternalCommand &command);
     void answerCommandDelCrashReport(const ExternalCommand &command);

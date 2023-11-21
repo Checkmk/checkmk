@@ -96,6 +96,25 @@ def test_parse(section: Section) -> None:
     assert section == expected_section
 
 
+def test_parse_ignores_additional_enable_attribute() -> None:
+    string_table = [
+        ["nodename", "lllllllll"],
+        ["csslocal", "NAME=ooo.ooooooooooooo.oo"],
+        ["csslocal", "TYPE=rrr.rrrrrrrrr.rrrr"],
+        ["csslocal", "ENABLED=1"],
+        ["csslocal", "STATE=ONLINE"],
+        ["csslocal", "TARGET=ONLINE"],
+    ]
+    assert parse_oracle_crs_res(string_table) == Section(
+        crs_nodename="lllllllll",
+        resources={
+            "ooo.ooooooooooooo.oo": {
+                "csslocal": Resource(type="rrr.rrrrrrrrr.rrrr", state="ONLINE", target="ONLINE")
+            }
+        },
+    )
+
+
 def test_discover(section: Section) -> None:
     services = list(discover_oracle_crs_res(section))
     assert services == [

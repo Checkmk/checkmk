@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import all_of, Service, startswith, type_defs
+from cmk.agent_based.v2 import all_of, Service, startswith, type_defs
 
 Variable = list[str]
 DiscoveryParams = Mapping[str, bool]

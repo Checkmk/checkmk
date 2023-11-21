@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2alpha import Result, Service, State, type_defs
+from cmk.agent_based.v2 import Result, Service, State, type_defs
 
 CPUSection = TypedDict(
     "CPUSection",

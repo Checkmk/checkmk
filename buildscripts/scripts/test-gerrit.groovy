@@ -114,7 +114,9 @@ def main() {
                         stopProcessingIfError: true,
                 )])
 
-                archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                show_duration("archiveArtifacts") {
+                    archiveArtifacts(allowEmptyArchive: true, artifacts: 'results/*');
+                }
                 sh("scripts/run-in-docker.sh make workspaceclean");
             }
         }

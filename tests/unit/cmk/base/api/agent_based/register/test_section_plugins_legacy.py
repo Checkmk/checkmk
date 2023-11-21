@@ -44,12 +44,12 @@ def test_create_agent_parse_function() -> None:
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             old_school_parse_function,
             expected_annotations={(str, "str")},  # irrelevant in test
         )
 
-    section_plugins._validate_parse_function(
+    section_plugins.validate_parse_function(
         compliant_parse_function,
         expected_annotations={(StringTable, "StringTable")},
     )
@@ -65,12 +65,12 @@ def test_create_snmp_parse_function() -> None:
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
-        section_plugins._validate_parse_function(
+        section_plugins.validate_parse_function(
             old_school_parse_function,
             expected_annotations={(str, "str")},  # irrelevant in test
         )
 
-    section_plugins._validate_parse_function(
+    section_plugins.validate_parse_function(
         compliant_parse_function,
         expected_annotations={(str, "str")},  # irrel. in test, SNMP parse function is not annotated
     )

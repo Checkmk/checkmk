@@ -20,8 +20,9 @@ from cmk.utils.metrics import MetricName
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.type_defs import GraphRenderOptions, VisualContext
+from cmk.gui.type_defs import VisualContext
 
+from ._graph_render_config import GraphRenderOptions
 from ._type_defs import (
     GraphConsoldiationFunction,
     GraphPresentation,

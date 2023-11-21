@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.agent_based.v2alpha import IgnoreResults, Metric, Result, Service, ServiceLabel, State
+from cmk.agent_based.v2 import IgnoreResults, Metric, Result, Service, ServiceLabel, State
 from cmk.plugins.lib import interfaces
 
 CheckResults = Sequence[Result | Metric | IgnoreResults]

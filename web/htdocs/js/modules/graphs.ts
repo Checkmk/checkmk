@@ -18,6 +18,13 @@ type LazyString = string; // not sure how teal with this for the moment
 export type HorizontalRule = [number, string, string, string | LazyString];
 type SizePT = number;
 
+interface GraphTitleFormat {
+    plain: boolean;
+    add_host_name: boolean;
+    add_host_alias: boolean;
+    add_service_description: boolean;
+}
+
 interface GraphRenderConfig {
     border_width: number;
     color_gradient: number;
@@ -40,12 +47,7 @@ interface GraphRenderConfig {
     show_title: boolean | "inline";
     show_vertical_axis: boolean;
     size: [bigint, bigint];
-    title_format: (
-        | "plain"
-        | "add_host_name"
-        | "add_host_alias"
-        | "add_service_description"
-    )[];
+    title_format: GraphTitleFormat;
     vertical_axis_width: "fixed" | ["explicit", SizePT];
 }
 

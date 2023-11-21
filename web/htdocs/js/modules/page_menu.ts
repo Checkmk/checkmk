@@ -52,6 +52,19 @@ function toggle_dropdown_enabled(id: string, enabled: boolean) {
     }
 }
 
+export function toggle_down_duration_button(id: string) {
+    const active_elements = document.getElementsByClassName(
+        "button duration active"
+    );
+    if (active_elements) {
+        for (const element of active_elements) {
+            element.classList.remove("active");
+        }
+    }
+    const target_button = document.getElementById(id);
+    utils.add_class(target_button, "active");
+}
+
 export function enable_menu_entry(id: string, enabled: boolean) {
     let from, to;
     if (enabled) {

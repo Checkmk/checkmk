@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.agent_based.v2alpha import all_of, exists, startswith
+from cmk.agent_based.v2 import all_of, exists, startswith
 
 DETECT = all_of(
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),

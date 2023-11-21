@@ -102,9 +102,6 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	tar -c -C $(REPO_PATH)/doc \
 	    --transform "s/^plugin-api\/build/plugin-api/" \
 	    plugin-api/build/html | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/
-	tar -c -C $(REPO_PATH)/livestatus/api \
-	    $(CHECK_MK_TAROPTS) \
-	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/livestatus/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
 	install -m 644 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman

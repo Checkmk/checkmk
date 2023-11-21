@@ -10,7 +10,7 @@ from typing import Any
 import freezegun
 import pytest
 
-from cmk.agent_based.v2alpha import GetRateError, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v2 import GetRateError, IgnoreResultsError, Metric, Result, State
 from cmk.plugins.lib import temperature
 
 UNIQUE_NAME = "unique_name"

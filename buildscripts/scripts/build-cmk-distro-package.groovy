@@ -33,7 +33,16 @@ def main() {
         "BAZEL_CACHE_URL=",
         "BAZEL_CACHE_USER=",
         "BAZEL_CACHE_PASSWORD="] : []);
+
+    def distro = params.DISTRO;
+    if (!distro) {
+        raise ("Job parameter DISTRO must be set to nonemtpy value.");
+    }
+
     def edition = params.EDITION;
+    if (!edition) {
+        raise ("Job parameter EDITION must be set to nonemtpy value.");
+    }
 
     // FIXME
     // def branch_name = versioning.safe_branch_name(scm);
@@ -50,9 +59,11 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
+        |DISTRO:................... │${DISTRO}│
         |distro:................... │${distro}│
         |edition:.................. │${edition}│
         |VERSION:.................. │${VERSION}│
+        |cmk_version:.............. │${cmk_version}│
         |branch_name:.............. │${branch_name}│
         |omd_env_vars:............. │${omd_env_vars}│
         |docker_tag:............... │${docker_tag}│
@@ -73,6 +84,9 @@ def main() {
 
                 dir("${checkout_dir}") {
                     sh("make buildclean");
+
+                    sh("find . -name *.pth -delete");
+
                     versioning.configure_checkout_folder(edition, cmk_version);
                 }
 
@@ -98,7 +112,7 @@ def main() {
                         sh("find .");
                         sh("cp *.deb *.rpm ${checkout_dir}/agents/");
                         sh("mkdir -p ${checkout_dir}/agents/linux");
-                        sh("cp cmk-agent-ctl* ${checkout_dir}/agents/linux/");
+                        sh("cp cmk-agent-ctl* check-sql ${checkout_dir}/agents/linux/");
                         if (edition != "raw") {
                             sh("cp cmk-update-agent* ${checkout_dir}/enterprise/agents/plugins/");
                         }
@@ -122,6 +136,7 @@ def main() {
                     dir("${checkout_dir}/artifacts/winagt-build") {
                         sh("find .");
                         sh("mkdir -p ${checkout_dir}/agents/windows");
+                        // TODO: SPoT!!
                         sh("""cp \
                             check_mk_agent-64.exe \
                             check_mk_agent.exe \
@@ -130,6 +145,8 @@ def main() {
                             check_mk.user.yml \
                             OpenHardwareMonitorLib.dll \
                             OpenHardwareMonitorCLI.exe \
+                            check-sql.exe \
+                            robotmk_ext.exe \
                             windows_files_hashes.txt \
                             ${checkout_dir}/agents/windows/
                         """);
@@ -221,10 +238,12 @@ def main() {
             setCustomBuildProperty(
                 key: "path_hashes",
                 value: scm_directory_hashes(scm.extensions));
-            archiveArtifacts(
-                artifacts: "*.deb,*.rpm,*.cma",
-                fingerprint: true,
-            );
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: "*.deb,*.rpm,*.cma",
+                    fingerprint: true,
+                );
+            }
         }
     }
 }

@@ -27,11 +27,11 @@ from cmk.utils.servicename import ServiceName
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import _color as graphing_color
 from cmk.gui.graphing import _unit_info as graphing_unit_info
 from cmk.gui.graphing import _utils as graphing_utils
 from cmk.gui.graphing import parse_perfometers, perfometer_info
+from cmk.gui.graphing._graph_render_config import GraphRenderConfig
 from cmk.gui.graphing._graph_specification import (
     CombinedSingleMetricSpec,
     GraphMetric,
@@ -44,10 +44,6 @@ from cmk.gui.graphing._html_render import (
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.http import request
-from cmk.gui.i18n import _
-
-PerfometerExpression = str | int | float
-RequiredMetricNames = set[str]
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -229,21 +225,9 @@ def page_graph_dashlet(
     ],
 ) -> None:
     """Registered as `graph_dashlet`."""
-    spec = request.var("spec")
-    if not spec:
-        raise MKUserError("spec", _("Missing spec parameter"))
-    graph_specification = parse_raw_graph_specification(
-        json.loads(request.get_str_input_mandatory("spec"))
-    )
-
-    render = request.var("render")
-    if not render:
-        raise MKUserError("render", _("Missing render parameter"))
-    custom_graph_render_options = json.loads(request.get_str_input_mandatory("render"))
-
     host_service_graph_dashlet_cmk(
-        graph_specification,
-        custom_graph_render_options,
+        parse_raw_graph_specification(json.loads(request.get_str_input_mandatory("spec"))),
+        GraphRenderConfig.model_validate_json(request.get_str_input_mandatory("config")),
         resolve_combined_single_metric_spec,
         graph_display_id=request.get_str_input_mandatory("id"),
     )

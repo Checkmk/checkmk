@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import NamedTuple
 
-from cmk.agent_based.v2alpha import any_of, equals, State
+from cmk.agent_based.v2 import any_of, equals, State
 
 
 class VirtualService(NamedTuple):

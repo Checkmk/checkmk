@@ -7,7 +7,7 @@ import dataclasses
 import datetime
 import typing
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     check_levels,
     check_levels_predictive,
     contains,

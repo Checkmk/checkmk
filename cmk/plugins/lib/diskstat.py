@@ -16,7 +16,7 @@ from collections.abc import (
 )
 from typing import Any, DefaultDict, TypedDict
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     check_levels,
     check_levels_predictive,
     get_average,

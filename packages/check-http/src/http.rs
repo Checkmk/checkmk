@@ -1,7 +1,7 @@
 use std::time::{Duration, Instant};
 
 pub use client::{ClientConfig, ForceIP, OnRedirect};
-pub use request::{ProcessedResponse, RequestConfig};
+pub use request::{Body, ProcessedResponse, RequestConfig};
 
 mod client;
 mod request;

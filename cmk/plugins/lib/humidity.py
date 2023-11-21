@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import check_levels, render, type_defs
+from cmk.agent_based.v2 import check_levels, render, type_defs
 
 CheckParams = None | Mapping[str, Any] | list[float] | None | tuple[float, float, float, float]
 

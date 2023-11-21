@@ -2,14 +2,13 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use bytes::Bytes;
 use http::HeaderValue;
 use httpdate::parse_http_date;
 use reqwest::{Error as ReqwestError, StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
-use crate::http::{OnRedirect, ProcessedResponse};
+use crate::http::{Body, OnRedirect, ProcessedResponse};
 
 // check_http allows specification of
 // * no levels/bounds
@@ -351,7 +350,7 @@ fn check_status(
 }
 
 fn check_body(
-    body: Option<Result<Bytes, ReqwestError>>,
+    body: Option<Result<Body, ReqwestError>>,
     page_size_limits: Option<Bounds<usize>>,
 ) -> Vec<Option<CheckResult>> {
     let Some(body) = body else {
@@ -359,7 +358,7 @@ fn check_body(
     };
 
     match body {
-        Ok(bd) => check_page_size(bd.len(), page_size_limits),
+        Ok(bd) => check_page_size(bd.length, page_size_limits),
         Err(_) => notice(State::Crit, "Error fetching the reponse body"),
     }
 }

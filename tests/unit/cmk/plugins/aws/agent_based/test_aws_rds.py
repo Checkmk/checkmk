@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2alpha import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.aws.agent_based.aws_rds import (
     check_aws_rds,
     check_aws_rds_agent_jobs,

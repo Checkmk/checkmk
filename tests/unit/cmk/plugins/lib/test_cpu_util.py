@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2alpha import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.lib import cpu_util
 
 pytestmark = pytest.mark.checks

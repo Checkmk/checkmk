@@ -653,7 +653,7 @@ metric_info["aws_dynamodb_consumed_rcu_perc"] = {
 
 metric_info["aws_dynamodb_consumed_wcu"] = {
     "title": _l("Average consumption"),
-    "unit": "RCU",
+    "unit": "WCU",
     "color": "41/a",
 }
 
@@ -677,13 +677,13 @@ metric_info["aws_dynamodb_maximum_consumed_rcu"] = {
 
 metric_info["aws_dynamodb_minimum_consumed_wcu"] = {
     "title": _l("Minimum single-request consumption"),
-    "unit": "RCU",
+    "unit": "WCU",
     "color": "31/b",
 }
 
 metric_info["aws_dynamodb_maximum_consumed_wcu"] = {
     "title": _l("Maximum single-request consumption"),
-    "unit": "RCU",
+    "unit": "WCU",
     "color": "15/a",
 }
 

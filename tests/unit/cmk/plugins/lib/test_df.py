@@ -9,8 +9,8 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2alpha import Metric, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult
 from cmk.plugins.lib import df
 
 

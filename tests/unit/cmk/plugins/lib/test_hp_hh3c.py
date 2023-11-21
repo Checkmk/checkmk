@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.agent_based.v2alpha import Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib import hp_hh3c
 
 

@@ -39,7 +39,6 @@ get_candidates_from_filesystem() {
         SEARCH+=" enterprise/bin"
         SEARCH+=" packages/cmc/test"
     fi
-    SEARCH+=" livestatus/api/python"
     SEARCH+=" locale"
     SEARCH+=" notifications"
     # Do not search whole omd/ because it may contain unpacked sub-packages

@@ -21,14 +21,14 @@ import os
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import ModuleType
-from typing import Final, Generic, Protocol, TypeVar
+from typing import Final, Generic, Hashable, Protocol, TypeVar
 
 PLUGIN_NAMESPACES = ("cmk.plugins", "cmk_addons.plugins")
 
 
 class _PluginProtocol(Protocol):
     @property
-    def name(self) -> str:
+    def name(self) -> Hashable:
         ...
 
 
@@ -147,7 +147,7 @@ class Collector(Generic[_PluginType]):
 
         self.errors: list[Exception] = []
         self._unique_plugins: dict[
-            tuple[type[_PluginType], str], tuple[PluginLocation, _PluginType]
+            tuple[type[_PluginType], Hashable], tuple[PluginLocation, _PluginType]
         ] = {}
 
     @property

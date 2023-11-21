@@ -73,6 +73,9 @@ def _base_site_demo(site_factory_demo):
     yield from site_factory_demo.get_test_site(site_name, save_results=False)
 
 
+@pytest.mark.skip(
+    reason="Backup currently using v2.2.0. It needs to be re-generated with at least 2.2.0p8"
+)  # TODO: re-generate backup file
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in ("sles-15sp4", "sles-15sp5"),
     reason="Test currently failing for missing `php7`. "
@@ -146,6 +149,9 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
         assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
 
 
+@pytest.mark.skip(
+    reason="Backup currently using v2.2.0p4. It needs to be re-generated with at least 2.2.0p8"
+)  # TODO: re-generate backup file
 @skip_if_not_cloud_edition
 @pytest.mark.skipif(
     os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),

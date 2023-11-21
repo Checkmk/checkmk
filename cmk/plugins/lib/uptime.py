@@ -6,8 +6,8 @@ import time
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2alpha import check_levels, render, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult
+from cmk.agent_based.v2 import check_levels, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 
 
 class Section(NamedTuple):

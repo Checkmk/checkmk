@@ -25,7 +25,6 @@ def main() {
     // def branch_name = versioning.safe_branch_name(scm);
     def branch_name = "master";
 
-    def branch_version = versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
@@ -113,10 +112,12 @@ def main() {
                 value: directory_hashes(["agents", "enterprise/agents/plugins"]));
         }
         dir("${WORKSPACE}/build") {
-            archiveArtifacts(
-                artifacts: "**/*",
-                fingerprint: true,
-            );
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: "**/*",
+                    fingerprint: true,
+                );
+            }
         }
     }
 }

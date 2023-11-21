@@ -121,6 +121,7 @@ async fn test_find_all_instances_remote() {
     }
 }
 
+/// Todo(sk): split this test on per section basis.
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
@@ -132,9 +133,11 @@ async fn test_validate_all_instances_remote() {
         let cfg = check_sql::config::ms_sql::Config::from_yaml(&r[0])
             .unwrap()
             .unwrap();
+        assert!(is.len() >= 3, "we need at least 3 instances to check");
         for i in is {
             match i.create_client(&cfg.endpoint(), None).await {
                 Ok(mut c) => {
+                    validate_database_names(&i, &mut c).await;
                     assert!(
                         tools::run_get_version(&mut c).await.is_some()
                             && api::get_computer_name(&mut c)
@@ -154,6 +157,9 @@ async fn test_validate_all_instances_remote() {
                     validate_table_spaces(&i, &mut c, &cfg.endpoint()).await;
                     validate_backup(&i, &mut c).await;
                     validate_transaction_logs(&i, &mut c, &cfg.endpoint()).await;
+                    validate_datafiles(&i, &mut c, &cfg.endpoint()).await;
+                    validate_databases(&i, &mut c).await;
+                    validate_databases_error(&i, &mut c).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -163,6 +169,13 @@ async fn test_validate_all_instances_remote() {
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
     }
+}
+
+async fn validate_database_names(instance: &InstanceEngine, client: &mut Client) {
+    let databases = instance.generate_databases(client).await;
+    let expected = expected_databases();
+    // O^2, but good enough for testing
+    assert!(expected.iter().all(|item| databases.contains(item)),);
 }
 
 async fn validate_counters(instance: &InstanceEngine, client: &mut Client) {
@@ -200,13 +213,13 @@ async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client
             l
         );
         let values = l.split('|').collect::<Vec<&str>>();
-        assert!(values[2].parse::<u64>().is_ok(), "bad line: {}", l);
+        assert!(values[2].parse::<u64>().is_ok(), "wrong: {l}");
         assert!(
             values[1].is_empty() || values[1].parse::<u64>().is_ok(),
             "bad line: {}",
             l
         );
-        assert!(!values[3].is_empty(), "bad line: {}", l);
+        assert!(!values[3].is_empty(), "wrong: {l}");
     }
 }
 
@@ -216,17 +229,7 @@ async fn validate_table_spaces(
     endpoint: &Endpoint,
 ) {
     let databases = instance.generate_databases(client).await;
-    let expected = vec!["master", "tempdb", "model", "msdb"];
-    // O^2, but enough good for testing
-    assert!(
-        expected
-            .iter()
-            .map(|&s| s.to_string())
-            .all(|item| databases.contains(&item)),
-        "{:?} {:?}",
-        databases,
-        expected
-    );
+    let expected = expected_databases();
 
     let result = instance
         .generate_table_spaces_section(endpoint, &databases, ' ')
@@ -236,13 +239,13 @@ async fn validate_table_spaces(
     assert!(lines[lines.len() - 1].is_empty());
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split(' ').collect::<Vec<&str>>();
-        assert_eq!(values[0], instance.mssql_name(), "bad line: {}", l);
-        assert!(values[2].parse::<f64>().is_ok(), "bad line: {}", l);
-        assert!(values[4].parse::<f64>().is_ok(), "bad line: {}", l);
-        assert!(values[6].parse::<u32>().is_ok(), "bad line: {}", l);
-        assert!(values[8].parse::<u32>().is_ok(), "bad line: {}", l);
-        assert!(values[10].parse::<u32>().is_ok(), "bad line: {}", l);
-        assert!(values[12].parse::<u32>().is_ok(), "bad line: {}", l);
+        assert_eq!(values[0], instance.mssql_name(), "wrong: {l}");
+        assert!(values[2].parse::<f64>().is_ok(), "wrong: {l}");
+        assert!(values[4].parse::<f64>().is_ok(), "wrong: {l}");
+        assert!(values[6].parse::<u32>().is_ok(), "wrong: {l}");
+        assert!(values[8].parse::<u32>().is_ok(), "wrong: {l}");
+        assert!(values[10].parse::<u32>().is_ok(), "wrong: {l}");
+        assert!(values[12].parse::<u32>().is_ok(), "wrong: {l}");
     }
 }
 
@@ -259,8 +262,8 @@ async fn validate_backup(instance: &InstanceEngine, client: &mut Client) {
     assert!(lines[lines.len() - 1].is_empty());
     for l in lines[..lines.len() - 2].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
-        assert_eq!(values.len(), 5, "bad line: {}", l);
-        assert_eq!(values[0], instance.mssql_name(), "bad line: {}", l);
+        assert_eq!(values.len(), 5, "wrong: {l}");
+        assert_eq!(values[0], instance.mssql_name(), "wrong: {l}");
         if to_be_found.contains(values[1]) {
             to_be_found.remove(values[1]);
         }
@@ -277,31 +280,116 @@ async fn validate_transaction_logs(
     client: &mut Client,
     endpoint: &Endpoint,
 ) {
+    let expected: HashSet<String> = expected_databases();
+
     let databases = instance.generate_databases(client).await;
-    let expected: HashSet<String> = ["master", "tempdb", "model", "msdb"]
-        .iter()
-        .map(|&s| s.to_string())
-        .collect();
+    let result = instance
+        .generate_transaction_logs_section(endpoint, &databases, '|')
+        .await;
+
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= expected.len(), "{:?}", lines);
+    assert!(lines[lines.len() - 1].is_empty());
     let mut found: HashSet<String> = HashSet::new();
+    for l in lines[..lines.len() - 1].iter() {
+        let values = l.split('|').collect::<Vec<&str>>();
+        assert_eq!(values[0], instance.name, "wrong: {l}");
+        if expected.contains(&values[1].to_string()) {
+            found.insert(values[1].to_string());
+        }
+        assert!(values[2].to_lowercase().ends_with("log"), "wrong: {l}");
+        assert!(values[3].starts_with("C:\\Program"), "wrong: {l}");
+        assert!(values[4].parse::<u64>().is_ok(), "wrong: {l}");
+        assert!(values[5].parse::<u64>().is_ok(), "wrong: {l}");
+        assert!(values[6].parse::<u64>().is_ok(), "wrong: {l}");
+        assert!(values[7].parse::<u64>().is_ok(), "wrong: {l}");
+    }
+    assert_eq!(found, expected);
+}
+
+async fn validate_datafiles(instance: &InstanceEngine, client: &mut Client, endpoint: &Endpoint) {
+    let expected: HashSet<String> = expected_databases();
+    let databases = instance.generate_databases(client).await;
 
     let result = instance
         .generate_transaction_logs_section(endpoint, &databases, '|')
         .await;
+
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
     assert!(lines[lines.len() - 1].is_empty());
+    let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
-        assert_eq!(values[0], instance.mssql_name(), "bad line: {}", l);
+        assert_eq!(values.len(), 8);
+        assert_eq!(values[0], instance.name, "wrong: {l}");
         if expected.contains(&values[1].to_string()) {
             found.insert(values[1].to_string());
         }
-        assert!(values[2].to_lowercase().ends_with("log"), "bad line: {}", l);
-        assert!(values[3].starts_with("C:\\Program"), "bad line: {}", l);
-        assert!(values[4].parse::<u64>().is_ok(), "bad line: {}", l);
-        assert!(values[5].parse::<u64>().is_ok(), "bad line: {}", l);
-        assert!(values[6].parse::<u64>().is_ok(), "bad line: {}", l);
-        assert!(values[7].parse::<u64>().is_ok(), "bad line: {}", l);
+        assert!(values[2].to_lowercase().ends_with("log"), "wrong: {l}");
+        assert!(values[3].starts_with("C:\\Program"), "wrong: {l}");
+        assert!(values[4].parse::<u64>().is_ok(), "wrong: {l}");
+        assert!(values[5].parse::<u64>().is_ok(), "wrong: {l}");
+        assert!(values[6].parse::<u64>().is_ok(), "wrong: {l}");
+        assert!(values[7].parse::<u64>().is_ok(), "wrong: {l}");
+    }
+    assert_eq!(found, expected);
+}
+
+async fn validate_databases(instance: &InstanceEngine, client: &mut Client) {
+    let expected: HashSet<String> = expected_databases();
+
+    let databases = instance.generate_databases(client).await;
+    let result = instance
+        .generate_databases_section(client, queries::QUERY_DATABASES, '|', &databases)
+        .await;
+
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= expected.len(), "{:?}", lines);
+    assert!(lines[lines.len() - 1].is_empty());
+    let mut found: HashSet<String> = HashSet::new();
+    for l in lines[..lines.len() - 1].iter() {
+        let values = l.split('|').collect::<Vec<&str>>();
+        assert_eq!(values.len(), 6);
+        assert_eq!(values[0], instance.name, "wrong: {l}");
+        if expected.contains(&values[1].to_string()) {
+            found.insert(values[1].to_string());
+        }
+        assert_eq!(values[2], "ONLINE", "wrong: {l}");
+        assert!(["SIMPLE", "FULL"].contains(&values[3]), "wrong: {l}");
+        assert!(
+            [0, 1].contains(&values[4].parse::<i32>().unwrap()),
+            "wrong: {l}",
+        );
+        assert!(
+            [0, 1].contains(&values[5].parse::<i32>().unwrap()),
+            "wrong: {l}",
+        );
+    }
+    assert_eq!(found, expected);
+}
+
+async fn validate_databases_error(instance: &InstanceEngine, client: &mut Client) {
+    let expected: HashSet<String> = expected_databases();
+
+    let databases = instance.generate_databases(client).await;
+    let result = instance
+        .generate_databases_section(client, queries::BAD_QUERY, '|', &databases)
+        .await;
+
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= expected.len(), "{:?}", lines);
+    assert!(lines[lines.len() - 1].is_empty());
+    let mut found: HashSet<String> = HashSet::new();
+    for l in lines[..lines.len() - 1].iter() {
+        let values = l.split('|').collect::<Vec<&str>>();
+        assert_eq!(values.len(), 6);
+        assert_eq!(values[0], instance.name, "wrong: {l}");
+        if expected.contains(&values[1].to_string()) {
+            found.insert(values[1].to_string());
+        }
+        assert!(values[2].contains(" error: "), "wrong: {l}");
+        assert_eq!(values[3..6], ["-", "-", "-"], "wrong: {l}");
     }
     assert_eq!(found, expected);
 }
@@ -607,4 +695,11 @@ mssql:
 
 fn update_config_in_dir(dir: &TempDir, content: &str) {
     tools::create_file_with_content(dir.path(), "check-sql.yml", content);
+}
+
+fn expected_databases() -> HashSet<String> {
+    ["master", "tempdb", "model", "msdb"]
+        .iter()
+        .map(|&s| s.to_string())
+        .collect()
 }

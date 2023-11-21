@@ -12,6 +12,8 @@ import traceback
 from collections.abc import Callable, Sequence
 from typing import Any
 
+from pydantic import ValidationError as PydanticValidationError
+
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
@@ -26,7 +28,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphRenderOptions, SizePT
+from cmk.gui.type_defs import SizePT
 
 from ._artwork import compute_graph_artwork, compute_graph_artwork_curves, GraphArtwork
 from ._graph_pdf import (
@@ -35,7 +37,7 @@ from ._graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from ._graph_render_config import GraphRenderConfigImage
+from ._graph_render_config import GraphRenderConfigImage, GraphRenderOptions, GraphTitleFormat
 from ._graph_specification import (
     CombinedSingleMetricSpec,
     GraphDataRange,
@@ -98,9 +100,9 @@ def _answer_graph_image_request(
         end_time = int(time.time())
         start_time = end_time - (25 * 3600)
 
-        graph_render_config = GraphRenderConfigImage.from_render_options_and_context(
-            graph_image_render_options(),
+        graph_render_config = GraphRenderConfigImage.from_user_context_and_options(
             user,
+            **graph_image_render_options(),
         )
 
         graph_data_range = graph_image_data_range(graph_render_config, start_time, end_time)
@@ -146,7 +148,12 @@ def graph_image_render_options(api_request: dict[str, Any] | None = None) -> Gra
         font_size=SizePT(8.0),
         resizable=False,
         show_controls=False,
-        title_format=("plain", "add_service_description"),
+        title_format=GraphTitleFormat(
+            plain=True,
+            add_host_name=False,
+            add_host_alias=False,
+            add_service_description=True,
+        ),
         interaction=False,
         size=(80, 30),  # ex
         # Specific for PDF rendering.
@@ -248,10 +255,13 @@ def graph_spec_from_request(
         [CombinedSingleMetricSpec], Sequence[GraphMetric]
     ],
 ) -> dict[str, Any]:
-    graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
-
     try:
+        graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)
         graph_recipe = graph_recipes[0]
+
+    except PydanticValidationError as e:
+        raise MKUserError(None, str(e))
+
     except IndexError:
         raise MKUserError(None, _("The requested graph does not exist"))
 

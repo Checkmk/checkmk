@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from html import escape
 from typing import Any, Literal
 
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     check_levels,
     get_average,
     get_rate,
@@ -31,7 +31,7 @@ from cmk.agent_based.v2alpha import (
     Service,
     State,
 )
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 
 from . import cpu, memory
 

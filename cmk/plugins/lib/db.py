@@ -9,7 +9,7 @@
 # This restriction is only working with newer agents, because we need an
 # additional parameter at end if each datafile
 
-from cmk.agent_based.v2alpha import render
+from cmk.agent_based.v2 import render
 
 
 def get_tablespace_levels_in_bytes(size_bytes, params):

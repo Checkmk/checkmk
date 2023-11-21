@@ -7,8 +7,8 @@ import json
 import time
 from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.v2alpha import render, Result, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, StringTable
+from cmk.agent_based.v2 import render, Result, State
+from cmk.agent_based.v2.type_defs import CheckResult, StringTable
 
 MerakiAPIData = Mapping[str, object]
 

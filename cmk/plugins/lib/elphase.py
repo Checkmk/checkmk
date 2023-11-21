@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import check_levels, render, Result, State, type_defs
+from cmk.agent_based.v2 import check_levels, render, Result, State, type_defs
 
 CheckParams = Mapping[str, Any] | None
 Sensor = Mapping[str, Any]

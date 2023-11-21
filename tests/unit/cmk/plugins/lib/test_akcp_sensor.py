@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.agent_based.v2alpha import Metric, Result, Service, State
-from cmk.agent_based.v2alpha.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib import akcp_sensor
 
 STRING_TABLE_1 = [["Dual Humidity Port 1", "30", "7", "1"]]

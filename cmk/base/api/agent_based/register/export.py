@@ -17,7 +17,7 @@ from cmk.agent_based.v1.type_defs import (
     StringByteTable,
     StringTable,
 )
-from cmk.agent_based.v2alpha import (
+from cmk.agent_based.v2 import (
     AgentSection,
     CheckPlugin,
     InventoryPlugin,
@@ -31,6 +31,12 @@ from ._discover import (
     register_check_plugin,
     register_inventory_plugin,
     register_snmp_section,
+)
+from .section_plugins import (
+    create_parse_annotation,
+    noop_agent_parse_function,
+    noop_snmp_parse_function,
+    validate_parse_function,
 )
 from .utils import get_validated_plugin_location
 
@@ -109,10 +115,13 @@ def agent_section(
                            superseded section will not be considered at all.
 
     """
+    if parse_function is not None:
+        validate_parse_function(parse_function, expected_annotations=create_parse_annotation())
+
     return register_agent_section(
         AgentSection(
             name=name,
-            parse_function=parse_function,
+            parse_function=noop_agent_parse_function if parse_function is None else parse_function,
             parsed_section_name=parsed_section_name,
             host_label_function=host_label_function,
             host_label_default_parameters=host_label_default_parameters,
@@ -226,12 +235,25 @@ def snmp_section(
                            superseded section will not be considered at all.
 
     """
+    if parse_function is not None:
+        validate_parse_function(
+            parse_function,
+            expected_annotations=create_parse_annotation(
+                needs_bytes=any(
+                    oid.encoding == "binary"
+                    for tree in (fetch if isinstance(fetch, list) else [fetch])
+                    for oid in tree.oids
+                ),
+                is_list=isinstance(fetch, list),
+            ),
+        )
+
     return register_snmp_section(
         SNMPSection(
             name=name,
             detect=detect,
             fetch=fetch,
-            parse_function=parse_function,  # type: ignore[arg-type]
+            parse_function=noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
             parsed_section_name=parsed_section_name,
             host_label_function=host_label_function,
             host_label_default_parameters=host_label_default_parameters,
@@ -244,7 +266,7 @@ def snmp_section(
             name=name,
             detect=detect,
             fetch=fetch,
-            parse_function=parse_function,  # type: ignore[arg-type]
+            parse_function=noop_snmp_parse_function if parse_function is None else parse_function,  # type: ignore[arg-type]
             parsed_section_name=parsed_section_name,
             host_label_function=host_label_function,
             host_label_default_parameters=host_label_default_parameters,

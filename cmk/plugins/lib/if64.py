@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2alpha import exists, OIDBytes, type_defs
+from cmk.agent_based.v2 import exists, OIDBytes, type_defs
 
 from . import interfaces
 

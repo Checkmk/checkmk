@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 import pytest
 
-from tests.testlib import SpecialAgent
+from cmk.plugins.aws.server_side_calls.aws import generate_aws_commands
+from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
 
 
 @pytest.mark.parametrize(
@@ -45,7 +46,7 @@ from tests.testlib import SpecialAgent
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                "strawberry098",
+                PlainTextSecret("strawberry098"),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-port",
@@ -53,7 +54,7 @@ from tests.testlib import SpecialAgent
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                "banana123",
+                PlainTextSecret("banana123"),
                 "--global-services",
                 "ce",
                 "--services",
@@ -87,13 +88,13 @@ from tests.testlib import SpecialAgent
                 "--access-key-id",
                 "strawberry",
                 "--secret-access-key",
-                ("store", "strawberry098", "%s"),
+                StoredSecret("strawberry098", "%s"),
                 "--proxy-host",
                 "1.1.1",
                 "--proxy-user",
                 "banana",
                 "--proxy-password",
-                ("store", "banana123", "%s"),
+                StoredSecret("banana123", "%s"),
                 "--hostname",
                 "testhost",
                 "--piggyback-naming-convention",
@@ -128,7 +129,9 @@ from tests.testlib import SpecialAgent
                         )
                     },
                     # special treatment of certain services?
-                    "cloudwatch": {"alarms": ("ut_ignored", ["ut_cloudwatch_alarms_tuple_1"])},
+                    "cloudwatch_alarms": {
+                        "alarms": ("ut_ignored", ["ut_cloudwatch_alarms_tuple_1"])
+                    },
                     "s3": {"requests": None},  # None if the option is active
                     "wafv2": {"cloudfront": None},  # same here
                 },
@@ -151,7 +154,7 @@ from tests.testlib import SpecialAgent
                 "--access-key-id",
                 "ut_access_key_id",
                 "--secret-access-key",
-                ("store", "ut_secret_access_key_store", "%s"),
+                StoredSecret("ut_secret_access_key_store", format="%s"),
                 "--global-service-region",
                 "ut_global_service_region",
                 "--assume-role",
@@ -197,10 +200,17 @@ from tests.testlib import SpecialAgent
     ],
 )
 def test_aws_argument_parsing(
-    params: Mapping[str, Any],
+    params: object,
     expected_args: Sequence[Any],
 ) -> None:
-    """Tests if all required arguments are present."""
-    agent = SpecialAgent("agent_aws")
-    arguments = agent.argument_func(params, "testhost", "address")
-    assert arguments == expected_args
+    (command,) = generate_aws_commands(
+        params,
+        HostConfig(
+            name="testhost",
+            address="unittest_address",
+            alias="unittest_alias",
+            ip_family=IPAddressFamily.IPV4,
+        ),
+        {},
+    )
+    assert command.command_arguments == expected_args

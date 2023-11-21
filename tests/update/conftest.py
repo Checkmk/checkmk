@@ -47,12 +47,15 @@ class BaseVersions:
         else "2.1.0p32"
     )
 
-    with open(Path(__file__).parent.resolve() / "base_versions.json", "r") as f:
-        BASE_VERSIONS_STR = json.load(f)
+    with open(Path(__file__).parent.resolve() / "base_versions_previous_branch.json", "r") as f:
+        BASE_VERSIONS_PB = json.load(f)
+
+    with open(Path(__file__).parent.resolve() / "base_versions_current_branch.json", "r") as f:
+        BASE_VERSIONS_CB = json.load(f)
 
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
-        for base_version_str in BASE_VERSIONS_STR
+        for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
     ]
     IDS = [
         f"from_{base_version.omd_version()}_to_{os.getenv('VERSION', 'daily')}"
@@ -214,6 +217,7 @@ def _get_site(
     if interactive:
         # bypass SiteFactory for interactive installations
         source_version = base_site.version.version_directory() if base_site else ""
+        source_version_short = base_site.version.version if base_site else ""
         target_version = version.version_directory()
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
         # install the release
@@ -232,8 +236,15 @@ def _get_site(
             )
 
         pexpect_dialogs = []
+        update_supported = False
+
         if update:
-            if version_supported(source_version):
+            update_supported = (
+                version_supported(source_version)
+                or source_version_short in BaseVersions.BASE_VERSIONS_CB
+            )
+
+            if update_supported:
                 logger.info("Updating to a supported version.")
                 pexpect_dialogs.extend(
                     [
@@ -288,7 +299,7 @@ def _get_site(
             logfile_path=logfile_path,
         )
 
-        if update and not version_supported(source_version):
+        if update and not update_supported:
             pytest.skip(f"{source_version} is not a supported version for {target_version}")
 
         assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"

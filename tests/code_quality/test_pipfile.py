@@ -339,6 +339,7 @@ CEE_UNUSED_PACKAGES = [
     "pykerberos",
     "pymssql",
     "pymysql",
+    "pyprof2calltree",
     "pyrsistent",
     "requests-kerberos",
     "requests-toolbelt",

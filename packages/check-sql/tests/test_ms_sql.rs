@@ -163,6 +163,8 @@ async fn test_validate_all_instances_remote() {
                     validate_clusters(&i, &mut c, &cfg.endpoint()).await;
                     validate_connections(&i, &mut c).await;
                     validate_connections_error(&i, &mut c).await;
+                    validate_jobs(&i, &cfg.endpoint()).await;
+                    validate_jobs_error(&i, &cfg.endpoint()).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -435,6 +437,42 @@ async fn validate_connections_error(instance: &InstanceEngine, client: &mut Clie
 
 async fn validate_clusters(_instance: &InstanceEngine, _client: &mut Client, _endpoint: &Endpoint) {
     // TODO(sk): implement it on arriving config
+}
+
+async fn validate_jobs(instance: &InstanceEngine, endpoint: &Endpoint) {
+    let result = instance
+        .generate_jobs_section(endpoint, queries::QUERY_JOBS, '\t')
+        .await;
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert_eq!(lines.len(), 3, "{:?}", lines);
+    assert_eq!(lines[0], instance.name);
+    assert!(lines[2].is_empty());
+    let values = lines[1].split('\t').collect::<Vec<&str>>();
+    assert!(
+        tiberius::Uuid::parse_str(values[0]).is_ok(),
+        "{:?}",
+        values[0]
+    );
+    for column in [2, 3, 4, 5, 7, 8, 9, 10] {
+        assert!(
+            values[column].parse::<u32>().is_ok(),
+            "{values:?} at {column} '{}'",
+            values[column]
+        );
+    }
+    assert!(values[11].len() > 10, "{values:?}");
+}
+
+async fn validate_jobs_error(instance: &InstanceEngine, endpoint: &Endpoint) {
+    let result = instance
+        .generate_jobs_section(endpoint, queries::BAD_QUERY, '\t')
+        .await;
+
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() == 2, "{:?}", lines);
+    assert!(lines.last().unwrap().is_empty());
+    assert!(lines[0].starts_with(&format!("{} ", instance.name)));
+    assert!(lines[0].contains(" error: "));
 }
 
 /// This test is ignored because it requires real credentials and real server

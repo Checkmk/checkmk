@@ -2,8 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use std::vec;
-
 use crate::config::{self, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
@@ -13,7 +11,7 @@ use std::collections::HashSet;
 
 #[cfg(windows)]
 use tiberius::SqlBrowser;
-use tiberius::{AuthMethod, Config, Query, Row};
+use tiberius::{AuthMethod, ColumnType, Config, Query, Row};
 use tokio::net::TcpStream;
 use tokio_util::compat::{Compat, TokioAsyncWriteCompatExt};
 
@@ -32,6 +30,7 @@ const DATAFILES_SECTION_NAME: &str = "datafiles";
 const DATABASES_SECTION_NAME: &str = "databases";
 const CLUSTERS_SECTION_NAME: &str = "clusters";
 const CONNECTIONS_SECTION_NAME: &str = "connections";
+const JOBS_SECTION_NAME: &str = "jobs";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -69,6 +68,7 @@ pub trait Column {
     fn get_optional_value_by_idx(&self, idx: usize) -> Option<String>;
     fn get_value_by_name(&self, idx: &str) -> String;
     fn get_optional_value_by_name(&self, idx: &str) -> Option<String>;
+    fn get_all(&self, sep: char) -> String;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -117,15 +117,17 @@ impl InstanceEngine {
                                 .generate_details_entry(&mut client, instance_section.sep())
                                 .await;
                         }
-                        COUNTERS_SECTION_NAME
-                        | BLOCKED_SESSIONS_SECTION_NAME
-                        | TABLE_SPACES_SECTION_NAME
-                        | BACKUP_SECTION_NAME
-                        | TRANSACTION_LOG_SECTION_NAME
-                        | DATAFILES_SECTION_NAME
-                        | DATABASES_SECTION_NAME
-                        | CLUSTERS_SECTION_NAME
-                        | CONNECTIONS_SECTION_NAME => {
+                        //COUNTERS_SECTION_NAME
+                        //| BLOCKED_SESSIONS_SECTION_NAME
+                        //| TABLE_SPACES_SECTION_NAME
+                        //| BACKUP_SECTION_NAME
+                        //| TRANSACTION_LOG_SECTION_NAME
+                        //| DATAFILES_SECTION_NAME
+                        //| DATABASES_SECTION_NAME
+                        //| CLUSTERS_SECTION_NAME
+                        //| CONNECTIONS_SECTION_NAME
+                        //|
+                        JOBS_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -238,6 +240,10 @@ impl InstanceEngine {
                 self.generate_connections_section(client, queries::QUERY_CONNECTIONS, sep)
                     .await
             }
+            JOBS_SECTION_NAME => {
+                self.generate_jobs_section(endpoint, queries::QUERY_JOBS, sep)
+                    .await
+            }
             _ => format!("{} not implemented\n", name).to_string(),
         }
     }
@@ -291,7 +297,7 @@ impl InstanceEngine {
     ) -> String {
         let format_error = |d: &str, e: &anyhow::Error| {
             format!(
-                "{}{sep}{} - - - - - - - - - - - - {:?}\n",
+                "{} {} - - - - - - - - - - - - {:?}\n",
                 self.mssql_name(),
                 d.replace(' ', "_"),
                 e
@@ -553,6 +559,29 @@ impl InstanceEngine {
             })
             .collect::<Vec<String>>()
             .join("")
+    }
+
+    /// NOTE: uses ' ' instead of '\t' in error messages
+    pub async fn generate_jobs_section(
+        &self,
+        endpoint: &config::ms_sql::Endpoint,
+        query: &str,
+        sep: char,
+    ) -> String {
+        match self.create_client(endpoint, Some("msdb".to_string())).await {
+            Ok(mut c) => run_query(&mut c, query)
+                .await
+                .and_then(validate_rows)
+                .map(|rows| format!("{}\n{}\n", self.name, self.to_jobs_entry(&rows, sep)))
+                .unwrap_or_else(|e| format!("{} {:?}\n", self.name, e)),
+            Err(err) => format!("{} {:?}\n", self.name, err),
+        }
+    }
+
+    /// rows must be not empty
+    fn to_jobs_entry(&self, rows: &[Vec<Row>], sep: char) -> String {
+        let rows = &rows[0];
+        rows[0].get_all(sep)
     }
 
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
@@ -913,6 +942,33 @@ impl Column for Row {
         self.try_get::<&str, &str>(idx)
             .unwrap_or_default()
             .map(str::to_string)
+    }
+
+    fn get_all(&self, sep: char) -> String {
+        let columns = self.columns();
+        columns
+            .iter()
+            .map(|c| match c.column_type() {
+                ColumnType::Int1
+                | ColumnType::Int2
+                | ColumnType::Int4
+                | ColumnType::Int8
+                | ColumnType::Intn => self.get_bigint_by_name(c.name()).to_string(),
+                ColumnType::Guid => format!(
+                    "{{{}}}",
+                    self.try_get::<tiberius::Uuid, &str>(c.name())
+                        .unwrap_or_default()
+                        .unwrap_or_default()
+                        .to_string()
+                        .to_ascii_uppercase()
+                ),
+                ColumnType::BigChar | ColumnType::BigVarChar | ColumnType::NVarchar => {
+                    self.get_value_by_name(c.name())
+                }
+                _ => format!("Unsupported '{:?}'", c.column_type()),
+            })
+            .collect::<Vec<String>>()
+            .join(&sep.to_string())
     }
 }
 

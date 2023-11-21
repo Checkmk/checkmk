@@ -871,7 +871,7 @@ def test_openapi_discovery_refresh_services(
     )
     assert (
         resp.location
-        == "/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
+        == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
     assert mock_discovery_preview.mock_calls == [
         call("example.com", prevent_fetching=True, raise_errors=False),

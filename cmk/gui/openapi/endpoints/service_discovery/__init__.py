@@ -13,7 +13,6 @@ You can find an introduction to services including service discovery in the
 import enum
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never
-from urllib.parse import urlparse
 
 from cmk.utils.everythingtype import EVERYTHING
 
@@ -343,7 +342,7 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
 
     if job.is_active():
         response = Response(status=302)
-        response.location = urlparse(request.url).path
+        response.location = request.url
         return response
     return Response(status=204)
 
@@ -456,7 +455,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
             response = Response(status=302)
-            response.location = urlparse(discovery_run["href"]).path
+            response.location = discovery_run["href"]
             return response
         case APIDiscoveryAction.only_host_labels:
             discovery_result = perform_host_label_discovery(

@@ -18,7 +18,6 @@ You can find an introduction to the configuration of Checkmk including activatio
 from collections.abc import Mapping
 from dataclasses import asdict
 from typing import Any
-from urllib.parse import urlparse
 
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import request, Response
@@ -129,7 +128,7 @@ def activate_changes(params: Mapping[str, Any]) -> Response:
     if body["redirect"]:
         wait_for = _completion_link(activation_response.activation_id)
         response = Response(status=302)
-        response.location = urlparse(wait_for["href"]).path
+        response.location = wait_for["href"]
         return response
 
     return serve_json(_activation_run_domain_object(activation_response))
@@ -197,7 +196,7 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
-        response.location = urlparse(request.url).path
+        response.location = request.url
         return response
 
     return Response(status=204)

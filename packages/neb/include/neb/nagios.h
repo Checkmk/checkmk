@@ -78,6 +78,8 @@ inline char *const &nagios_compat_service_check_command(const service &s) {
 }
 
 inline int nagios_compat_submit_external_command(const char *cmd) {
+    // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     return process_external_command1(const_cast<char *>(cmd));
 }
 
@@ -230,6 +232,8 @@ inline char *const &nagios_compat_service_check_command(const service &s) {
 }
 
 inline int nagios_compat_submit_external_command(const char *cmd) {
+    // Older Nagios headers are not const-correct... :-P
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
     return submit_external_command(const_cast<char *>(cmd), nullptr);
 }
 

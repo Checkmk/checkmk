@@ -11,26 +11,26 @@ from tests.testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
-STATIC_ARGS = ["--inventory-as-check", "$HOSTNAME$"]
+ARGS = [
+    "--inv-fail-status=1",
+    "--hw-changes=0",
+    "--sw-changes=0",
+    "--sw-missing=0",
+    "--inventory-as-check",
+    "$HOSTNAME$",
+]
 
 
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
-            {},
-            ["--inv-fail-status=1", "--hw-changes=0", "--sw-changes=0", "--sw-missing=0"]
-            + STATIC_ARGS,
-        ),
-        (
-            {"timeout": 0},
-            ["--inv-fail-status=1", "--hw-changes=0", "--sw-changes=0", "--sw-missing=0"]
-            + STATIC_ARGS,
-        ),
+        (None, ARGS),
+        ({}, ARGS),
+        ({"timeout": 0}, ARGS),
     ],
 )
 def test_check_cmk_inv_argument_parsing(
-    params: Mapping[str, object], expected_args: Sequence[str]
+    params: None | Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_cmk_inv")

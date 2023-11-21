@@ -25,13 +25,15 @@ var g_ajax_obj;
 export function enable_select2_dropdowns(container) {
     if (!container) container = $(document);
 
+    let candidates;
+    candidates = $(container)
+        .find(".select2-enable")
+        .not(".vlof_prototype .select2-enable");
+
     // These can work upgraded with select2 and in plain mode,
     // so we can skip converting these when it would take too long.
     let not_autocompleting;
-    not_autocompleting = $(container)
-        .find(".select2-enable")
-        .not(".vlof_prototype .select2-enable")
-        .not("[data-autocompleter]");
+    not_autocompleting = candidates.not("[data-autocompleter]");
     const max_wait_seconds = 3; // Let the user wait for max 3 seconds. We can convert ~60-80 selects per second.
     if (not_autocompleting.length <= 60 * max_wait_seconds) {
         // If we've got too many of those, we bail out early instead of letting the user wait potentially "forever".
@@ -43,9 +45,7 @@ export function enable_select2_dropdowns(container) {
 
     // We always have to convert these, because they can only work with select2, and would stop working otherwise.
     let autocompleting;
-    autocompleting = $(container)
-        .find(".select2-enable[data-autocompleter]")
-        .not(".vlof_prototype .select2-enable");
+    autocompleting = candidates.filter("[data-autocompleter]");
     autocompleting.select2({
         dropdownAutoWidth: true,
         minimumResultsForSearch: 5,

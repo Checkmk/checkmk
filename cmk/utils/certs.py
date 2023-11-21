@@ -21,9 +21,9 @@ from cmk.utils.crypto.certificate import (
     Certificate,
     CertificateSigningRequest,
     CertificateWithPrivateKey,
-    PrivateKey,
     X509Name,
 )
+from cmk.utils.crypto.keys import PrivateKey
 
 
 class _CNTemplate:

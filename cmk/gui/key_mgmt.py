@@ -13,13 +13,10 @@ from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
-from cmk.utils.crypto import HashAlgorithm
-from cmk.utils.crypto.certificate import (
-    CertificateWithPrivateKey,
-    InvalidPEMError,
-    WrongPasswordError,
-)
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey
+from cmk.utils.crypto.keys import WrongPasswordError
 from cmk.utils.crypto.password import Password as PasswordType
+from cmk.utils.crypto.types import HashAlgorithm, InvalidPEMError
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
 

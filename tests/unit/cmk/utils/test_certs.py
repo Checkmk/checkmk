@@ -14,12 +14,8 @@ from tests.testlib import on_time
 from livestatus import SiteId
 
 from cmk.utils.certs import CN_TEMPLATE, RootCA
-from cmk.utils.crypto.certificate import (
-    Certificate,
-    CertificateWithPrivateKey,
-    PrivateKey,
-    X509Name,
-)
+from cmk.utils.crypto.certificate import Certificate, CertificateWithPrivateKey, X509Name
+from cmk.utils.crypto.keys import PrivateKey
 
 _CA = b"""-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDpDGxoGtI59lZM

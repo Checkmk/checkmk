@@ -15,9 +15,9 @@ from playwright.sync_api import expect, FilePayload
 from tests.testlib.playwright.helpers import PPage
 from tests.testlib.site import Site
 
-from cmk.utils.crypto import HashAlgorithm
 from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 from cmk.utils.crypto.password import Password
+from cmk.utils.crypto.types import HashAlgorithm
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,8 @@ import pytest
 from dateutil.relativedelta import relativedelta
 from freezegun import freeze_time
 
-from cmk.utils.crypto.certificate import CertificateWithPrivateKey, PrivateKey
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey
+from cmk.utils.crypto.keys import PrivateKey
 
 
 @pytest.fixture(name="self_signed_cert", scope="module")

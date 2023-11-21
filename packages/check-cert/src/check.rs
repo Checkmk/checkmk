@@ -88,7 +88,7 @@ impl<T: PartialOrd> LevelsCheck<T> for UpperLevels<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
     Ok,
     Warn,
@@ -284,7 +284,7 @@ impl From<CheckResult> for Writer {
     fn from(check_result: CheckResult) -> Self {
         Self {
             state: check_result.state,
-            summary: check_result.summary,
+            summary: check_result.to_string(),
         }
     }
 }
@@ -293,7 +293,7 @@ impl From<Vec<CheckResult>> for Writer {
     fn from(check_results: Vec<CheckResult>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.state).max() {
-                Some(state) => state.clone(),
+                Some(state) => *state,
                 None => State::Ok,
             },
             summary: check_results
@@ -368,6 +368,38 @@ mod test_writer_format {
 
     fn s(s: &str) -> String {
         String::from(s)
+    }
+
+    #[test]
+    fn test_single_check_result_ok() {
+        assert_eq!(
+            format!("{}", Writer::from(CheckResult::ok(s("summary")))),
+            "OK - summary"
+        );
+    }
+
+    #[test]
+    fn test_single_check_result_warn() {
+        assert_eq!(
+            format!("{}", Writer::from(CheckResult::warn(s("summary")))),
+            "WARNING - summary (!)"
+        );
+    }
+
+    #[test]
+    fn test_single_check_result_crit() {
+        assert_eq!(
+            format!("{}", Writer::from(CheckResult::crit(s("summary")))),
+            "CRITICAL - summary (!!)"
+        );
+    }
+
+    #[test]
+    fn test_single_check_result_unknown() {
+        assert_eq!(
+            format!("{}", Writer::from(CheckResult::unknown(s("summary")))),
+            "UNKNOWN - summary (?)"
+        );
     }
 
     #[test]

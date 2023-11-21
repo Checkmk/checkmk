@@ -6,7 +6,7 @@ Date: 1699863833
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0p15
+Version: 2.3.0b1
 
 This Werk affects you if you have a logwatch_ec check which forwards events to
 a remote syslog hosts and if you activated the option "Create a separate check

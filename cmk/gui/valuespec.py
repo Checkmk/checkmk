@@ -7203,16 +7203,10 @@ class LabelGroups(LabelGroup):
         return _("Remove this label group")
 
     def render_input(self, varprefix: str, value: ListOfAndOrNotDropdownValue) -> None:
-        # Remove all HTTP vars for the current varprefix before rendering. This ensures that
-        # rendering is based solely on the given argument 'value' (no interference from formerly
-        # submitted values under the same varname). Also this avoids the dragging on of unused HTTP
-        # vars in hidden input fields.
-        for varname, _value in request.itervars(prefix=varprefix):
-            request.del_var_from_env(varname)
-
         # Always append one empty row to groups
         value = self._add_empty_row_to_groups(value)
         super().render_input(varprefix, value)
+        html.final_javascript(f"cmk.forms.remove_label_filter_hidden_fields('{varprefix}');")
 
     def _add_empty_row_to_groups(
         self, value: ListOfAndOrNotDropdownValue

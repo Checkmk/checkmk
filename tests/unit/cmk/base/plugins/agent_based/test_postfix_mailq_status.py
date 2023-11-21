@@ -6,11 +6,10 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.postfix_mailq_status import (
-    check_postfix_mailq_status,
-    inventory_postfix_mailq_status,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.postfix_mailq_status import (
+    check_postfix_mailq_status,
+    discovery_postfix_mailq_status,
     parse_postfix_mailq_status,
     PostfixError,
     PostfixPid,
@@ -44,14 +43,14 @@ def fixture_section() -> dict[str, PostfixError | PostfixPid]:
     )
 
 
-def test_inventory_postfix_mailq_status(section: Mapping[str, PostfixError | PostfixPid]) -> None:
-    assert list(inventory_postfix_mailq_status(section)) == [
-        ("", None),
-        ("postfix-external", None),
-        ("postfix-stopped", None),
-        ("postfix-internal", None),
-        ("postfix-uat-cdi", None),
-        ("postfix-other", None),
+def test_discovery_postfix_mailq_status(section: Mapping[str, PostfixError | PostfixPid]) -> None:
+    assert list(discovery_postfix_mailq_status(section)) == [
+        Service(item="postfix"),
+        Service(item="postfix-external"),
+        Service(item="postfix-stopped"),
+        Service(item="postfix-internal"),
+        Service(item="postfix-uat-cdi"),
+        Service(item="postfix-other"),
     ]
 
 
@@ -60,23 +59,30 @@ def test_inventory_postfix_mailq_status(section: Mapping[str, PostfixError | Pos
     [
         pytest.param("missing", [], id="Item missing in data"),
         pytest.param(
-            "",  # default postfix
-            [(0, "Status: the Postfix mail system is running"), (0, "PID: 12910")],
+            "postfix",
+            [
+                Result(state=State.OK, summary="Status: the Postfix mail system is running"),
+                Result(state=State.OK, summary="PID: 12910"),
+            ],
             id="Postfix running",
         ),
         pytest.param(
             "postfix-uat-cdi",
-            [(2, "Status: the Postfix mail system is not running")],
+            [Result(state=State.CRIT, summary="Status: the Postfix mail system is not running")],
             id="Postfix not running",
         ),
         pytest.param(
             "postfix-stopped",
-            [(2, "Status: PID file exists but instance is not running!")],
+            [
+                Result(
+                    state=State.CRIT, summary="Status: PID file exists but instance is not running!"
+                )
+            ],
             id="Postfix stopped",
         ),
         pytest.param(
             "postfix-other",
-            [(2, "Status: PID file exists but is not readable")],
+            [Result(state=State.CRIT, summary="Status: PID file exists but is not readable")],
             id="Postfix process file not readable",
         ),
     ],
@@ -84,4 +90,4 @@ def test_inventory_postfix_mailq_status(section: Mapping[str, PostfixError | Pos
 def test_check_postfix_mailq_status(
     section: Mapping[str, PostfixError | PostfixPid], item: str, expected_output: Sequence[object]
 ) -> None:
-    assert list(check_postfix_mailq_status(item, None, section)) == expected_output
+    assert list(check_postfix_mailq_status(item, section)) == expected_output

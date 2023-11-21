@@ -960,7 +960,7 @@ _expected_services: dict = {
     (CheckPluginName("omd_status"), "test3"): {},
     (CheckPluginName("omd_status"), "test_crawl"): {},
     (CheckPluginName("postfix_mailq"), ""): {},
-    (CheckPluginName("postfix_mailq_status"), ""): {},
+    (CheckPluginName("postfix_mailq_status"), "postfix"): {},
     (CheckPluginName("tcp_conn_stats"), None): {},
     (CheckPluginName("uptime"), None): {},
 }

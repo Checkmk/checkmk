@@ -8,12 +8,14 @@ def main() {
             try {
                 stage('run Bandit') {
                     dir("${checkout_dir}") {
-                        sh("BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make -C tests test-bandit")
+                        sh("BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make -C tests test-bandit");
                     }
                 }
             } finally {
-                stage('process results') {
-                    archiveArtifacts("bandit_results.xml")
+                stage("Archive / process test reports") {
+                    show_duration("archiveArtifacts") {
+                        archiveArtifacts("bandit_results.xml");
+                    }
                     xunit([Custom(
                         customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/bandit-xunit.xsl",
                         deleteOutputFiles: true,
@@ -21,13 +23,13 @@ def main() {
                         pattern: "bandit_results.xml",
                         skipNoTestFiles: false,
                         stopProcessingIfError: true
-                    )])
+                    )]);
                 }
             }
             stage('check nosec markers') {
                 try {
                     dir("${checkout_dir}") {
-                        sh("make -C tests test-bandit-nosec-markers")
+                        sh("make -C tests test-bandit-nosec-markers");
                     }
                 } catch(Exception) {
                     // Don't fail the job if un-annotated markers are found.

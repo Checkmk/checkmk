@@ -112,10 +112,12 @@ def main() {
                 value: directory_hashes(["agents", "enterprise/agents/plugins"]));
         }
         dir("${WORKSPACE}/build") {
-            archiveArtifacts(
-                artifacts: "**/*",
-                fingerprint: true,
-            );
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: "**/*",
+                    fingerprint: true,
+                );
+            }
         }
     }
 }

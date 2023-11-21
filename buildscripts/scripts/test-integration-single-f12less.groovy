@@ -100,7 +100,7 @@ def main() {
                     }
                     try {
                         stage("Run `make ${make_target}`") {
-                            dir("${checkout_dir}/tests") { 
+                            dir("${checkout_dir}/tests") {
                                 sh("""
                                     RESULT_PATH='${WORKSPACE}/test-results/${distro}' \
                                     EDITION='${edition}' \
@@ -112,10 +112,11 @@ def main() {
                             }
                         }
                     } finally {
-                        stage('Archive / process test reports') {
-                            dir("${WORKSPACE}") { 
-                                archiveArtifacts("test-results/**");
-
+                        stage("Archive / process test reports") {
+                            dir("${WORKSPACE}") {
+                                show_duration("archiveArtifacts") {
+                                    archiveArtifacts("test-results/**");
+                                }
                                 xunit([Custom(
                                     customXSL: "$JENKINS_HOME/userContent/xunit/JUnit/0.1/pytest-xunit.xsl",
                                     deleteOutputFiles: true,

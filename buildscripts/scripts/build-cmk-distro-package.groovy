@@ -238,10 +238,12 @@ def main() {
             setCustomBuildProperty(
                 key: "path_hashes",
                 value: scm_directory_hashes(scm.extensions));
-            archiveArtifacts(
-                artifacts: "*.deb,*.rpm,*.cma",
-                fingerprint: true,
-            );
+            show_duration("archiveArtifacts") {
+                archiveArtifacts(
+                    artifacts: "*.deb,*.rpm,*.cma",
+                    fingerprint: true,
+                );
+            }
         }
     }
 }

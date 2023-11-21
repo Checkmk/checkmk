@@ -357,18 +357,14 @@ class NodeCustomCondition(NodeCondition):
     type_: str
 
 
-TruthyNodeCondition = NodeCondition
-FalsyNodeCondition = NodeCondition
-
-
 class NodeConditions(Section):
     """section: kube_node_conditions_v1"""
 
-    ready: TruthyNodeCondition
-    memorypressure: FalsyNodeCondition
-    diskpressure: FalsyNodeCondition
-    pidpressure: FalsyNodeCondition
-    networkunavailable: FalsyNodeCondition | None = None
+    ready: NodeCondition
+    memorypressure: NodeCondition
+    diskpressure: NodeCondition
+    pidpressure: NodeCondition
+    networkunavailable: NodeCondition | None = None
 
 
 class NodeCustomConditions(Section):

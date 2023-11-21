@@ -24,11 +24,10 @@ from cmk.plugins.lib.kube import (
     condition_detailed_description,
     condition_short_description,
     EXPECTED_CONDITION_STATES,
-    FalsyNodeCondition,
+    NodeCondition,
     NodeConditions,
     NodeConditionStatus,
     NodeCustomConditions,
-    TruthyNodeCondition,
 )
 
 
@@ -85,7 +84,7 @@ def _check_node_conditions(params: Params, section: NodeConditions) -> Iterator[
 def _check_condition(
     name: Literal["ready", "memorypressure", "diskpressure", "pidpressure", "networkunavailable"],
     params: Params,
-    cond: FalsyNodeCondition | TruthyNodeCondition | None,
+    cond: NodeCondition | None,
 ) -> Iterator[Result]:
     if cond is None:
         return

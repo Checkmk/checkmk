@@ -159,10 +159,6 @@ def test_conditions_truthy_vs_status() -> None:
     node_conditions = _conditions(api_node)
     assert node_conditions is not None
 
-    truthy_conditions = [
-        c for _, c in node_conditions if isinstance(c, section.TruthyNodeCondition)
-    ]
-    assert len(truthy_conditions) > 0
     # Check that all expected to be true states are actually true.
     for name, value in api.EXPECTED_CONDITION_STATES.items():
         if value == api.NodeConditionStatus.TRUE:
@@ -175,8 +171,6 @@ def test_conditions_falsy_vs_status() -> None:
     node_conditions = _conditions(api_node)
     assert node_conditions is not None
 
-    falsy_conditions = [c for _, c in node_conditions if isinstance(c, section.FalsyNodeCondition)]
-    assert len(falsy_conditions) > 0
     # Check that all expected to be false states are actually false.
     for name, value in api.EXPECTED_CONDITION_STATES.items():
         if value == api.NodeConditionStatus.FALSE:

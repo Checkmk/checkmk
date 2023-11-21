@@ -80,6 +80,7 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
             }),
             document_age_levels: args.document_age_levels.map(UpperLevels::warn),
             timeout: args.timeout,
+            body_string: args.body_string,
         },
     )
 }

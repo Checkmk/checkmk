@@ -4,7 +4,7 @@
 
 use http::HeaderValue;
 use httpdate::parse_http_date;
-use reqwest::{Error as ReqwestError, StatusCode, Version};
+use reqwest::{StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::time::{Duration, SystemTime};
 
@@ -272,6 +272,7 @@ pub struct CheckParameters {
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
     pub timeout: Duration,
+    pub body_string: Option<String>,
 }
 
 pub fn collect_response_checks(
@@ -285,7 +286,11 @@ pub fn collect_response_checks(
 
     check_status(response.status, response.version, params.onredirect)
         .into_iter()
-        .chain(check_body(response.body, params.page_size))
+        .chain(check_body(
+            response.body,
+            params.page_size,
+            params.body_string,
+        ))
         .chain(check_response_time(
             response_time,
             params.response_time_levels,
@@ -349,18 +354,30 @@ fn check_status(
     ]
 }
 
-fn check_body(
-    body: Option<Result<Body, ReqwestError>>,
+fn check_body<T: std::error::Error>(
+    body: Option<Result<Body, T>>,
     page_size_limits: Option<Bounds<usize>>,
+    body_string: Option<String>,
 ) -> Vec<Option<CheckResult>> {
     let Some(body) = body else {
+        // We assume that a None-Body means that we didn't fetch it at all
+        // and we don't want to perform checks on it.
+        // TODO(au): The cmdline should forbit invalid combinations like "without_body + limits".
         return vec![];
     };
 
-    match body {
-        Ok(bd) => check_page_size(bd.length, page_size_limits),
-        Err(_) => notice(State::Crit, "Error fetching the reponse body"),
-    }
+    let Ok(body) = body else {
+        return notice(State::Crit, "Error fetching the response body");
+    };
+    let mut ret = check_page_size(body.length, page_size_limits);
+
+    if body_string.map_or(false, |string| !body.text.contains(&string)) {
+        ret.append(&mut notice(
+            State::Warn,
+            "Specified string not found in response body",
+        ));
+    };
+    ret
 }
 
 fn check_page_size(
@@ -454,76 +471,137 @@ fn check_document_age(
 }
 
 #[cfg(test)]
-mod test_check_page_size {
+mod test_check_body {
     use super::*;
+    use std::error::Error;
+    use std::fmt::{Display, Formatter, Result};
 
-    #[test]
-    fn test_without_bounds() {
-        assert!(
-            check_page_size(42, None)
-                == vec![
-                    CheckResult::details(State::Ok, "Page size: 42 Bytes"),
-                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-                ]
-        )
+    #[derive(Debug)]
+    struct DummyError;
+
+    impl Error for DummyError {}
+
+    impl Display for DummyError {
+        fn fmt(&self, f: &mut Formatter) -> Result {
+            write!(f, "Error")
+        }
     }
 
     #[test]
-    fn test_lower_within_bounds() {
+    fn test_no_body() {
+        assert!(check_body::<DummyError>(None, None, None,) == vec![])
+    }
+
+    #[test]
+    fn test_error_body() {
         assert!(
-            check_page_size(42, Some(Bounds::lower(12)))
+            check_body(Some(Err(DummyError {})), None, None)
                 == vec![
-                    CheckResult::details(State::Ok, "Page size: 42 Bytes"),
-                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                    CheckResult::summary(State::Crit, "Error fetching the response body"),
+                    CheckResult::details(State::Crit, "Error fetching the response body"),
                 ]
         );
     }
 
     #[test]
-    fn test_lower_out_of_bounds() {
+    fn test_all_ok() {
         assert!(
-            check_page_size(42, Some(Bounds::lower(56)))
-                == vec![
-                    CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                    CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-                ]
+            check_body::<DummyError>(
+                Some(Ok(Body {
+                    text: "foobär".to_string(),
+                    length: 7
+                })),
+                Some(Bounds::lower_upper(3, 10)),
+                Some("foo".to_string()),
+            ) == vec![
+                CheckResult::details(State::Ok, "Page size: 7 Bytes"),
+                CheckResult::metric("size", 7., Some('B'), None, Some(0.), None)
+            ]
         );
     }
 
     #[test]
-    fn test_lower_and_higher_too_low() {
+    fn test_string_not_found() {
         assert!(
-            check_page_size(42, Some(Bounds::lower_upper(56, 100)))
-                == vec![
-                    CheckResult::summary(
-                        State::Warn,
-                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::details(
-                        State::Warn,
-                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-                ]
+            check_body::<DummyError>(
+                Some(Ok(Body {
+                    text: "foobär".to_string(),
+                    length: 7
+                })),
+                Some(Bounds::lower_upper(3, 10)),
+                Some("foobar".to_string()),
+            ) == vec![
+                CheckResult::details(State::Ok, "Page size: 7 Bytes"),
+                CheckResult::metric("size", 7., Some('B'), None, Some(0.), None),
+                CheckResult::summary(State::Warn, "Specified string not found in response body"),
+                CheckResult::details(State::Warn, "Specified string not found in response body"),
+            ]
         );
     }
 
     #[test]
-    fn test_lower_and_higher_too_high() {
+    fn test_size_lower_out_of_bounds() {
         assert!(
-            check_page_size(142, Some(Bounds::lower_upper(56, 100)))
-                == vec![
-                    CheckResult::summary(
-                        State::Warn,
-                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::details(
-                        State::Warn,
-                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                    ),
-                    CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
-                ]
+            check_body::<DummyError>(
+                Some(Ok(Body {
+                    text: "don't care".to_string(),
+                    length: 42
+                })),
+                Some(Bounds::lower(56)),
+                None,
+            ) == vec![
+                CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_size_lower_and_higher_too_low() {
+        assert!(
+            check_body::<DummyError>(
+                Some(Ok(Body {
+                    text: "don't care".to_string(),
+                    length: 42,
+                })),
+                Some(Bounds::lower_upper(56, 100)),
+                None,
+            ) == vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+            ]
+        );
+    }
+
+    #[test]
+    fn test_size_lower_and_higher_too_high() {
+        assert!(
+            check_body::<DummyError>(
+                Some(Ok(Body {
+                    text: "don't care".to_string(),
+                    length: 142,
+                })),
+                Some(Bounds::lower_upper(56, 100)),
+                None,
+            ) == vec![
+                CheckResult::summary(
+                    State::Warn,
+                    "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::details(
+                    State::Warn,
+                    "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                ),
+                CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
+            ]
         );
     }
 }

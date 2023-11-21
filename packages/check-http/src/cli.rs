@@ -79,6 +79,10 @@ pub struct Cli {
     /// This does not encode the specified body text automatically.
     #[arg(short = 'T', long, requires = "body_text")]
     pub content_type: Option<HeaderValue>,
+
+    /// String to expect in the response body.
+    #[arg(short = 's', long, conflicts_with = "without_body")]
+    pub body_string: Option<String>,
 }
 
 type PageSizeLimits = (usize, Option<usize>);

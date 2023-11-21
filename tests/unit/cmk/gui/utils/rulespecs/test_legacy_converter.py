@@ -343,6 +343,33 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             ),
             id="FixedValue",
         ),
+        pytest.param(
+            api_v1.TimeSpan(),
+            legacy_valuespecs.Age(),
+            id="minimal Age",
+        ),
+        pytest.param(
+            api_v1.TimeSpan(
+                title=api_v1.Localizable("age title"),
+                label=api_v1.Localizable("age label"),
+                help_text=api_v1.Localizable("help text"),
+                displayed_units=[
+                    api_v1.DisplayUnits.DAYS,
+                    api_v1.DisplayUnits.HOURS,
+                    api_v1.DisplayUnits.MINUTES,
+                    api_v1.DisplayUnits.SECONDS,
+                ],
+                prefill_value=100,
+            ),
+            legacy_valuespecs.Age(
+                title=_("age title"),
+                label=_("age label"),
+                help=_("help text"),
+                display=["days", "hours", "minutes", "seconds"],
+                default_value=100,
+            ),
+            id="Age",
+        ),
     ],
 )
 def test_convert_to_legacy_valuespec(

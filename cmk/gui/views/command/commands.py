@@ -1346,11 +1346,13 @@ class CommandScheduleDowntimes(Command):
     def _vs_date(self) -> DatePicker:
         return DatePicker(
             title=_("Downtime datepicker"),
+            onclick="cmk.page_menu.update_down_duration_button();",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
             title=_("Downtime timepicker"),
+            onclick="cmk.page_menu.update_down_duration_button();",
         )
 
     def _get_onclick(
@@ -1362,7 +1364,7 @@ class CommandScheduleDowntimes(Command):
         end_time = time_interval_end(time_range, self._current_local_time())
 
         return (
-            f'cmk.page_menu.toggle_down_duration_button("{id_}");'
+            f'cmk.page_menu.update_down_duration_button("{id_}");'
             f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d",time.localtime(start_time))}");'
             f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M",time.localtime(start_time))}");'
             f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'

@@ -52,17 +52,21 @@ function toggle_dropdown_enabled(id: string, enabled: boolean) {
     }
 }
 
-export function toggle_down_duration_button(id: string) {
+export function update_down_duration_button(
+    new_selection_id: string | null = null
+) {
     const active_elements = document.getElementsByClassName(
         "button duration active"
-    );
+    ) as HTMLCollectionOf<HTMLElement>;
     if (active_elements) {
         for (const element of active_elements) {
-            element.classList.remove("active");
+            utils.remove_class(element, "active");
         }
     }
-    const target_button = document.getElementById(id);
-    utils.add_class(target_button, "active");
+    if (new_selection_id) {
+        const target_button = document.getElementById(new_selection_id);
+        if (target_button) utils.add_class(target_button, "active");
+    }
 }
 
 export function enable_menu_entry(id: string, enabled: boolean) {

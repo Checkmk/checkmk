@@ -12,7 +12,7 @@ use std::{str::FromStr, time::Duration};
 #[command(about = "check_http")]
 pub struct Cli {
     /// Username for HTTP Basic Auth
-    #[arg(long, group = "authuser")]
+    #[arg(long)]
     pub auth_user: Option<String>,
 
     #[command(flatten)]
@@ -57,7 +57,7 @@ pub struct Cli {
     pub force_ip_version: Option<ForceIP>,
 
     /// Minimum/Maximum expected page size in bytes (Format: MIN[,MAX])
-    #[arg(long, value_parser = parse_optional_pair::<usize>)]
+    #[arg(long, conflicts_with = "without_body", value_parser = parse_optional_pair::<usize>)]
     pub page_size: Option<PageSizeLimits>,
 
     /// WARN/CRIT levels for response time (Format: WARN>[,CRIT])
@@ -72,12 +72,12 @@ pub struct Cli {
     /// Text to send in HTTP body. This will set the HTTP method to POST if unset,
     /// but will not overwrite the method specified with --method.
     /// Also, no encoding (like url-encoding) will be applied.
-    #[arg(long, group = "body_text")]
+    #[arg(long)]
     pub body: Option<String>,
 
     /// Specify Content-Type header when sending HTTP body.
     /// This does not encode the specified body text automatically.
-    #[arg(short = 'T', long, requires = "body_text")]
+    #[arg(short = 'T', long, requires = "body")]
     pub content_type: Option<HeaderValue>,
 
     /// String to expect in the response body.
@@ -108,11 +108,11 @@ pub enum ForceIP {
 #[group(multiple = false)]
 pub struct AuthPw {
     /// Plain password for HTTP Basic Auth
-    #[arg(long, requires = "authuser")]
+    #[arg(long, requires = "auth_user")]
     pub auth_pw_plain: Option<String>,
 
     /// Password for HTTP Basic Auth, provided as ID for password store lookup
-    #[arg(long, requires = "authuser", value_parser=pwstore::password_from_store)]
+    #[arg(long, requires = "auth_user", value_parser=pwstore::password_from_store)]
     pub auth_pwstore: Option<String>,
 }
 

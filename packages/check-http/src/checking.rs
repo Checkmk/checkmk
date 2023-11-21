@@ -362,7 +362,6 @@ fn check_body<T: std::error::Error>(
     let Some(body) = body else {
         // We assume that a None-Body means that we didn't fetch it at all
         // and we don't want to perform checks on it.
-        // TODO(au): The cmdline should forbit invalid combinations like "without_body + limits".
         return vec![];
     };
 

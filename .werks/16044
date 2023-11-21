@@ -1,0 +1,11 @@
+Title: Keep label filters when sorting a view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1700564389
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When a view was filtered for host/service labels and then sorted by clicking on one of the table headers, the label filters were lost.
+This is fixed to conserving the label filters when sorting a view.

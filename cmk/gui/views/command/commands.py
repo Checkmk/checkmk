@@ -1331,7 +1331,7 @@ class CommandScheduleDowntimes(Command):
                 id_=varname,
                 class_=["button", "duration"],
                 value=_u(time_range["title"]),
-                onclick=self._get_onclick(time_range["end"]),
+                onclick=self._get_onclick(time_range["end"], varname),
                 submit="_set_date_and_time",
             )
         return duration_options
@@ -1354,12 +1354,15 @@ class CommandScheduleDowntimes(Command):
         )
 
     def _get_onclick(
-        self, time_range: int | Literal["next_day", "next_week", "next_month", "next_year"]
+        self,
+        time_range: int | Literal["next_day", "next_week", "next_month", "next_year"],
+        id_: str,
     ) -> str:
         start_time = self._current_local_time()
         end_time = time_interval_end(time_range, self._current_local_time())
 
         return (
+            f'cmk.page_menu.toggle_down_duration_button("{id_}");'
             f'cmk.utils.update_time("date__down_from_date","{time.strftime("%Y-%m-%d",time.localtime(start_time))}");'
             f'cmk.utils.update_time("time__down_from_time","{time.strftime("%H:%M",time.localtime(start_time))}");'
             f'cmk.utils.update_time("date__down_to_date","{time.strftime("%Y-%m-%d",time.localtime(end_time))}");'

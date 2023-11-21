@@ -711,7 +711,8 @@ div.page_menu_popup {
         margin-left: 10px !important;
       }
       margin: 0px;
-      &:active,
+
+      &.active,
       &:focus {
         background-color: $input-button-hover-bg-color;
       }

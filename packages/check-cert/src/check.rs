@@ -126,8 +126,9 @@ impl<T: PartialOrd> LevelsCheck<T> for UpperLevels<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum State {
+    #[default]
     Ok,
     Warn,
     Crit,
@@ -247,15 +248,44 @@ impl<T> MetricBuilder<T> {
     }
 }
 
-#[derive(Debug)]
-pub struct CheckResult {
+#[derive(Debug, Default)]
+pub struct Summary {
     state: State,
-    summary: String,
+    text: String,
+}
+
+impl Summary {
+    fn new(state: State, text: String) -> Self {
+        Self { state, text }
+    }
+}
+
+impl Display for Summary {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
+        write!(
+            f,
+            "{}{}",
+            self.text,
+            match self.state {
+                State::Ok => "",
+                State::Warn => " (!)",
+                State::Crit => " (!!)",
+                State::Unknown => " (?)",
+            }
+        )
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct CheckResult {
+    summary: Summary,
 }
 
 impl CheckResult {
     fn new(state: State, summary: String) -> Self {
-        Self { state, summary }
+        Self {
+            summary: Summary::new(state, summary),
+        }
     }
 
     pub fn ok(summary: String) -> Self {
@@ -276,28 +306,6 @@ impl CheckResult {
 
     pub fn from_levels<T>(levels: &impl LevelsCheck<T>, value: &T, summary: String) -> Self {
         levels.check(value, summary)
-    }
-}
-
-impl Default for CheckResult {
-    fn default() -> Self {
-        Self::new(State::Ok, String::from(""))
-    }
-}
-
-impl Display for CheckResult {
-    fn fmt(&self, f: &mut Formatter<'_>) -> FormatResult {
-        write!(
-            f,
-            "{}{}",
-            self.summary,
-            match self.state {
-                State::Ok => "",
-                State::Warn => " (!)",
-                State::Crit => " (!!)",
-                State::Unknown => " (?)",
-            }
-        )
     }
 }
 
@@ -338,8 +346,8 @@ impl Display for Writer {
 impl From<CheckResult> for Writer {
     fn from(check_result: CheckResult) -> Self {
         Self {
-            state: check_result.state,
-            summary: check_result.to_string(),
+            state: check_result.summary.state,
+            summary: check_result.summary.to_string(),
         }
     }
 }
@@ -347,14 +355,14 @@ impl From<CheckResult> for Writer {
 impl From<Vec<CheckResult>> for Writer {
     fn from(check_results: Vec<CheckResult>) -> Self {
         Self {
-            state: match check_results.iter().map(|cr| &cr.state).max() {
+            state: match check_results.iter().map(|cr| &cr.summary.state).max() {
                 Some(state) => *state,
                 None => State::Ok,
             },
             summary: check_results
                 .iter()
-                .filter(|cr| !cr.summary.is_empty())
-                .map(|cr| cr.to_string())
+                .filter(|cr| !cr.summary.text.is_empty())
+                .map(|cr| cr.summary.to_string())
                 .collect::<Vec<_>>()
                 .join(", "),
         }

@@ -1151,7 +1151,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "poseidon_inputs",
         "poseidon_temp",
         "postfix_mailq",
-        "postfix_mailq_status",
         "postgres_bloat",
         "postgres_conn_time",
         "postgres_connections",

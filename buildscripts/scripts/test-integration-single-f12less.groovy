@@ -4,10 +4,11 @@
 
 def main() {
     check_job_parameters([
-        "EDITION",  // the testees package long edition string (e.g. 'enterprise')
-        "DISTRO",   // the testees package distro string (e.g. 'ubuntu-22.04')
-        // "DISABLE_CACHE",    // forwarded to package build job (todo)
+        ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
+        ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
+        "DEPENDENCY_PATH_HASHES",
         // "DOCKER_TAG_BUILD", // test base image tag (todo)
+        // "DISABLE_CACHE",    // forwarded to package build job (todo)
     ]);
 
     check_environment_variables([
@@ -27,14 +28,8 @@ def main() {
             "",                // 'folder tag'
     )
     def distro = params.DISTRO;
-    if (!distro) {
-        raise ("Job parameter DISTRO must be set to nonempty value.");
-    }
-
     def edition = params.EDITION;
-    if (!edition) {
-        raise ("Job parameter EDITION must be set to nonempty value.");
-    }
+
     def make_target = "test-integration-docker";
 
     currentBuild.description += (

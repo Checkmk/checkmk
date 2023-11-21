@@ -7,9 +7,10 @@
 
 def main() {
     check_job_parameters([
-        "EDITION",
-        "VERSION",
-        "DISTRO",
+        ["EDITION", true],
+        ["DISTRO", true],
+        "VERSION",  // should be deprecated
+        "DEPENDENCY_PATH_HASHES",
         "DOCKER_TAG_BUILD",
         "DISABLE_CACHE",
     ]);
@@ -35,14 +36,7 @@ def main() {
         "BAZEL_CACHE_PASSWORD="] : []);
 
     def distro = params.DISTRO;
-    if (!distro) {
-        raise ("Job parameter DISTRO must be set to nonemtpy value.");
-    }
-
     def edition = params.EDITION;
-    if (!edition) {
-        raise ("Job parameter EDITION must be set to nonemtpy value.");
-    }
 
     // FIXME
     // def branch_name = versioning.safe_branch_name(scm);
@@ -59,10 +53,8 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |DISTRO:................... │${DISTRO}│
         |distro:................... │${distro}│
         |edition:.................. │${edition}│
-        |VERSION:.................. │${VERSION}│
         |cmk_version:.............. │${cmk_version}│
         |branch_name:.............. │${branch_name}│
         |omd_env_vars:............. │${omd_env_vars}│

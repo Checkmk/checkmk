@@ -36,17 +36,19 @@ def notify_error(error) {
     def projectname = currentBuild.fullProjectName
     try {
         def isChangeValidation = projectname.contains("cv");
-        print("|| error-reporting: isChangeValidation=${isChangeValidation}");
-
         def isTesting = projectname.contains("Testing");
-        print("|| error-reporting: isTesting=${isTesting}");
-
         def isTriggerJob = projectname.contains("trigger");
-        print("|| error-reporting: isTriggerJob=${isTriggerJob}");
-
         /// for now we assume this build to be in state "FAILURE"
         def isFirstFailure = currentBuild.getPreviousBuild()?.result != "FAILURE";
-        print("|| error-reporting: isFirstFailure=${isFirstFailure}");
+        print(
+            """
+            ||==========================================================================================
+            || error-reporting: isChangeValidation=${isChangeValidation}
+            || error-reporting: isTesting=${isTesting}
+            || error-reporting: isTriggerJob=${isTriggerJob}
+            || error-reporting: isFirstFailure=${isFirstFailure}
+            ||==========================================================================================
+            """.stripMargin());
 
         if (isFirstFailure && !isChangeValidation && !isTriggerJob && !isTesting) {
             /// include me for now to give me the chance to debug
@@ -56,11 +58,15 @@ def notify_error(error) {
                 "jonas.scharpf@checkmk.com",
             ];
             currentBuild.changeSets.each { changeSet ->
-                print("|| error-reporting:   changeSet=${changeSet}");
-                print("|| error-reporting:   changeSet.items=${changeSet.items}");
-
                 def culprits_emails = changeSet.items.collect {e -> e.authorEmail};
-                print("|| error-reporting:   culprits_emails ${culprits_emails}");
+                print(
+                    """
+                    ||==========================================================================================
+                    || error-reporting:   changeSet=${changeSet}
+                    || error-reporting:   changeSet.items=${changeSet.items}
+                    || error-reporting:   culprits_emails=${culprits_emails}
+                    ||==========================================================================================
+                    """.stripMargin());
             }
 
             // It seems the option "Allowed domains" is not working properly.
@@ -136,6 +142,7 @@ def notify_error(error) {
 
     StackTraceUtils.sanitize(error);
     print("ERROR: ${error.stackTrace.head()}: ${error}");
+    currentBuild.description += "<br>The build failed due to an exception (at ${error.stackTrace.head()}):<br><strong style='color:red'>${error}</strong>";
     throw error;
 }
 

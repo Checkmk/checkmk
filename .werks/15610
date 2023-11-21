@@ -6,7 +6,7 @@ Date: 1683186871
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0b7
+Version: 2.3.0b1
 
 If a user ran the command <tt>omd config</tt> and selected <tt>Distributed Monitoring >
 LIVESTATUS_TCP_ONLY_FROM</tt>, then the following error was shown

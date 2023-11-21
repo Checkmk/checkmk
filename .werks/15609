@@ -6,7 +6,7 @@ Date: 1682683781
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0b7
+Version: 2.3.0b1
 
 This change affects those using the <tt>Kubernetes</tt> together with the feature <tt>Collect
 information about Persistent Volume Claims & Persistent Volumes</tt> (available in 2.2.0 and above).

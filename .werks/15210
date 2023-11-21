@@ -6,10 +6,9 @@ Date: 1675686406
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.3.0b1
 
 The Oracle plugin allowed the user to configure Login options without
 actually configuring any details. This also resulted in the default values
 for 'Hostname' or 'TCP-Port for Listener' to be ignored. This werk fixes
 this issue.
-

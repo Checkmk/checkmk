@@ -3,46 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=comparison-with-callable,redefined-outer-name
-
 import pytest
-from polyfactory import Use
-from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.base.plugins.agent_based import kube_node_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 
 from cmk.plugins.lib import kube
-
-
-class NodeConditionFactory(ModelFactory):
-    __model__ = kube.NodeCondition
-
-
-class NodeConditionsFactory(ModelFactory):
-    __model__ = kube.NodeConditions
-
-    ready = Use(NodeConditionFactory.build, status=kube.NodeConditionStatus.TRUE)
-    memorypressure = Use(NodeConditionFactory.build, status=kube.NodeConditionStatus.FALSE)
-    diskpressure = Use(NodeConditionFactory.build, status=kube.NodeConditionStatus.FALSE)
-    pidpressure = Use(NodeConditionFactory.build, status=kube.NodeConditionStatus.FALSE)
-    networkunavailable = Use(NodeConditionFactory.build, status=kube.NodeConditionStatus.FALSE)
-
-
-class FalsyNodeCustomConditionFactory(ModelFactory):
-    __model__ = kube.NodeCustomCondition
-
-
-class NodeCustomConditionsFactory(ModelFactory):
-    __model__ = kube.NodeCustomConditions
-
-    custom_conditions = Use(
-        FalsyNodeCustomConditionFactory.batch,
-        status=kube.NodeConditionStatus.FALSE,
-        size=1,
-    )
-
 
 PARAMS = kube_node_conditions.Params(
     ready=int(State.CRIT),
@@ -53,170 +19,92 @@ PARAMS = kube_node_conditions.Params(
 )
 
 
-@pytest.fixture
-def string_table():
-    return [[NodeConditionsFactory.build().model_dump_json()]]
-
-
-@pytest.fixture
-def custom_string_table():
-    return [[NodeCustomConditionsFactory.build().model_dump_json()]]
-
-
-@pytest.fixture
-def section(string_table: StringTable) -> kube.NodeConditions:
-    return kube_node_conditions.parse_node_conditions(string_table)
-
-
-@pytest.fixture
-def custom_section(
-    custom_string_table: StringTable,
-) -> kube.NodeCustomConditions:
-    return kube_node_conditions.parse_node_custom_conditions(custom_string_table)
-
-
-@pytest.fixture
-def check_result(
-    section: kube.NodeConditions | None, custom_section: kube.NodeCustomConditions | None
-) -> CheckResult:
-    return kube_node_conditions.check(PARAMS, section, custom_section)
-
-
-@pytest.mark.parametrize("section", [None])
-def test_check_raises_when_section_is_none(check_result: CheckResult) -> None:
+def test_check_raises_when_section_is_none() -> None:
+    custom_section = kube.NodeCustomConditions(custom_conditions=[])
     with pytest.raises(IgnoreResultsError):
-        list(check_result)
+        list(kube_node_conditions.check(PARAMS, None, custom_section))
 
 
-def test_check_yields_single_result_when_all_conditions_pass(
-    check_result: CheckResult,
-) -> None:
-    results = list(check_result)
-    assert len(results) == 1
+def test_check_ignores_missing_network_unavailable() -> None:
+    # Act
+    results = list(kube_node_conditions._check_condition("networkunavailable", PARAMS, None))
+    # Assert
+    assert not results
 
 
-def test_check_all_results_state_ok(check_result: CheckResult) -> None:
-    results = list(check_result)
-    assert isinstance(results[0], Result)
-    assert results[0].state == State.OK
-
-
-@pytest.mark.parametrize(
-    "disk_pressure_status",
-    [
-        kube.NodeConditionStatus.TRUE,
-        kube.NodeConditionStatus.UNKNOWN,
-    ],
-)
-def test_check_with_falsy_condition_yields_as_much_results_as_section_items(disk_pressure_status):
-    # Arrange
-    section = NodeConditionsFactory.build(
-        diskpressure=NodeConditionFactory.build(status=disk_pressure_status)
+def test_check_all_conditions_ok() -> None:
+    section = kube.NodeConditions(
+        ready=kube.NodeCondition(status=kube.NodeConditionStatus.TRUE),
+        memorypressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+        diskpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+        pidpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+        networkunavailable=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
     )
-    custom_section = NodeCustomConditionsFactory.build()
-    # Act
-    results = list(kube_node_conditions.check(PARAMS, section, custom_section))
-    # Assert
-    assert len(results) == len(list(section)) + len(list(custom_section))
-
-
-@pytest.mark.parametrize(
-    "disk_pressure_status",
-    [
-        kube.NodeConditionStatus.TRUE,
-        kube.NodeConditionStatus.UNKNOWN,
-    ],
-)
-def test_check_with_falsy_condition_yields_one_crit_among_others_ok(disk_pressure_status):
-    # Arrange
-    section = NodeConditionsFactory.build(
-        diskpressure=NodeConditionFactory.build(status=disk_pressure_status)
-    )
-    custom_section = NodeCustomConditionsFactory.build()
-    expected_ok_results = len(list(section)) + len(list(custom_section)) - 1
-    # Act
-    results = [
-        r
-        for r in kube_node_conditions.check(PARAMS, section, custom_section)
-        if isinstance(r, Result)
-    ]
-    # Assert
-    assert len([result for result in results if result.state == State.CRIT]) == 1
-    assert len([result for result in results if result.state == State.OK]) == expected_ok_results
-
-
-def test_check_ignores_missing_network_unavailable_when_all_conditions_pass() -> None:
-    # Arrange
-    section = NodeConditionsFactory.build(networkunavailable=None)
-    custom_section = NodeCustomConditionsFactory.build()
-    # Act
-    results = [
-        r
-        for r in kube_node_conditions.check(PARAMS, section, custom_section)
-        if isinstance(r, Result)
-    ]
-    # Assert
-    assert len(results) == 1
-
-
-@pytest.mark.parametrize(
-    "disk_pressure_status",
-    [
-        kube.NodeConditionStatus.TRUE,
-        kube.NodeConditionStatus.UNKNOWN,
-    ],
-)
-def test_check_ignores_missing_network_unavailable_when_a_condition_does_not_pass(
-    disk_pressure_status,
-):
-    # Arrange
-    section = NodeConditionsFactory.build(
-        networkunavailable=None,
-        diskpressure=NodeConditionFactory.build(status=disk_pressure_status),
-    )
-    custom_section = NodeCustomConditionsFactory.build()
-    expected_ok_results = len(list(section)) + len(list(custom_section)) - 2
-    # Act
-    results = [
-        r
-        for r in kube_node_conditions.check(PARAMS, section, custom_section)
-        if isinstance(r, Result)
-    ]
-    # Assert
-    assert len([result for result in results if result.state == State.CRIT]) == 1
-    assert len([result for result in results if result.state == State.OK]) == expected_ok_results
-
-
-def test_check_with_missing_network_unavailable_all_states_ok() -> None:
-    # Arrange
-    section = NodeConditionsFactory.build(networkunavailable=None)
-    custom_section = NodeCustomConditionsFactory.build()
-    # Act
-    results = [
-        r
-        for r in kube_node_conditions.check(PARAMS, section, custom_section)
-        if isinstance(r, Result)
-    ]
-    # Assert
-    assert isinstance(results[0], Result)
-    assert results[0].state == State.OK
-
-
-def test_check_with_builtin_conditions_true_but_one_false_custom_condition():
-    # Arrange
-    section = NodeConditionsFactory.build()
-    custom_section = NodeCustomConditionsFactory.build(
+    custom_section = kube.NodeCustomConditions(
         custom_conditions=[
-            FalsyNodeCustomConditionFactory.build(status=kube.NodeConditionStatus.TRUE)
-        ],
+            kube.NodeCustomCondition(type_="custom", status=kube.NodeConditionStatus.FALSE)
+        ]
     )
-    expected_ok_results = len(list(section)) + len(list(custom_section)) - 1
-    # Act
-    results = [
-        r
-        for r in kube_node_conditions.check(PARAMS, section, custom_section)
-        if isinstance(r, Result)
+    results = list(kube_node_conditions.check(PARAMS, section, custom_section))
+    assert results == [
+        Result(
+            state=State.OK,
+            summary="Ready, all conditions passed",
+            details="READY: NodeConditionStatus.TRUE (None: None)\n"
+            "MEMORYPRESSURE: NodeConditionStatus.FALSE (None: None)\n"
+            "DISKPRESSURE: NodeConditionStatus.FALSE (None: None)\n"
+            "PIDPRESSURE: NodeConditionStatus.FALSE (None: None)\n"
+            "NETWORKUNAVAILABLE: NodeConditionStatus.FALSE (None: None)\n"
+            "CUSTOM: NodeConditionStatus.FALSE (None: None)",
+        )
     ]
-    # Assert
-    assert len([result for result in results if result.state == State.CRIT]) == 1
-    assert len([result for result in results if result.state == State.OK]) == expected_ok_results
+
+
+def test_check_one_condition_bad() -> None:
+    section = kube.NodeConditions(
+        ready=kube.NodeCondition(status=kube.NodeConditionStatus.TRUE),
+        memorypressure=kube.NodeCondition(status=kube.NodeConditionStatus.TRUE),
+        diskpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+        pidpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+        networkunavailable=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+    )
+    custom_section = kube.NodeCustomConditions(custom_conditions=[])
+    results = list(kube_node_conditions.check(PARAMS, section, custom_section))
+    assert results == [
+        Result(
+            state=State.OK,
+            summary="READY: NodeConditionStatus.TRUE",
+            details="READY: NodeConditionStatus.TRUE (None: None)",
+        ),
+        Result(
+            state=State.CRIT,
+            summary="MEMORYPRESSURE: NodeConditionStatus.TRUE (None: None)",
+        ),
+        Result(
+            state=State.OK,
+            summary="DISKPRESSURE: NodeConditionStatus.FALSE",
+            details="DISKPRESSURE: NodeConditionStatus.FALSE (None: None)",
+        ),
+        Result(
+            state=State.OK,
+            summary="PIDPRESSURE: NodeConditionStatus.FALSE",
+            details="PIDPRESSURE: NodeConditionStatus.FALSE (None: None)",
+        ),
+        Result(
+            state=State.OK,
+            summary="NETWORKUNAVAILABLE: NodeConditionStatus.FALSE",
+            details="NETWORKUNAVAILABLE: NodeConditionStatus.FALSE (None: None)",
+        ),
+    ]
+
+
+def test_check_custom() -> None:
+    custom_section = kube.NodeCustomConditions(
+        custom_conditions=[
+            kube.NodeCustomCondition(type_="custom", status=kube.NodeConditionStatus.TRUE)
+        ]
+    )
+    results = list(kube_node_conditions._check_node_custom_conditions(custom_section))
+    assert results == [
+        Result(state=State.CRIT, summary="CUSTOM: NodeConditionStatus.TRUE (None: None)")
+    ]

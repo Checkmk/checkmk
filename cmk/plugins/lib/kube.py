@@ -364,10 +364,6 @@ class NodeCondition(BaseModel):
     last_transition_time: int | None = None
 
 
-TruthyNodeCondition = NodeCondition
-FalsyNodeCondition = NodeCondition
-
-
 class NodeCustomCondition(NodeCondition):
     """NodeCustomCondition mainly come from Node Problem Detector.
     Its type can be user-defined, hence it being a string."""
@@ -378,11 +374,11 @@ class NodeCustomCondition(NodeCondition):
 class NodeConditions(Section):
     """section: kube_node_conditions_v1"""
 
-    ready: TruthyNodeCondition
-    memorypressure: FalsyNodeCondition
-    diskpressure: FalsyNodeCondition
-    pidpressure: FalsyNodeCondition
-    networkunavailable: FalsyNodeCondition | None = None
+    ready: NodeCondition
+    memorypressure: NodeCondition
+    diskpressure: NodeCondition
+    pidpressure: NodeCondition
+    networkunavailable: NodeCondition | None = None
 
 
 class NodeCustomConditions(Section):

@@ -707,8 +707,11 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
+    ' The last backup date is converted to UTC in the process by removing the timezone offset, given in 15 min
+    ' intervals (or as 127 if unknown)
     Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
+    addOutput("-|-|date_tz|UTC|-")
     sqlString = "SELECT CONVERT(VARCHAR, MAX(DATEADD(MINUTE, - 15 * IIF(time_zone <> 127, time_zone, 0), backup_finish_date)), 120) AS last_backup_date, type, database_name " & _
                 "FROM msdb.dbo.backupset " & _
                 "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY('Machinename') AS VARCHAR)) " & _

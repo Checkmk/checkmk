@@ -47,16 +47,25 @@ def test_check_all_conditions_ok() -> None:
     )
     results = list(kube_node_conditions.check(PARAMS, section, custom_section))
     assert results == [
+        Result(state=State.OK, summary="Ready, all conditions passed"),
+        Result(state=State.OK, notice="READY: NodeConditionStatus.TRUE (None: None)"),
         Result(
             state=State.OK,
-            summary="Ready, all conditions passed",
-            details="READY: NodeConditionStatus.TRUE (None: None)\n"
-            "MEMORYPRESSURE: NodeConditionStatus.FALSE (None: None)\n"
-            "DISKPRESSURE: NodeConditionStatus.FALSE (None: None)\n"
-            "PIDPRESSURE: NodeConditionStatus.FALSE (None: None)\n"
-            "NETWORKUNAVAILABLE: NodeConditionStatus.FALSE (None: None)\n"
-            "CUSTOM: NodeConditionStatus.FALSE (None: None)",
-        )
+            notice="MEMORYPRESSURE: NodeConditionStatus.FALSE (None: None)",
+        ),
+        Result(
+            state=State.OK,
+            notice="DISKPRESSURE: NodeConditionStatus.FALSE (None: None)",
+        ),
+        Result(
+            state=State.OK,
+            notice="PIDPRESSURE: NodeConditionStatus.FALSE (None: None)",
+        ),
+        Result(state=State.OK, notice="NETWORKUNAVAILABLE: NodeConditionStatus.FALSE (None: None)"),
+        Result(
+            state=State.OK,
+            notice="CUSTOM: NodeConditionStatus.FALSE (None: None)",
+        ),
     ]
 
 

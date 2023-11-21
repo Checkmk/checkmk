@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterator, MutableSequence
+from collections.abc import Iterator
 from typing import Literal, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -64,40 +64,14 @@ def check(
 ) -> CheckResult:
     if not section_kube_node_conditions:
         raise IgnoreResultsError("No node conditions found")
-    expect_match = [
-        EXPECTED_CONDITION_STATES[name] == cond.status
-        for name, cond in section_kube_node_conditions
-        if cond
-    ]
-    conditions_ok = all(expect_match)
-
+    results = list(_check_node_conditions(params, section_kube_node_conditions))
     if section_kube_node_custom_conditions:
-        expect_false = [
-            cond.status == NodeConditionStatus.FALSE
-            for cond in section_kube_node_custom_conditions.custom_conditions
-        ]
-        custom_conditions_ok = all(expect_false)
+        results.extend(_check_node_custom_conditions(section_kube_node_custom_conditions))
+    if all(result.state is State.OK for result in results):
+        yield Result(state=State.OK, summary="Ready, all conditions passed")
+        yield from (Result(state=r.state, notice=r.details) for r in results)
     else:
-        custom_conditions_ok = True
-
-    if conditions_ok and custom_conditions_ok:
-        details: MutableSequence[str] = [
-            condition_detailed_description(name, cond.status, cond.reason, cond.detail)
-            for name, cond in section_kube_node_conditions
-            if cond
-        ]
-        if section_kube_node_custom_conditions:
-            details.extend(
-                condition_detailed_description(cond.type_, cond.status, cond.reason, cond.detail)
-                for cond in section_kube_node_custom_conditions.custom_conditions
-            )
-        yield Result(
-            state=State.OK, summary="Ready, all conditions passed", details="\n".join(details)
-        )
-    else:
-        yield from _check_node_conditions(params, section_kube_node_conditions)
-        if section_kube_node_custom_conditions:
-            yield from _check_node_custom_conditions(section_kube_node_custom_conditions)
+        yield from results
 
 
 def _check_node_conditions(params: Params, section: NodeConditions) -> Iterator[Result]:
@@ -128,7 +102,7 @@ def _check_condition(
         )
 
 
-def _check_node_custom_conditions(section: NodeCustomConditions):  # type: ignore[no-untyped-def]
+def _check_node_custom_conditions(section: NodeCustomConditions) -> Iterator[Result]:
     for cond in section.custom_conditions:
         if cond.status == NodeConditionStatus.FALSE:
             yield Result(

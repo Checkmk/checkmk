@@ -3,19 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
 from cmk.base.legacy_checks.postfix_mailq_status import (
     check_postfix_mailq_status,
     inventory_postfix_mailq_status,
+)
+from cmk.base.plugins.agent_based.postfix_mailq_status import (
     parse_postfix_mailq_status,
+    PostfixError,
+    PostfixPid,
 )
 
 
 @pytest.fixture(name="section", scope="module")
-def fixture_section() -> dict[str, Any]:
+def fixture_section() -> dict[str, PostfixError | PostfixPid]:
     return parse_postfix_mailq_status(
         [
             ["postfix", " the Postfix mail system is running", " PID", " 12910"],
@@ -41,7 +44,7 @@ def fixture_section() -> dict[str, Any]:
     )
 
 
-def test_inventory_postfix_mailq_status(section: Mapping[str, Any]) -> None:
+def test_inventory_postfix_mailq_status(section: Mapping[str, PostfixError | PostfixPid]) -> None:
     assert list(inventory_postfix_mailq_status(section)) == [
         ("", None),
         ("postfix-external", None),
@@ -79,6 +82,6 @@ def test_inventory_postfix_mailq_status(section: Mapping[str, Any]) -> None:
     ],
 )
 def test_check_postfix_mailq_status(
-    section: Mapping[str, Any], item: str, expected_output: Sequence[object]
+    section: Mapping[str, PostfixError | PostfixPid], item: str, expected_output: Sequence[object]
 ) -> None:
     assert list(check_postfix_mailq_status(item, None, section)) == expected_output

@@ -800,7 +800,7 @@ unused devices: <none>
 QUEUE_deferred 68 0
 QUEUE_active 4 0
 <<<postfix_mailq_status:sep(58)>>>
-postfix: Postfix is running with backwards-compatible default settings postfix: See http://www.postfix.org/COMPATIBILITY_README.html for details postfix: To disable backwards compatibility use "postconf compatibility_level=2" and "postfix reload" postfix/postfix-script: the Postfix mail system is running: PID: 2051
+postfix/postfix-script: the Postfix mail system is running: PID: 2051
 <<<omd_status:cached(1483648213,60)>>>
 [heute]
 mkeventd 0

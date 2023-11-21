@@ -180,6 +180,10 @@ pub const QUERY_CLUSTER_NODES: &str = "SELECT nodename FROM sys.dm_os_cluster_no
 pub const QUERY_CLUSTER_ACTIVE_NODES: &str =
     "SELECT cast(SERVERPROPERTY('ComputerNamePhysicalNetBIOS') as varchar) AS active_node";
 
+pub const QUERY_CONNECTIONS: &str = "SELECT name AS DbName, \
+      cast((SELECT COUNT(dbid) AS Num_Of_Connections FROM sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ) as bigint) AS NumberOfConnections  \
+FROM sys.databases";
+
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()
 }

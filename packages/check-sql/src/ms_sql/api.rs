@@ -31,6 +31,7 @@ const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
 const DATAFILES_SECTION_NAME: &str = "datafiles";
 const DATABASES_SECTION_NAME: &str = "databases";
 const CLUSTERS_SECTION_NAME: &str = "clusters";
+const CONNECTIONS_SECTION_NAME: &str = "connections";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -123,7 +124,8 @@ impl InstanceEngine {
                         | TRANSACTION_LOG_SECTION_NAME
                         | DATAFILES_SECTION_NAME
                         | DATABASES_SECTION_NAME
-                        | CLUSTERS_SECTION_NAME => {
+                        | CLUSTERS_SECTION_NAME
+                        | CONNECTIONS_SECTION_NAME => {
                             result += &self
                                 .generate_known_sections(&mut client, endpoint, &section.name)
                                 .await;
@@ -230,6 +232,10 @@ impl InstanceEngine {
             }
             CLUSTERS_SECTION_NAME => {
                 self.generate_clusters_section(endpoint, &databases, sep)
+                    .await
+            }
+            CONNECTIONS_SECTION_NAME => {
+                self.generate_connections_section(client, queries::QUERY_CONNECTIONS, sep)
                     .await
             }
             _ => format!("{} not implemented\n", name).to_string(),
@@ -517,6 +523,36 @@ impl InstanceEngine {
                 .get_value_by_name("active_node"));
         }
         Ok("-".to_string())
+    }
+
+    pub async fn generate_connections_section(
+        &self,
+        client: &mut Client,
+        query: &str,
+        sep: char,
+    ) -> String {
+        run_query(client, query)
+            .await
+            .map(|rows| self.to_connections_entries(&rows, sep))
+            .unwrap_or_else(|e| format!("{}{sep}{:?}\n", self.name, e))
+    }
+
+    fn to_connections_entries(&self, rows: &[Vec<Row>], sep: char) -> String {
+        if rows.is_empty() {
+            return String::new();
+        }
+        let rows = &rows[0];
+        rows.iter()
+            .map(|row| {
+                format!(
+                    "{}{sep}{}{sep}{}\n",
+                    self.name,
+                    row.get_value_by_idx(0).replace(' ', "_"), // for unknown reason we can't get it by name
+                    row.get_bigint_by_name("NumberOfConnections")
+                )
+            })
+            .collect::<Vec<String>>()
+            .join("")
     }
 
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {

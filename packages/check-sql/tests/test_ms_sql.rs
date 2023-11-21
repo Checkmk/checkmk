@@ -160,6 +160,9 @@ async fn test_validate_all_instances_remote() {
                     validate_datafiles(&i, &mut c, &cfg.endpoint()).await;
                     validate_databases(&i, &mut c).await;
                     validate_databases_error(&i, &mut c).await;
+                    validate_clusters(&i, &mut c, &cfg.endpoint()).await;
+                    validate_connections(&i, &mut c).await;
+                    validate_connections_error(&i, &mut c).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -205,7 +208,7 @@ async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client
         .await;
 
     let lines: Vec<&str> = all_sessions.split('\n').collect::<Vec<&str>>();
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     for l in lines[..lines.len() - 1].iter() {
         assert!(
             l.starts_with(&format!("{}|", instance.name)),
@@ -236,7 +239,7 @@ async fn validate_table_spaces(
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split(' ').collect::<Vec<&str>>();
         assert_eq!(values[0], instance.mssql_name(), "wrong: {l}");
@@ -259,7 +262,7 @@ async fn validate_backup(instance: &InstanceEngine, client: &mut Client) {
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= (to_be_found.len() + 1), "{:?}", lines);
 
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     for l in lines[..lines.len() - 2].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
         assert_eq!(values.len(), 5, "wrong: {l}");
@@ -289,7 +292,7 @@ async fn validate_transaction_logs(
 
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
@@ -317,7 +320,7 @@ async fn validate_datafiles(instance: &InstanceEngine, client: &mut Client, endp
 
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
@@ -346,7 +349,7 @@ async fn validate_databases(instance: &InstanceEngine, client: &mut Client) {
 
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
@@ -379,7 +382,7 @@ async fn validate_databases_error(instance: &InstanceEngine, client: &mut Client
 
     let lines: Vec<&str> = result.split('\n').collect();
     assert!(lines.len() >= expected.len(), "{:?}", lines);
-    assert!(lines[lines.len() - 1].is_empty());
+    assert!(lines.last().unwrap().is_empty());
     let mut found: HashSet<String> = HashSet::new();
     for l in lines[..lines.len() - 1].iter() {
         let values = l.split('|').collect::<Vec<&str>>();
@@ -392,6 +395,46 @@ async fn validate_databases_error(instance: &InstanceEngine, client: &mut Client
         assert_eq!(values[3..6], ["-", "-", "-"], "wrong: {l}");
     }
     assert_eq!(found, expected);
+}
+
+async fn validate_connections(instance: &InstanceEngine, client: &mut Client) {
+    let expected: HashSet<String> = expected_databases();
+
+    let result = instance
+        .generate_connections_section(client, queries::QUERY_CONNECTIONS, ' ')
+        .await;
+
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() >= expected.len(), "{:?}", lines);
+    assert!(lines.last().unwrap().is_empty());
+
+    let mut found: HashSet<String> = HashSet::new();
+    for l in lines[..lines.len() - 1].iter() {
+        let values = l.split(' ').collect::<Vec<&str>>();
+        assert_eq!(values.len(), 3);
+        assert_eq!(values[0], instance.name, "wrong: {l}");
+        if expected.contains(&values[1].to_string()) {
+            found.insert(values[1].to_string());
+        }
+        assert!(values[2].parse::<u32>().is_ok(), "wrong: {l}");
+    }
+    assert_eq!(found, expected);
+}
+
+async fn validate_connections_error(instance: &InstanceEngine, client: &mut Client) {
+    let result = instance
+        .generate_connections_section(client, queries::BAD_QUERY, ' ')
+        .await;
+
+    let lines: Vec<&str> = result.split('\n').collect();
+    assert!(lines.len() == 2, "{:?}", lines);
+    assert!(lines.last().unwrap().is_empty());
+    assert!(lines[0].starts_with(&format!("{} ", instance.name)));
+    assert!(lines[0].contains(" error: "));
+}
+
+async fn validate_clusters(_instance: &InstanceEngine, _client: &mut Client, _endpoint: &Endpoint) {
+    // TODO(sk): implement it on arriving config
 }
 
 /// This test is ignored because it requires real credentials and real server

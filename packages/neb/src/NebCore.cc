@@ -619,19 +619,6 @@ bool NebCore::pnp4nagiosEnabled() const {
     return true;  // TODO(sp) ???
 }
 
-namespace {
-std::list<std::string> getLines(InputBuffer &input) {
-    std::list<std::string> lines;
-    while (!input.empty()) {
-        lines.push_back(input.nextLine());
-        if (lines.back().empty()) {
-            break;
-        }
-    }
-    return lines;
-}
-}  // namespace
-
 void NebCore::logRequest(const std::string &line,
                          const std::list<std::string> &lines) {
     Informational log(_logger);
@@ -687,7 +674,7 @@ bool NebCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
 bool NebCore::handleGet(InputBuffer &input, OutputBuffer &output,
                         const std::string &line,
                         const std::string &table_name) {
-    auto lines = getLines(input);
+    auto lines = input.getLines();
     logRequest(line, lines);
     return _store.answerGetRequest(lines, output, table_name);
 }

@@ -247,10 +247,19 @@ InputBuffer::Result InputBuffer::readData() {
     return Result::should_terminate;
 }
 
-bool InputBuffer::empty() const { return _request_lines.empty(); }
-
 std::string InputBuffer::nextLine() {
     std::string s = _request_lines.front();
     _request_lines.pop_front();
     return s;
+}
+
+std::list<std::string> InputBuffer::getLines() {
+    std::list<std::string> lines;
+    while (!_request_lines.empty()) {
+        lines.push_back(nextLine());
+        if (lines.back().empty()) {
+            break;
+        }
+    }
+    return lines;
 }

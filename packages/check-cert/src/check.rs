@@ -4,6 +4,33 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
+#[derive(Debug, Clone, Copy)]
+pub enum Real {
+    Integer(isize),
+    Double(f64),
+}
+
+impl From<isize> for Real {
+    fn from(x: isize) -> Self {
+        Real::Integer(x)
+    }
+}
+
+impl From<f64> for Real {
+    fn from(x: f64) -> Self {
+        Real::Double(x)
+    }
+}
+
+impl Display for Real {
+    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+        match self {
+            Self::Integer(x) => write!(f, "{}", x),
+            Self::Double(x) => write!(f, "{:.06}", x),
+        }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Bounds<T> {
     pub min: T,
@@ -155,7 +182,7 @@ pub struct Metric<T> {
     bounds: Option<Bounds<T>>,
 }
 
-impl<T: Default + Display> Metric<T> {
+impl<T: Display> Metric<T> {
     pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
         MetricBuilder::new(label, value)
     }
@@ -434,16 +461,22 @@ mod test_metrics_map {
 
 #[cfg(test)]
 mod test_metrics_display {
-    use super::{Bounds, Levels, Metric, MetricBuilder};
+    use super::{Bounds, Levels, Metric, MetricBuilder, Real};
 
     #[test]
     fn test_default() {
         assert_eq!(
-            format!("{}", Metric::<u32>::builder("name", 42).build()),
+            format!(
+                "{}",
+                Metric::<Real>::builder("name", Real::Integer(42)).build()
+            ),
             "name=42;;;;"
         );
         assert_eq!(
-            format!("{}", MetricBuilder::<u32>::new("name", 42).build()),
+            format!(
+                "{}",
+                MetricBuilder::<Real>::new("name", Real::Integer(42)).build()
+            ),
             "name=42;;;;"
         );
     }
@@ -453,7 +486,9 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<u32>::new("name", 42).uom("ms").build()
+                MetricBuilder::<Real>::new("name", Real::Integer(42))
+                    .uom("ms")
+                    .build()
             ),
             "name=42ms;;;;"
         );
@@ -464,8 +499,11 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<u32>::new("name", 42)
-                    .levels(Levels { warn: 24, crit: 42 })
+                MetricBuilder::<Real>::new("name", Real::Integer(42))
+                    .levels(Levels {
+                        warn: Real::Integer(24),
+                        crit: Real::Integer(42)
+                    })
                     .build()
             ),
             "name=42;24;42;;"
@@ -473,17 +511,44 @@ mod test_metrics_display {
     }
 
     #[test]
-    fn test_chain_all() {
+    fn test_chain_all_integer() {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<u32>::new("name", 42)
+                MetricBuilder::<Real>::new("name", Real::Integer(42))
                     .uom("ms")
-                    .levels(Levels { warn: 24, crit: 42 })
-                    .bounds(Bounds { min: 0, max: 100 })
+                    .levels(Levels {
+                        warn: Real::Integer(24),
+                        crit: Real::Integer(42)
+                    })
+                    .bounds(Bounds {
+                        min: Real::Integer(0),
+                        max: Real::Integer(100)
+                    })
                     .build()
             ),
             "name=42ms;24;42;0;100"
+        );
+    }
+
+    #[test]
+    fn test_chain_all_double() {
+        assert_eq!(
+            format!(
+                "{}",
+                MetricBuilder::<Real>::new("name", Real::Double(42.0))
+                    .uom("ms")
+                    .levels(Levels {
+                        warn: Real::Double(24.0),
+                        crit: Real::Double(42.0)
+                    })
+                    .bounds(Bounds {
+                        min: Real::Double(0.0),
+                        max: Real::Double(100.0)
+                    })
+                    .build()
+            ),
+            "name=42.000000ms;24.000000;42.000000;0.000000;100.000000"
         );
     }
 }

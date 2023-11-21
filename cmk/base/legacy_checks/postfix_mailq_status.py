@@ -18,48 +18,35 @@
 
 # mypy: disable-error-code="var-annotated"
 
+from collections.abc import Mapping
+from typing import Any, Iterator
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State
+from cmk.base.plugins.agent_based.postfix_mailq_status import PostfixError, PostfixPid
 
 
-def parse_postfix_mailq_status(string_table):
-    parsed = {}
-    for line in string_table:
-        stripped_line = [x.strip() for x in line]
-        queuename = stripped_line[0].split("/")[0]
-        if queuename == "postfix":
-            queuename = ""
-        parsed.setdefault(queuename, {})
-
-        state_index = -1
-        if len(stripped_line) > 2 and stripped_line[-2] == "PID":
-            state_index = -3
-            parsed[queuename]["pid"] = stripped_line[-1]
-        parsed[queuename]["state"] = stripped_line[state_index]
-
-    return parsed
+def inventory_postfix_mailq_status(
+    section: Mapping[str, PostfixError | PostfixPid]
+) -> Iterator[Any]:
+    yield from ((queuename, None) for queuename in section)
 
 
-def inventory_postfix_mailq_status(parsed):
-    return [(queuename, None) for queuename in parsed]
+def check_postfix_mailq_status(
+    item: str, params: object, section: Mapping[str, PostfixError | PostfixPid]
+) -> Iterator[Any]:
+    if not (postfix := section.get(item)):
+        return
 
-
-def check_postfix_mailq_status(item, params, parsed):
-    if item in parsed:
-        state_readable = parsed[item]["state"]
-        pid = parsed[item].get("pid")
-        if state_readable.endswith("is running"):
-            state = 0
-        else:
-            state = 2
-        yield state, "Status: %s" % state_readable
-
-        if pid:
-            yield 0, "PID: %s" % pid
+    if isinstance(postfix, PostfixPid):
+        yield State.OK.value, "Status: the Postfix mail system is running"
+        yield State.OK.value, f"PID: {postfix}"
+    else:
+        yield State.CRIT.value, f"Status: {postfix.value}"
 
 
 check_info["postfix_mailq_status"] = LegacyCheckDefinition(
-    parse_function=parse_postfix_mailq_status,
     service_name="Postfix status %s",
     discovery_function=inventory_postfix_mailq_status,
     check_function=check_postfix_mailq_status,

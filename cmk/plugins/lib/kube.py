@@ -139,26 +139,6 @@ class Controller(BaseModel):
 ControlChain = Sequence[Controller]
 
 
-def condition_short_description(name: str, status: bool | str) -> str:
-    return f"{name.upper()}: {status}"
-
-
-def condition_detailed_description(
-    name: str,
-    status: bool | str,
-    reason: str | None,
-    message: str | None,
-) -> str:
-    """Format the condition for Result summary or details
-
-    Examples:
-        >>> condition_detailed_description("Ready", "False", "Waiting", "ContainerCreating")
-        'READY: False (Waiting: ContainerCreating)'
-
-    """
-    return f"{condition_short_description(name, status)} ({reason}: {message})"
-
-
 # TODO: CMK-10380 (the change will incompatible)
 def kube_labels_to_cmk_labels(labels: Labels) -> HostLabelGenerator:
     """Convert Kubernetes Labels to HostLabels.
@@ -342,6 +322,28 @@ class NodeConditionStatus(str, enum.Enum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"
+
+
+def condition_short_description(name: str, status: NodeConditionStatus | bool) -> str:
+    if isinstance(status, NodeConditionStatus):
+        return f"{name.upper()}: {status.value}"
+    return f"{name.upper()}: {status}"
+
+
+def condition_detailed_description(
+    name: str,
+    status: NodeConditionStatus | bool,
+    reason: str | None,
+    message: str | None,
+) -> str:
+    """Format the condition for Result summary or details
+
+    Examples:
+        >>> condition_detailed_description("Ready", NodeConditionStatus.FALSE, "Waiting", "ContainerCreating")
+        'READY: NodeConditionStatus.FALSE (Waiting: ContainerCreating)'
+
+    """
+    return f"{condition_short_description(name, status)} ({reason}: {message})"
 
 
 class CountableNode(BaseModel):

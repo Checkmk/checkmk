@@ -22,6 +22,7 @@ PARAMS = kube_node_conditions.Params(
     diskpressure=int(State.CRIT),
     pidpressure=int(State.CRIT),
     networkunavailable=int(State.CRIT),
+    conditions=[],
 )
 
 
@@ -103,5 +104,5 @@ def test_check_custom() -> None:
     custom_section = NodeCustomConditions(
         custom_conditions=[NodeCustomCondition(type_="custom", status=NodeConditionStatus.TRUE)]
     )
-    results = list(kube_node_conditions._check_node_custom_conditions(custom_section))
+    results = list(kube_node_conditions._check_node_custom_conditions(PARAMS, custom_section))
     assert results == [Result(state=State.CRIT, summary="CUSTOM: True (None: None)")]

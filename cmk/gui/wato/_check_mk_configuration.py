@@ -4290,15 +4290,58 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
         elements=[
             (
                 "mode",
-                DropdownChoice(
-                    title=_("Mode"),
-                    choices=[
-                        (0, _("Add unmonitored services, new host labels")),
-                        (1, _("Remove vanished services")),
-                        (2, _("Add unmonitored & remove vanished services and host labels")),
-                        (3, _("Refresh all services and host labels (tabula rasa)")),
-                    ],
-                    default_value=0,
+                Migrate(
+                    migrate=_migrate_automatic_rediscover_parameters,
+                    valuespec=CascadingDropdown(
+                        title=_("Parameters"),
+                        sorted=False,
+                        choices=[
+                            (
+                                "update_everything",
+                                _("Refresh all services and host labels (tabula rasa)"),
+                                FixedValue(
+                                    value={
+                                        "add_new_services": True,
+                                        "remove_vanished_services": True,
+                                        "update_host_labels": True,
+                                    },
+                                    title=_("Refresh all services and host labels (tabula rasa)"),
+                                    totext="",
+                                ),
+                            ),
+                            (
+                                "custom",
+                                _("Custom service configuration update"),
+                                Dictionary(
+                                    title=_("Custom service configuration update"),
+                                    elements=[
+                                        (
+                                            "add_new_services",
+                                            Checkbox(
+                                                label=_("Monitor undecided services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "remove_vanished_services",
+                                            Checkbox(
+                                                label=_("Remove vanished services"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                        (
+                                            "update_host_labels",
+                                            Checkbox(
+                                                label=_("Update host labels"),
+                                                default_value=False,
+                                            ),
+                                        ),
+                                    ],
+                                    optional_keys=False,
+                                ),
+                            ),
+                        ],
+                    ),
                 ),
             ),
             (
@@ -4414,6 +4457,56 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
         ],
         optional_keys=["service_filters", "keep_clustered_vanished_services"],
     )
+
+
+def _migrate_automatic_rediscover_parameters(
+    param: int | tuple[str, dict[str, bool]]
+) -> tuple[str, dict[str, bool]]:
+    # already migrated
+    if isinstance(param, tuple):
+        return param
+
+    if param == 0:
+        return (
+            "custom",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": False,
+                "update_host_labels": True,
+            },
+        )
+
+    if param == 1:
+        return (
+            "custom",
+            {
+                "add_new_services": False,
+                "remove_vanished_services": True,
+                "update_host_labels": False,
+            },
+        )
+
+    if param == 2:
+        return (
+            "custom",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": True,
+                "update_host_labels": True,
+            },
+        )
+
+    if param == 3:
+        return (
+            "update_everything",
+            {
+                "add_new_services": True,
+                "remove_vanished_services": True,
+                "update_host_labels": True,
+            },
+        )
+
+    raise MKConfigError(f"Automatic rediscovery parameter {param} not implemented")
 
 
 def _get_periodic_discovery_dflt_service_filter_lists() -> list[tuple[str, ValueSpec]]:

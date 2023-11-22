@@ -8,7 +8,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal, Self, TypeVar
+from typing import assert_never, Literal, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.auto_queue import AutoQueue
@@ -45,7 +45,7 @@ from ._filters import RediscoveryParameters
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import discover_host_labels, HostLabelPlugin
 from ._services import analyse_services, discover_services, find_plugins
-from ._utils import DiscoveryMode, QualifiedDiscovery
+from ._utils import DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["get_host_services"]
 
@@ -86,25 +86,6 @@ _L = TypeVar("_L", bound=str)
 ServicesTableEntry = tuple[_L, AutocheckEntry, list[HostName]]
 ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
-
-
-@dataclass(frozen=True)
-class DiscoverySettings:
-    update_host_labels: bool
-    add_new_services: bool
-    remove_vanished_services: bool
-    # this will be separated into service labels and parameters at some point
-    update_changed_services: bool
-
-    @classmethod
-    def from_discovery_mode(cls, mode: DiscoveryMode) -> Self:
-        return cls(
-            update_host_labels=mode is not DiscoveryMode.REMOVE,
-            add_new_services=mode
-            in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
-            remove_vanished_services=mode in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL),
-            update_changed_services=mode is DiscoveryMode.REFRESH,
-        )
 
 
 # determine changed services on host.
@@ -418,9 +399,7 @@ def autodiscovery(
         ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=get_service_description,
-        settings=DiscoverySettings.from_discovery_mode(
-            DiscoveryMode(rediscovery_parameters.get("mode"))
-        ),
+        settings=DiscoverySettings.from_vs(rediscovery_parameters.get("mode")),
         keep_clustered_vanished_services=rediscovery_parameters.get(
             "keep_clustered_vanished_services", True
         ),

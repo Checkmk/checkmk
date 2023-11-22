@@ -35,7 +35,7 @@ from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._params import DiscoveryCheckParameters
-from ._utils import DiscoveryMode, QualifiedDiscovery
+from ._utils import DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
 
@@ -52,14 +52,9 @@ class _Transition(enum.Enum):
             case _Transition.VANISHED:
                 return "Vanished"
 
-    def need_discovery(self, discovery_mode: DiscoveryMode) -> bool:
-        return (
-            self is _Transition.NEW
-            and discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)
-        ) or (
-            self is _Transition.VANISHED
-            and discovery_mode
-            in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)
+    def need_discovery(self, discovery_mode: DiscoverySettings) -> bool:
+        return (self is _Transition.NEW and discovery_mode.add_new_services) or (
+            self is _Transition.VANISHED and discovery_mode.remove_vanished_services
         )
 
 
@@ -88,7 +83,7 @@ def execute_check_discovery(
     #    - Set FileCacheGlobals.use_outdated = True
     # 2. Then these settings are used to read cache file or not
 
-    discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
+    discovery_mode = DiscoverySettings.from_vs(params.rediscovery.get("mode"))
 
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
@@ -191,7 +186,7 @@ def _check_service_lists(
     services_by_transition: ServicesByTransition,
     params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
-    discovery_mode: DiscoveryMode,
+    discovery_mode: DiscoverySettings,
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> tuple[Sequence[ActiveCheckResult], bool]:
     subresults = []
@@ -278,7 +273,7 @@ def _iter_output_services(
 def _check_host_labels(
     host_labels: QualifiedDiscovery[HostLabel],
     severity_new_host_label: int,
-    discovery_mode: DiscoveryMode,
+    discovery_mode: DiscoverySettings,
 ) -> tuple[Sequence[ActiveCheckResult], bool]:
     subresults = []
     if host_labels.new:
@@ -288,7 +283,7 @@ def _check_host_labels(
     return (
         (
             subresults,
-            discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
+            discovery_mode.update_host_labels,
         )
         if subresults
         else (

@@ -7,9 +7,59 @@ from __future__ import annotations
 
 import enum
 from collections.abc import Hashable, Iterable, Sequence
-from typing import Final, Generic, Literal, Protocol, TypeVar
+from dataclasses import dataclass
+from typing import Final, Generic, Literal, Protocol, Self, TypeVar
 
-__all__ = ["DiscoveryMode", "QualifiedDiscovery"]
+__all__ = ["DiscoveryMode", "QualifiedDiscovery", "DiscoverySettings"]
+
+DiscoveryVsSetting = dict[
+    Literal["add_new_services", "remove_vanished_services", "update_host_labels"], bool
+]
+DiscoveryVsSettings = tuple[Literal["update_everything", "custom"], DiscoveryVsSetting]
+
+
+@dataclass(frozen=True)
+class DiscoverySettings:
+    update_host_labels: bool
+    add_new_services: bool
+    remove_vanished_services: bool
+    # this will be separated into service labels and parameters at some point
+    update_changed_services: bool
+
+    @classmethod
+    def from_discovery_mode(cls, mode: DiscoveryMode) -> Self:
+        return cls(
+            update_host_labels=mode is not DiscoveryMode.REMOVE,
+            add_new_services=mode
+            in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
+            remove_vanished_services=mode in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL),
+            update_changed_services=mode is DiscoveryMode.REFRESH,
+        )
+
+    @classmethod
+    def from_vs(cls, mode: DiscoveryVsSettings | None) -> Self:
+        if mode is None:
+            return cls(
+                update_host_labels=False,
+                add_new_services=False,
+                remove_vanished_services=False,
+                update_changed_services=False,
+            )
+
+        if "update_everything" in mode:
+            return cls(
+                update_host_labels=True,
+                add_new_services=True,
+                remove_vanished_services=True,
+                update_changed_services=True,
+            )
+
+        return cls(
+            update_host_labels=mode[1].get("update_host_labels", False),
+            add_new_services=mode[1].get("add_new_services", False),
+            remove_vanished_services=mode[1].get("remove_vanished_services", False),
+            update_changed_services=False,
+        )
 
 
 class DiscoveryMode(enum.Enum):

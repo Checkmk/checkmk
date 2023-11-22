@@ -288,6 +288,21 @@ class Site:
             services[service["extensions"]["description"]] = service["extensions"]["state"]
         return services
 
+    def set_timezone(self, timezone: str) -> None:
+        """Set the timezone of the site."""
+        if not timezone:
+            return
+        restart_site = self.is_running()
+        self.stop()
+        environment = [
+            _
+            for _ in self.read_file("etc/environment").splitlines()
+            if not _.strip().startswith("TZ=")
+        ] + [f"TZ={timezone}"]
+        self.write_text_file("etc/environment", "\n".join(environment) + "\n")
+        if restart_site:
+            self.start()
+
     @staticmethod
     def _command_timestamp(last_check_before: float) -> float:
         # Ensure the next check result is not in same second as the previous check
@@ -664,6 +679,8 @@ class Site:
         self.openapi.set_authentication_header(
             user="automation", password=self.get_automation_secret()
         )
+        # set the sites timezone according to TZ
+        self.set_timezone(os.getenv("TZ", ""))
 
     def _ensure_sample_config_is_present(self) -> None:
         if missing_files := self._missing_but_required_wato_files():

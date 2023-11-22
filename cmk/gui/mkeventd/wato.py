@@ -94,6 +94,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     DictionaryEntry,
+    DictionaryModel,
     DropdownChoice,
     DualListChoice,
     FixedValue,
@@ -2538,6 +2539,24 @@ def _get_match(rule: ec.Rule) -> str:
     return value
 
 
+def _add_change_for_sites(
+    *, what: str, message: str, rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec
+) -> None:
+    """If CME, add the changes only for the customer's sites if customer is configured"""
+    customer_id: str | None = rule_or_rulepack.get("customer")
+    if edition() is Edition.CME and customer_id is not None:
+        sites = list(customer_api().get_sites_of_customer(customer_id).keys())
+    else:
+        sites = _get_event_console_sync_sites()
+
+    _changes.add_change(
+        what,
+        message,
+        domains=[ConfigDomainEventConsole],
+        sites=sites,
+    )
+
+
 class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     @classmethod
     def name(cls) -> str:
@@ -2630,11 +2649,17 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         save_mkeventd_rules(self._rule_packs)
 
         if self._new:
-            self._add_change(
-                "new-rule-pack", _("Created new rule pack with id %s") % self._rule_pack["id"]
+            _add_change_for_sites(
+                what="new-rule-pack",
+                message=_("Created new rule pack with id %s") % self._rule_pack["id"],
+                rule_or_rulepack=self._rule_pack,
             )
         else:
-            self._add_change("edit-rule-pack", _("Modified rule pack %s") % self._rule_pack["id"])
+            _add_change_for_sites(
+                what="edit-rule-pack",
+                message=_("Modified rule pack %s") % self._rule_pack["id"],
+                rule_or_rulepack=self._rule_pack,
+            )
         return redirect(mode_url("mkeventd_rule_packs"))
 
     def page(self) -> None:
@@ -2823,12 +2848,16 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         save_mkeventd_rules(self._rule_packs)
 
         if self._new:
-            self._add_change(
-                "new-rule", _("Created new event correlation rule with id %s") % self._rule["id"]
+            _add_change_for_sites(
+                what="new-rule",
+                message=("Created new event correlation rule with id %s") % self._rule["id"],
+                rule_or_rulepack=self._rule,
             )
         else:
-            self._add_change(
-                "edit-rule", _("Modified event correlation rule %s") % self._rule["id"]
+            _add_change_for_sites(
+                what="edit-rule",
+                message=("Modified event correlation rule %s") % self._rule["id"],
+                rule_or_rulepack=self._rule,
             )
             # Reset hit counters of this rule
             execute_command("RESETCOUNTERS", [self._rule["id"]], omd_site())

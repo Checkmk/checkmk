@@ -1,0 +1,11 @@
+Title: Cease to provide builds for Ubuntu 22.10 (Kinetic Kudu)
+Class: fix
+Compatible: incomp
+Component: omd
+Date: 1700665071
+Edition: cre
+Level: 1
+Version: 2.2.0p15
+
+With this werk, we cease to deliver builds for Ubuntu 22.10.
+Since Ubuntu 22.10 is out of support since August 2023, it is necessary to upgrade to Ubuntu 23.04 or 23.10 before installing upcoming Checkmk builds.

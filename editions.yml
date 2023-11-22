@@ -5,7 +5,6 @@ common: &common
     - "debian-12"
     - "ubuntu-20.04"
     - "ubuntu-22.04"
-    - "ubuntu-22.10"
     - "ubuntu-23.04"
     - "ubuntu-23.10"
     - "centos-7"
@@ -22,7 +21,6 @@ common: &common
 daily_reduced: &daily_reduced
     - "ubuntu-20.04"
     - "ubuntu-22.04"
-    - "ubuntu-22.10"
     - "debian-10"
 
 # Builds for those distros will only be available internally for development purpose

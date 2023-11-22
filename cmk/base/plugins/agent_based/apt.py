@@ -25,10 +25,10 @@
 # Inst default-jre [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64]) []
 # Inst default-jre-headless [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64])
 
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from itertools import islice
-from re import Pattern
 from typing import Any, ClassVar, NamedTuple
 
 from cmk.plugins.lib.apt import (
@@ -38,7 +38,7 @@ from cmk.plugins.lib.apt import (
     UBUNTU_PRO,
 )
 
-from .agent_based_api.v1 import Metric, regex, register, Result, Service, State
+from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
@@ -55,7 +55,7 @@ class Section(NamedTuple):
 
 @dataclass(frozen=True)
 class ParsedLine:
-    action_line_regex: ClassVar[Pattern] = regex(
+    action_line_regex: ClassVar[re.Pattern] = re.compile(
         r"(Inst|Remv)"  # capture action
         r"\s"  # whitespace
         r"(\S+)"  # capture package
@@ -63,7 +63,7 @@ class ParsedLine:
         r"(?:\s\((.*?)\))?"  # optional update/new package metadata, capture text inside ()
         r".*?"  # any other stuff
     )
-    sec_regex: ClassVar[Pattern] = regex(r"Debian-Security:|Ubuntu[^/]*/[^/]*-\bsecurity\b")
+    sec_regex: ClassVar[re.Pattern] = re.compile(r"Debian-Security:|Ubuntu[^/]*/[^/]*-\bsecurity\b")
     action: str
     package: str
     old_version: str | None

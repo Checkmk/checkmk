@@ -41,8 +41,9 @@ from cmk.gui.graphing._html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
+from cmk.gui.graphing._loader import load_graphing_plugins
 from cmk.gui.graphing._type_defs import TranslatedMetric
-from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
+from cmk.gui.graphing._utils import add_graphing_plugins, parse_perf_data, translate_metrics
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 
@@ -62,6 +63,7 @@ def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
+    add_graphing_plugins(load_graphing_plugins())
     parse_perfometers(perfometer_info)
 
 

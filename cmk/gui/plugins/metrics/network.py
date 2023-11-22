@@ -307,18 +307,6 @@ metric_info["connections"] = {
     "color": "#a080b0",
 }
 
-metric_info["idle_connections"] = {
-    "title": _("Idle connections"),
-    "unit": "count",
-    "color": "#a080f0",
-}
-
-metric_info["active_connections"] = {
-    "title": _("Active connections"),
-    "unit": "count",
-    "color": "#a020c0",
-}
-
 metric_info["failed_connections"] = {
     "title": _("Failed connections"),
     "unit": "count",
@@ -1896,6 +1884,7 @@ graph_info["db_connections"] = {
         ("active_connections:crit", _("Critical (active connections)")),
     ],
 }
+
 
 graph_info["cluster_hosts"] = {
     "title": _("Hosts"),

@@ -163,6 +163,8 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return wato.RulespecGroupCheckParametersApplications
                 case ruleset_api_v1.Topic.VIRTUALIZATION:
                     return wato.RulespecGroupCheckParametersVirtualization
+                case ruleset_api_v1.Topic.OPERATING_SYSTEM:
+                    return wato.RulespecGroupCheckParametersOperatingSystem
 
             assert_never(topic_to_convert)
 
@@ -172,6 +174,8 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return legacy_rulespec_groups.RulespecGroupEnforcedServicesApplications
                 case ruleset_api_v1.Topic.VIRTUALIZATION:
                     return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
+                case ruleset_api_v1.Topic.OPERATING_SYSTEM:
+                    return legacy_rulespec_groups.RulespecGroupEnforcedServicesOperatingSystem
 
             assert_never(topic_to_convert)
 

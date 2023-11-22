@@ -171,7 +171,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
 
 	# cmk needs to be a namespace package (CMK-3979)
-        grep -R 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm -f
+	grep -Rl 'check_mk.make: do-not-deploy' $(CHECK_MK_INSTALL_DIR)/lib/python3/ | xargs rm
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk

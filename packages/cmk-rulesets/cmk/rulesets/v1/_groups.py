@@ -12,12 +12,14 @@ from cmk.rulesets.v1._localize import Localizable
 class Functionality(Enum):
     ENFORCED_SERVICES = auto()
     MONITORING_CONFIGURATION = auto()
+    DISCOVERY_CONFIGURATION = auto()
 
 
 class Topic(Enum):
     APPLICATIONS = auto()
     OPERATING_SYSTEM = auto()
     VIRTUALIZATION = auto()
+    INDIVIDUAL_SERVICE_DISCOVERY = auto()
 
 
 @dataclass(frozen=True)

@@ -46,7 +46,9 @@ def convert_to_legacy_rulespec(
             )
         case ruleset_api_v1.EnforcedServiceRuleSpecWithoutItem():
             return _convert_to_legacy_manual_check_parameter_rulespec(to_convert, localizer)
-        case ruleset_api_v1.CheckParameterRuleSpecWithoutItem() | ruleset_api_v1.HostRuleSpec() | ruleset_api_v1.ServiceRuleSpec() | ruleset_api_v1.InventoryParameterRuleSpec() | ruleset_api_v1.ActiveChecksRuleSpec() | ruleset_api_v1.AgentConfigRuleSpec() | ruleset_api_v1.SpecialAgentRuleSpec() | ruleset_api_v1.ExtraHostConfRuleSpec() | ruleset_api_v1.ExtraServiceConfRuleSpec():
+        case ruleset_api_v1.HostRuleSpec():
+            return _convert_to_legacy_host_rule_spec_rulespec(to_convert, localizer)
+        case ruleset_api_v1.ServiceRuleSpec() | ruleset_api_v1.InventoryParameterRuleSpec() | ruleset_api_v1.ActiveChecksRuleSpec() | ruleset_api_v1.AgentConfigRuleSpec() | ruleset_api_v1.SpecialAgentRuleSpec() | ruleset_api_v1.ExtraHostConfRuleSpec() | ruleset_api_v1.ExtraServiceConfRuleSpec():
             raise NotImplementedError(to_convert)
         case other:
             assert_never(other)
@@ -141,6 +143,22 @@ def _convert_to_legacy_rulespec_group(
     raise ValueError((functionality_to_convert, topic_to_convert))
 
 
+def _convert_to_legacy_host_rule_spec_rulespec(
+    to_convert: ruleset_api_v1.HostRuleSpec,
+    localizer: Callable[[str], str],
+) -> legacy_rulespecs.HostRulespec:
+    return legacy_rulespecs.HostRulespec(
+        group=_convert_to_legacy_rulespec_group(
+            to_convert.functionality, to_convert.topic, localizer
+        ),
+        name=to_convert.name,
+        valuespec=partial(_convert_to_legacy_valuespec, to_convert.parameter_form(), localizer),
+        title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
+        is_deprecated=to_convert.is_deprecated,
+        match_type="dict" if to_convert.eval_type == ruleset_api_v1.RuleEvalType.MERGE else "all",
+    )
+
+
 def _get_builtin_legacy_main_group(
     functionality_to_convert: ruleset_api_v1.Functionality,
 ) -> type[legacy_rulespecs.RulespecGroup]:
@@ -149,6 +167,8 @@ def _get_builtin_legacy_main_group(
             return wato._rulespec_groups.RulespecGroupMonitoringConfiguration  # type: ignore[attr-defined]
         case ruleset_api_v1.Functionality.ENFORCED_SERVICES:
             return legacy_rulespecs.RulespecGroupEnforcedServices
+        case ruleset_api_v1.Functionality.DISCOVERY_CONFIGURATION:
+            return wato.RulespecGroupDiscoveryCheckParameters
     assert_never(functionality_to_convert)
 
 
@@ -165,6 +185,8 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return wato.RulespecGroupCheckParametersVirtualization
                 case ruleset_api_v1.Topic.OPERATING_SYSTEM:
                     return wato.RulespecGroupCheckParametersOperatingSystem
+                case ruleset_api_v1.Topic.INDIVIDUAL_SERVICE_DISCOVERY:
+                    raise NotImplementedError
 
             assert_never(topic_to_convert)
 
@@ -176,6 +198,17 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
                 case ruleset_api_v1.Topic.OPERATING_SYSTEM:
                     return legacy_rulespec_groups.RulespecGroupEnforcedServicesOperatingSystem
+                case ruleset_api_v1.Topic.INDIVIDUAL_SERVICE_DISCOVERY:
+                    raise NotImplementedError
+
+            assert_never(topic_to_convert)
+
+        case ruleset_api_v1.Functionality.DISCOVERY_CONFIGURATION:
+            match topic_to_convert:
+                case ruleset_api_v1.Topic.INDIVIDUAL_SERVICE_DISCOVERY:
+                    return wato.RulespecGroupCheckParametersDiscovery
+                case ruleset_api_v1.Topic.APPLICATIONS | ruleset_api_v1.Topic.VIRTUALIZATION | ruleset_api_v1.Topic.OPERATING_SYSTEM:
+                    raise NotImplementedError
 
             assert_never(topic_to_convert)
 

@@ -16,11 +16,8 @@ Version 1
    v1.render
    v1.type_defs
 
-Version 2 ALPHA - unstable
-==========================
-
-.. automodule:: cmk.agent_based.v2
-   :members:
+Version 2
+=========
 
 .. toctree::
 

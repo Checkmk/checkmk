@@ -23,12 +23,14 @@ def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:
 
     For compatibilty, this is part of the API.
     Note that there are two other ways to achieve better performance when
-    dealing with regexes using the python standard libraries `re` module:
+    dealing with regexes using the python standard libraries :mod:`re` module.
 
-     * Compile regexes using `re.compile` and store them in a global constant
-     * Do not explicitly compile the patterns and use `re`s module scope match
-       functions (like `re.match(".*", "foobar")`).
-       That way `re` will deal with memoizing.
+    One option is to compile regexes using :func:`re.compile` and store them
+    in a global constant.
+
+    The other is to not explicitly compile the patterns and use the module scope
+    match functions like `re.match(".*", "foobar")`.
+    That way `re` will deal with memoizing.
 
     """
     return re.compile(pattern, flags=flags)

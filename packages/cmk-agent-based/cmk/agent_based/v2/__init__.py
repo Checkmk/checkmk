@@ -3,14 +3,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-Agent based API v2
+New in this version:
+--------------------
 
-New/changed:
+Registration is replaced by a discovery approach
+************************************************
 
-  * The registration is replaced by a discovery approach
-  * Agent/SNMP sections:
-    * parse_function is no longer optional
-    * no runtime validation of the parse function - respect the type annotations!
+This is the main reason for the introduction of this new API version.
+Plugins are no longer registered during import, but only created and
+picked up later by the backend.
+To realize this, we introduced four new classes:
+    * :class:`AgentSection` replacing :func:`register.agent_section`
+    * :class:`SimpleSNMPSection` and :class:`SNMPSection`
+      replacing :func:`register.snmp_section`
+    * :class:`Checkplugin` replacing :func:`register.check_plugin`
+    * :class:`InventoryPlugin` replacing :func:`register.inventory_plugin`
+
+The arguments of these have barely changed (see next paragraph), resulting
+in easy to automate changes (see
+`this commit <https://github.com/Checkmk/checkmk/commit/6e7c9010ae370b30be904c6589ccdc75498482f7>`_
+for instance).
+
+Changed arguments and validation for Agent and SNMP sections
+************************************************************
+
+We slightly adopted the arguments to the above mentioned `Section` classes.
+We now favor type annotations over runtime validation.
+To get slightly easier type annotations, `parse_function` is no longer optional.
+
+Removed wrapper for regex creation :func:`regex`
+************************************************
+
+This has been removed. See its documentation for the reasoning.
+You can use pythons :func:`re.compile` as drop-in replacement.
 
 """
 # pylint: disable=duplicate-code

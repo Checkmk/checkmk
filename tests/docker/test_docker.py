@@ -479,6 +479,9 @@ def test_start_enable_mail(request: pytest.FixtureRequest, client: docker.Docker
     )
 
 
+@pytest.mark.skipif(
+    build_version().is_saas_edition(), reason="Saas edition requires cognito config"
+)
 def test_http_access_base_redirects_work(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:
@@ -623,7 +626,8 @@ def test_http_access_login_screen(
     assert 'name="_login"' in response.text, "Login field not found!"
 
 
-@pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
+@pytest.mark.skip(reason="Saas edition requires cognito config")
+# @pytest.mark.skipif(not build_version().is_saas_edition(), reason="Saas check saas login")
 def test_http_access_login_screen_saas(
     request: pytest.FixtureRequest, client: docker.DockerClient
 ) -> None:

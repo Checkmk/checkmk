@@ -8,7 +8,13 @@ import pytest
 from cmk.base.plugins.agent_based import kube_node_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
 
-from cmk.plugins.lib import kube
+from cmk.plugins.lib.kube import (
+    NodeCondition,
+    NodeConditions,
+    NodeConditionStatus,
+    NodeCustomCondition,
+    NodeCustomConditions,
+)
 
 PARAMS = kube_node_conditions.Params(
     ready=int(State.CRIT),
@@ -20,7 +26,7 @@ PARAMS = kube_node_conditions.Params(
 
 
 def test_check_raises_when_section_is_none() -> None:
-    custom_section = kube.NodeCustomConditions(custom_conditions=[])
+    custom_section = NodeCustomConditions(custom_conditions=[])
     with pytest.raises(IgnoreResultsError):
         list(kube_node_conditions.check(PARAMS, None, custom_section))
 
@@ -33,17 +39,15 @@ def test_check_ignores_missing_network_unavailable() -> None:
 
 
 def test_check_all_conditions_ok() -> None:
-    section = kube.NodeConditions(
-        ready=kube.NodeCondition(status=kube.NodeConditionStatus.TRUE),
-        memorypressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
-        diskpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
-        pidpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
-        networkunavailable=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+    section = NodeConditions(
+        ready=NodeCondition(status=NodeConditionStatus.TRUE),
+        memorypressure=NodeCondition(status=NodeConditionStatus.FALSE),
+        diskpressure=NodeCondition(status=NodeConditionStatus.FALSE),
+        pidpressure=NodeCondition(status=NodeConditionStatus.FALSE),
+        networkunavailable=NodeCondition(status=NodeConditionStatus.FALSE),
     )
-    custom_section = kube.NodeCustomConditions(
-        custom_conditions=[
-            kube.NodeCustomCondition(type_="custom", status=kube.NodeConditionStatus.FALSE)
-        ]
+    custom_section = NodeCustomConditions(
+        custom_conditions=[NodeCustomCondition(type_="custom", status=NodeConditionStatus.FALSE)]
     )
     results = list(kube_node_conditions.check(PARAMS, section, custom_section))
     assert results == [
@@ -58,14 +62,14 @@ def test_check_all_conditions_ok() -> None:
 
 
 def test_check_one_condition_bad() -> None:
-    section = kube.NodeConditions(
-        ready=kube.NodeCondition(status=kube.NodeConditionStatus.TRUE),
-        memorypressure=kube.NodeCondition(status=kube.NodeConditionStatus.TRUE),
-        diskpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
-        pidpressure=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
-        networkunavailable=kube.NodeCondition(status=kube.NodeConditionStatus.FALSE),
+    section = NodeConditions(
+        ready=NodeCondition(status=NodeConditionStatus.TRUE),
+        memorypressure=NodeCondition(status=NodeConditionStatus.TRUE),
+        diskpressure=NodeCondition(status=NodeConditionStatus.FALSE),
+        pidpressure=NodeCondition(status=NodeConditionStatus.FALSE),
+        networkunavailable=NodeCondition(status=NodeConditionStatus.FALSE),
     )
-    custom_section = kube.NodeCustomConditions(custom_conditions=[])
+    custom_section = NodeCustomConditions(custom_conditions=[])
     results = list(kube_node_conditions.check(PARAMS, section, custom_section))
     assert results == [
         Result(
@@ -96,10 +100,8 @@ def test_check_one_condition_bad() -> None:
 
 
 def test_check_custom() -> None:
-    custom_section = kube.NodeCustomConditions(
-        custom_conditions=[
-            kube.NodeCustomCondition(type_="custom", status=kube.NodeConditionStatus.TRUE)
-        ]
+    custom_section = NodeCustomConditions(
+        custom_conditions=[NodeCustomCondition(type_="custom", status=NodeConditionStatus.TRUE)]
     )
     results = list(kube_node_conditions._check_node_custom_conditions(custom_section))
     assert results == [Result(state=State.CRIT, summary="CUSTOM: True (None: None)")]

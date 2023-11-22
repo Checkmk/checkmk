@@ -92,12 +92,17 @@ def on_succeeded_login(username: UserId, now: datetime) -> None:
     ensure_user_can_init_session(username, now)
     # Set failed login counter to 0
     save_custom_attr(username, "num_failed_logins", 0)
+    if active_config.single_user_session is not None:
+        # In single user session mode there is only one session allowed at a time. Once we
+        # reach this place, we can be sure that we are allowed to remove all existing ones.
+        # A new session for the user will be created afterwards either explicitly or through the
+        # new page request.
+        save_session_infos(username, {})
 
 
 def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
     """When single user session mode is enabled, check that there is not another active session"""
-    session_timeout = active_config.single_user_session
-    if session_timeout is None:
+    if (session_timeout := active_config.single_user_session) is None:
         return  # No login session limitation enabled, no validation
     for session_info in load_session_infos(username).values():
         idle_time = now.timestamp() - session_info.last_activity
@@ -123,14 +128,9 @@ def active_sessions(
 ) -> dict[str, SessionInfo]:
     """Return only valid (not outdated) session
 
-    In single user session mode no sessions are returned. In regular mode, the sessions are limited
-    to 20 per user. Sessions with an inactivity > 7 days are also not returned.
+    In regular mode, the sessions are limited to 20 per user. Sessions with an inactivity > 7 days
+    are also not returned.
     """
-    if active_config.single_user_session:
-        # In single user session mode there is only one session allowed at a time. Once we
-        # reach this place, we can be sure that we are allowed to remove all existing ones.
-        return {}
-
     # NOTE
     # We intentionally don't remove any session which has been logged out, and rely on that fact
     # to be checked elsewhere, because that would lead to the session being removed directly after

@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.apt import (
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2.type_defs import StringTable
+from cmk.plugins.collection.agent_based.apt import (
     _data_is_valid,
     check_apt,
     discover_apt,

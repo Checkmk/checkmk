@@ -31,15 +31,14 @@ from dataclasses import dataclass
 from itertools import islice
 from typing import Any, ClassVar, NamedTuple
 
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Metric, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.apt import (
     ESM_ENABLED,
     ESM_NOT_ENABLED,
     NOTHING_PENDING_FOR_INSTALLATION,
     UBUNTU_PRO,
 )
-
-from .agent_based_api.v1 import Metric, register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class Section(NamedTuple):
@@ -203,7 +202,7 @@ def parse_apt(string_table: StringTable) -> Section | None:
     )
 
 
-register.agent_section(
+agent_section_apt = AgentSection(
     name="apt",
     parse_function=parse_apt,
 )
@@ -258,7 +257,7 @@ def check_apt(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield Metric(name="security_updates", value=len(section.sec_updates))
 
 
-register.check_plugin(
+check_plugin_apt = CheckPlugin(
     name="apt",
     service_name="APT Updates",
     check_function=check_apt,

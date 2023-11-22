@@ -15,7 +15,32 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        ({}, ["$HOSTADDRESS$"]),
+        pytest.param(
+            {},
+            ["$HOSTADDRESS$"],
+            id="minimal configuration",
+        ),
+        pytest.param(
+            {
+                "description": "abc",
+                "port": 4587,
+                "timeout": 120,
+                "remote_version": "OpenSSH_8.2p1",
+                "remote_protocol": "2.0",
+            },
+            [
+                "-t",
+                120,
+                "-p",
+                4587,
+                "-r",
+                "OpenSSH_8.2p1",
+                "-P",
+                "2.0",
+                "$HOSTADDRESS$",
+            ],
+            id="full configuration",
+        ),
     ],
 )
 def test_check_ssh_argument_parsing(

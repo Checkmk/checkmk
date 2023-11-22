@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 from collections.abc import Iterator
 from typing import Literal, TypedDict
 
@@ -41,12 +40,12 @@ class Params(TypedDict):
 
 def parse_node_conditions(string_table: StringTable) -> NodeConditions:
     """Parses `string_table` into a NodeConditions instance"""
-    return NodeConditions(**json.loads(string_table[0][0]))
+    return NodeConditions.model_validate_json(string_table[0][0])
 
 
 def parse_node_custom_conditions(string_table: StringTable) -> NodeCustomConditions:
     """Parses `string_table` into a NodeCustomConditions instance"""
-    return NodeCustomConditions(**json.loads(string_table[0][0]))
+    return NodeCustomConditions.model_validate_json(string_table[0][0])
 
 
 def discovery(

@@ -137,7 +137,6 @@ include \
     packages/lcab/lcab.make \
     packages/msitools/msitools.make \
     packages/nagios/nagios.make \
-    packages/nagvis/nagvis.make \
     packages/heirloom-mailx/heirloom-mailx.make \
     packages/navicli/navicli.make \
     packages/nrpe/nrpe.make \
@@ -178,4 +177,7 @@ include \
     $(REPO_PATH)/enterprise/enterprise.make \
     $(REPO_PATH)/cloud/cloud.make \
     $(REPO_PATH)/saas/saas.make
+else
+# Ship nagvis for all but saas edition: CMK-14926
+include packages/nagvis/nagvis.make
 endif

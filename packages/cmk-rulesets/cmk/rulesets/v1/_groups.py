@@ -17,6 +17,7 @@ class Functionality(Enum):
 class Topic(Enum):
     APPLICATIONS = auto()
     VIRTUALIZATION = auto()
+    OPERATING_SYSTEM = auto()
 
 
 @dataclass(frozen=True)

@@ -28,7 +28,7 @@ $(OPENSSL_INTERMEDIATE_INSTALL):  $(OPENSSL_BUILD)
 	mkdir -p "$(INTERMEDIATE_INSTALL_BASE)/$(OPENSSL_DIR)"
 	# This will leave us with some strange file permissions, but works for now, see
 	# https://stackoverflow.com/questions/75208034
-	rsync -r --links --chmod=u+w "$(BAZEL_BIN_EXT)/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
+	rsync --recursive --links --times --chmod=u+w "$(BAZEL_BIN_EXT)/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
 
 # legacy stuff
 .PHONY: $(OPENSSL_CACHE_PKG_PROCESS)

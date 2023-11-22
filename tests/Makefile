@@ -285,7 +285,7 @@ test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)
 
 test-plugins:
-	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
+	TZ=UTC $(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"

@@ -240,8 +240,8 @@ def _get_site(
 
         if update:
             update_supported = (
-                version_supported(source_version)
-                or source_version_short in BaseVersions.BASE_VERSIONS_CB
+                source_version_short in BaseVersions.BASE_VERSIONS_CB
+                or version_supported(source_version)
             )
 
             if update_supported:

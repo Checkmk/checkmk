@@ -375,6 +375,11 @@ class CREConfig:
             "user_idle_timeout": 5400,
         }
     )
+    # This option can be configured in Global Settings.
+    # When configured, these are the expected behaviors:
+    # 1. setting this option (the first time) does not log the user out from existing sessions
+    # 2. with every successful login, all previous sessions of the user will be removed, only
+    # one session (the one resulting from the successful login) will be kept
     single_user_session: int | None = None
     password_policy: dict[str, Any] = field(
         default_factory=lambda: {

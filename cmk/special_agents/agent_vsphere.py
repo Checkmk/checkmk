@@ -1849,8 +1849,12 @@ def fetch_virtual_machines(connection, hostsystems, datastores, opt):
             if key in vm_data:
                 vm_data[key] = transform(vm_data[key], datastores)
 
-        if opt.vm_piggyname == "hostname" and vm_data.get("summary.guest.hostName"):
-            vm_name = convert_hostname(vm_data.get("summary.guest.hostName"), opt)
+        if (
+            opt.vm_piggyname == "hostname"
+            and (host_name := vm_data.get("summary.guest.hostName"))
+            and not host_name.startswith(".")
+        ):
+            vm_name = convert_hostname(host_name, opt)
         else:
             vm_name = convert_hostname(vm_data.get("name"), opt)
         vms[vm_name] = vm_data

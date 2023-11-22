@@ -38,6 +38,13 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 from cmk.gui.visuals import livestatus_query_bare
 
+from cmk.discover_plugins import DiscoveredPlugins
+from cmk.graphing.v1 import graph as graph_api
+from cmk.graphing.v1 import metric as metric_api
+from cmk.graphing.v1 import perfometer as perfometer_api
+from cmk.graphing.v1 import translation as translation_api
+from cmk.graphing.v1 import Unit
+
 from ._color import (
     get_next_random_palette_color,
     get_palette_color_by_index,
@@ -45,6 +52,7 @@ from ._color import (
 )
 from ._expression import CriticalOf, Metric, MetricExpression, parse_expression, WarningOf
 from ._graph_specification import MetricOperation, MetricOpRRDChoice
+from ._parser import make_hex_color, make_unit_info
 from ._type_defs import (
     GraphConsoldiationFunction,
     LineType,
@@ -277,6 +285,84 @@ check_metrics: dict[str, dict[MetricName_, CheckMetricEntry]] = {}
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
 graph_info = AutomaticDict("manual_graph_template")
+
+
+def _parse_check_command(
+    check_command: translation_api.PassiveCheck
+    | translation_api.ActiveCheck
+    | translation_api.HostCheckCommand
+    | translation_api.NagiosPlugin,
+) -> str:
+    match check_command:
+        case translation_api.PassiveCheck():
+            return (
+                check_command.name
+                if check_command.name.startswith("check_mk-")
+                else f"check_mk-{check_command.name}"
+            )
+        case translation_api.ActiveCheck():
+            return (
+                check_command.name
+                if check_command.name.startswith("check_mk_active-")
+                else f"check_mk_active-{check_command.name}"
+            )
+        case translation_api.HostCheckCommand():
+            return (
+                check_command.name
+                if check_command.name.startswith("check-mk-")
+                else f"check-mk-{check_command.name}"
+            )
+        case translation_api.NagiosPlugin():
+            return (
+                check_command.name
+                if check_command.name.startswith("check_")
+                else f"check_{check_command.name}"
+            )
+
+
+def _parse_translation(
+    translation: translation_api.Renaming
+    | translation_api.Scaling
+    | translation_api.RenamingAndScaling,
+) -> CheckMetricEntry:
+    match translation:
+        case translation_api.Renaming():
+            return {"name": translation.rename_to.value}
+        case translation_api.Scaling():
+            return {"scale": translation.scale_by}
+        case translation_api.RenamingAndScaling():
+            return {"name": translation.rename_to.value, "scale": translation.scale_by}
+
+
+def add_graphing_plugins(
+    plugins: DiscoveredPlugins[
+        metric_api.Metric
+        | translation_api.Translation
+        | perfometer_api.Perfometer
+        | perfometer_api.Bidirectional
+        | perfometer_api.Stacked
+        | graph_api.Graph
+        | graph_api.Bidirectional
+    ],
+) -> None:
+    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
+    for plugin in plugins.plugins.values():
+        if isinstance(plugin, metric_api.Metric):
+            unit_name = plugin.unit.name if isinstance(plugin.unit, Unit) else plugin.unit.symbol
+            unit_info[unit_name] = make_unit_info(plugin.unit)
+            metric_info[MetricName_(plugin.name.value)] = {
+                "title": plugin.title.localize(_),
+                "unit": unit_name,
+                "color": make_hex_color(plugin.color),
+            }
+
+        elif isinstance(plugin, translation_api.Translation):
+            for check_command in plugin.check_commands:
+                check_metrics[_parse_check_command(check_command)] = {
+                    MetricName_(old_name.value): _parse_translation(translation)
+                    for old_name, translation in plugin.translations.items()
+                }
+
 
 # .
 #   .--Constants-----------------------------------------------------------.

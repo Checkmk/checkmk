@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
 from cmk.gui.graphing._utils import check_metrics, CheckMetricEntry, KB, m, MB
 
 # .
@@ -88,12 +87,6 @@ for check in [
 check_metrics["check_mk-winperf_processor_util"].update({"util": {"name": "util_numcpu_as_max"}})
 check_metrics["check_mk-netapp_api_cpu"] = {"util": {"name": "util_numcpu_as_max"}}
 check_metrics["check_mk-netapp_api_cpu_utilization"] = {"util": {"name": "util_numcpu_as_max"}}
-check_metrics["check_mk-citrix_serverload"] = {
-    "perf": {"name": "citrix_load", "scale": 0.01},
-}
-check_metrics["check_mk-genau_fan"] = {
-    "rpm": {"name": "fan"},
-}
 check_metrics["check_mk-openbsd_sensors"] = {
     "rpm": {"name": "fan"},
 }
@@ -198,10 +191,6 @@ check_metrics["check_mk-esx_vsphere_vm_mem_usage"] = {
     "ballooned": {"name": "mem_esx_ballooned"},
     "shared": {"name": "mem_esx_shared"},
     "private": {"name": "mem_esx_private"},
-}
-check_metrics["check_mk-ibm_svc_nodestats_disk_latency"] = {
-    "read_latency": {"scale": m},
-    "write_latency": {"scale": m},
 }
 check_metrics["check_mk-ibm_svc_systemstats_disk_latency"] = {
     "read_latency": {"scale": m},

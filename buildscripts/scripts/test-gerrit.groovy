@@ -4,6 +4,8 @@
 
 def main() {
     def test_gerrit_helper = load("${checkout_dir}/buildscripts/scripts/utils/gerrit_stages.groovy");
+    // no `def` - must be global
+    test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
     def result_dir = "${checkout_dir}/results";
     def issues = [];
     def time_job_started = new Date();

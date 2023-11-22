@@ -69,6 +69,10 @@ def edition_has_enforced_licensing() -> bool:
     return edition() in (Edition.CME, Edition.CCE)
 
 
+def edition_supports_nagvis() -> bool:
+    return edition() is not Edition.CSE
+
+
 def mark_edition_only(feature_to_mark: str, exclusive_to: Sequence[Edition]) -> str:
     """
     >>> mark_edition_only("Feature", [Edition.CRE])

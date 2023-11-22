@@ -66,6 +66,7 @@ from cmk.utils.paths import (
 from cmk.utils.sectionname import SectionName
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.version import edition_supports_nagvis
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -1124,7 +1125,7 @@ class AutomationRenameHosts(Automation):
             actions.append("retention")
 
         # NagVis maps
-        if self.rename_host_in_files(
+        if edition_supports_nagvis() and self.rename_host_in_files(
             "%s/etc/nagvis/maps/*.cfg" % omd_root,
             "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
             "host_name=%s" % newname,

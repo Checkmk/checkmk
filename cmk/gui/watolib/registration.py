@@ -5,6 +5,8 @@
 
 from collections.abc import Callable, Sequence
 
+from cmk.utils.version import edition_supports_nagvis
+
 from cmk.gui import hooks
 from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.cron import register_job
@@ -96,7 +98,8 @@ def register(
 ) -> None:
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
-    _register_hooks()
+    if edition_supports_nagvis():
+        _register_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     _host_attributes.register()

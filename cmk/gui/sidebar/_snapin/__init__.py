@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.version import edition_supports_nagvis
+
 from cmk.gui.pages import PageRegistry
 
 from ._base import CustomizableSidebarSnapin as CustomizableSidebarSnapin
@@ -44,7 +46,8 @@ def register(snapin_registry_: SnapinRegistry, page_registry: PageRegistry) -> N
     snapin_registry_.register(HostGroups)
     snapin_registry_.register(ServiceGroups)
     snapin_registry_.register(MasterControlSnapin)
-    snapin_registry_.register(NagVisMaps)
+    if edition_supports_nagvis():
+        snapin_registry_.register(NagVisMaps)
     snapin_registry_.register(Performance)
     snapin_registry_.register(QuicksearchSnapin)
     snapin_registry_.register(CurrentTime)

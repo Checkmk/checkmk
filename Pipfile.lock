@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6575414471d4803987d00b88f97d260e290fbd5be34939ce865269759abe5191"
+            "sha256": "d087fa0fe6d4126fe629b44c4d793fea683704a1ebbd8996d3937145c9dca80d"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1807,11 +1807,11 @@
         },
         "pygments": {
             "hashes": [
-                "sha256:1b37f1b1e1bff2af52ecaf28cc601e2ef7077000b227a0675da25aef85784bc4",
-                "sha256:e45a0e74bf9c530f564ca81b8952343be986a29f6afe7f5ad95c5f06b7bdf5e8"
+                "sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c",
+                "sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==2.17.1"
+            "version": "==2.17.2"
         },
         "pyjwt": {
             "extras": [
@@ -2395,11 +2395,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:6875bbd06382d857b1b90cd07cee6a2df701a164f241095706b5192bc56c5c62",
-                "sha256:f25195d54deb649832182d6455bffba7ac3d8fe71d35185e738d2198a4310044"
+                "sha256:1e8fdff6797d3865f37397be788a4e3cba233608e9b509382a2777d25ebde7f2",
+                "sha256:735896e78a4742605974de002ac60562d286fa8051a7e2299445e8e8fbb01aa6"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==69.0.1"
+            "version": "==69.0.2"
         },
         "setuptools-scm": {
             "hashes": [
@@ -3089,11 +3089,11 @@
         },
         "checkmk-dev-tools": {
             "hashes": [
-                "sha256:c63632da473b6f042c9a4004e88ad2942381eea4c3d5d1970982f731a8e14106",
-                "sha256:ff7a3b2f96cdfcb64260faed9635f7e537d2e14f79feb66b6ed6c8a61b8a71cd"
+                "sha256:19c52e596efb72e422da5850ab0984953e252c0187f2816fc015ee6b2c02fd03",
+                "sha256:72340fcd84884e8977e32440820ef009838c2dd227b8adc4bedeb2780327c2a2"
             ],
             "index": "pypi",
-            "version": "==0.1.29"
+            "version": "==0.1.31"
         },
         "click": {
             "hashes": [
@@ -4284,11 +4284,11 @@
         },
         "pygments": {
             "hashes": [
-                "sha256:1b37f1b1e1bff2af52ecaf28cc601e2ef7077000b227a0675da25aef85784bc4",
-                "sha256:e45a0e74bf9c530f564ca81b8952343be986a29f6afe7f5ad95c5f06b7bdf5e8"
+                "sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c",
+                "sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==2.17.1"
+            "version": "==2.17.2"
         },
         "pylint": {
             "hashes": [
@@ -4832,11 +4832,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:6875bbd06382d857b1b90cd07cee6a2df701a164f241095706b5192bc56c5c62",
-                "sha256:f25195d54deb649832182d6455bffba7ac3d8fe71d35185e738d2198a4310044"
+                "sha256:1e8fdff6797d3865f37397be788a4e3cba233608e9b509382a2777d25ebde7f2",
+                "sha256:735896e78a4742605974de002ac60562d286fa8051a7e2299445e8e8fbb01aa6"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==69.0.1"
+            "version": "==69.0.2"
         },
         "shutilwhich": {
             "hashes": [
@@ -5389,11 +5389,11 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:02ece4f56fbf939dbbc33c0715159951d6bf14aaf5457b092e4548e1382455af",
-                "sha256:520d056652454c5098a00c0f073611ccbea4c79089331f60bf9d7ba247bb7381"
+                "sha256:69050ffb42419c91f6c1284a7b24e0475d793447e35929b488bf6a0aade39353",
+                "sha256:a18b3fd0314ca59a2e9f4b556819ed07183b3e9a3702ecfe213f593d44f7b3fd"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==20.24.6"
+            "version": "==20.24.7"
         },
         "waitress": {
             "hashes": [

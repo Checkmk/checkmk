@@ -152,6 +152,21 @@ def main() {
                         }
                     }
 
+                    conditional_stage("Load image", !build_image) {
+                        withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
+                            sh("""
+                                scripts/run-pipenv run python \
+                                buildscripts/scripts/build-cmk-container.py \
+                                --branch=${branch_name} \
+                                --edition=${EDITION} \
+                                --version=${cmk_version} \
+                                --source_path=${source_dir} \
+                                --action=load \
+                                -vvvv
+                            """);
+                        }
+                    }
+
                     conditional_stage("Push images", push_to_registry) {
                         sh("""
                             scripts/run-pipenv run python \

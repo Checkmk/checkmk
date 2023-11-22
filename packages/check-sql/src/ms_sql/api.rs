@@ -20,6 +20,8 @@ pub type Client = tiberius::Client<Compat<TcpStream>>;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
+
+// section hand-made
 const INSTANCE_SECTION_NAME: &str = "instance";
 const COUNTERS_SECTION_NAME: &str = "counters";
 const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
@@ -30,7 +32,11 @@ const DATAFILES_SECTION_NAME: &str = "datafiles";
 const DATABASES_SECTION_NAME: &str = "databases";
 const CLUSTERS_SECTION_NAME: &str = "clusters";
 const CONNECTIONS_SECTION_NAME: &str = "connections";
-const JOBS_SECTION_NAME: &str = "jobs";
+
+// query based section
+pub const JOBS_SECTION_NAME: &str = "jobs";
+pub const MIRRORING_SECTION_NAME: &str = "mirroring";
+pub const AVAILABILITY_GROUPS_SECTION_NAME: &str = "availability_groups";
 
 pub enum Credentials<'a> {
     SqlServer { user: &'a str, password: &'a str },
@@ -48,6 +54,7 @@ impl Section {
         let sep = get_section_separator(&name);
         Self { name, sep }
     }
+
     pub fn to_header(&self) -> String {
         header(&self.name, self.sep)
     }
@@ -58,6 +65,50 @@ impl Section {
 
     pub fn sep(&self) -> char {
         self.sep.unwrap_or(' ')
+    }
+
+    fn first_line<F>(&self, closure: F) -> String
+    where
+        F: Fn() -> String,
+    {
+        match self.name.as_ref() {
+            JOBS_SECTION_NAME | MIRRORING_SECTION_NAME => closure(),
+            _ => "".to_string(),
+        }
+    }
+
+    fn query_selector<'a>(&'a self, custom_query: Option<&'a str>) -> Option<&str> {
+        if custom_query.is_some() {
+            custom_query
+        } else {
+            match self.name.as_ref() {
+                JOBS_SECTION_NAME => Some(queries::QUERY_JOBS),
+                MIRRORING_SECTION_NAME => Some(queries::QUERY_MIRRORING),
+                AVAILABILITY_GROUPS_SECTION_NAME => Some(queries::QUERY_AVAILABILITY_GROUP),
+                _ => None,
+            }
+        }
+    }
+
+    fn main_db(&self) -> Option<String> {
+        match self.name.as_ref() {
+            JOBS_SECTION_NAME => Some("msdb"),
+            MIRRORING_SECTION_NAME => Some("master"),
+            _ => None,
+        }
+        .map(|s| s.to_string())
+    }
+
+    fn validate_rows(&self, rows: Vec<Vec<Row>>) -> Result<Vec<Vec<Row>>> {
+        const ALLOW_TO_HAVE_EMPTY_OUTPUT: [&str; 2] =
+            [MIRRORING_SECTION_NAME, AVAILABILITY_GROUPS_SECTION_NAME];
+        if (!rows.is_empty() && !rows[0].is_empty())
+            || (ALLOW_TO_HAVE_EMPTY_OUTPUT.contains(&self.name()))
+        {
+            Ok(rows)
+        } else {
+            Err(anyhow::anyhow!("No output from query"))
+        }
     }
 }
 
@@ -126,9 +177,11 @@ impl InstanceEngine {
                         | DATABASES_SECTION_NAME
                         | CLUSTERS_SECTION_NAME
                         | CONNECTIONS_SECTION_NAME
-                        | JOBS_SECTION_NAME => {
+                        | JOBS_SECTION_NAME
+                        | MIRRORING_SECTION_NAME
+                        | AVAILABILITY_GROUPS_SECTION_NAME => {
                             result += &self
-                                .generate_known_sections(&mut client, endpoint, &section.name)
+                                .generate_known_sections(&mut client, endpoint, section)
                                 .await;
                         }
                         _ => {
@@ -197,11 +250,11 @@ impl InstanceEngine {
         &self,
         client: &mut Client,
         endpoint: &config::ms_sql::Endpoint,
-        name: &str,
+        section: &Section,
     ) -> String {
-        let sep = Section::new(name).sep();
+        let sep = section.sep();
         let databases = self.generate_databases(client).await;
-        match name {
+        match section.name.as_str() {
             COUNTERS_SECTION_NAME => {
                 self.generate_utc_entry(client, sep).await
                     + &self.generate_counters_entry(client, sep).await
@@ -239,11 +292,10 @@ impl InstanceEngine {
                 self.generate_connections_section(client, queries::QUERY_CONNECTIONS, sep)
                     .await
             }
-            JOBS_SECTION_NAME => {
-                self.generate_jobs_section(endpoint, queries::QUERY_JOBS, sep)
-                    .await
+            MIRRORING_SECTION_NAME | JOBS_SECTION_NAME | AVAILABILITY_GROUPS_SECTION_NAME => {
+                self.generate_query_section(endpoint, section, None).await
             }
-            _ => format!("{} not implemented\n", name).to_string(),
+            _ => format!("{} not implemented\n", section.name).to_string(),
         }
     }
 
@@ -561,26 +613,51 @@ impl InstanceEngine {
     }
 
     /// NOTE: uses ' ' instead of '\t' in error messages
-    pub async fn generate_jobs_section(
+    pub async fn generate_query_section(
         &self,
         endpoint: &config::ms_sql::Endpoint,
-        query: &str,
-        sep: char,
+        section: &Section,
+        query: Option<&str>,
     ) -> String {
-        match self.create_client(endpoint, Some("msdb".to_string())).await {
-            Ok(mut c) => run_query(&mut c, query)
-                .await
-                .and_then(validate_rows)
-                .map(|rows| format!("{}\n{}\n", self.name, self.to_jobs_entry(rows, sep)))
-                .unwrap_or_else(|e| format!("{} {:?}\n", self.name, e)),
+        match self.create_client(endpoint, section.main_db()).await {
+            Ok(mut c) => {
+                let q = section.query_selector(query).unwrap_or_default();
+                run_query(&mut c, q)
+                    .await
+                    .and_then(|r| section.validate_rows(r))
+                    .map(|rows| {
+                        format!(
+                            "{}{}",
+                            section.first_line(|| format!("{}\n", &self.name)),
+                            self.to_entries(rows, section.sep())
+                        )
+                    })
+                    .unwrap_or_else(|e| format!("{} {:?}\n", self.name, e))
+            }
             Err(err) => format!("{} {:?}\n", self.name, err),
         }
     }
 
     /// rows must be not empty
-    fn to_jobs_entry(&self, mut rows: Vec<Vec<Row>>, sep: char) -> String {
-        let mut rows = rows.remove(0);
-        rows.remove(0).get_all(sep)
+    fn to_entries(&self, rows: Vec<Vec<Row>>, sep: char) -> String {
+        // just a safety guard, the function should not get empty rows
+        if rows.is_empty() {
+            return String::new();
+        }
+
+        let mut r = rows;
+        let rows = r.remove(0);
+        let result = rows
+            .into_iter()
+            .map(|r| r.get_all(sep))
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        if result.is_empty() {
+            result
+        } else {
+            result + "\n"
+        }
     }
 
     fn process_blocked_sessions_rows(&self, rows: &[Vec<Row>], sep: char) -> String {
@@ -1278,6 +1355,9 @@ pub async fn create_local_instance_client(
 
 /// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
 pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Vec<Row>>> {
+    if query.is_empty() {
+        anyhow::bail!("Empty query");
+    }
     let stream = Query::new(query).query(client).await?;
     let rows: Vec<Vec<Row>> = stream.into_results().await?;
     Ok(rows)

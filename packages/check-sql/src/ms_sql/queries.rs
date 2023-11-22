@@ -206,6 +206,31 @@ ORDER BY sj.name, \
          sjs.next_run_time ASC \
 ";
 
+pub const QUERY_MIRRORING: &str = "SELECT @@SERVERNAME as server_name, \
+  DB_NAME(database_id) AS [database_name], \
+  mirroring_state, \
+  mirroring_state_desc, \
+  mirroring_role, \
+  mirroring_role_desc, \
+  mirroring_safety_level, \
+  mirroring_safety_level_desc, \
+  mirroring_partner_name, \
+  mirroring_partner_instance, \
+  mirroring_witness_name, \
+  mirroring_witness_state, \
+  mirroring_witness_state_desc \
+FROM sys.database_mirroring \
+WHERE mirroring_state IS NOT NULL";
+
+pub const QUERY_AVAILABILITY_GROUP: &str = "SELECT \
+  GroupsName.name, \
+  Groups.primary_replica, \
+  Groups.synchronization_health, \
+  Groups.synchronization_health_desc, \
+  Groups.primary_recovery_health_desc \
+FROM sys.dm_hadr_availability_group_states Groups \
+INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
+
 pub fn get_instances_query() -> String {
     QUERY_ALL_BASE.to_string()
 }

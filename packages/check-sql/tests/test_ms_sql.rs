@@ -5,7 +5,11 @@
 mod common;
 use std::collections::HashSet;
 
-use check_sql::ms_sql::{api::Client, api::InstanceEngine, queries};
+use check_sql::ms_sql::{
+    api::InstanceEngine,
+    api::{Client, Section},
+    queries,
+};
 use check_sql::{config::ms_sql::Endpoint, config::CheckConfig, ms_sql::api};
 use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
@@ -137,34 +141,7 @@ async fn test_validate_all_instances_remote() {
         for i in is {
             match i.create_client(&cfg.endpoint(), None).await {
                 Ok(mut c) => {
-                    validate_database_names(&i, &mut c).await;
-                    assert!(
-                        tools::run_get_version(&mut c).await.is_some()
-                            && api::get_computer_name(&mut c)
-                                .await
-                                .unwrap()
-                                .unwrap()
-                                .to_lowercase()
-                                .starts_with("agentbuild")
-                    );
-                    validate_counters(&i, &mut c).await;
-                    validate_blocked_sessions(&i, &mut c).await;
-                    validate_all_sessions_to_check_format(&i, &mut c).await;
-                    assert!(&i
-                        .generate_blocking_sessions_section(&mut c, queries::BAD_QUERY, '|',)
-                        .await
-                        .contains(" error: "),);
-                    validate_table_spaces(&i, &mut c, &cfg.endpoint()).await;
-                    validate_backup(&i, &mut c).await;
-                    validate_transaction_logs(&i, &mut c, &cfg.endpoint()).await;
-                    validate_datafiles(&i, &mut c, &cfg.endpoint()).await;
-                    validate_databases(&i, &mut c).await;
-                    validate_databases_error(&i, &mut c).await;
-                    validate_clusters(&i, &mut c, &cfg.endpoint()).await;
-                    validate_connections(&i, &mut c).await;
-                    validate_connections_error(&i, &mut c).await;
-                    validate_jobs(&i, &cfg.endpoint()).await;
-                    validate_jobs_error(&i, &cfg.endpoint()).await;
+                    validate_all(&i, &mut c, &cfg.endpoint()).await;
                 }
                 Err(e) => {
                     panic!("Unexpected error: `{:?}`", e);
@@ -174,6 +151,45 @@ async fn test_validate_all_instances_remote() {
     } else {
         tools::skip_on_lack_of_ms_sql_endpoint();
     }
+}
+
+async fn validate_all(i: &InstanceEngine, c: &mut Client, e: &Endpoint) {
+    validate_database_names(i, c).await;
+    assert!(
+        tools::run_get_version(c).await.is_some()
+            && api::get_computer_name(c)
+                .await
+                .unwrap()
+                .unwrap()
+                .to_lowercase()
+                .starts_with("agentbuild")
+    );
+    validate_counters(i, c).await;
+    validate_blocked_sessions(i, c).await;
+    validate_all_sessions_to_check_format(i, c).await;
+    assert!(i
+        .generate_blocking_sessions_section(c, queries::BAD_QUERY, '|',)
+        .await
+        .contains(" error: "),);
+    validate_table_spaces(i, c, e).await;
+    validate_backup(i, c).await;
+    validate_transaction_logs(i, c, e).await;
+    validate_datafiles(i, c, e).await;
+    validate_databases(i, c).await;
+    validate_databases_error(i, c).await;
+    validate_clusters(i, c, e).await;
+    validate_connections(i, c).await;
+    validate_connections_error(i, c).await;
+    validate_jobs(i, e).await;
+    for name in [
+        api::JOBS_SECTION_NAME,
+        api::MIRRORING_SECTION_NAME,
+        api::AVAILABILITY_GROUPS_SECTION_NAME,
+    ] {
+        validate_query_error(i, e, &Section::new(name)).await;
+    }
+    validate_mirroring_section(i, e).await;
+    validate_availability_groups_section(i, e).await;
 }
 
 async fn validate_database_names(instance: &InstanceEngine, client: &mut Client) {
@@ -441,7 +457,7 @@ async fn validate_clusters(_instance: &InstanceEngine, _client: &mut Client, _en
 
 async fn validate_jobs(instance: &InstanceEngine, endpoint: &Endpoint) {
     let result = instance
-        .generate_jobs_section(endpoint, queries::QUERY_JOBS, '\t')
+        .generate_query_section(endpoint, &Section::new(api::JOBS_SECTION_NAME), None)
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert_eq!(lines.len(), 3, "{:?}", lines);
@@ -463,9 +479,9 @@ async fn validate_jobs(instance: &InstanceEngine, endpoint: &Endpoint) {
     assert!(values[11].len() > 10, "{values:?}");
 }
 
-async fn validate_jobs_error(instance: &InstanceEngine, endpoint: &Endpoint) {
+async fn validate_query_error(instance: &InstanceEngine, endpoint: &Endpoint, section: &Section) {
     let result = instance
-        .generate_jobs_section(endpoint, queries::BAD_QUERY, '\t')
+        .generate_query_section(endpoint, section, Some(queries::BAD_QUERY))
         .await;
 
     let lines: Vec<&str> = result.split('\n').collect();
@@ -473,6 +489,31 @@ async fn validate_jobs_error(instance: &InstanceEngine, endpoint: &Endpoint) {
     assert!(lines.last().unwrap().is_empty());
     assert!(lines[0].starts_with(&format!("{} ", instance.name)));
     assert!(lines[0].contains(" error: "));
+}
+
+async fn validate_mirroring_section(instance: &InstanceEngine, endpoint: &Endpoint) {
+    let section = &Section::new(api::MIRRORING_SECTION_NAME);
+    let lines: Vec<String> = instance
+        .generate_query_section(endpoint, section, None)
+        .await
+        .split('\n')
+        .map(|l| l.to_string())
+        .collect();
+    assert_eq!(lines.len(), 2, "{:?} at {}", lines, section.name());
+    assert_eq!(lines[0], instance.name);
+    assert!(lines[1].is_empty(), "bad line {}", lines[1]);
+}
+
+async fn validate_availability_groups_section(instance: &InstanceEngine, endpoint: &Endpoint) {
+    let section = &Section::new(api::AVAILABILITY_GROUPS_SECTION_NAME);
+    let lines: Vec<String> = instance
+        .generate_query_section(endpoint, section, None)
+        .await
+        .split('\n')
+        .map(|l| l.to_string())
+        .collect();
+    assert_eq!(lines.len(), 1, "{:?} at {}", lines, section.name());
+    assert!(lines[0].is_empty(), "bad line {}", lines[1]);
 }
 
 /// This test is ignored because it requires real credentials and real server

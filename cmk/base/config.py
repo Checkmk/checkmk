@@ -3766,8 +3766,11 @@ class ConfigCache:
         )
 
     def inv_retention_intervals(self, hostname: HostName) -> RawIntervalsFromConfig:
-        entries = self.host_extra_conf(hostname, inv_retention_intervals)
-        return entries[0] if entries else []
+        return [
+            raw
+            for entry in self.host_extra_conf(hostname, inv_retention_intervals)
+            for raw in entry
+        ]
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.host_extra_conf(hostname, host_service_levels)

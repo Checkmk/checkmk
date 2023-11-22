@@ -162,11 +162,6 @@ include \
 ifeq ($(EDITION),enterprise)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
-ifeq ($(EDITION),free)
-include \
-    $(REPO_PATH)/enterprise/enterprise.make \
-    $(REPO_PATH)/cloud/cloud.make
-endif
 ifeq ($(EDITION),managed)
 include \
     $(REPO_PATH)/enterprise/enterprise.make \

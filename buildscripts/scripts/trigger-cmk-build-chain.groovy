@@ -57,7 +57,7 @@ def main() {
     def run_int_tests = true;
     def run_comp_tests = edition != "saas";
     def run_image_tests = true;
-    def run_update_tests = (edition in ["enterprise"]);
+    def run_update_tests = (edition in ["enterprise", "cloud"]);
 
     print(
         """

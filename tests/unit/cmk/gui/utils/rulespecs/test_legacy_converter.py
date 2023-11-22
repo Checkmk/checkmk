@@ -5,6 +5,7 @@
 
 from collections.abc import Sequence
 from functools import partial
+from typing import TypeVar
 
 import pytest
 
@@ -661,3 +662,198 @@ def test_list_custom_validate(input_value: Sequence[str], expected_error: str) -
 
     with pytest.raises(MKUserError, match=expected_error):
         legacy_list.validate_value(input_value, "var_prefix")
+
+
+T = TypeVar("T")
+
+
+def _narrow_type(x: object, narrow_to: type[T]) -> T:
+    if isinstance(x, narrow_to):
+        return x
+    raise ValueError(x)
+
+
+@pytest.mark.parametrize(
+    ["parameter_form", "old_value", "expected_transformed_value"],
+    [
+        pytest.param(
+            api_v1.Integer(
+                transform=api_v1.Migrate(raw_to_form=lambda x: _narrow_type(x, int) * 2)
+            ),
+            2,
+            4,
+            id="integer migration",
+        ),
+        pytest.param(
+            api_v1.Tuple(
+                elements=[
+                    api_v1.Integer(
+                        transform=api_v1.Migrate(raw_to_form=lambda x: _narrow_type(x, int) * 2)
+                    ),
+                    api_v1.Percentage(
+                        transform=api_v1.Migrate(raw_to_form=lambda x: _narrow_type(x, float) * 2)
+                    ),
+                ]
+            ),
+            (2, 2.0),
+            (4, 4.0),
+            id="migrate nested element",
+        ),
+        pytest.param(
+            api_v1.Dictionary(
+                elements={"key2": api_v1.DictElement(parameter_form=api_v1.Integer())},
+                transform=api_v1.Migrate(
+                    raw_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]}
+                ),
+            ),
+            {"key": 2},
+            {"key2": 2},
+            id="migrate top level element",
+        ),
+        pytest.param(
+            api_v1.CascadingDropdown(
+                elements=[
+                    api_v1.CascadingDropdownElement(
+                        ident="key_new",
+                        parameter_form=api_v1.TextInput(
+                            transform=api_v1.Migrate(raw_to_form=lambda x: f"{x}_new")
+                        ),
+                    )
+                ],
+                transform=api_v1.Migrate(
+                    raw_to_form=lambda x: (
+                        f"{_narrow_type(x, tuple)[0]}_new",
+                        _narrow_type(x, tuple)[1],
+                    )
+                ),
+            ),
+            ("key", "value"),
+            ("key_new", "value_new"),
+            id="migrate nested and top level element",
+        ),
+    ],
+)
+def test_migrate(
+    parameter_form: api_v1.FormSpec, old_value: object, expected_transformed_value: object
+) -> None:
+    legacy_valuespec = _convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
+    actual_transformed_value = legacy_valuespec.transform_value(value=old_value)
+    assert expected_transformed_value == actual_transformed_value
+
+
+@pytest.mark.parametrize(
+    ["parameter_form", "old_value", "expected_transformed_value"],
+    [
+        pytest.param(
+            api_v1.Integer(
+                transform=api_v1.Transform(
+                    raw_to_form=lambda x: _narrow_type(x, int) * 2,
+                    form_to_raw=lambda x: x // 2,
+                )
+            ),
+            2,
+            2,
+            id="transform same",
+        ),
+        pytest.param(
+            api_v1.Integer(
+                transform=api_v1.Transform(
+                    raw_to_form=lambda x: _narrow_type(x, int) * 2,
+                    form_to_raw=lambda x: x // 4,
+                )
+            ),
+            2,
+            1,
+            id="transform different",
+        ),
+        pytest.param(
+            api_v1.Tuple(
+                elements=[
+                    api_v1.Integer(
+                        transform=api_v1.Transform(
+                            raw_to_form=lambda x: _narrow_type(x, int) * 2,
+                            form_to_raw=lambda x: x // 2,
+                        )
+                    ),
+                    api_v1.Percentage(
+                        transform=api_v1.Transform(
+                            raw_to_form=lambda x: _narrow_type(x, float) * 2,
+                            form_to_raw=lambda x: x / 2,
+                        )
+                    ),
+                ]
+            ),
+            (2, 2.0),
+            (2, 2.0),
+            id="transform nested element",
+        ),
+        pytest.param(
+            api_v1.Dictionary(
+                elements={"key2": api_v1.DictElement(parameter_form=api_v1.Integer())},
+                transform=api_v1.Transform(
+                    raw_to_form=lambda x: {"key2": _narrow_type(x, dict)["key"]},
+                    form_to_raw=lambda x: {"key": x["key2"]},
+                ),
+            ),
+            {"key": 2},
+            {"key": 2},
+            id="transform top level element",
+        ),
+        pytest.param(
+            api_v1.CascadingDropdown(
+                elements=[
+                    api_v1.CascadingDropdownElement(
+                        ident="key_new",
+                        parameter_form=api_v1.TextInput(
+                            transform=api_v1.Transform(
+                                raw_to_form=lambda x: f"{x}_new",
+                                form_to_raw=lambda x: f"{x.removesuffix('_new')}",
+                            )
+                        ),
+                    )
+                ],
+                transform=api_v1.Transform(
+                    raw_to_form=lambda x: (
+                        f"{ _narrow_type(x, tuple)[0]}_new",
+                        _narrow_type(x, tuple)[1],
+                    ),
+                    form_to_raw=lambda x: (
+                        f"{_narrow_type(x, tuple)[0].removesuffix('_new')}",
+                        _narrow_type(x, tuple)[1],
+                    ),
+                ),
+            ),
+            ("key", "value"),
+            ("key", "value"),
+            id="transform nested and top level element",
+        ),
+    ],
+)
+def test_transform(
+    parameter_form: api_v1.FormSpec, old_value: object, expected_transformed_value: object
+) -> None:
+    legacy_valuespec = _convert_to_legacy_valuespec(parameter_form, localizer=lambda x: x)
+    actual_transformed_value = legacy_valuespec.transform_value(value=old_value)
+    assert expected_transformed_value == actual_transformed_value
+
+
+@pytest.mark.parametrize(
+    "form_spec",
+    [
+        api_v1.Integer(),
+        api_v1.Percentage(),
+        api_v1.TextInput(),
+        api_v1.Tuple(elements=[]),
+        api_v1.Dictionary(elements={}),
+        api_v1.DropdownChoice(elements=[]),
+        api_v1.CascadingDropdown(elements=[]),
+        api_v1.MonitoringState(),
+        api_v1.List(parameter_form=api_v1.Integer()),
+    ],
+)
+def test_form_spec_attributes(form_spec: api_v1.FormSpec) -> None:
+    try:
+        _ = form_spec.title
+        _ = form_spec.transform
+    except AttributeError:
+        assert False

@@ -44,6 +44,7 @@ from cmk.gui.graphing._html_render import (
 from cmk.gui.graphing._type_defs import TranslatedMetric
 from cmk.gui.graphing._utils import parse_perf_data, translate_metrics
 from cmk.gui.http import request
+from cmk.gui.i18n import _
 
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -132,6 +133,7 @@ def _register_pre_21_plugin_api() -> None:
             "metric_info": graphing_utils.metric_info,
             "check_metrics": graphing_utils.check_metrics,
             "graph_info": graphing_utils.graph_info,
+            "_": _,
         }
     )
 

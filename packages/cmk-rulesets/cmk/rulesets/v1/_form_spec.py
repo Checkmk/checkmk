@@ -7,8 +7,40 @@ import ast
 import enum
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Generic, TypeVar
 
 from cmk.rulesets.v1._localize import Localizable
+
+_T = TypeVar("_T")
+
+
+@dataclass(frozen=True)
+class Migrate(Generic[_T]):
+    """Marks transformations that change the value as a one-off event, to update the value from an
+     old version to be compatible with the current definition.
+
+    Args:
+        raw_to_form: Transforms the raw, persisted value to a value compatible with current form
+                     specification
+    """
+
+    raw_to_form: Callable[[object], _T]
+
+
+@dataclass(frozen=True)
+class Transform(Generic[_T]):
+    """Marks transformations that are performed every time the value is loaded/stored. E.g. could
+     be used to allow a different unit to be shown/entered than that is used by the rest of Checkmk.
+
+    Args:
+        raw_to_form: Transforms the raw, persisted value to a value compatible with current form
+                     specification
+        form_to_raw: Transforms the value as defined in the form to the raw, persisted value as
+                     used by other consumers, e.g. the check plugin
+    """
+
+    raw_to_form: Callable[[object], _T]
+    form_to_raw: Callable[[_T], object]
 
 
 @dataclass(frozen=True)
@@ -32,6 +64,8 @@ class Integer:
     label: Localizable | None = None
     unit: Localizable | None = None
     prefill_value: int | None = None
+
+    transform: Transform[int] | Migrate[int] | None = None
 
     custom_validate: Callable[[int], object] | None = None
 
@@ -60,6 +94,8 @@ class Percentage:
 
     prefill_value: float | None = None
 
+    transform: Transform[float] | Migrate[float] | None = None
+
     custom_validate: Callable[[float], object] | None = None
 
 
@@ -85,6 +121,8 @@ class TextInput:
 
     prefill_value: str | None = None
 
+    transform: Transform[str] | Migrate[str] | None = None
+
     custom_validate: Callable[[str], object] | None = None
 
 
@@ -94,6 +132,8 @@ class Tuple:
 
     title: Localizable | None = None
     help_text: Localizable | None = None
+
+    transform: Transform[tuple[object, ...]] | Migrate[tuple[object, ...]] | None = None
 
     custom_validate: Callable[[tuple[object, ...]], object] | None = None
 
@@ -152,6 +192,10 @@ class DropdownChoice:
 
     deprecated_elements: Sequence[_DropdownChoiceElementType] | None = None
     invalid_element_validation: InvalidElementValidator | None = None
+    transform: Transform[_DropdownChoiceElementType] | Migrate[
+        _DropdownChoiceElementType
+    ] | None = None
+
     custom_validate: Callable[[_DropdownChoiceElementType], object] | None = None
 
 
@@ -180,6 +224,8 @@ class CascadingDropdown:
     label: Localizable | None = None
 
     prefill_selection: str | None = None
+
+    transform: Transform[object] | Migrate[object] | None = None
 
     def __post_init__(self) -> None:
         avail_idents = [elem.ident for elem in self.elements]
@@ -228,9 +274,12 @@ class Dictionary:
     title: Localizable | None = None
     help_text: Localizable | None = None
 
-    custom_validate: Callable[[Mapping[str, object]], object] | None = None
-    deprecated_elements: Sequence[str] = field(default_factory=list)
     no_elements_text: Localizable | None = None
+
+    deprecated_elements: Sequence[str] = field(default_factory=list)
+    transform: Transform[Mapping[str, object]] | Migrate[Mapping[str, object]] | None = None
+
+    custom_validate: Callable[[Mapping[str, object]], object] | None = None
 
     def __post_init__(self) -> None:
         for key in self.elements.keys():
@@ -259,6 +308,8 @@ class MonitoringState:
 
     prefill_value: State = State.OK
 
+    transform: Transform[State] | Migrate[State] | None = None
+
 
 @dataclass(frozen=True)
 class List:
@@ -279,10 +330,11 @@ class List:
     parameter_form: "FormSpec"
     title: Localizable | None = None
     help_text: Localizable | None = None
-
-    custom_validate: Callable[[Sequence[object]], object] | None = None
-    prefill_value: Sequence[object] | None = None
     order_editable: bool = True
+
+    prefill_value: Sequence[object] | None = None
+    transform: Transform[Sequence[object]] | Migrate[Sequence[object]] | None = None
+    custom_validate: Callable[[Sequence[object]], object] | None = None
 
 
 @dataclass(frozen=True)
@@ -303,6 +355,10 @@ class FixedValue:
     title: Localizable | None = None
     label: Localizable | None = None
     help_text: Localizable | None = None
+
+    transform: Transform[Sequence[int | float | str | bool | None]] | Migrate[
+        Sequence[int | float | str | bool | None]
+    ] | None = None
 
     def __post_init__(self) -> None:
         try:
@@ -347,7 +403,7 @@ class TimeSpan:
     label: Localizable | None = None
     displayed_units: Sequence[DisplayUnits] | None = None
     prefill_value: int | None = None
-
+    transform: Transform[Sequence[int]] | Migrate[Sequence[int]] | None = None
     custom_validate: Callable[[int], object] | None = None
 
 

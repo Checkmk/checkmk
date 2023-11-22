@@ -18,11 +18,13 @@ from cmk.rulesets.v1._form_spec import (
     InvalidElementValidator,
     ItemFormSpec,
     List,
+    Migrate,
     MonitoringState,
     Percentage,
     State,
     TextInput,
     TimeSpan,
+    Transform,
     Tuple,
 )
 from cmk.rulesets.v1._groups import CustomFunctionality, CustomTopic, Functionality, Topic
@@ -89,4 +91,6 @@ __all__ = [
     "FixedValue",
     "TimeSpan",
     "DisplayUnits",
+    "Migrate",
+    "Transform",
 ]

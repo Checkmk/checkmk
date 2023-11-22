@@ -215,7 +215,7 @@ def _extract_dictionary_key_props(
     return key_props
 
 
-def _convert_to_legacy_valuespec(
+def _convert_to_inner_legacy_valuespec(
     to_convert: ruleset_api_v1.FormSpec, localizer: Callable[[str], str]
 ) -> legacy_valuespecs.ValueSpec:
     match to_convert:
@@ -272,6 +272,23 @@ def _convert_to_legacy_valuespec(
 
         case other:
             assert_never(other)
+
+
+def _convert_to_legacy_valuespec(
+    to_convert: ruleset_api_v1.FormSpec, localizer: Callable[[str], str]
+) -> legacy_valuespecs.ValueSpec:
+    if isinstance(to_convert.transform, ruleset_api_v1.Migrate):
+        return legacy_valuespecs.Migrate(
+            valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
+            migrate=to_convert.transform.raw_to_form,
+        )
+    if isinstance(to_convert.transform, ruleset_api_v1.Transform):
+        return legacy_valuespecs.Transform(
+            valuespec=_convert_to_inner_legacy_valuespec(to_convert, localizer),
+            to_valuespec=to_convert.transform.raw_to_form,
+            from_valuespec=to_convert.transform.form_to_raw,
+        )
+    return _convert_to_inner_legacy_valuespec(to_convert, localizer)
 
 
 def _convert_to_legacy_integer(

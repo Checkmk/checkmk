@@ -6,7 +6,6 @@ def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
-        "DEPENDENCY_PATH_HASHES",
         // "DOCKER_TAG_BUILD", // test base image tag (todo)
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
     ]);

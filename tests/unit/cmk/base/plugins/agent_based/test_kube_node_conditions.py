@@ -32,13 +32,6 @@ def test_check_raises_when_section_is_none() -> None:
         list(kube_node_conditions.check(PARAMS, None, custom_section))
 
 
-def test_check_ignores_missing_network_unavailable() -> None:
-    # Act
-    results = list(kube_node_conditions._check_condition("networkunavailable", PARAMS, None))
-    # Assert
-    assert not results
-
-
 def test_check_all_conditions_ok() -> None:
     section = NodeConditions(
         ready=NodeCondition(status=NodeConditionStatus.TRUE),

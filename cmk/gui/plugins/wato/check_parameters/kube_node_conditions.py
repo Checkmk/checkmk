@@ -9,10 +9,29 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, MonitoringState
+from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput, Tuple
 
 
-# TODO: change valuespec in a way to support user-defined type-to-state mappings
+def __elements() -> Tuple:
+    return Tuple(
+        elements=[
+            TextInput(title="Type of node condition"),
+            MonitoringState(
+                title=_("Map `True` to"),
+                default_value=2,
+            ),
+            MonitoringState(
+                title=_("Map `False` to"),
+                default_value=0,
+            ),
+            MonitoringState(
+                title=_("Map `Unknown` to"),
+                default_value=2,
+            ),
+        ],
+    )
+
+
 def _parameter_valuespec():
     return Dictionary(
         elements=[
@@ -55,7 +74,17 @@ def _parameter_valuespec():
                     default_value=2,
                 ),
             ),
+            (
+                "conditions",
+                ListOf(
+                    valuespec=__elements(),
+                    title=_("Add node condition"),
+                    default_value=[],
+                    add_label=_("Add new node condition"),
+                ),
+            ),
         ],
+        required_keys="conditions",
     )
 
 

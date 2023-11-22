@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
-from typing import Literal, TypedDict
+from typing import assert_never, Literal, NamedTuple, TypedDict
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -26,8 +26,15 @@ from cmk.plugins.lib.kube import (
     NodeCondition,
     NodeConditions,
     NodeConditionStatus,
+    NodeCustomCondition,
     NodeCustomConditions,
 )
+
+
+class StateMap(NamedTuple):
+    true: State
+    false: State
+    unknown: State
 
 
 class Params(TypedDict):
@@ -36,6 +43,10 @@ class Params(TypedDict):
     diskpressure: int
     pidpressure: int
     networkunavailable: int
+    conditions: list[tuple[str, Literal[0, 1, 2, 3], Literal[0, 1, 2, 3], Literal[0, 1, 2, 3]]]
+
+
+DEFAULT_STATE_MAP = StateMap(true=State.CRIT, false=State.OK, unknown=State.CRIT)
 
 
 def parse_node_conditions(string_table: StringTable) -> NodeConditions:
@@ -64,7 +75,7 @@ def check(
         raise IgnoreResultsError("No node conditions found")
     results = list(_check_node_conditions(params, section_kube_node_conditions))
     if section_kube_node_custom_conditions:
-        results.extend(_check_node_custom_conditions(section_kube_node_custom_conditions))
+        results.extend(_check_node_custom_conditions(params, section_kube_node_custom_conditions))
     if all(result.state is State.OK for result in results):
         yield Result(state=State.OK, summary="Ready, all conditions passed")
         yield from (Result(state=r.state, notice=r.details) for r in results)
@@ -100,23 +111,34 @@ def _check_condition(
         )
 
 
-def _check_node_custom_conditions(section: NodeCustomConditions) -> Iterator[Result]:
+def _extract_state(state_map: StateMap, status: NodeConditionStatus) -> State:
+    match status:
+        case NodeConditionStatus.FALSE:
+            return state_map.false
+        case NodeConditionStatus.TRUE:
+            return state_map.true
+        case NodeConditionStatus.UNKNOWN:
+            return state_map.unknown
+    assert_never(status)
+
+
+def _check_custom_condition(state_map: StateMap, cond: NodeCustomCondition) -> Iterator[Result]:
+    state = _extract_state(state_map, cond.status)
+    details = condition_detailed_description(cond.type_, cond.status, cond.reason, cond.detail)
+    summary = condition_short_description(cond.type_, cond.status) if state is State.OK else details
+    yield Result(state=state, summary=summary, details=details)
+
+
+def _check_node_custom_conditions(
+    params: Params, section: NodeCustomConditions
+) -> Iterator[Result]:
+    conditions = {
+        type_.upper(): StateMap(true=State(true), false=State(false), unknown=State(unknown))
+        for type_, true, false, unknown in params["conditions"]
+    }
     for cond in section.custom_conditions:
-        if cond.status == NodeConditionStatus.FALSE:
-            yield Result(
-                state=State.OK,
-                summary=condition_short_description(cond.type_, cond.status),
-                details=condition_detailed_description(
-                    cond.type_, cond.status, cond.reason, cond.detail
-                ),
-            )
-        else:
-            yield Result(
-                state=State.CRIT,  # TODO: change valuespec in a way to support user-defined type-to-state mappings
-                summary=condition_detailed_description(
-                    cond.type_, cond.status, cond.reason, cond.detail
-                ),
-            )
+        state_map = conditions.get(cond.type_, DEFAULT_STATE_MAP)
+        yield from _check_custom_condition(state_map, cond)
 
 
 register.agent_section(
@@ -143,6 +165,7 @@ register.check_plugin(
         "diskpressure": int(State.CRIT),
         "pidpressure": int(State.CRIT),
         "networkunavailable": int(State.CRIT),
+        "conditions": [],
     },
     check_ruleset_name="kube_node_conditions",
 )

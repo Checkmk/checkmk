@@ -1,0 +1,10 @@
+Title: juniper_trpz_cpu_util: fix TypeError ('>=' not supported between instances of 'float' and 'NoneType')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700660050
+Edition: cre
+Level: 1
+Version: 2.2.0p16
+
+This werk fixes the crash mentioned above.

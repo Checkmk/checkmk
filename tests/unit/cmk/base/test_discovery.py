@@ -39,9 +39,9 @@ from cmk.checkengine.discovery import (
     discover_host_labels,
     discover_services,
     DiscoveryCheckParameters,
-    DiscoveryMode,
     DiscoveryResult,
     DiscoverySettings,
+    DiscoveryVsSettings,
     find_plugins,
     QualifiedDiscovery,
 )
@@ -192,73 +192,182 @@ def test__group_by_transition(
     [
         # No params
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {},
             ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (2, 2, 0),
         ),
-        (DiscoveryMode.FIXALL, {}, ["New Item 1", "New Item 2"], (2, 0, 2)),
         (
-            DiscoveryMode.REFRESH,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {},
-            ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
-            (2, 2, 0),
+            ["New Item 1", "New Item 2"],
+            (2, 0, 2),
         ),
-        (DiscoveryMode.REMOVE, {}, [], (0, 0, 2)),
+        # TODO For "refresh" we currently do not "remove vanished services".
+        # What the code rather does is: It does not load the existing services.
+        # Then there are no "vanished services", they just disappeared as if
+        # they never existed. It's the code that needs
+        # fixing...
+        # https://review.lan.tribe29.com/c/check_mk/+/67447
+        # grep for '67447' to find the other 5 places in this test
+        (
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
+            {},
+            ["New Item 1", "New Item 2"],
+            (2, 0, 2),
+        ),
+        (
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
+            {},
+            [],
+            (0, 0, 2),
+        ),
         # New services
         # Whitelist
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.FIXALL,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.REFRESH,
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.REMOVE,
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
         # Blacklist
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.FIXALL,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
+            {"service_blacklist": ["^Test Description New Item 1"]},
+            ["New Item 2"],
+            (1, 0, 2),
+        ),
+        # TODO 67447
+        (
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2"],
             (1, 0, 2),
         ),
         (
-            DiscoveryMode.REFRESH,
-            {"service_blacklist": ["^Test Description New Item 1"]},
-            ["New Item 2", "Vanished Item 1", "Vanished Item 2"],
-            (1, 2, 0),
-        ),
-        (
-            DiscoveryMode.REMOVE,
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
             {"service_blacklist": ["^Test Description New Item 1"]},
             [],
             (0, 0, 2),
         ),
         # White-/blacklist
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -267,7 +376,14 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.FIXALL,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -276,7 +392,14 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.REFRESH,
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -285,7 +408,14 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            DiscoveryMode.REMOVE,
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -296,57 +426,122 @@ def test__group_by_transition(
         # Vanished services
         # Whitelist
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
         (
-            DiscoveryMode.FIXALL,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
+            {"service_whitelist": ["^Test Description Vanished Item 1"]},
+            ["Vanished Item 2"],
+            (0, 1, 1),
+        ),
+        # TODO 67447
+        (
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 2"],
             (0, 1, 1),
         ),
         (
-            DiscoveryMode.REFRESH,
-            {"service_whitelist": ["^Test Description Vanished Item 1"]},
-            ["Vanished Item 1", "Vanished Item 2"],
-            (0, 2, 0),
-        ),
-        (
-            DiscoveryMode.REMOVE,
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 2"],
             (0, 1, 1),
         ),
         # Blacklist
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (2, 2, 0),
         ),
         (
-            DiscoveryMode.FIXALL,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
+            {"service_blacklist": ["^Test Description Vanished Item 1"]},
+            ["New Item 1", "New Item 2", "Vanished Item 1"],
+            (2, 1, 1),
+        ),
+        # TODO 67447
+        (
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1"],
             (2, 1, 1),
         ),
         (
-            DiscoveryMode.REFRESH,
-            {"service_blacklist": ["^Test Description Vanished Item 1"]},
-            ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
-            (2, 2, 0),
-        ),
-        (
-            DiscoveryMode.REMOVE,
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 1"],
             (0, 1, 1),
         ),
         # White-/blacklist
         (
-            DiscoveryMode.NEW,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": False,
+                    "update_host_labels": True,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -355,7 +550,31 @@ def test__group_by_transition(
             (0, 2, 0),
         ),
         (
-            DiscoveryMode.FIXALL,
+            (
+                "custom",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
+            {
+                "service_whitelist": ["^Test Description Vanished Item 1"],
+                "service_blacklist": ["^Test Description Vanished Item 2"],
+            },
+            ["Vanished Item 2"],
+            (0, 1, 1),
+        ),
+        # TODO 67447
+        (
+            (
+                "update_everything",
+                {
+                    "add_new_services": True,
+                    "remove_vanished_services": True,
+                    "update_host_labels": True,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -364,16 +583,14 @@ def test__group_by_transition(
             (0, 1, 1),
         ),
         (
-            DiscoveryMode.REFRESH,
-            {
-                "service_whitelist": ["^Test Description Vanished Item 1"],
-                "service_blacklist": ["^Test Description Vanished Item 2"],
-            },
-            ["Vanished Item 1", "Vanished Item 2"],
-            (0, 2, 0),
-        ),
-        (
-            DiscoveryMode.REMOVE,
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": True,
+                    "update_host_labels": False,
+                },
+            ),
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -385,7 +602,7 @@ def test__group_by_transition(
 )
 def test__get_post_discovery_services(
     grouped_services: ServicesByTransition,
-    mode: DiscoveryMode,
+    mode: DiscoveryVsSettings,
     parameters_rediscovery: RediscoveryParameters,
     result_new_item_names: list[str],
     result_counts: tuple[int, int, int],
@@ -402,7 +619,7 @@ def test__get_post_discovery_services(
             service_filters,
             result,
             get_service_description=lambda *args: f"Test Description {args[-1]}",
-            settings=DiscoverySettings.from_discovery_mode(mode),
+            settings=DiscoverySettings.from_vs(mode),
             keep_clustered_vanished_services=True,
         ).values()
     ]
@@ -435,7 +652,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.NEW,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": False,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -444,7 +668,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REMOVE,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": False,
+                            "remove_vanished_services": True,
+                            "update_host_labels": False,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -453,7 +684,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.FIXALL,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -462,7 +700,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REFRESH,
+                    "mode": (
+                        "update_everything",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -472,7 +717,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.NEW,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": False,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -481,7 +733,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REMOVE,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": False,
+                            "remove_vanished_services": True,
+                            "update_host_labels": False,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -490,7 +749,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.FIXALL,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -499,7 +765,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REFRESH,
+                    "mode": (
+                        "update_everything",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -509,7 +782,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.NEW,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": False,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -519,7 +799,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REMOVE,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": False,
+                            "remove_vanished_services": True,
+                            "update_host_labels": False,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -529,7 +816,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.FIXALL,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -539,7 +833,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REFRESH,
+                    "mode": (
+                        "update_everything",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -551,7 +852,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.NEW,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": False,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -560,7 +868,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REMOVE,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": False,
+                            "remove_vanished_services": True,
+                            "update_host_labels": False,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -569,7 +884,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.FIXALL,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -578,7 +900,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REFRESH,
+                    "mode": (
+                        "update_everything",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -588,7 +917,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.NEW,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": False,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -597,7 +933,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REMOVE,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": False,
+                            "remove_vanished_services": True,
+                            "update_host_labels": False,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -606,7 +949,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.FIXALL,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -615,7 +965,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REFRESH,
+                    "mode": (
+                        "update_everything",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -625,7 +982,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.NEW,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": False,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -635,7 +999,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REMOVE,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": False,
+                            "remove_vanished_services": True,
+                            "update_host_labels": False,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -645,7 +1016,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.FIXALL,
+                    "mode": (
+                        "custom",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -655,7 +1033,14 @@ def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": DiscoveryMode.REFRESH,
+                    "mode": (
+                        "update_everything",
+                        {
+                            "add_new_services": True,
+                            "remove_vanished_services": True,
+                            "update_host_labels": True,
+                        },
+                    ),
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -670,8 +1055,19 @@ def test__check_service_table(
     result_need_rediscovery: bool,
 ) -> None:
     rediscovery_parameters = parameters.rediscovery.copy()
-    discovery_mode = rediscovery_parameters.pop("mode", DiscoveryMode.FALLBACK)
-    assert isinstance(discovery_mode, DiscoveryMode)  # for mypy
+    discovery_mode = DiscoverySettings.from_vs(
+        rediscovery_parameters.pop(
+            "mode",
+            (
+                "custom",
+                {
+                    "add_new_services": False,
+                    "remove_vanished_services": False,
+                    "update_host_labels": False,
+                },
+            ),
+        )
+    )
     results, need_rediscovery = _check_service_lists(
         host_name=HostName("hostname"),
         services_by_transition=grouped_services,
@@ -731,7 +1127,12 @@ def test__check_host_labels_up_to_date() -> None:
             ],
         ),
         1,
-        DiscoveryMode.FIXALL,
+        DiscoverySettings(
+            add_new_services=False,
+            remove_vanished_services=False,
+            update_host_labels=True,
+            update_changed_services=False,
+        ),
     ) == ([ActiveCheckResult(0, "Host labels: all up to date")], False)
 
 
@@ -750,7 +1151,12 @@ def test__check_host_labels_changed() -> None:
             ],
         ),
         1,
-        DiscoveryMode.FIXALL,
+        DiscoverySettings(
+            add_new_services=False,
+            remove_vanished_services=False,
+            update_host_labels=True,
+            update_changed_services=False,
+        ),
     ) == (
         [
             ActiveCheckResult(

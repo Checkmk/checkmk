@@ -11,7 +11,7 @@ from typing_extensions import TypedDict
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
 
-from ._utils import DiscoveryMode
+from ._utils import DiscoveryVsSettings
 
 ServiceFilter = Callable[[ServiceName], bool]
 
@@ -32,7 +32,7 @@ class RediscoveryParameters(TypedDict, total=False):
     excluded_time: Sequence[tuple[tuple[int, int], tuple[int, int]]]
     keep_clustered_vanished_services: bool
     group_time: int
-    mode: DiscoveryMode
+    mode: DiscoveryVsSettings
     service_whitelist: Sequence[str]
     service_blacklist: Sequence[str]
     service_filters: tuple[Literal["combined", "dedicated"], ServiceFiltersDedicated]

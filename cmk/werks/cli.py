@@ -309,13 +309,12 @@ def goto_werksdir() -> None:
         sys.exit(1)
 
 
-LAST_WERK: Optional[WerkId] = None
-
-
 def get_last_werk() -> WerkId:
-    if LAST_WERK is None:
-        bail_out("No last werk known. Please specify id.")
-    return LAST_WERK
+    try:
+        with open(".last", encoding="utf-8") as f_last:
+            return WerkId(int(f_last.read()))
+    except Exception as e:
+        raise RuntimeError("No last werk known. Please specify id.") from e
 
 
 @cache
@@ -344,16 +343,10 @@ def get_config() -> Config:
 
 
 def load_config() -> None:
-    global LAST_WERK  # pylint: disable=global-statement
     with open("config", encoding="utf-8") as f_config:
         exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
             f_config.read(), globals(), globals()
         )
-    try:
-        with open(".last", encoding="utf-8") as f_last:
-            LAST_WERK = WerkId(int(f_last.read()))
-    except Exception:
-        LAST_WERK = None
 
 
 def load_werks() -> dict[WerkId, Werk]:

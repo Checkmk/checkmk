@@ -153,30 +153,6 @@ def test_custom_conditions_respects_status_conditions() -> None:
     assert npd_conditions_status == custom_conditions_status
 
 
-def test_conditions_truthy_vs_status() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-
-    # Check that all expected to be true states are actually true.
-    for name, value in api.EXPECTED_CONDITION_STATES.items():
-        if value == api.NodeConditionStatus.TRUE:
-            assert getattr(node_conditions, name).status == api.NodeConditionStatus.TRUE
-
-
-def test_conditions_falsy_vs_status() -> None:
-    status = node_status(api.NodeConditionStatus.FALSE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-
-    # Check that all expected to be false states are actually false.
-    for name, value in api.EXPECTED_CONDITION_STATES.items():
-        if value == api.NodeConditionStatus.FALSE:
-            assert getattr(node_conditions, name).status == api.NodeConditionStatus.FALSE
-
-
 def test_conditions_with_status_conditions_none() -> None:
     api_node = api_to_agent_node(
         APINodeFactory.build(status=NodeStatusFactory.build(conditions=None))

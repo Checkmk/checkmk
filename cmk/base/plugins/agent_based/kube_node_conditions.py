@@ -88,27 +88,19 @@ def _check_node_conditions(params: Params, section: NodeConditions) -> Iterator[
     yield from _check_condition("memorypressure", params, section.memorypressure)
     yield from _check_condition("diskpressure", params, section.diskpressure)
     yield from _check_condition("pidpressure", params, section.pidpressure)
-    yield from _check_condition("networkunavailable", params, section.networkunavailable)
+    if section.networkunavailable is not None:
+        yield from _check_condition("networkunavailable", params, section.networkunavailable)
 
 
 def _check_condition(
     name: Literal["ready", "memorypressure", "diskpressure", "pidpressure", "networkunavailable"],
     params: Params,
-    cond: NodeCondition | None,
+    cond: NodeCondition,
 ) -> Iterator[Result]:
-    if cond is None:
-        return
-    if EXPECTED_CONDITION_STATES[name] == cond.status:
-        yield Result(
-            state=State.OK,
-            summary=condition_short_description(name, cond.status),
-            details=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
-        )
-    else:
-        yield Result(
-            state=State(params[name]),
-            summary=condition_detailed_description(name, cond.status, cond.reason, cond.detail),
-        )
+    state = State.OK if EXPECTED_CONDITION_STATES[name] == cond.status else State(params[name])
+    details = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+    summary = condition_short_description(name, cond.status) if state is State.OK else details
+    yield Result(state=state, summary=summary, details=details)
 
 
 def _extract_state(state_map: StateMap, status: NodeConditionStatus) -> State:

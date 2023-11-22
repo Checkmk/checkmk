@@ -424,15 +424,6 @@ class NodeConditionStatus(str, enum.Enum):
     UNKNOWN = "Unknown"
 
 
-EXPECTED_CONDITION_STATES = {
-    "ready": NodeConditionStatus.TRUE,
-    "memorypressure": NodeConditionStatus.FALSE,
-    "diskpressure": NodeConditionStatus.FALSE,
-    "pidpressure": NodeConditionStatus.FALSE,
-    "networkunavailable": NodeConditionStatus.FALSE,
-}
-
-
 class NodeCondition(ClientModel):
     status: NodeConditionStatus
     type_: str = Field(..., alias="type")

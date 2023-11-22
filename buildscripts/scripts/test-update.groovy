@@ -3,7 +3,7 @@
 /// file: test-update.groovy
 
 def build_make_target(edition) {
-    def prefix = "test-update";
+    def prefix = "test-update-";
     def suffix = "-docker";
     switch(edition) {
         case 'enterprise':

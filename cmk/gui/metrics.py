@@ -14,7 +14,7 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import json
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from livestatus import SiteId
@@ -175,7 +175,7 @@ age_human_readable = cmk.utils.render.approx_age
 
 def translate_perf_data(
     perf_data_string: str, check_command: str | None = None
-) -> dict[str, TranslatedMetric]:
+) -> Mapping[str, TranslatedMetric]:
     perf_data, check_command = parse_perf_data(perf_data_string, check_command)
     return translate_metrics(perf_data, check_command)
 

@@ -556,7 +556,7 @@ def _translated_metric_scalar(
     return scalar
 
 
-def translate_metrics(perf_data: Perfdata, check_command: str) -> dict[str, TranslatedMetric]:
+def translate_metrics(perf_data: Perfdata, check_command: str) -> Mapping[str, TranslatedMetric]:
     """Convert Ascii-based performance data as output from a check plugin
     into floating point numbers, do scaling if necessary.
 
@@ -621,7 +621,7 @@ def available_metrics_translated(
     perf_data_string: str,
     rrd_metrics: list[MetricName_],
     check_command: str,
-) -> dict[str, TranslatedMetric]:
+) -> Mapping[str, TranslatedMetric]:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
         return {}
@@ -644,7 +644,7 @@ def available_metrics_translated(
     return translate_metrics(perf_data, check_command)
 
 
-def translated_metrics_from_row(row: Row) -> dict[str, TranslatedMetric]:
+def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "11b3dab2fc9c9012774cb64b9d288da93615d43db619047ce71b26786fa55e03"
+            "sha256": "4e6e4201ad3aa0462bf1cd0ec40459fd82bd421d526fb063a92bd10e9aca6f1e"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,10 +23,6 @@
             ],
             "index": "pypi",
             "version": "==1.2.7"
-        },
-        "agent-receiver": {
-            "editable": true,
-            "path": "./packages/cmk-agent-receiver"
         },
         "aiohttp": {
             "hashes": [
@@ -455,6 +451,10 @@
             "editable": true,
             "path": "./packages/cmk-agent-based"
         },
+        "cmk-agent-receiver": {
+            "editable": true,
+            "path": "./packages/cmk-agent-receiver"
+        },
         "cmk-graphing": {
             "editable": true,
             "path": "./packages/cmk-graphing"
@@ -474,6 +474,10 @@
         "cmk-server-side-calls": {
             "editable": true,
             "path": "./packages/cmk-server-side-calls"
+        },
+        "cmk-werks": {
+            "editable": true,
+            "path": "./packages/cmk-werks"
         },
         "cryptography": {
             "hashes": [
@@ -2220,14 +2224,6 @@
             "index": "pypi",
             "version": "==3.6.12"
         },
-        "repoze-profile": {
-            "hashes": [
-                "sha256:6aaa0201d4cda2e7f97c119d7dfc87376aab7e7dd48d6f85d0000351ffe67509",
-                "sha256:a13e01a40f8780d4c445758159be191bbd14f45040c49888fb2335fefffd5b8e"
-            ],
-            "index": "pypi",
-            "version": "==2.3"
-        },
         "requests": {
             "hashes": [
                 "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f",
@@ -2534,10 +2530,6 @@
             ],
             "index": "pypi",
             "version": "==1.5.1"
-        },
-        "werks": {
-            "editable": true,
-            "path": "./packages/cmk-werks"
         },
         "werkzeug": {
             "hashes": [

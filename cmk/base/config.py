@@ -3013,8 +3013,11 @@ class ConfigCache:
         return merged_spec
 
     def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
-        entries = self.ruleset_matcher.get_host_values(hostname, inv_retention_intervals)
-        return entries[0] if entries else []
+        return [
+            raw
+            for entry in self.ruleset_matcher.get_host_values(hostname, inv_retention_intervals)
+            for raw in entry
+        ]
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values(hostname, host_service_levels)

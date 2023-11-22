@@ -49,7 +49,8 @@ SYSTEM_TESTS := \
     test-integration \
     test-plugins-integration \
     test-composition \
-    test-update \
+    test-update-cee \
+    test-update-cce \
     test-schemathesis-openapi \
     test-plugins \
     test-gui-crawl \
@@ -278,8 +279,11 @@ test-composition:
 test-extension-compatibility:
 	$(PYTEST) -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
-test-update:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)
+test-update-cee:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cee --log-cli-level=INFO
+
+test-update-cce:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update) -m cce --log-cli-level=INFO
 
 test-schemathesis-openapi:
 	$(PYTEST) -T schemathesis_openapi $(PYTEST_SYSTEM_TEST_ARGS) $(realpath schemathesis_openapi)

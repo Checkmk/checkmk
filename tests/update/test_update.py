@@ -22,6 +22,7 @@ from .conftest import get_site_status, update_config, update_site
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
     test_site: Site,
     agent_ctl: Path,

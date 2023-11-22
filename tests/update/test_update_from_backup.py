@@ -78,6 +78,7 @@ def _base_site_demo(site_factory_demo):
     reason="Test currently failing for missing `php7`. "
     "This will be fixed starting from base-version 2.2.0p8",
 )
+@pytest.mark.cee
 def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ctl: Path) -> None:
     backup_path = qa_test_data_path() / Path("update/backups/update_central_backup.tar.gz")
     assert backup_path.exists()
@@ -149,11 +150,12 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
 @pytest.mark.skip(
     reason="Backup currently using v2.2.0p4. It needs to be re-generated with at least 2.2.0p8"
 )  # TODO: re-generate backup file
-@skip_if_not_cloud_edition
 @pytest.mark.skipif(
     os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),
     reason=f"The CCE currently does not support {os.environ.get('DISTRO')}",
 )
+@skip_if_not_cloud_edition
+@pytest.mark.cce
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

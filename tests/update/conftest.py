@@ -47,6 +47,11 @@ def pytest_addoption(parser):
     )
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "cee: marks tests using an enterprise-edition site")
+    config.addinivalue_line("markers", "cce: marks tests using a cloud-edition site")
+
+
 @dataclasses.dataclass
 class BaseVersions:
     """Get all base versions used for the test."""

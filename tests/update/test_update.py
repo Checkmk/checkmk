@@ -21,6 +21,7 @@ from tests.composition.controller_site_interactions.common import (
 from cmk.utils.version import Edition
 
 from .conftest import (
+    BaseVersions,
     get_host_data,
     get_services_with_status,
     get_site_status,
@@ -97,7 +98,11 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
         fallback_branch=current_base_branch_name(),
     )
 
-    target_site = update_site(test_site, target_version, interactive=True)
+    interactive_update = True
+    if test_site.version.version in BaseVersions.BASE_VERSIONS_CB:
+        interactive_update = False  # perform update non-interactively as site-user
+
+    target_site = update_site(test_site, target_version, interactive=interactive_update)
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)

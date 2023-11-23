@@ -214,6 +214,7 @@ def _get_site(
     )
     logger.info("Updating existing site" if update else "Creating new site")
 
+    logger.info("Interactive mode: %s", interactive)
     if interactive:
         # bypass SiteFactory for interactive installations
         source_version = base_site.version.version_directory() if base_site else ""
@@ -234,16 +235,13 @@ def _get_site(
                 "#######################################################################"
                 "\033[0m"
             )
-
         pexpect_dialogs = []
         update_supported = False
-
         if update:
             update_supported = (
                 source_version_short in BaseVersions.BASE_VERSIONS_CB
                 or version_supported(source_version)
             )
-
             if update_supported:
                 logger.info("Updating to a supported version.")
                 pexpect_dialogs.extend(
@@ -313,8 +311,30 @@ def _get_site(
         # start the site after manually installing it
         site.start()
     else:
-        # use SiteFactory for non-interactive site creation/update
-        site = sf.get_site("central")
+        if update:
+            source_version = base_site.version.version_directory() if base_site else ""
+            source_version_short = base_site.version.version if base_site else ""
+            target_version = version.version_directory()
+            update_supported = (
+                source_version_short in BaseVersions.BASE_VERSIONS_CB
+                or version_supported(source_version)
+            )
+
+            # update via CLI as site user (not interactive)
+            if not update_supported:
+                pytest.skip(f"{source_version} is not a supported version for {target_version}")
+
+            _update_as_site_user(site, target_version)
+
+            # refresh the site object after creating the site
+            site = sf.get_existing_site("central")
+            # open the livestatus port
+            site.open_livestatus_tcp(encrypted=False)
+            # start the site after manually installing it
+            site.start()
+        else:
+            # use SiteFactory for non-interactive site creation
+            site = sf.get_site("central")
 
     verify_admin_password(site)
 
@@ -412,3 +432,19 @@ def logger_services_crit(version: str, services: list) -> None:
         version,
         pformat(services),
     )
+
+
+def _update_as_site_user(
+    test_site: Site, target_version: str, conflict_mode: str = "keepold"
+) -> None:
+    cmd = [
+        "omd",
+        "-f",
+        "-V",
+        target_version,
+        "update",
+        f"--conflict={conflict_mode}",
+    ]
+    test_site.stop()
+    proc = _run_as_site_user(test_site, cmd)
+    assert proc.returncode == 0, proc.stdout

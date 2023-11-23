@@ -614,7 +614,7 @@ fn test_no_ms_sql() {
         .unwrap();
     let (stdout, code) = tools::get_good_results(&r).unwrap();
     assert_eq!(code, 0);
-    assert!(stdout.contains(EXPECTED_ERROR));
+    assert!(stdout.contains(EXPECTED_ERROR), "{}", stdout);
 }
 
 #[cfg(windows)]

@@ -14,7 +14,7 @@ mssql:
       tls: # optional
         ca: 'C:\path\to\file' # mandatory
         client_certificate: 'C:\path\to\file' # mandatory
-      timeout: 5 # optional, default: 5
+      timeout: 5 # optional, default: 5. Important: you may have longer timeout if your DNS can't resolve hostname.
     sections: # optional
       always: # optional, default
         - "instance"

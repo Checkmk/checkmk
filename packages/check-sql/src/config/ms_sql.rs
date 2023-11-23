@@ -5,6 +5,7 @@
 use crate::config::yaml::{Get, Yaml};
 use anyhow::{anyhow, bail, Context, Result};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 mod keys {
     pub const MSSQL: &str = "mssql";
@@ -75,7 +76,7 @@ mod defaults {
     pub const MODE: &str = values::PORT;
     pub const CONNECTION_HOST_NAME: &str = "localhost";
     pub const CONNECTION_PORT: u16 = 1433;
-    pub const CONNECTION_TIMEOUT: u32 = 5;
+    pub const CONNECTION_TIMEOUT: u64 = 5;
     pub const SECTIONS_CACHE_AGE: u32 = 600;
     pub const SECTIONS_ALWAYS: &[&str] = &[
         "instance",
@@ -248,7 +249,7 @@ pub struct Connection {
     port: u16,
     socket: Option<PathBuf>,
     tls: Option<ConnectionTls>,
-    timeout: u32,
+    timeout: u64,
 }
 
 impl Connection {
@@ -265,7 +266,7 @@ impl Connection {
             port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
             socket: conn.get_pathbuf(keys::SOCKET),
             tls: ConnectionTls::from_yaml(conn)?,
-            timeout: conn.get_int::<u32>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
+            timeout: conn.get_int::<u64>(keys::TIMEOUT, defaults::CONNECTION_TIMEOUT),
         }))
     }
     pub fn hostname(&self) -> &str {
@@ -286,8 +287,8 @@ impl Connection {
     pub fn tls(&self) -> Option<&ConnectionTls> {
         self.tls.as_ref()
     }
-    pub fn timeout(&self) -> u32 {
-        self.timeout
+    pub fn timeout(&self) -> Duration {
+        Duration::from_secs(self.timeout)
     }
 }
 
@@ -787,7 +788,7 @@ authentication:
         assert_eq!(c.fail_over_partner(), Some(&"bob".to_owned()));
         assert_eq!(c.port(), 9999);
         assert_eq!(c.socket(), Some(&PathBuf::from(r"C:\path\to\file_socket")));
-        assert_eq!(c.timeout(), 341);
+        assert_eq!(c.timeout(), Duration::from_secs(341));
         let tls = c.tls().unwrap();
         assert_eq!(tls.ca(), PathBuf::from(r"C:\path\to\file_ca"));
         assert_eq!(
@@ -1008,7 +1009,10 @@ discovery:
             c.conn().tls().unwrap().client_certificate(),
             Path::new(r"C:\path\to\file")
         );
-        assert_eq!(c.conn().timeout(), defaults::CONNECTION_TIMEOUT);
+        assert_eq!(
+            c.conn().timeout(),
+            std::time::Duration::from_secs(defaults::CONNECTION_TIMEOUT)
+        );
         assert_eq!(c.sections().always(), defaults::SECTIONS_ALWAYS);
         assert_eq!(c.sections().cached(), defaults::SECTIONS_CACHED);
         assert_eq!(c.sections().disabled(), &vec!["someOtherSQL".to_string()]);

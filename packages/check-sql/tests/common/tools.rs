@@ -135,6 +135,7 @@ mssql:
        type: "sql_server"
     connection:
        hostname: "no_host"
+       timeout: 30 # long timeout to avoid timeout error
 "#;
     l.write_all(config.as_bytes()).unwrap();
     l

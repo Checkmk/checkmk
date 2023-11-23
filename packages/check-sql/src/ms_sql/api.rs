@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::{self, CheckConfig};
+use crate::config::{self, ms_sql::AuthType, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
 use anyhow::Result;
@@ -207,7 +207,7 @@ impl InstanceEngine {
     ) -> Result<Client> {
         let (auth, conn) = endpoint.split();
         let client = match auth.auth_type() {
-            config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
+            AuthType::SqlServer | AuthType::Windows => {
                 if let Some(credentials) = obtain_config_credentials(auth) {
                     create_remote_client(
                         conn.hostname(),
@@ -222,7 +222,7 @@ impl InstanceEngine {
             }
 
             #[cfg(windows)]
-            config::ms_sql::AuthType::Integrated => {
+            AuthType::Integrated => {
                 create_local_instance_client(&self.name, conn.sql_browser_port(), database).await?
             }
 
@@ -1133,31 +1133,45 @@ async fn generate_result(
 
 async fn create_client_from_config(endpoint: &config::ms_sql::Endpoint) -> Result<Client> {
     let (auth, conn) = endpoint.split();
+    let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
+        anyhow::anyhow!(
+            "Timeout: {e} when creating client from config {:?}",
+            conn.timeout()
+        )
+    };
     let client = match auth.auth_type() {
-        config::ms_sql::AuthType::SqlServer | config::ms_sql::AuthType::Windows => {
+        AuthType::SqlServer | AuthType::Windows => {
             if let Some(credentials) = obtain_config_credentials(auth) {
-                create_remote_client(conn.hostname(), conn.port(), credentials, None).await?
+                tokio::time::timeout(
+                    conn.timeout(),
+                    create_remote_client(conn.hostname(), conn.port(), credentials, None),
+                )
+                .await
+                .map_err(map_elapsed_to_anyhow)?
             } else {
                 anyhow::bail!("Not provided credentials")
             }
         }
 
         #[cfg(windows)]
-        config::ms_sql::AuthType::Integrated => create_local_client(None).await?,
+        AuthType::Integrated => tokio::time::timeout(conn.timeout(), create_local_client(None))
+            .await
+            .map_err(map_elapsed_to_anyhow)?,
 
         _ => anyhow::bail!("Not supported authorization type"),
     };
-    Ok(client)
+
+    client
 }
 
 fn obtain_config_credentials(auth: &config::ms_sql::Authentication) -> Option<Credentials> {
     match auth.auth_type() {
-        config::ms_sql::AuthType::SqlServer => Some(Credentials::SqlServer {
+        AuthType::SqlServer => Some(Credentials::SqlServer {
             user: auth.username(),
             password: auth.password().map(|s| s.as_str()).unwrap_or(""),
         }),
         #[cfg(windows)]
-        config::ms_sql::AuthType::Windows => Some(Credentials::Windows {
+        AuthType::Windows => Some(Credentials::Windows {
             user: auth.username(),
             password: auth.password().map(|s| s.as_str()).unwrap_or(""),
         }),
@@ -1282,7 +1296,6 @@ pub async fn create_local_client(database: Option<String>) -> Result<Client> {
     }
     config.authentication(AuthMethod::Integrated);
     config.trust_cert(); // on production, it is not a good idea to do this
-
     let tcp = TcpStream::connect(config.get_addr()).await?;
     tcp.set_nodelay(true)?;
 
@@ -1421,7 +1434,9 @@ mssql:
        password: "bad_password"
        type: type_tag
     connection:
-       hostname: "bad_host"
+       hostname: "localhost" # we use real host to avoid long timeout
+       port: 65345 # we use weird port to avoid connection
+       timeout: 1
 "#;
         Config::from_yaml(
             &YamlLoader::load_from_str(&BASE.replace("type_tag", auth_type))
@@ -1440,6 +1455,22 @@ mssql:
             .unwrap_err()
             .to_string()
             .contains("Not supported authorization type"));
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn test_create_client_from_config_timeout() {
+        let config = make_config_with_auth_type("sql_server");
+        let s = create_client_from_config(&config.endpoint())
+            .await
+            .unwrap_err()
+            .to_string();
+        // in Windows connection is slow enough, we could verify timeout
+        #[cfg(windows)]
+        assert!(s.contains("Timeout: "), "{s}");
+
+        // in linux connection is too fast, no chance for timeout
+        #[cfg(unix)]
+        assert!(s.contains("Connection refused"), "{s}");
     }
 
     #[test]

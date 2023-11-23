@@ -223,7 +223,7 @@ async def register_new(
     credentials: HTTPBasicCredentials = Depends(security),
     registration_body: RegisterNewBody,
 ) -> RegisterNewResponse:
-    _validate_is_cce(credentials, registration_body.uuid)
+    _validate_is_allowed(credentials, registration_body.uuid)
     _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
 
     root_cert = _pem_serizialized_site_root_cert()
@@ -266,7 +266,7 @@ async def register_new_ongoing(
     | RegisterNewOngoingResponseDeclined
     | RegisterNewOngoingResponseSuccess
 ):
-    _validate_is_cce(credentials, uuid)
+    _validate_is_allowed(credentials, uuid)
 
     try:
         r4r = R4R.read(uuid)
@@ -329,7 +329,7 @@ async def register_new_ongoing(
     assert_never(r4r.status)
 
 
-def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
+def _validate_is_allowed(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
     if not (
         edition := cmk_edition(
             f"uuid={uuid} Querying Checkmk edition failed",

@@ -24,6 +24,7 @@ class CMKEdition(Enum):
     cee = "Enterprise"  # pylint: disable=invalid-name
     cme = "Managed Services"  # pylint: disable=invalid-name
     cce = "Cloud"  # pylint: disable=invalid-name
+    cse = "Saas"  # pylint: disable=invalid-name
 
     def supports_register_new(self) -> bool:
         """
@@ -32,7 +33,7 @@ class CMKEdition(Enum):
         >>> CMKEdition.cce.supports_register_new()
         True
         """
-        return self is CMKEdition.cce
+        return self is CMKEdition.cce or self is CMKEdition.cse
 
 
 def _local_apache_port() -> int:

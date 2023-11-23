@@ -37,7 +37,7 @@ from typing import Final
 
 import requests
 
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 UPNPInfo = tuple[Mapping[str, str], str, str]
 

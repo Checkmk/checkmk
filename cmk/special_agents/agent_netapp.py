@@ -66,7 +66,7 @@ import urllib3
 
 from cmk.utils.password_store import replace_passwords
 
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 # pylint: disable=inconsistent-return-statements
 

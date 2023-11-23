@@ -12,7 +12,7 @@ import requests
 
 from cmk.utils.password_store import replace_passwords
 
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 
 class Section(NamedTuple):

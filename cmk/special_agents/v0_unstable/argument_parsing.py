@@ -13,7 +13,7 @@ Current responsibilities include:
 
 import argparse
 
-from cmk.special_agents.utils import vcrtrace
+from .misc import vcrtrace
 
 Args = argparse.Namespace
 

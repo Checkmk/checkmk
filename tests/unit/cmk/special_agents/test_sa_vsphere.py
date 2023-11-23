@@ -87,6 +87,8 @@ def test_parse_arguments(
 def test_parse_arguments_invalid(
     invalid_argv: Sequence[str], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("cmk.special_agents.utils.vcrtrace", lambda **vcr_init_kwargs: None)
+    monkeypatch.setattr(
+        "cmk.special_agents.v0_unstable.misc.vcrtrace", lambda **vcr_init_kwargs: None
+    )
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(invalid_argv)

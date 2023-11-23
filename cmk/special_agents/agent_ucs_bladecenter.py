@@ -26,7 +26,7 @@ import urllib3
 from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import replace_passwords
 
-from cmk.special_agents.utils import vcrtrace
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 ElementAttributes = dict[str, str]
 

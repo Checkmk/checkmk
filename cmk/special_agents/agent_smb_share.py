@@ -16,8 +16,8 @@ from smb.base import NotConnectedError, SharedFile  # type: ignore[import]
 from smb.smb_structs import OperationFailure  # type: ignore[import]
 from smb.SMBConnection import SMBConnection  # type: ignore[import]
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
 class SMBShareAgentError(Exception):

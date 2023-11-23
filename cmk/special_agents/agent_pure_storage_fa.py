@@ -17,8 +17,8 @@ import requests
 import urllib3
 from requests.adapters import HTTPAdapter
 
-from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter, special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 _LOGGER = logging.getLogger("agent_pure_storage_fa")
 __version__ = "2.3.0b1"

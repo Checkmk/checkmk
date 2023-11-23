@@ -9,9 +9,9 @@ from collections.abc import Sequence
 
 from requests.auth import HTTPBasicAuth
 
-from cmk.special_agents.utils.agent_common import special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.request_helper import create_api_connect_session, parse_api_url
 
 
 def parse_arguments(args: Sequence[str] | None) -> Args:

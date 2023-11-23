@@ -34,8 +34,6 @@ from pydantic import TypeAdapter
 import cmk.utils.password_store
 import cmk.utils.profile
 
-from cmk.special_agents.utils import vcrtrace
-from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.agent_handlers import (
     cluster_handler,
@@ -82,6 +80,8 @@ from cmk.special_agents.utils_kubernetes.common import (
     RawMetrics,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
+from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.misc import vcrtrace
 
 
 class MonitoredObject(enum.Enum):

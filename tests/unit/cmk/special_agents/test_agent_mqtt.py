@@ -9,7 +9,7 @@ from cmk.utils import password_store
 from cmk.utils.config_path import LATEST_CONFIG
 
 from cmk.special_agents import agent_mqtt
-from cmk.special_agents.utils.argument_parsing import Args
+from cmk.special_agents.v0_unstable.argument_parsing import Args
 
 
 def test_parse_minimal_arguments() -> None:

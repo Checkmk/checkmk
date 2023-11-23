@@ -97,6 +97,7 @@ def parse_werk_v1(content: str, werk_id: int) -> WerkV1ParseResult:
     parse werk v1 but do not validate, or transform description
     """
     werk: dict[str, str] = {
+        # older werks don't specify compatible or edition
         "compatible": "compat",
         "edition": "cre",
         "id": str(werk_id),

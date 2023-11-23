@@ -24,9 +24,8 @@ from functools import cache
 from pathlib import Path
 from typing import Literal, NamedTuple, NoReturn, Optional, Union
 
-from pydantic import BaseModel
-
 from . import parse_werk
+from .config import Config, load_config
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
 from .parse import WerkV2ParseResult
@@ -62,17 +61,6 @@ class Werk(NamedTuple):
     @property
     def date(self) -> datetime.datetime:
         return datetime.datetime.fromisoformat(self.content.metadata["date"])
-
-
-class Config(BaseModel):
-    editions: list[tuple[str, str]]
-    components: list[tuple[str, str]]
-    edition_components: dict[str, list[tuple[str, str]]]
-    classes: list[tuple[str, str, str]]
-    levels: list[tuple[str, str]]
-    compatible: list[tuple[str, str]]
-    online_url: str
-    current_version: str
 
 
 WerkVersion = Literal["v1", "v2"]
@@ -318,35 +306,8 @@ def get_last_werk() -> WerkId:
 
 
 @cache
-def get_valid_choices() -> dict[str, set[str]]:
-    return {
-        "component": {e[0] for e in all_components()},
-    }
-    # the following are checked on pydantic model level:
-    # "level": {e[0] for e in get_config().levels},
-    # "compatible": {e[0] for e in get_config().compatible},
-    # "class": {e[0] for e in get_config().classes},
-    # "edition": {e[0] for e in get_config().editions},
-
-
-@cache
 def get_config() -> Config:
-    globals_: dict[str, object] = {}
-    with open("config", encoding="utf-8") as f_config:
-        exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
-            f_config.read(), globals_, globals_
-        )
-
-    globals_.pop("__builtins__")
-    globals_["current_version"] = load_current_version()
-    return Config.parse_obj(globals_)
-
-
-def load_config() -> None:
-    with open("config", encoding="utf-8") as f_config:
-        exec(  # pylint: disable=exec-used # nosec B102 # BNS:aee528
-            f_config.read(), globals(), globals()
-        )
+    return load_config(Path("config"), Path("../defines.make"))
 
 
 def load_werks() -> dict[WerkId, Werk]:
@@ -366,16 +327,6 @@ def save_last_werkid(wid: WerkId) -> None:
             f.write(f"{wid}\n")
     except OSError:
         pass
-
-
-def load_current_version() -> str:
-    with open("../defines.make", encoding="utf-8") as f:
-        for line in f:
-            if line.startswith("VERSION"):
-                version = line.split("=", 1)[1].strip()
-                return version
-
-    bail_out("Failed to read VERSION from defines.make")
 
 
 @cache
@@ -412,15 +363,7 @@ def load_werk(werk_path: Path) -> Werk:
         content=parsed,
     )
 
-    validate_werk(werk)
-
     return werk
-
-
-def validate_werk(werk: Werk) -> None:
-    for key, choices in get_valid_choices().items():
-        if (value := werk.content.metadata[key]) not in choices:
-            raise ValueError(f"Invalid value {value!r} for '{key}'")
 
 
 def save_werk(werk: Werk, werk_version: WerkVersion, destination: Optional[Path] = None) -> None:
@@ -567,7 +510,7 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=to
         hit = False
         for tp, values in [
             ("edition", get_config().editions),
-            ("component", all_components()),
+            ("component", get_config().all_components()),
             ("level", get_config().levels),
             ("class", get_config().classes),
             ("version", versions),
@@ -745,13 +688,6 @@ def input_choice(
 
 def get_edition_components(edition: str) -> list[tuple[str, str]]:
     return get_config().components + get_config().edition_components.get(edition, [])
-
-
-def all_components() -> list[tuple[str, str]]:
-    c = get_config().components.copy()
-    for ed_components in get_config().edition_components.values():
-        c += ed_components
-    return c
 
 
 WERK_NOTES = """

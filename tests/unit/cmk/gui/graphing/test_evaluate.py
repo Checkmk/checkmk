@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.gui.graphing._evaluate import perfometer_matches
+from cmk.gui.graphing._evaluate import evaluate_quantity, perfometer_matches
 from cmk.gui.graphing._type_defs import ScalarBounds, TranslatedMetric
 
 from cmk.graphing.v1 import Color, Localizable
@@ -253,3 +253,321 @@ def test_perfometer_matches(
     result: bool,
 ) -> None:
     assert perfometer_matches(perfometer, translated_metrics) is result
+
+
+@pytest.mark.parametrize(
+    "quantity, translated_metrics, result",
+    [
+        pytest.param(
+            metric_api.Name("name"),
+            {
+                "name": {
+                    "orig_name": ["name"],
+                    "value": 10.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                }
+            },
+            10.0,
+            id="metric.Name",
+        ),
+        pytest.param(
+            metric_api.Constant(
+                Localizable("Title"),
+                Unit.COUNT,
+                Color.BLUE,
+                5.0,
+            ),
+            {
+                "name": {
+                    "orig_name": ["name"],
+                    "value": 10.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                }
+            },
+            5.0,
+            id="metric.Constant",
+        ),
+        pytest.param(
+            metric_api.WarningOf(metric_api.Name("name")),
+            {
+                "name": {
+                    "orig_name": ["name"],
+                    "value": 10.0,
+                    "scalar": {"warn": 5.0},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                }
+            },
+            5.0,
+            id="metric.WarningOf",
+        ),
+        pytest.param(
+            metric_api.CriticalOf(metric_api.Name("name")),
+            {
+                "name": {
+                    "orig_name": ["name"],
+                    "value": 10.0,
+                    "scalar": {"crit": 5.0},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                }
+            },
+            5.0,
+            id="metric.CriticalOf",
+        ),
+        pytest.param(
+            metric_api.MinimumOf(metric_api.Name("name"), Color.BLUE),
+            {
+                "name": {
+                    "orig_name": ["name"],
+                    "value": 10.0,
+                    "scalar": {"min": 5.0},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                }
+            },
+            5.0,
+            id="metric.MinimumOf",
+        ),
+        pytest.param(
+            metric_api.MaximumOf(metric_api.Name("name"), Color.BLUE),
+            {
+                "name": {
+                    "orig_name": ["name"],
+                    "value": 10.0,
+                    "scalar": {"max": 5.0},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                }
+            },
+            5.0,
+            id="metric.MaximumOf",
+        ),
+        pytest.param(
+            metric_api.Sum(
+                Localizable("Title"),
+                Color.BLUE,
+                [metric_api.Name("name1"), metric_api.Name("name2")],
+            ),
+            {
+                "name1": {
+                    "orig_name": ["name1"],
+                    "value": 10.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+                "name2": {
+                    "orig_name": ["name2"],
+                    "value": 5.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+            },
+            15.0,
+            id="metric.Sum",
+        ),
+        pytest.param(
+            metric_api.Product(
+                Localizable("Title"),
+                Unit.COUNT,
+                Color.BLUE,
+                [metric_api.Name("name1"), metric_api.Name("name2")],
+            ),
+            {
+                "name1": {
+                    "orig_name": ["name1"],
+                    "value": 10.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+                "name2": {
+                    "orig_name": ["name2"],
+                    "value": 5.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+            },
+            50.0,
+            id="metric.Product",
+        ),
+        pytest.param(
+            metric_api.Difference(
+                Localizable("Title"),
+                Color.BLUE,
+                minuend=metric_api.Name("name1"),
+                subtrahend=metric_api.Name("name2"),
+            ),
+            {
+                "name1": {
+                    "orig_name": ["name1"],
+                    "value": 10.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+                "name2": {
+                    "orig_name": ["name2"],
+                    "value": 3.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+            },
+            7.0,
+            id="metric.Fraction",
+        ),
+        pytest.param(
+            metric_api.Fraction(
+                Localizable("Title"),
+                Unit.COUNT,
+                Color.BLUE,
+                dividend=metric_api.Name("name1"),
+                divisor=metric_api.Name("name2"),
+            ),
+            {
+                "name1": {
+                    "orig_name": ["name1"],
+                    "value": 10.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+                "name2": {
+                    "orig_name": ["name2"],
+                    "value": 5.0,
+                    "scalar": {},
+                    "scale": [1.0],
+                    "auto_graph": False,
+                    "title": "Title 1",
+                    "unit": {
+                        "title": "Title 2",
+                        "symbol": "",
+                        "render": lambda v: f"{v}",
+                        "js_render": "v => v",
+                    },
+                    "color": "#123456",
+                },
+            },
+            2.0,
+            id="metric.Fraction",
+        ),
+    ],
+)
+def test_evaluate_quantity(
+    quantity: metric_api.Quantity,
+    translated_metrics: Mapping[str, TranslatedMetric],
+    result: float,
+) -> None:
+    assert evaluate_quantity(quantity, translated_metrics).value == result

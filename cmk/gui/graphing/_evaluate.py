@@ -7,10 +7,15 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Literal, Self
 
+from cmk.gui.i18n import _
+from cmk.gui.utils.speaklater import LazyString
+
+from cmk.graphing.v1 import Color
 from cmk.graphing.v1 import metric as metric_api
 from cmk.graphing.v1 import perfometer as perfometer_api
 
-from ._type_defs import TranslatedMetric
+from ._parser import make_hex_color, make_unit_info
+from ._type_defs import TranslatedMetric, UnitInfo
 
 
 @dataclass(frozen=True)
@@ -126,3 +131,108 @@ def perfometer_matches(
                 perfometer.upper,
             )
     return _is_perfometer_applicable(translated_metrics, metric_names_or_scalars)
+
+
+@dataclass(frozen=True)
+class EvaluatedQuantity:
+    title: LazyString | str
+    unit: UnitInfo
+    color: str
+    value: int | float
+
+
+def evaluate_quantity(
+    quantity: metric_api.Quantity,
+    translated_metrics: Mapping[str, TranslatedMetric],
+) -> EvaluatedQuantity:
+    match quantity:
+        case metric_api.Name():
+            metric = translated_metrics[quantity.value]
+            return EvaluatedQuantity(
+                metric["title"],
+                metric["unit"],
+                metric["color"],
+                translated_metrics[quantity.value]["value"],
+            )
+        case metric_api.Constant():
+            return EvaluatedQuantity(
+                str(quantity.title),
+                make_unit_info(quantity.unit),
+                make_hex_color(quantity.color),
+                quantity.value,
+            )
+        case metric_api.WarningOf():
+            metric = translated_metrics[quantity.name.value]
+            return EvaluatedQuantity(
+                _("Warning of ") + metric["title"],
+                metric["unit"],
+                make_hex_color(Color.YELLOW),
+                translated_metrics[quantity.name.value]["scalar"]["warn"],
+            )
+        case metric_api.CriticalOf():
+            metric = translated_metrics[quantity.name.value]
+            return EvaluatedQuantity(
+                _("Critical of ") + metric["title"],
+                metric["unit"],
+                make_hex_color(Color.RED),
+                translated_metrics[quantity.name.value]["scalar"]["crit"],
+            )
+        case metric_api.MinimumOf():
+            metric = translated_metrics[quantity.name.value]
+            return EvaluatedQuantity(
+                _("Minimum of ") + metric["title"],
+                metric["unit"],
+                make_hex_color(quantity.color),
+                translated_metrics[quantity.name.value]["scalar"]["min"],
+            )
+        case metric_api.MaximumOf():
+            metric = translated_metrics[quantity.name.value]
+            return EvaluatedQuantity(
+                _("Maximum of ") + metric["title"],
+                metric["unit"],
+                make_hex_color(quantity.color),
+                translated_metrics[quantity.name.value]["scalar"]["max"],
+            )
+        case metric_api.Sum():
+            evaluated_first_summand = evaluate_quantity(quantity.summands[0], translated_metrics)
+            return EvaluatedQuantity(
+                str(quantity.title),
+                evaluated_first_summand.unit,
+                make_hex_color(quantity.color),
+                (
+                    evaluated_first_summand.value
+                    + sum(
+                        evaluate_quantity(s, translated_metrics).value
+                        for s in quantity.summands[1:]
+                    )
+                ),
+            )
+        case metric_api.Product():
+            product = 1.0
+            for f in quantity.factors:
+                product *= evaluate_quantity(f, translated_metrics).value
+            return EvaluatedQuantity(
+                str(quantity.title),
+                make_unit_info(quantity.unit),
+                make_hex_color(quantity.color),
+                product,
+            )
+        case metric_api.Difference():
+            evaluated_minuend = evaluate_quantity(quantity.minuend, translated_metrics)
+            evaluated_subtrahend = evaluate_quantity(quantity.subtrahend, translated_metrics)
+            return EvaluatedQuantity(
+                str(quantity.title),
+                evaluated_minuend.unit,
+                make_hex_color(quantity.color),
+                evaluated_minuend.value - evaluated_subtrahend.value,
+            )
+        case metric_api.Fraction():
+            return EvaluatedQuantity(
+                str(quantity.title),
+                make_unit_info(quantity.unit),
+                make_hex_color(quantity.color),
+                (
+                    evaluate_quantity(quantity.dividend, translated_metrics).value
+                    / evaluate_quantity(quantity.divisor, translated_metrics).value
+                ),
+            )

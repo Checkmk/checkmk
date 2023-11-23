@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::pwstore;
-use anyhow::{anyhow, Result as AnyhowResult};
+use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
 use http::{HeaderName, HeaderValue, Method};
 use std::{str::FromStr, time::Duration};
@@ -83,6 +83,16 @@ pub struct Cli {
     /// String to expect in the response body.
     #[arg(short = 's', long, conflicts_with = "without_body")]
     pub body_string: Option<String>,
+
+    /// Strings to expect in the headers. Format: [KEY]:[VALUE]
+    /// Specify multiple times for additional headers.
+    /// It's possible to only specify key or value, but a separating colon is
+    /// mandatory to identify them.
+    /// Keys are matched case-insensitive and may only contain ASCII characters.
+    /// Values are matched case-sensitive. If they contain non-ASCII characters,
+    /// they are expected to be latin-1
+    #[arg(short = 'd', long, value_parser=parse_header_pair)]
+    pub header_strings: Option<Vec<(String, String)>>,
 }
 
 type PageSizeLimits = (usize, Option<usize>);
@@ -118,9 +128,33 @@ pub struct AuthPw {
 
 fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
     let Some((name, value)) = header.split_once(':') else {
-        return Err(anyhow!("Invalid HTTP header: {} (missing ':')", header));
+        bail!("Invalid HTTP header: {} (missing ':')", header);
     };
     Ok((name.trim().parse()?, value.trim().parse()?))
+}
+
+fn parse_header_pair(header: &str) -> AnyhowResult<(String, String)> {
+    let Some((name, value)) = header.split_once(':') else {
+        bail!("Invalid HTTP header: {} (missing ':')", header);
+    };
+
+    Ok((
+        if name.trim().is_empty() {
+            String::new()
+        } else {
+            // HeaderNames have some properties and requirements (case insensitive, only ASCII).
+            // Instead of checking and formatting manually, we convert the search
+            // string to HeaderName and back.
+            HeaderName::from_str(name.trim())?.to_string()
+        },
+        // HeaderValues, while they *should* only contain ASCII chars, are allowed to be
+        // ISO-8859-1 ("latin-1") encoded, and are even ophaque bytes in general.
+        // By that, it makes sense to search for arbitrary text in the latin-1-decoded
+        // HeaderValue text, as this also includes ASCII. Characters that can't be encoded in
+        // latin-1 can't be found in a latin-1 HeaderValue, but thats rather a problem of the
+        // caller than invalid input.
+        value.trim().to_string(),
+    ))
 }
 
 fn parse_seconds(secs: &str) -> AnyhowResult<Duration> {
@@ -155,11 +189,19 @@ mod tests {
         assert!(split_header(":value").is_err());
         assert!(split_header("name value").is_err());
         assert!(split_header("name:some\r\nvalue").is_err());
+        assert!(split_header("näme:some\r\nvalue").is_err());
         assert_eq!(
             split_header("name:value").unwrap(),
             (
                 HeaderName::from_str("name").unwrap(),
                 HeaderValue::from_str("value").unwrap()
+            )
+        );
+        assert_eq!(
+            split_header("name:valüe").unwrap(),
+            (
+                HeaderName::from_str("name").unwrap(),
+                HeaderValue::from_str("valüe").unwrap()
             )
         );
         assert_eq!(
@@ -175,6 +217,25 @@ mod tests {
                 HeaderName::from_str("name").unwrap(),
                 HeaderValue::from_str("value").unwrap()
             )
+        );
+    }
+
+    #[test]
+    fn test_parse_header_pair() {
+        assert!(split_header("name value").is_err());
+        assert!(split_header("name:some\r\nvalue").is_err());
+        assert!(split_header("näme:value").is_err());
+        assert_eq!(
+            parse_header_pair(":value").unwrap(),
+            ("".to_string(), "value".to_string())
+        );
+        assert_eq!(
+            parse_header_pair("name:").unwrap(),
+            ("name".to_string(), "".to_string())
+        );
+        assert_eq!(
+            parse_header_pair("NaMe:VaLüE").unwrap(),
+            ("name".to_string(), "VaLüE".to_string())
         );
     }
 }

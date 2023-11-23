@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use http::HeaderValue;
+use http::{HeaderMap, HeaderValue};
 use httpdate::parse_http_date;
 use reqwest::{StatusCode, Version};
 use std::fmt::{Display, Formatter, Result as FormatResult};
@@ -273,6 +273,7 @@ pub struct CheckParameters {
     pub document_age_levels: Option<UpperLevels<u64>>,
     pub timeout: Duration,
     pub body_string: Option<String>,
+    pub header_strings: Vec<(String, String)>,
 }
 
 pub fn collect_response_checks(
@@ -286,6 +287,7 @@ pub fn collect_response_checks(
 
     check_status(response.status, response.version, params.onredirect)
         .into_iter()
+        .chain(check_headers(&response.headers, params.header_strings))
         .chain(check_body(
             response.body,
             params.page_size,
@@ -352,6 +354,46 @@ fn check_status(
         CheckResult::summary(state.clone(), &text),
         CheckResult::details(state, &text),
     ]
+}
+
+fn check_headers(
+    headers: &HeaderMap,
+    search_strings: Vec<(String, String)>,
+) -> Vec<Option<CheckResult>> {
+    if search_strings.is_empty() {
+        return vec![];
+    };
+
+    if contains_search_strings(headers, &search_strings) {
+        vec![]
+    } else {
+        notice(
+            State::Crit,
+            "Specified strings not found in response headers",
+        )
+    }
+}
+
+fn contains_search_strings(headers: &HeaderMap, search_strings: &[(String, String)]) -> bool {
+    let headers_as_strings: Vec<(&str, String)> = headers
+        .iter()
+        // The header name (coming from reqwest) is guaranteed to be ASCII, so we can have it as string.
+        // The header value is only bytes in general. However, RFC 9110, section 5.5 tells us that it
+        // should be ASCII and is allowed to be ISO-8859-1 (latin-1), so we decode it with latin-1.
+        .map(|(hk, hv)| (hk.as_str(), latin1_to_string(hv.as_bytes())))
+        .collect();
+
+    search_strings.iter().all(|(search_key, search_value)| {
+        headers_as_strings.iter().any(|(header_key, header_value)| {
+            header_key.contains(search_key) && header_value.contains(search_value)
+        })
+    })
+}
+
+fn latin1_to_string(bytes: &[u8]) -> String {
+    // latin-1 basically consists of the first two unicode blocks,
+    // so it's straighyforward to interpret the u8 values as unicode values.
+    bytes.iter().map(|&b| b as char).collect()
 }
 
 fn check_body<T: std::error::Error>(
@@ -469,6 +511,110 @@ fn check_document_age(
     )
 }
 
+#[cfg(test)]
+mod test_check_headers {
+    use http::HeaderName;
+
+    use super::*;
+    use std::collections::HashMap;
+    use std::str::FromStr;
+
+    #[test]
+    fn test_no_search_strings() {
+        assert!(
+            check_headers(
+                &(&HashMap::from([
+                    ("key1".to_string(), "value1".to_string()),
+                    ("key2".to_string(), "value2".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![]
+            ) == vec![]
+        )
+    }
+
+    #[test]
+    fn test_strings_found() {
+        assert!(
+            check_headers(
+                &(&HashMap::from([
+                    ("some_key1".to_string(), "some_value1".to_string()),
+                    ("some_key2".to_string(), "some_value2".to_string()),
+                    ("some_key3".to_string(), "some_value3".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![
+                    (("some_key1".to_string()), "value1".to_string()),
+                    (String::new(), "value".to_string()),
+                    ("some_key3".to_string(), String::new()),
+                ]
+            ) == vec![]
+        )
+    }
+
+    #[test]
+    fn test_strings_not_found() {
+        assert!(
+            check_headers(
+                &(&HashMap::from([
+                    ("some_key1".to_string(), "some_value1".to_string()),
+                    ("some_key2".to_string(), "some_value2".to_string()),
+                    ("some_key3".to_string(), "some_value3".to_string()),
+                ]))
+                    .try_into()
+                    .unwrap(),
+                vec![("key1".to_string(), "value2".to_string()),]
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_impossible_non_latin1() {
+        assert!(
+            check_headers(
+                &(&HashMap::from([("some_key1".to_string(), "ßome_value1".to_string()),]))
+                    .try_into()
+                    .unwrap(),
+                vec![("some_key1".to_string(), "ßome_value1".to_string()),]
+            ) == vec![
+                CheckResult::summary(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+                CheckResult::details(
+                    State::Crit,
+                    "Specified strings not found in response headers"
+                ),
+            ]
+        )
+    }
+
+    #[test]
+    fn test_decode_latin1() {
+        let mut header_map = HeaderMap::new();
+        header_map.append(
+            HeaderName::from_str("some_key").unwrap(),
+            HeaderValue::from_bytes(b"\xF6\xE4\xFC").unwrap(),
+        );
+        assert!(
+            check_headers(
+                &header_map,
+                vec![("some_key".to_string(), "öäü".to_string()),]
+            ) == vec![]
+        )
+    }
+}
 #[cfg(test)]
 mod test_check_body {
     use super::*;

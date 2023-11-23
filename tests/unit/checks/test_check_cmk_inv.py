@@ -7,17 +7,17 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.cmk_inv import CmkInvParams, generate_cmk_inv_commands
-from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily
+from tests.testlib import ActiveCheck
+
+pytestmark = pytest.mark.checks
 
 ARGS = [
-    "cmk",
     "--inv-fail-status=1",
     "--hw-changes=0",
     "--sw-changes=0",
     "--sw-missing=0",
     "--inventory-as-check",
-    "unittest_name",
+    "$HOSTNAME$",
 ]
 
 
@@ -33,17 +33,5 @@ def test_check_cmk_inv_argument_parsing(
     params: None | Mapping[str, object], expected_args: Sequence[str]
 ) -> None:
     """Tests if all required arguments are present."""
-    commands = list(
-        generate_cmk_inv_commands(
-            CmkInvParams.model_validate(params),
-            HostConfig(
-                name="unittest_name",
-                address="unittest_address",
-                alias="unittest_alias",
-                ip_family=IPAddressFamily.IPV4,
-            ),
-            {},
-        )
-    )
-    assert len(commands) == 1
-    assert commands[0].command_arguments == expected_args
+    active_check = ActiveCheck("check_cmk_inv")
+    assert active_check.run_argument_function(params) == expected_args

@@ -1277,7 +1277,7 @@ class CommandScheduleDowntimes(Command):
         # Duration section
         html.tr(
             HTMLWriter.render_td(_("Duration"))
-            + HTMLWriter.render_td(self._get_duration_options())
+            + HTMLWriter.render_td(self._get_duration_options(), class_="down_duration")
             + HTMLWriter.render_td(
                 html.render_a(
                     _("(Edit presets)"),
@@ -1294,6 +1294,10 @@ class CommandScheduleDowntimes(Command):
         html.open_td()
         self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
         self._vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
+        html.i(
+            _("Server time (currently: %s)") % time.strftime("%d/%m/%Y %H:%M", time.localtime()),
+            class_="server_time",
+        )
         html.close_td()
         html.close_tr()
 
@@ -1307,6 +1311,7 @@ class CommandScheduleDowntimes(Command):
         self._vs_time().render_input(
             "_down_to_time", time.strftime("%H:%M", time.localtime(time.time() + 7200))
         )
+        html.i(_("Server time"), class_="server_time")
         html.close_td()
 
         # Repeat section
@@ -1324,12 +1329,12 @@ class CommandScheduleDowntimes(Command):
 
     def _get_duration_options(self) -> HTML:
         duration_options = HTML("")
-        for time_range in active_config.user_downtime_timeranges:
+        for nr, time_range in enumerate(active_config.user_downtime_timeranges):
             duration_options += html.render_input(
                 name=(varname := f'_downrange__{time_range["end"]}'),
                 type_="button",
                 id_=varname,
-                class_=["button", "duration"],
+                class_=["button", "duration"] + (["active"] if nr == 0 else []),
                 value=_u(time_range["title"]),
                 onclick=self._get_onclick(time_range["end"], varname),
                 submit="_set_date_and_time",

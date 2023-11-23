@@ -693,7 +693,9 @@ div.page_menu_popup {
     }
 
     .button {
-      margin: 0px 20px 0px 0px;
+      &:not(.duration) {
+        margin: 0px 20px 0px 0px;
+      }
 
       &.border_hot {
         border: 1px solid $success-dimmed;
@@ -702,15 +704,35 @@ div.page_menu_popup {
 
     input[type="date"],
     input[type="time"],
-    select#_down_recurring + span .select2-selection.select2-selection--single {
+    select#_down_recurring + span .select2-selection.select2-selection--single,
+    .server_time {
       margin-left: 10px;
     }
 
+    .server_time {
+      color: $font-color-dimmed;
+    }
+
+    td.down_duration {
+      padding: 10px;
+    }
+
     input.button.duration {
-      &:first-child {
-        margin-left: 10px !important;
-      }
       margin: 0px;
+      border: none;
+      border-radius: 0px;
+      border-top: 1px solid $line-color;
+      border-bottom: 1px solid $line-color;
+
+      &:first-child {
+        border-radius: 4px 0 0 4px;
+        border-left: 1px solid $line-color;
+      }
+
+      &:last-child {
+        border-radius: 0 4px 4px 0;
+        border-right: 1px solid $line-color;
+      }
 
       &.active,
       &:focus {

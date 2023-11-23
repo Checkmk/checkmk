@@ -707,24 +707,24 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
-    Dim lastBackupDate, backup_type, backup_machine_name, backup_database, found_db_backups
+    Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
     sqlString = "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
                 "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
                 "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
                 "BEGIN " & _
                     "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
-                    "type, machine_name, database_name FROM msdb.dbo.backupset " & _
+                    "type, database_name FROM msdb.dbo.backupset " & _
                     "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
-                    "GROUP BY type, machine_name,database_name ' " & _
+                    "GROUP BY type, database_name ' " & _
                 "END " & _
                 "ELSE " & _
                 "BEGIN " & _
                     "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
-                    "b.type, b.machine_name, database_name  " & _
+                    "b.type, database_name  " & _
                     "FROM msdb.dbo.backupset b  " & _
                     "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
-                    "GROUP BY type, b.database_name, b.machine_name' " & _
+                    "GROUP BY type, b.database_name' " & _
                 "END " & _
                 "EXEC (@SQLCommand)"
     Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
@@ -746,8 +746,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                If backup_type = "" Then
                    backup_type = "-"
                End If
-
-               backup_machine_name = Trim(record("machine_name"))
 
                If lastBackupDate <> "" Then
                    addOutput("MSSQL_" & instance_id & "|" & backup_database & _

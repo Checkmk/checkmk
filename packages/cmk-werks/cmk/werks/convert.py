@@ -20,8 +20,15 @@ def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, st
     metadata.pop("state", None)  # removed field
     metadata.pop("targetversion", None)  # removed field
 
-    if (compatible := metadata.get("compatible")) is not None:
-        metadata["compatible"] = "yes" if compatible == "compat" else "no"
+    match metadata.get("compatible"):
+        case None:
+            pass
+        case "compat":
+            metadata["compatible"] = "yes"
+        case "incomp":
+            metadata["compatible"] = "no"
+        case _:
+            raise ValueError("compatible of werkv1 has to be either 'compat' or 'incomp'")
 
     if (date := metadata.get("date")) is not None:
         metadata["date"] = datetime.datetime.fromtimestamp(

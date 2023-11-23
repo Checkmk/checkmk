@@ -1,0 +1,17 @@
+Title: Ignore certificates with negative serial numbers
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1700822338
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+X509 certificates contain a serial number which is used for various purposes.
+
+Since RFC5280 (May 2008) certificates must be a positive integer.
+There used to be certificates with negative serial numbers which were accepted.
+Our underlying libraries start to deprecate the support for these certificates, therefore Checkmk now deems them invalid.
+
+Please note that these certificates are very uncommon.
+If Checkmk encounters such a certificate it will log it to <code>var/log/web.log</code>.

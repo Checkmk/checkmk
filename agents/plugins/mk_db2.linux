@@ -81,12 +81,11 @@ function get_sections_for_single_db {
 
         echo "<<<db2_backup>>>"
         echo "[[[$instance:$db]]]"
-        echo "DATE_TZ UTC"
         if compare_version_greater_equal "$version_number" 10.5; then
             # MON_GET_DATBASE(-2) gets information of all active members
-            db2 -x "select LAST_BACKUP - CURRENT TIMEZONE from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
+            db2 -x "select LAST_BACKUP from TABLE (MON_GET_DATABASE(-2))" | grep -v "selected." | tail -n 1
         else
-            db2 -x "select SQLM_ELM_LAST_BACKUP - CURRENT TIMEZONE from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
+            db2 -x "select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as int))) as ref" | grep -v "selected." | tail -n 1
         fi
 
         # disconnect from database

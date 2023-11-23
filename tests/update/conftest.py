@@ -214,12 +214,19 @@ def _get_site(
     )
     logger.info("Updating existing site" if update else "Creating new site")
 
+    source_version = base_site.version.version_directory() if base_site else ""
+    source_version_short = base_site.version.version if base_site else ""
+    target_version = version.version_directory()
+
+    update_supported = (
+        (source_version_short in BaseVersions.BASE_VERSIONS_CB or version_supported(source_version))
+        if update
+        else False
+    )
+
     logger.info("Interactive mode: %s", interactive)
     if interactive:
         # bypass SiteFactory for interactive installations
-        source_version = base_site.version.version_directory() if base_site else ""
-        source_version_short = base_site.version.version if base_site else ""
-        target_version = version.version_directory()
         logfile_path = f"/tmp/omd_{'update' if update else 'install'}_{site.id}.out"
         # install the release
         site.install_cmk()
@@ -236,12 +243,7 @@ def _get_site(
                 "\033[0m"
             )
         pexpect_dialogs = []
-        update_supported = False
         if update:
-            update_supported = (
-                source_version_short in BaseVersions.BASE_VERSIONS_CB
-                or version_supported(source_version)
-            )
             if update_supported:
                 logger.info("Updating to a supported version.")
                 pexpect_dialogs.extend(
@@ -297,8 +299,8 @@ def _get_site(
             logfile_path=logfile_path,
         )
 
-        if update and not update_supported:
-            pytest.skip(f"{source_version} is not a supported version for {target_version}")
+        if update:
+            _skip_test_if_unsupported_update(update_supported, source_version, target_version)
 
         assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
 
@@ -312,18 +314,8 @@ def _get_site(
         site.start()
     else:
         if update:
-            source_version = base_site.version.version_directory() if base_site else ""
-            source_version_short = base_site.version.version if base_site else ""
-            target_version = version.version_directory()
-            update_supported = (
-                source_version_short in BaseVersions.BASE_VERSIONS_CB
-                or version_supported(source_version)
-            )
-
             # update via CLI as site user (not interactive)
-            if not update_supported:
-                pytest.skip(f"{source_version} is not a supported version for {target_version}")
-
+            _skip_test_if_unsupported_update(update_supported, source_version, target_version)
             _update_as_site_user(site, target_version)
 
             # refresh the site object after creating the site
@@ -448,3 +440,10 @@ def _update_as_site_user(
     test_site.stop()
     proc = _run_as_site_user(test_site, cmd)
     assert proc.returncode == 0, proc.stdout
+
+
+def _skip_test_if_unsupported_update(
+    update_supported: bool, source_version: str, target_version: str
+) -> None:
+    if not update_supported:
+        pytest.skip(f"{source_version} is not a supported version for {target_version}")

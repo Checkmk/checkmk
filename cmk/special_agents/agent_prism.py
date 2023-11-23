@@ -7,13 +7,13 @@ import logging
 import sys
 from collections.abc import Sequence
 
-from cmk.special_agents.utils.agent_common import (
+from cmk.special_agents.v0_unstable.agent_common import (
     ConditionalPiggybackSection,
     SectionWriter,
     special_agent_main,
 )
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
-from cmk.special_agents.utils.request_helper import HTTPSAuthRequester, Requester
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.request_helper import HTTPSAuthRequester, Requester
 
 LOGGING = logging.getLogger("agent_prism")
 

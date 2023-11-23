@@ -45,14 +45,14 @@ from cmk.plugins.aws.constants import (  # pylint: disable=cmk-module-layer-viol
     AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
-from cmk.special_agents.utils import (
+from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
+from cmk.special_agents.v0_unstable.argument_parsing import Args
+from cmk.special_agents.v0_unstable.misc import (
     DataCache,
     datetime_serializer,
     get_seconds_since_midnight,
     vcrtrace,
 )
-from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
-from cmk.special_agents.utils.argument_parsing import Args
 
 NOW = datetime.now()
 

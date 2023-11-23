@@ -5,11 +5,11 @@
 
 import sys
 
-import cmk.special_agents.utils as utils
+from cmk.special_agents.v0_unstable.misc import AgentJSON
 
 
 def main():
-    agent = utils.AgentJSON("salesforce", "Salesforce")
+    agent = AgentJSON("salesforce", "Salesforce")
     content = agent.get_content()
     for section, section_content in content.items():
         sys.stdout.write("<<<%s>>>\n" % section)

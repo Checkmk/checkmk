@@ -15,8 +15,8 @@ from collections.abc import Sequence
 import pydantic
 import requests
 
-from cmk.special_agents.utils import agent_common
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable import agent_common
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 Seconds = typing.NewType("Seconds", float)
 

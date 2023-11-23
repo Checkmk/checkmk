@@ -23,7 +23,7 @@ import urllib3
 
 import cmk.utils.password_store
 
-from cmk.special_agents.utils.crash_reporting import create_agent_crash_dump
+from cmk.special_agents.v0_unstable.crash_reporting import create_agent_crash_dump
 
 
 class CannotRecover(RuntimeError):

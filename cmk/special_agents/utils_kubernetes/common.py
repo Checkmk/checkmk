@@ -14,8 +14,8 @@ from typing import Generic, NewType, TypeVar
 
 from pydantic import BaseModel
 
-from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes.schemata import section
+from cmk.special_agents.v0_unstable.agent_common import ConditionalPiggybackSection, SectionWriter
 
 LOGGER = logging.getLogger()
 RawMetrics = Mapping[str, str]

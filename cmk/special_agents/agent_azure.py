@@ -29,7 +29,7 @@ from cmk.utils import password_store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.v0_unstable.misc import DataCache, vcrtrace
 
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]

@@ -374,7 +374,7 @@ def _is_allowed_for_plugins(
             _in_component(imported=imported, component=Component("cmk.graphing.v1")),
             _in_component(imported=imported, component=Component("cmk.rulesets.v1")),
             _in_component(imported=imported, component=Component("cmk.server_side_calls.v1")),
-            _in_component(imported=imported, component=Component("cmk.special_agents.utils")),
+            _in_component(imported=imported, component=Component("cmk.special_agents.v0_unstable")),
             _in_component(imported=imported, component=Component("cmk.plugins")),
         )
     )

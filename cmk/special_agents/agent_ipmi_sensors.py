@@ -15,8 +15,8 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Literal
 
-from cmk.special_agents.utils.agent_common import special_agent_main
-from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+from cmk.special_agents.v0_unstable.agent_common import special_agent_main
+from cmk.special_agents.v0_unstable.argument_parsing import Args, create_default_argument_parser
 
 
 @dataclass(frozen=True)

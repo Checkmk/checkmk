@@ -15,7 +15,7 @@ from snap7.common import Snap7Library
 from snap7.exceptions import Snap7Exception
 from snap7.types import Areas
 
-from cmk.special_agents.utils.agent_common import SectionWriter
+from cmk.special_agents.v0_unstable.agent_common import SectionWriter
 
 # prevent snap7 logger to log errors directly to console
 snap7.common.logger.setLevel(logging.CRITICAL + 10)

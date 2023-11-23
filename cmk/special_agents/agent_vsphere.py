@@ -27,7 +27,7 @@ from requests.adapters import HTTPAdapter
 import cmk.utils.password_store
 import cmk.utils.paths
 
-import cmk.special_agents.utils as utils
+import cmk.special_agents.v0_unstable.misc as utils
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |

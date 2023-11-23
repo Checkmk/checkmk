@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from cmk.special_agents.utils import DataCache, get_seconds_since_midnight
+from cmk.special_agents.v0_unstable.misc import DataCache, get_seconds_since_midnight
 
 
 class KeksDose(DataCache):

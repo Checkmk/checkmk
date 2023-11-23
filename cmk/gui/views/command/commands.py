@@ -1851,16 +1851,22 @@ class CommandRemoveDowntime(Command):
         return PermissionActionDowntimes
 
     @property
+    def group(self) -> type[CommandGroup]:
+        return CommandGroupDowntimes
+
+    @property
     def tables(self):
         return ["host", "service", "downtime"]
 
+    # we only want to show the button and shortcut in the explicit downtime
+    # view
     @property
     def is_shortcut(self) -> bool:
-        return True
+        return self.is_suggested
 
     @property
     def is_suggested(self) -> bool:
-        return True
+        return request.var("view_name") == "downtimes"
 
     def _confirm_dialog_options(
         self,

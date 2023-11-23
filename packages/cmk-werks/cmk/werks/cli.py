@@ -708,6 +708,9 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     metadata: WerkMetadata = {}
+    werk_id = next_werk_id()
+    metadata["id"] = str(werk_id)
+
     # this is the metadata format of werkv1
     metadata["date"] = str(int(time.time()))
     metadata["version"] = get_config().current_version
@@ -720,9 +723,6 @@ def main_new(args: argparse.Namespace) -> None:
     metadata["component"] = input_choice("Component", get_edition_components(metadata["edition"]))
     metadata["level"] = input_choice("Level", get_config().levels)
     metadata["compatible"] = input_choice("Compatible", get_config().compatible)
-
-    werk_id = next_werk_id()
-    metadata["id"] = str(werk_id)
 
     werk_path = get_werk_filename(werk_id, get_werk_file_version())
     werk = Werk(

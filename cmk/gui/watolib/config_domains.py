@@ -9,12 +9,14 @@ import shutil
 import signal
 import subprocess
 import traceback
+import warnings as warnings_module
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
+from cryptography.utils import CryptographyDeprecationWarning
 from cryptography.x509 import Certificate, load_pem_x509_certificate
 from cryptography.x509.oid import NameOID
 
@@ -335,10 +337,23 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     @staticmethod
     def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
+        def _load_cert(trusted_cas: list[str]) -> Iterable[Certificate]:
+            for raw in trusted_cas:
+                with warnings_module.catch_warnings():
+                    warnings_module.filterwarnings("error", category=UserWarning)
+                    try:
+                        yield load_pem_x509_certificate(raw.encode())
+                    except CryptographyDeprecationWarning:
+                        logger.warning(
+                            "There is a certificate with a negative serial number "
+                            "in the trusted certificate authorities! Ignoring that..."
+                        )
+                        continue
+
         return {
             site_id: cert
             for cert in sorted(
-                (load_pem_x509_certificate(raw.encode()) for raw in trusted_cas),
+                _load_cert(trusted_cas),
                 key=lambda cert: cert.not_valid_after,
             )
             if (
@@ -351,7 +366,16 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     @staticmethod
     def is_valid_cert(raw_cert: str) -> bool:
         try:
-            _ = load_pem_x509_certificate(raw_cert.encode())
+            with warnings_module.catch_warnings():
+                warnings_module.filterwarnings("error", category=UserWarning)
+                try:
+                    load_pem_x509_certificate(raw_cert.encode())
+                except CryptographyDeprecationWarning:
+                    logger.warning(
+                        "There is a certificate with a negative serial number "
+                        "in the system trusted certificate authorities! Ignoring that..."
+                    )
+                    return False
             return True
         except ValueError:
             return False

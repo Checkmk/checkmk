@@ -12,8 +12,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 ProjectId = str
 
@@ -72,7 +72,7 @@ def parse(string_table: StringTable) -> Section:
     return section
 
 
-register.agent_section(name="gcp_cost", parse_function=parse)
+agent_section_gcp_cost = AgentSection(name="gcp_cost", parse_function=parse)
 
 
 def discover(section: Section) -> DiscoveryResult:
@@ -100,7 +100,7 @@ def check(item: str, params: Mapping[str, Any], section: Section) -> CheckResult
     )
 
 
-register.check_plugin(
+check_plugin_gcp_cost = CheckPlugin(
     name="gcp_cost",
     service_name="Costs project %s",
     discovery_function=discover,

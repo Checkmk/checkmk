@@ -17,7 +17,7 @@ from google.cloud.monitoring_v3.types import TimeSeries
 Aligner = Aggregation.Aligner
 Reducer = Aggregation.Reducer
 
-from cmk.special_agents import agent_gcp
+from cmk.plugins.gcp.special_agents import agent_gcp
 
 METRIC_TYPE = "compute.googleapis.com/instance/uptime"
 METRIC_LABELS = {"instance_name": "instance-1"}

@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.gcp_cost import check, discover, parse, Section
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.gcp.agent_based.gcp_cost import check, discover, parse, Section
 
 
 @pytest.fixture(name="section")

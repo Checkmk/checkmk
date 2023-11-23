@@ -7,10 +7,9 @@
 import polyfactory.factories.pydantic_factory
 import pytest
 
-from cmk.utils import gcp_constants
-
-from cmk.base.plugins.agent_based import gcp_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.agent_based.v2 import Result, State
+from cmk.plugins.gcp.agent_based import gcp_status
+from cmk.plugins.gcp.lib import constants
 
 
 class IncidentFactory(polyfactory.factories.pydantic_factory.ModelFactory):
@@ -129,14 +128,13 @@ def test_one_incident_per_region() -> None:
     agent_output = AgentOutputFactory.build(health_info=[incident])
     section = gcp_status.parse([[agent_output.json(by_alias=True)]])
     assert all(
-        gcp_constants.RegionMap[l.id_] in section.data
-        for l in incident.currently_affected_locations
+        constants.RegionMap[l.id_] in section.data for l in incident.currently_affected_locations
     )
 
 
 def test_result_per_incident() -> None:
     incident_count = 3
-    item = gcp_constants.RegionMap["asia-east1"]
+    item = constants.RegionMap["asia-east1"]
     section = gcp_status.Section(
         discovery_param=gcp_status.DiscoveryParam(regions=[]),
         data={item: IncidentFactory.batch(size=incident_count)},
@@ -146,7 +144,7 @@ def test_result_per_incident() -> None:
 
 
 def test_result_shows_up_correctly(section: gcp_status.Section) -> None:
-    item = gcp_constants.RegionMap["europe-north1"]
+    item = constants.RegionMap["europe-north1"]
     results = list(gcp_status.check(item, section=section))
     assert results == [
         Result(

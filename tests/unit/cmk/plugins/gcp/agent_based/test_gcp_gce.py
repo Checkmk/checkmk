@@ -5,18 +5,18 @@
 # mypy: disallow_untyped_defs
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.gcp_assets import parse_assets
-from cmk.base.plugins.agent_based.gcp_gce import (
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
+from cmk.plugins.gcp.agent_based.gcp_gce import (
     check_disk_summary,
     check_network,
     check_summary,
     parse_gce_uptime,
 )
-
-from cmk.plugins.lib import gcp, uptime
+from cmk.plugins.gcp.lib import gcp
+from cmk.plugins.gcp.special_agents import agent_gcp
+from cmk.plugins.lib import uptime
 from cmk.plugins.lib.interfaces import CHECK_DEFAULT_PARAMETERS
-from cmk.special_agents import agent_gcp
 
 
 def test_parse_piggy_back() -> None:

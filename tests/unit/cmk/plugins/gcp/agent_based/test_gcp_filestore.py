@@ -7,17 +7,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, ServiceLabel, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-from cmk.base.plugins.agent_based.gcp_assets import parse_assets
-from cmk.base.plugins.agent_based.gcp_filestore import check, check_summary, discover, parse
-
-from cmk.plugins.lib import gcp
-from cmk.special_agents.agent_gcp import FILESTORE
+from cmk.agent_based.v2 import Metric, Result, ServiceLabel, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
+from cmk.plugins.gcp.agent_based.gcp_filestore import check, check_summary, discover, parse
+from cmk.plugins.gcp.lib import gcp
+from cmk.plugins.gcp.special_agents.agent_gcp import FILESTORE
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
 

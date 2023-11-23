@@ -8,22 +8,18 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
     get_value_store,
-    register,
     render,
     Result,
     Service,
     ServiceLabel,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-
-from cmk.plugins.lib import gcp
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 
@@ -33,7 +29,9 @@ def parse(string_table: StringTable) -> gcp.Section:
     )
 
 
-register.agent_section(name="gcp_service_cloud_sql", parse_function=parse)
+agent_section_gcp_service_cloud_sql = AgentSection(
+    name="gcp_service_cloud_sql", parse_function=parse
+)
 service_namer = gcp.service_name_factory("Cloud SQL")
 ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
@@ -101,7 +99,7 @@ def check_gcp_sql_status(
     yield Result(state=state, summary=summary)
 
 
-register.check_plugin(
+check_plugin_gcp_sql_status = CheckPlugin(
     name="gcp_sql_status",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("status"),
@@ -140,7 +138,7 @@ def check_gcp_sql_memory(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_sql_memory = CheckPlugin(
     name="gcp_sql_memory",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("memory"),
@@ -170,7 +168,7 @@ def check_gcp_sql_cpu(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_sql_cpu = CheckPlugin(
     name="gcp_sql_cpu",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("CPU"),
@@ -212,7 +210,7 @@ def check_gcp_sql_network(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_sql_network = CheckPlugin(
     name="gcp_sql_network",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("network"),
@@ -267,7 +265,7 @@ def check_gcp_sql_disk(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_sql_disk = CheckPlugin(
     name="gcp_sql_disk",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("disk"),
@@ -290,7 +288,7 @@ def check_summary(section: gcp.AssetSection) -> CheckResult:
     yield from gcp.check_summary(ASSET_TYPE, "Server", section)
 
 
-register.check_plugin(
+check_plugin_gcp_sql_summary = CheckPlugin(
     name="gcp_sql_summary",
     sections=["gcp_assets"],
     service_name=service_namer.summary_name(),
@@ -349,7 +347,7 @@ def check_gcp_sql_replication(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_sql_replication = CheckPlugin(
     name="gcp_sql_replication",
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("replication"),

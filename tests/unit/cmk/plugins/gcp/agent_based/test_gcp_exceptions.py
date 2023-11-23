@@ -10,9 +10,9 @@ from dataclasses import dataclass
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.gcp_exceptions import _ExceptionSection, check, discover, parse
+from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2.type_defs import StringTable
+from cmk.plugins.gcp.agent_based.gcp_exceptions import _ExceptionSection, check, discover, parse
 
 
 @dataclass(frozen=True)

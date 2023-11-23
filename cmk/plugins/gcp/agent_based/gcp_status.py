@@ -9,14 +9,9 @@ from collections.abc import Mapping, Sequence
 
 import pydantic
 
-from cmk.utils import gcp_constants  # pylint: disable=cmk-module-layer-violation
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.lib import constants
 
 BASE_URL = "https://status.cloud.google.com/"
 _NO_ISSUES = Result(state=State.OK, summary=f"No known issues. Details: {BASE_URL}")
@@ -66,11 +61,11 @@ def parse(string_table: StringTable) -> Section:
     data: dict[str, list[Incident]] = {}
     for incident in output.health_info:
         for location in incident.currently_affected_locations:
-            data.setdefault(gcp_constants.RegionMap[location.id_], []).append(incident)
+            data.setdefault(constants.RegionMap[location.id_], []).append(incident)
     return Section(discovery_param=output.discovery_param, data=data)
 
 
-register.agent_section(name="gcp_status", parse_function=parse)
+agent_section_gcp_status = AgentSection(name="gcp_status", parse_function=parse)
 
 
 def check(item: str, section: Section) -> CheckResult:
@@ -89,10 +84,10 @@ def check(item: str, section: Section) -> CheckResult:
 def discovery(section: Section) -> DiscoveryResult:
     yield Service(item="Global")
     for region in section.discovery_param.regions:
-        yield Service(item=gcp_constants.RegionMap[region])
+        yield Service(item=constants.RegionMap[region])
 
 
-register.check_plugin(
+check_plugin_gcp_status = CheckPlugin(
     name="gcp_status",
     service_name="GCP Status %s",
     discovery_function=discovery,

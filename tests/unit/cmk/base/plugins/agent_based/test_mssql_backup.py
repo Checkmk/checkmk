@@ -4,15 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import mssql_backup as msb
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-STRING_TABLE_WITHOUT_TZ = [
+STRING_TABLE = [
     ["MSSQL_SQL0x4", "master", "2016-07-08 20:20:27", "D"],
     ["MSSQL_SQL0x4", "model", "2016-07-08 20:20:28", "D"],
     ["MSSQL_SQL0x4", "model", "2016-07-12 09:09:42", "L"],
@@ -24,27 +21,13 @@ STRING_TABLE_WITHOUT_TZ = [
     ["MSSQL_Parrot", "Polly", "-", "-", "-", "ERROR: Polly has no crackers"],
 ]
 
-STRING_TABLE = [
-    ["-", "-", "date_tz", "UTC", "-"],
-    *STRING_TABLE_WITHOUT_TZ,
-]
+
+def _get_section() -> msb.Section:
+    return msb.parse_mssql_backup(STRING_TABLE)
 
 
-def _get_section(string_table: list[list[str]]) -> msb.Section:
-    return msb.parse_mssql_backup(string_table)
-
-
-@pytest.mark.parametrize(
-    "string_table",
-    [
-        pytest.param(STRING_TABLE, id="with tz"),
-        pytest.param(STRING_TABLE_WITHOUT_TZ, id="without tz"),
-    ],
-)
-def test_discovery_default(string_table: StringTable) -> None:
-    assert sorted(
-        msb.discover_mssql_backup({"mode": "summary"}, _get_section(string_table))
-    ) == sorted(
+def test_discovery_default() -> None:
+    assert sorted(msb.discover_mssql_backup({"mode": "summary"}, _get_section())) == sorted(
         [
             Service(item="MSSQL_SQL0x4 master"),
             Service(item="MSSQL_SQL0x4 model"),
@@ -53,22 +36,13 @@ def test_discovery_default(string_table: StringTable) -> None:
             Service(item="MSSQL_Parrot Polly"),
         ]
     )
-    assert not list(
-        msb.discover_mssql_backup_per_type({"mode": "summary"}, _get_section(string_table))
-    )
+    assert not list(msb.discover_mssql_backup_per_type({"mode": "summary"}, _get_section()))
 
 
-@pytest.mark.parametrize(
-    "string_table",
-    [
-        pytest.param(STRING_TABLE, id="with tz"),
-        pytest.param(STRING_TABLE_WITHOUT_TZ, id="without tz"),
-    ],
-)
-def test_discovery_single(string_table: StringTable) -> None:
-    assert not list(msb.discover_mssql_backup({"mode": "per_type"}, _get_section(string_table)))
+def test_discovery_single() -> None:
+    assert not list(msb.discover_mssql_backup({"mode": "per_type"}, _get_section()))
     assert sorted(
-        msb.discover_mssql_backup_per_type({"mode": "per_type"}, _get_section(string_table))
+        msb.discover_mssql_backup_per_type({"mode": "per_type"}, _get_section())
     ) == sorted(
         [
             Service(item="MSSQL_SQL0x4 master Database"),
@@ -83,49 +57,25 @@ def test_discovery_single(string_table: StringTable) -> None:
     )
 
 
-@pytest.mark.parametrize(
-    ["string_table", "local_timezone", "rendered_datetime"],
-    [
-        pytest.param(STRING_TABLE, "UTC", "Jul 08 2016 20:20:27", id="UTC"),
-        pytest.param(STRING_TABLE, "Europe/Berlin", "Jul 08 2016 22:20:27", id="CEST"),
-        pytest.param(STRING_TABLE_WITHOUT_TZ, "UTC", "Jul 08 2016 20:20:27", id="UTC without tz"),
-    ],
-)
-def test_check(string_table: StringTable, local_timezone: str, rendered_datetime: str) -> None:
-    with on_time("2016-07-15", local_timezone):
-        assert list(
-            msb.check_mssql_backup("MSSQL_SQL0x4 master", {}, _get_section(string_table))
-        ) == [
-            Result(state=State.OK, summary=f"[database] Last backup: {rendered_datetime}"),
+def test_check() -> None:
+    with on_time("2016-07-15", "UTC"):
+        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 master", {}, _get_section())) == [
+            Result(state=State.OK, summary="[database] Last backup: Jul 08 2016 20:20:27"),
             Result(state=State.OK, summary="Time since last backup: 6 days 3 hours"),
             Metric("backup_age_database", 531573.0),
         ]
 
 
-@pytest.mark.parametrize(
-    "string_table",
-    [
-        pytest.param(STRING_TABLE, id="with tz"),
-        pytest.param(STRING_TABLE_WITHOUT_TZ, id="without tz"),
-    ],
-)
-def test_check_with_seconds_metric(string_table: StringTable) -> None:
+def test_check_with_seconds_metric() -> None:
     with on_time("2016-07-15", "UTC"):
-        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 bar", {}, _get_section(string_table))) == [
+        assert list(msb.check_mssql_backup("MSSQL_SQL0x4 bar", {}, _get_section())) == [
             Result(state=State.OK, summary="[database] Last backup: May 23 1970 21:21:18"),
             Result(state=State.OK, summary="Time since last backup: 46 years 64 days"),
             Metric("seconds", 1456195122.0),
         ]
 
 
-@pytest.mark.parametrize(
-    "string_table",
-    [
-        pytest.param(STRING_TABLE, id="with tz"),
-        pytest.param(STRING_TABLE_WITHOUT_TZ, id="without tz"),
-    ],
-)
-def test_check_error(string_table: StringTable) -> None:
-    assert list(msb.check_mssql_backup("MSSQL_Parrot Polly", {}, _get_section(string_table))) == [
+def test_check_error() -> None:
+    assert list(msb.check_mssql_backup("MSSQL_Parrot Polly", {}, _get_section())) == [
         Result(state=State.CRIT, summary="Polly has no crackers"),
     ]

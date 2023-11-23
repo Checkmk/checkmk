@@ -3261,8 +3261,11 @@ class HostConfig:
 
     @property
     def inv_retention_intervals(self) -> RawIntervalsFromConfig:
-        entries = self._config_cache.host_extra_conf(self.hostname, inv_retention_intervals)
-        return entries[0] if entries else []
+        return [
+            raw
+            for entry in self._config_cache.host_extra_conf(self.hostname, inv_retention_intervals)
+            for raw in entry
+        ]
 
     @property
     def service_level(self) -> Optional[int]:

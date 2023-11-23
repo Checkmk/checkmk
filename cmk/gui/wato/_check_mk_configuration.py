@@ -1987,7 +1987,7 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
                     Age(
                         title=_("Expire acknowledgement after"),
                         display=["days", "hours", "minutes"],
-                        default_value=0,
+                        default_value=3600,
                     ),
                 ),
             ],

@@ -874,7 +874,7 @@ class CommandAcknowledge(Command):
 
     @property
     def icon_name(self):
-        return "host_svc_problems"
+        return "ack"
 
     @property
     def is_shortcut(self) -> bool:
@@ -905,38 +905,89 @@ class CommandAcknowledge(Command):
             submit="_acknowledge",
             label=_("Comment"),
             required=True,
+            placeholder=_("e.g. ticket ID"),
         )
         html.close_div()
 
-        html.open_div(class_="group")
-        html.checkbox(
-            "_ack_sticky", active_config.view_action_defaults["ack_sticky"], label=_("sticky")
-        )
-        html.checkbox(
-            "_ack_notify",
-            active_config.view_action_defaults["ack_notify"],
-            label=_("send notification"),
-        )
-        html.checkbox(
-            "_ack_persistent",
-            active_config.view_action_defaults["ack_persistent"],
-            label=_("persistent comment"),
-        )
-        html.close_div()
+        html.open_div(class_="group ack_command_options")
+        html.heading(_("Options"))
+        if user.may("wato.global"):
+            html.open_span()
+            html.write_text("(")
+            html.a(_("Edit defaults"), self._action_defaults_url())
+            html.write_text(")")
+            html.close_span()
 
-        html.open_div(class_="group")
-        self._vs_expire().render_input(
-            "_ack_expire", active_config.view_action_defaults.get("ack_expire", 0)
+        date, time_ = self._expiration_date_and_time(
+            active_config.view_action_defaults.get("ack_expire", 3600)
+        )
+        html.open_div()
+        html.checkbox("_ack_expire", False, label=_("Expire on"))
+        self._vs_date().render_input("_ack_expire_date", date)
+        self._vs_time().render_input("_ack_expire_time", time_)
+        html.span(
+            _("Server time (currently: %s)")
+            % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time()))
         )
         html.help(
             _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core.")
         )
         html.close_div()
 
-        html.open_div(class_="group")
-        html.button("_acknowledge", _("Acknowledge"), cssclass="hot")
-        html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
+        html.open_div()
+        html.checkbox(
+            "_ack_sticky",
+            active_config.view_action_defaults["ack_sticky"],
+            label=_("Ignore status changes until services/hosts are OK/UP again (sticky)"),
+        )
+        html.div(
+            "<b>"
+            + _("Example:")
+            + "</b> "
+            + _("Service was WARN and goes CRIT - acknowledgment doesn't expire."),
+            class_="example",
+        )
         html.close_div()
+
+        html.div(
+            html.render_checkbox(
+                "_ack_persistent",
+                active_config.view_action_defaults["ack_persistent"],
+                label=_("Keep comment after acknowledgment expires (persistent comment)"),
+            )
+        )
+
+        html.div(
+            html.render_checkbox(
+                "_ack_notify",
+                active_config.view_action_defaults["ack_notify"],
+                label=_("Notify affected users if %s are in place (send notifications)")
+                % self._link_to_notification_rules(),
+            )
+        )
+        html.close_div()
+
+        html.open_div(class_="group buttons")
+        html.button("_acknowledge", _("Acknowledge problems"), cssclass="hot")
+        html.jsbutton("_cancel", _("Cancel"), onclick="cmk.page_menu.close_popup(this)")
+        html.close_div()
+
+    def _action_defaults_url(self) -> str:
+        return makeuri_contextless(
+            request,
+            [("mode", "edit_configvar"), ("varname", "view_action_defaults")],
+            filename="wato.py",
+        )
+
+    def _link_to_notification_rules(self) -> HTML:
+        return html.render_a(
+            _("notification rules"),
+            makeuri_contextless(request, [("mode", "notifications")], filename="wato.py"),
+        )
+
+    def _expiration_date_and_time(self, time_until_exp: int) -> tuple[str, str]:
+        exp_time = time.localtime(time.time() + time_until_exp)
+        return time.strftime("%Y-%m-%d", exp_time), time.strftime("%H:%M", exp_time)
 
     def _action(  # pylint: disable=too-many-branches
         self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
@@ -964,9 +1015,22 @@ class CommandAcknowledge(Command):
             sendnot = 1 if request.var("_ack_notify") else 0
             perscomm = 1 if request.var("_ack_persistent") else 0
 
-            expire_secs = self._vs_expire().from_html_vars("_ack_expire")
-            if expire_secs:
-                expire = int(time.time()) + expire_secs
+            if request.var("_ack_expire"):
+                expire_date = self._vs_date().from_html_vars("_ack_expire_date")
+                expire_time = self._vs_time().from_html_vars("_ack_expire_time")
+                expire_timestamp = int(
+                    time.mktime(
+                        time.strptime(f"{expire_date} {expire_time}", "%Y-%m-%d %H:%M"),
+                    )
+                )
+
+                if expire_timestamp < time.time():
+                    raise MKUserError(
+                        "_ack_expire",
+                        _("You cannot set an expiration date and time that is in the past:")
+                        + f' "{expire_date} {expire_time}"',
+                    )
+                expire = expire_timestamp - int(time.time())
                 expire_text = ";%d" % expire
             else:
                 expire_text = ""
@@ -993,25 +1057,30 @@ class CommandAcknowledge(Command):
                 len(action_rows),
             )
 
-        if request.var("_remove_ack"):
+        # TODO: Move this into a new, separate command "Remove acknowledgments"
+        # if request.var("_remove_ack"):
 
-            def make_command_rem(spec, cmdtag):
-                return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+        # def make_command_rem(spec, cmdtag):
+        # return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
 
-            if "aggr_tree" in row:  # BI mode
-                commands = [
-                    (site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
-                ]
-            else:
-                commands = [make_command_rem(spec, cmdtag)]
-            return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
+        # if "aggr_tree" in row:  # BI mode
+        # commands = [
+        # (site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
+        # ]
+        # else:
+        # commands = [make_command_rem(spec, cmdtag)]
+        # return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
 
         return None
 
-    def _vs_expire(self):
-        return Age(
-            display=["days", "hours", "minutes"],
-            label=_("Expire acknowledgement after"),
+    def _vs_date(self) -> DatePicker:
+        return DatePicker(
+            title=_("Acknowledge problems datepicker"),
+        )
+
+    def _vs_time(self) -> TimePicker:
+        return TimePicker(
+            title=_("Acknowledge problems timepicker"),
         )
 
 

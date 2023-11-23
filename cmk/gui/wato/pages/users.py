@@ -441,18 +441,25 @@ class ModeUsers(WatoMode):
 
                 # Online/Offline
                 if user.may("wato.show_last_user_activity"):
-                    last_seen = userdb.get_last_activity(user_spec)
+                    last_seen, auth_type = userdb.get_last_seen(user_spec)
                     if last_seen >= online_threshold:
-                        title = _("Online")
+                        title = _("Online (%s %s via %s)") % (
+                            render.date(last_seen),
+                            render.time_of_day(last_seen),
+                            auth_type,
+                        )
                         img_txt = "checkmark"
                     elif last_seen != 0:
-                        title = _("Offline")
+                        title = _("Offline (%s %s via %s)") % (
+                            render.date(last_seen),
+                            render.time_of_day(last_seen),
+                            auth_type,
+                        )
                         img_txt = "cross_grey"
                     elif last_seen == 0:
-                        title = _("Never logged in")
+                        title = _("Never")
                         img_txt = "hyphen"
 
-                    title += f" ({render.date(last_seen)} {render.time_of_day(last_seen)})"
                     table.cell(_("Act."))
                     html.icon(img_txt, title)
 
@@ -460,7 +467,7 @@ class ModeUsers(WatoMode):
                     if last_seen != 0:
                         html.write_text(f"{render.date(last_seen)} {render.time_of_day(last_seen)}")
                     else:
-                        html.write_text(_("Never logged in"))
+                        html.write_text(_("Never"))
 
                 if edition() is Edition.CME:
                     table.cell(_("Customer"), customer.get_customer_name(user_spec))

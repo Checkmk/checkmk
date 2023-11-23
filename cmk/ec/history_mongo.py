@@ -7,14 +7,14 @@ import contextlib
 import datetime
 import os
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Iterable, Sequence
 from logging import Logger
 from typing import Any, Literal
 
 from .config import Config
 from .event import Event
 from .history import _log_event, History
-from .query import OperatorName, QueryGET
+from .query import QueryFilter, QueryGET
 from .settings import Settings
 
 HistoryWhat = Literal[
@@ -123,7 +123,7 @@ class MongoDBHistory(History):
 
 
 def filters_to_mongo_query(
-    filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]],
+    filters: Iterable[QueryFilter],
 ) -> dict[str, str | dict[str, str]]:
     """
     Construct the mongodb filtering specification.

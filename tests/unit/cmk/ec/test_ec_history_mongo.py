@@ -4,19 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History mongo backend"""
 
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.ec.history_mongo import filters_to_mongo_query
-from cmk.ec.query import OperatorName
+from cmk.ec.query import QueryFilter
 
 
 def test_filters_to_mongo_query() -> None:
     """Filters become proper mongo query"""
 
-    filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]] = [
+    filters: Sequence[QueryFilter] = [
         ("event_text", "=", lambda x: True, "test_event"),
         ("event_time", "<", lambda x: True, 1234),
         ("event_delay_until", "<=", lambda x: True, 120),

@@ -26,7 +26,7 @@ from .history import (
     HistoryWhat,
     quote_tab,
 )
-from .query import OperatorName, QueryGET
+from .query import OperatorName, QueryFilter, QueryGET
 from .settings import Settings
 
 
@@ -179,9 +179,7 @@ _GREPABLE_COLUMNS = {
 }
 
 
-def _grep_pipeline(
-    filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]]
-) -> list[str]:
+def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     """
     Optimization: use grep in order to reduce amount of read lines based on some frequently used
     filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you

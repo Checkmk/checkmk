@@ -8,6 +8,7 @@ See chapter "Module hierarchy" in coding_guidelines_python in wiki
 for further information.
 """
 
+from contextlib import suppress
 from typing import NewType
 
 from astroid.nodes import Import, ImportFrom  # type: ignore[import-untyped]
@@ -90,6 +91,23 @@ def _is_default_allowed_import(
     component: Component,
 ) -> bool:
     return _is_allowed_import(imported) or _in_component(imported=imported, component=component)
+
+
+def _is_allowed_for_special_agent_executable(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    if _in_component(imported=imported, component=Component("cmk.special_agents")):
+        # still ok, but is on its way out.
+        return True
+
+    if _in_component(imported=imported, component=Component("cmk.plugins")):
+        # allow all `cmk.plugins.<FAMILY>.special_agents`
+        with suppress(IndexError):
+            return imported.split(".")[3] == "special_agents"
+
+    return False
 
 
 def _allow_default_plus_checkers(
@@ -456,6 +474,7 @@ def _allow_default_plus_component_under_test_bakery_checkengine(
 
 
 _COMPONENTS = (
+    (Component("agents.special"), _is_allowed_for_special_agent_executable),
     (Component("tests.unit.cmk"), _allow_default_plus_component_under_test),
     (Component("tests.unit.checks"), _is_allowed_for_legacy_check_tests),
     (Component("tests.extension_compatibility"), _allow_default_plus_gui_and_base),
@@ -622,7 +641,7 @@ class CMKModuleLayerChecker(BaseChecker):
         ):
             return True
 
-        if component == Component("cmk.special_agents") and importing_path.startswith(
+        if component == Component("agents.special") and importing_path.startswith(
             "agents/special/"
         ):
             return True

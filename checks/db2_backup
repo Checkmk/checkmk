@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
-
-from dateutil import tz
-
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -14,12 +10,6 @@ from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-imp
 # <<<db2_backup>>>
 # [[[db2taddm:CMDBS1]]]
 # 2015-03-12-04.00.13.000000
-
-# <<<db2_backup>>>
-# [[[db2taddm:CMDBS1]]]
-# DATE_TZ UTC
-# 2015-03-12-02.00.13.000000
-
 
 db2_backup_default_levels = (86400 * 14, 86400 * 28)
 
@@ -34,26 +24,13 @@ def check_db2_backup(item, params, parsed):
     if not db:
         raise MKCounterWrapped("Login into database failed")
 
-    tz_info = None
-    time_raw = db[0][0][:19]
-    if db[0][0] == "DATE_TZ":
-        tz_info = tz.gettz(db[0][1])
-        time_raw = db[1][0][:19]
-
     try:
-        if tz_info is None:
-            last_backup = time.mktime(time.strptime(time_raw, "%Y-%m-%d-%H.%M.%S"))
-        else:
-            last_backup = (
-                datetime.datetime.strptime(time_raw, "%Y-%m-%d-%H.%M.%S")
-                .replace(tzinfo=tz_info)
-                .timestamp()
-            )
+        last_backup = time.mktime(time.strptime(db[0][0][:19], "%Y-%m-%d-%H.%M.%S"))
     except Exception:
         if db[0][0] == "-":
             yield 1, "No backup available"
         else:
-            yield 3, "Last backup contains an invalid timestamp: %s" % time_raw
+            yield 3, "Last backup contains an invalid timestamp: %s" % db[0][0]
         return
 
     age = time.time() - last_backup

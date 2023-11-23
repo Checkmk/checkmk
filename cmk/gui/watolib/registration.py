@@ -99,7 +99,7 @@ def register(
     _register_automation_commands(automation_command_registry)
     _register_gui_background_jobs(job_registry)
     if edition_supports_nagvis():
-        _register_hooks()
+        _register_nagvis_hooks()
     _register_config_domains(config_domain_registry)
     host_attributes.register(host_attribute_topic_registry)
     _host_attributes.register()
@@ -196,7 +196,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
         host_attribute_registry.register(cls)
 
 
-def _register_hooks() -> None:
+def _register_nagvis_hooks() -> None:
     # TODO: Should we not execute this hook also when folders are modified?
     args: Sequence[tuple[str, Callable]] = (
         ("userdb-job", auth_php._on_userdb_job),

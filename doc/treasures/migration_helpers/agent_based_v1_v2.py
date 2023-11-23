@@ -28,27 +28,27 @@ REGISTRATION_REGEXES = (
     (
         "agent_section",
         "AgentSection",
-        re.compile(r'register\.agent_section(.*?\ name="([^"]*).*?\))$', re.DOTALL),
+        re.compile(r'register\.agent_section(.*?name="([^"]*).*?\))$', re.DOTALL),
     ),
     (
         "snmp_section",
         "SimpleSNMPSection",
-        re.compile(r'register\.snmp_section(.*?\ name="([^"]*).*?fetch=SNMP.*?\))$', re.DOTALL),
+        re.compile(r'register\.snmp_section(.*?name="([^"]*).*?fetch=SNMP.*?\))$', re.DOTALL),
     ),
     (
         "snmp_section",
         "SNMPSection",
-        re.compile(r'register\.snmp_section(.*?\ name="([^"]*).*?fetch=\[.*?\))$', re.DOTALL),
+        re.compile(r'register\.snmp_section(.*?name="([^"]*).*?fetch=\[.*?\))$', re.DOTALL),
     ),
     (
         "check_plugin",
         "CheckPlugin",
-        re.compile(r'register\.check_plugin(.*?\ name="([^"]*).*?\))$', re.DOTALL),
+        re.compile(r'register\.check_plugin(.*?name="([^"]*).*?\))$', re.DOTALL),
     ),
     (
         "inventory_plugin",
         "InventoryPlugin",
-        re.compile(r'register\.inventory_plugin(.*?\ name="([^"]*).*?\))$', re.DOTALL),
+        re.compile(r'register\.inventory_plugin(.*?name="([^"]*).*?\))$', re.DOTALL),
     ),
 )
 

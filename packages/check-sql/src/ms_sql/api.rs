@@ -1422,7 +1422,6 @@ pub async fn get_computer_name(client: &mut Client) -> Result<Option<String>> {
 mod tests {
     use super::*;
     use crate::config::ms_sql::Config;
-    use yaml_rust::YamlLoader;
 
     fn make_config_with_auth_type(auth_type: &str) -> Config {
         const BASE: &str = r#"
@@ -1438,13 +1437,9 @@ mssql:
        port: 65345 # we use weird port to avoid connection
        timeout: 1
 "#;
-        Config::from_yaml(
-            &YamlLoader::load_from_str(&BASE.replace("type_tag", auth_type))
-                .expect("fix test string!")[0]
-                .clone(),
-        )
-        .unwrap()
-        .unwrap()
+        Config::from_string(&BASE.replace("type_tag", auth_type))
+            .unwrap()
+            .unwrap()
     }
 
     #[tokio::test(flavor = "multi_thread")]

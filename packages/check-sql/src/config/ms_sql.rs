@@ -6,6 +6,7 @@ use crate::config::yaml::{Get, Yaml};
 use anyhow::{anyhow, bail, Context, Result};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use yaml_rust::YamlLoader;
 
 mod keys {
     pub const MSSQL: &str = "mssql";
@@ -119,6 +120,13 @@ impl Default for Config {
 }
 
 impl Config {
+    pub fn from_string(source: &str) -> Result<Option<Self>> {
+        YamlLoader::load_from_str(source)?
+            .get(0)
+            .and_then(|e| Config::from_yaml(e).transpose())
+            .transpose()
+    }
+
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
         let mssql = yaml.get(keys::MSSQL);
         if mssql.is_badvalue() {
@@ -974,9 +982,7 @@ discovery:
 
     #[test]
     fn test_config() {
-        let c = Config::from_yaml(&create_yaml(data::TEST_CONFIG))
-            .unwrap()
-            .unwrap();
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
         assert_eq!(c.instances().len(), 2);
         assert!(c.instances()[0].piggyback().is_some());
         assert_eq!(

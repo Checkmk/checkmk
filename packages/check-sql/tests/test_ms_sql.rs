@@ -10,10 +10,13 @@ use check_sql::ms_sql::{
     api::{Client, Section},
     queries,
 };
-use check_sql::{config::ms_sql::Endpoint, config::CheckConfig, ms_sql::api};
+use check_sql::{
+    config::ms_sql::{Config, Endpoint},
+    config::CheckConfig,
+    ms_sql::api,
+};
 use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
-use yaml_rust::YamlLoader;
 
 fn expected_instances() -> Vec<String> {
     const EXPECTED_INSTANCES: [&str; 3] = ["MSSQLSERVER", "SQLEXPRESS_NAME", "SQLEXPRESS_WOW"];
@@ -133,8 +136,7 @@ async fn test_validate_all_instances_remote() {
         let instances = api::detect_instance_engines(&mut client).await.unwrap();
         let is = [&instances.0[..], &instances.1[..]].concat();
 
-        let r = YamlLoader::load_from_str(&create_remote_config(endpoint)).unwrap();
-        let cfg = check_sql::config::ms_sql::Config::from_yaml(&r[0])
+        let cfg = Config::from_string(&create_remote_config(endpoint))
             .unwrap()
             .unwrap();
         assert!(is.len() >= 3, "we need at least 3 instances to check");
@@ -522,14 +524,12 @@ async fn validate_availability_groups_section(instance: &InstanceEngine, endpoin
 #[ignore]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
-    use yaml_rust::YamlLoader;
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
         let mut client = tools::create_remote_client(&endpoint).await.unwrap();
         let instances = api::detect_instance_engines(&mut client).await.unwrap();
         let is = [&instances.0[..], &instances.1[..]].clone().concat();
-        let ms_sql = check_sql::config::ms_sql::Config::from_yaml(
-            &YamlLoader::load_from_str(
-                r"---
+        let ms_sql = Config::from_string(
+            r"---
 mssql:
   standard:
     authentication:
@@ -539,9 +539,6 @@ mssql:
     connection:
       hostname: your_host
 ",
-            )
-            .expect("fix test string!")[0]
-                .clone(),
         )
         .unwrap()
         .unwrap();

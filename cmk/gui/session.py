@@ -243,7 +243,20 @@ class FileBasedSession(SessionInterface):
                     remote_ip=request.remote_addr,
                 )
             )
+
+        self.update_last_login(user_name, auth_type, request)
+
         return self.session_class.create_session(user_name, auth_type)
+
+    def update_last_login(
+        self, userid: UserId, auth_type: AuthType, request: flask.Request
+    ) -> None:
+        last_login_info = {
+            "auth_type": auth_type,
+            "timestamp": int(datetime.now().timestamp()),
+            "remote_address": request.remote_addr,
+        }
+        userdb.save_custom_attr(userid, "last_login", last_login_info)
 
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.

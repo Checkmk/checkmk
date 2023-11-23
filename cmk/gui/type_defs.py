@@ -147,6 +147,12 @@ class SessionInfo:
         self.last_activity = int(now.timestamp())
 
 
+class LastLoginInfo(TypedDict, total=False):
+    auth_type: AuthType
+    timestamp: int
+    remote_address: str
+
+
 class UserSpec(TypedDict, total=False):
     """This is not complete, but they don't yet...  Also we have a
     user_attribute_registry (cmk/gui/plugins/userdb/utils.py)
@@ -169,6 +175,7 @@ class UserSpec(TypedDict, total=False):
     idle_timeout: Any  # TODO: Improve this
     language: str
     last_pw_change: int
+    last_login: LastLoginInfo | None
     locked: bool | None
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this

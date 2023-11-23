@@ -723,7 +723,6 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                     "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
                     "b.type, b.machine_name, database_name  " & _
                     "FROM msdb.dbo.backupset b  " & _
-                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
                     "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
                     "GROUP BY type, b.database_name, b.machine_name' " & _
                 "END " & _

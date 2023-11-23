@@ -103,7 +103,7 @@ def _check_rebot_age(
     execution_interval: int,
     now: float,
 ) -> CheckResult:
-    if (rebot_age := now - rebot_timestamp) > execution_interval:
+    if (rebot_age := now - rebot_timestamp) > 2 * execution_interval:
         yield Result(
             state=State.CRIT,
             summary=(

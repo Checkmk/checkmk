@@ -196,12 +196,12 @@ def test_check_suite_execution_report_too_old() -> None:
         _check_suite_execution_report(
             _SECTION["suite_1"],
             CheckParameters(upper_levels_runtime_percentage=(80.0, 90.0)),
-            now=12345,
+            now=2734,
         )
     ) == [
         Result(
             state=State.CRIT,
-            summary="Data is too old (age: 3 hours 24 minutes, execution interval: 20 minutes 0 seconds)",
+            summary="Data is too old (age: 43 minutes 54 seconds, execution interval: 20 minutes 0 seconds)",
         ),
         Result(state=State.OK, summary="Runtime: 2 seconds"),
         Metric("robotmk_suite_runtime", 2.0, levels=(8.0, 9.0)),

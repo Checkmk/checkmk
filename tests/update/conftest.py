@@ -18,7 +18,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version
+from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
@@ -200,8 +200,13 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
             site = sf.interactive_create(site.id, logfile_path)
 
     else:
-        # use SiteFactory for non-interactive site creation/update
-        site = sf.get_site("central")
+        if update:
+            # non-interactive update as site-user
+            _update_as_site_user(sf, site, target_version=version)
+
+        else:
+            # use SiteFactory for non-interactive site creation
+            site = sf.get_site("central")
 
     return site
 
@@ -240,10 +245,10 @@ def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     test_site.rm()
 
 
-def update_site(site: Site, target_version: CMKVersion, interactive_mode_off: bool) -> Site:
+def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) -> Site:
     """Update the test site to the target version."""
-    logger.info("Updating site (interactive-mode=%s) ...", not interactive_mode_off)
-    return _get_site(target_version, base_site=site, interactive=not interactive_mode_off)
+    logger.info("Updating site (interactive-mode=%s) ...", interactive_mode)
+    return _get_site(target_version, base_site=site, interactive=interactive_mode)
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
@@ -258,3 +263,55 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state
+
+
+def _update_as_site_user(  # TODO: move this funtion to the Site.py module
+    site_factory: SiteFactory,
+    test_site: Site,
+    target_version: CMKVersion,
+    conflict_mode: str = "keepold",
+) -> Site:
+    if not version_supported(target_version.version):
+        pytest.skip(f"{test_site.version} is not a supported version for {target_version.version}")
+
+    site = site_factory.get_existing_site(test_site.id)
+    site.install_cmk()
+    site.stop()
+
+    logger.info(
+        "Updating %s site from %s version to %s version...",
+        test_site.id,
+        test_site.version.version,
+        target_version.version_directory(),
+    )
+
+    cmd = [
+        "omd",
+        "-f",
+        "-V",
+        target_version.version_directory(),
+        "update",
+        f"--conflict={conflict_mode}",
+    ]
+    test_site.stop()
+    proc = _run_as_site_user(test_site, cmd)
+    assert proc.returncode == 0, proc.stdout
+
+    # refresh the site object after creating the site
+    site = site_factory.get_existing_site("central")
+    # open the livestatus port
+    site.open_livestatus_tcp(encrypted=False)
+    # start the site after manually installing it
+    site.start()
+
+    assert site.is_running(), "Site is not running!"
+    logger.info("Site %s is up", site.id)
+
+    restart_httpd()
+
+    assert site.version.version == target_version.version, "Version mismatch during update!"
+    assert (
+        site.version.edition.short == target_version.edition.short
+    ), "Edition mismatch during update!"
+
+    return test_site

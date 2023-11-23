@@ -32,7 +32,6 @@ import urllib3
 from pydantic import TypeAdapter
 
 import cmk.utils.password_store
-import cmk.utils.paths
 import cmk.utils.profile
 
 from cmk.special_agents.utils import vcrtrace

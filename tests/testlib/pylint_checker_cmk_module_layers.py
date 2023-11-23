@@ -617,11 +617,6 @@ class CMKModuleLayerChecker(BaseChecker):
         if explicit_component is not None:
             return explicit_component == component
 
-        # The check and bakery plugins are all compiled together by tests/pylint/test_pylint.py.
-        # They clearly belong to the cmk.base component.
-        if component == Component("cmk.base") and importing.startswith("cmk_pylint"):
-            return True
-
         if component == Component("cmk.notification_plugins") and importing_path.startswith(
             "notifications/"
         ):

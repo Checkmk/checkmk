@@ -6,17 +6,16 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.plugins.lib import gcp
-
-from .agent_based_api.v1 import register, render, Service, ServiceLabel
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Service, ServiceLabel
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.lib import gcp
 
 
 def parse_gcp_gcs(string_table: StringTable) -> gcp.Section:
     return gcp.parse_gcp(string_table, gcp.ResourceKey("bucket_name"))
 
 
-register.agent_section(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
+agent_section_gcp_service_gcs = AgentSection(name="gcp_service_gcs", parse_function=parse_gcp_gcs)
 
 
 service_namer = gcp.service_name_factory("GCS")
@@ -55,7 +54,7 @@ def check_gcp_gcs_requests(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_gcs_requests = CheckPlugin(
     name="gcp_gcs_requests",
     sections=SECTIONS,
     service_name=service_namer("requests"),
@@ -89,7 +88,7 @@ def check_gcp_gcs_network(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_gcs_network = CheckPlugin(
     name="gcp_gcs_network",
     sections=SECTIONS,
     service_name=service_namer("networks"),
@@ -121,7 +120,7 @@ def check_gcp_gcs_object(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_gcs_objects = CheckPlugin(
     name="gcp_gcs_objects",
     sections=SECTIONS,
     service_name=service_namer("objects"),
@@ -140,7 +139,7 @@ def check_summary(section: gcp.AssetSection) -> CheckResult:
     yield from gcp.check_summary(ASSET_TYPE, "Bucket", section)
 
 
-register.check_plugin(
+check_plugin_gcp_gcs_summary = CheckPlugin(
     name="gcp_gcs_summary",
     sections=["gcp_assets"],
     service_name=service_namer.summary_name(),

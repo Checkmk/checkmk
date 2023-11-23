@@ -7,10 +7,10 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.plugins.lib import gcp, interfaces, uptime
-
-from .agent_based_api.v1 import get_value_store, register, render, Service
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, render, Service
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.lib import gcp
+from cmk.plugins.lib import interfaces, uptime
 
 
 def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:
@@ -22,13 +22,13 @@ def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:
     return uptime.Section(uptime_sec, None)
 
 
-register.agent_section(
+agent_section_gcp_service_gce_uptime_total = AgentSection(
     name="gcp_service_gce_uptime_total",
     parsed_section_name="gcp_gce_uptime",
     parse_function=parse_gce_uptime,
 )
 
-register.check_plugin(
+check_plugin_gcp_gce_uptime = CheckPlugin(
     name="gcp_gce_uptime",
     service_name="GCP/GCE Uptime",
     discovery_function=uptime.discover,
@@ -44,7 +44,7 @@ def parse_default(string_table: StringTable) -> gcp.PiggyBackSection | None:
     return gcp.parse_piggyback(string_table)
 
 
-register.agent_section(
+agent_section_gcp_service_gce_cpu = AgentSection(
     name="gcp_service_gce_cpu",
     parsed_section_name="gcp_gce_cpu",
     parse_function=parse_default,
@@ -73,7 +73,7 @@ def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> Check
     yield from gcp.generic_check(metrics, section, params)
 
 
-register.check_plugin(
+check_plugin_gcp_gce_cpu = CheckPlugin(
     name="gcp_gce_cpu",
     service_name="GCP/GCE CPU utilization",
     discovery_function=discover_default,
@@ -83,7 +83,7 @@ register.check_plugin(
 )
 
 
-register.agent_section(
+agent_section_gcp_service_gce_network = AgentSection(
     name="gcp_service_gce_network",
     parsed_section_name="gcp_gce_network",
     parse_function=parse_default,
@@ -134,7 +134,7 @@ def check_network(
     yield from interfaces.check_single_interface(item, params, interface)
 
 
-register.check_plugin(
+check_plugin_gcp_gce_network = CheckPlugin(
     name="gcp_gce_network",
     service_name="GCP/GCE Network IO %s",
     discovery_function=discover_network,
@@ -143,7 +143,7 @@ register.check_plugin(
     check_function=check_network,
 )
 
-register.agent_section(
+agent_section_gcp_service_gce_disk = AgentSection(
     name="gcp_service_gce_disk",
     parsed_section_name="gcp_gce_disk",
     parse_function=parse_default,
@@ -180,7 +180,7 @@ def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection)
     yield from gcp.generic_check(metrics, section, params)
 
 
-register.check_plugin(
+check_plugin_gcp_gce_disk_summary = CheckPlugin(
     name="gcp_gce_disk_summary",
     sections=["gcp_gce_disk"],
     service_name="GCP/GCE Disk IO Summary",
@@ -209,7 +209,7 @@ def check_summary(section: gcp.AssetSection) -> CheckResult:
 
 service_namer = gcp.service_name_factory("GCE")
 
-register.check_plugin(
+check_plugin_gcp_gce_summary = CheckPlugin(
     name="gcp_gce_summary",
     sections=["gcp_assets"],
     service_name=service_namer.summary_name(),

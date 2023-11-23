@@ -12,6 +12,7 @@ import pytest
 
 from tests.testlib import cmk_path
 
+from cmk.plugins.gcp.special_agents import agent_gcp, agent_gcp_status
 from cmk.special_agents import (
     agent_activemq,
     agent_alertmanager,
@@ -26,8 +27,6 @@ from cmk.special_agents import (
     agent_datadog,
     agent_elasticsearch,
     agent_fritzbox,
-    agent_gcp,
-    agent_gcp_status,
     agent_graylog,
     agent_hivemanager_ng,
     agent_innovaphone,

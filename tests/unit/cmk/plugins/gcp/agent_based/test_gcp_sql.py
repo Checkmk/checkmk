@@ -7,14 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, ServiceLabel, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-from cmk.base.plugins.agent_based.gcp_assets import parse_assets
-from cmk.base.plugins.agent_based.gcp_sql import (
+from cmk.agent_based.v2 import Metric, Result, ServiceLabel, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
+from cmk.plugins.gcp.agent_based.gcp_sql import (
     check_gcp_sql_cpu,
     check_gcp_sql_disk,
     check_gcp_sql_memory,
@@ -26,10 +22,9 @@ from cmk.base.plugins.agent_based.gcp_sql import (
     discover_gcp_sql_replication,
     parse,
 )
-
-from cmk.plugins.lib import gcp
-from cmk.plugins.lib.gcp import Section, SectionItem
-from cmk.special_agents.agent_gcp import CLOUDSQL
+from cmk.plugins.gcp.lib import gcp
+from cmk.plugins.gcp.lib.gcp import Section, SectionItem
+from cmk.plugins.gcp.special_agents.agent_gcp import CLOUDSQL
 
 from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
 

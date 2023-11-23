@@ -8,19 +8,9 @@ import time
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
-    register,
-    Service,
-    ServiceLabel,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-
-from cmk.plugins.lib import gcp
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, get_value_store, Service, ServiceLabel
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.lib.diskstat import check_diskstat_dict
 
 
@@ -28,7 +18,9 @@ def parse(string_table: StringTable) -> gcp.Section:
     return gcp.parse_gcp(string_table, gcp.ResourceKey("instance_name"))
 
 
-register.agent_section(name="gcp_service_filestore", parse_function=parse)
+agent_section_gcp_service_filestore = AgentSection(
+    name="gcp_service_filestore", parse_function=parse
+)
 
 service_namer = gcp.service_name_factory("Filestore")
 ASSET_TYPE = gcp.AssetType("file.googleapis.com/Instance")
@@ -94,7 +86,7 @@ def check(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_filestore_disk = CheckPlugin(
     name="gcp_filestore_disk",
     sections=["gcp_service_filestore", "gcp_assets"],
     service_name=service_namer("disk"),
@@ -120,7 +112,7 @@ def check_summary(section: gcp.AssetSection) -> CheckResult:
     yield from gcp.check_summary(ASSET_TYPE, "Filestore", section)
 
 
-register.check_plugin(
+check_plugin_gcp_filestore_summary = CheckPlugin(
     name="gcp_filestore_summary",
     sections=["gcp_assets"],
     service_name=service_namer.summary_name(),

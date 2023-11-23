@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.special_agents import agent_gcp_status
+from cmk.plugins.gcp.special_agents import agent_gcp_status
 
 
 def test_health_serialization(capsys: pytest.CaptureFixture[str]) -> None:

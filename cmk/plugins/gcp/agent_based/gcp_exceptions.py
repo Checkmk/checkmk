@@ -7,12 +7,8 @@ import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 @dataclass(frozen=True)
@@ -32,7 +28,7 @@ def parse(string_table: StringTable) -> _ExceptionSection:
     )
 
 
-register.agent_section(name="gcp_exceptions", parse_function=parse)
+agent_section_gcp_exceptions = AgentSection(name="gcp_exceptions", parse_function=parse)
 
 
 def discover(section: _ExceptionSection) -> DiscoveryResult:
@@ -90,7 +86,7 @@ def check(section: _ExceptionSection) -> CheckResult:
         yield Result(state=State.CRIT, summary=f"{general_msg}", details=details)
 
 
-register.check_plugin(
+check_plugin_gcp_exceptions = CheckPlugin(
     name="gcp_exceptions",
     service_name="Exceptions",
     discovery_function=discover,

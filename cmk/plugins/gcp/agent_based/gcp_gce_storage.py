@@ -6,17 +6,18 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.plugins.lib import gcp
-
-from .agent_based_api.v1 import register, render, Service, ServiceLabel
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Service, ServiceLabel
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.gcp.lib import gcp
 
 
 def parse(string_table: StringTable) -> gcp.Section:
     return gcp.parse_gcp(string_table, gcp.MetricKey("device_name"))
 
 
-register.agent_section(name="gcp_service_gce_storage", parse_function=parse)
+agent_section_gcp_service_gce_storage = AgentSection(
+    name="gcp_service_gce_storage", parse_function=parse
+)
 
 
 service_namer = gcp.service_name_factory("GCE Disk")
@@ -73,7 +74,7 @@ def check_storage(
     )
 
 
-register.check_plugin(
+check_plugin_gcp_gce_storage = CheckPlugin(
     name="gcp_gce_storage",
     sections=SECTIONS,
     service_name=service_namer("disk"),
@@ -97,7 +98,7 @@ def check_summary(section: gcp.AssetSection) -> CheckResult:
     yield from gcp.check_summary(ASSET_TYPE, "Disk", section)
 
 
-register.check_plugin(
+check_plugin_gcp_gce_storage_summary = CheckPlugin(
     name="gcp_gce_storage_summary",
     sections=["gcp_assets"],
     service_name=service_namer.summary_name(),

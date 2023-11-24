@@ -709,12 +709,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' which have at least one backup
     Dim lastBackupDate, backup_type, backup_database, found_db_backups
     addOutput(sections("backup"))
-    sqlString = "DECLARE @SQLCommand nvarchar(max); " & _
-                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+    sqlString = "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date, " & _
                 "type, database_name FROM msdb.dbo.backupset " & _
-                "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY(''Machinename'') AS VARCHAR)) " & _
-                "GROUP BY type, database_name ' " & _
-                "EXEC (@SQLCommand)"
+                "WHERE UPPER(machine_name) = UPPER(CAST(SERVERPROPERTY('Machinename') AS VARCHAR)) " & _
+                "GROUP BY type, database_name "
     Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
 
     Set found_db_backups = CreateObject("Scripting.Dictionary")

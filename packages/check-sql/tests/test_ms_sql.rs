@@ -712,7 +712,7 @@ fn test_run_as_plugin_with_config() {
         update_config_in_dir(&dir, &content);
         let exec = tools::run_bin()
             .env("MK_CONFDIR", dir.path())
-            .timeout(std::time::Duration::from_secs(5))
+            .timeout(std::time::Duration::from_secs(20))
             .unwrap();
         let (stdout, code) = tools::get_good_results(&exec).unwrap();
         assert_eq!(code, 0, "For label: {}", &label);

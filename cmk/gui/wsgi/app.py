@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import logging
+import pathlib
 import typing as t
 
 import werkzeug
@@ -14,10 +15,13 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import safe_join
 
+from cmk.utils import paths
+
 from cmk.gui import http
 from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
+from cmk.gui.wsgi.profiling import ProfileSwitcher
 
 if t.TYPE_CHECKING:
     # Here due to cyclical imports
@@ -62,6 +66,10 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
 
     # Some middlewares we want to have available in all environments
     app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore[method-assign]
+    app.wsgi_app = ProfileSwitcher(  # type: ignore[method-assign]
+        app.wsgi_app,
+        profile_file=pathlib.Path(paths.var_dir) / "multisite.profile",
+    ).wsgi_app
 
     if debug:
         app.wsgi_app = DebuggedApplication(  # type: ignore[method-assign]

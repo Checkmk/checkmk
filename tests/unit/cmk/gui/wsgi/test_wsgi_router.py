@@ -2,70 +2,15 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import importlib.util
-import os
-import os.path
-import types
-from importlib._bootstrap_external import SourceFileLoader  # type: ignore[import]
-
 import flask
 import pytest
 import webtest  # type: ignore[import]
 from flask import request
-from werkzeug.test import create_environ
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.site import omd_site
 from cmk.utils.user import UserId
-
-
-def search_up(search_path: str, start_path: str) -> str:
-    current_path = start_path
-
-    while True:
-        full_path = os.path.join(current_path, search_path)
-        if os.path.exists(full_path):
-            return os.path.abspath(full_path)
-
-        new_path = os.path.dirname(current_path)
-
-        if new_path == current_path:
-            raise ValueError(f"Path {search_path!r} not found starting from {start_path!r}")
-
-        current_path = new_path
-
-
-def test_wsgi_app() -> None:
-    app_file = search_up("cmk/gui/wsgi/applications/index.wsgi", os.path.dirname(__file__))
-    imported = _import_file(app_file)
-    wsgi_app = imported.Application
-    env = create_environ()
-
-    def start_response(status, response_headers, exc_info=None):
-        pass
-
-    assert wsgi_app.config_loader.mode == "default"
-    wsgi_app(env, start_response)
-    assert wsgi_app.config_loader.mode == "imported"
-
-
-def _import_file(file_name: str) -> types.ModuleType:
-    loader: SourceFileLoader = SourceFileLoader("index", file_name)
-    file_spec = importlib.util.spec_from_file_location(
-        "index",
-        file_name,
-        loader=loader,
-    )
-    if file_spec is None:
-        raise ValueError(f"Module {file_name} could not be found.")
-
-    file_spec.loader = loader
-    imported = importlib.util.module_from_spec(file_spec)
-
-    assert file_spec.loader is not None
-    file_spec.loader.exec_module(imported)
-    return imported
 
 
 def test_request_url(flask_app: flask.Flask) -> None:

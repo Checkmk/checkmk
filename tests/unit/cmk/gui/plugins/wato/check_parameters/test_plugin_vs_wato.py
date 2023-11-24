@@ -307,16 +307,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "haproxy_frontend",
-            RuleGroup.CheckgroupParameters("haproxy_frontend"),
-        ),
-        (
-            "check",
-            "haproxy_server",
-            RuleGroup.CheckgroupParameters("haproxy_server"),
-        ),
-        (
-            "check",
             "hp_procurve_mem",
             RuleGroup.CheckgroupParameters("memory_simple"),
         ),

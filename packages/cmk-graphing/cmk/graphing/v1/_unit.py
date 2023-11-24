@@ -79,7 +79,17 @@ class Unit(Enum):
 
 
 @dataclass(frozen=True)
-class CustomUnit:
+class PhysicalUnit:
+    title: Localizable
+    symbol: str
+
+    def __post_init__(self) -> None:
+        if not self.symbol:
+            raise ValueError(self.symbol)
+
+
+@dataclass(frozen=True)
+class ScientificUnit:
     title: Localizable
     symbol: str
 

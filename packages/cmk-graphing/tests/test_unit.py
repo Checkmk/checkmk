@@ -5,10 +5,16 @@
 
 import pytest
 
-from cmk.graphing.v1 import CustomUnit, Localizable
+from cmk.graphing.v1 import Localizable, PhysicalUnit, ScientificUnit
 
 
-def test_custom_unit_error() -> None:
+def test_physical_unit_error() -> None:
     title = Localizable("")
     with pytest.raises(ValueError):
-        CustomUnit(title, "")
+        PhysicalUnit(title, "")
+
+
+def test_scientific_unit_error() -> None:
+    title = Localizable("")
+    with pytest.raises(ValueError):
+        ScientificUnit(title, "")

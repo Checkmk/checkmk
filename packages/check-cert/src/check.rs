@@ -419,11 +419,11 @@ impl Writer {
 
 impl Display for Writer {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        if self.summary.is_empty() {
-            write!(f, "{}", self.state)?;
-        } else {
-            write!(f, "{} - {}", self.state, self.summary)?;
+        let mut out = format!("{}", self.state);
+        if !self.summary.is_empty() {
+            out = format!("{} - {}", out, self.summary);
         }
+        write!(f, "{}", out)?;
         Ok(())
     }
 }
@@ -446,8 +446,9 @@ impl From<Vec<CheckResult<()>>> for Writer {
             },
             summary: check_results
                 .iter()
-                .filter(|cr| !cr.summary.text.is_empty())
-                .map(|cr| cr.summary.to_string())
+                .map(|cr| &cr.summary)
+                .filter(|s| !s.text.is_empty())
+                .map(|s| s.to_string())
                 .collect::<Vec<_>>()
                 .join(", "),
         }

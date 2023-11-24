@@ -10,8 +10,6 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dhcp_pools import check_dhcp_pools_levels
 from cmk.base.config import check_info
 
-isc_dhcpd_default_levels = (15.0, 5.0)
-
 # Example output from agent:
 # <<<isc_dhcpd>>>
 # [general]
@@ -73,7 +71,7 @@ def parse_isc_dhcpd(string_table):
 
 
 def inventory_isc_dhcpd(parsed):
-    return [(item, isc_dhcpd_default_levels) for item in parsed["pools"]]
+    return [(item, None) for item in parsed["pools"]]
 
 
 def check_isc_dhcpd(item, params, parsed):
@@ -104,4 +102,5 @@ check_info["isc_dhcpd"] = LegacyCheckDefinition(
     discovery_function=inventory_isc_dhcpd,
     check_function=check_isc_dhcpd,
     check_ruleset_name="win_dhcp_pools",
+    check_default_parameters={"free_leases": (15.0, 5.0)},
 )

@@ -1,0 +1,16 @@
+Title: service_discovery: redirect response header incorrectly configured to an absolute URI
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1700141008
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+When calling the service discovery endpoint, the redirect response
+header 'location' was set to an absolute URI, when it should be a
+relative URI.
+
+This werk addresses this issue by setting the URI correctly in the
+redirect responses.
+

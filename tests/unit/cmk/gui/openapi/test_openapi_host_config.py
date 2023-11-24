@@ -627,7 +627,7 @@ def test_openapi_host_rename(
     )
     assert (
         resp.headers["Location"]
-        == "http://localhost/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
+        == "/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
     )
 
 
@@ -666,7 +666,6 @@ def test_openapi_host_rename_on_invalid_hostname(
     clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobar",
-        follow_redirects=False,
         expect_ok=False,
     ).assert_status_code(400)
 

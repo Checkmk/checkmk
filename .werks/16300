@@ -5,7 +5,7 @@ Component: metrics
 Date: 1700760668
 Edition: cee
 Level: 1
-Version: 2.2.0p16
+Version: 2.2.0p15
 
 This change reverts werk #16150, since this werk made forecast graphs basically unusable.
 Furthermore, this change fixes the error mentioned above. This error occurred when computing a

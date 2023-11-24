@@ -29,23 +29,28 @@ editions:
     enterprise:
         release: [*common, "cma-3"]
         daily: [*common]
+        daily_tests: [*common]
         testbuild: ["ubuntu-22.04", "centos-8", "cma-3"]
     cloud:
         release: [*common, "cma-3"]
         daily: *daily_reduced
+        daily_tests: *daily_reduced
         testbuild: []
     managed:
         release: [*common, "cma-3"]
         daily: []
+        daily_tests: []
         testbuild: []
     raw:
         release: [*common]
         daily: *daily_reduced
+        daily_tests: *daily_reduced
         testbuild: []
     saas:
         release: ["ubuntu-22.04"]
         # Max L runs on the latest ubuntu and does not want to reinstall his machine
         daily: ["ubuntu-22.04", "ubuntu-23.10"]
+        daily_tests: ["ubuntu-22.04", "ubuntu-23.10"]
         testbuild: []
 
 # TODO: Sync this with our omd/distros/*.mk files

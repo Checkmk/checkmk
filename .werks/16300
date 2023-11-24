@@ -1,4 +1,4 @@
-Title: Revert werk #16150 and fix <tt>IndexError: boolean index did not match indexed array along dimension 0<tt> in forecast graphs
+Title: Revert werk #16150 and fix <tt>IndexError: boolean index did not match indexed array along dimension 0</tt> in forecast graphs
 Class: fix
 Compatible: compat
 Component: metrics

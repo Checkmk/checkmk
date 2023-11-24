@@ -9,8 +9,8 @@
 set -e -o pipefail
 
 TARGET_DIR="/opt"
-if [ "$DISTRO" = "cma-3" ]; then
-    # as there are no system tests with CMA-3, an installation of CMK
+if [ "$DISTRO" = "cma-3" ] || [ "$DISTRO" = "cma-4" ]; then
+    # As there are no system tests for the appliance, an installation of CMK
     # dependencies is not required
     exit
 fi

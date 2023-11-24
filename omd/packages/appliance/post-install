@@ -23,11 +23,6 @@ for PROGRAM in $CAP_PROGRAMS; do
         CAP="cap_net_bind_service+ep"
     fi
 
-    # Capabilities are support as of CMA 1.4.7. To be compatible with older
-    # appliances, we add the setuid workaround here
-    if ! setcap "$CAP" "$PROGRAM_PATH"; then
-        echo "Failed to set capabilities $CAP for $PROGRAM. Falling back to setuid."
-        chmod 4750 "$PROGRAM"
-    fi
+    setcap "$CAP" "$PROGRAM_PATH"
   fi
 done

@@ -29,7 +29,7 @@ from ._mkp import (
     PackagePart,
 )
 from ._parts import PackageOperationCallbacks, PathConfig, permissions
-from ._reporter import all_local_files, all_rule_pack_files
+from ._reporter import all_packable_files
 from ._type_defs import PackageError, PackageID, PackageName
 
 _logger = logging.getLogger(__name__)
@@ -567,12 +567,7 @@ def get_unpackaged_files(
     installer: Installer, path_config: PathConfig
 ) -> dict[PackagePart, list[Path]]:
     packaged = installer.get_packaged_files()
-    present: dict[PackagePart | None, set[Path]] = {
-        **all_local_files(path_config),
-        PackagePart.EC_RULE_PACKS: all_rule_pack_files(
-            path_config.get_path(PackagePart.EC_RULE_PACKS)
-        ),
-    }
+    present = all_packable_files(path_config)
     return {
         part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
         for part in PackagePart

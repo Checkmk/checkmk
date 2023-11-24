@@ -6,7 +6,7 @@
 from pathlib import Path
 
 from cmk.mkp_tool import PackagePart, PathConfig
-from cmk.mkp_tool._reporter import all_local_files
+from cmk.mkp_tool._reporter import _all_local_files, all_packable_files
 
 
 def _setup_local_files_structure(path_config: PathConfig) -> None:
@@ -37,4 +37,24 @@ def test_get_local_files_by_part(path_config: PathConfig) -> None:
             path_config.local_root / "some" / "other" / "file.sh",
         },
     }
-    assert all_local_files(path_config) == expected
+    assert _all_local_files(path_config) == expected
+
+
+def test_get_packable_files_by_part(path_config: PathConfig) -> None:
+    _setup_local_files_structure(path_config)
+
+    expected: dict[PackagePart, set[Path]] = {
+        **{
+            p: {Path(f"regular_file_of_{p.ident}.py"), Path(f"subdir/subdir_file_of_{p.ident}.py")}
+            for p in PackagePart
+            if p is not PackagePart.EC_RULE_PACKS
+        },
+        PackagePart.EC_RULE_PACKS: {
+            Path(".hidden_file_of_ec_rule_packs.py"),
+            Path("compiled_file_of_ec_rule_packs.pyc"),
+            Path("editor_file_of_ec_rule_packs.py~"),
+            Path("regular_file_of_ec_rule_packs.py"),
+            Path("subdir"),
+        },
+    }
+    assert all_packable_files(path_config) == expected

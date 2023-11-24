@@ -6,14 +6,15 @@ mod common;
 use std::collections::HashSet;
 
 use check_sql::ms_sql::{
-    api::InstanceEngine,
-    api::{Client, Section},
+    api::{Client, InstanceEngine},
     queries,
+    section::{self, Section},
 };
 use check_sql::{
     config::ms_sql::{Config, Endpoint},
     config::CheckConfig,
     ms_sql::api,
+    ms_sql::client,
 };
 use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
@@ -30,7 +31,7 @@ fn expected_instances() -> Vec<String> {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_local_connection() {
-    assert!(api::create_local_client(None).await.is_ok());
+    assert!(client::create_local(None).await.is_ok());
 }
 
 fn is_instance_good(i: &InstanceEngine) -> bool {
@@ -69,7 +70,7 @@ async fn test_validate_all_instances_local() {
         .collect();
 
     for name in names {
-        let c = api::create_local_instance_client(&name, None, None).await;
+        let c = client::create_instance_local(&name, None, None).await;
         match c {
             Ok(mut c) => assert!(tools::run_get_version(&mut c).await.is_some()),
             Err(e) if e.to_string().starts_with(api::SQL_LOGIN_ERROR_TAG) => {
@@ -88,7 +89,7 @@ async fn test_validate_all_instances_local() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        assert!(api::create_client_from_config(&endpoint.make_ep())
+        assert!(client::create_from_config(&endpoint.make_ep())
             .await
             .is_ok());
     } else {
@@ -180,9 +181,9 @@ async fn validate_all(i: &InstanceEngine, c: &mut Client, e: &Endpoint) {
     validate_connections_error(i, c).await;
     validate_jobs(i, e).await;
     for name in [
-        api::JOBS_SECTION_NAME,
-        api::MIRRORING_SECTION_NAME,
-        api::AVAILABILITY_GROUPS_SECTION_NAME,
+        section::JOBS_SECTION_NAME,
+        section::MIRRORING_SECTION_NAME,
+        section::AVAILABILITY_GROUPS_SECTION_NAME,
     ] {
         validate_query_error(i, e, &Section::new(name)).await;
     }
@@ -455,7 +456,7 @@ async fn validate_clusters(_instance: &InstanceEngine, _client: &mut Client, _en
 
 async fn validate_jobs(instance: &InstanceEngine, endpoint: &Endpoint) {
     let result = instance
-        .generate_query_section(endpoint, &Section::new(api::JOBS_SECTION_NAME), None)
+        .generate_query_section(endpoint, &Section::new(section::JOBS_SECTION_NAME), None)
         .await;
     let lines: Vec<&str> = result.split('\n').collect();
     assert_eq!(lines.len(), 3, "{:?}", lines);
@@ -490,7 +491,7 @@ async fn validate_query_error(instance: &InstanceEngine, endpoint: &Endpoint, se
 }
 
 async fn validate_mirroring_section(instance: &InstanceEngine, endpoint: &Endpoint) {
-    let section = &Section::new(api::MIRRORING_SECTION_NAME);
+    let section = &Section::new(section::MIRRORING_SECTION_NAME);
     let lines: Vec<String> = instance
         .generate_query_section(endpoint, section, None)
         .await
@@ -503,7 +504,7 @@ async fn validate_mirroring_section(instance: &InstanceEngine, endpoint: &Endpoi
 }
 
 async fn validate_availability_groups_section(instance: &InstanceEngine, endpoint: &Endpoint) {
-    let section = &Section::new(api::AVAILABILITY_GROUPS_SECTION_NAME);
+    let section = &Section::new(section::AVAILABILITY_GROUPS_SECTION_NAME);
     let lines: Vec<String> = instance
         .generate_query_section(endpoint, section, None)
         .await
@@ -565,7 +566,7 @@ mssql:
 #[tokio::test(flavor = "multi_thread")]
 async fn test_get_computer_name() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = api::create_client_from_config(&endpoint.make_ep())
+        let mut client = client::create_from_config(&endpoint.make_ep())
             .await
             .unwrap();
         let name = api::get_computer_name(&mut client).await.unwrap();

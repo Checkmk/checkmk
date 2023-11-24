@@ -29,7 +29,15 @@ def parse_postfix_mailq_status(string_table: StringTable) -> dict[str, PostfixPi
 
     for line in string_table:
         stripped_line = [x.strip() for x in line]
-        queuename = stripped_line[0].split("/")[0]
+        # In the new agent the main postfix service is now discovered as 'default';
+        # in the previous agent version it was simply discovered as 'postfix'.
+        # For backward compatibility I therefore convert the queuename
+        # from 'postfix' to 'default'.
+        queuename = (
+            "default"
+            if (first_word := stripped_line[0]) in {"default", "postfix"}
+            else first_word.split("/")[0]
+        )
 
         status = stripped_line[-1]
         pid = None
@@ -51,7 +59,11 @@ register.agent_section(
 def discovery_postfix_mailq_status(
     section: Mapping[str, PostfixError | PostfixPid]
 ) -> DiscoveryResult:
-    yield from (Service(item=queuename) for queuename in section)
+    yield from (
+        Service(item=queuename)
+        for queuename, posfix in section.items()
+        if posfix != PostfixError.SystemNotRunning
+    )
 
 
 def check_postfix_mailq_status(

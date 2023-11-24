@@ -45,11 +45,10 @@ def fixture_section() -> dict[str, PostfixError | PostfixPid]:
 
 def test_discovery_postfix_mailq_status(section: Mapping[str, PostfixError | PostfixPid]) -> None:
     assert list(discovery_postfix_mailq_status(section)) == [
-        Service(item="postfix"),
+        Service(item="default"),
         Service(item="postfix-external"),
         Service(item="postfix-stopped"),
         Service(item="postfix-internal"),
-        Service(item="postfix-uat-cdi"),
         Service(item="postfix-other"),
     ]
 
@@ -59,7 +58,7 @@ def test_discovery_postfix_mailq_status(section: Mapping[str, PostfixError | Pos
     [
         pytest.param("missing", [], id="Item missing in data"),
         pytest.param(
-            "postfix",
+            "default",
             [
                 Result(state=State.OK, summary="Status: the Postfix mail system is running"),
                 Result(state=State.OK, summary="PID: 12910"),

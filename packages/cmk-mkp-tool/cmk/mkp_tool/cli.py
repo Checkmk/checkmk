@@ -681,20 +681,23 @@ def _command_package(
         sys.stderr.write(f"{exc}\n")
         return 1
 
+    try:
+        package_bytes = create_mkp(package, path_config.get_path, version_packaged=_VERSION_STR)
+    except PackageError as exc:
+        sys.stderr.write(f"{exc}\n")
+        return 1
+    _logger.info("Successfully created %s %s", package.name, package.version)
+
     store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    try:
-        manifest = store.store(
-            create_mkp(package, path_config.get_path, version_packaged=_VERSION_STR),
-            persisting_function,
-        )
-    except PackageError as exc:
-        sys.stderr.write(f"{exc}\n")
-        return 1
-    _logger.info("Successfully created %s %s", manifest.name, manifest.version)
+    manifest = store.store(
+        package_bytes,
+        persisting_function,
+    )
+    _logger.info("Successfully wrote package file")
 
     if site_context is None:
         return 0

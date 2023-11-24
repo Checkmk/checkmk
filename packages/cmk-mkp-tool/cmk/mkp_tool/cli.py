@@ -30,6 +30,7 @@ from ._unsorted import (
     ComparableVersion,
     disable,
     disable_outdated,
+    format_file_name,
     get_classified_manifests,
     get_stored_manifests,
     get_unpackaged_files,
@@ -641,11 +642,14 @@ def _command_template(
 def _args_package(
     subparser: argparse.ArgumentParser,
 ) -> None:
-    subparser.add_argument(
-        "manifest_file",
-        type=Path,
-        help="The path to an package manifest file",
-    )
+    subparser.add_argument("manifest_file", type=Path, help="The path to an package manifest file")
+
+
+def _args_package_with_target(
+    subparser: argparse.ArgumentParser,
+) -> None:
+    subparser.add_argument("manifest_file", type=Path, help="The path to an package manifest file")
+    subparser.add_argument("target_dir", type=Path, help="The directory to create the mkp in")
 
 
 def _command_package(
@@ -677,6 +681,14 @@ def _command_package(
         return 1
     _logger.info("Successfully created %s %s", package.name, package.version)
 
+    if site_context is None:
+        persisting_function(
+            f"{args.target_dir / format_file_name(package.id)}",
+            package_bytes,
+        )
+        _logger.info("Successfully wrote package file")
+        return 0
+
     store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
@@ -687,9 +699,6 @@ def _command_package(
         persisting_function,
     )
     _logger.info("Successfully wrote package file")
-
-    if site_context is None:
-        return 0
 
     installer = Installer(path_config.installed_packages_dir)
     try:
@@ -747,7 +756,12 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
     _add_command(subparsers, "template", _args_template, _command_template)
-    _add_command(subparsers, "package", _args_package, partial_opt(_command_package, site_context))
+    _add_command(
+        subparsers,
+        "package",
+        _args_package_with_target if site_context is None else _args_package,
+        partial_opt(_command_package, site_context),
+    )
 
     if site_context is None:
         return parser.parse_args(argv)

@@ -376,23 +376,6 @@ def _row(manifest: Manifest, state: str) -> list[str]:
     ]
 
 
-def _args_install_deprecated(
-    subparser: argparse.ArgumentParser,
-) -> None:
-    subparser.add_argument("file", type=str, metavar="(DEPRECATED)")
-
-
-def _command_install_deprecated(
-    _site_context: SiteContext,
-    _args: argparse.Namespace,
-    _path_config: PathConfig | None,
-    _persisting_function: Callable[[str, bytes], None],
-) -> int:
-    """This command is deprecated. Please use the `add` and `enable` commands."""
-    sys.stderr.write(f"{_command_install_deprecated.__doc__}\n")
-    return 1
-
-
 def _args_add(
     subparser: argparse.ArgumentParser,
 ) -> None:
@@ -769,13 +752,6 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
     if site_context is None:
         return parser.parse_args(argv)
 
-    # Can be dropped in 2.3
-    _add_command(
-        subparsers,
-        "install",
-        _args_install_deprecated,
-        partial(_command_install_deprecated, site_context),
-    )
     _add_command(subparsers, "release", _args_release, partial(_command_release, site_context))
     _add_command(subparsers, "enable", _args_package_id, partial(_command_enable, site_context))
     _add_command(subparsers, "disable", _args_package_id, partial(_command_disable, site_context))

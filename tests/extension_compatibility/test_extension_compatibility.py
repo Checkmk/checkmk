@@ -64,6 +64,17 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "Error in agent based plugin cephdf: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
         }
     ),
+    "cve_2021_44228_log4j_cmk20.mkp": _ImportErrors(
+        gui_errors={
+            "views/inv_cve_2021_22448_log4j: No module named 'cmk.gui.plugins.views.inventory'",
+        },
+    ),
+    "veeam_o365-2.6.1.mkp": _ImportErrors(
+        gui_errors={
+            "metrics/veeam_o365jobs: cannot import name 'check_metrics' from 'cmk.gui.plugins.metrics.utils' (/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/metrics/utils.py)",
+            "metrics/veeam_o365licenses: cannot import name 'check_metrics' from 'cmk.gui.plugins.metrics.utils' (/omd/sites/ext_comp_1/lib/python3/cmk/gui/plugins/metrics/utils.py)",
+        },
+    ),
 }
 
 

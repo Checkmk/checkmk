@@ -6,11 +6,12 @@
 from collections.abc import Mapping, Sequence
 from enum import Enum
 from itertools import chain
-from pathlib import Path
 from time import time
 from typing import assert_never
 
 from pydantic import BaseModel, Field, RootModel, TypeAdapter
+
+from cmk.plugins.lib.robotmk_config import Config, EnvironmentConfigRcc, PiggybackHost, SuiteConfig
 
 from .agent_based_api.v1 import register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -22,67 +23,6 @@ class ConfigFileContent(BaseModel, frozen=True):
 
 class ConfigReadingError(BaseModel, frozen=True):
     ReadingError: str
-
-
-class RobotFrameworkConfig(BaseModel, frozen=True):
-    robot_target: Path
-    command_line_args: Sequence[str] = Field(default=[])
-
-
-class ExecutionConfig(BaseModel, frozen=True):
-    n_attempts_max: int
-    retry_strategy: str
-    execution_interval_seconds: int
-    timeout: int
-
-
-class EnvironmentConfigSystem(Enum):
-    System = "System"
-
-
-class RccConfig(BaseModel, frozen=True):
-    robot_yaml_path: Path
-    build_timeout: int
-    env_json_path: Path | None
-
-
-class EnvironmentConfigRcc(BaseModel, frozen=True):
-    Rcc: RccConfig
-
-
-class SessionConfigCurrent(Enum):
-    Current = "Current"
-
-
-class UserSessionConfig(BaseModel, frozen=True):
-    user_name: str
-
-
-class SessionConfigSpecificUser(BaseModel, frozen=True):
-    SpecificUser: UserSessionConfig
-
-
-class SourceHost(Enum):
-    Source = "Source"
-
-
-class PiggybackHost(BaseModel, frozen=True):
-    Piggyback: str
-
-
-class SuiteConfig(BaseModel, frozen=True):
-    robot_framework_config: RobotFrameworkConfig
-    execution_config: ExecutionConfig
-    environment_config: EnvironmentConfigSystem | EnvironmentConfigRcc
-    session_config: SessionConfigCurrent | SessionConfigSpecificUser
-    host: SourceHost | PiggybackHost
-
-
-class Config(BaseModel, frozen=True):
-    working_directory: Path
-    results_directory: Path
-    rcc_binary_path: Path
-    suites: Mapping[str, SuiteConfig]
 
 
 def parse_robotmk_config(string_table: StringTable) -> Config | ConfigReadingError | None:

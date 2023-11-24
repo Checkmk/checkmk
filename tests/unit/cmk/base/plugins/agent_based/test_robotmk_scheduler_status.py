@@ -8,7 +8,6 @@ from pathlib import Path
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.robotmk_scheduler_status import (
     _check_scheduler_status,
-    Config,
     ConfigReadingError,
     discover_scheduler_status,
     EnviromentBuildStatusErrorMessage,
@@ -18,14 +17,18 @@ from cmk.base.plugins.agent_based.robotmk_scheduler_status import (
     EnvironmentBuildStatusInProgress,
     EnvironmentBuildStatusNotNeeded,
     EnvironmentBuildStatusSuccess,
+    RCCSetupFailures,
+    SchedulerPhase,
+)
+
+from cmk.plugins.lib.robotmk_config import (
+    Config,
     EnvironmentConfigRcc,
     EnvironmentConfigSystem,
     ExecutionConfig,
     PiggybackHost,
     RccConfig,
-    RCCSetupFailures,
     RobotFrameworkConfig,
-    SchedulerPhase,
     SessionConfigCurrent,
     SessionConfigSpecificUser,
     SourceHost,

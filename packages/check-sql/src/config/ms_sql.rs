@@ -176,6 +176,22 @@ impl Config {
     pub fn instances(&self) -> &Vec<Instance> {
         &self.instances
     }
+
+    pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
+        if self.discovery.all() {
+            return true;
+        }
+
+        if !self.discovery.include().is_empty() {
+            return self.discovery.include().contains(&name.to_string());
+        }
+
+        if self.discovery.exclude().contains(&name.to_string()) {
+            return false;
+        }
+
+        false
+    }
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -340,7 +356,7 @@ impl ConnectionTls {
     }
 }
 
-#[derive(PartialEq, Debug, Clone)]
+#[derive(PartialEq, Debug, Clone, Default)]
 pub struct Endpoint {
     auth: Authentication,
     conn: Connection,
@@ -363,6 +379,15 @@ impl Endpoint {
 
     pub fn split(&self) -> (&Authentication, &Connection) {
         (self.auth(), self.conn())
+    }
+
+    pub fn hostname(&self) -> String {
+        if self.auth().auth_type() == &AuthType::Integrated {
+            "localhost"
+        } else {
+            self.conn().hostname()
+        }
+        .to_string()
     }
 }
 
@@ -1023,5 +1048,40 @@ discovery:
         assert_eq!(c.sections().cached(), defaults::SECTIONS_CACHED);
         assert_eq!(c.sections().disabled(), &vec!["someOtherSQL".to_string()]);
         assert_eq!(c.sections().cache_age(), defaults::SECTIONS_CACHE_AGE);
+    }
+
+    #[test]
+    fn test_config_discovery() {
+        let c = make_detect_config(true, &[], &[]);
+        assert!(c.is_instance_allowed(&"weird"));
+        let c = make_detect_config(false, &[], &[]);
+        assert!(!c.is_instance_allowed(&"weird"));
+        let c = make_detect_config(false, &["a", "b"], &["a", "b"]);
+        assert!(!c.is_instance_allowed(&"weird"));
+        assert!(c.is_instance_allowed(&"a"));
+        assert!(c.is_instance_allowed(&"b"));
+    }
+
+    fn make_detect_config(all: bool, include: &[&str], exclude: &[&str]) -> Config {
+        let source = format!(
+            r"---
+mssql:
+  standard:
+    authentication:
+      username: foo
+    discovery:
+      detect: true # doesnt matter for us
+      all: {}
+      include: {include:?}
+      exclude: {exclude:?}
+  instances:
+    - sid: sid1
+    - sid: sid2
+      connection:
+        hostname: ab
+",
+            if all { "yes" } else { "no" }
+        );
+        Config::from_string(&source).unwrap().unwrap()
     }
 }

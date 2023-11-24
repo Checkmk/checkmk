@@ -1,0 +1,13 @@
+Title: primekey_hsm_battery_voltage: Fixed parsing of section when battery voltage is not available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700831541
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Sometimes the battery voltage was not available or it wasn't a number. That cause the parsing of the section to fail.
+This has now been fixed.
+In the case of voltage being: 'External Battery: absence", the check status will be OK and the summary will provide details that the battery is absent.
+If the voltage is not a number or is not absent, the voltage check will be skipped and the check result will the battery state.

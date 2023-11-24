@@ -230,6 +230,7 @@ def _args_show_all(
 
 
 def _command_show_all(
+    _site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -266,6 +267,7 @@ def _args_show(
 
 
 def _command_show(
+    _site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -287,6 +289,7 @@ def _command_show(
 
 
 def _command_files(
+    _site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -320,6 +323,7 @@ def _args_list(
 
 
 def _command_list(
+    _site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -383,6 +387,7 @@ def _args_add(
 
 
 def _command_add(
+    _site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
@@ -433,6 +438,7 @@ def _command_release(
 
 
 def _command_remove(
+    _site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -740,18 +746,18 @@ def _parse_arguments(argv: list[str], site_context: SiteContext | None) -> argpa
 
     _add_command(subparsers, "find", _args_find, _command_find)
     _add_command(subparsers, "inspect", _args_inspect, _command_inspect)
-    _add_command(subparsers, "show", _args_show, _command_show)
-    _add_command(subparsers, "show-all", _args_show_all, _command_show_all)
-    _add_command(subparsers, "files", _args_package_id, _command_files)
-    _add_command(subparsers, "list", _args_list, _command_list)
-    _add_command(subparsers, "add", _args_add, _command_add)
-    _add_command(subparsers, "remove", _args_package_id, _command_remove)
     _add_command(subparsers, "template", _args_template, _command_template)
     _add_command(subparsers, "package", _args_package, partial_opt(_command_package, site_context))
 
     if site_context is None:
         return parser.parse_args(argv)
 
+    _add_command(subparsers, "show", _args_show, partial(_command_show, site_context))
+    _add_command(subparsers, "show-all", _args_show_all, partial(_command_show_all, site_context))
+    _add_command(subparsers, "files", _args_package_id, partial(_command_files, site_context))
+    _add_command(subparsers, "list", _args_list, partial(_command_list, site_context))
+    _add_command(subparsers, "add", _args_add, partial(_command_add, site_context))
+    _add_command(subparsers, "remove", _args_package_id, partial(_command_remove, site_context))
     _add_command(subparsers, "release", _args_release, partial(_command_release, site_context))
     _add_command(subparsers, "enable", _args_package_id, partial(_command_enable, site_context))
     _add_command(subparsers, "disable", _args_package_id, partial(_command_disable, site_context))

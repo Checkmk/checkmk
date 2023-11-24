@@ -327,9 +327,9 @@ pub struct SimpleCheckResult {
 }
 
 impl SimpleCheckResult {
-    fn new(state: State, summary: String) -> Self {
+    fn new(state: State, text: String) -> Self {
         Self {
-            summary: Summary::new(state, summary),
+            summary: Summary::new(state, text),
         }
     }
 
@@ -351,6 +351,47 @@ impl SimpleCheckResult {
 
     pub fn from_levels<T>(levels: &impl LevelsCheck<T>, value: &T, summary: String) -> Self {
         levels.check(value, summary)
+    }
+}
+
+pub struct CheckResult<T> {
+    #[allow(dead_code)]
+    summary: Summary,
+    #[allow(dead_code)]
+    metrics: Option<Metric<T>>,
+}
+
+impl<T> CheckResult<T> {
+    fn new(state: State, text: String, metrics: Option<Metric<T>>) -> Self {
+        Self {
+            summary: Summary::new(state, text),
+            metrics,
+        }
+    }
+
+    pub fn ok(summary: String, metrics: Metric<T>) -> Self {
+        Self::new(State::Ok, summary, Some(metrics))
+    }
+
+    pub fn warn(summary: String, metrics: Metric<T>) -> Self {
+        Self::new(State::Warn, summary, Some(metrics))
+    }
+
+    pub fn crit(summary: String, metrics: Metric<T>) -> Self {
+        Self::new(State::Crit, summary, Some(metrics))
+    }
+
+    pub fn unknown(summary: String, metrics: Metric<T>) -> Self {
+        Self::new(State::Unknown, summary, Some(metrics))
+    }
+}
+
+impl<T> From<SimpleCheckResult> for CheckResult<T> {
+    fn from(x: SimpleCheckResult) -> Self {
+        Self {
+            summary: x.summary,
+            metrics: None,
+        }
     }
 }
 

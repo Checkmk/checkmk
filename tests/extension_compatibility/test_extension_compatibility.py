@@ -46,6 +46,24 @@ _EXPECTED_IMPORT_ERRORS: Mapping[str, _ImportErrors] = {
             "wato/msteams: name 'socket' is not defined",
         }
     ),
+    "apcaccess-5.2.2.mkp": _ImportErrors(
+        base_errors={
+            "Error in agent based plugin apcaccess: cannot import name 'temperature' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+        }
+    ),
+    "kentix_devices-3.0.1.mkp": _ImportErrors(
+        base_errors={
+            "Error in agent based plugin kentix_devices: No module named 'cmk.base.plugins.agent_based.utils.temperature'\n",
+        }
+    ),
+    "ceph-11.17.2.mkp": _ImportErrors(
+        base_errors={
+            "Error in agent based plugin cephosd: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+            "Error in agent based plugin cephosdbluefs: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+            "Error in agent based plugin cephstatus: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+            "Error in agent based plugin cephdf: cannot import name 'df' from 'cmk.base.plugins.agent_based.utils' (unknown location)\n",
+        }
+    ),
 }
 
 

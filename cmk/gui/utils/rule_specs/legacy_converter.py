@@ -195,21 +195,18 @@ def _convert_to_custom_group(
 class _LegacyDictKeyProps:
     required: list[str]
     hidden: list[str]
-    show_more: list[str]
 
 
 def _extract_dictionary_key_props(
     dic_elements: Mapping[str, ruleset_api_v1.DictElement]
 ) -> _LegacyDictKeyProps:
-    key_props = _LegacyDictKeyProps(required=[], hidden=[], show_more=[])
+    key_props = _LegacyDictKeyProps(required=[], hidden=[])
 
     for key, dic_elem in dic_elements.items():
         if dic_elem.required:
             key_props.required.append(key)
         if dic_elem.read_only:
             key_props.hidden.append(key)
-        if dic_elem.show_more:
-            key_props.show_more.append(key)
 
     return key_props
 
@@ -246,7 +243,6 @@ def _convert_to_legacy_valuespec(
                 required_keys=legacy_key_props.required,
                 ignored_keys=to_convert.deprecated_elements,
                 hidden_keys=legacy_key_props.hidden,
-                show_more_keys=legacy_key_props.show_more,
                 validate=_convert_to_legacy_validation(to_convert.custom_validate, localizer)
                 if to_convert.custom_validate is not None
                 else None,

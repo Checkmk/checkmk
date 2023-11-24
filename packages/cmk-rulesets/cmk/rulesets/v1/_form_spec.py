@@ -194,13 +194,11 @@ class DictElement:
         required: Whether the user has to configure the value in question. If set to False, it may
                   be omitted.
         read_only: Element that can't be edited. Can be used to store the discovered parameters.
-        show_more: Only show if "show more" is activated
     """
 
     parameter_form: "FormSpec"
     required: bool | None = False
     read_only: bool | None = False
-    show_more: bool | None = False
 
 
 @dataclass(frozen=True)

@@ -70,10 +70,6 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
                         api_v1.MonitoringState(title=api_v1.Localizable("title")),
                         required=True,
                     ),
-                    "key_opt": api_v1.DictElement(
-                        api_v1.MonitoringState(title=api_v1.Localizable("title")),
-                        show_more=True,
-                    ),
                     "key_read_only": api_v1.DictElement(
                         api_v1.MonitoringState(title=api_v1.Localizable("title")),
                         read_only=True,
@@ -87,14 +83,13 @@ def _legacy_custom_text_validate(value: str, varprefix: str) -> None:
             legacy_valuespecs.Dictionary(
                 elements=[
                     ("key_req", legacy_valuespecs.MonitoringState(title=_("title"))),
-                    ("key_opt", legacy_valuespecs.MonitoringState(title=_("title"))),
                     ("key_read_only", legacy_valuespecs.MonitoringState(title=_("title"))),
                 ],
                 title=_("Configuration title"),
                 help=_("Helpful description"),
                 empty_text=_("No elements specified"),
                 required_keys=["key_req"],
-                show_more_keys=["key_opt"],
+                show_more_keys=[],
                 hidden_keys=["key_read_only"],
                 ignored_keys=["old_key", "another_old_key"],
             ),

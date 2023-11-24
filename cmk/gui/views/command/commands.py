@@ -1377,6 +1377,8 @@ class CommandScheduleDowntimes(Command):
         )
 
     def _render_advanced_options(self, what) -> None:  # type: ignore[no-untyped-def]
+        html.open_div(class_="group")
+        html.open_div(class_="down_advanced")
         with foldable_container(
             treename="advanced_down_options",
             id_="adv_down_opts",
@@ -1384,14 +1386,16 @@ class CommandScheduleDowntimes(Command):
             title=_("Advanced options"),
             indent=False,
         ):
+            html.open_div(class_="down_advanced_option")
             if what == "host":
-                html.open_div(class_="group")
                 self._vs_host_downtime().render_input("_include_children", None)
                 html.close_div()
 
-            html.open_div(class_="group")
             self._vs_flexible_options().render_input("_down_duration", None)
             html.close_div()
+
+        html.close_div()
+        html.close_div()
 
     def _render_confirm_buttons(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")

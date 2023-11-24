@@ -144,15 +144,15 @@ where
 }
 
 pub trait LevelsCheck<T> {
-    fn check(&self, value: &T, summary: String) -> CheckResult;
+    fn check(&self, value: &T, summary: String) -> SimpleCheckResult;
 }
 
 impl<T> LevelsCheck<T> for LowerLevels<T>
 where
     T: PartialOrd,
 {
-    fn check(&self, value: &T, summary: String) -> CheckResult {
-        CheckResult::new(self.evaluate(value), summary)
+    fn check(&self, value: &T, summary: String) -> SimpleCheckResult {
+        SimpleCheckResult::new(self.evaluate(value), summary)
     }
 }
 
@@ -160,8 +160,8 @@ impl<T> LevelsCheck<T> for UpperLevels<T>
 where
     T: PartialOrd,
 {
-    fn check(&self, value: &T, summary: String) -> CheckResult {
-        CheckResult::new(self.evaluate(value), summary)
+    fn check(&self, value: &T, summary: String) -> SimpleCheckResult {
+        SimpleCheckResult::new(self.evaluate(value), summary)
     }
 }
 
@@ -322,11 +322,11 @@ impl Display for Summary {
 }
 
 #[derive(Debug, Default)]
-pub struct CheckResult {
+pub struct SimpleCheckResult {
     summary: Summary,
 }
 
-impl CheckResult {
+impl SimpleCheckResult {
     fn new(state: State, summary: String) -> Self {
         Self {
             summary: Summary::new(state, summary),
@@ -371,7 +371,7 @@ impl Writer {
     }
 
     pub fn bail_out(message: &str) -> ! {
-        let out = Self::from(CheckResult::unknown(String::from(message)));
+        let out = Self::from(SimpleCheckResult::unknown(String::from(message)));
         eprintln!("{}", out);
         out.bye()
     }
@@ -388,8 +388,8 @@ impl Display for Writer {
     }
 }
 
-impl From<CheckResult> for Writer {
-    fn from(check_result: CheckResult) -> Self {
+impl From<SimpleCheckResult> for Writer {
+    fn from(check_result: SimpleCheckResult) -> Self {
         Self {
             state: check_result.summary.state,
             summary: check_result.summary.to_string(),
@@ -397,8 +397,8 @@ impl From<CheckResult> for Writer {
     }
 }
 
-impl From<Vec<CheckResult>> for Writer {
-    fn from(check_results: Vec<CheckResult>) -> Self {
+impl From<Vec<SimpleCheckResult>> for Writer {
+    fn from(check_results: Vec<SimpleCheckResult>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.summary.state).max() {
                 Some(state) => *state,
@@ -573,7 +573,7 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{CheckResult, Writer};
+    use super::{SimpleCheckResult, Writer};
 
     fn s(s: &str) -> String {
         String::from(s)
@@ -582,7 +582,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_ok() {
         assert_eq!(
-            format!("{}", Writer::from(CheckResult::ok(s("summary")))),
+            format!("{}", Writer::from(SimpleCheckResult::ok(s("summary")))),
             "OK - summary"
         );
     }
@@ -590,7 +590,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_warn() {
         assert_eq!(
-            format!("{}", Writer::from(CheckResult::warn(s("summary")))),
+            format!("{}", Writer::from(SimpleCheckResult::warn(s("summary")))),
             "WARNING - summary (!)"
         );
     }
@@ -598,7 +598,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_crit() {
         assert_eq!(
-            format!("{}", Writer::from(CheckResult::crit(s("summary")))),
+            format!("{}", Writer::from(SimpleCheckResult::crit(s("summary")))),
             "CRITICAL - summary (!!)"
         );
     }
@@ -606,7 +606,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_unknown() {
         assert_eq!(
-            format!("{}", Writer::from(CheckResult::unknown(s("summary")))),
+            format!("{}", Writer::from(SimpleCheckResult::unknown(s("summary")))),
             "UNKNOWN - summary (?)"
         );
     }
@@ -618,17 +618,17 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_with_state_only() {
-        let cr1 = CheckResult::default();
-        let cr2 = CheckResult::default();
-        let cr3 = CheckResult::default();
+        let cr1 = SimpleCheckResult::default();
+        let cr2 = SimpleCheckResult::default();
+        let cr3 = SimpleCheckResult::default();
         assert_eq!(format!("{}", Writer::from(vec![cr1, cr2, cr3])), "OK");
     }
 
     #[test]
     fn test_merge_check_results_ok() {
-        let cr1 = CheckResult::ok(s("summary 1"));
-        let cr2 = CheckResult::ok(s("summary 2"));
-        let cr3 = CheckResult::ok(s("summary 3"));
+        let cr1 = SimpleCheckResult::ok(s("summary 1"));
+        let cr2 = SimpleCheckResult::ok(s("summary 2"));
+        let cr3 = SimpleCheckResult::ok(s("summary 3"));
         assert_eq!(
             format!("{}", Writer::from(vec![cr1, cr2, cr3])),
             "OK - summary 1, summary 2, summary 3"
@@ -637,9 +637,9 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_warn() {
-        let cr1 = CheckResult::ok(s("summary 1"));
-        let cr2 = CheckResult::warn(s("summary 2"));
-        let cr3 = CheckResult::ok(s("summary 3"));
+        let cr1 = SimpleCheckResult::ok(s("summary 1"));
+        let cr2 = SimpleCheckResult::warn(s("summary 2"));
+        let cr3 = SimpleCheckResult::ok(s("summary 3"));
         assert_eq!(
             format!("{}", Writer::from(vec![cr1, cr2, cr3])),
             "WARNING - summary 1, summary 2 (!), summary 3"
@@ -648,9 +648,9 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_crit() {
-        let cr1 = CheckResult::ok(s("summary 1"));
-        let cr2 = CheckResult::warn(s("summary 2"));
-        let cr3 = CheckResult::crit(s("summary 3"));
+        let cr1 = SimpleCheckResult::ok(s("summary 1"));
+        let cr2 = SimpleCheckResult::warn(s("summary 2"));
+        let cr3 = SimpleCheckResult::crit(s("summary 3"));
         assert_eq!(
             format!("{}", Writer::from(vec![cr1, cr2, cr3])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
@@ -659,10 +659,10 @@ mod test_writer_format {
 
     #[test]
     fn test_merge_check_results_unknown() {
-        let cr1 = CheckResult::ok(s("summary 1"));
-        let cr2 = CheckResult::warn(s("summary 2"));
-        let cr3 = CheckResult::crit(s("summary 3"));
-        let cr4 = CheckResult::unknown(s("summary 4"));
+        let cr1 = SimpleCheckResult::ok(s("summary 1"));
+        let cr2 = SimpleCheckResult::warn(s("summary 2"));
+        let cr3 = SimpleCheckResult::crit(s("summary 3"));
+        let cr4 = SimpleCheckResult::unknown(s("summary 4"));
         assert_eq!(
             format!("{}", Writer::from(vec![cr1, cr2, cr3, cr4])),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"

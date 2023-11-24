@@ -2,19 +2,19 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, LowerLevels};
+use crate::check::{LowerLevels, SimpleCheckResult};
 use time::Duration;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
-pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<CheckResult> {
+pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     match expected {
         None => None,
         Some(expected) => {
             if serial == expected {
-                Some(CheckResult::ok(format!("Serial {}", serial)))
+                Some(SimpleCheckResult::ok(format!("Serial {}", serial)))
             } else {
-                Some(CheckResult::warn(format!(
+                Some(SimpleCheckResult::warn(format!(
                     "Serial is {} but expected {}",
                     serial, expected
                 )))
@@ -23,16 +23,19 @@ pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<
     }
 }
 
-pub fn check_details_subject(subject: &X509Name, expected: Option<String>) -> Option<CheckResult> {
+pub fn check_details_subject(
+    subject: &X509Name,
+    expected: Option<String>,
+) -> Option<SimpleCheckResult> {
     match expected {
         None => None,
         Some(expected) => {
             let subject = subject.to_string();
             // subject string has the form: `CN=domain`
             if subject == expected {
-                Some(CheckResult::ok(subject.to_string()))
+                Some(SimpleCheckResult::ok(subject.to_string()))
             } else {
-                Some(CheckResult::warn(format!(
+                Some(SimpleCheckResult::warn(format!(
                     "Subject is {} but expected {}",
                     subject, expected
                 )))
@@ -41,16 +44,19 @@ pub fn check_details_subject(subject: &X509Name, expected: Option<String>) -> Op
     }
 }
 
-pub fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Option<CheckResult> {
+pub fn check_details_issuer(
+    issuer: &X509Name,
+    expected: Option<String>,
+) -> Option<SimpleCheckResult> {
     match expected {
         None => None,
         Some(expected) => {
             let issuer = issuer.to_string();
 
             if issuer == expected {
-                Some(CheckResult::ok(format!("Issuer {}", issuer)))
+                Some(SimpleCheckResult::ok(format!("Issuer {}", issuer)))
             } else {
-                Some(CheckResult::warn(format!(
+                Some(SimpleCheckResult::warn(format!(
                     "Issuer is {} but expected {}",
                     issuer, expected
                 )))
@@ -63,10 +69,10 @@ pub fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
     levels: LowerLevels<Duration>,
     not_after: ASN1Time,
-) -> CheckResult {
+) -> SimpleCheckResult {
     match time_to_expiration {
-        None => CheckResult::crit(format!("Certificate expired ({})", not_after)),
-        Some(time_to_expiration) => CheckResult::from_levels(
+        None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)),
+        Some(time_to_expiration) => SimpleCheckResult::from_levels(
             &levels,
             &time_to_expiration,
             format!(

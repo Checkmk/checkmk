@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{CheckResult, Levels, LowerLevels, UpperLevels, Writer};
+use check_cert::check::{Levels, LowerLevels, SimpleCheckResult, UpperLevels, Writer};
 use check_cert::{checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = Writer::from(vec![
-        CheckResult::from_levels(
+        SimpleCheckResult::from_levels(
             &response_time_levels,
             &response_time,
             format!(

@@ -28,15 +28,15 @@ internal_distros: []
 
 editions:
     enterprise:
-        release: [*common, "cma-3"]
-        daily: [*common, "cma-3"]
+        release: [*common, "cma-3", "cma-4"]
+        daily: [*common, "cma-3", "cma-4"]
         testbuild: ["ubuntu-22.04", "centos-7", "cma-3"]
     cloud:
-        release: [*common, "cma-3"]
+        release: [*common, "cma-3", "cma-4"]
         daily: *daily_reduced
         testbuild: []
     managed:
-        release: [*common, "cma-3"]
+        release: [*common, "cma-3", "cma-4"]
         daily: []
         testbuild: []
     raw:

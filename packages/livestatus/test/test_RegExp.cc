@@ -3,6 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+#include <cstddef>
 #include <string>
 
 #include "gtest/gtest.h"
@@ -89,4 +90,19 @@ TEST(RegExpTest, CMK1381) {
     EXPECT_TRUE(r.search("xy.z|"));
     EXPECT_FALSE(r.search("xyaz|"));
     EXPECT_TRUE(r.search("GNARK xy.z|KENU"));
+}
+
+TEST(RegExpTest, NullCharacter) {
+    using namespace std::literals::string_literals;
+    auto s = "foo \x00 bar"s;
+    ASSERT_EQ(size_t{9}, s.size());  // just to be sure...
+    const RegExp r{s, RegExp::Case::respect, RegExp::Syntax::literal};
+
+    EXPECT_FALSE(r.match("foo "s));
+    EXPECT_TRUE(r.match("foo \x00 bar"s));
+    EXPECT_FALSE(r.match("xfoo \x00 bary"s));
+
+    EXPECT_FALSE(r.search("foo "s));
+    EXPECT_TRUE(r.search("foo \x00 bar"s));
+    EXPECT_TRUE(r.search("xfoo \x00 bary"s));
 }

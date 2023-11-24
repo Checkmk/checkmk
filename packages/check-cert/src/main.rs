@@ -97,18 +97,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "Certificate obtained in {} ms",
                 response_time.whole_milliseconds()
             ),
-        ),
+        )
+        .into(),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
-            .unwrap_or_default(),
+            .unwrap_or_default()
+            .into(),
         checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)
-            .unwrap_or_default(),
+            .unwrap_or_default()
+            .into(),
         checker::check_details_issuer(cert.tbs_certificate.issuer(), args.issuer)
-            .unwrap_or_default(),
+            .unwrap_or_default()
+            .into(),
         checker::check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),
             not_after_levels,
             cert.tbs_certificate.validity().not_after,
-        ),
+        )
+        .into(),
     ]);
     println!("HTTP {}", out);
     out.bye()

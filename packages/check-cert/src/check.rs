@@ -355,7 +355,6 @@ impl SimpleCheckResult {
 }
 
 pub struct CheckResult<T> {
-    #[allow(dead_code)]
     summary: Summary,
     #[allow(dead_code)]
     metrics: Option<Metric<T>>,
@@ -386,7 +385,7 @@ impl<T> CheckResult<T> {
     }
 }
 
-impl<T> From<SimpleCheckResult> for CheckResult<T> {
+impl From<SimpleCheckResult> for CheckResult<()> {
     fn from(x: SimpleCheckResult) -> Self {
         Self {
             summary: x.summary,
@@ -438,8 +437,8 @@ impl From<SimpleCheckResult> for Writer {
     }
 }
 
-impl From<Vec<SimpleCheckResult>> for Writer {
-    fn from(check_results: Vec<SimpleCheckResult>) -> Self {
+impl From<Vec<CheckResult<()>>> for Writer {
+    fn from(check_results: Vec<CheckResult<()>>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.summary.state).max() {
                 Some(state) => *state,
@@ -662,7 +661,10 @@ mod test_writer_format {
         let cr1 = SimpleCheckResult::default();
         let cr2 = SimpleCheckResult::default();
         let cr3 = SimpleCheckResult::default();
-        assert_eq!(format!("{}", Writer::from(vec![cr1, cr2, cr3])), "OK");
+        assert_eq!(
+            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
+            "OK"
+        );
     }
 
     #[test]
@@ -671,7 +673,7 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::ok(s("summary 2"));
         let cr3 = SimpleCheckResult::ok(s("summary 3"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
             "OK - summary 1, summary 2, summary 3"
         );
     }
@@ -682,7 +684,7 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::warn(s("summary 2"));
         let cr3 = SimpleCheckResult::ok(s("summary 3"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
             "WARNING - summary 1, summary 2 (!), summary 3"
         );
     }
@@ -693,7 +695,7 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::warn(s("summary 2"));
         let cr3 = SimpleCheckResult::crit(s("summary 3"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
     }
@@ -705,7 +707,10 @@ mod test_writer_format {
         let cr3 = SimpleCheckResult::crit(s("summary 3"));
         let cr4 = SimpleCheckResult::unknown(s("summary 4"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1, cr2, cr3, cr4])),
+            format!(
+                "{}",
+                Writer::from(vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
+            ),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
     }

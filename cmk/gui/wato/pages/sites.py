@@ -513,6 +513,7 @@ class ModeEditSite(WatoMode):
                         "When enabled, this site is marked for synchronisation every time a Web GUI "
                         "related option is changed and users are allowed to login "
                         "to the Web GUI of this site."
+                        "The access to the Rest API is unaffected by this option though."
                     ),
                 ),
             ),

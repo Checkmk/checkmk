@@ -3,8 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._color import Color, RGB
-from ._localize import Localizable
-from ._unit import CustomUnit, Unit
+import pytest
 
-__all__ = ["Color", "RGB", "Localizable", "CustomUnit", "Unit"]
+from cmk.graphing.v1 import CustomUnit, Localizable
+
+
+def test_custom_unit_error() -> None:
+    title = Localizable("")
+    with pytest.raises(ValueError):
+        CustomUnit(title, "")

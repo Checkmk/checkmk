@@ -12,6 +12,7 @@ from typing import TypeAlias
 from ._color import Color
 from ._localize import Localizable
 from ._name import Name
+from ._unit import CustomUnit, Unit
 
 __all__ = [
     "Name",
@@ -33,14 +34,14 @@ __all__ = [
 class Metric:
     name: Name
     title: Localizable
-    unit: str
+    unit: Unit | CustomUnit
     color: Color
 
 
 @dataclass(frozen=True)
 class Constant:
     title: Localizable
-    unit: str
+    unit: Unit | CustomUnit
     color: Color
     value: int | float
 
@@ -80,7 +81,7 @@ class Sum:
 @dataclass(frozen=True)
 class Product:
     title: Localizable
-    unit: str
+    unit: Unit | CustomUnit
     color: Color
     factors: Sequence[Quantity]
 
@@ -100,7 +101,7 @@ class Difference:
 @dataclass(frozen=True)
 class Fraction:
     title: Localizable
-    unit: str
+    unit: Unit | CustomUnit
     color: Color
     _: KW_ONLY
     dividend: Quantity

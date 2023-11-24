@@ -6,10 +6,13 @@
 https://www.technologyuk.net/science/measurement-and-units/physical-quantities-and-si-units.shtml#ID02
 """
 
-from enum import StrEnum
+from dataclasses import dataclass
+from enum import Enum
+
+from ._localize import Localizable
 
 
-class Unit(StrEnum):
+class Unit(Enum):
     # CMK
     BAR = "bar"
     BITS_IEC = "bits"  # factor 1024
@@ -73,3 +76,13 @@ class Unit(StrEnum):
     VOLT = "V"
     WATT = "W"
     WEBER = "Wb"
+
+
+@dataclass(frozen=True)
+class CustomUnit:
+    title: Localizable
+    symbol: str
+
+    def __post_init__(self) -> None:
+        if not self.symbol:
+            raise ValueError(self.symbol)

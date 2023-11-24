@@ -532,20 +532,22 @@ mod test_metrics_map {
 mod test_metrics_display {
     use super::{Bounds, Levels, Metric, MetricBuilder, Real};
 
+    fn i(x: isize) -> Real {
+        Real::Integer(x)
+    }
+
+    fn d(x: f64) -> Real {
+        Real::Double(x)
+    }
+
     #[test]
     fn test_default() {
         assert_eq!(
-            format!(
-                "{}",
-                Metric::<Real>::builder("name", Real::Integer(42)).build()
-            ),
+            format!("{}", Metric::<Real>::builder("name", i(42)).build()),
             "name=42;;;;"
         );
         assert_eq!(
-            format!(
-                "{}",
-                MetricBuilder::<Real>::new("name", Real::Integer(42)).build()
-            ),
+            format!("{}", MetricBuilder::<Real>::new("name", i(42)).build()),
             "name=42;;;;"
         );
     }
@@ -555,9 +557,7 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", Real::Integer(42))
-                    .uom("ms")
-                    .build()
+                MetricBuilder::<Real>::new("name", i(42)).uom("ms").build()
             ),
             "name=42ms;;;;"
         );
@@ -568,10 +568,10 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", Real::Integer(42))
+                MetricBuilder::<Real>::new("name", i(42))
                     .levels(Levels {
-                        warn: Real::Integer(24),
-                        crit: Real::Integer(42)
+                        warn: i(24),
+                        crit: i(42)
                     })
                     .build()
             ),
@@ -584,15 +584,15 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", Real::Integer(42))
+                MetricBuilder::<Real>::new("name", i(42))
                     .uom("ms")
                     .levels(Levels {
-                        warn: Real::Integer(24),
-                        crit: Real::Integer(42)
+                        warn: i(24),
+                        crit: i(42)
                     })
                     .bounds(Bounds {
-                        min: Real::Integer(0),
-                        max: Real::Integer(100)
+                        min: i(0),
+                        max: i(100)
                     })
                     .build()
             ),
@@ -605,15 +605,15 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", Real::Double(42.0))
+                MetricBuilder::<Real>::new("name", d(42.0))
                     .uom("ms")
                     .levels(Levels {
-                        warn: Real::Double(24.0),
-                        crit: Real::Double(42.0)
+                        warn: d(24.0),
+                        crit: d(42.0)
                     })
                     .bounds(Bounds {
-                        min: Real::Double(0.0),
-                        max: Real::Double(100.0)
+                        min: d(0.0),
+                        max: d(100.0)
                     })
                     .build()
             ),

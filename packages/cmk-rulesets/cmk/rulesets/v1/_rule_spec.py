@@ -82,7 +82,7 @@ class CheckParameterRuleSpecWithoutItem:
 class EnforcedServiceRuleSpecWithItem:
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec] | None
     item_form: ItemFormSpec
     name: str
     is_deprecated: bool = False
@@ -102,7 +102,7 @@ class EnforcedServiceRuleSpecWithItem:
 class EnforcedServiceRuleSpecWithoutItem:
     title: Localizable
     topic: Topic | CustomTopic
-    parameter_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec] | None
     name: str
     is_deprecated: bool = False
     help_text: Localizable | None = None
@@ -121,7 +121,7 @@ class InventoryParameterRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    item_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -133,7 +133,7 @@ class ActiveChecksRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    item_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -145,7 +145,7 @@ class AgentConfigRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    item_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -157,7 +157,7 @@ class SpecialAgentRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    item_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -169,7 +169,7 @@ class ExtraHostConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    item_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False
@@ -181,7 +181,7 @@ class ExtraServiceConfRuleSpec:
     title: Localizable
     topic: Topic | CustomTopic
     functionality: Functionality | CustomFunctionality
-    item_form: Callable[[], FormSpec]
+    parameter_form: Callable[[], FormSpec]
     eval_type: RuleEvalType
     name: str
     is_deprecated: bool = False

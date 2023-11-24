@@ -385,10 +385,133 @@ def test_convert_to_legacy_rulespec_group(
                     ],
                 ),
                 match_type="dict",
-                create_manual_check=False,  # TODO adapt when enforced services are created
+                create_manual_check=False,
             ),
             id="CheckParameterRuleSpecWithItem",
-        )
+        ),
+        pytest.param(
+            api_v1.CheckParameterRuleSpecWithoutItem(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.Topic.APPLICATIONS,
+                parameter_form=partial(
+                    api_v1.Dictionary,
+                    elements={
+                        "key": api_v1.DictElement(
+                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                        ),
+                    },
+                ),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.CheckParameterRulespecWithoutItem(
+                check_group_name="test_rulespec",
+                group=wato.RulespecGroupCheckParametersApplications,
+                title=lambda: _("rulespec title"),
+                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                    ],
+                ),
+                match_type="dict",
+                create_manual_check=False,
+            ),
+            id="CheckParameterRuleSpecWithoutItem",
+        ),
+        pytest.param(
+            api_v1.EnforcedServiceRuleSpecWithItem(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.Topic.APPLICATIONS,
+                item_form=api_v1.TextInput(title=api_v1.Localizable("item title")),
+                parameter_form=partial(
+                    api_v1.Dictionary,
+                    elements={
+                        "key": api_v1.DictElement(
+                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                        ),
+                    },
+                ),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.ManualCheckParameterRulespec(
+                check_group_name="test_rulespec",
+                group=wato.RulespecGroupCheckParametersApplications,
+                title=lambda: _("rulespec title"),
+                item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
+                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                    ],
+                ),
+                match_type="dict",
+            ),
+            id="EnforcedServiceRuleSpecWithItem",
+        ),
+        pytest.param(
+            api_v1.EnforcedServiceRuleSpecWithItem(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.Topic.APPLICATIONS,
+                item_form=api_v1.TextInput(title=api_v1.Localizable("item title")),
+                parameter_form=None,
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.ManualCheckParameterRulespec(
+                check_group_name="test_rulespec",
+                group=wato.RulespecGroupCheckParametersApplications,
+                title=lambda: _("rulespec title"),
+                item_spec=lambda: legacy_valuespecs.TextInput(title=_("item title")),
+                parameter_valuespec=None,
+                match_type="dict",
+            ),
+            id="EnforcedServiceRuleSpecWithItem no parameters",
+        ),
+        pytest.param(
+            api_v1.EnforcedServiceRuleSpecWithoutItem(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.Topic.APPLICATIONS,
+                parameter_form=partial(
+                    api_v1.Dictionary,
+                    elements={
+                        "key": api_v1.DictElement(
+                            api_v1.MonitoringState(title=api_v1.Localizable("valuespec title"))
+                        ),
+                    },
+                ),
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.ManualCheckParameterRulespec(
+                check_group_name="test_rulespec",
+                group=wato.RulespecGroupCheckParametersApplications,
+                title=lambda: _("rulespec title"),
+                parameter_valuespec=lambda: legacy_valuespecs.Dictionary(
+                    elements=[
+                        ("key", legacy_valuespecs.MonitoringState(title=_("valuespec title")))
+                    ],
+                ),
+                match_type="dict",
+            ),
+            id="EnforcedServiceRuleSpecWithoutItem",
+        ),
+        pytest.param(
+            api_v1.EnforcedServiceRuleSpecWithoutItem(
+                name="test_rulespec",
+                title=api_v1.Localizable("rulespec title"),
+                topic=api_v1.Topic.APPLICATIONS,
+                parameter_form=None,
+                help_text=api_v1.Localizable("help text"),
+            ),
+            legacy_rulespecs.ManualCheckParameterRulespec(
+                check_group_name="test_rulespec",
+                group=wato.RulespecGroupCheckParametersApplications,
+                title=lambda: _("rulespec title"),
+                parameter_valuespec=None,
+                match_type="dict",
+            ),
+            id="EnforcedServiceRuleSpecWithoutItem no parameters",
+        ),
     ],
 )
 def test_convert_to_legacy_rulespec(

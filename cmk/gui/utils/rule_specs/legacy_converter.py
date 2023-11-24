@@ -101,7 +101,9 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         check_group_name=to_convert.name,
         parameter_valuespec=partial(
             _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
-        ),
+        )
+        if to_convert.parameter_form is not None
+        else None,
         title=None if to_convert.title is None else partial(to_convert.title.localize, localizer),
         is_deprecated=False,
         match_type="dict",

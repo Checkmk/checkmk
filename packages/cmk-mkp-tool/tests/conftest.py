@@ -34,11 +34,8 @@ def fixture_path_config(tmp_path: Path) -> Iterable[PathConfig]:
         mib_dir=local_root / "mib_dir",
         mkp_rule_pack_dir=tmp_path / "mkp_rule_pack_dir",
         notifications_dir=local_root / "notifications_dir",
-        packages_enabled_dir=local_root / "enabled_packages_dir",
-        packages_local_dir=local_root / "optional_packages_dir",
-        packages_shipped_dir=tmp_path / "optional_packages_dir",
         pnp_templates_dir=local_root / "pnp_templates_dir",
-        tmp_dir=tmp_path / "tmp_dir",
+        manifests_dir=tmp_path / "tmp_dir",
         web_dir=local_root / "web_dir",
     )
 
@@ -49,11 +46,12 @@ def fixture_path_config(tmp_path: Path) -> Iterable[PathConfig]:
 
 
 @pytest.fixture(scope="function", name="package_store")
-def fixture_package_store(path_config: PathConfig) -> PackageStore:
+def fixture_package_store(tmp_path: Path) -> PackageStore:
+    local_root = tmp_path / "local_root"
     return PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
+        shipped_dir=tmp_path / "optional_packages_dir",
+        local_dir=local_root / "optional_packages_dir",
+        enabled_dir=local_root / "enabled_packages_dir",
     )
 
 

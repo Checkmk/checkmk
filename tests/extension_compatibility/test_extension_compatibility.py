@@ -6,7 +6,7 @@
 import contextlib
 import dataclasses
 import json
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Self
 
@@ -30,12 +30,19 @@ _EXPECTED_GUI_IMPORT_ERRORS: Mapping[_ExtensionName, frozenset[str]] = {
 }
 
 
+def _get_tested_extensions() -> Iterable[tuple[str, str]]:
+    return [
+        (url, url.rsplit("/", 1)[-1])
+        for url in (Path(__file__).resolve().parent / "current_extensions_under_test.txt")
+        .read_text()
+        .strip()
+        .splitlines()
+    ]
+
+
 @pytest.mark.parametrize(
     "extension_download_url",
-    (Path(__file__).resolve().parent / "current_extensions_under_test.txt")
-    .read_text()
-    .strip()
-    .splitlines(),
+    [pytest.param(url, id=name) for url, name in _get_tested_extensions()],
 )
 def test_extension_compatibility(
     site: Site,

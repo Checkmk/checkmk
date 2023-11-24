@@ -290,7 +290,7 @@ class RestApiClient:
                 query_params=query_params,
                 body=body,
                 headers=default_headers,
-                url_is_complete=url_is_complete,
+                url_is_complete=True,
             )
         return resp
 

@@ -660,7 +660,6 @@ def test_openapi_host_rename_on_invalid_hostname(
     clients.HostConfig.rename(
         host_name="foobar",
         new_name="foobar",
-        follow_redirects=False,
         expect_ok=False,
     ).assert_status_code(400)
 

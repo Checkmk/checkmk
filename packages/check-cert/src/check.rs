@@ -356,7 +356,6 @@ impl SimpleCheckResult {
 
 pub struct CheckResult<T> {
     summary: Summary,
-    #[allow(dead_code)]
     metrics: Option<Metric<T>>,
 }
 
@@ -385,7 +384,7 @@ impl<T> CheckResult<T> {
     }
 }
 
-impl From<SimpleCheckResult> for CheckResult<()> {
+impl From<SimpleCheckResult> for CheckResult<Real> {
     fn from(x: SimpleCheckResult) -> Self {
         Self {
             summary: x.summary,
@@ -398,6 +397,7 @@ impl From<SimpleCheckResult> for CheckResult<()> {
 pub struct Writer {
     state: State,
     summary: String,
+    metrics: String,
 }
 
 impl Writer {
@@ -423,6 +423,9 @@ impl Display for Writer {
         if !self.summary.is_empty() {
             out = format!("{} - {}", out, self.summary);
         }
+        if !self.metrics.is_empty() {
+            out = format!("{} | {}", out, self.metrics);
+        }
         write!(f, "{}", out)?;
         Ok(())
     }
@@ -433,12 +436,13 @@ impl From<SimpleCheckResult> for Writer {
         Self {
             state: check_result.summary.state,
             summary: check_result.summary.to_string(),
+            metrics: String::new(),
         }
     }
 }
 
-impl From<Vec<CheckResult<()>>> for Writer {
-    fn from(check_results: Vec<CheckResult<()>>) -> Self {
+impl From<Vec<CheckResult<Real>>> for Writer {
+    fn from(check_results: Vec<CheckResult<Real>>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.summary.state).max() {
                 Some(state) => *state,
@@ -448,6 +452,12 @@ impl From<Vec<CheckResult<()>>> for Writer {
                 .iter()
                 .map(|cr| &cr.summary)
                 .filter(|s| !s.text.is_empty())
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join(", "),
+            metrics: check_results
+                .iter()
+                .flat_map(|cr| &cr.metrics)
                 .map(|s| s.to_string())
                 .collect::<Vec<_>>()
                 .join(", "),
@@ -614,7 +624,7 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{SimpleCheckResult, Writer};
+    use super::{CheckResult, Metric, MetricBuilder, Real, SimpleCheckResult, Writer};
 
     fn s(s: &str) -> String {
         String::from(s)
@@ -713,6 +723,21 @@ mod test_writer_format {
                 Writer::from(vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
             ),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
+        );
+    }
+
+    fn m(name: &str, x: isize) -> Metric<Real> {
+        MetricBuilder::<Real>::new(name, Real::Integer(x)).build()
+    }
+
+    #[test]
+    fn test_merge_check_results_with_metrics() {
+        let cr1 = CheckResult::ok(s("summary 1"), m("m1", 13));
+        let cr2 = CheckResult::warn(s("summary 2"), m("m2", 37));
+        let cr3 = CheckResult::crit(s("summary 3"), m("m3", 42));
+        assert_eq!(
+            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );
     }
 }

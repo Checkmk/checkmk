@@ -278,8 +278,6 @@ class ErrorReporter:
         ("check", "datapower_mem", "checkgroup_parameters:memory_simple"),
         ("check", "f5_bigip_mem", "checkgroup_parameters:memory_simple"),
         ("check", "f5_bigip_mem_tmm", "checkgroup_parameters:memory_simple"),
-        ("check", "haproxy_frontend", "checkgroup_parameters:haproxy_frontend"),
-        ("check", "haproxy_server", "checkgroup_parameters:haproxy_server"),
         ("check", "hp_procurve_mem", "checkgroup_parameters:memory_simple"),
         ("check", "mongodb_replica_set", "checkgroup_parameters:mongodb_replica_set"),
         ("check", "mongodb_replica_set_election", "checkgroup_parameters:mongodb_replica_set"),

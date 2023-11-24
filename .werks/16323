@@ -1,0 +1,10 @@
+Title: isc_dhcpd: Fix AttributeError ('tuple' object has no attribute 'get')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1700834228
+Edition: cre
+Level: 1
+Version: 2.2.0p16
+
+This werk fixes the crash mentioned above.

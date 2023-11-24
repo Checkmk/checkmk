@@ -16,6 +16,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     Integer,
+    Migrate,
     Percentage,
     TextInput,
     Tuple,
@@ -58,54 +59,68 @@ def _item_spec_win_dhcp_pools():
     )
 
 
-def _parameter_valuespec_win_dhcp_pools() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "free_leases",
-                Alternative(
-                    title=_("Free leases levels"),
-                    elements=[
-                        Tuple(
-                            title=_("Free leases levels in percent"),
-                            elements=[
-                                Percentage(title=_("Warning if below"), default_value=10.0),
-                                Percentage(title=_("Critical if below"), default_value=5.0),
-                            ],
-                        ),
-                        Tuple(
-                            title=_("Absolute free leases levels"),
-                            elements=[
-                                Integer(title=_("Warning if below"), unit=_("free leases")),
-                                Integer(title=_("Critical if below"), unit=_("free leases")),
-                            ],
-                        ),
-                    ],
+def _parameter_valuespec_win_dhcp_pools() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "free_leases",
+                    Alternative(
+                        title=_("Free leases levels"),
+                        elements=[
+                            Tuple(
+                                title=_("Free leases levels in percent"),
+                                elements=[
+                                    Percentage(title=_("Warning if below"), default_value=10.0),
+                                    Percentage(title=_("Critical if below"), default_value=5.0),
+                                ],
+                            ),
+                            Tuple(
+                                title=_("Absolute free leases levels"),
+                                elements=[
+                                    Integer(title=_("Warning if below"), unit=_("free leases")),
+                                    Integer(title=_("Critical if below"), unit=_("free leases")),
+                                ],
+                            ),
+                        ],
+                    ),
                 ),
-            ),
-            (
-                "used_leases",
-                Alternative(
-                    title=_("Used leases levels"),
-                    elements=[
-                        Tuple(
-                            title=_("Used leases levels in percent"),
-                            elements=[
-                                Percentage(title=_("Warning if below")),
-                                Percentage(title=_("Critical if below")),
-                            ],
-                        ),
-                        Tuple(
-                            title=_("Absolute used leases levels"),
-                            elements=[
-                                Integer(title=_("Warning if below"), unit=_("used leases")),
-                                Integer(title=_("Critical if below"), unit=_("used leases")),
-                            ],
-                        ),
-                    ],
+                (
+                    "used_leases",
+                    Alternative(
+                        title=_("Used leases levels"),
+                        elements=[
+                            Tuple(
+                                title=_("Used leases levels in percent"),
+                                elements=[
+                                    Percentage(title=_("Warning if below")),
+                                    Percentage(title=_("Critical if below")),
+                                ],
+                            ),
+                            Tuple(
+                                title=_("Absolute used leases levels"),
+                                elements=[
+                                    Integer(title=_("Warning if below"), unit=_("used leases")),
+                                    Integer(title=_("Critical if below"), unit=_("used leases")),
+                                ],
+                            ),
+                        ],
+                    ),
                 ),
-            ),
-        ]
+            ]
+        ),
+        migrate=lambda p: p
+        if isinstance(p, dict)
+        else {
+            "free_leases": (
+                float(
+                    p[0],
+                ),
+                float(
+                    p[1],
+                ),
+            )
+        },
     )
 
 

@@ -7,7 +7,8 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.dhcp_pools import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-isc_dhcpd_default_levels = (15.0, 5.0)
+factory_settings["isc_dhcpd_default_levels"] = {"free_leases": (15.0, 5.0)}
+
 
 # Example output from agent:
 # <<<isc_dhcpd>>>
@@ -70,7 +71,7 @@ def parse_isc_dhcpd(info):
 
 
 def inventory_isc_dhcpd(parsed):
-    return [(item, "isc_dhcpd_default_levels") for item in parsed["pools"]]
+    return [(item, None) for item in parsed["pools"]]
 
 
 def check_isc_dhcpd(item, params, parsed):
@@ -105,4 +106,5 @@ check_info["isc_dhcpd"] = {
     "service_description": "DHCP Pool %s",
     "group": "win_dhcp_pools",
     "has_perfdata": True,
+    "default_levels_variable": "isc_dhcpd_default_levels",
 }

@@ -41,8 +41,8 @@ import itertools
 import operator
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Callable
+from urllib.parse import urlparse
 
-import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.bakery as bakery
@@ -576,9 +576,13 @@ def rename_host(params: Mapping[str, Any]) -> Response:
         )
 
     response = Response(status=302)
-    response.location = constructors.link_endpoint(
-        "cmk.gui.openapi.endpoints.host_config", "cmk/wait-for-completion", parameters={}
-    )["href"]
+    response.location = urlparse(
+        constructors.link_endpoint(
+            "cmk.gui.openapi.endpoints.host_config",
+            "cmk/wait-for-completion",
+            parameters={},
+        )["href"]
+    ).path
     return response
 
 
@@ -612,7 +616,7 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
 
     if job_is_active:
         response = Response(status=302)
-        response.location = request.url
+        response.location = urlparse(request.url).path
         return response
     return Response(status=204)
 

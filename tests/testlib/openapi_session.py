@@ -36,7 +36,7 @@ class RequestSessionRequestHandler(RequestHandler):
             params=query_params,
             data=body,
             headers=headers,
-            allow_redirects=False,
+            allow_redirects=True,
         )
         return Response(status_code=resp.status_code, body=resp.text.encode(), headers=resp.headers)
 
@@ -431,7 +431,11 @@ class CMKOpenApiSession(requests.Session):
         try:
             yield None
         except Redirect as redirect:
-            redirect_url = redirect.redirect_url
+            if not redirect.redirect_url.startswith("http://"):
+                redirect_url = f"http://{self.host}:{self.port}{redirect.redirect_url}"
+            else:
+                redirect_url = redirect.redirect_url
+
             while redirect_url:
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion timed out")

@@ -217,18 +217,13 @@ def create(
     installer: Installer,
     manifest: Manifest,
     path_config: PathConfig,
+    package_store: PackageStore,
     persisting_function: Callable[[str, bytes], object],
     *,
     version_packaged: str,
 ) -> None:
     if installer.is_installed(manifest.name):
         raise PackageError("Package already exists.")
-
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
 
     _raise_for_nonexisting_files(manifest, path_config)
     _validate_package_files(manifest, installer)
@@ -243,6 +238,7 @@ def edit(
     pacname: PackageName,
     new_manifest: Manifest,
     path_config: PathConfig,
+    package_store: PackageStore,
     persisting_function: Callable[[str, bytes], object],
     *,
     version_packaged: str,
@@ -254,11 +250,6 @@ def edit(
     if pacname != new_manifest.name:
         if installer.is_installed(new_manifest.name):
             raise PackageError("Cannot rename package: a package with that name already exists.")
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
 
     _raise_for_nonexisting_files(new_manifest, path_config)
     _validate_package_files(new_manifest, installer)
@@ -595,16 +586,12 @@ def id_to_mkp(
 def update_active_packages(
     installer: Installer,
     path_config: PathConfig,
+    package_store: PackageStore,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     site_version: str,
     parse_version: Callable[[str], ComparableVersion],
 ) -> tuple[Sequence[Manifest], Sequence[Manifest]]:
     """Update which of the enabled packages are actually active (installed)"""
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
     # order matters here (deinstall, then install)!
     return (
         _deinstall_inapplicable_active_packages(

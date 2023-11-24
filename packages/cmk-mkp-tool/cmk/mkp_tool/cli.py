@@ -47,6 +47,7 @@ _VERSION_STR = f"cmk-mkp-tool {__version__}"
 
 @dataclass(frozen=True)
 class SiteContext:
+    package_store: PackageStore
     callbacks: Mapping[PackagePart, PackageOperationCallbacks]
     post_package_change_actions: Callable[[Sequence[Manifest]], None]
     version: str
@@ -231,7 +232,7 @@ def _args_show_all(
 
 
 def _command_show_all(
-    _site_context: SiteContext,
+    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -240,13 +241,7 @@ def _command_show_all(
     if path_config is None:
         path_config = read_path_config()
 
-    stored_manifests = get_stored_manifests(
-        PackageStore(
-            shipped_dir=path_config.packages_shipped_dir,
-            local_dir=path_config.packages_local_dir,
-            enabled_dir=path_config.packages_enabled_dir,
-        )
-    )
+    stored_manifests = get_stored_manifests(site_context.package_store)
 
     if args.json:
         sys.stdout.write(f"{stored_manifests.model_dump_json()}\n")
@@ -268,7 +263,7 @@ def _args_show(
 
 
 def _command_show(
-    _site_context: SiteContext,
+    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -277,20 +272,17 @@ def _command_show(
     if path_config is None:
         path_config = read_path_config()
 
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
     manifest = extract_manifest(
-        package_store.read_bytes(_get_package_id(args.name, args.version, package_store))
+        site_context.package_store.read_bytes(
+            _get_package_id(args.name, args.version, site_context.package_store)
+        )
     )
     sys.stdout.write(f"{manifest.model_dump_json() if args.json else _to_text(manifest)}\n")
     return 0
 
 
 def _command_files(
-    _site_context: SiteContext,
+    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -299,13 +291,10 @@ def _command_files(
     if path_config is None:
         path_config = read_path_config()
 
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
     manifest = extract_manifest(
-        package_store.read_bytes(_get_package_id(args.name, args.version, package_store))
+        site_context.package_store.read_bytes(
+            _get_package_id(args.name, args.version, site_context.package_store)
+        )
     )
     sys.stdout.write(
         "".join(
@@ -324,7 +313,7 @@ def _args_list(
 
 
 def _command_list(
-    _site_context: SiteContext,
+    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -335,11 +324,7 @@ def _command_list(
 
     installer = Installer(path_config.installed_packages_dir)
     classified_manifests = get_classified_manifests(
-        PackageStore(
-            shipped_dir=path_config.packages_shipped_dir,
-            local_dir=path_config.packages_local_dir,
-            enabled_dir=path_config.packages_enabled_dir,
-        ),
+        site_context.package_store,
         installer,
     )
 
@@ -388,7 +373,7 @@ def _args_add(
 
 
 def _command_add(
-    _site_context: SiteContext,
+    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     persisting_function: Callable[[str, bytes], None],
@@ -403,11 +388,7 @@ def _command_add(
     except OSError as exc:
         raise PackageError from exc
 
-    manifest = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    ).store(file_content, persisting_function)
+    manifest = site_context.package_store.store(file_content, persisting_function)
 
     # these are the required arguments for `mkp enable`!
     sys.stdout.write(f"{manifest.name} {manifest.version}\n")
@@ -439,7 +420,7 @@ def _command_release(
 
 
 def _command_remove(
-    _site_context: SiteContext,
+    site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
     _persisting_function: Callable[[str, bytes], None],
@@ -448,11 +429,7 @@ def _command_remove(
     if path_config is None:
         path_config = read_path_config()
 
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
+    package_store = site_context.package_store
     package_id = _get_package_id(args.name, args.version, package_store)
     if package_id in package_store.get_enabled_manifests():
         raise PackageError("This package is enabled! Please disable it first.")
@@ -480,11 +457,7 @@ def _command_disable_outdated(
 
     disabled = disable_outdated(
         Installer(path_config.installed_packages_dir),
-        PackageStore(
-            shipped_dir=path_config.packages_shipped_dir,
-            local_dir=path_config.packages_local_dir,
-            enabled_dir=path_config.packages_enabled_dir,
-        ),
+        site_context.package_store,
         path_config,
         site_context.callbacks,
         site_version=site_context.version,
@@ -514,6 +487,7 @@ def _command_update_active(
     uninstalled, installed = update_active_packages(
         Installer(path_config.installed_packages_dir),
         path_config,
+        site_context.package_store,
         site_context.callbacks,
         site_version=site_context.version,
         parse_version=site_context.parse_version,
@@ -553,15 +527,10 @@ def _command_enable(
         path_config = read_path_config()
 
     installer = Installer(path_config.installed_packages_dir)
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
     installed = install(
         installer,
-        package_store,
-        _get_package_id(args.name, args.version, package_store),
+        site_context.package_store,
+        _get_package_id(args.name, args.version, site_context.package_store),
         path_config,
         site_context.callbacks,
         site_version=site_context.version,
@@ -582,18 +551,13 @@ def _command_disable(
     if path_config is None:
         path_config = read_path_config()
 
-    package_store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
     if (
         disabled := disable(
             Installer(path_config.installed_packages_dir),
-            package_store,
+            site_context.package_store,
             path_config,
             site_context.callbacks,
-            _get_package_id(args.name, args.version, package_store),
+            _get_package_id(args.name, args.version, site_context.package_store),
         )
     ) is not None:
         site_context.post_package_change_actions([disabled])
@@ -629,7 +593,7 @@ def _command_template(
         files={part: files_ for part in PackagePart if (files_ := unpackaged.get(part))},
     )
 
-    temp_file = path_config.tmp_dir / f"{args.name}.manifest.temp"
+    temp_file = path_config.manifests_dir / f"{args.name}.manifest.temp"
     temp_file.write_text(package.file_content())
     sys.stdout.write(
         f"Created '{temp_file}'.\n"
@@ -691,12 +655,7 @@ def _command_package(
         _logger.info("Successfully wrote package file")
         return 0
 
-    store = PackageStore(
-        shipped_dir=path_config.packages_shipped_dir,
-        local_dir=path_config.packages_local_dir,
-        enabled_dir=path_config.packages_enabled_dir,
-    )
-    manifest = store.store(
+    manifest = site_context.package_store.store(
         package_bytes,
         persisting_function,
     )
@@ -706,7 +665,7 @@ def _command_package(
     try:
         installed = install(
             installer,
-            store,
+            site_context.package_store,
             manifest.id,
             path_config,
             site_context.callbacks,

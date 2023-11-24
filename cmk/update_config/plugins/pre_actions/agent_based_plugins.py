@@ -16,8 +16,8 @@ from cmk.update_config.plugins.pre_actions.utils import (
     continue_on_incomp_local_file,
     disable_incomp_mkp,
     get_installer_and_package_map,
-    get_package_store,
     get_path_config,
+    PACKAGE_STORE,
 )
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
@@ -27,7 +27,7 @@ class PreUpdateAgentBasedPlugins(PreUpdateAction):
 
     def __call__(self, conflict_mode: ConflictMode) -> None:
         path_config = get_path_config()
-        package_store = get_package_store(path_config)
+        package_store = PACKAGE_STORE
         installer, package_map = get_installer_and_package_map(path_config)
         disabled_packages: set[PackageID] = set()
         for module_name, error in load_plugins_with_exceptions("cmk.base.plugins.agent_based"):

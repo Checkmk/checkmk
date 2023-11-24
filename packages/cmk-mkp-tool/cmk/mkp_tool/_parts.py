@@ -45,10 +45,7 @@ class PathConfig:
     # other paths
     installed_packages_dir: Path
     local_root: Path
-    packages_enabled_dir: Path
-    packages_local_dir: Path
-    packages_shipped_dir: Path
-    tmp_dir: Path
+    manifests_dir: Path
 
     @classmethod
     def from_toml(cls, content: str) -> Self:
@@ -74,10 +71,7 @@ class PathConfig:
             web_dir=Path(raw["web_dir"]),
             installed_packages_dir=Path(raw["installed_packages_dir"]),
             local_root=Path(raw["local_root"]),
-            packages_enabled_dir=Path(raw["packages_enabled_dir"]),
-            packages_local_dir=Path(raw["packages_local_dir"]),
-            packages_shipped_dir=Path(raw["packages_shipped_dir"]),
-            tmp_dir=Path(raw["tmp_dir"]),
+            manifests_dir=Path(raw["manifests_dir"]),
         )
 
     def get_path(self, part: PackagePart) -> Path:

@@ -89,7 +89,7 @@ def test_reload_gui_with_gui_part() -> None:
 
 
 def _create_simple_test_package(
-    installer: Installer, pacname: PackageName, path_config: PathConfig
+    installer: Installer, pacname: PackageName, path_config: PathConfig, package_store: PackageStore
 ) -> Manifest:
     _create_test_file(str(pacname), path_config)
 
@@ -101,6 +101,7 @@ def _create_simple_test_package(
             files={PackagePart.AGENT_BASED: [Path(pacname)]},
         ),
         path_config,
+        package_store,
         lambda s, b: Path(s).write_bytes(b),
         version_packaged="3.14.0p15",
     )
@@ -117,28 +118,34 @@ def test_get_stored_manifests(
     installer: Installer, path_config: PathConfig, package_store: PackageStore
 ) -> None:
     # Create package
-    expected_manifest = _create_simple_test_package(installer, PackageName("optional"), path_config)
+    expected_manifest = _create_simple_test_package(
+        installer, PackageName("optional"), path_config, package_store
+    )
 
     assert get_stored_manifests(package_store) == StoredManifests(
         local=[expected_manifest], shipped=[]
     )
 
 
-def test_create(installer: Installer, path_config: PathConfig) -> None:
+def test_create(installer: Installer, path_config: PathConfig, package_store: PackageStore) -> None:
     name = PackageName("aaa")
     assert not installer.is_installed(name)
-    _create_simple_test_package(installer, name, path_config)
+    _create_simple_test_package(installer, name, path_config, package_store)
     assert installer.is_installed(name)
 
 
-def test_create_twice(installer: Installer, path_config: PathConfig) -> None:
-    _create_simple_test_package(installer, PackageName("aaa"), path_config)
+def test_create_twice(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
+    _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
 
     with pytest.raises(PackageError):
-        _create_simple_test_package(installer, PackageName("aaa"), path_config)
+        _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
 
 
-def test_edit_not_existing(installer: Installer, path_config: PathConfig) -> None:
+def test_edit_not_existing(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
     new_manifest = mkp.manifest_template(
         name=PackageName("aaa"),
         version_packaged="3.14.0p15",
@@ -151,6 +158,7 @@ def test_edit_not_existing(installer: Installer, path_config: PathConfig) -> Non
             PackageName("aaa"),
             new_manifest,
             path_config,
+            package_store,
             lambda s, b: Path(s).write_bytes(b),
             version_packaged="3.14.0p15",
         )
@@ -162,14 +170,16 @@ def _get_asserted_manifest(installer: Installer, name: PackageName) -> Manifest:
     return m
 
 
-def test_edit(installer: Installer, path_config: PathConfig) -> None:
+def test_edit(installer: Installer, path_config: PathConfig, package_store: PackageStore) -> None:
     new_manifest = mkp.manifest_template(
         name=PackageName("aaa"),
         version_packaged="3.14.0p15",
         version=PackageVersion("2.0.0"),
     )
 
-    manifest = _create_simple_test_package(installer, PackageName("aaa"), path_config)
+    manifest = _create_simple_test_package(
+        installer, PackageName("aaa"), path_config, package_store
+    )
     assert manifest.version == PackageVersion("1.0.0")
 
     edit(
@@ -177,6 +187,7 @@ def test_edit(installer: Installer, path_config: PathConfig) -> None:
         PackageName("aaa"),
         new_manifest,
         path_config,
+        package_store,
         lambda s, b: Path(s).write_bytes(b),
         version_packaged="3.14.0p15",
     )
@@ -184,19 +195,22 @@ def test_edit(installer: Installer, path_config: PathConfig) -> None:
     assert _get_asserted_manifest(installer, PackageName("aaa")).version == PackageVersion("2.0.0")
 
 
-def test_edit_rename(installer: Installer, path_config: PathConfig) -> None:
+def test_edit_rename(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
     new_manifest = mkp.manifest_template(
         PackageName("bbb"),
         version_packaged="3.14.0p15",
     )
 
-    _create_simple_test_package(installer, PackageName("aaa"), path_config)
+    _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
 
     edit(
         installer,
         PackageName("aaa"),
         new_manifest,
         path_config,
+        package_store,
         lambda s, b: Path(s).write_bytes(b),
         version_packaged="3.14.0p15",
     )
@@ -205,13 +219,15 @@ def test_edit_rename(installer: Installer, path_config: PathConfig) -> None:
     assert installer.get_installed_manifest(PackageName("aaa")) is None
 
 
-def test_edit_rename_conflict(installer: Installer, path_config: PathConfig) -> None:
+def test_edit_rename_conflict(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
     new_manifest = mkp.manifest_template(
         PackageName("bbb"),
         version_packaged="3.14.0p15",
     )
-    _create_simple_test_package(installer, PackageName("aaa"), path_config)
-    _create_simple_test_package(installer, PackageName("bbb"), path_config)
+    _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
+    _create_simple_test_package(installer, PackageName("bbb"), path_config, package_store)
 
     with pytest.raises(PackageError):
         edit(
@@ -219,14 +235,19 @@ def test_edit_rename_conflict(installer: Installer, path_config: PathConfig) -> 
             PackageName("aaa"),
             new_manifest,
             path_config,
+            package_store,
             lambda s, b: Path(s).write_bytes(b),
             version_packaged="3.14.0p15",
         )
 
 
-def _make_mkp_bytes(installer: Installer, path_config: PathConfig) -> bytes:
+def _make_mkp_bytes(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> bytes:
     # Create package information
-    manifest = _create_simple_test_package(installer, PackageName("aaa"), path_config)
+    manifest = _create_simple_test_package(
+        installer, PackageName("aaa"), path_config, package_store
+    )
 
     # Build MKP in memory
     mkp_bytes = mkp.create_mkp(manifest, path_config.get_path, "3.14.0p15")
@@ -246,7 +267,7 @@ def test_install(
     _install(
         installer,
         package_store,
-        _make_mkp_bytes(installer, path_config),
+        _make_mkp_bytes(installer, path_config, package_store),
         path_config,
         {},
         allow_outdated=False,
@@ -265,8 +286,10 @@ def test_release_not_existing(installer: Installer) -> None:
         release(installer, PackageName("abc"), {})
 
 
-def test_release(installer: Installer, path_config: PathConfig) -> None:
-    _create_simple_test_package(installer, PackageName("aaa"), path_config)
+def test_release(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
+    _create_simple_test_package(installer, PackageName("aaa"), path_config, package_store)
     assert installer.is_installed(PackageName("aaa"))
     assert path_config.agent_based_plugins_dir.joinpath("aaa").exists()
 
@@ -276,8 +299,12 @@ def test_release(installer: Installer, path_config: PathConfig) -> None:
     assert path_config.agent_based_plugins_dir.joinpath("aaa").exists()
 
 
-def test_write_file(installer: Installer, path_config: PathConfig) -> None:
-    manifest = _create_simple_test_package(installer, PackageName("aaa"), path_config)
+def test_write_file(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
+    manifest = _create_simple_test_package(
+        installer, PackageName("aaa"), path_config, package_store
+    )
 
     mkp_bytes = mkp.create_mkp(manifest, path_config.get_path, "3.14.0p15")
 
@@ -296,8 +323,12 @@ def test_write_file(installer: Installer, path_config: PathConfig) -> None:
     assert info2["name"] == "aaa"
 
 
-def test_uninstall(installer: Installer, path_config: PathConfig) -> None:
-    manifest = _create_simple_test_package(installer, PackageName("aaa"), path_config)
+def test_uninstall(
+    installer: Installer, path_config: PathConfig, package_store: PackageStore
+) -> None:
+    manifest = _create_simple_test_package(
+        installer, PackageName("aaa"), path_config, package_store
+    )
     _uninstall(installer, path_config, {}, manifest)
     assert not installer.is_installed(PackageName("aaa"))
 

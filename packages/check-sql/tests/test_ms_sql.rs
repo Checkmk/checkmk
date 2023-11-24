@@ -45,8 +45,9 @@ fn is_instance_good(i: &InstanceEngine) -> bool {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_local() {
-    let mut client = api::create_local_client(None).await.unwrap();
-    let instances = api::detect_instance_engines(&mut client).await.unwrap();
+    let instances = api::detect_instance_engines(&Endpoint::default())
+        .await
+        .unwrap();
     let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
@@ -58,8 +59,9 @@ async fn test_find_all_instances_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
-    let mut client = api::create_local_client(None).await.unwrap();
-    let instances = api::detect_instance_engines(&mut client).await.unwrap();
+    let instances = api::detect_instance_engines(&Endpoint::default())
+        .await
+        .unwrap();
     let names: Vec<String> = [&instances.0[..], &instances.1[..]]
         .concat()
         .into_iter()
@@ -86,17 +88,9 @@ async fn test_validate_all_instances_local() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_connection() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        assert!(api::create_remote_client(
-            &endpoint.host,
-            check_sql::ms_sql::defaults::STANDARD_PORT,
-            api::Credentials::SqlServer {
-                user: &endpoint.user,
-                password: &endpoint.pwd,
-            },
-            None
-        )
-        .await
-        .is_ok());
+        assert!(api::create_client_from_config(&endpoint.make_ep())
+            .await
+            .is_ok());
     } else {
         panic!(
             "Skipping remote connection test: environment variable {} not set",
@@ -108,8 +102,9 @@ async fn test_remote_connection() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let instances = api::detect_instance_engines(&mut client).await.unwrap();
+        let instances = api::detect_instance_engines(&endpoint.make_ep())
+            .await
+            .unwrap();
         let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
         assert!(all.iter().all(is_instance_good));
         let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
@@ -132,8 +127,9 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let instances = api::detect_instance_engines(&mut client).await.unwrap();
+        let instances = api::detect_instance_engines(&endpoint.make_ep())
+            .await
+            .unwrap();
         let is = [&instances.0[..], &instances.1[..]].concat();
 
         let cfg = Config::from_string(&create_remote_config(endpoint))
@@ -525,8 +521,9 @@ async fn validate_availability_groups_section(instance: &InstanceEngine, endpoin
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
-        let instances = api::detect_instance_engines(&mut client).await.unwrap();
+        let instances = api::detect_instance_engines(&endpoint.make_ep())
+            .await
+            .unwrap();
         let is = [&instances.0[..], &instances.1[..]].clone().concat();
         let ms_sql = Config::from_string(
             r"---
@@ -568,7 +565,9 @@ mssql:
 #[tokio::test(flavor = "multi_thread")]
 async fn test_get_computer_name() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let mut client = tools::create_remote_client(&endpoint).await.unwrap();
+        let mut client = api::create_client_from_config(&endpoint.make_ep())
+            .await
+            .unwrap();
         let name = api::get_computer_name(&mut client).await.unwrap();
         assert!(name
             .clone()
@@ -724,6 +723,7 @@ fn test_run_as_plugin_with_config() {
     update_config_in_dir(&dir, "---\n");
     let exec_err = tools::run_bin()
         .env("MK_CONFDIR", dir.path())
+        .env("MK_LOGDIR", dir.path())
         .timeout(std::time::Duration::from_secs(5))
         .unwrap_err();
     let (stderr, code) = tools::get_bad_results(&exec_err).unwrap();

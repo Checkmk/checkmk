@@ -5,12 +5,14 @@
 use anyhow::Result;
 use assert_cmd::output::OutputError;
 use assert_cmd::Command;
+use check_sql::config::ms_sql::{Authentication, Connection, Endpoint};
 use check_sql::ms_sql::api::Client;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Output;
 use tempfile::NamedTempFile;
 use tempfile::{Builder, TempDir};
+use yaml_rust::YamlLoader;
 
 pub fn run_bin() -> Command {
     Command::cargo_bin("check-sql").unwrap()
@@ -35,6 +37,35 @@ pub struct SqlDbEndpoint {
     pub host: String,
     pub user: String,
     pub pwd: String,
+}
+
+impl SqlDbEndpoint {
+    pub fn make_ep(&self) -> Endpoint {
+        let a = format!(
+            r"
+authentication:
+  username: {}
+  password: {}
+  type: sql_server",
+            self.user, self.pwd
+        );
+        let auth =
+            Authentication::from_yaml(&YamlLoader::load_from_str(&a).unwrap()[0].clone()).unwrap();
+
+        let c = format!(
+            r"
+connection:
+  hostname: {}
+  ",
+            self.host
+        );
+
+        let conn = Connection::from_yaml(&YamlLoader::load_from_str(&c).unwrap()[0].clone())
+            .unwrap()
+            .unwrap();
+
+        Endpoint::new(&auth, &conn)
+    }
 }
 
 pub fn get_remote_sql_from_env_var() -> Option<SqlDbEndpoint> {
@@ -72,19 +103,6 @@ pub fn create_temp_process_dir() -> TempDir {
         .unwrap();
 
     dir
-}
-
-pub async fn create_remote_client(endpoint: &SqlDbEndpoint) -> Result<Client> {
-    crate::api::create_remote_client(
-        &endpoint.host,
-        1433,
-        crate::api::Credentials::SqlServer {
-            user: &endpoint.user,
-            password: &endpoint.pwd,
-        },
-        None,
-    )
-    .await
 }
 
 pub fn create_remote_config(end_point: &SqlDbEndpoint) -> NamedTempFile {

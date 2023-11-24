@@ -37,10 +37,10 @@ mssql:
     discovery: # optional
       detect: yes # optional, default
       all: yes # optional, default: yes / prio 1; ignore include/exclude if yes
-      include: ["foo", "bar"] # optional, no default /prio 2; use instance even if excluded
-      exclude: ["baz"] # optional, no default / prio 3
+      include: ["foo", "bar"] # optional, no default /prio 2; use only those instance, ignore exclude
+      exclude: ["baz"] # optional, no default / prio 3, exclude those instances from the list if all is no and include is empty
     mode: "port" # optional, default: "port" / can be "socket", "port" or "special"
-  instances: # optional
+  instances: # optional, list of instances to be monitored in addition/correction to the detected instances
     - sid: "INST1" # mandatory
       authentication: # optional, same as above
       connection: # optional,  same as above

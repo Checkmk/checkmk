@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::config::{self, ms_sql::AuthType, CheckConfig};
+use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint, CheckConfig};
 use crate::emit::header;
 use crate::ms_sql::queries;
 use anyhow::Result;
@@ -123,7 +123,95 @@ pub trait Column<'a> {
 }
 
 #[derive(Clone, Debug, Default)]
+pub struct InstanceEngineBuilder {
+    alias: Option<String>,
+    name: Option<String>,
+    id: Option<String>,
+    edition: Option<String>,
+    version: Option<String>,
+    cluster: Option<String>,
+    port: Option<u16>,
+    dynamic_port: Option<u16>,
+    endpoint: Option<Endpoint>,
+}
+
+impl InstanceEngineBuilder {
+    pub fn new() -> InstanceEngineBuilder {
+        InstanceEngineBuilder::default()
+    }
+
+    pub fn name<S: Into<String>>(mut self, name: S) -> Self {
+        self.name = Some(name.into());
+        self
+    }
+    pub fn alias<S: Into<String>>(mut self, alias: S) -> Self {
+        self.alias = Some(alias.into());
+        self
+    }
+    pub fn id<S: Into<String>>(mut self, id: S) -> Self {
+        self.id = Some(id.into());
+        self
+    }
+    pub fn edition<S: Into<String>>(mut self, edition: S) -> Self {
+        self.edition = Some(edition.into());
+        self
+    }
+    pub fn version<S: Into<String>>(mut self, version: S) -> Self {
+        self.version = Some(version.into());
+        self
+    }
+    pub fn cluster<S: Into<String>>(mut self, cluster: Option<S>) -> Self {
+        self.cluster = cluster.map(|s| s.into());
+        self
+    }
+    pub fn port<S: Into<u16>>(mut self, port: Option<S>) -> Self {
+        self.port = port.map(|s| s.into());
+        self
+    }
+    pub fn dynamic_port<S: Into<u16>>(mut self, port: Option<S>) -> Self {
+        self.dynamic_port = port.map(|s| s.into());
+        self
+    }
+    pub fn endpoint(mut self, endpoint: &Endpoint) -> Self {
+        self.endpoint = Some(endpoint.clone());
+        self
+    }
+
+    pub fn row(self, row: &Row) -> Self {
+        self.name(row.get_value_by_idx(0))
+            .id(row.get_value_by_idx(1))
+            .edition(row.get_value_by_idx(2))
+            .version(row.get_value_by_idx(3))
+            .cluster(row.get_optional_value_by_idx(4))
+            .port(
+                row.get_optional_value_by_idx(5)
+                    .and_then(|s| s.parse::<u16>().ok()),
+            )
+            .dynamic_port(
+                row.get_optional_value_by_idx(6)
+                    .and_then(|s| s.parse::<u16>().ok()),
+            )
+    }
+
+    pub fn build(self) -> InstanceEngine {
+        InstanceEngine {
+            alias: self.alias,
+            name: self.name.unwrap_or_default(),
+            id: self.id.unwrap_or_default(),
+            edition: self.edition.unwrap_or_default(),
+            version: self.version.unwrap_or_default(),
+            cluster: self.cluster,
+            port: self.port,
+            dynamic_port: self.dynamic_port,
+            available: None,
+            endpoint: self.endpoint.unwrap_or_default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct InstanceEngine {
+    pub alias: Option<String>,
     pub name: String,
     pub id: String,
     pub version: String,
@@ -132,6 +220,7 @@ pub struct InstanceEngine {
     port: Option<u16>,
     dynamic_port: Option<u16>,
     pub available: Option<bool>,
+    endpoint: Endpoint,
 }
 
 impl InstanceEngine {
@@ -147,6 +236,10 @@ impl InstanceEngine {
 
     pub fn mssql_name(&self) -> String {
         format!("MSSQL_{}", self.name)
+    }
+
+    pub fn full_name(&self) -> String {
+        format!("{}/{}", self.endpoint.hostname(), self.name)
     }
 
     pub async fn generate_sections(
@@ -202,7 +295,7 @@ impl InstanceEngine {
     /// Create a client for an Instance based on Config
     pub async fn create_client(
         &self,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         database: Option<String>,
     ) -> Result<Client> {
         let (auth, conn) = endpoint.split();
@@ -249,7 +342,7 @@ impl InstanceEngine {
     pub async fn generate_known_sections(
         &self,
         client: &mut Client,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         section: &Section,
     ) -> String {
         let sep = section.sep();
@@ -342,7 +435,7 @@ impl InstanceEngine {
 
     pub async fn generate_table_spaces_section(
         &self,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         databases: &Vec<String>,
         sep: char,
     ) -> String {
@@ -403,7 +496,7 @@ impl InstanceEngine {
 
     pub async fn generate_transaction_logs_section(
         &self,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         databases: &Vec<String>,
         sep: char,
     ) -> String {
@@ -436,7 +529,7 @@ impl InstanceEngine {
 
     pub async fn generate_datafiles_section(
         &self,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         databases: &Vec<String>,
         sep: char,
     ) -> String {
@@ -504,7 +597,7 @@ impl InstanceEngine {
     /// Todo(sk): write a test
     pub async fn generate_clusters_section(
         &self,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         databases: &Vec<String>,
         sep: char,
     ) -> String {
@@ -615,7 +708,7 @@ impl InstanceEngine {
     /// NOTE: uses ' ' instead of '\t' in error messages
     pub async fn generate_query_section(
         &self,
-        endpoint: &config::ms_sql::Endpoint,
+        endpoint: &Endpoint,
         section: &Section,
         query: Option<&str>,
     ) -> String {
@@ -1043,27 +1136,6 @@ impl<'a> Column<'a> for Row {
     }
 }
 
-impl From<&Row> for InstanceEngine {
-    /// NOTE: ignores any bad data in the row
-    /// try_get is used to not panic
-    fn from(row: &Row) -> Self {
-        InstanceEngine {
-            name: row.get_value_by_idx(0),
-            id: row.get_value_by_idx(1),
-            edition: row.get_value_by_idx(2),
-            version: row.get_value_by_idx(3),
-            cluster: row.get_optional_value_by_idx(4),
-            port: row
-                .get_optional_value_by_idx(5)
-                .and_then(|s| s.parse::<u16>().ok()),
-            dynamic_port: row
-                .get_optional_value_by_idx(6)
-                .and_then(|s| s.parse::<u16>().ok()),
-            available: None,
-        }
-    }
-}
-
 impl CheckConfig {
     pub async fn exec(&self) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
@@ -1091,24 +1163,31 @@ impl CheckConfig {
 
 /// Generate header for each section without any data
 async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
-    let instance_section_sep = get_section_separator(INSTANCE_SECTION_NAME).unwrap_or(' ');
+    let instances = discovery_instances(ms_sql)
+        .await?
+        .into_iter()
+        .filter(|i| ms_sql.is_instance_allowed(&i.name))
+        .collect::<Vec<InstanceEngine>>();
 
     let mut result = Section::new(INSTANCE_SECTION_NAME).to_header(); // as in old plugin
-    let sections = get_work_sections(ms_sql);
-    let all = get_instance_engines(&ms_sql.endpoint()).await?;
-    let instances: Vec<InstanceEngine> = [&all.0[..], &all.1[..]].concat();
-
+    let instance_section_sep = get_section_separator(INSTANCE_SECTION_NAME).unwrap_or(' ');
     for instance in &instances {
         result += &Section::new(INSTANCE_SECTION_NAME).to_header();
         result += &instance.generate_leading_entry(instance_section_sep);
     }
-    // TODO(sk): remove this reference code after fucntionality of [futures] will be verified
-    //for instance in &instances {
-    //    for section in &sections {
-    //        result += &instance.generate_section(&client, section).await;
-    //    }
-    //}
+
+    let sections = get_work_sections(ms_sql);
     Ok(result + &generate_result(&instances, &sections, ms_sql).await?)
+}
+
+async fn discovery_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<InstanceEngine>> {
+    let instances = if ms_sql.discovery().detect() {
+        get_instance_engines(&ms_sql.endpoint()).await?
+    } else {
+        Vec::new()
+    };
+
+    Ok(instances)
 }
 
 /// Intelligent async processing of the data
@@ -1131,7 +1210,7 @@ async fn generate_result(
     Ok(results.join(""))
 }
 
-async fn create_client_from_config(endpoint: &config::ms_sql::Endpoint) -> Result<Client> {
+pub async fn create_client_from_config(endpoint: &Endpoint) -> Result<Client> {
     let (auth, conn) = endpoint.split();
     let map_elapsed_to_anyhow = |e: tokio::time::error::Elapsed| {
         anyhow::anyhow!(
@@ -1208,7 +1287,7 @@ fn get_section_separator(name: &str) -> Option<char> {
 /// * `port` - Port of MS SQL server
 /// * `credentials` - defines connection type and credentials itself
 /// * `instance_name` - name of the instance to connect to
-pub async fn create_remote_client(
+async fn create_remote_client(
     host: &str,
     port: u16,
     credentials: Credentials<'_>,
@@ -1377,28 +1456,35 @@ pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Vec<Row>>
 }
 
 /// return all MS SQL instances installed
-pub async fn get_instance_engines(
-    endpoint: &config::ms_sql::Endpoint,
-) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
-    let mut client = create_client_from_config(endpoint).await?;
-    detect_instance_engines(&mut client).await
+async fn get_instance_engines(endpoint: &Endpoint) -> Result<Vec<InstanceEngine>> {
+    let all = detect_instance_engines(endpoint).await?;
+    Ok([&all.0[..], &all.1[..]].concat().to_vec())
 }
 
 /// [low level helper] return all MS SQL instances installed
 pub async fn detect_instance_engines(
-    client: &mut Client,
+    endpoint: &Endpoint,
 ) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
+    let mut client = create_client_from_config(endpoint).await?;
     Ok((
-        get_engines(client, &queries::get_instances_query()).await?,
-        get_engines(client, &queries::get_32bit_instances_query()).await?,
+        get_engines(&mut client, endpoint, &queries::get_instances_query()).await?,
+        get_engines(&mut client, endpoint, &queries::get_32bit_instances_query()).await?,
     ))
 }
-
-async fn get_engines(client: &mut Client, query: &str) -> Result<Vec<InstanceEngine>> {
+async fn get_engines(
+    client: &mut Client,
+    endpoint: &Endpoint,
+    query: &str,
+) -> Result<Vec<InstanceEngine>> {
     let rows = run_query(client, query).await?;
     Ok(rows[0]
         .iter()
-        .map(InstanceEngine::from)
+        .map(|r| {
+            InstanceEngineBuilder::new()
+                .row(r)
+                .endpoint(endpoint)
+                .build()
+        })
         .collect::<Vec<InstanceEngine>>()
         .to_vec())
 }
@@ -1478,10 +1564,8 @@ mssql:
     }
     #[test]
     fn test_generate_state_entry() {
-        let i = InstanceEngine {
-            name: "test_name".to_string(),
-            ..Default::default()
-        };
+        let i = InstanceEngineBuilder::new().name("test_name").build();
+
         assert_eq!(
             i.generate_state_entry(false, '.'),
             format!("MSSQL_test_name.state.0\n")

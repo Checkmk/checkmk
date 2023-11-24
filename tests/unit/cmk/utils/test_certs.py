@@ -207,7 +207,7 @@ def test_sign_csr_with_local_ca() -> None:
         start_date=datetime.now(),
         is_ca=True,
         issuer_signing_key=peters_mom.private_key,
-        issuer_name=X509Name.create(common_name=peters_mom.certificate.common_name),
+        issuer_name=peters_mom.certificate.subject,
     )
     peter_root_ca = RootCA(peter_cert, peter_key)
 

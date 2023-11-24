@@ -153,7 +153,12 @@ class CertificateWithPrivateKey(NamedTuple):
         )
 
     def sign_csr(self, csr: CertificateSigningRequest, expiry: relativedelta) -> Certificate:
-        """Create a certificate by signing a certificate signing request"""
+        """
+        Create a certificate by signing a certificate signing request.
+
+        Note that the resulting certificate is NOT a CA. This means we don't do intermediate
+        certificates at the moment.
+        """
         if not self.certificate.may_sign_certificates():
             raise ValueError("This certificate is not suitable for signing CSRs")
 
@@ -162,12 +167,13 @@ class CertificateWithPrivateKey(NamedTuple):
 
         # Add the DNS name of the subject CN as alternative name.
         # Our root CA has always done this, so for now this behavior is hardcoded.
-        sans = x509.DNSName(csr.subject.common_name).value
+        if (cn := csr.subject.common_name) is None:
+            raise ValueError("common name is expected for CSRs")
 
         return Certificate._create(
             subject_public_key=csr.public_key,
             subject_name=csr.subject,
-            subject_alt_dns_names=[sans],
+            subject_alt_dns_names=[x509.DNSName(cn).value],
             issuer_signing_key=self.private_key,
             issuer_name=self.certificate.subject,
             expiry=expiry,
@@ -387,7 +393,7 @@ class Certificate:
         return X509Name(self._cert.issuer)
 
     @property
-    def common_name(self) -> str:
+    def common_name(self) -> str | None:
         return self.subject.common_name
 
     @property
@@ -607,15 +613,17 @@ class X509Name:
         ]
 
     @property
-    def common_name(self) -> str:
+    def common_name(self) -> str | None:
         """Get the common name
         >>> print(X509Name.create(common_name="john", organizational_unit="corp").common_name)
         john
         """
         name = self._get_name_attributes(x509.oid.NameOID.COMMON_NAME)
-        if (count := len(name)) != 1:
-            raise ValueError(f"Expected to find exactly one common name, found {count}")
-        return name[0]
+        if (count := len(name)) == 1:
+            return name[0]
+        if count == 0:
+            return None
+        raise ValueError(f"Expected to find at most one common name, found {count}")
 
     @property
     def organization_name(self) -> str | None:

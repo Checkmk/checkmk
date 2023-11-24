@@ -28,12 +28,15 @@ from cmk.plugins.lib.robotmk_config import (
     ExecutionConfig,
     PiggybackHost,
     RccConfig,
+    RetryStrategy,
     RobotFrameworkConfig,
     SessionConfigCurrent,
     SessionConfigSpecificUser,
     SourceHost,
     SuiteConfig,
     UserSessionConfig,
+    WorkingDirectoryCleanupConfigMaxAge,
+    WorkingDirectoryCleanupConfigMaxExecutions,
 )
 
 _CONFIG = Config(
@@ -47,12 +50,13 @@ _CONFIG = Config(
             ),
             execution_config=ExecutionConfig(
                 n_attempts_max=1,
-                retry_strategy="Complete",
+                retry_strategy=RetryStrategy.COMPLETE,
                 execution_interval_seconds=600,
                 timeout=30,
             ),
             environment_config=EnvironmentConfigSystem.System,
             session_config=SessionConfigCurrent.Current,
+            working_directory_cleanup_config=WorkingDirectoryCleanupConfigMaxAge(MaxAgeSecs=3600),
             host=SourceHost.Source,
         ),
         "rcc": SuiteConfig(
@@ -61,7 +65,7 @@ _CONFIG = Config(
             ),
             execution_config=ExecutionConfig(
                 n_attempts_max=2,
-                retry_strategy="Incremental",
+                retry_strategy=RetryStrategy.INCREMENTAL,
                 execution_interval_seconds=600,
                 timeout=100,
             ),
@@ -75,6 +79,7 @@ _CONFIG = Config(
             session_config=SessionConfigSpecificUser(
                 SpecificUser=UserSessionConfig(user_name="synth_mon")
             ),
+            working_directory_cleanup_config=WorkingDirectoryCleanupConfigMaxAge(MaxAgeSecs=3600),
             host=SourceHost.Source,
         ),
         "piggyback": SuiteConfig(
@@ -83,7 +88,7 @@ _CONFIG = Config(
             ),
             execution_config=ExecutionConfig(
                 n_attempts_max=1,
-                retry_strategy="Complete",
+                retry_strategy=RetryStrategy.COMPLETE,
                 execution_interval_seconds=200,
                 timeout=100,
             ),
@@ -95,6 +100,9 @@ _CONFIG = Config(
                 )
             ),
             session_config=SessionConfigCurrent.Current,
+            working_directory_cleanup_config=WorkingDirectoryCleanupConfigMaxExecutions(
+                MaxExecutions=10
+            ),
             host=PiggybackHost(Piggyback="synth_mon_host"),
         ),
     },

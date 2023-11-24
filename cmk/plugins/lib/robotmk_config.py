@@ -5,19 +5,24 @@
 
 from collections.abc import Mapping, Sequence
 from enum import Enum
-from pathlib import Path
+from pathlib import PurePath
 
 from pydantic import BaseModel, Field
 
 
 class RobotFrameworkConfig(BaseModel, frozen=True):
-    robot_target: Path
+    robot_target: PurePath
     command_line_args: Sequence[str] = Field(default=[])
+
+
+class RetryStrategy(Enum):
+    INCREMENTAL = "Incremental"
+    COMPLETE = "Complete"
 
 
 class ExecutionConfig(BaseModel, frozen=True):
     n_attempts_max: int
-    retry_strategy: str
+    retry_strategy: RetryStrategy
     execution_interval_seconds: int
     timeout: int
 
@@ -27,9 +32,9 @@ class EnvironmentConfigSystem(Enum):
 
 
 class RccConfig(BaseModel, frozen=True):
-    robot_yaml_path: Path
+    robot_yaml_path: PurePath
     build_timeout: int
-    env_json_path: Path | None
+    env_json_path: PurePath | None
 
 
 class EnvironmentConfigRcc(BaseModel, frozen=True):
@@ -48,6 +53,14 @@ class SessionConfigSpecificUser(BaseModel, frozen=True):
     SpecificUser: UserSessionConfig
 
 
+class WorkingDirectoryCleanupConfigMaxAge(BaseModel, frozen=True):
+    MaxAgeSecs: int
+
+
+class WorkingDirectoryCleanupConfigMaxExecutions(BaseModel, frozen=True):
+    MaxExecutions: int
+
+
 class SourceHost(Enum):
     Source = "Source"
 
@@ -61,11 +74,14 @@ class SuiteConfig(BaseModel, frozen=True):
     execution_config: ExecutionConfig
     environment_config: EnvironmentConfigSystem | EnvironmentConfigRcc
     session_config: SessionConfigCurrent | SessionConfigSpecificUser
+    working_directory_cleanup_config: (
+        WorkingDirectoryCleanupConfigMaxAge | WorkingDirectoryCleanupConfigMaxExecutions
+    )
     host: SourceHost | PiggybackHost
 
 
 class Config(BaseModel, frozen=True):
-    working_directory: Path
-    results_directory: Path
-    rcc_binary_path: Path
+    working_directory: PurePath
+    results_directory: PurePath
+    rcc_binary_path: PurePath
     suites: Mapping[str, SuiteConfig]

@@ -1542,13 +1542,13 @@ class PainterCheckManpage(Painter):
         else:
             checktype = command[9:]
 
-        if (
-            page := man_pages.load_man_page(
-                # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
-                checktype.split()[0],
-                man_pages.get_man_page_dirs(),
-            )
-        ) is None:
+        man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
+        # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
+        name = checktype.split()[0]
+
+        try:
+            page = man_pages.parse_man_page(name, man_page_path_map[name])
+        except KeyError:
             return "", ""
 
         description = (

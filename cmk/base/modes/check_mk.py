@@ -445,13 +445,13 @@ def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
     all_check_manuals = {
-        maincheckify(n): k
-        for n, k in man_pages.all_man_pages(man_pages.get_man_page_dirs()).items()
+        n: man_pages.parse_man_page(n, p)
+        for n, p in man_pages.make_man_page_path_map(man_pages.get_man_page_dirs()).items()
     }
 
     all_checks: list[CheckPluginName | str] = [
         p.name for p in agent_based_register.iter_all_check_plugins()
-    ]  #
+    ]
 
     # active checks using both new and old API have to be collected
     all_checks += [
@@ -461,7 +461,10 @@ def mode_list_checks() -> None:
 
     for plugin_name in sorted(all_checks, key=str):
         ds_protocol = _get_ds_protocol(plugin_name)
-        title = _get_check_plugin_title(str(plugin_name), all_check_manuals)
+        try:
+            title = all_check_manuals[str(plugin_name)].title
+        except KeyError:
+            title = "(no man page present)"
 
         out.output(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
 
@@ -485,20 +488,6 @@ def _get_ds_protocol(check_name: CheckPluginName | str) -> str:
         return f"{tty.magenta}{'snmp':10}"
 
     return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
-
-
-def _get_check_plugin_title(
-    check_plugin_name: str,
-    all_man_pages: dict[str, str],
-) -> str:
-    man_filename = all_man_pages.get(check_plugin_name)
-    if man_filename is None:
-        return "(no man page present)"
-
-    try:
-        return cmk.utils.man_pages.get_title_from_man_page(Path(man_filename))
-    except MKGeneralException:
-        return "(failed to read man page)"
 
 
 modes.register(
@@ -1605,15 +1594,15 @@ modes.register(
 def mode_man(args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    man_page_dirs = man_pages.get_man_page_dirs()
+    man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
     if not args:
-        man_pages.print_man_page_table(man_page_dirs)
+        man_pages.print_man_page_table(man_page_path_map)
         return
 
-    if (man_page := man_pages.load_man_page(args[0], man_page_dirs)) is None:
+    if (man_page_path := man_page_path_map.get(args[0])) is None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
 
-    man_pages.ConsoleManPageRenderer(man_page).paint()
+    man_pages.ConsoleManPageRenderer(man_pages.parse_man_page(args[0], man_page_path)).paint()
 
 
 modes.register(

@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Reversible, Sequence
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
@@ -24,7 +24,6 @@ from typing import Final, TextIO
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -330,33 +329,21 @@ def _is_valid_basename(name: str) -> bool:
     return not name.startswith(".") and not name.endswith("~")
 
 
-def man_page_path(name: str, man_page_dirs: Iterable[Path]) -> Path | None:
-    if not _is_valid_basename(name):
-        return None
-
-    for basedir in man_page_dirs:
-        # check plugins pre 1.7 could have dots in them. be nice and find those.
-        p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
-        if p.exists():
-            return p
-    return None
+def make_man_page_path_map(man_page_dirs: Reversible[Path]) -> Mapping[str, Path]:
+    return {
+        name: Path(dir, name)
+        for source in reversed(man_page_dirs)
+        for dir, _subdirs, files in os.walk(source)
+        for name in files
+        if _is_valid_basename(name)
+    }
 
 
-def all_man_pages(man_page_dirs: Iterable[Path]) -> Mapping[str, str]:
-    manuals = {}
-    for basedir in man_page_dirs:
-        if basedir.exists():
-            for file_path in basedir.iterdir():
-                if file_path.name not in manuals and _is_valid_basename(file_path.name):
-                    manuals[file_path.name] = str(file_path)
-    return manuals
-
-
-def print_man_page_table(man_page_dirs: Iterable[Path]) -> None:
+def print_man_page_table(man_page_path_map: Mapping[str, Path]) -> None:
     table = []
-    for name, path in sorted(all_man_pages(man_page_dirs).items()):
+    for name, path in sorted(man_page_path_map.items()):
         try:
-            table.append([name, get_title_from_man_page(Path(path))])
+            table.append([name, get_title_from_man_page(path)])
         except MKGeneralException as e:
             sys.stderr.write(str(f"ERROR: {e}"))
 
@@ -371,10 +358,11 @@ def get_title_from_man_page(path: Path) -> str:
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
-def load_man_page_catalog(man_page_dirs: Iterable[Path]) -> ManPageCatalog:
+def load_man_page_catalog(man_page_dirs: Reversible[Path]) -> ManPageCatalog:
+    man_page_path_map = make_man_page_path_map(man_page_dirs)
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
-    for name, path in all_man_pages(man_page_dirs).items():
-        parsed = _parse_man_page(name, Path(path))
+    for name, path in man_page_path_map.items():
+        parsed = parse_man_page(name, path)
 
         if parsed.catalog[0] == "os":
             for agent in parsed.agents:
@@ -503,7 +491,7 @@ def _run_dialog(args: Sequence[str]) -> tuple[bool, bytes]:
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def _parse_man_page(name: str, path: Path) -> ManPage:
+def parse_man_page(name: str, path: Path) -> ManPage:
     with path.open(encoding="utf-8") as fp:
         content = fp.read()
 
@@ -531,12 +519,6 @@ def _parse_man_page(name: str, path: Path) -> ManPage:
             content=content,
             msg=str(msg),
         )
-
-
-# TODO: accepting the path here would make things a bit easier.
-def load_man_page(name: str, man_page_dirs: Iterable[Path]) -> ManPage | None:
-    path = man_page_path(name, man_page_dirs)
-    return None if path is None else _parse_man_page(name, path)
 
 
 def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
@@ -871,12 +853,15 @@ def main() -> None:
     _args = _parser.parse_args()
     # seriously?! Do we still need this? Why? This stinks. Maybe we can clean it up now.
     cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / "checkman"
-    man_page_dirs = get_man_page_dirs()
+    man_page_path_map = make_man_page_path_map(get_man_page_dirs())
     for check in _args.checks:
-        if (man_page := load_man_page(check, man_page_dirs)) is None:
+        try:
+            man_page_path = man_page_path_map[check]
+        except KeyError:
             print(f"No manpage for {check}. Sorry.")
             continue
 
+        man_page = parse_man_page(check, man_page_path)
         try:
             print("----------------------------------------", check)
             if _args.renderer == "console":

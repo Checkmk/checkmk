@@ -1680,14 +1680,14 @@ class AutomationGetCheckInformation(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> GetCheckInformationResult:
-        manuals = man_pages.all_man_pages(man_pages.get_man_page_dirs())
+        man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
 
         plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():
             plugin_info = plugin_infos.setdefault(
                 str(plugin.name),
                 {
-                    "title": self._get_title(manuals, plugin.name),
+                    "title": self._get_title(man_page_path_map, plugin.name),
                     "name": str(plugin.name),
                     "service_description": str(plugin.service_name),
                 },
@@ -1703,16 +1703,18 @@ class AutomationGetCheckInformation(Automation):
         return GetCheckInformationResult(plugin_infos)
 
     @staticmethod
-    def _get_title(manuals: Mapping[str, str], plugin_name: CheckPluginName) -> str:
-        manfile = manuals.get(str(plugin_name))
-        if manfile:
-            try:
-                return cmk.utils.man_pages.get_title_from_man_page(Path(manfile))
-            except Exception as e:
-                if cmk.utils.debug.enabled():
-                    raise
-                raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
-        return str(plugin_name)
+    def _get_title(man_page_path_map: Mapping[str, Path], plugin_name: CheckPluginName) -> str:
+        try:
+            manfile = man_page_path_map[str(plugin_name)]
+        except KeyError:
+            return str(plugin_name)
+
+        try:
+            return cmk.utils.man_pages.get_title_from_man_page(manfile)
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKAutomationError(f"Failed to parse man page '{plugin_name}': {e}")
 
 
 automations.register(AutomationGetCheckInformation())

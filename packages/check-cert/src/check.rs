@@ -88,80 +88,51 @@ where
 }
 
 #[derive(Debug)]
-pub struct LowerLevels<T> {
-    pub levels: Levels<T>,
+pub enum LevelsStrategy {
+    Upper,
+    Lower,
+}
+
+impl LevelsStrategy {
+    pub fn cmp<T: PartialOrd>(&self, x: &T, y: &T) -> bool {
+        match self {
+            Self::Upper => PartialOrd::ge(x, y),
+            Self::Lower => PartialOrd::lt(x, y),
+        }
+    }
 }
 
 #[derive(Debug)]
-pub struct UpperLevels<T> {
+pub struct LevelsChecker<T> {
+    pub strategy: LevelsStrategy,
     pub levels: Levels<T>,
 }
 
-impl<T> LowerLevels<T>
+impl<T> LevelsChecker<T>
 where
     T: PartialOrd,
 {
-    pub fn try_new(levels: Levels<T>) -> Result<Self, Box<dyn std::error::Error>> {
-        if levels.warn >= levels.crit {
-            Ok(Self { levels })
-        } else {
-            Err(Box::from("bad values"))
-        }
+    pub fn try_new(
+        strategy: LevelsStrategy,
+        levels: Levels<T>,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        strategy
+            .cmp(&levels.crit, &levels.warn)
+            .then_some(Self { strategy, levels })
+            .ok_or(Box::from("bad values"))
     }
 
-    fn evaluate(&self, value: &T) -> State {
-        if value < &self.levels.crit {
-            State::Crit
-        } else if value < &self.levels.warn {
-            State::Warn
-        } else {
-            State::Ok
-        }
-    }
-}
-
-impl<T> UpperLevels<T>
-where
-    T: PartialOrd,
-{
-    pub fn try_new(levels: Levels<T>) -> Result<Self, Box<dyn std::error::Error>> {
-        if levels.crit >= levels.warn {
-            Ok(Self { levels })
-        } else {
-            Err(Box::from("bad values"))
-        }
-    }
-
-    fn evaluate(&self, value: &T) -> State {
-        if value >= &self.levels.crit {
-            State::Crit
-        } else if value >= &self.levels.warn {
-            State::Warn
-        } else {
-            State::Ok
-        }
-    }
-}
-
-pub trait LevelsCheck<T> {
-    fn check(&self, value: &T, summary: String) -> SimpleCheckResult;
-}
-
-impl<T> LevelsCheck<T> for LowerLevels<T>
-where
-    T: PartialOrd,
-{
     fn check(&self, value: &T, summary: String) -> SimpleCheckResult {
-        SimpleCheckResult::new(self.evaluate(value), summary)
-    }
-}
-
-impl<T> LevelsCheck<T> for UpperLevels<T>
-where
-    T: PartialOrd,
-{
-    fn check(&self, value: &T, summary: String) -> SimpleCheckResult {
-        SimpleCheckResult::new(self.evaluate(value), summary)
+        let evaluate = |value: &T| -> State {
+            if self.strategy.cmp(value, &self.levels.crit) {
+                State::Crit
+            } else if self.strategy.cmp(value, &self.levels.warn) {
+                State::Warn
+            } else {
+                State::Ok
+            }
+        };
+        SimpleCheckResult::new(evaluate(value), summary)
     }
 }
 
@@ -349,7 +320,10 @@ impl SimpleCheckResult {
         Self::new(State::Unknown, summary)
     }
 
-    pub fn from_levels<T>(levels: &impl LevelsCheck<T>, value: &T, summary: String) -> Self {
+    pub fn from_levels<T>(levels: &LevelsChecker<T>, value: &T, summary: String) -> Self
+    where
+        T: PartialOrd,
+    {
         levels.check(value, summary)
     }
 }

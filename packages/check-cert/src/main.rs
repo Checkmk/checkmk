@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{Levels, LowerLevels, SimpleCheckResult, UpperLevels, Writer};
+use check_cert::check::{Levels, LevelsChecker, LevelsStrategy, SimpleCheckResult, Writer};
 use check_cert::{checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
@@ -62,13 +62,15 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let Ok(not_after_levels) = LowerLevels::try_new(
+    let Ok(not_after_levels) = LevelsChecker::try_new(
+        LevelsStrategy::Lower,
         Levels::from(&[args.not_after_warn, args.not_after_crit]).map(&|v| v * Duration::DAY),
     ) else {
         Writer::bail_out("invalid args: not after crit level larger than warn");
     };
 
-    let Ok(response_time_levels) = UpperLevels::try_new(
+    let Ok(response_time_levels) = LevelsChecker::try_new(
+        LevelsStrategy::Upper,
         Levels::from(&[args.response_time_warn, args.response_time_crit])
             .map(&|v| v * Duration::MILLISECOND),
     ) else {

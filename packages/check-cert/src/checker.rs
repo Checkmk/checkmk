@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{LowerLevels, SimpleCheckResult};
+use crate::check::{LevelsChecker, SimpleCheckResult};
 use time::Duration;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
@@ -67,7 +67,7 @@ pub fn check_details_issuer(
 
 pub fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
-    levels: LowerLevels<Duration>,
+    levels: LevelsChecker<Duration>,
     not_after: ASN1Time,
 ) -> SimpleCheckResult {
     match time_to_expiration {

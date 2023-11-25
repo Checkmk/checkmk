@@ -833,7 +833,7 @@ def main_url(args: argparse.Namespace) -> None:
 
 
 def main_delete(args: argparse.Namespace) -> None:
-    werks = [WerkId(i) for i in args.id] or [get_last_werk()]
+    werks = [WerkId(i) for i in args.id]
 
     for werk_id in werks:
         if not werk_exists(werk_id):

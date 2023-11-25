@@ -444,7 +444,10 @@ modes.register(
 def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
+    all_check_manuals = {
+        maincheckify(n): k
+        for n, k in man_pages.all_man_pages(man_pages.get_man_page_dirs()).items()
+    }
 
     all_checks: list[CheckPluginName | str] = [
         p.name for p in agent_based_register.iter_all_check_plugins()
@@ -1602,10 +1605,11 @@ modes.register(
 def mode_man(args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
+    man_page_dirs = man_pages.get_man_page_dirs()
     if args:
-        man_pages.ConsoleManPageRenderer(args[0]).paint()
+        man_pages.ConsoleManPageRenderer(args[0], man_page_dirs).paint()
     else:
-        man_pages.print_man_page_table()
+        man_pages.print_man_page_table(man_page_dirs)
 
 
 modes.register(
@@ -1641,7 +1645,7 @@ modes.register(
 def mode_browse_man() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    man_pages.print_man_page_browser()
+    man_pages.print_man_page_browser(man_pages.get_man_page_dirs())
 
 
 modes.register(

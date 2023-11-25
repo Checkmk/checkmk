@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import pytest
@@ -21,17 +21,17 @@ from cmk.base.plugins.server_side_calls import load_active_checks
 ManPages = Mapping[str, man_pages.ManPage | None]
 
 
-@pytest.fixture(autouse=True)
-def patch_man_page_dir_paths(monkeypatch, tmp_path):
-    monkeypatch.setattr(
-        man_pages,
-        "_get_man_page_dirs",
-        lambda: [
-            tmp_path,
-            Path(cce_path(), "checkman"),
-            Path(cmk_path(), "checkman"),
-        ],
-    )
+def man_page_dirs_for_test(*tmp_paths: Path) -> Iterable[Path]:
+    return [
+        *tmp_paths,
+        Path(cce_path(), "checkman"),
+        Path(cmk_path(), "checkman"),
+    ]
+
+
+@pytest.fixture(scope="module", name="catalog")
+def get_catalog() -> man_pages.ManPageCatalog:
+    return man_pages.load_man_page_catalog(man_page_dirs_for_test())
 
 
 @pytest.fixture(scope="module", name="all_pages")
@@ -46,27 +46,25 @@ def get_all_pages() -> ManPages:
     }
 
 
-@pytest.fixture(scope="module", name="catalog")
-def get_catalog() -> man_pages.ManPageCatalog:
-    return man_pages.load_man_page_catalog()
-
-
-def test_man_page_path_only_shipped() -> None:
-    assert man_pages.man_page_path("if64") == Path(cmk_path()) / "checkman" / "if64"
-    assert man_pages.man_page_path("not_existant") is None
+def test_man_page_path_only_shipped(tmp_path: Path) -> None:
+    assert (
+        man_pages.man_page_path("if64", man_page_dirs_for_test(tmp_path))
+        == Path(cmk_path()) / "checkman" / "if64"
+    )
+    assert man_pages.man_page_path("not_existant", man_page_dirs_for_test(tmp_path)) is None
 
 
 def test_man_page_path_both_dirs(tmp_path: Path) -> None:
     f1 = tmp_path / "file1"
     f1.write_text("x", encoding="utf-8")
 
-    assert man_pages.man_page_path("file1") == tmp_path / "file1"
-    assert man_pages.man_page_path("file2") is None
+    assert man_pages.man_page_path("file1", man_page_dirs_for_test(tmp_path)) == tmp_path / "file1"
+    assert man_pages.man_page_path("file2", man_page_dirs_for_test(tmp_path)) is None
 
     f2 = tmp_path / "if"
     f2.write_text("x", encoding="utf-8")
 
-    assert man_pages.man_page_path("if") == tmp_path / "if"
+    assert man_pages.man_page_path("if", man_page_dirs_for_test(tmp_path)) == tmp_path / "if"
 
 
 def test_all_manpages_migrated(all_pages: ManPages) -> None:
@@ -81,7 +79,7 @@ def test_all_man_pages(tmp_path: Path) -> None:
     (tmp_path / "asd~").write_text("", encoding="utf-8")
     (tmp_path / "if").write_text("", encoding="utf-8")
 
-    pages = man_pages.all_man_pages()
+    pages = man_pages.all_man_pages(man_page_dirs_for_test(tmp_path))
 
     assert len(pages) > 1241
     assert ".asd" not in pages
@@ -96,8 +94,8 @@ def test_load_all_man_pages(all_pages: ManPages) -> None:
         assert isinstance(man_page, man_pages.ManPage)
 
 
-def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
-    man_pages.print_man_page_table()
+def test_print_man_page_table(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    man_pages.print_man_page_table(man_page_dirs_for_test(tmp_path))
     out, err = capsys.readouterr()
     assert err == ""
 
@@ -204,12 +202,12 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
 # TODO: print_man_page_browser()
 
 
-def test_load_man_page_not_existing() -> None:
-    assert man_pages.load_man_page("not_existing") is None
+def test_load_man_page_not_existing(tmp_path: Path) -> None:
+    assert man_pages.load_man_page("not_existing", man_page_dirs_for_test(tmp_path)) is None
 
 
-def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str]) -> None:
-    renderer = man_pages.NowikiManPageRenderer("if64")
+def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    renderer = man_pages.NowikiManPageRenderer("if64", man_page_dirs_for_test(tmp_path))
     index_entry = renderer.index_entry()
     out, err = capsys.readouterr()
     assert out == ""
@@ -219,8 +217,8 @@ def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str]) -> None
     assert "[check_if64|" in index_entry
 
 
-def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str]) -> None:
-    renderer = man_pages.NowikiManPageRenderer("if64")
+def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    renderer = man_pages.NowikiManPageRenderer("if64", man_page_dirs_for_test(tmp_path))
     content = renderer.render()
     out, err = capsys.readouterr()
     assert out == ""
@@ -232,8 +230,8 @@ def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str]) -> No
 
 
 @pytest.mark.skip("skip this until we don't need the capturing foo anymore")
-def test_print_man_page(capsys: pytest.CaptureFixture[str]) -> None:
-    man_pages.ConsoleManPageRenderer("if64").paint()
+def test_print_man_page(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    man_pages.ConsoleManPageRenderer("if64", man_page_dirs_for_test(tmp_path)).paint()
     out, err = capsys.readouterr()
     assert err == ""
 
@@ -241,9 +239,9 @@ def test_print_man_page(capsys: pytest.CaptureFixture[str]) -> None:
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages(all_pages: ManPages) -> None:
+def test_missing_catalog_entries_of_man_pages(all_pages: ManPages, tmp_path: Path) -> None:
     found_catalog_entries_from_man_pages: set[str] = set()
-    for name in man_pages.all_man_pages():
+    for name in man_pages.all_man_pages(man_page_dirs_for_test(tmp_path)):
         man_page = all_pages[name]
         assert man_page is not None
         found_catalog_entries_from_man_pages.update(man_page.catalog)

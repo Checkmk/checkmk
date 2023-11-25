@@ -32,7 +32,7 @@ from cmk.utils.licensing.usage import (
     save_extensions,
     try_update_license_usage,
 )
-from cmk.utils.man_pages import load_man_page_catalog, ManPageCatalogPath
+from cmk.utils.man_pages import get_man_page_dirs, load_man_page_catalog, ManPageCatalogPath
 
 
 def test_try_update_license_usage() -> None:
@@ -795,7 +795,7 @@ def test_cloud_service_prefixes_up_to_date():
             catalog_path[0] == "cloud" and catalog_path[1] not in not_cloud_for_licensing_purposes
         )
 
-    catalog = load_man_page_catalog()
+    catalog = load_man_page_catalog(get_man_page_dirs())
     cloud_man_pages = [
         manpage
         for catalog_path, man_pages in catalog.items()

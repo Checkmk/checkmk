@@ -833,21 +833,24 @@ def main_url(args: argparse.Namespace) -> None:
 
 
 def main_delete(args: argparse.Namespace) -> None:
-    werks = args.ids or [get_last_werk()]
+    werks = [WerkId(i) for i in args.id] or [get_last_werk()]
 
     for werk_id in werks:
         if not werk_exists(werk_id):
             bail_out(f"There is no werk {format_werk_id(werk_id)}.")
 
-        werk_to_be_removed_title = load_werk(werk_id).content.metadata["title"]
-        if os.system("git rm -f {werk_id}") == 0:  # nosec
-            sys.stdout.write(
-                f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n"
-            )
-            my_ids = get_werk_ids()
-            my_ids.append(werk_id)
-            store_werk_ids(my_ids)
-            sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
+        werk_path = werk_path_by_id(werk_id)
+        werk_to_be_removed_title = load_werk(werk_path).content.metadata["title"]
+        try:
+            subprocess.check_call(["git", "rm", "-f", f"{werk_path}"])
+        except subprocess.CalledProcessError as exc:
+            sys.stdout.write(f"Error removing werk file: {exc}.\n")
+            continue
+        sys.stdout.write(f"Deleted werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
+        my_ids = get_werk_ids()
+        my_ids.append(werk_id)
+        store_werk_ids(my_ids)
+        sys.stdout.write(f"You lucky bastard now own the werk ID {format_werk_id(werk_id)}.\n")
 
 
 def grep(line: str, kw: str, n: int) -> str | None:

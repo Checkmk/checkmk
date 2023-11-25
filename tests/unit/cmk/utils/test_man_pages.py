@@ -21,6 +21,26 @@ from cmk.base.plugins.server_side_calls import load_active_checks
 ManPages = Mapping[str, man_pages.ManPage | None]
 
 
+_IF64_MAN_PAGE = man_pages.ManPage(
+    name="if64",
+    path="/omd/sites/heute/share/check_mk/checkman/if64",
+    title="Monitor Network Interfaces via Standard MIB Using 64-Bit Counters",
+    agents=["snmp"],
+    catalog=["hw", "network", "generic"],
+    license="GPLv2",
+    distribution="check_mk",
+    description=(
+        "This check does the same as {interfaces} but uses 64-bit counters from\nthe {IF-MIB}"
+        " {.1.3.6.1.2.1.31.1.1.1}. This allows to correctly\nmonitor switch ports with a traffic"
+        " of more then 2GB per check interval.\n\nAlso, this check can use {ifAlias} instead if"
+        " ..."  # shortened for this test
+    ),
+    item=None,
+    discovery=None,
+    cluster=None,
+)
+
+
 def man_page_dirs_for_test(*tmp_paths: Path) -> Iterable[Path]:
     return [
         *tmp_paths,
@@ -207,7 +227,7 @@ def test_load_man_page_not_existing(tmp_path: Path) -> None:
 
 
 def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    renderer = man_pages.NowikiManPageRenderer("if64", man_page_dirs_for_test(tmp_path))
+    renderer = man_pages.NowikiManPageRenderer(_IF64_MAN_PAGE)
     index_entry = renderer.index_entry()
     out, err = capsys.readouterr()
     assert out == ""
@@ -218,7 +238,7 @@ def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str], tmp_pat
 
 
 def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    renderer = man_pages.NowikiManPageRenderer("if64", man_page_dirs_for_test(tmp_path))
+    renderer = man_pages.NowikiManPageRenderer(_IF64_MAN_PAGE)
     content = renderer.render()
     out, err = capsys.readouterr()
     assert out == ""
@@ -231,7 +251,7 @@ def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str], tmp_p
 
 @pytest.mark.skip("skip this until we don't need the capturing foo anymore")
 def test_print_man_page(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    man_pages.ConsoleManPageRenderer("if64", man_page_dirs_for_test(tmp_path)).paint()
+    man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).paint()
     out, err = capsys.readouterr()
     assert err == ""
 

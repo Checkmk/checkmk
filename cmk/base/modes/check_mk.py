@@ -1606,10 +1606,14 @@ def mode_man(args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_dirs = man_pages.get_man_page_dirs()
-    if args:
-        man_pages.ConsoleManPageRenderer(args[0], man_page_dirs).paint()
-    else:
+    if not args:
         man_pages.print_man_page_table(man_page_dirs)
+        return
+
+    if (man_page := man_pages.load_man_page(args[0], man_page_dirs)) is None:
+        raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
+
+    man_pages.ConsoleManPageRenderer(man_page).paint()
 
 
 modes.register(

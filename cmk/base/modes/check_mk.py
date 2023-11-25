@@ -1649,7 +1649,7 @@ modes.register(
 def mode_browse_man() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    man_pages.print_man_page_browser(man_pages.get_man_page_dirs())
+    man_pages.print_man_page_browser(man_pages.load_man_page_catalog(man_pages.get_man_page_dirs()))
 
 
 modes.register(

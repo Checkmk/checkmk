@@ -386,11 +386,9 @@ def load_man_page_catalog(man_page_dirs: Iterable[Path]) -> ManPageCatalog:
 
 
 def print_man_page_browser(
-    man_page_dirs: Iterable[Path],
+    catalog: ManPageCatalog,
     cat: ManPageCatalogPath = (),
 ) -> None:
-    catalog = load_man_page_catalog(man_page_dirs)
-
     entries = {man_page.name: man_page for man_page in catalog.get(cat, [])}
     subtree_names = _manpage_catalog_subtree_names(catalog, cat)
 
@@ -403,7 +401,7 @@ def print_man_page_browser(
         _manpage_browse_entries(cat, entries)
 
     elif subtree_names:
-        _manpage_browser_folder(catalog, cat, subtree_names, man_page_dirs)
+        _manpage_browser_folder(catalog, cat, subtree_names)
 
 
 def _manpage_catalog_subtree_names(
@@ -425,7 +423,6 @@ def _manpage_browser_folder(
     catalog: ManPageCatalog,
     cat: ManPageCatalogPath,
     subtrees: Iterable[str],
-    man_page_dirs: Iterable[Path],
 ) -> None:
     titles = []
     for e in subtrees:
@@ -449,7 +446,7 @@ def _manpage_browser_folder(
         if x[0]:
             index = int(x[1])
             subcat = titles[index - 1][1]
-            print_man_page_browser(man_page_dirs, cat + (subcat,))
+            print_man_page_browser(catalog, cat + (subcat,))
         else:
             break
 

@@ -391,7 +391,7 @@ def print_man_page_browser(
 ) -> None:
     catalog = load_man_page_catalog(man_page_dirs)
 
-    entries = catalog.get(cat, [])
+    entries = {man_page.name: man_page for man_page in catalog.get(cat, [])}
     subtree_names = _manpage_catalog_subtree_names(catalog, cat)
 
     if entries and subtree_names:
@@ -400,7 +400,7 @@ def print_man_page_browser(
         )
 
     if entries:
-        _manpage_browse_entries(cat, entries, man_page_dirs)
+        _manpage_browse_entries(cat, entries)
 
     elif subtree_names:
         _manpage_browser_folder(catalog, cat, subtree_names, man_page_dirs)
@@ -454,13 +454,10 @@ def _manpage_browser_folder(
             break
 
 
-def _manpage_browse_entries(
-    cat: Iterable[str], entries: Iterable[ManPage], man_page_dirs: Iterable[Path]
-) -> None:
-    checks = [(e.title, e.name) for e in entries]
-    checks.sort()
+def _manpage_browse_entries(cat: Iterable[str], entries: Mapping[str, ManPage]) -> None:
+    checks = sorted(entries.values(), key=lambda m: (m.title, m.name))
 
-    choices = [(str(n + 1), c[0]) for n, c in enumerate(checks)]
+    choices = [(str(num), mp.title) for num, mp in enumerate(checks, start=1)]
 
     while True:
         x = _dialog_menu(
@@ -473,8 +470,7 @@ def _manpage_browse_entries(
         )
         if x[0]:
             index = int(x[1]) - 1
-            name = checks[index][1]
-            ConsoleManPageRenderer(name, man_page_dirs).paint()
+            ConsoleManPageRenderer(checks[index]).paint()
         else:
             break
 
@@ -567,12 +563,9 @@ def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
 
 
 class ManPageRenderer:
-    def __init__(self, name: str, man_page_dirs: Iterable[Path]) -> None:
-        self.name = name
-        if man_page := load_man_page(name, man_page_dirs):
-            self._page = man_page
-        else:
-            raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
+    def __init__(self, man_page: ManPage) -> None:
+        self.name = man_page.name
+        self._page = man_page
 
     def paint(self) -> None:
         try:
@@ -658,8 +651,8 @@ def _console_stream() -> TextIO:
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    def __init__(self, name: str, man_page_dirs: Iterable[Path]) -> None:
-        super().__init__(name, man_page_dirs)
+    def __init__(self, man_page: ManPage) -> None:
+        super().__init__(man_page)
         self.__output = _console_stream()
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
         # stuff might have been changed since import time, consider e.g. pytest.
@@ -803,8 +796,8 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 
 class NowikiManPageRenderer(ManPageRenderer):
-    def __init__(self, name: str, man_page_dirs: Iterable[Path]) -> None:
-        super().__init__(name, man_page_dirs)
+    def __init__(self, man_page: ManPage) -> None:
+        super().__init__(man_page)
         self.__output = StringIO()
 
     def _flush(self) -> None:
@@ -883,12 +876,16 @@ def main() -> None:
     cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / "checkman"
     man_page_dirs = get_man_page_dirs()
     for check in _args.checks:
+        if (man_page := load_man_page(check, man_page_dirs)) is None:
+            print(f"No manpage for {check}. Sorry.")
+            continue
+
         try:
             print("----------------------------------------", check)
             if _args.renderer == "console":
-                ConsoleManPageRenderer(check, man_page_dirs).paint()
+                ConsoleManPageRenderer(man_page).paint()
             else:
-                print(NowikiManPageRenderer(check, man_page_dirs).render())
+                print(NowikiManPageRenderer(man_page).render())
         except MKGeneralException as _e:
             print(_e)
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -17,9 +17,6 @@ import cmk.utils.man_pages as man_pages
 from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.server_side_calls import load_active_checks
-
-ManPages = Mapping[str, man_pages.ManPage | None]
-
 
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
@@ -41,7 +38,7 @@ _IF64_MAN_PAGE = man_pages.ManPage(
 )
 
 
-def man_page_dirs_for_test(*tmp_paths: Path) -> Iterable[Path]:
+def man_page_dirs_for_test(*tmp_paths: Path) -> Sequence[Path]:
     return [
         *tmp_paths,
         Path(cce_path(), "checkman"),
@@ -55,39 +52,38 @@ def get_catalog() -> man_pages.ManPageCatalog:
 
 
 @pytest.fixture(scope="module", name="all_pages")
-def get_all_pages() -> ManPages:
-    base_dirs = [
-        Path(cce_path(), "checkman"),
-        Path(cmk_path(), "checkman"),
-    ]
-    return {
-        name: man_pages.load_man_page(name, base_dirs)
-        for name in man_pages.all_man_pages(base_dirs)
-    }
-
-
-def test_man_page_path_only_shipped(tmp_path: Path) -> None:
-    assert (
-        man_pages.man_page_path("if64", man_page_dirs_for_test(tmp_path))
-        == Path(cmk_path()) / "checkman" / "if64"
+def get_all_pages() -> Mapping[str, man_pages.ManPage]:
+    mpm = man_pages.make_man_page_path_map(
+        [
+            Path(cce_path(), "checkman"),
+            Path(cmk_path(), "checkman"),
+        ]
     )
-    assert man_pages.man_page_path("not_existant", man_page_dirs_for_test(tmp_path)) is None
+    return {name: man_pages.parse_man_page(name, path) for name, path in mpm.items()}
+
+
+def test_man_page_path_only_shipped() -> None:
+    mpm = man_pages.make_man_page_path_map(man_page_dirs_for_test())
+    assert mpm["if64"] == Path(cmk_path()) / "checkman" / "if64"
 
 
 def test_man_page_path_both_dirs(tmp_path: Path) -> None:
     f1 = tmp_path / "file1"
     f1.write_text("x", encoding="utf-8")
 
-    assert man_pages.man_page_path("file1", man_page_dirs_for_test(tmp_path)) == tmp_path / "file1"
-    assert man_pages.man_page_path("file2", man_page_dirs_for_test(tmp_path)) is None
+    man_page_path_map = man_pages.make_man_page_path_map(man_page_dirs_for_test(tmp_path))
+    assert man_page_path_map["file1"] == tmp_path / "file1"
+    assert "file2" not in man_page_path_map
 
-    f2 = tmp_path / "if"
-    f2.write_text("x", encoding="utf-8")
+    (tmp_path / "file2").touch()
 
-    assert man_pages.man_page_path("if", man_page_dirs_for_test(tmp_path)) == tmp_path / "if"
+    # This tests that make_manpage_path_map is not cached.
+    # Not sure if this is realy required.
+    man_page_path_map = man_pages.make_man_page_path_map(man_page_dirs_for_test(tmp_path))
+    assert man_page_path_map["file2"] == tmp_path / "file2"
 
 
-def test_all_manpages_migrated(all_pages: ManPages) -> None:
+def test_all_manpages_migrated(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     for name in all_pages:
         if name in ("check-mk-inventory", "check-mk"):
             continue
@@ -99,23 +95,24 @@ def test_all_man_pages(tmp_path: Path) -> None:
     (tmp_path / "asd~").write_text("", encoding="utf-8")
     (tmp_path / "if").write_text("", encoding="utf-8")
 
-    pages = man_pages.all_man_pages(man_page_dirs_for_test(tmp_path))
+    pages = man_pages.make_man_page_path_map(man_page_dirs_for_test(tmp_path))
 
     assert len(pages) > 1241
     assert ".asd" not in pages
     assert "asd~" not in pages
 
-    assert pages["if"] == str(tmp_path / "if")
-    assert pages["if64"] == "%s/checkman/if64" % cmk_path()
+    assert pages["if"] == tmp_path / "if"
+    assert pages["if64"] == Path(cmk_path(), "checkman/if64")
 
 
-def test_load_all_man_pages(all_pages: ManPages) -> None:
+def test_load_all_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     for _name, man_page in all_pages.items():
         assert isinstance(man_page, man_pages.ManPage)
 
 
-def test_print_man_page_table(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    man_pages.print_man_page_table(man_page_dirs_for_test(tmp_path))
+def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
+    man_page_path_map = man_pages.make_man_page_path_map(man_page_dirs_for_test())
+    man_pages.print_man_page_table(man_page_path_map)
     out, err = capsys.readouterr()
     assert err == ""
 
@@ -150,17 +147,19 @@ def test_no_unsorted_man_pages(catalog: man_pages.ManPageCatalog) -> None:
     assert not unsorted_page_names
 
 
-def test_manpage_files(all_pages: ManPages) -> None:
+def test_manpage_files(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     assert len(all_pages) > 1000
 
 
-def test_find_missing_manpages_passive(fix_register: FixRegister, all_pages: ManPages) -> None:
+def test_find_missing_manpages_passive(
+    fix_register: FixRegister, all_pages: Mapping[str, man_pages.ManPage]
+) -> None:
     for plugin_name in fix_register.check_plugins:
         assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
 
 
 def test_find_missing_manpages_active(
-    fix_plugin_legacy: FixPluginLegacy, all_pages: ManPages
+    fix_plugin_legacy: FixPluginLegacy, all_pages: Mapping[str, man_pages.ManPage]
 ) -> None:
     for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
@@ -169,7 +168,7 @@ def test_find_missing_manpages_active(
 def test_find_missing_plugins(
     fix_register: FixRegister,
     fix_plugin_legacy: FixPluginLegacy,
-    all_pages: ManPages,
+    all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     missing_plugins = (
         set(all_pages)
@@ -188,14 +187,13 @@ def test_find_missing_plugins(
 
 def test_cluster_check_functions_match_manpages_cluster_sections(
     fix_register: FixRegister,
-    all_pages: ManPages,
+    all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
     missing_cluster_description: set[str] = set()
     unexpected_cluster_description: set[str] = set()
 
     for plugin in fix_register.check_plugins.values():
         man_page = all_pages[str(plugin.name)]
-        assert man_page
         has_cluster_doc = bool(man_page.cluster)
         has_cluster_func = plugin.cluster_check_function is not None
         if has_cluster_doc is not has_cluster_func:
@@ -220,10 +218,6 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
 
 
 # TODO: print_man_page_browser()
-
-
-def test_load_man_page_not_existing(tmp_path: Path) -> None:
-    assert man_pages.load_man_page("not_existing", man_page_dirs_for_test(tmp_path)) is None
 
 
 def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
@@ -259,11 +253,7 @@ def test_print_man_page(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> N
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages(all_pages: ManPages, tmp_path: Path) -> None:
-    found_catalog_entries_from_man_pages: set[str] = set()
-    for name in man_pages.all_man_pages(man_page_dirs_for_test(tmp_path)):
-        man_page = all_pages[name]
-        assert man_page is not None
-        found_catalog_entries_from_man_pages.update(man_page.catalog)
+def test_missing_catalog_entries_of_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:
+    found_catalog_entries_from_man_pages = {e for page in all_pages.values() for e in page.catalog}
     missing_catalog_entries = found_catalog_entries_from_man_pages - set(man_pages.CATALOG_TITLES)
     assert not missing_catalog_entries

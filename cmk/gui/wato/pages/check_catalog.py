@@ -10,7 +10,7 @@ the global settings.
 """
 
 import re
-from collections.abc import Collection, Iterable, Mapping
+from collections.abc import Collection, Mapping, Sequence
 from pathlib import Path
 from typing import Any, overload
 
@@ -403,7 +403,7 @@ def _man_page_catalog_topics():
 
 
 def _get_check_catalog(
-    man_page_dirs: Iterable[Path],
+    man_page_dirs: Sequence[Path],
     only_path: tuple[str, ...],
 ) -> Mapping[str, Any]:
     # Note: this is impossible to type, since the type is recursive.
@@ -469,11 +469,14 @@ class ModeCheckManPage(WatoMode):
         ):
             raise MKUserError("check_type", _("Invalid check type"))
 
-        manpage = man_pages.load_man_page(self._check_plugin_name, man_pages.get_man_page_dirs())
-        if manpage is None:
-            raise MKUserError(None, _("There is no manpage for this check."))
-        self._manpage = manpage
+        man_page_paths = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
 
+        try:
+            man_page_path = man_page_paths[self._check_plugin_name]
+        except KeyError:
+            raise MKUserError(None, _("There is no manpage for this check."))
+
+        self._manpage = man_pages.parse_man_page(self._check_plugin_name, man_page_path)
         self._check_default_parameters: object = None
 
         checks = get_check_information().plugin_infos

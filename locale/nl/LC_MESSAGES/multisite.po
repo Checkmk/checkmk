@@ -691,6 +691,10 @@ msgstr "%s is gestopt na %s om %s."
 msgid "%s write %s"
 msgstr "%s schrijf %s"
 
+#, fuzzy, python-format
+msgid "%s, %s. %s %s at %s"
+msgstr "%s is gestopt na %s om %s."
+
 #, python-format
 msgid ""
 "%s. Checkmk is now unlicensed, and you are no longer able to 'Activate "
@@ -1904,6 +1908,10 @@ msgid ""
 msgstr ""
 "<tt>TNS_ADMIN</tt> te gebruiken voor <tt>sqlnet.ora</tt> en <tt>tnsnames."
 "ora</tt> %s"
+
+#, fuzzy
+msgid "<u>Info</u>: Downtime also applies to services."
+msgstr "Onderbrekingen van de dienst"
 
 msgid "??"
 msgstr "??"
@@ -4210,6 +4218,10 @@ msgstr "Adhoc commentaar"
 msgid "Adhoc downtime"
 msgstr "Adhoc-uitvaltijd"
 
+#, python-format
+msgid "Adhoc for %d minutes"
+msgstr "Adhoc voor %d minuten"
+
 msgid "Admin"
 msgstr "Admin"
 
@@ -4618,6 +4630,9 @@ msgstr "Agent bakken en ondertekenen"
 
 msgid "Agent baking finished."
 msgstr "Agent bakte af."
+
+msgid "Agent based plugins (Checks, Inventory)"
+msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
 
 msgid "Agent controller"
 msgstr "Agent controller"
@@ -7714,6 +7729,10 @@ msgstr "BasicAuth instellingen (optioneel)"
 msgid "Batch Requests/sec"
 msgstr "Batch verzoeken/sec"
 
+#, fuzzy
+msgid "Battery Levels"
+msgstr "Geheugenniveaus"
+
 msgid "Battery capacity"
 msgstr "Batterijcapaciteit"
 
@@ -7798,6 +7817,9 @@ msgstr "Factureerbare tijd"
 
 msgid "Bin Log Disk Usage"
 msgstr "Bin Log Schijfgebruik"
+
+msgid "Binaries"
+msgstr "Binaire bestanden"
 
 msgid "Bind DN"
 msgstr "Bind DN"
@@ -10198,9 +10220,6 @@ msgstr "Controleer plugin"
 msgid "Check plugin API introduction"
 msgstr "Controleer plugin API introductie"
 
-msgid "Check plugin API reference"
-msgstr "Controleer plugin API referentie"
-
 msgid "Check plugin timeout"
 msgstr "Controleer plugin timeout"
 
@@ -10708,6 +10727,9 @@ msgstr "Controles op regelmatige gastheren"
 
 msgid "Checks via SSH. "
 msgstr "Controles via SSH. "
+
+msgid "Checks' man pages"
+msgstr "De man pagina's van de controles"
 
 msgid "Checktype"
 msgstr "Controletype"
@@ -13531,10 +13553,6 @@ msgstr "Nieuwe alert handler regel gemaakt"
 #, python-format
 msgid "Created new connection to site %s"
 msgstr "Nieuwe verbinding gemaakt met site %s"
-
-#, python-format
-msgid "Created new event correlation rule with id %s"
-msgstr "Aangemaakt nieuwe gebeurtenis correlatie regel met id %s"
 
 #, python-format
 msgid "Created new extension package %s"
@@ -17724,6 +17742,9 @@ msgstr "Aantal documenten groeit per minuut"
 msgid "Documentation URL"
 msgstr "Documentatie URL"
 
+msgid "Documentation files"
+msgstr "Documentatiebestanden"
+
 msgid "Documents fragmentation"
 msgstr "Versnippering van documenten"
 
@@ -17922,10 +17943,6 @@ msgid "Downtime active or pending"
 msgstr "Stilstand actief of in afwachting"
 
 #, fuzzy
-msgid "Downtime also applies to services."
-msgstr "Onderbrekingen van de dienst"
-
-#, fuzzy
 msgid "Downtime attributes:"
 msgstr "Gewijzigde attributen"
 
@@ -17935,6 +17952,9 @@ msgstr "Auteur van Downtime"
 #, fuzzy
 msgid "Downtime author (regex)"
 msgstr "Auteur van Downtime"
+
+msgid "Downtime can extend beyond the previously defined end date and time"
+msgstr ""
 
 msgid "Downtime comment"
 msgstr "Commentaar bij stilstand"
@@ -17946,10 +17966,6 @@ msgstr "Commentaar bij stilstand"
 #, fuzzy
 msgid "Downtime datepicker"
 msgstr "Eindtijd downtime"
-
-#, fuzzy
-msgid "Downtime does not apply to host."
-msgstr "Downtimes van host"
 
 msgid "Downtime duration (if flexible)"
 msgstr "Duur van de stilstand (indien flexibel)"
@@ -19321,8 +19337,8 @@ msgstr "Eindtijd"
 msgid "End-to-end latency"
 msgstr "End-to-end latentie"
 
-#, fuzzy, python-format
-msgid "End: %s"
+#, fuzzy
+msgid "End:"
 msgstr "Bewerken %s: %s"
 
 msgid "Ended"
@@ -22507,6 +22523,9 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
+msgid "GUI extensions"
+msgstr "GUI-uitbreidingen"
+
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
 "providers, to your data centers, across servers, networks, containers, and "
@@ -23332,9 +23351,6 @@ msgstr "Behandeling van te lange teksten (betreft alleen tabel)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
-msgid "Hard disk device"
-msgstr "Hard disk apparaat"
-
 msgid "Hard query limit"
 msgstr "Harde query limiet"
 
@@ -23355,9 +23371,6 @@ msgstr ""
 "</b> Bij het berekenen van de beschikbaarheid van een BI aggregaat heeft "
 "deze optie geen invloed. Voor dat doel zullen altijd de zachte (d.w.z. "
 "echte) toestanden worden gebruikt."
-
-msgid "Harddisk temperature (e.g. via SMART)"
-msgstr "Temperatuur van de harde schijf (bv. via SMART)"
 
 msgid "Harddrive CRC errors"
 msgstr "Harddrive CRC fouten"
@@ -23412,9 +23425,6 @@ msgstr "Hardware-informatie van de Checkmk Server"
 
 msgid "Hardware status"
 msgstr "Hardware status"
-
-msgid "Hardware temperature, multiple sensors"
-msgstr "Hardware temperatuur, meerdere sensoren"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -25141,9 +25151,6 @@ msgstr "Gastheer- en dienstcommentaren"
 
 msgid "Host- or DNS name"
 msgstr "Host- of DNS-naam"
-
-msgid "Host/Device temperature"
-msgstr "Temperatuur host/apparaat"
 
 msgid "Host/Service"
 msgstr "Gastheer/Dienst"
@@ -28471,6 +28478,10 @@ msgstr "Individueel onderwerp"
 msgid "Ineffective"
 msgstr "Ondoeltreffend"
 
+#, fuzzy
+msgid "Ineffective rule"
+msgstr "Ondoeltreffende regels"
+
 msgid "Ineffective rules"
 msgstr "Ondoeltreffende regels"
 
@@ -28517,6 +28528,10 @@ msgstr "Info"
 #, fuzzy
 msgid "Info:"
 msgstr "Info"
+
+#, fuzzy
+msgid "Info: Downtime does not apply to host."
+msgstr "Downtimes van host"
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -30453,8 +30468,17 @@ msgstr ""
 "Oude ASCII E-mails ondersteunen bulking niet. Je kunt bulking uitschakelen "
 "of een andere plugin kiezen die bulking toestaat."
 
+msgid "Legacy GUI extensions"
+msgstr "Verouderde GUI-uitbreidingen"
+
 msgid "Legacy agent management"
 msgstr "Beheer van oudere agenten"
+
+msgid "Legacy check plugins"
+msgstr "Plugins voor oudere controles"
+
+msgid "Legacy inventory plugins"
+msgstr "Verouderde inventaris plugins"
 
 msgid "Legacy run"
 msgstr "Erfenis run"
@@ -31143,6 +31167,9 @@ msgstr "Niveaus opslag"
 
 msgid "Libelle Business Shadow"
 msgstr "Libelle Bedrijfsschaduw"
+
+msgid "Libraries"
+msgstr "Bibliotheken"
 
 msgid "Licence state"
 msgstr "Staat van de vergunning"
@@ -31934,6 +31961,9 @@ msgstr ""
 
 msgid "Locality Name"
 msgstr "Plaatsnaam"
+
+msgid "Localizations"
+msgstr "Lokalisaties"
 
 msgid "Locally enabled"
 msgstr "Lokaal ingeschakeld"
@@ -33454,6 +33484,10 @@ msgstr "Overeenkomende poorttypes"
 msgid "Match process path"
 msgstr "Overeenkomen met procespad"
 
+#, fuzzy
+msgid "Match search"
+msgstr "Match diensten"
+
 msgid "Match service event type"
 msgstr "Type overeenkomst dienstgebeurtenis"
 
@@ -33525,6 +33559,10 @@ msgstr "Wedstrijd type"
 msgid "Matched line"
 msgstr "Bijbehorende lijn"
 
+#, fuzzy
+msgid "Matches"
+msgstr "Wedstrijd"
+
 msgid "Matching"
 msgstr "Passend bij"
 
@@ -33572,6 +33610,10 @@ msgstr "Max. Leeftijd (sec)"
 
 msgid "Max. Count"
 msgstr "Max. Tel"
+
+#, fuzzy
+msgid "Max. duration after downtime starts: "
+msgstr "De eerste keer dat de uitval begint"
 
 msgid "Max. number of SSL connections"
 msgstr "Max. aantal SSL-verbindingen"
@@ -34739,9 +34781,6 @@ msgstr "Ontbrekende of ongeldige modus. Toegestaan zijn 'agent' en 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Ontbrekende parameter \"%s\"."
 
-msgid "Missing render parameter"
-msgstr "Ontbrekende render parameter"
-
 msgid "Missing required \"Host name\" selection."
 msgstr "De vereiste \"Host name\" selectie ontbreekt."
 
@@ -34756,9 +34795,6 @@ msgstr "Ontbrekende verplichte selectie."
 
 msgid "Missing secret for automation command."
 msgstr "Ontbrekend geheim voor automatiseringscommando."
-
-msgid "Missing spec parameter"
-msgstr "Ontbrekende spec parameter"
 
 msgid "Missing test host name"
 msgstr "Ontbrekende test host naam"
@@ -34884,10 +34920,6 @@ msgstr "Gewijzigde BI-regel %s"
 
 msgid "Modified NFS data"
 msgstr "Gewijzigde NFS gegevens"
-
-#, python-format
-msgid "Modified event correlation rule %s"
-msgstr "Gewijzigde gebeurtenis correlatie regel %s"
 
 #, python-format
 msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
@@ -37273,6 +37305,9 @@ msgstr "Regels voor kennisgeving"
 msgid "Notification rules of user %s"
 msgstr "Meldingsregels van gebruiker %s"
 
+msgid "Notification scripts"
+msgstr "Notificatie scripts"
+
 msgid "Notification sort order for bulk notifications"
 msgstr "Sorteervolgorde voor bulkmeldingen"
 
@@ -39608,6 +39643,9 @@ msgstr ""
 "bijwerken bij het verwerken van het resultaat van de eerste controle na de "
 "herstart."
 
+msgid "PNP4Nagios templates (deprecated)"
+msgstr "PNP4Nagios sjablonen (verouderd)"
+
 msgid "POP3"
 msgstr "POP3"
 
@@ -41449,6 +41487,10 @@ msgstr "Stekker artikelnummer of naam"
 
 msgid "Plugin"
 msgstr "Plugin"
+
+#, fuzzy
+msgid "Plugin API references"
+msgstr "Controleer plugin API referentie"
 
 msgid "Plugin Name"
 msgstr "Plugin naam"
@@ -43698,10 +43740,6 @@ msgstr "Verwijder alle stilstandtijden"
 msgid "Remove all files and subdirectories"
 msgstr "Verwijder alle bestanden en subdirectories"
 
-#, fuzzy
-msgid "Remove all scheduled downtimes?"
-msgstr "<b>verwijder alle geplande downtimes</b> van "
-
 msgid "Remove downtimes"
 msgstr "Uitvaltijd verwijderen"
 
@@ -43729,6 +43767,10 @@ msgstr "Alleen overeenkomende verdwenen diensten verwijderen"
 
 msgid "Remove package"
 msgstr "Pakket verwijderen"
+
+#, fuzzy
+msgid "Remove scheduled downtimes?"
+msgstr "<b>verwijder alle geplande downtimes</b> van "
 
 msgid "Remove service"
 msgstr "Service verwijderen"
@@ -44846,9 +44888,6 @@ msgstr "Rollen"
 
 msgid "Roles & permissions"
 msgstr "Rollen en machtigingen"
-
-msgid "Room temperature (external thermal sensors)"
-msgstr "Ruimtetemperatuur (externe thermische sensoren)"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Draait elke dag om 00:00 lokale tijd"
@@ -46719,6 +46758,14 @@ msgstr "Serverprestaties"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Serverzijde behandeling van niet-gecodeerde gegevens"
+
+#, fuzzy
+msgid "Server time"
+msgstr "Server tijd"
+
+#, python-format
+msgid "Server time (currently: %s)"
+msgstr ""
 
 msgid "Service"
 msgstr "Dienst"
@@ -50277,9 +50324,9 @@ msgstr "Start!"
 msgid "Start-Time"
 msgstr "Starttijd"
 
-#, fuzzy, python-format
-msgid "Start: %s"
-msgstr "Begonnen op: %s."
+#, fuzzy
+msgid "Start:"
+msgstr "Start"
 
 msgid "Started"
 msgstr "Begonnen met"
@@ -50356,6 +50403,10 @@ msgstr "Staatsclassificatie"
 
 msgid "State during active system events"
 msgstr "Toestand tijdens actieve systeemgebeurtenissen"
+
+#, fuzzy
+msgid "State during discovery of the service"
+msgstr "Service discovery: Diensten verwijderen"
 
 msgid "State flag (on/off)"
 msgstr "Staatsvlag (aan/uit)"
@@ -52348,32 +52399,6 @@ msgstr "Trendanalyse temperatuur"
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatuur en vochtigheid voor Eaton UPS"
 
-msgid ""
-"Temperature levels for external thermometers that are used for monitoring "
-"the temperature of a datacenter. An example is the webthem from W&T."
-msgstr ""
-"Temperatuurniveaus voor externe thermometers die worden gebruikt om de "
-"temperatuur van een datacentrum te bewaken. Een voorbeeld is de webthem van "
-"W&T."
-
-msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
-msgstr ""
-"Temperatuurniveaus voor harde schijven, die b.v. via SMART worden bepaald"
-
-msgid ""
-"Temperature levels for hardware devices like Brocade switches with "
-"(potentially) several temperature sensors. Sensor IDs can be selected in the "
-"rule."
-msgstr ""
-"Temperatuurniveaus voor hardware-apparaten zoals Brocade-switches met "
-"(potentieel) meerdere temperatuursensoren. Sensor ID's kunnen geselecteerd "
-"worden in de regel."
-
-msgid ""
-"Temperature levels for hardware devices with a single temperature sensor."
-msgstr ""
-"Temperatuurniveaus voor hardware-apparaten met een enkele temperatuursensor."
-
 #, fuzzy
 msgid "Temperature sensors with built-in levels"
 msgstr "Temperatuursensoren met ingebouwde niveaus"
@@ -53738,13 +53763,6 @@ msgstr ""
 "zodat je in dat geval geen meldingen krijgt."
 
 msgid ""
-"The checkbox for setting host downtimes does not work when removing "
-"downtimes."
-msgstr ""
-"Het selectievakje voor het instellen van host downtimes werkt niet bij het "
-"verwijderen van downtimes."
-
-msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
 "reduce the memory consumption."
 msgstr ""
@@ -54757,9 +54775,6 @@ msgstr "De ident van een waarde moet uniek zijn per waardetype."
 
 msgid "The identificator of the fan."
 msgstr "De identificator van de ventilator."
-
-msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
-msgstr "De identificator van de harde schijf, bijv. <tt>/dev/sda</tt>."
 
 msgid "The identificator of the module."
 msgstr "De identificator van de module."
@@ -57493,6 +57508,10 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Deze ID wordt gebruikt als unieke identificatiecode. Het kan later niet "
 "worden gewijzigd."
+
+#, fuzzy
+msgid "This Ruleset sets the threshold limits for battery sensors"
+msgstr "Deze regelset stelt de drempelwaarden voor vochtigheidssensoren in"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "Deze regelset stelt de drempelwaarden voor vochtigheidssensoren in"
@@ -63955,6 +63974,9 @@ msgstr ""
 "adressen weer te geven bij hosts die zonder expliciet adres zijn "
 "geconfigureerd."
 
+msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgstr ""
+
 msgid "Upload"
 msgstr "Upload"
 
@@ -66962,6 +66984,10 @@ msgstr "Waarschuwing begint met"
 msgid "Warning threshold"
 msgstr "Waarschuwingsdrempel"
 
+#, fuzzy
+msgid "Warning: "
+msgstr "Waarschuwingen:"
+
 msgid "Warning: This host has an invalid configuration!"
 msgstr "Waarschuwing: Deze host heeft een ongeldige configuratie!"
 
@@ -69814,11 +69840,12 @@ msgstr ""
 msgid "You can specify at most %d entries"
 msgstr "U kunt maximaal %d items opgeven"
 
+#, fuzzy
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
-"specfied VMs are distributed across at least so many hosts. E.g. provide two "
-"VM names and set 'Number of hosts' to two, to make sure those VMs are not "
-"running on the same host."
+"specified VMs are distributed across at least so many hosts. E.g. provide "
+"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
+"not running on the same host."
 msgstr ""
 "U kunt lijsten met VM-namen en een aantal hosts opgeven, om ervoor te zorgen "
 "dat de opgegeven VM's over ten minste zoveel hosts worden verdeeld. Geef "
@@ -72304,10 +72331,6 @@ msgstr "alleen wanneer de host niet in downtime is"
 msgid "open"
 msgstr "open"
 
-#, fuzzy
-msgid "operational state not available"
-msgstr "Toestand apparaat niet beschikbaar"
-
 msgid "optional"
 msgstr "optionele"
 
@@ -72995,14 +73018,86 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
+#, python-format
+#~ msgid "Created new event correlation rule with id %s"
+#~ msgstr "Aangemaakt nieuwe gebeurtenis correlatie regel met id %s"
+
+#, python-format
+#~ msgid "Modified event correlation rule %s"
+#~ msgstr "Gewijzigde gebeurtenis correlatie regel %s"
+
+#~ msgid "Hard disk device"
+#~ msgstr "Hard disk apparaat"
+
+#~ msgid "Harddisk temperature (e.g. via SMART)"
+#~ msgstr "Temperatuur van de harde schijf (bv. via SMART)"
+
+#~ msgid "Hardware temperature, multiple sensors"
+#~ msgstr "Hardware temperatuur, meerdere sensoren"
+
+#~ msgid "Host/Device temperature"
+#~ msgstr "Temperatuur host/apparaat"
+
+#~ msgid "Room temperature (external thermal sensors)"
+#~ msgstr "Ruimtetemperatuur (externe thermische sensoren)"
+
+#~ msgid ""
+#~ "Temperature levels for external thermometers that are used for monitoring "
+#~ "the temperature of a datacenter. An example is the webthem from W&T."
+#~ msgstr ""
+#~ "Temperatuurniveaus voor externe thermometers die worden gebruikt om de "
+#~ "temperatuur van een datacentrum te bewaken. Een voorbeeld is de webthem "
+#~ "van W&T."
+
+#~ msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
+#~ msgstr ""
+#~ "Temperatuurniveaus voor harde schijven, die b.v. via SMART worden bepaald"
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices like Brocade switches with "
+#~ "(potentially) several temperature sensors. Sensor IDs can be selected in "
+#~ "the rule."
+#~ msgstr ""
+#~ "Temperatuurniveaus voor hardware-apparaten zoals Brocade-switches met "
+#~ "(potentieel) meerdere temperatuursensoren. Sensor ID's kunnen "
+#~ "geselecteerd worden in de regel."
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices with a single temperature sensor."
+#~ msgstr ""
+#~ "Temperatuurniveaus voor hardware-apparaten met een enkele "
+#~ "temperatuursensor."
+
+#~ msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
+#~ msgstr "De identificator van de harde schijf, bijv. <tt>/dev/sda</tt>."
+
+#, fuzzy
+#~| msgid "Device state not available"
+#~ msgid "operational state not available"
+#~ msgstr "Toestand apparaat niet beschikbaar"
+
+#, fuzzy, python-format
+#~| msgid "Started at: %s."
+#~ msgid "Start: %s"
+#~ msgstr "Begonnen op: %s."
+
+#~ msgid ""
+#~ "The checkbox for setting host downtimes does not work when removing "
+#~ "downtimes."
+#~ msgstr ""
+#~ "Het selectievakje voor het instellen van host downtimes werkt niet bij "
+#~ "het verwijderen van downtimes."
+
+#~ msgid "Missing render parameter"
+#~ msgstr "Ontbrekende render parameter"
+
+#~ msgid "Missing spec parameter"
+#~ msgstr "Ontbrekende spec parameter"
+
 #, fuzzy, python-format
 #~| msgid "<b>%s for the next %d minutes</b>"
 #~ msgid "<b>%s for the next %d minutes</b>?"
 #~ msgstr "<b>%s voor de volgende %d minuten</b>"
-
-#, python-format
-#~ msgid "Adhoc for %d minutes"
-#~ msgstr "Adhoc voor %d minuten"
 
 #~ msgid "Also set downtime on child hosts"
 #~ msgstr "Stel ook downtime in op child hosts"
@@ -73047,42 +73142,6 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Clear audit log"
 #~ msgstr "Auditlogboek wissen"
-
-#~ msgid "Agent based plugins (Checks, Inventory)"
-#~ msgstr "Op agenten gebaseerde plugins (Checks, Inventory)"
-
-#~ msgid "Binaries"
-#~ msgstr "Binaire bestanden"
-
-#~ msgid "Checks' man pages"
-#~ msgstr "De man pagina's van de controles"
-
-#~ msgid "Documentation files"
-#~ msgstr "Documentatiebestanden"
-
-#~ msgid "GUI extensions"
-#~ msgstr "GUI-uitbreidingen"
-
-#~ msgid "Legacy GUI extensions"
-#~ msgstr "Verouderde GUI-uitbreidingen"
-
-#~ msgid "Legacy check plugins"
-#~ msgstr "Plugins voor oudere controles"
-
-#~ msgid "Legacy inventory plugins"
-#~ msgstr "Verouderde inventaris plugins"
-
-#~ msgid "Libraries"
-#~ msgstr "Bibliotheken"
-
-#~ msgid "Localizations"
-#~ msgstr "Lokalisaties"
-
-#~ msgid "Notification scripts"
-#~ msgstr "Notificatie scripts"
-
-#~ msgid "PNP4Nagios templates (deprecated)"
-#~ msgstr "PNP4Nagios sjablonen (verouderd)"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr ""

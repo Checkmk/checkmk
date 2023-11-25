@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-11-17 07:00+0000\n"
+"PO-Revision-Date: 2023-11-24 07:00+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.17\n"
+"X-Generator: Weblate 5.0.2\n"
 
 #, python-format
 msgid " %s, outage duration %s"
@@ -696,6 +696,10 @@ msgid "%s write %s"
 msgstr "%s Schreiben %s"
 
 #, python-format
+msgid "%s, %s. %s %s at %s"
+msgstr "%s, %s. %s %s um %s"
+
+#, python-format
 msgid ""
 "%s. Checkmk is now unlicensed, and you are no longer able to 'Activate "
 "changes'."
@@ -817,9 +821,8 @@ msgstr ""
 msgid "(0 is current period)"
 msgstr "(0 entspricht aktuelle Periode)"
 
-#, fuzzy
 msgid "(Edit presets)"
-msgstr "Berichte Editieren"
+msgstr "(Voreinstellungen bearbeiten)"
 
 msgid "(Max suggestions reached, be more specific)"
 msgstr "(Maximale Anzahl von Vorschlägen erreicht, bitte genauer definieren)"
@@ -1927,6 +1930,9 @@ msgid ""
 msgstr ""
 "Zu nutzender <tt>TNS_ADMIN</tt> für <tt>sqlnet.ora</tt> und <tt>tnsnames."
 "ora</tt> %s"
+
+msgid "<u>Info</u>: Downtime also applies to services."
+msgstr "<u>Info</u>: Wartungszeit gilt auch für Services."
 
 msgid "??"
 msgstr "??"
@@ -4223,6 +4229,10 @@ msgstr "Adhoc-Kommentar"
 msgid "Adhoc downtime"
 msgstr "Adhoc Wartungszeiten"
 
+#, python-format
+msgid "Adhoc for %d minutes"
+msgstr "Adhoc für %d Minuten"
+
 msgid "Admin"
 msgstr "Admin"
 
@@ -4230,7 +4240,7 @@ msgid "Admin States"
 msgstr "Verwaltungszustände"
 
 msgid "Admin state"
-msgstr "Verwaltungsstatus"
+msgstr "Admin-Status"
 
 msgid "Admin state (SNMP with 64-bit counters only)"
 msgstr "Admin Status (nur SNMP mit 64 bit Zählern)"
@@ -4276,9 +4286,8 @@ msgstr ""
 msgid "Adva Optical Transport Laser Power"
 msgstr "Adva Optical Transport Laser Leistung"
 
-#, fuzzy
 msgid "Advanced options"
-msgstr "Verfügbare Optionen"
+msgstr "Erweiterte Optionen"
 
 msgid "Advanced: Disable SSL/TLS hostname extension support (SNI)"
 msgstr ""
@@ -4632,6 +4641,9 @@ msgstr "Agenten backen und signieren"
 
 msgid "Agent baking finished."
 msgstr "Agentenbacken beendet."
+
+msgid "Agent based plugins (Checks, Inventory)"
+msgstr "Agenten-basierte Plugins (Checks, Inventur)"
 
 msgid "Agent controller"
 msgstr "Agent Controller"
@@ -7550,7 +7562,7 @@ msgid "Backup target"
 msgstr "Sicherungsziel"
 
 msgid "Backup targets"
-msgstr "Sicherungsziele"
+msgstr "Backup-Ziele"
 
 msgid "Backup time"
 msgstr "Sicherungsdauer"
@@ -7704,6 +7716,10 @@ msgstr "BasicAuth Einstellungen (optional)"
 msgid "Batch Requests/sec"
 msgstr "Batchanfragen/sec"
 
+#, fuzzy
+msgid "Battery Levels"
+msgstr "Schwellenwerte für Speichernutzung"
+
 msgid "Battery capacity"
 msgstr "Batteriekapazität"
 
@@ -7788,6 +7804,9 @@ msgstr "Abrechenbare Zeit"
 
 msgid "Bin Log Disk Usage"
 msgstr "Verwendung der Bin-Log-Festplatte"
+
+msgid "Binaries"
+msgstr "Ausführbare Programme"
 
 msgid "Bind DN"
 msgstr "Bind DN"
@@ -10187,9 +10206,6 @@ msgstr "Checkplugin"
 msgid "Check plugin API introduction"
 msgstr "Einführung in das Check-Plugin-API"
 
-msgid "Check plugin API reference"
-msgstr "Check-Plugin-API Referenz"
-
 msgid "Check plugin timeout"
 msgstr "Ablaufzeit für Checkplugin"
 
@@ -10694,6 +10710,9 @@ msgstr "Checks auf regulären Hosts"
 msgid "Checks via SSH. "
 msgstr "Checks über SSH. "
 
+msgid "Checks' man pages"
+msgstr "Handbuch-Seiten der Checks"
+
 msgid "Checktype"
 msgstr "Checktyp"
 
@@ -10704,11 +10723,10 @@ msgid "Child Node Generation"
 msgstr "Child-Node generieren"
 
 msgid "Child hosts also go in downtime (recursively)."
-msgstr ""
+msgstr "Child Hosts gehen auch in die Wartungszeit (rekursiv)."
 
-#, fuzzy
 msgid "Child hosts also go in downtime."
-msgstr "Lists alle Wartungszeiten für Host auf."
+msgstr "Child Hosts gehen auch in die Wartungszeit."
 
 msgid "Child report"
 msgstr "Eingebetteter Bericht"
@@ -13522,10 +13540,6 @@ msgid "Created new connection to site %s"
 msgstr "Neue Verbindung zu %s erzeugt"
 
 #, python-format
-msgid "Created new event correlation rule with id %s"
-msgstr "Neue Ereignis-Regel mit ID %s erzeugt"
-
-#, python-format
 msgid "Created new extension package %s"
 msgstr "Neues Erweiterungspaket %s erzeugt"
 
@@ -13840,7 +13854,7 @@ msgid "Current connections upper levels"
 msgstr "Obergrenze für aktuelle Verbindungen"
 
 msgid "Current date"
-msgstr "Heute"
+msgstr "Aktuelles Datum"
 
 msgid "Current events"
 msgstr "Aktuelle Ereignisse"
@@ -13974,7 +13988,7 @@ msgid "Custom GUI design of %s"
 msgstr "Benutzerdefiniertes GUI-Design von %s"
 
 msgid "Custom Graph"
-msgstr "Benutzergraph"
+msgstr "Benutzerdefinierter Graph"
 
 msgid "Custom Host"
 msgstr "Benutzerdefinierter Host"
@@ -14034,7 +14048,7 @@ msgid "Custom footer links"
 msgstr "Benutzerdefinierte Fußzeilen-Links"
 
 msgid "Custom graph"
-msgstr "Benutzergraph"
+msgstr "Benutzerdefinierter Graph"
 
 msgid "Custom graph timeranges"
 msgstr "Benutzerdefinierte Zeiträume für Graphen"
@@ -14855,7 +14869,7 @@ msgid "Day of the week"
 msgstr "Wochentag"
 
 msgid "Day of the week (1-7, 1 is Monday)"
-msgstr "Wochentag"
+msgstr "Wochentag (1-7, 1 ist Montag)"
 
 msgid "Day rate"
 msgstr "Tagesrate"
@@ -17714,6 +17728,9 @@ msgstr "Zuwachs der Dokumentenanzahl pro Minute zählen"
 msgid "Documentation URL"
 msgstr "URL zur Dokumentation"
 
+msgid "Documentation files"
+msgstr "Dokumentation Dateien"
+
 msgid "Documents fragmentation"
 msgstr "Dokumentation Fragmentation"
 
@@ -17909,13 +17926,8 @@ msgstr "Wartungszeit-ID (exakte Übereinstimmung)"
 msgid "Downtime active or pending"
 msgstr "Wartungszeit ist aktiv/anstehend"
 
-#, fuzzy
-msgid "Downtime also applies to services."
-msgstr "Wartungszeiten von Service"
-
-#, fuzzy
 msgid "Downtime attributes:"
-msgstr "Modizifierte Attribute"
+msgstr "Attribute der Wartungszeit:"
 
 msgid "Downtime author"
 msgstr "Wartungszeit (Autor)"
@@ -17923,26 +17935,25 @@ msgstr "Wartungszeit (Autor)"
 msgid "Downtime author (regex)"
 msgstr "Ersteller der Wartungszeit (regex)"
 
+msgid "Downtime can extend beyond the previously defined end date and time"
+msgstr ""
+"Die Wartungszeit kann über das zuvor festgelegte Enddatum und die Uhrzeit "
+"hinausgehen"
+
 msgid "Downtime comment"
 msgstr "Wartungszeit (Kommentar)"
 
 msgid "Downtime comment (regex)"
 msgstr "Kommentar zur Wartungszeit (regex)"
 
-#, fuzzy
 msgid "Downtime datepicker"
-msgstr "Wartungszeit (Ende)"
-
-#, fuzzy
-msgid "Downtime does not apply to host."
-msgstr "Wartungszeiten von Host"
+msgstr "Terminwahl für Wartungszeit"
 
 msgid "Downtime duration (if flexible)"
 msgstr "Wartungszeitdauer (wenn flexibel)"
 
-#, fuzzy
 msgid "Downtime duration presets"
-msgstr "Wartungszeitdauer (wenn flexibel)"
+msgstr "Voreinstellungen der Wartungszeitdauer"
 
 msgid "Downtime end"
 msgstr "Wartungszeit Ende"
@@ -17980,9 +17991,8 @@ msgstr "Wartungszeit (Beginn)"
 msgid "Downtime stopped"
 msgstr "Wartungszeit angehalten"
 
-#, fuzzy
 msgid "Downtime timepicker"
-msgstr "Wartungszeit (Ende)"
+msgstr "Zeitauswahl für Wartungszeit"
 
 msgid "Downtime will not start anymore after"
 msgstr "Wartungszeit startet nicht mehr nach"
@@ -19304,9 +19314,8 @@ msgstr "End-Zeit"
 msgid "End-to-end latency"
 msgstr "End-to-End Latenz"
 
-#, python-format
-msgid "End: %s"
-msgstr "Ende: %s"
+msgid "End:"
+msgstr "Ende:"
 
 msgid "Ended"
 msgstr "Beendet"
@@ -21555,9 +21564,8 @@ msgstr "Flexible Wartung"
 msgid "Flexible downtime duration:"
 msgstr "Flexible Wartungsdauer:"
 
-#, fuzzy
 msgid "Flexible downtime options"
-msgstr "Flexible Wartungsdauer:"
+msgstr "Optionen für flexible Wartungszeit"
 
 msgid "Floating point number"
 msgstr "Fließkommazahl"
@@ -22498,6 +22506,9 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUI-Design"
 
+msgid "GUI extensions"
+msgstr "GUI-Erweiterungen"
+
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
 "providers, to your data centers, across servers, networks, containers, and "
@@ -23325,9 +23336,6 @@ msgstr "Umgang mit zu langen Texten (Betrifft Tabellen)"
 msgid "Haproxy"
 msgstr "HA-Proxy"
 
-msgid "Hard disk device"
-msgstr "Festplattengerät"
-
 msgid "Hard query limit"
 msgstr "Abragelimit (hart)"
 
@@ -23347,9 +23355,6 @@ msgstr ""
 "der harte Zustand ist nach sie vor OK. <b>Hinweis</b>: Bei der Berechung der "
 "Verfügbarkeit eines BI-Aggregates hat diese Einstellung keinen Effekt. Für "
 "diese Berechnung werden grundsätzlich weiche (also reale) Zustände verwendet."
-
-msgid "Harddisk temperature (e.g. via SMART)"
-msgstr "Festplattentemperatur (z.B. via SMART)"
 
 msgid "Harddrive CRC errors"
 msgstr "Festplatten-CRC-Fehler"
@@ -23404,9 +23409,6 @@ msgstr "Hardware-Informationen des Checkmk Servers"
 
 msgid "Hardware status"
 msgstr "Hardwarestatus"
-
-msgid "Hardware temperature, multiple sensors"
-msgstr "Hardware-Temperatur, mehrere Sensoren"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -25149,9 +25151,6 @@ msgstr "Host-/Service-Kommentare"
 
 msgid "Host- or DNS name"
 msgstr "Host- oder DNS-Name"
-
-msgid "Host/Device temperature"
-msgstr "Host/Gerätetemperatur"
 
 msgid "Host/Service"
 msgstr "Host/Service"
@@ -28279,7 +28278,7 @@ msgid "Include full path"
 msgstr "Vollständigen Prozesspfad verwenden"
 
 msgid "Include indirectly connected hosts (recursively)"
-msgstr ""
+msgstr "Indirekt verbundene Hosts einbeziehen (rekursiv)"
 
 msgid "Include per-process arguments (security risk!)"
 msgstr "Einbeziehen von pro Prozess Argumenten (Sicherheitsrisiko!)"
@@ -28461,6 +28460,9 @@ msgstr "Eigenes Thema"
 msgid "Ineffective"
 msgstr "Unwirksame Regeln"
 
+msgid "Ineffective rule"
+msgstr "Unwirksame Regel"
+
 msgid "Ineffective rules"
 msgstr "Unwirksame Regeln"
 
@@ -28505,6 +28507,9 @@ msgstr "Info"
 
 msgid "Info:"
 msgstr "Info:"
+
+msgid "Info: Downtime does not apply to host."
+msgstr "Info: Wartungszeit gilt nicht für den Host."
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29061,9 +29066,9 @@ msgstr "Ungültige Datenquelle '%s' konfiguriert."
 msgid "Invalid datatype of timestamp: must be int or float."
 msgstr "Ungültiger Datentyp des Zeitstempels (muss int/float sein)."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid date format: %s"
-msgstr "Ungültige Datenquelle: %s"
+msgstr "Ungültiges Datenformat: %s"
 
 msgid "Invalid end time given"
 msgstr "Ungülitge Endzeit"
@@ -29251,9 +29256,9 @@ msgstr ""
 "Ungültiges Zeitformat '<tt>%s</tt>', bitte verwenden Sie das <tt>24:00</tt>-"
 "Format."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid time format: %s"
-msgstr "Ungültige Zeiteinheit %s"
+msgstr "Ungültiges Zeitformat: %s"
 
 msgid ""
 "Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
@@ -30433,8 +30438,17 @@ msgstr ""
 "deaktivieren Sie Sammelalarme oder wählen Sie eine andere "
 "Alarmierungsmethode, welche dies erlaubt."
 
+msgid "Legacy GUI extensions"
+msgstr "Legacy GUI-Erweiterungen"
+
 msgid "Legacy agent management"
 msgstr "Verwaltung veralteter Agenten"
+
+msgid "Legacy check plugins"
+msgstr "Veraltete Checkplugins"
+
+msgid "Legacy inventory plugins"
+msgstr "Veraltete Inventurplugins"
 
 msgid "Legacy run"
 msgstr "Veralteter Lauf"
@@ -30480,7 +30494,7 @@ msgid "Let through notifications counting upto this number"
 msgstr "Alarme bis zu dieser Anzahl durchlassen"
 
 msgid "Letter"
-msgstr "Zeichen"
+msgstr "Buchstabe"
 
 msgid "Level"
 msgstr "Schwellwert"
@@ -31109,6 +31123,9 @@ msgstr "Grenzwerte der Speicherung"
 
 msgid "Libelle Business Shadow"
 msgstr "Libelle Business Shadow"
+
+msgid "Libraries"
+msgstr "Bibliotheken"
 
 msgid "Licence state"
 msgstr "Lizenzstatus"
@@ -31895,6 +31912,9 @@ msgstr ""
 msgid "Locality Name"
 msgstr "Name der Lokalität"
 
+msgid "Localizations"
+msgstr "Lokalisierungen"
+
 msgid "Locally enabled"
 msgstr "Lokal aktiviert"
 
@@ -32248,7 +32268,7 @@ msgid "Logos"
 msgstr "Logos"
 
 msgid "Logout"
-msgstr "Abmelden"
+msgstr "Abmeldung"
 
 msgid "Logs"
 msgstr "Logs"
@@ -33401,6 +33421,9 @@ msgstr "Matche Port-Typen"
 msgid "Match process path"
 msgstr "Mit Prozesspfad abgleichen"
 
+msgid "Match search"
+msgstr "Übereinstimmung mit der Suche"
+
 msgid "Match service event type"
 msgstr "Art des Service-Ereignisses"
 
@@ -33472,6 +33495,9 @@ msgstr "Art der Prüfung"
 msgid "Matched line"
 msgstr "Passende Zeile"
 
+msgid "Matches"
+msgstr "Stimmt überein"
+
 msgid "Matching"
 msgstr "Bedingungen"
 
@@ -33519,6 +33545,9 @@ msgstr "Max. Alter (sec)"
 
 msgid "Max. Count"
 msgstr "Max. Anzahl"
+
+msgid "Max. duration after downtime starts: "
+msgstr "Maximale Dauer ab Beginn der Wartungszeit: "
 
 msgid "Max. number of SSL connections"
 msgstr "Max. Anzahl von SSL-Verbindungen"
@@ -34571,7 +34600,7 @@ msgid "Minimum possible value"
 msgstr "Kleinstmöglicher Wert"
 
 msgid "Minimum read wait time"
-msgstr "Minimale Leselatenz"
+msgstr "Minimale Wartezeit beim Lesen"
 
 msgid "Minimum required Checkmk version"
 msgstr "Minimal benötigte Checkmk-Version"
@@ -34686,9 +34715,6 @@ msgstr "Fehlender oder ungültiger Modus. Erlaubt sind 'agent' und 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Der Parameter \"%s\" fehlt."
 
-msgid "Missing render parameter"
-msgstr "Der Parameter render fehlt"
-
 msgid "Missing required \"Host name\" selection."
 msgstr "Fehlende erforderliche \"Host-Name\" Auswahl."
 
@@ -34703,9 +34729,6 @@ msgstr "Fehlende erforderliche Auswahl."
 
 msgid "Missing secret for automation command."
 msgstr "Passwort für Automatisierungsbefehl fehlt."
-
-msgid "Missing spec parameter"
-msgstr "Der Parameter spec fehlt"
 
 msgid "Missing test host name"
 msgstr "Fehlender Test-Hostname"
@@ -34831,10 +34854,6 @@ msgstr "Modifizierte BI Regel %s"
 
 msgid "Modified NFS data"
 msgstr "Veränderte NFS-Daten"
-
-#, python-format
-msgid "Modified event correlation rule %s"
-msgstr "Ereignis-Regel %s editiert"
 
 #, python-format
 msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
@@ -37219,6 +37238,9 @@ msgstr "Alarmierungsregeln"
 msgid "Notification rules of user %s"
 msgstr "Alarmierungsregeln von Benutzer %s"
 
+msgid "Notification scripts"
+msgstr "Alarmierungsskripte"
+
 msgid "Notification sort order for bulk notifications"
 msgstr "Sortierungsreihenfolge für Sammelalarme"
 
@@ -38565,9 +38587,8 @@ msgstr "Nur die ersten 10 sortierten Ergebnisse"
 msgid "Only first 20 sorted results"
 msgstr "Nur die ersten 20 sortierten Ergebnisse"
 
-#, fuzzy
 msgid "Only for hosts: Set child hosts in downtime"
-msgstr "nur wenn der Host nicht in Wartung ist"
+msgstr "Nur für Hosts: Child Hosts in Wartungszeit setzen"
 
 msgid ""
 "Only host are listed that are currently part of the active monitoring "
@@ -38673,6 +38694,8 @@ msgid ""
 "Only start downtime if host/service goes DOWN/UNREACH during the defined "
 "start and end time (flexible)"
 msgstr ""
+"Wartungszeit nur starten, wenn der Host/Service zwischen der definierten "
+"Start- und Endezeit auf DOWN/UNREACH geht (flexibel)"
 
 #, python-format
 msgid "Only str and unicode values are allowed, got %s"
@@ -39536,6 +39559,9 @@ msgstr ""
 "sprungartig zu einer hohen Schreiblast führen. In kleineren Installationen "
 "ist dies unkritisch und vermeidet eine verzögerte Aktualisierung von Warn/"
 "Krit-Schwellen in den Graphen."
+
+msgid "PNP4Nagios templates (deprecated)"
+msgstr "PNP4Nagios-Schablonen (veraltet)"
 
 msgid "POP3"
 msgstr "POP3"
@@ -41407,6 +41433,9 @@ msgstr "Anschlussnummer oder -name"
 msgid "Plugin"
 msgstr "Plugin"
 
+msgid "Plugin API references"
+msgstr "Plugin-API Referenzen"
+
 msgid "Plugin Name"
 msgstr "Pluginname"
 
@@ -42968,7 +42997,7 @@ msgid "Read wait maximum"
 msgstr "Maximale Leselatenz"
 
 msgid "Read wait minimum"
-msgstr "Minimale Leselatenz"
+msgstr "Lese-Wartezeit Minimum"
 
 msgid "Read wait time"
 msgstr "Leselatenz"
@@ -43649,9 +43678,6 @@ msgstr "Alle Wartungszeiten entfernen"
 msgid "Remove all files and subdirectories"
 msgstr "Alle Dateien und Unterverzeichnisse entfernen"
 
-msgid "Remove all scheduled downtimes?"
-msgstr "Alle geplanten Wartungszeiten entfernen?"
-
 msgid "Remove downtimes"
 msgstr "Wartungszeiten löschen"
 
@@ -43680,6 +43706,9 @@ msgstr "Nur matchende verschwundene Services entfernen"
 
 msgid "Remove package"
 msgstr "Paket entfernen"
+
+msgid "Remove scheduled downtimes?"
+msgstr "Geplante Wartungszeiten entfernen?"
 
 msgid "Remove service"
 msgstr "Entfernter Service"
@@ -43891,9 +43920,8 @@ msgstr ""
 msgid "Render vertical rules between columns"
 msgstr "Vertikale Linien zwischen den Spalten zeichnen"
 
-#, fuzzy
 msgid "Repeat"
-msgstr "Wiederhole:"
+msgstr "Wiederhole"
 
 msgid "Repeat query and allow more results."
 msgstr "Wiederhole Abfrage - mehr Ergebnisse zulassen."
@@ -43904,9 +43932,9 @@ msgstr "Wiederhole Abfrage ohne Limit."
 msgid "Repeat this downtime"
 msgstr "Diese Wartungszeit wiederholen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Repeats every %s"
-msgstr "Wiederhole jede 20. Zeile"
+msgstr "Wiederhole alle %s"
 
 #, python-brace-format
 msgid "Repetition change for item {diff_path}."
@@ -44779,9 +44807,8 @@ msgstr "Robotmk"
 msgid "Robotmk (Windows)"
 msgstr "Robotmk (Windows)"
 
-#, fuzzy
 msgid "Robotmk Suite Status"
-msgstr "Instanzstatus"
+msgstr "Robotmk Suite Status"
 
 msgid "Role"
 msgstr "Rolle"
@@ -44794,9 +44821,6 @@ msgstr "Rollen"
 
 msgid "Roles & permissions"
 msgstr "Rollen & Berechtigungen"
-
-msgid "Room temperature (external thermal sensors)"
-msgstr "Raumtemperatur (externe thermische Sensoren)"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Jeden Tag um 00:00 Ortszeit rotieren"
@@ -45717,9 +45741,8 @@ msgstr "Scanintervall"
 msgid "Schedule"
 msgstr "Planer"
 
-#, fuzzy
 msgid "Schedule a downtime?"
-msgstr "Wartungszeit planen?"
+msgstr "Eine Wartungszeit planen?"
 
 #, python-format
 msgid "Schedule a periodic downtime every %s"
@@ -45738,9 +45761,8 @@ msgstr "Ausfallzeit für %d %s einplanen"
 msgid "Schedule downtime on host"
 msgstr "Wartungszeit auf Host ansetzen"
 
-#, fuzzy
 msgid "Schedule downtime on service"
-msgstr "Wartungszeit auf Host ansetzen"
+msgstr "Wartungszeit für Service festlegen"
 
 msgid "Schedule downtime?"
 msgstr "Wartungszeit planen?"
@@ -46657,6 +46679,14 @@ msgstr "Serverperformance"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Server-seitige Behandlung unverschlüsselter Daten"
+
+#, fuzzy
+msgid "Server time"
+msgstr "Uhrzeit des Servers"
+
+#, python-format
+msgid "Server time (currently: %s)"
+msgstr ""
 
 msgid "Service"
 msgstr "Service"
@@ -48615,7 +48645,7 @@ msgid "Site backup"
 msgstr "Instanzsicherung"
 
 msgid "Site backup targets"
-msgstr "Sicherungsziele"
+msgstr "Ziele des Instanz-Backups"
 
 msgid "Site base URL"
 msgstr "Instanz-Basis-URL"
@@ -50216,9 +50246,8 @@ msgstr "Start!"
 msgid "Start-Time"
 msgstr "Beginn"
 
-#, python-format
-msgid "Start: %s"
-msgstr "Start: %s"
+msgid "Start:"
+msgstr "Beginn:"
 
 msgid "Started"
 msgstr "Gestartet"
@@ -50261,6 +50290,8 @@ msgstr "Beginnend beim Eintrage"
 msgid ""
 "Starts if host/service goes DOWN/UNREACH with a max. duration of %d hours."
 msgstr ""
+"Startet, wenn der Host/Dienst auf DOWN/UNREACH mit einer maximalen Dauer von "
+"%d Stunden geht."
 
 msgid "Startup overhead in shared pool"
 msgstr "Anfänglicher Überschuss im gemeinsamen Pool"
@@ -50295,6 +50326,9 @@ msgstr "Status Klassifizierung"
 
 msgid "State during active system events"
 msgstr "Status während aktiver Systemereignisse"
+
+msgid "State during discovery of the service"
+msgstr "Status während der Service-Erkennung"
 
 msgid "State flag (on/off)"
 msgstr "Statusflag (an/aus)"
@@ -51472,11 +51506,10 @@ msgid "Suggested tutorial videos"
 msgstr "Vorgeschlagene Tutorial Videos"
 
 msgid "Suite"
-msgstr ""
+msgstr "Suite"
 
-#, fuzzy
 msgid "Suite runtime"
-msgstr "Instanzname"
+msgstr "Suite Laufzeit"
 
 msgid "Sum"
 msgstr "Summe"
@@ -52274,30 +52307,6 @@ msgstr "Temperatur-Trendanalyse"
 
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatur/Luftfeuchtigkeit für Eaton UPS"
-
-msgid ""
-"Temperature levels for external thermometers that are used for monitoring "
-"the temperature of a datacenter. An example is the webthem from W&T."
-msgstr ""
-"Temperaturschwellwerte für externe Thermometer, welche die Temperatur des "
-"Rechnerraums überwachen. Beispiel: webtherm von W&T."
-
-msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
-msgstr "Temperaturschwellwerte für Festplatten (übermittelt z. B. von SMART)"
-
-msgid ""
-"Temperature levels for hardware devices like Brocade switches with "
-"(potentially) several temperature sensors. Sensor IDs can be selected in the "
-"rule."
-msgstr ""
-"Temperaturschwellen für Hardwaregeräte wie Brocade-Switche mit "
-"(möglicherweise) mehreren Temperatursensoren. Die Sensor-IDs können in der "
-"Regel eingestellt werden."
-
-msgid ""
-"Temperature levels for hardware devices with a single temperature sensor."
-msgstr ""
-"Temperaturschwellwerte für Geräte mit einem einzelnen Temperatursensor."
 
 msgid "Temperature sensors with built-in levels"
 msgstr "Temperatursensoren mit mitgelieferten Schwellwerten"
@@ -53646,13 +53655,6 @@ msgstr ""
 "diesen Fällen nicht Benachrichtigt wird."
 
 msgid ""
-"The checkbox for setting host downtimes does not work when removing "
-"downtimes."
-msgstr ""
-"Die Option für das Setzen von Host-Wartungszeiten funktioniert nicht beim "
-"Entfernen von Wartungszeiten."
-
-msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
 "reduce the memory consumption."
 msgstr ""
@@ -54667,9 +54669,6 @@ msgstr "Der Identifikator eines Werts muss pro Typ eindeutig sein."
 
 msgid "The identificator of the fan."
 msgstr "Die ID des Lüfters."
-
-msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
-msgstr "Identifikation der Festplatte, z.B. <tt>sda</tt>."
 
 msgid "The identificator of the module."
 msgstr "Die ID des Moduls."
@@ -56119,6 +56118,10 @@ msgid ""
 "multiplied by the timeout per attempt. This settings configures thresholds "
 "on the suite runtime with respect to this overall limit."
 msgstr ""
+"Die Laufzeit einer Suite wird begrenzt durch die maximale Anzahl der "
+"Versuche multipliziert mit dem Timeout pro Versuch. Diese Einstellung "
+"konfiguriert Schwellenwerte für die Laufzeit der Suite in Bezug auf diese "
+"Gesamtgrenze."
 
 msgid "The schedule you are trying to clone does not exist."
 msgstr "Der Eintrag, den Sie klonen möchten, existiert nicht."
@@ -57407,6 +57410,10 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Diese ID wird als eindeutiger Identifier verwendet. Sie kann später nicht "
 "mehr geändert werden."
+
+#, fuzzy
+msgid "This Ruleset sets the threshold limits for battery sensors"
+msgstr "Dieser Regelsatz definiert Schwellwerte für Feuchtigkeitssensoren"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "Dieser Regelsatz definiert Schwellwerte für Feuchtigkeitssensoren"
@@ -63884,6 +63891,11 @@ msgstr ""
 "Adressänderungen bei Hosts, die ohne explizite Adresse konfiguriert sind, zu "
 "berücksichtigen."
 
+msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgstr ""
+"Upgraden Sie auf die Cloud oder Enterprise Edition, um diese Funktion zu "
+"nutzen"
+
 msgid "Upload"
 msgstr "Hochladen"
 
@@ -64509,9 +64521,10 @@ msgstr "Obere Grenzen für die Anzahl der Point-to-Site Verbindungen"
 msgid "Upper levels on percentage of %s requests"
 msgstr "Obergrenze bei Prozentsatz der %s-Anfragen"
 
-#, fuzzy
 msgid "Upper levels on suite runtime relative to overall timeout"
-msgstr "Obere Schwellwerte für die Dauer in Prozent des Timeouts"
+msgstr ""
+"Obere Schwellwerte für die Laufzeit der Suite im Verhältnis zum Gesamt-"
+"Timeout"
 
 msgid "Upper levels on the oldest replication slot lag"
 msgstr "Obergrenze auf dem ältesten Replikationssteckplatz verzögern"
@@ -66877,6 +66890,9 @@ msgstr "Warnung beginnt mit"
 msgid "Warning threshold"
 msgstr "Warnungs-Schwellwert"
 
+msgid "Warning: "
+msgstr "Warnung: "
+
 msgid "Warning: This host has an invalid configuration!"
 msgstr "Warnung: Die Host-Konfiguration ist ungültig!"
 
@@ -67043,7 +67059,7 @@ msgid "Wh"
 msgstr "Wh"
 
 msgid "What is the occasion?"
-msgstr ""
+msgstr "Was ist der Anlass?"
 
 msgid ""
 "When Multisite is running in debug mode, internal Python error messages are "
@@ -69708,9 +69724,9 @@ msgstr "Sie können höchstens %d Einträge angeben"
 
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
-"specfied VMs are distributed across at least so many hosts. E.g. provide two "
-"VM names and set 'Number of hosts' to two, to make sure those VMs are not "
-"running on the same host."
+"specified VMs are distributed across at least so many hosts. E.g. provide "
+"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
+"not running on the same host."
 msgstr ""
 "Sie können Listen mit VM-Namen und eine Reihe von Hosts angeben, um "
 "sicherzustellen, dass die angegebenen VMs auf mindestens so viele Hosts "
@@ -72030,9 +72046,8 @@ msgstr "n.v."
 msgid "negate"
 msgstr "invers"
 
-#, fuzzy
 msgid "never"
-msgstr "(nie)"
+msgstr "nie"
 
 msgid "new element"
 msgstr "neues Element"
@@ -72206,9 +72221,6 @@ msgstr "nur wenn der Host nicht in Wartung ist"
 
 msgid "open"
 msgstr "offen"
-
-msgid "operational state not available"
-msgstr "Operational State nicht verfügbar"
 
 msgid "optional"
 msgstr "optional"
@@ -72419,7 +72431,7 @@ msgid "require primary interface to be active"
 msgstr "Benötigt aktive primäre Schnittstelle"
 
 msgid "reset"
-msgstr "Zurücksetzen"
+msgstr "zurücksetzen"
 
 msgid "resources matching tag based criteria"
 msgstr "Ressourcen basierend auf Tags auswählen"
@@ -72798,7 +72810,7 @@ msgid "warning if above"
 msgstr "Warnung wenn über"
 
 msgid "warning if above or equal"
-msgstr "Warnung bei oder über"
+msgstr "Warnung, falls bei oder über"
 
 msgid "warning if at"
 msgstr "Warnung bei"
@@ -72895,12 +72907,79 @@ msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #, python-format
-#~ msgid "<b>%s for the next %d minutes</b>?"
-#~ msgstr "<b>%s für die nächsten %d Minutes</b>?"
+#~ msgid "Created new event correlation rule with id %s"
+#~ msgstr "Neue Ereignis-Regel mit ID %s erzeugt"
 
 #, python-format
-#~ msgid "Adhoc for %d minutes"
-#~ msgstr "Adhoc für %d Minuten"
+#~ msgid "Modified event correlation rule %s"
+#~ msgstr "Ereignis-Regel %s editiert"
+
+#~ msgid "Hard disk device"
+#~ msgstr "Festplattengerät"
+
+#~ msgid "Harddisk temperature (e.g. via SMART)"
+#~ msgstr "Festplattentemperatur (z.B. via SMART)"
+
+#~ msgid "Hardware temperature, multiple sensors"
+#~ msgstr "Hardware-Temperatur, mehrere Sensoren"
+
+#~ msgid "Host/Device temperature"
+#~ msgstr "Host/Gerätetemperatur"
+
+#~ msgid "Room temperature (external thermal sensors)"
+#~ msgstr "Raumtemperatur (externe thermische Sensoren)"
+
+#~ msgid ""
+#~ "Temperature levels for external thermometers that are used for monitoring "
+#~ "the temperature of a datacenter. An example is the webthem from W&T."
+#~ msgstr ""
+#~ "Temperaturschwellwerte für externe Thermometer, welche die Temperatur des "
+#~ "Rechnerraums überwachen. Beispiel: webtherm von W&T."
+
+#~ msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
+#~ msgstr ""
+#~ "Temperaturschwellwerte für Festplatten (übermittelt z. B. von SMART)"
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices like Brocade switches with "
+#~ "(potentially) several temperature sensors. Sensor IDs can be selected in "
+#~ "the rule."
+#~ msgstr ""
+#~ "Temperaturschwellen für Hardwaregeräte wie Brocade-Switche mit "
+#~ "(möglicherweise) mehreren Temperatursensoren. Die Sensor-IDs können in "
+#~ "der Regel eingestellt werden."
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices with a single temperature sensor."
+#~ msgstr ""
+#~ "Temperaturschwellwerte für Geräte mit einem einzelnen Temperatursensor."
+
+#~ msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
+#~ msgstr "Identifikation der Festplatte, z.B. <tt>sda</tt>."
+
+#~ msgid "operational state not available"
+#~ msgstr "Operational State nicht verfügbar"
+
+#, python-format
+#~ msgid "Start: %s"
+#~ msgstr "Start: %s"
+
+#~ msgid ""
+#~ "The checkbox for setting host downtimes does not work when removing "
+#~ "downtimes."
+#~ msgstr ""
+#~ "Die Option für das Setzen von Host-Wartungszeiten funktioniert nicht beim "
+#~ "Entfernen von Wartungszeiten."
+
+#~ msgid "Missing render parameter"
+#~ msgstr "Der Parameter render fehlt"
+
+#~ msgid "Missing spec parameter"
+#~ msgstr "Der Parameter spec fehlt"
+
+#, python-format
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s für die nächsten %d Minutes</b>?"
 
 #~ msgid "Also set downtime on child hosts"
 #~ msgstr "Wartungszeit auf für Child-Hosts setzen"
@@ -72944,42 +73023,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Clear audit log"
 #~ msgstr "Audit-Log leeren"
-
-#~ msgid "Agent based plugins (Checks, Inventory)"
-#~ msgstr "Agenten-basierte Plugins (Checks, Inventur)"
-
-#~ msgid "Binaries"
-#~ msgstr "Ausführbare Programme"
-
-#~ msgid "Checks' man pages"
-#~ msgstr "Handbuch-Seiten der Checks"
-
-#~ msgid "Documentation files"
-#~ msgstr "Dokumentation Dateien"
-
-#~ msgid "GUI extensions"
-#~ msgstr "GUI-Erweiterungen"
-
-#~ msgid "Legacy GUI extensions"
-#~ msgstr "Legacy GUI-Erweiterungen"
-
-#~ msgid "Legacy check plugins"
-#~ msgstr "Veraltete Checkplugins"
-
-#~ msgid "Legacy inventory plugins"
-#~ msgstr "Veraltete Inventurplugins"
-
-#~ msgid "Libraries"
-#~ msgstr "Bibliotheken"
-
-#~ msgid "Localizations"
-#~ msgstr "Lokalisierungen"
-
-#~ msgid "Notification scripts"
-#~ msgstr "Alarmierungsskripte"
-
-#~ msgid "PNP4Nagios templates (deprecated)"
-#~ msgstr "PNP4Nagios-Schablonen (veraltet)"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr ""
@@ -82358,9 +82401,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Detailed host infos"
 #~ msgstr "Detaillierte Host-Informationen"
-
-#~ msgid "Maximum delay until downtime starts:"
-#~ msgstr "Maximale Verzögerung bis zum Beginn der Wartungszeit:"
 
 #~ msgid "Qos outbound bits"
 #~ msgstr "QoS ausgehende Bits"

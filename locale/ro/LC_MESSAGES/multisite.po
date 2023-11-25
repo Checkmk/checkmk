@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2023-11-18 00:08+0000\n"
 "Last-Translator: Marius Pana <mp@spearhead.systems>\n"
@@ -696,6 +696,10 @@ msgstr "%s a fost oprit după %s la %s."
 #, python-format
 msgid "%s write %s"
 msgstr "%s scrie %s"
+
+#, fuzzy, python-format
+msgid "%s, %s. %s %s at %s"
+msgstr "%s a fost oprit după %s la %s."
 
 #, python-format
 msgid ""
@@ -1917,6 +1921,10 @@ msgid ""
 msgstr ""
 "<tt>TNS_ADMIN</tt> de folosit pentru <tt>sqlnet.ora</tt> și <tt>tnsnames."
 "ora</tt> %s."
+
+#, fuzzy
+msgid "<u>Info</u>: Downtime also applies to services."
+msgstr "Întreruperi de serviciu"
 
 msgid "??"
 msgstr "??"
@@ -4232,6 +4240,10 @@ msgstr "Comentariu adhoc"
 msgid "Adhoc downtime"
 msgstr "Întreruperi adhoc"
 
+#, python-format
+msgid "Adhoc for %d minutes"
+msgstr "Adhoc pentru %d minute"
+
 msgid "Admin"
 msgstr "Admin"
 
@@ -4645,6 +4657,9 @@ msgstr "Coacerea și semnarea agentului"
 
 msgid "Agent baking finished."
 msgstr "Agentul de coacere a terminat."
+
+msgid "Agent based plugins (Checks, Inventory)"
+msgstr "Plugin-uri bazate pe agenți (Verificări, Inventar)"
 
 msgid "Agent controller"
 msgstr "Controlor agent"
@@ -7770,6 +7785,10 @@ msgstr "Setări BasicAuth (opțional)"
 msgid "Batch Requests/sec"
 msgstr "Solicitări de loturi/sec"
 
+#, fuzzy
+msgid "Battery Levels"
+msgstr "Niveluri de memorie"
+
 msgid "Battery capacity"
 msgstr "Capacitatea bateriei"
 
@@ -7854,6 +7873,9 @@ msgstr "Timp facturabil"
 
 msgid "Bin Log Disk Usage"
 msgstr "Jurnal de pubelă Utilizare disc"
+
+msgid "Binaries"
+msgstr "Binare"
 
 msgid "Bind DN"
 msgstr "Legătură DN"
@@ -10271,9 +10293,6 @@ msgstr "Verificați plugin-ul"
 msgid "Check plugin API introduction"
 msgstr "Verificați introducerea plugin-ului API"
 
-msgid "Check plugin API reference"
-msgstr "Verificați referința API a plugin-ului"
-
 msgid "Check plugin timeout"
 msgstr "Verificați timeout-ul plugin-ului"
 
@@ -10777,6 +10796,9 @@ msgstr "Verificări privind gazdele obișnuite"
 
 msgid "Checks via SSH. "
 msgstr "Verifică prin SSH. "
+
+msgid "Checks' man pages"
+msgstr "Pagini de manual pentru verificări"
 
 msgid "Checktype"
 msgstr "Tip de control"
@@ -13620,10 +13642,6 @@ msgstr "A creat o nouă regulă de gestionare a alertelor"
 #, python-format
 msgid "Created new connection to site %s"
 msgstr "A fost creată o nouă conexiune la site %s"
-
-#, python-format
-msgid "Created new event correlation rule with id %s"
-msgstr "A creat o nouă regulă de corelare a evenimentelor cu id %s"
 
 #, python-format
 msgid "Created new extension package %s"
@@ -17841,6 +17859,9 @@ msgstr "Creșterea numărului de documente pe minut"
 msgid "Documentation URL"
 msgstr "URL de documentare"
 
+msgid "Documentation files"
+msgstr "Fișiere de documentare"
+
 msgid "Documents fragmentation"
 msgstr "Fragmentarea documentelor"
 
@@ -18037,10 +18058,6 @@ msgid "Downtime active or pending"
 msgstr "Timp de oprire activ sau în așteptare"
 
 #, fuzzy
-msgid "Downtime also applies to services."
-msgstr "Întreruperi de serviciu"
-
-#, fuzzy
 msgid "Downtime attributes:"
 msgstr "Atribute modificate"
 
@@ -18049,6 +18066,9 @@ msgstr "Autorul Downtime"
 
 msgid "Downtime author (regex)"
 msgstr "Autorul timpului de nefuncționare (regex)"
+
+msgid "Downtime can extend beyond the previously defined end date and time"
+msgstr ""
 
 msgid "Downtime comment"
 msgstr "Comentariu privind timpul de nefuncționare"
@@ -18059,10 +18079,6 @@ msgstr "Comentariu privind timpul de întrerupere (regex)"
 #, fuzzy
 msgid "Downtime datepicker"
 msgstr "Ora de sfârșit a timpului de oprire"
-
-#, fuzzy
-msgid "Downtime does not apply to host."
-msgstr "Timpii de întrerupere a gazdei"
 
 msgid "Downtime duration (if flexible)"
 msgstr "Durata timpului de oprire (dacă este flexibil)"
@@ -19434,8 +19450,8 @@ msgstr "Sfârșitul timpului"
 msgid "End-to-end latency"
 msgstr "Latență de la un capăt la altul"
 
-#, fuzzy, python-format
-msgid "End: %s"
+#, fuzzy
+msgid "End:"
 msgstr "Adăugat %s"
 
 msgid "Ended"
@@ -22639,6 +22655,9 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "Proiectare GUI"
 
+msgid "GUI extensions"
+msgstr "Extensii GUI"
+
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
 "providers, to your data centers, across servers, networks, containers, and "
@@ -23470,9 +23489,6 @@ msgstr "Gestionarea textelor prea lungi (afectează doar tabelul)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
-msgid "Hard disk device"
-msgstr "Dispozitiv de hard disk"
-
 msgid "Hard query limit"
 msgstr "Limita de interogare dură"
 
@@ -23493,9 +23509,6 @@ msgstr ""
 "OK. <b>Nota:</b> La calcularea disponibilității unui agregat BI această "
 "opțiune nu are niciun impact. În acest scop se vor utiliza întotdeauna "
 "stările soft (adică reale)."
-
-msgid "Harddisk temperature (e.g. via SMART)"
-msgstr "Temperatura harddisk-ului (de exemplu, prin SMART)"
 
 msgid "Harddrive CRC errors"
 msgstr "Erori CRC ale harddrive-ului"
@@ -23550,9 +23563,6 @@ msgstr "Informații hardware ale serverului Checkmk"
 
 msgid "Hardware status"
 msgstr "Starea hardware"
-
-msgid "Hardware temperature, multiple sensors"
-msgstr "Temperatura hardware, senzori multipli"
 
 msgid "Hardware, BIOS"
 msgstr "Hardware, BIOS"
@@ -25291,9 +25301,6 @@ msgstr "Comentarii privind gazdele și serviciile"
 
 msgid "Host- or DNS name"
 msgstr "Nume gazdă sau DNS"
-
-msgid "Host/Device temperature"
-msgstr "Temperatura gazdei/dispozitivului"
 
 msgid "Host/Service"
 msgstr "Gazdă/Serviciu"
@@ -28654,6 +28661,10 @@ msgstr "Subiect individual"
 msgid "Ineffective"
 msgstr "Ineficace"
 
+#, fuzzy
+msgid "Ineffective rule"
+msgstr "Reguli neaplicate"
+
 msgid "Ineffective rules"
 msgstr "Reguli neaplicate"
 
@@ -28702,6 +28713,10 @@ msgstr "Informații"
 
 msgid "Info:"
 msgstr "Informații:"
+
+#, fuzzy
+msgid "Info: Downtime does not apply to host."
+msgstr "Timpii de întrerupere a gazdei"
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -30642,8 +30657,17 @@ msgstr ""
 "dezactivați gruparea notificărilor, fie să alegeți un alt plugin de "
 "notificare care permite gruparea."
 
+msgid "Legacy GUI extensions"
+msgstr "Extensii GUI moștenite"
+
 msgid "Legacy agent management"
 msgstr "Gestionarea agenților vechi"
+
+msgid "Legacy check plugins"
+msgstr "Plugin-uri de verificare a moștenirii"
+
+msgid "Legacy inventory plugins"
+msgstr "Plugin-uri de inventar vechi"
 
 msgid "Legacy run"
 msgstr "Rularea moștenirii"
@@ -31327,6 +31351,9 @@ msgstr "Niveluri de depozitare"
 
 msgid "Libelle Business Shadow"
 msgstr "Libelle Business Shadow"
+
+msgid "Libraries"
+msgstr "Biblioteci"
 
 msgid "Licence state"
 msgstr "Statul de licență"
@@ -32118,6 +32145,9 @@ msgstr ""
 
 msgid "Locality Name"
 msgstr "Denumirea localității"
+
+msgid "Localizations"
+msgstr "Localizări"
 
 msgid "Locally enabled"
 msgstr "Activat la nivel local"
@@ -33651,6 +33681,10 @@ msgstr "Potriviți tipurile de porturi"
 msgid "Match process path"
 msgstr "Potrivește calea procesului"
 
+#, fuzzy
+msgid "Match search"
+msgstr "Servicii de potrivire"
+
 msgid "Match service event type"
 msgstr "Potrivire tip de eveniment de serviciu"
 
@@ -33724,6 +33758,10 @@ msgstr "Tipul de meci"
 msgid "Matched line"
 msgstr "Linie de potrivire"
 
+#, fuzzy
+msgid "Matches"
+msgstr "Meci"
+
 msgid "Matching"
 msgstr "Potrivire"
 
@@ -33771,6 +33809,10 @@ msgstr "Max. Vârsta (sec)"
 
 msgid "Max. Count"
 msgstr "Numarul maxim"
+
+#, fuzzy
+msgid "Max. duration after downtime starts: "
+msgstr "Prima dată când începe timpul de nefuncționare"
 
 msgid "Max. number of SSL connections"
 msgstr "Numărul maxim de conexiuni SSL"
@@ -34933,9 +34975,6 @@ msgstr "Mod lipsă sau invalid. Permise sunt 'agent' și 'status'"
 msgid "Missing parameter \"%s\"."
 msgstr "Lipsește parametrul \"%s\"."
 
-msgid "Missing render parameter"
-msgstr "Parametru de redare lipsă"
-
 msgid "Missing required \"Host name\" selection."
 msgstr "Lipsește selecția necesară \"Host name\"."
 
@@ -34950,9 +34989,6 @@ msgstr "Lipsește selecția necesară."
 
 msgid "Missing secret for automation command."
 msgstr "Secretul lipsă pentru comanda de automatizare."
-
-msgid "Missing spec parameter"
-msgstr "Parametru de specificații lipsă"
 
 msgid "Missing test host name"
 msgstr "Numele gazdei de test lipsă"
@@ -35078,10 +35114,6 @@ msgstr "Regula BI modificată %s."
 
 msgid "Modified NFS data"
 msgstr "Date NFS modificate"
-
-#, python-format
-msgid "Modified event correlation rule %s"
-msgstr "Regula de corelare a evenimentelor modificată %s"
 
 #, python-format
 msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
@@ -37490,6 +37522,9 @@ msgstr "Norme de notificare"
 msgid "Notification rules of user %s"
 msgstr "Reguli de notificare a utilizatorului %s."
 
+msgid "Notification scripts"
+msgstr "Scripturi de notificare"
+
 msgid "Notification sort order for bulk notifications"
 msgstr "Ordinea de sortare a notificărilor pentru notificările în masă"
 
@@ -39823,6 +39858,9 @@ msgstr ""
 "ca informațiile meta să fie actualizate la procesarea rezultatului primei "
 "verificări după repornire."
 
+msgid "PNP4Nagios templates (deprecated)"
+msgstr "Șabloane PNP4Nagios (depreciat)"
+
 msgid "POP3"
 msgstr "POP3"
 
@@ -41692,6 +41730,10 @@ msgstr "Numărul sau denumirea elementului de fișă"
 
 msgid "Plugin"
 msgstr "Plugin"
+
+#, fuzzy
+msgid "Plugin API references"
+msgstr "Verificați referința API a plugin-ului"
 
 msgid "Plugin Name"
 msgstr "Nume Plugin"
@@ -43946,9 +43988,6 @@ msgstr "Eliminați toate timpii de nefuncționare"
 msgid "Remove all files and subdirectories"
 msgstr "Îndepărtați toate fișierele și subdirectoarele"
 
-msgid "Remove all scheduled downtimes?"
-msgstr "Eliminați toate opririle programate?"
-
 msgid "Remove downtimes"
 msgstr "Eliminați timpii de nefuncționare"
 
@@ -43975,6 +44014,10 @@ msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
 
 msgid "Remove package"
 msgstr "Îndepărtați pachetul"
+
+#, fuzzy
+msgid "Remove scheduled downtimes?"
+msgstr "Eliminați toate opririle programate?"
 
 msgid "Remove service"
 msgstr "Îndepărtarea serviciului"
@@ -45109,9 +45152,6 @@ msgstr "Roluri"
 
 msgid "Roles & permissions"
 msgstr "Roluri și permisiuni"
-
-msgid "Room temperature (external thermal sensors)"
-msgstr "Temperatura camerei (senzori termici externi)"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "Se rotește în fiecare zi la ora locală 00:00"
@@ -46992,6 +47032,14 @@ msgstr "Performanța serverului"
 
 msgid "Server side handling of unencrypted data"
 msgstr "Manipularea pe server a datelor necriptate"
+
+#, fuzzy
+msgid "Server time"
+msgstr "Ora serverului"
+
+#, python-format
+msgid "Server time (currently: %s)"
+msgstr ""
 
 msgid "Service"
 msgstr "Serviciul"
@@ -50601,9 +50649,9 @@ msgstr "Începeți!"
 msgid "Start-Time"
 msgstr "Ora de începere"
 
-#, fuzzy, python-format
-msgid "Start: %s"
-msgstr "Setari"
+#, fuzzy
+msgid "Start:"
+msgstr "Start"
 
 msgid "Started"
 msgstr "A început cu"
@@ -50680,6 +50728,10 @@ msgstr "Clasificarea de stat"
 
 msgid "State during active system events"
 msgstr "Starea în timpul evenimentelor sistemului activ"
+
+#, fuzzy
+msgid "State during discovery of the service"
+msgstr "Descoperirea serviciilor: Eliminarea serviciilor"
 
 msgid "State flag (on/off)"
 msgstr "Indicator de stare (pornit/oprit)"
@@ -52686,34 +52738,6 @@ msgstr "Analiza tendinței temperaturii"
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Temperatura și umiditatea pentru UPS Eaton"
 
-msgid ""
-"Temperature levels for external thermometers that are used for monitoring "
-"the temperature of a datacenter. An example is the webthem from W&T."
-msgstr ""
-"Nivelurile de temperatură pentru termometrele externe utilizate pentru "
-"monitorizarea temperaturii unui centru de date. Un exemplu este webthem de "
-"la W&T."
-
-msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
-msgstr ""
-"Nivelurile de temperatură pentru discurile dure, care sunt determinate, de "
-"exemplu, prin SMART."
-
-msgid ""
-"Temperature levels for hardware devices like Brocade switches with "
-"(potentially) several temperature sensors. Sensor IDs can be selected in the "
-"rule."
-msgstr ""
-"Niveluri de temperatură pentru dispozitive hardware precum switch-urile "
-"Brocade cu (potențial) mai mulți senzori de temperatură. ID-urile senzorilor "
-"pot fi selectate în regulă."
-
-msgid ""
-"Temperature levels for hardware devices with a single temperature sensor."
-msgstr ""
-"Niveluri de temperatură pentru dispozitive hardware cu un singur senzor de "
-"temperatură."
-
 msgid "Temperature sensors with built-in levels"
 msgstr "Senzori de temperatură cu niveluri încorporate"
 
@@ -54075,13 +54099,6 @@ msgstr ""
 "acest caz."
 
 msgid ""
-"The checkbox for setting host downtimes does not work when removing "
-"downtimes."
-msgstr ""
-"Caseta de selectare pentru setarea timpilor de oprire a gazdelor nu "
-"funcționează atunci când se elimină timpii de oprire."
-
-msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
 "reduce the memory consumption."
 msgstr ""
@@ -55100,10 +55117,6 @@ msgstr ""
 
 msgid "The identificator of the fan."
 msgstr "Identificatorul ventilatorului."
-
-msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
-msgstr ""
-"Identificatorul dispozitivului hard disk, de exemplu <tt>/dev/sda</tt>."
 
 msgid "The identificator of the module."
 msgstr "Identificatorul modulului."
@@ -57857,6 +57870,11 @@ msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "Acest ID este utilizat ca identificator unic al acestuia. Acesta nu poate fi "
 "modificat ulterior."
+
+#, fuzzy
+msgid "This Ruleset sets the threshold limits for battery sensors"
+msgstr ""
+"Acest set de reguli stabilește limitele de prag pentru senzorii de umiditate"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr ""
@@ -64389,6 +64407,9 @@ msgstr ""
 "schimbările de adresă IP ale gazdelor care sunt configurate fără o adresă "
 "explicită."
 
+msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgstr ""
+
 msgid "Upload"
 msgstr "Încărcați"
 
@@ -67421,6 +67442,10 @@ msgstr "Avertismentul începe cu"
 msgid "Warning threshold"
 msgstr "Prag de avertizare"
 
+#, fuzzy
+msgid "Warning: "
+msgstr "Avertismente:"
+
 msgid "Warning: This host has an invalid configuration!"
 msgstr "Avertisment: Această gazdă are o configurație invalidă!"
 
@@ -70266,11 +70291,12 @@ msgstr ""
 msgid "You can specify at most %d entries"
 msgstr "Puteți specifica cel mult %d intrări"
 
+#, fuzzy
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
-"specfied VMs are distributed across at least so many hosts. E.g. provide two "
-"VM names and set 'Number of hosts' to two, to make sure those VMs are not "
-"running on the same host."
+"specified VMs are distributed across at least so many hosts. E.g. provide "
+"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
+"not running on the same host."
 msgstr ""
 "Puteți specifica liste de nume de mașini virtuale și un număr de gazde, "
 "pentru a vă asigura că mașinile virtuale specificate sunt distribuite pe cel "
@@ -72773,9 +72799,6 @@ msgstr "numai atunci când gazda nu este în timp de nefuncționare"
 msgid "open"
 msgstr "deschis"
 
-msgid "operational state not available"
-msgstr "starea de funcționare nu este disponibilă"
-
 msgid "optional"
 msgstr "opțional"
 
@@ -73467,12 +73490,83 @@ msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #, python-format
-#~ msgid "<b>%s for the next %d minutes</b>?"
-#~ msgstr "<b>%s pentru următoarele %d minute</b>?"
+#~ msgid "Created new event correlation rule with id %s"
+#~ msgstr "A creat o nouă regulă de corelare a evenimentelor cu id %s"
 
 #, python-format
-#~ msgid "Adhoc for %d minutes"
-#~ msgstr "Adhoc pentru %d minute"
+#~ msgid "Modified event correlation rule %s"
+#~ msgstr "Regula de corelare a evenimentelor modificată %s"
+
+#~ msgid "Hard disk device"
+#~ msgstr "Dispozitiv de hard disk"
+
+#~ msgid "Harddisk temperature (e.g. via SMART)"
+#~ msgstr "Temperatura harddisk-ului (de exemplu, prin SMART)"
+
+#~ msgid "Hardware temperature, multiple sensors"
+#~ msgstr "Temperatura hardware, senzori multipli"
+
+#~ msgid "Host/Device temperature"
+#~ msgstr "Temperatura gazdei/dispozitivului"
+
+#~ msgid "Room temperature (external thermal sensors)"
+#~ msgstr "Temperatura camerei (senzori termici externi)"
+
+#~ msgid ""
+#~ "Temperature levels for external thermometers that are used for monitoring "
+#~ "the temperature of a datacenter. An example is the webthem from W&T."
+#~ msgstr ""
+#~ "Nivelurile de temperatură pentru termometrele externe utilizate pentru "
+#~ "monitorizarea temperaturii unui centru de date. Un exemplu este webthem "
+#~ "de la W&T."
+
+#~ msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
+#~ msgstr ""
+#~ "Nivelurile de temperatură pentru discurile dure, care sunt determinate, "
+#~ "de exemplu, prin SMART."
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices like Brocade switches with "
+#~ "(potentially) several temperature sensors. Sensor IDs can be selected in "
+#~ "the rule."
+#~ msgstr ""
+#~ "Niveluri de temperatură pentru dispozitive hardware precum switch-urile "
+#~ "Brocade cu (potențial) mai mulți senzori de temperatură. ID-urile "
+#~ "senzorilor pot fi selectate în regulă."
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices with a single temperature sensor."
+#~ msgstr ""
+#~ "Niveluri de temperatură pentru dispozitive hardware cu un singur senzor "
+#~ "de temperatură."
+
+#~ msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
+#~ msgstr ""
+#~ "Identificatorul dispozitivului hard disk, de exemplu <tt>/dev/sda</tt>."
+
+#~ msgid "operational state not available"
+#~ msgstr "starea de funcționare nu este disponibilă"
+
+#, fuzzy, python-format
+#~ msgid "Start: %s"
+#~ msgstr "Setari"
+
+#~ msgid ""
+#~ "The checkbox for setting host downtimes does not work when removing "
+#~ "downtimes."
+#~ msgstr ""
+#~ "Caseta de selectare pentru setarea timpilor de oprire a gazdelor nu "
+#~ "funcționează atunci când se elimină timpii de oprire."
+
+#~ msgid "Missing render parameter"
+#~ msgstr "Parametru de redare lipsă"
+
+#~ msgid "Missing spec parameter"
+#~ msgstr "Parametru de specificații lipsă"
+
+#, python-format
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s pentru următoarele %d minute</b>?"
 
 #~ msgid "Also set downtime on child hosts"
 #~ msgstr "De asemenea, setați timpul de nefuncționare pe gazdele copil"
@@ -73516,42 +73610,6 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 #~ msgid "Clear audit log"
 #~ msgstr "Ștergeți jurnalul de audit"
-
-#~ msgid "Agent based plugins (Checks, Inventory)"
-#~ msgstr "Plugin-uri bazate pe agenți (Verificări, Inventar)"
-
-#~ msgid "Binaries"
-#~ msgstr "Binare"
-
-#~ msgid "Checks' man pages"
-#~ msgstr "Pagini de manual pentru verificări"
-
-#~ msgid "Documentation files"
-#~ msgstr "Fișiere de documentare"
-
-#~ msgid "GUI extensions"
-#~ msgstr "Extensii GUI"
-
-#~ msgid "Legacy GUI extensions"
-#~ msgstr "Extensii GUI moștenite"
-
-#~ msgid "Legacy check plugins"
-#~ msgstr "Plugin-uri de verificare a moștenirii"
-
-#~ msgid "Legacy inventory plugins"
-#~ msgstr "Plugin-uri de inventar vechi"
-
-#~ msgid "Libraries"
-#~ msgstr "Biblioteci"
-
-#~ msgid "Localizations"
-#~ msgstr "Localizări"
-
-#~ msgid "Notification scripts"
-#~ msgstr "Scripturi de notificare"
-
-#~ msgid "PNP4Nagios templates (deprecated)"
-#~ msgstr "Șabloane PNP4Nagios (depreciat)"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr ""

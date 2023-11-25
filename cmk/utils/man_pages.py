@@ -318,7 +318,7 @@ CHECK_MK_AGENTS: Final = {
 }
 
 
-def _get_man_page_dirs() -> Sequence[Path]:
+def get_man_page_dirs() -> Sequence[Path]:
     # first match wins
     return [
         cmk.utils.paths.local_check_manpages_dir,
@@ -330,12 +330,9 @@ def _is_valid_basename(name: str) -> bool:
     return not name.startswith(".") and not name.endswith("~")
 
 
-def man_page_path(name: str, man_page_dirs: Iterable[Path] | None = None) -> Path | None:
+def man_page_path(name: str, man_page_dirs: Iterable[Path]) -> Path | None:
     if not _is_valid_basename(name):
         return None
-
-    if man_page_dirs is None:
-        man_page_dirs = _get_man_page_dirs()
 
     for basedir in man_page_dirs:
         # check plugins pre 1.7 could have dots in them. be nice and find those.
@@ -345,10 +342,7 @@ def man_page_path(name: str, man_page_dirs: Iterable[Path] | None = None) -> Pat
     return None
 
 
-def all_man_pages(man_page_dirs: Iterable[Path] | None = None) -> Mapping[str, str]:
-    if man_page_dirs is None:
-        man_page_dirs = _get_man_page_dirs()
-
+def all_man_pages(man_page_dirs: Iterable[Path]) -> Mapping[str, str]:
     manuals = {}
     for basedir in man_page_dirs:
         if basedir.exists():
@@ -358,9 +352,9 @@ def all_man_pages(man_page_dirs: Iterable[Path] | None = None) -> Mapping[str, s
     return manuals
 
 
-def print_man_page_table() -> None:
+def print_man_page_table(man_page_dirs: Iterable[Path]) -> None:
     table = []
-    for name, path in sorted(all_man_pages().items()):
+    for name, path in sorted(all_man_pages(man_page_dirs).items()):
         try:
             table.append([name, get_title_from_man_page(Path(path))])
         except MKGeneralException as e:
@@ -377,9 +371,9 @@ def get_title_from_man_page(path: Path) -> str:
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
-def load_man_page_catalog() -> ManPageCatalog:
+def load_man_page_catalog(man_page_dirs: Iterable[Path]) -> ManPageCatalog:
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
-    for name, path in all_man_pages().items():
+    for name, path in all_man_pages(man_page_dirs).items():
         parsed = _parse_man_page(name, Path(path))
 
         if parsed.catalog[0] == "os":
@@ -391,8 +385,11 @@ def load_man_page_catalog() -> ManPageCatalog:
     return catalog
 
 
-def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
-    catalog = load_man_page_catalog()
+def print_man_page_browser(
+    man_page_dirs: Iterable[Path],
+    cat: ManPageCatalogPath = (),
+) -> None:
+    catalog = load_man_page_catalog(man_page_dirs)
 
     entries = catalog.get(cat, [])
     subtree_names = _manpage_catalog_subtree_names(catalog, cat)
@@ -403,10 +400,10 @@ def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
         )
 
     if entries:
-        _manpage_browse_entries(cat, entries)
+        _manpage_browse_entries(cat, entries, man_page_dirs)
 
     elif subtree_names:
-        _manpage_browser_folder(catalog, cat, subtree_names)
+        _manpage_browser_folder(catalog, cat, subtree_names, man_page_dirs)
 
 
 def _manpage_catalog_subtree_names(
@@ -425,7 +422,10 @@ def _manpage_num_entries(catalog: ManPageCatalog, cat: ManPageCatalogPath) -> in
 
 
 def _manpage_browser_folder(
-    catalog: ManPageCatalog, cat: ManPageCatalogPath, subtrees: Iterable[str]
+    catalog: ManPageCatalog,
+    cat: ManPageCatalogPath,
+    subtrees: Iterable[str],
+    man_page_dirs: Iterable[Path],
 ) -> None:
     titles = []
     for e in subtrees:
@@ -449,12 +449,14 @@ def _manpage_browser_folder(
         if x[0]:
             index = int(x[1])
             subcat = titles[index - 1][1]
-            print_man_page_browser(cat + (subcat,))
+            print_man_page_browser(man_page_dirs, cat + (subcat,))
         else:
             break
 
 
-def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPage]) -> None:
+def _manpage_browse_entries(
+    cat: Iterable[str], entries: Iterable[ManPage], man_page_dirs: Iterable[Path]
+) -> None:
     checks = [(e.title, e.name) for e in entries]
     checks.sort()
 
@@ -472,7 +474,7 @@ def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPage]) -> N
         if x[0]:
             index = int(x[1]) - 1
             name = checks[index][1]
-            ConsoleManPageRenderer(name).paint()
+            ConsoleManPageRenderer(name, man_page_dirs).paint()
         else:
             break
 
@@ -539,7 +541,7 @@ def _parse_man_page(name: str, path: Path) -> ManPage:
 
 
 # TODO: accepting the path here would make things a bit easier.
-def load_man_page(name: str, man_page_dirs: Iterable[Path] | None = None) -> ManPage | None:
+def load_man_page(name: str, man_page_dirs: Iterable[Path]) -> ManPage | None:
     path = man_page_path(name, man_page_dirs)
     return None if path is None else _parse_man_page(name, path)
 
@@ -565,9 +567,9 @@ def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
 
 
 class ManPageRenderer:
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, man_page_dirs: Iterable[Path]) -> None:
         self.name = name
-        if man_page := load_man_page(name):
+        if man_page := load_man_page(name, man_page_dirs):
             self._page = man_page
         else:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
@@ -656,8 +658,8 @@ def _console_stream() -> TextIO:
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+    def __init__(self, name: str, man_page_dirs: Iterable[Path]) -> None:
+        super().__init__(name, man_page_dirs)
         self.__output = _console_stream()
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
         # stuff might have been changed since import time, consider e.g. pytest.
@@ -801,8 +803,8 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 
 class NowikiManPageRenderer(ManPageRenderer):
-    def __init__(self, name: str) -> None:
-        super().__init__(name)
+    def __init__(self, name: str, man_page_dirs: Iterable[Path]) -> None:
+        super().__init__(name, man_page_dirs)
         self.__output = StringIO()
 
     def _flush(self) -> None:
@@ -864,7 +866,7 @@ def _apply_markup(line: str) -> str:
     )
 
 
-if __name__ == "__main__":
+def main() -> None:
     import argparse
 
     _parser = argparse.ArgumentParser(prog="man_pages", description="show manual pages for checks")
@@ -877,13 +879,19 @@ if __name__ == "__main__":
         help="use the given renderer (default: console)",
     )
     _args = _parser.parse_args()
+    # seriously?! Do we still need this? Why? This stinks. Maybe we can clean it up now.
     cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / "checkman"
+    man_page_dirs = get_man_page_dirs()
     for check in _args.checks:
         try:
             print("----------------------------------------", check)
             if _args.renderer == "console":
-                ConsoleManPageRenderer(check).paint()
+                ConsoleManPageRenderer(check, man_page_dirs).paint()
             else:
-                print(NowikiManPageRenderer(check).render())
+                print(NowikiManPageRenderer(check, man_page_dirs).render())
         except MKGeneralException as _e:
             print(_e)
+
+
+if __name__ == "__main__":
+    main()

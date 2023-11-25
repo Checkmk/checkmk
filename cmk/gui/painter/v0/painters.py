@@ -1544,9 +1544,9 @@ class PainterCheckManpage(Painter):
 
         if (
             page := man_pages.load_man_page(
-                checktype.split()[
-                    0
-                ]  # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
+                # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
+                checktype.split()[0],
+                man_pages.get_man_page_dirs(),
             )
         ) is None:
             return "", ""

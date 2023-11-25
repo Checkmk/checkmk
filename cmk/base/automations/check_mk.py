@@ -1680,7 +1680,7 @@ class AutomationGetCheckInformation(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> GetCheckInformationResult:
-        manuals = man_pages.all_man_pages()
+        manuals = man_pages.all_man_pages(man_pages.get_man_page_dirs())
 
         plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():

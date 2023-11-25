@@ -686,6 +686,10 @@ msgstr "%s は %s後に%sで停止しました。"
 msgid "%s write %s"
 msgstr "%s 書き込み %s"
 
+#, fuzzy, python-format
+msgid "%s, %s. %s %s at %s"
+msgstr "%s は %s後に%sで停止しました。"
+
 #, python-format
 msgid ""
 "%s. Checkmk is now unlicensed, and you are no longer able to 'Activate "
@@ -1856,6 +1860,10 @@ msgid ""
 "%s"
 msgstr ""
 "<tt>sqlnet.ora</tt> と <tt>tnsnames.ora</tt> %sに使用する<tt>TNS_ADMIN</tt>"
+
+#, fuzzy
+msgid "<u>Info</u>: Downtime also applies to services."
+msgstr "サービスのダウンタイム"
 
 msgid "??"
 msgstr "??"
@@ -4116,6 +4124,10 @@ msgstr "アドホックコメント"
 msgid "Adhoc downtime"
 msgstr "アドホックダウンタイム"
 
+#, python-format
+msgid "Adhoc for %d minutes"
+msgstr "アドホック %d 分間"
+
 msgid "Admin"
 msgstr "管理者"
 
@@ -4501,6 +4513,9 @@ msgstr "エージェントのベーキングと署名"
 
 msgid "Agent baking finished."
 msgstr "エージェントのベーキングが終了しました。"
+
+msgid "Agent based plugins (Checks, Inventory)"
+msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
 
 msgid "Agent controller"
 msgstr "エージェントコントローラー"
@@ -7527,6 +7542,10 @@ msgstr "BasicAuth設定(オプション)"
 msgid "Batch Requests/sec"
 msgstr "バッチリクエスト/秒"
 
+#, fuzzy
+msgid "Battery Levels"
+msgstr "メモリレベル"
+
 msgid "Battery capacity"
 msgstr "バッテリー容量"
 
@@ -7608,6 +7627,9 @@ msgstr "課金時間"
 
 msgid "Bin Log Disk Usage"
 msgstr "ビン ログ ディスクの使用量"
+
+msgid "Binaries"
+msgstr "バイナリ"
 
 msgid "Bind DN"
 msgstr "DNをバインド"
@@ -9936,9 +9958,6 @@ msgstr "プラグインを確認する"
 msgid "Check plugin API introduction"
 msgstr "プラグインのAPIを確認する"
 
-msgid "Check plugin API reference"
-msgstr "プラグインAPIリファレンスの確認"
-
 msgid "Check plugin timeout"
 msgstr "プラグインのタイムアウトを確認する"
 
@@ -10427,6 +10446,9 @@ msgstr "通常のホストをチェックします"
 
 msgid "Checks via SSH. "
 msgstr "SSH経由でチェックします。 "
+
+msgid "Checks' man pages"
+msgstr "チェックのマニュアルページ"
 
 msgid "Checktype"
 msgstr "チェックタイプ"
@@ -13167,10 +13189,6 @@ msgstr "新しいアラートハンドラルールを作成しました"
 #, python-format
 msgid "Created new connection to site %s"
 msgstr "サイト%sへの新しい接続を作成しました"
-
-#, python-format
-msgid "Created new event correlation rule with id %s"
-msgstr "id %s で新しいイベント相関ルールを作成しました"
 
 #, python-format
 msgid "Created new extension package %s"
@@ -17305,6 +17323,9 @@ msgstr "1分あたりのドキュメント数の増加"
 msgid "Documentation URL"
 msgstr "ドキュメントURL"
 
+msgid "Documentation files"
+msgstr "ドキュメントファイル"
+
 msgid "Documents fragmentation"
 msgstr "ドキュメントの断片化"
 
@@ -17502,10 +17523,6 @@ msgid "Downtime active or pending"
 msgstr "ダウンタイムがアクティブまたは保留中"
 
 #, fuzzy
-msgid "Downtime also applies to services."
-msgstr "サービスのダウンタイム"
-
-#, fuzzy
 msgid "Downtime attributes:"
 msgstr "変更された属性"
 
@@ -17514,6 +17531,9 @@ msgstr "ダウンタイムの作者"
 
 msgid "Downtime author (regex)"
 msgstr "ダウンタイム作者（正規表現）"
+
+msgid "Downtime can extend beyond the previously defined end date and time"
+msgstr ""
 
 msgid "Downtime comment"
 msgstr "ダウンタイムコメント"
@@ -17524,10 +17544,6 @@ msgstr "ダウンタイムコメント（正規表現）"
 #, fuzzy
 msgid "Downtime datepicker"
 msgstr "ダウンタイム終了時間"
-
-#, fuzzy
-msgid "Downtime does not apply to host."
-msgstr "ホストのダウンタイム"
 
 msgid "Downtime duration (if flexible)"
 msgstr "ダウンタイム期間(フレキシブルな場合)"
@@ -18870,8 +18886,8 @@ msgstr "終了時間"
 msgid "End-to-end latency"
 msgstr "エンドツーエンドのレイテンシ"
 
-#, python-format
-msgid "End: %s"
+#, fuzzy
+msgid "End:"
 msgstr "End: %s"
 
 msgid "Ended"
@@ -22006,6 +22022,9 @@ msgstr "GUI"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
+msgid "GUI extensions"
+msgstr "GUI拡張機能"
+
 msgid ""
 "Gain a complete view of your entire IT infrastructure: from public cloud "
 "providers, to your data centers, across servers, networks, containers, and "
@@ -22828,9 +22847,6 @@ msgstr "長すぎるテキストの処理(表のみに影響します)"
 msgid "Haproxy"
 msgstr "Haproxy"
 
-msgid "Hard disk device"
-msgstr "ハードディスクデバイス"
-
 msgid "Hard query limit"
 msgstr "ハードクエリ制限"
 
@@ -22849,9 +22865,6 @@ msgstr ""
 "ある場合、ソフト状態はCRITですが、ハード状態は引き続きOKです。<b>注意:</b> BI"
 "アグリゲートの可用性を計算する場合、このオプションは影響しません。その目的の"
 "ために、常にソフト(つまり実際の)状態が使用されます。"
-
-msgid "Harddisk temperature (e.g. via SMART)"
-msgstr "ハードディスクの温度(例: SMART経由)"
 
 msgid "Harddrive CRC errors"
 msgstr "ハードドライブCRCエラー"
@@ -22906,9 +22919,6 @@ msgstr "Checkmkサーバーのハードウェア情報"
 
 msgid "Hardware status"
 msgstr "ハードウェアステータス"
-
-msgid "Hardware temperature, multiple sensors"
-msgstr "ハードウェア温度、複数のセンサー"
 
 msgid "Hardware, BIOS"
 msgstr "ハードウェア、BIOS"
@@ -24593,9 +24603,6 @@ msgstr "ホスト- とサービスのコメント"
 
 msgid "Host- or DNS name"
 msgstr "ホスト名またはDNS名"
-
-msgid "Host/Device temperature"
-msgstr "ホスト/デバイスの温度"
 
 msgid "Host/Service"
 msgstr "ホスト/サービス"
@@ -27788,6 +27795,10 @@ msgstr "個別のトピック"
 msgid "Ineffective"
 msgstr "効果がない"
 
+#, fuzzy
+msgid "Ineffective rule"
+msgstr "無効なルール"
+
 msgid "Ineffective rules"
 msgstr "無効なルール"
 
@@ -27833,6 +27844,10 @@ msgstr "インフォ"
 #, fuzzy
 msgid "Info:"
 msgstr "インフォ"
+
+#, fuzzy
+msgid "Info: Downtime does not apply to host."
+msgstr "ホストのダウンタイム"
 
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
@@ -29731,8 +29746,17 @@ msgstr ""
 "従来のASCIIメールはバルキングをサポートしていません。通知のバルキングを無効に"
 "するか、バルキングを許可する別の通知プラグインを選択できます。"
 
+msgid "Legacy GUI extensions"
+msgstr "レガシーGUI拡張機能"
+
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
+
+msgid "Legacy check plugins"
+msgstr "レガシーチェックプラグイン"
+
+msgid "Legacy inventory plugins"
+msgstr "レガシーインベントリプラグイン"
 
 msgid "Legacy run"
 msgstr "レガシーラン"
@@ -30404,6 +30428,9 @@ msgstr "ストレージレベル"
 
 msgid "Libelle Business Shadow"
 msgstr "リベルビジネスシャドウ"
+
+msgid "Libraries"
+msgstr "ライブラリ"
 
 msgid "Licence state"
 msgstr "ライセンスの状態"
@@ -31175,6 +31202,9 @@ msgstr ""
 
 msgid "Locality Name"
 msgstr "地域名"
+
+msgid "Localizations"
+msgstr "ローカリゼーション"
 
 msgid "Locally enabled"
 msgstr "ローカルで有効"
@@ -32662,6 +32692,10 @@ msgstr "ポートタイプを一致させる"
 msgid "Match process path"
 msgstr "プロセスパスを一致させる"
 
+#, fuzzy
+msgid "Match search"
+msgstr "サービスと一致する"
+
 msgid "Match service event type"
 msgstr "サービスイベントタイプと一致する"
 
@@ -32732,6 +32766,10 @@ msgstr "マッチタイプ"
 msgid "Matched line"
 msgstr "一致した行"
 
+#, fuzzy
+msgid "Matches"
+msgstr "一致"
+
 msgid "Matching"
 msgstr "マッチング"
 
@@ -32779,6 +32817,10 @@ msgstr "最大期間(秒)"
 
 msgid "Max. Count"
 msgstr "最大カウント"
+
+#, fuzzy
+msgid "Max. duration after downtime starts: "
+msgstr "初めてダウンタイム開始"
 
 msgid "Max. number of SSL connections"
 msgstr "最大 SSL接続の数"
@@ -33927,9 +33969,6 @@ msgstr ""
 msgid "Missing parameter \"%s\"."
 msgstr "パラメータ \"%s\" がありません。"
 
-msgid "Missing render parameter"
-msgstr "レンダリングパラメータがありません"
-
 msgid "Missing required \"Host name\" selection."
 msgstr "必須項目\"ホスト名\"が選択されていません。"
 
@@ -33944,9 +33983,6 @@ msgstr "必須項目が選択されていません。"
 
 msgid "Missing secret for automation command."
 msgstr "自動化コマンドのシークレットがありません。"
-
-msgid "Missing spec parameter"
-msgstr "スペックパラメータがありません"
 
 msgid "Missing test host name"
 msgstr "テストホスト名がありません"
@@ -34072,10 +34108,6 @@ msgstr "変更されたBIルール%s"
 
 msgid "Modified NFS data"
 msgstr "変更されたNFSデータ"
-
-#, python-format
-msgid "Modified event correlation rule %s"
-msgstr "変更されたイベント相関ルール%s"
 
 #, python-format
 msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
@@ -36415,6 +36447,9 @@ msgstr "通知ルール"
 msgid "Notification rules of user %s"
 msgstr "ユーザー %s の通知ルール"
 
+msgid "Notification scripts"
+msgstr "通知スクリプト"
+
 msgid "Notification sort order for bulk notifications"
 msgstr "一括通知の通知の並べ替え順序"
 
@@ -38674,6 +38709,9 @@ msgstr ""
 "規模なインストールでは問題にならない可能性があります。これを有効にすると、再"
 "起動後の最初のチェックの結果を処理するときにメタ情報を更新できます。"
 
+msgid "PNP4Nagios templates (deprecated)"
+msgstr "PNP4Nagiosテンプレート(非推奨)"
+
 msgid "POP3"
 msgstr "POP3"
 
@@ -40488,6 +40526,10 @@ msgstr "プラグのアイテム番号または名前"
 
 msgid "Plugin"
 msgstr "プラグイン"
+
+#, fuzzy
+msgid "Plugin API references"
+msgstr "プラグインAPIリファレンスの確認"
 
 msgid "Plugin Name"
 msgstr "プラグイン名"
@@ -42701,9 +42743,6 @@ msgstr "全てのダウンタイムを削除"
 msgid "Remove all files and subdirectories"
 msgstr "すべてのファイルとサブディレクトリを削除します"
 
-msgid "Remove all scheduled downtimes?"
-msgstr "全ての予定されたダウンタイムを削除しますか?"
-
 msgid "Remove downtimes"
 msgstr "ダウンタイムを除く"
 
@@ -42732,6 +42771,10 @@ msgstr "一致する消失したサービスのみを削除する"
 
 msgid "Remove package"
 msgstr "パッケージの取り外し"
+
+#, fuzzy
+msgid "Remove scheduled downtimes?"
+msgstr "全ての予定されたダウンタイムを削除しますか?"
 
 msgid "Remove service"
 msgstr "サービスを削除する"
@@ -43849,9 +43892,6 @@ msgstr "役割"
 
 msgid "Roles & permissions"
 msgstr "役割と権限"
-
-msgid "Room temperature (external thermal sensors)"
-msgstr "室温(外部温度センサー)"
 
 msgid "Rotate every day at 00:00 local time"
 msgstr "毎日現地時間00:00でローテーション"
@@ -45684,6 +45724,14 @@ msgstr "サーバーのパフォーマンス"
 
 msgid "Server side handling of unencrypted data"
 msgstr "サーバー側の未暗号化データのハンドリング"
+
+#, fuzzy
+msgid "Server time"
+msgstr "サーバー時間"
+
+#, python-format
+msgid "Server time (currently: %s)"
+msgstr ""
 
 msgid "Service"
 msgstr "サービス"
@@ -49133,9 +49181,9 @@ msgstr "開始!"
 msgid "Start-Time"
 msgstr "始まる時間"
 
-#, python-format
-msgid "Start: %s"
-msgstr "開始: %s"
+#, fuzzy
+msgid "Start:"
+msgstr "開始"
 
 msgid "Started"
 msgstr "開始"
@@ -49212,6 +49260,10 @@ msgstr "ステータス分類"
 
 msgid "State during active system events"
 msgstr "アクティブなシステムイベント中の状態"
+
+#, fuzzy
+msgid "State during discovery of the service"
+msgstr "サービスディスカバリー:サービスの削除"
 
 msgid "State flag (on/off)"
 msgstr "状態フラグ(on/off)"
@@ -51165,28 +51217,6 @@ msgstr "温度傾向分析"
 msgid "Temperature and Humidity for Eaton UPS"
 msgstr "Eaton UPSの温度と湿度"
 
-msgid ""
-"Temperature levels for external thermometers that are used for monitoring "
-"the temperature of a datacenter. An example is the webthem from W&T."
-msgstr ""
-"データセンターの温度を監視するために使用される外部温度計の温度レベル。例は、"
-"W&Tのwebthemです。"
-
-msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
-msgstr "SMARTなどで決定されるハードディスクの温度レベル"
-
-msgid ""
-"Temperature levels for hardware devices like Brocade switches with "
-"(potentially) several temperature sensors. Sensor IDs can be selected in the "
-"rule."
-msgstr ""
-"(潜在的に)複数の温度センサーを備えたBrocadeスイッチなどのハードウェアデバイス"
-"の温度レベル。ルールでセンサーIDを選択できます。"
-
-msgid ""
-"Temperature levels for hardware devices with a single temperature sensor."
-msgstr "単一の温度センサーを備えたハードウェアデバイスの温度レベル。"
-
 msgid "Temperature sensors with built-in levels"
 msgstr "レベルが組み込まれた温度センサー"
 
@@ -52454,13 +52484,6 @@ msgstr ""
 "に設定することです - その場合、通知はありません。"
 
 msgid ""
-"The checkbox for setting host downtimes does not work when removing "
-"downtimes."
-msgstr ""
-"ホストのダウンタイムを設定するチェックボックスは、ダウンタイムを削除するとき"
-"に機能しません。"
-
-msgid ""
 "The checker usage is below 50%, you may decrease the number of checkers to "
 "reduce the memory consumption."
 msgstr ""
@@ -53417,9 +53440,6 @@ msgstr "値のIDは、値タイプごとに一意である必要があります�
 
 msgid "The identificator of the fan."
 msgstr "ファンの識別子。"
-
-msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
-msgstr "ハードディスクデバイスの識別子(例: <tt>/dev/sda </tt>)。"
 
 msgid "The identificator of the module."
 msgstr "モジュールの識別子。"
@@ -56022,6 +56042,10 @@ msgstr "このIDは、別のバックアップターゲットによってすで�
 msgid "This ID is used as it's unique identifier. It cannot be changed later."
 msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
+
+#, fuzzy
+msgid "This Ruleset sets the threshold limits for battery sensors"
+msgstr "このルールセットは、湿度センサーのしきい値制限を設定します"
 
 msgid "This Ruleset sets the threshold limits for humidity sensors"
 msgstr "このルールセットは、湿度センサーのしきい値制限を設定します"
@@ -62231,6 +62255,9 @@ msgstr ""
 "サイトのDNSキャッシュを更新することは、明示的なアドレスなしで設定されているホ"
 "ストのIPアドレスの変更を反映するために必要です。"
 
+msgid "Upgrade to Cloud or Enterprise edition to use this feature"
+msgstr ""
+
 msgid "Upload"
 msgstr "アップロード"
 
@@ -65149,6 +65176,10 @@ msgstr "警告の開始"
 msgid "Warning threshold"
 msgstr "警告しきい値"
 
+#, fuzzy
+msgid "Warning: "
+msgstr "警告:"
+
 msgid "Warning: This host has an invalid configuration!"
 msgstr "警告:このホストの構成は無効です!"
 
@@ -67833,11 +67864,12 @@ msgstr ""
 msgid "You can specify at most %d entries"
 msgstr "最大 %d のエントリを指定できます"
 
+#, fuzzy
 msgid ""
 "You can specify lists of VM names and a number of hosts, to make sure the "
-"specfied VMs are distributed across at least so many hosts. E.g. provide two "
-"VM names and set 'Number of hosts' to two, to make sure those VMs are not "
-"running on the same host."
+"specified VMs are distributed across at least so many hosts. E.g. provide "
+"two VM names and set 'Number of hosts' to two, to make sure those VMs are "
+"not running on the same host."
 msgstr ""
 "VM名とホストの数のリストを指定して、指定したVMが少なくとも非常に多くのホスト"
 "に分散されていることを確認できます。たとえば、2つのVM名を指定し、\"ホストの数"
@@ -70256,9 +70288,6 @@ msgstr "ホストがダウンタイムになっていない場合のみ"
 msgid "open"
 msgstr "開いた"
 
-msgid "operational state not available"
-msgstr "動作状態不明"
-
 msgid "optional"
 msgstr "オプション"
 
@@ -70939,12 +70968,76 @@ msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #, python-format
-#~ msgid "<b>%s for the next %d minutes</b>?"
-#~ msgstr "<b>%s for the next %d minutes</b>?"
+#~ msgid "Created new event correlation rule with id %s"
+#~ msgstr "id %s で新しいイベント相関ルールを作成しました"
 
 #, python-format
-#~ msgid "Adhoc for %d minutes"
-#~ msgstr "アドホック %d 分間"
+#~ msgid "Modified event correlation rule %s"
+#~ msgstr "変更されたイベント相関ルール%s"
+
+#~ msgid "Hard disk device"
+#~ msgstr "ハードディスクデバイス"
+
+#~ msgid "Harddisk temperature (e.g. via SMART)"
+#~ msgstr "ハードディスクの温度(例: SMART経由)"
+
+#~ msgid "Hardware temperature, multiple sensors"
+#~ msgstr "ハードウェア温度、複数のセンサー"
+
+#~ msgid "Host/Device temperature"
+#~ msgstr "ホスト/デバイスの温度"
+
+#~ msgid "Room temperature (external thermal sensors)"
+#~ msgstr "室温(外部温度センサー)"
+
+#~ msgid ""
+#~ "Temperature levels for external thermometers that are used for monitoring "
+#~ "the temperature of a datacenter. An example is the webthem from W&T."
+#~ msgstr ""
+#~ "データセンターの温度を監視するために使用される外部温度計の温度レベル。例"
+#~ "は、W&Tのwebthemです。"
+
+#~ msgid "Temperature levels for hard disks, that is determined e.g. via SMART"
+#~ msgstr "SMARTなどで決定されるハードディスクの温度レベル"
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices like Brocade switches with "
+#~ "(potentially) several temperature sensors. Sensor IDs can be selected in "
+#~ "the rule."
+#~ msgstr ""
+#~ "(潜在的に)複数の温度センサーを備えたBrocadeスイッチなどのハードウェアデバ"
+#~ "イスの温度レベル。ルールでセンサーIDを選択できます。"
+
+#~ msgid ""
+#~ "Temperature levels for hardware devices with a single temperature sensor."
+#~ msgstr "単一の温度センサーを備えたハードウェアデバイスの温度レベル。"
+
+#~ msgid "The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."
+#~ msgstr "ハードディスクデバイスの識別子(例: <tt>/dev/sda </tt>)。"
+
+#~ msgid "operational state not available"
+#~ msgstr "動作状態不明"
+
+#, python-format
+#~ msgid "Start: %s"
+#~ msgstr "開始: %s"
+
+#~ msgid ""
+#~ "The checkbox for setting host downtimes does not work when removing "
+#~ "downtimes."
+#~ msgstr ""
+#~ "ホストのダウンタイムを設定するチェックボックスは、ダウンタイムを削除すると"
+#~ "きに機能しません。"
+
+#~ msgid "Missing render parameter"
+#~ msgstr "レンダリングパラメータがありません"
+
+#~ msgid "Missing spec parameter"
+#~ msgstr "スペックパラメータがありません"
+
+#, python-format
+#~ msgid "<b>%s for the next %d minutes</b>?"
+#~ msgstr "<b>%s for the next %d minutes</b>?"
 
 #~ msgid "Also set downtime on child hosts"
 #~ msgstr "また、子ホストのダウンタイムを設定します"
@@ -70988,42 +71081,6 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 #~ msgid "Clear audit log"
 #~ msgstr "監査ログをクリア"
-
-#~ msgid "Agent based plugins (Checks, Inventory)"
-#~ msgstr "エージェントベースのプラグイン(チェック、インベントリ)"
-
-#~ msgid "Binaries"
-#~ msgstr "バイナリ"
-
-#~ msgid "Checks' man pages"
-#~ msgstr "チェックのマニュアルページ"
-
-#~ msgid "Documentation files"
-#~ msgstr "ドキュメントファイル"
-
-#~ msgid "GUI extensions"
-#~ msgstr "GUI拡張機能"
-
-#~ msgid "Legacy GUI extensions"
-#~ msgstr "レガシーGUI拡張機能"
-
-#~ msgid "Legacy check plugins"
-#~ msgstr "レガシーチェックプラグイン"
-
-#~ msgid "Legacy inventory plugins"
-#~ msgstr "レガシーインベントリプラグイン"
-
-#~ msgid "Libraries"
-#~ msgstr "ライブラリ"
-
-#~ msgid "Localizations"
-#~ msgstr "ローカリゼーション"
-
-#~ msgid "Notification scripts"
-#~ msgstr "通知スクリプト"
-
-#~ msgid "PNP4Nagios templates (deprecated)"
-#~ msgstr "PNP4Nagiosテンプレート(非推奨)"
 
 #~ msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 #~ msgstr "レガシー環境をデプロイする(Python 3.4 + モジュールの標準セット)"

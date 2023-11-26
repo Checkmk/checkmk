@@ -1603,13 +1603,21 @@ def mode_man(options: Mapping[str, str], args: list[str]) -> None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
 
     man_page = man_pages.parse_man_page(args[0], man_page_path)
+    renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
     match options.get("renderer", "console"):
         case "console":
-            man_pages.ConsoleManPageRenderer(man_page).paint()
+            renderer = man_pages.ConsoleManPageRenderer
         case "nowiki":
-            sys.stdout.write(f"{man_pages.NowikiManPageRenderer(man_page).render()}\n")
+            renderer = man_pages.NowikiManPageRenderer
         case other:
             raise ValueError(other)
+
+    try:
+        rendered = renderer(man_page).render_page()
+    except Exception as exc:
+        sys.stdout.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
+
+    man_pages.write_output(rendered)
 
 
 modes.register(

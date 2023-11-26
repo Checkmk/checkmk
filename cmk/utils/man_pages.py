@@ -456,7 +456,7 @@ def _manpage_browse_entries(cat: Iterable[str], entries: Mapping[str, ManPage]) 
         )
         if x[0]:
             index = int(x[1]) - 1
-            ConsoleManPageRenderer(checks[index]).paint()
+            write_output(ConsoleManPageRenderer(checks[index]).render_page())
         else:
             break
 
@@ -542,18 +542,25 @@ def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
     return {k: "\n".join(v).strip() for k, v in parsed.items()}
 
 
+def write_output(rendered_page: str) -> None:
+    if sys.stdout.isatty():
+        with suppress(FileNotFoundError):
+            subprocess.run(
+                ["/usr/bin/less", "-S", "-R", "-Q", "-u", "-L"],
+                input=rendered_page,
+                encoding="utf8",
+                check=False,
+            )
+            return
+    sys.stdout.write(rendered_page)
+
+
 class ManPageRenderer:
     def __init__(self, man_page: ManPage) -> None:
         self.name = man_page.name
         self._page = man_page
 
-    def paint(self) -> None:
-        try:
-            self._paint_man_page()
-        except Exception as e:
-            sys.stdout.write(f"ERROR: Invalid check manpage {self.name}: {e}\n")
-
-    def _paint_man_page(self) -> None:
+    def render_page(self) -> str:
         self._print_header()
         self._print_manpage_title(self._page.title)
 
@@ -579,9 +586,9 @@ class ManPageRenderer:
             self._print_textbody(self._page.discovery)
 
         self._print_empty_line()
-        self._flush()
+        return self._get_value()
 
-    def _flush(self) -> None:
+    def _get_value(self) -> str:
         raise NotImplementedError()
 
     def _print_header(self) -> None:
@@ -637,18 +644,8 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._header_color_left = tty.colorset(0, 2)
         self._header_color_right = tty.colorset(7, 2, 1)
 
-    def _flush(self) -> None:
-        rendered = "".join(self._buffer)
-        if sys.stdout.isatty():
-            with suppress(FileNotFoundError):
-                subprocess.run(
-                    ["/usr/bin/less", "-S", "-R", "-Q", "-u", "-L"],
-                    input=rendered,
-                    encoding="utf8",
-                    check=False,
-                )
-                return
-        sys.stdout.write("".join(self._buffer))
+    def _get_value(self) -> str:
+        return "".join(self._buffer)
 
     def _patch_braces(self, line: str, *, color: str) -> str:
         """Replace braces in the line with a colors
@@ -781,14 +778,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         super().__init__(man_page)
         self.__output = StringIO()
 
-    def _flush(self) -> None:
-        pass
-
-    def index_entry(self) -> str:
-        return f'<tr><td class="tt">{self.name}</td><td>[check_{self.name}|{self._page.title}]</td></tr>\n'
-
-    def render(self) -> str:
-        self.paint()
+    def _get_value(self) -> str:
         return self.__output.getvalue()
 
     def _print_header(self) -> None:

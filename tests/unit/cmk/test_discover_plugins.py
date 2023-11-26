@@ -9,7 +9,7 @@ from types import ModuleType, UnionType
 
 import pytest
 
-from cmk.discover_plugins import Collector, find_namespaces, PluginLocation
+from cmk.discover_plugins import Collector, discover_modules, PluginLocation
 
 
 class AssumeDirs:
@@ -46,7 +46,7 @@ def _make_module(name: str, path: list[str], **kwargs: object) -> ModuleType:
 
 def test_find_namespaces_ignore_init() -> None:
     assert list(
-        find_namespaces(
+        discover_modules(
             (_make_module("cmk.plugins", ["/local/lib/cmk/plugins", "/lib/cmk/plugins"]),),
             "notification",
             ls=AssumeDirs(
@@ -65,7 +65,7 @@ def test_find_namespaces_ignore_init() -> None:
 
 def test_find_namespaces_ignore_non_path_match() -> None:
     assert list(
-        find_namespaces(
+        discover_modules(
             (_make_module("cmk.plugins", ["/mypath/cmk/plugins"]),),
             "notification",
             ls=AssumeDirs(
@@ -80,7 +80,7 @@ def test_find_namespaces_ignore_non_path_match() -> None:
 
 def test_find_namespaces_deduplicate_preserving_order() -> None:
     assert list(
-        find_namespaces(
+        discover_modules(
             (
                 _make_module("cmk.plugins", ["/lib/cmk/plugins"]),
                 _make_module("cmk.plugins", ["/local/cmk/plugins"]),

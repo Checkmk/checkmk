@@ -672,6 +672,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _flush(self) -> None:
         self.__output.flush()
+        self.__output.close()
 
     def _patch_braces(self, line: str, *, color: str) -> str:
         """Replace braces in the line with a colors

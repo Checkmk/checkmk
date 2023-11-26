@@ -7,13 +7,13 @@ from collections.abc import Mapping, Sequence
 
 import cmk.utils.debug
 
-from cmk.discover_plugins import discover_plugins
+from cmk.discover_plugins import discover_plugins, PluginGroup
 from cmk.server_side_calls.v1 import ActiveCheckConfig, SpecialAgentConfig
 
 
 def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]]:
     loaded = discover_plugins(
-        "server_side_calls",
+        PluginGroup.SERVER_SIDE_CALLS,
         {ActiveCheckConfig: "active_check_"},
         raise_errors=cmk.utils.debug.enabled(),
     )
@@ -26,7 +26,7 @@ def load_active_checks() -> tuple[Sequence[str], Mapping[str, ActiveCheckConfig]
 
 def load_special_agents() -> tuple[Sequence[str], Mapping[str, SpecialAgentConfig]]:
     loaded = discover_plugins(
-        "server_side_calls",
+        PluginGroup.SERVER_SIDE_CALLS,
         {SpecialAgentConfig: "special_agent_"},
         raise_errors=cmk.utils.debug.enabled(),
     )

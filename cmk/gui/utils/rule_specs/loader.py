@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import (
     ActiveChecksRuleSpec,
     AgentConfigRuleSpec,
@@ -41,7 +41,7 @@ def load_api_v1_rule_specs(
     raise_errors: bool,
 ) -> tuple[Sequence[str], Sequence[RuleSpec]]:
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
-        "rulesets",
+        PluginGroup.RULESETS,
         {
             HostRuleSpec: "rule_spec_",
             ServiceRuleSpec: "rule_spec_",

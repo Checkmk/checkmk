@@ -9,7 +9,7 @@ from types import ModuleType, UnionType
 
 import pytest
 
-from cmk.discover_plugins import Collector, discover_modules, PluginLocation
+from cmk.discover_plugins import Collector, discover_modules, PluginGroup, PluginLocation
 
 
 class AssumeDirs:
@@ -48,18 +48,18 @@ def test_find_namespaces_ignore_init() -> None:
     assert list(
         discover_modules(
             (_make_module("cmk.plugins", ["/local/lib/cmk/plugins", "/lib/cmk/plugins"]),),
-            "notification",
+            PluginGroup.GRAPHING,
             ls=AssumeDirs(
-                "/local/lib/cmk/plugins/foo/notification/bar.py",
-                "/local/lib/cmk/plugins/foo/notification/__init__.py",
-                "/local/lib/cmk/plugins/foo/notification/__pycache__",
-                "/lib/cmk_hugo/plugins/gee/notification/nope.py",
-                "/lib/cmk/plugins/okey/notification/hello.py",
+                "/local/lib/cmk/plugins/foo/graphing/bar.py",
+                "/local/lib/cmk/plugins/foo/graphing/__init__.py",
+                "/local/lib/cmk/plugins/foo/graphing/__pycache__",
+                "/lib/cmk_hugo/plugins/gee/graphing/nope.py",
+                "/lib/cmk/plugins/okey/graphing/hello.py",
             ),
         )
     ) == [
-        "cmk.plugins.foo.notification.bar",
-        "cmk.plugins.okey.notification.hello",
+        "cmk.plugins.foo.graphing.bar",
+        "cmk.plugins.okey.graphing.hello",
     ]
 
 
@@ -67,14 +67,14 @@ def test_find_namespaces_ignore_non_path_match() -> None:
     assert list(
         discover_modules(
             (_make_module("cmk.plugins", ["/mypath/cmk/plugins"]),),
-            "notification",
+            PluginGroup.GRAPHING,
             ls=AssumeDirs(
-                "/mypath/cmk/plugins/my_foo/notification/bar.py",
-                "/otherpath/cmk/plugins/other_foo/notification/bar.py",
+                "/mypath/cmk/plugins/my_foo/graphing/bar.py",
+                "/otherpath/cmk/plugins/other_foo/graphing/bar.py",
             ),
         )
     ) == [
-        "cmk.plugins.my_foo.notification.bar",
+        "cmk.plugins.my_foo.graphing.bar",
     ]
 
 
@@ -85,18 +85,18 @@ def test_find_namespaces_deduplicate_preserving_order() -> None:
                 _make_module("cmk.plugins", ["/lib/cmk/plugins"]),
                 _make_module("cmk.plugins", ["/local/cmk/plugins"]),
             ),
-            "notification",
+            PluginGroup.GRAPHING,
             ls=AssumeDirs(
-                "/lib/cmk/plugins/my_foo/notification/bar.py",
-                "/lib/cmk/plugins/my_zoo/notification/bar.py",
-                "/local/cmk/plugins/my_foo/notification/bar.py",
-                "/local/cmk/plugins/my_boo/notification/bar.py",
+                "/lib/cmk/plugins/my_foo/graphing/bar.py",
+                "/lib/cmk/plugins/my_zoo/graphing/bar.py",
+                "/local/cmk/plugins/my_foo/graphing/bar.py",
+                "/local/cmk/plugins/my_boo/graphing/bar.py",
             ),
         )
     ) == [
-        "cmk.plugins.my_foo.notification.bar",
-        "cmk.plugins.my_zoo.notification.bar",
-        "cmk.plugins.my_boo.notification.bar",
+        "cmk.plugins.my_foo.graphing.bar",
+        "cmk.plugins.my_zoo.graphing.bar",
+        "cmk.plugins.my_boo.graphing.bar",
     ]
 
 

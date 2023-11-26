@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils
+import cmk.utils.debug
 
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import graph, metric, perfometer, translation
 
 
@@ -21,7 +21,7 @@ def load_graphing_plugins() -> (
     ]
 ):
     return discover_plugins(
-        "graphing",
+        PluginGroup.GRAPHING,
         {
             metric.Metric: "metric_",
             translation.Translation: "translation_",

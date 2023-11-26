@@ -16,6 +16,7 @@ of plugins developed against a versionized API.
 
 Please keep this in mind when trying to consolidate.
 """
+import enum
 import importlib
 import os
 from collections import defaultdict
@@ -27,6 +28,15 @@ from typing import Final, Generic, Hashable, Protocol, TypeVar
 PLUGIN_NAMESPACES = ("cmk.plugins", "cmk_addons.plugins")
 
 
+class PluginGroup(enum.Enum):
+    """Definitive list of discoverable plugin groups"""
+
+    GRAPHING = "graphing"
+    AGENT_BASED = "agent_based"
+    SERVER_SIDE_CALLS = "server_side_calls"
+    RULESETS = "rulesets"
+
+
 class _PluginProtocol(Protocol):
     @property
     def name(self) -> Hashable:
@@ -36,7 +46,7 @@ class _PluginProtocol(Protocol):
 _PluginType = TypeVar("_PluginType", bound=_PluginProtocol)
 
 
-class ImporterProtocol(Protocol):
+class _ImporterProtocol(Protocol):
     def __call__(self, module_name: str, raise_errors: bool) -> ModuleType | None:
         ...
 
@@ -57,7 +67,7 @@ class DiscoveredPlugins(Generic[_PluginType]):
 
 
 def discover_plugins(
-    plugin_group: str,
+    plugin_group: PluginGroup,
     plugin_prefixes: Mapping[type[_PluginType], str],
     raise_errors: bool,
 ) -> DiscoveredPlugins[_PluginType]:
@@ -94,7 +104,7 @@ def discover_families(
 
 def discover_modules(
     modules: Iterable[ModuleType],
-    plugin_group: str,
+    plugin_group: PluginGroup,
     *,
     ls: Callable[[str], Iterable[str]],
 ) -> Iterable[str]:
@@ -104,10 +114,10 @@ def discover_modules(
     """
     return _deduplicate(
         (
-            f"{family}.{plugin_group}.{fname.removesuffix('.py')}"
+            f"{family}.{plugin_group.value}.{fname.removesuffix('.py')}"
             for family, paths in discover_families(modules, ls=ls).items()
             for path in paths
-            for fname in ls(f"{path}/{plugin_group}")
+            for fname in ls(f"{path}/{plugin_group.value}")
             if fname not in {"__pycache__", "__init__.py"}
         )
     )
@@ -169,7 +179,7 @@ class Collector(Generic[_PluginType]):
     def plugins(self) -> Mapping[PluginLocation, _PluginType]:
         return dict(self._unique_plugins.values())
 
-    def add_from_module(self, mod_name: str, importer: ImporterProtocol) -> None:
+    def add_from_module(self, mod_name: str, importer: _ImporterProtocol) -> None:
         try:
             module = importer(mod_name, raise_errors=True)
         except Exception as exc:

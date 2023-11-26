@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SimpleSNMPSection,
     SNMPSection,
 )
-from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginLocation
+from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup, PluginLocation
 
 from ._config import (
     add_check_plugin,
@@ -46,7 +46,7 @@ def load_all_plugins() -> list[str]:
             raise exception
 
     discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_plugins(
-        "agent_based",
+        PluginGroup.AGENT_BASED,
         {
             SimpleSNMPSection: "snmp_section_",
             SNMPSection: "snmp_section_",

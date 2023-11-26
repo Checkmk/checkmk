@@ -1591,7 +1591,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_man(args: list[str]) -> None:
+def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
     man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
@@ -1602,7 +1602,14 @@ def mode_man(args: list[str]) -> None:
     if (man_page_path := man_page_path_map.get(args[0])) is None:
         raise MKBailOut(f"No manpage for {args[0]}. Sorry.")
 
-    man_pages.ConsoleManPageRenderer(man_pages.parse_man_page(args[0], man_page_path)).paint()
+    man_page = man_pages.parse_man_page(args[0], man_page_path)
+    match options.get("renderer", "console"):
+        case "console":
+            man_pages.ConsoleManPageRenderer(man_page).paint()
+        case "nowiki":
+            sys.stdout.write(f"{man_pages.NowikiManPageRenderer(man_page).render()}\n")
+        case other:
+            raise ValueError(other)
 
 
 modes.register(
@@ -1620,6 +1627,15 @@ modes.register(
             "Shows documentation about a check type. If /usr/bin/less is "
             "available it is used as pager. Exit by pressing Q. "
             "Use -M without an argument to show a list of all manual pages."
+        ],
+        sub_options=[
+            Option(
+                long_option="renderer",
+                short_option="r",
+                argument=True,
+                argument_descr="RENDERER",
+                short_help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+            ),
         ],
     )
 )

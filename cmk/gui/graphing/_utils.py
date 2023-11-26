@@ -50,8 +50,24 @@ from ._color import (
     get_palette_color_by_index,
     parse_color_into_hexrgb,
 )
-from ._expression import CriticalOf, Metric, MetricExpression, parse_expression, WarningOf
+from ._expression import (
+    Constant,
+    CriticalOf,
+    Difference,
+    Fraction,
+    Maximum,
+    MaximumOf,
+    Metric,
+    MetricExpression,
+    Minimum,
+    MinimumOf,
+    parse_expression,
+    Product,
+    Sum,
+    WarningOf,
+)
 from ._graph_specification import MetricOperation, MetricOpRRDChoice
+from ._loader import load_graphing_plugins
 from ._parser import parse_color, parse_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
@@ -138,12 +154,140 @@ def _parse_raw_metric_definition(
     )
 
 
-def _parse_graph_range(
+def _parse_raw_graph_range(
     raw_graph_range: tuple[int | str, int | str] | None
 ) -> tuple[MetricExpression, MetricExpression] | None:
     if raw_graph_range is None:
         return None
     return parse_expression(raw_graph_range[0], {}), parse_expression(raw_graph_range[1], {})
+
+
+def _parse_quantity(
+    quantity: (
+        str
+        | metric_api.Constant
+        | metric_api.WarningOf
+        | metric_api.CriticalOf
+        | metric_api.MinimumOf
+        | metric_api.MaximumOf
+        | metric_api.Sum
+        | metric_api.Product
+        | metric_api.Difference
+        | metric_api.Fraction
+    ),
+    line_type: Literal["line", "-line", "stack", "-stack"],
+) -> MetricDefinition:
+    match quantity:
+        case str():
+            metric = metric_info[quantity]
+            return MetricDefinition(
+                expression=MetricExpression(Metric(quantity)),
+                line_type=line_type,
+                title=str(metric["title"]),
+            )
+        case metric_api.Constant():
+            return MetricDefinition(
+                expression=MetricExpression(Constant(quantity.value)),
+                line_type=line_type,
+                title=str(quantity.title.localize(_)),
+            )
+        case metric_api.WarningOf():
+            metric = metric_info[quantity.name]
+            return MetricDefinition(
+                expression=MetricExpression(WarningOf(Metric(quantity.name))),
+                line_type=line_type,
+                title=str(metric["title"]),
+            )
+        case metric_api.CriticalOf():
+            metric = metric_info[quantity.name]
+            return MetricDefinition(
+                expression=MetricExpression(CriticalOf(Metric(quantity.name))),
+                line_type=line_type,
+                title=str(metric["title"]),
+            )
+        case metric_api.MinimumOf():
+            metric = metric_info[quantity.name]
+            return MetricDefinition(
+                expression=MetricExpression(MinimumOf(Metric(quantity.name))),
+                line_type=line_type,
+                title=str(metric["title"]),
+            )
+        case metric_api.MaximumOf():
+            metric = metric_info[quantity.name]
+            return MetricDefinition(
+                expression=MetricExpression(MaximumOf(Metric(quantity.name))),
+                line_type=line_type,
+                title=str(metric["title"]),
+            )
+        case metric_api.Sum():
+            return MetricDefinition(
+                expression=MetricExpression(
+                    Sum(
+                        [
+                            _parse_quantity(s, line_type).expression.declaration
+                            for s in quantity.summands
+                        ]
+                    )
+                ),
+                line_type=line_type,
+                title=str(quantity.title.localize(_)),
+            )
+        case metric_api.Product():
+            return MetricDefinition(
+                expression=MetricExpression(
+                    Product(
+                        [
+                            _parse_quantity(f, line_type).expression.declaration
+                            for f in quantity.factors
+                        ]
+                    )
+                ),
+                line_type=line_type,
+                title=str(quantity.title.localize(_)),
+            )
+        case metric_api.Difference():
+            return MetricDefinition(
+                expression=MetricExpression(
+                    Difference(
+                        minuend=_parse_quantity(quantity.minuend, line_type).expression.declaration,
+                        subtrahend=_parse_quantity(
+                            quantity.subtrahend, line_type
+                        ).expression.declaration,
+                    )
+                ),
+                line_type=line_type,
+                title=str(quantity.title.localize(_)),
+            )
+        case metric_api.Fraction():
+            return MetricDefinition(
+                expression=MetricExpression(
+                    Fraction(
+                        dividend=_parse_quantity(
+                            quantity.dividend, line_type
+                        ).expression.declaration,
+                        divisor=_parse_quantity(quantity.divisor, line_type).expression.declaration,
+                    )
+                ),
+                line_type=line_type,
+                title=str(quantity.title.localize(_)),
+            )
+
+
+def _parse_minimal_range(
+    minimal_range: graph_api.MinimalRange,
+) -> tuple[MetricExpression, MetricExpression]:
+    return (
+        (
+            MetricExpression(Constant(minimal_range.lower))
+            if isinstance(minimal_range.lower, (int, float))
+            else _parse_quantity(minimal_range.lower, "line").expression
+        ),
+        (
+            MetricExpression(Constant(minimal_range.upper))
+            if isinstance(minimal_range.upper, (int, float))
+            else _parse_quantity(minimal_range.upper, "line").expression
+        ),
+    )
 
 
 @dataclass(frozen=True)
@@ -197,11 +341,101 @@ class GraphTemplate:
             conflicting_metrics=template.get("conflicting_metrics", []),
             optional_metrics=template.get("optional_metrics", []),
             consolidation_function=template.get("consolidation_function"),
-            range=_parse_graph_range(template.get("range")),
+            range=_parse_raw_graph_range(template.get("range")),
             omit_zero_metrics=template.get("omit_zero_metrics", False),
             # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
             # https://github.com/python/mypy/issues/1178
             metrics=[_parse_raw_metric_definition(r) for r in template["metrics"]],
+        )
+
+    @classmethod
+    def from_graph(cls, graph: graph_api.Graph) -> Self:
+        metrics = [_parse_quantity(l, "stack") for l in graph.compound_lines]
+        scalars: list[ScalarDefinition] = []
+        for line in graph.simple_lines:
+            match line:
+                case (
+                    metric_api.WarningOf()
+                    | metric_api.CriticalOf()
+                    | metric_api.MinimumOf()
+                    | metric_api.MaximumOf()
+                ):
+                    parsed = _parse_quantity(line, "line")
+                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                case _:
+                    metrics.append(_parse_quantity(line, "line"))
+        return cls(
+            id=graph.name,
+            title=graph.title.localize(_),
+            range=(
+                None if graph.minimal_range is None else _parse_minimal_range(graph.minimal_range)
+            ),
+            metrics=metrics,
+            scalars=list(scalars),
+            optional_metrics=graph.optional,
+            conflicting_metrics=graph.conflicting,
+            consolidation_function=None,
+            omit_zero_metrics=False,
+        )
+
+    @classmethod
+    def from_bidirectional(cls, graph: graph_api.Bidirectional) -> Self:
+        lower_ranges = []
+        upper_ranges = []
+        if graph.lower.minimal_range is not None:
+            lower_range = _parse_minimal_range(graph.lower.minimal_range)
+            lower_ranges.append(lower_range[0])
+            upper_ranges.append(lower_range[1])
+        if graph.upper.minimal_range is not None:
+            upper_range = _parse_minimal_range(graph.upper.minimal_range)
+            lower_ranges.append(upper_range[0])
+            upper_ranges.append(upper_range[1])
+
+        metrics = [_parse_quantity(l, "-stack") for l in graph.lower.compound_lines] + [
+            _parse_quantity(l, "stack") for l in graph.upper.compound_lines
+        ]
+        scalars: list[ScalarDefinition] = []
+        for line in graph.lower.simple_lines:
+            match line:
+                case (
+                    metric_api.WarningOf()
+                    | metric_api.CriticalOf()
+                    | metric_api.MinimumOf()
+                    | metric_api.MaximumOf()
+                ):
+                    parsed = _parse_quantity(line, "-line")
+                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                case _:
+                    metrics.append(_parse_quantity(line, "-line"))
+        for line in graph.upper.simple_lines:
+            match line:
+                case (
+                    metric_api.WarningOf()
+                    | metric_api.CriticalOf()
+                    | metric_api.MinimumOf()
+                    | metric_api.MaximumOf()
+                ):
+                    parsed = _parse_quantity(line, "line")
+                    scalars.append(ScalarDefinition(parsed.expression, parsed.title))
+                case _:
+                    metrics.append(_parse_quantity(line, "line"))
+        return cls(
+            id=graph.name,
+            title=graph.title.localize(_),
+            range=(
+                (
+                    MetricExpression(Minimum([l.declaration for l in lower_ranges])),
+                    MetricExpression(Maximum([u.declaration for u in upper_ranges])),
+                )
+                if lower_ranges and upper_ranges
+                else None
+            ),
+            metrics=metrics,
+            scalars=scalars,
+            optional_metrics=list(graph.lower.optional) + list(graph.upper.optional),
+            conflicting_metrics=list(graph.lower.conflicting) + list(graph.upper.conflicting),
+            consolidation_function=None,
+            omit_zero_metrics=False,
         )
 
 
@@ -804,10 +1038,17 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 
 def graph_templates_internal() -> dict[str, GraphTemplate]:
-    return {
-        template_id: GraphTemplate.from_template(template_id, template)
-        for template_id, template in graph_info.items()
-    }
+    # TODO CMK-15246 Checkmk 2.4: Remove legacy objects
+    graph_templates: dict[str, GraphTemplate] = {}
+    for plugin in load_graphing_plugins().plugins.values():
+        if isinstance(plugin, graph_api.Graph):
+            graph_templates[plugin.name] = GraphTemplate.from_graph(plugin)
+        elif isinstance(plugin, graph_api.Bidirectional):
+            graph_templates[plugin.name] = GraphTemplate.from_bidirectional(plugin)
+    for template_id, template in graph_info.items():
+        if template_id not in graph_templates:
+            graph_templates[template_id] = GraphTemplate.from_template(template_id, template)
+    return graph_templates
 
 
 def get_graph_range(

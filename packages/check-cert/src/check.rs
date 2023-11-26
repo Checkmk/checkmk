@@ -3,8 +3,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
+use std::mem;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub enum Real {
     Integer(isize),
     Double(f64),
@@ -41,20 +42,20 @@ impl<T> Bounds<T> {
     pub fn map<F, U>(self, f: F) -> Bounds<U>
     where
         F: FnMut(T) -> U,
-        U: Clone,
+        U: Default,
     {
-        Bounds::from(&[self.min, self.max].map(f))
+        Bounds::from(&mut [self.min, self.max].map(f))
     }
 }
 
-impl<T> From<&[T; 2]> for Bounds<T>
+impl<T: Default> From<&mut [T; 2]> for Bounds<T>
 where
-    T: Clone,
+    T: Default,
 {
-    fn from(arr: &[T; 2]) -> Self {
+    fn from(arr: &mut [T; 2]) -> Self {
         Self {
-            min: arr[0].clone(),
-            max: arr[1].clone(),
+            min: mem::take(&mut arr[0]),
+            max: mem::take(&mut arr[1]),
         }
     }
 }
@@ -69,20 +70,20 @@ impl<T> Levels<T> {
     pub fn map<F, U>(self, f: F) -> Levels<U>
     where
         F: FnMut(T) -> U,
-        U: Clone,
+        U: Default,
     {
-        Levels::from(&[self.warn, self.crit].map(f))
+        Levels::from(&mut [self.warn, self.crit].map(f))
     }
 }
 
-impl<T> From<&[T; 2]> for Levels<T>
+impl<T> From<&mut [T; 2]> for Levels<T>
 where
-    T: Clone,
+    T: Default,
 {
-    fn from(arr: &[T; 2]) -> Self {
+    fn from(arr: &mut [T; 2]) -> Self {
         Self {
-            warn: arr[0].clone(),
-            crit: arr[1].clone(),
+            warn: mem::take(&mut arr[0]),
+            crit: mem::take(&mut arr[1]),
         }
     }
 }
@@ -179,7 +180,7 @@ impl<T> Metric<T> {
     where
         F: FnMut(T) -> U,
         F: Copy,
-        U: Clone,
+        U: Default,
     {
         Metric {
             label: self.label,
@@ -450,7 +451,7 @@ mod test_metrics_map {
             Bounds { min: 10, max: 100 }
         );
         assert_eq!(
-            Bounds::from(&[1, 10]).map(&|v| v * 10),
+            Bounds::from(&mut [1, 10]).map(&|v| v * 10),
             Bounds { min: 10, max: 100 }
         );
     }
@@ -465,7 +466,7 @@ mod test_metrics_map {
             }
         );
         assert_eq!(
-            Levels::from(&[1, 10]).map(&|v| v * 10),
+            Levels::from(&mut [1, 10]).map(&|v| v * 10),
             Levels {
                 warn: 10,
                 crit: 100,

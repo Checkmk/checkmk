@@ -658,15 +658,7 @@ fn test_run_remote() {
 
 #[test]
 fn test_run_local_as_plugin_without_config() {
-    assert!(
-        tools::run_bin()
-            .unwrap_err()
-            .as_output()
-            .unwrap()
-            .status
-            .code()
-            == Some(1)
-    );
+    assert!(tools::run_bin_error().status.code() == Some(1));
     assert!(
         tools::run_bin()
             .env("MK_CONFDIR", ".")

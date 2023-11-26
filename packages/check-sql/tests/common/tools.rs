@@ -18,6 +18,10 @@ pub fn run_bin() -> Command {
     Command::cargo_bin("check-sql").unwrap()
 }
 
+pub fn run_bin_error() -> Output {
+    run_bin().unwrap_err().as_output().unwrap().clone()
+}
+
 /// returns stderr content +  resulting code
 pub fn get_bad_results(output_err: &OutputError) -> Result<(String, i32)> {
     let output = output_err.as_output().unwrap();

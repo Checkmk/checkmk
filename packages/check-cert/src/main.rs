@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{Levels, LevelsChecker, LevelsStrategy, SimpleCheckResult, Writer};
+use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy, SimpleCheckResult, Writer};
 use check_cert::{checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
@@ -69,7 +69,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .map(&|v| v * Duration::DAY),
     ) else {
-        Writer::bail_out("invalid args: not after crit level larger than warn");
+        check::bail_out("invalid args: not after crit level larger than warn");
     };
 
     let Ok(response_time_levels) = LevelsChecker::try_new(
@@ -82,7 +82,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .map(&|v| v * Duration::MILLISECOND),
     ) else {
-        Writer::bail_out("invalid args: response time crit higher than warn");
+        check::bail_out("invalid args: response time crit higher than warn");
     };
 
     let start = Instant::now();
@@ -126,5 +126,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .into(),
     ]);
     println!("HTTP {}", out);
-    out.bye()
+    std::process::exit(out.exit_code())
 }

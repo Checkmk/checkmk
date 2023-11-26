@@ -376,19 +376,13 @@ pub struct Writer {
 }
 
 impl Writer {
-    pub fn bye(&self) -> ! {
-        std::process::exit(match self.state {
+    pub fn exit_code(&self) -> i32 {
+        match self.state {
             State::Ok => 0,
             State::Warn => 1,
             State::Crit => 2,
             State::Unknown => 3,
-        })
-    }
-
-    pub fn bail_out(message: &str) -> ! {
-        let out = Self::from(SimpleCheckResult::unknown(String::from(message)));
-        eprintln!("{}", out);
-        out.bye()
+        }
     }
 }
 
@@ -438,6 +432,12 @@ impl From<&Vec<CheckResult<Real>>> for Writer {
                 .join(", "),
         }
     }
+}
+
+pub fn bail_out(message: &str) -> ! {
+    let out = Writer::from(SimpleCheckResult::unknown(String::from(message)));
+    eprintln!("{}", out);
+    std::process::exit(out.exit_code())
 }
 
 #[cfg(test)]

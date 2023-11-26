@@ -1876,15 +1876,6 @@ graph_info["tcp_connection_states"] = {
     "optional_metrics": ["tcp_bound", "tcp_idle"],
 }
 
-graph_info["db_connections"] = {
-    "title": _("DB Connections"),
-    "metrics": [("active_connections", "line"), ("idle_connections", "line")],
-    "scalars": [
-        ("active_connections:warn", _("Warning (active connections)")),
-        ("active_connections:crit", _("Critical (active connections)")),
-    ],
-}
-
 
 graph_info["cluster_hosts"] = {
     "title": _("Hosts"),

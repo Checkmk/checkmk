@@ -3,8 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
 from cmk.gui.graphing._loader import load_graphing_plugins
-from cmk.gui.graphing._utils import add_graphing_plugins, check_metrics, metric_info
+from cmk.gui.graphing._utils import (
+    add_graphing_plugins,
+    check_metrics,
+    graph_templates_internal,
+    GraphTemplate,
+    metric_info,
+    MetricDefinition,
+    ScalarDefinition,
+)
 
 
 def test_add_graphing_plugins() -> None:
@@ -39,3 +48,37 @@ def test_add_graphing_plugins() -> None:
         "read_latency": {"scale": 0.001},
         "write_latency": {"scale": 0.001},
     }
+
+    graph_templates = graph_templates_internal()
+    assert "db_connections" in graph_templates
+    assert graph_templates["db_connections"] == GraphTemplate(
+        id="db_connections",
+        title="DB Connections",
+        scalars=[
+            ScalarDefinition(
+                MetricExpression(declaration=WarningOf(Metric("active_connections"))),
+                "Active connections",
+            ),
+            ScalarDefinition(
+                MetricExpression(declaration=CriticalOf(Metric("active_connections"))),
+                "Active connections",
+            ),
+        ],
+        conflicting_metrics=[],
+        optional_metrics=[],
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+        metrics=[
+            MetricDefinition(
+                MetricExpression(Metric("active_connections")),
+                "line",
+                "Active connections",
+            ),
+            MetricDefinition(
+                MetricExpression(Metric("idle_connections")),
+                "line",
+                "Idle connections",
+            ),
+        ],
+    )

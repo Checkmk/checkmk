@@ -978,12 +978,20 @@ msgstr "... (%d mai mult)"
 msgid ".Net/CLR Memory"
 msgstr "Memorie .Net/CLR"
 
+#, fuzzy
+msgid "/d"
+msgstr "B/d"
+
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "/etc/cma/backup.conf are permisiuni greșite. Refuză să citească fișierul"
 
 msgid "/m"
 msgstr "/m"
+
+#, fuzzy
+msgid "/op"
+msgstr "Top"
 
 msgid "/s"
 msgstr "/s"
@@ -5852,6 +5860,10 @@ msgstr "Cantitatea de fișiere din spool-ul de notificare"
 msgid "Amount of mails in queues"
 msgstr "Cantitatea de mailuri în cozi"
 
+#, fuzzy
+msgid "Amount of substance"
+msgstr "Cantitatea de date prelucrate"
+
 msgid ""
 "Amount of time that the application of redo data on the standby database "
 "lags behind the primary database"
@@ -8004,6 +8016,10 @@ msgstr "Cutii"
 msgid "Boxes (omit root)"
 msgstr "Cutii (omiteți rădăcina)"
 
+#, fuzzy
+msgid "Bq"
+msgstr "B"
+
 msgid "Breakdown"
 msgstr "Descompunere"
 
@@ -8952,6 +8968,10 @@ msgstr "Byte pierdute"
 msgid "Bytes per day"
 msgstr "Bytes pe zi"
 
+#, fuzzy
+msgid "Bytes per operation"
+msgstr "Citire de octeți pe operațiune"
+
 msgid "Bytes per second"
 msgstr "Byte pe secundă"
 
@@ -9723,6 +9743,10 @@ msgstr "Nu se poate scrie fișierul de configurare \"%s\": %s."
 msgid "Cannot write file \"%s\": %s"
 msgstr "Nu se poate scrie fișierul \"%s\": %s."
 
+#, fuzzy
+msgid "Capacitance"
+msgstr "Utilizarea capacității"
+
 msgid "Capacity filled"
 msgstr "Capacitate umplută"
 
@@ -9779,6 +9803,10 @@ msgstr "Catalog"
 
 msgid "Catalog of check plugins"
 msgstr "Catalog de plugin-uri de verificare"
+
+#, fuzzy
+msgid "Catalytic activity"
+msgstr "Activare automată"
 
 msgid "Categories"
 msgstr "Categorii"
@@ -15073,6 +15101,10 @@ msgstr "Decibel"
 msgid "Decibel-millivolt"
 msgstr "Decibel-millivolt"
 
+#, fuzzy
+msgid "Decibel-milliwatt"
+msgstr "Decibel-milliwati"
+
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwati"
 
@@ -17875,6 +17907,9 @@ msgstr "Nu există"
 msgid "Does not match any service"
 msgstr "Nu se potrivește cu niciun serviciu"
 
+msgid "Dollar"
+msgstr ""
+
 msgid "Domain (only used for european accounts)"
 msgstr "Domeniu (utilizat numai pentru conturile europene)"
 
@@ -17959,6 +17994,9 @@ msgstr "Nu folosiți ghilimele"
 
 msgid "Don't wait for document body"
 msgstr "Nu așteptați corpul documentului"
+
+msgid "Dose equivalent"
+msgstr ""
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "Nivelurile de memorie în timpul execuției DotNet (.Net)"
@@ -18970,8 +19008,20 @@ msgstr "Noduri Elasticsearch"
 msgid "Elbow"
 msgstr "Cotul"
 
+#, fuzzy
+msgid "Electric charge"
+msgstr "Curent electric"
+
+#, fuzzy
+msgid "Electric potential"
+msgstr "Putere electrică"
+
 msgid "Electrical Apparent Power"
 msgstr "Puterea electrică aparentă"
+
+#, fuzzy
+msgid "Electrical Current"
+msgstr "Curent electric"
 
 msgid "Electrical Current (Amperage)"
 msgstr "Curent electric (amperaj)"
@@ -18993,6 +19043,10 @@ msgstr "Tensiune electrică (tensiune)"
 
 msgid "Electrical apparent power"
 msgstr "Puterea aparentă electrică"
+
+#, fuzzy
+msgid "Electrical conductance"
+msgstr "Tensiune electrică"
 
 msgid "Electrical current"
 msgstr "Curent electric"
@@ -20709,6 +20763,9 @@ msgstr ""
 msgid "Extremes only"
 msgstr "Doar extreme"
 
+msgid "F"
+msgstr ""
+
 msgid "F5 BigIP configuration sync status"
 msgstr "Starea de sincronizare a configurației F5 BigIP"
 
@@ -22070,6 +22127,10 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Interzis să vezi tot copacul"
 
+#, fuzzy
+msgid "Force"
+msgstr "forță"
+
 msgid "Force agent to run in single thread"
 msgstr "Forțați agentul să ruleze într-un singur fir de execuție"
 
@@ -23283,6 +23344,14 @@ msgstr "Sisteme de operare invitate"
 msgid "Guest user"
 msgstr "Utilizator invitat"
 
+#, fuzzy
+msgid "Gy"
+msgstr "y"
+
+#, fuzzy
+msgid "H"
+msgstr "HA"
+
 msgid "H.Down"
 msgstr "H.Down"
 
@@ -23654,6 +23723,9 @@ msgstr "Clustere de bătăi ale inimii"
 
 msgid "Heartbeat tools missing or not installed"
 msgstr "Instrumentele Heartbeat lipsesc sau nu sunt instalate"
+
+msgid "Heat"
+msgstr ""
 
 msgid "Height"
 msgstr "Înălțime"
@@ -27863,6 +27935,10 @@ msgstr "Ignoră tipurile de așteptare"
 msgid "Ignored autostart services"
 msgstr "Servicii de autopornire ignorate"
 
+#, fuzzy
+msgid "Illuminance"
+msgstr "Instanța InfluxDB"
+
 msgid "Image"
 msgstr "Imagine"
 
@@ -27883,6 +27959,10 @@ msgstr "Controale programate imediat"
 
 msgid "Impact"
 msgstr "Impact"
+
+#, fuzzy
+msgid "Impedance"
+msgstr "Aspectul articolului"
 
 msgid "Import"
 msgstr "Import"
@@ -28657,6 +28737,10 @@ msgstr "State individuale pentru fiecare sursă de date"
 
 msgid "Individual topic"
 msgstr "Subiect individual"
+
+#, fuzzy
+msgid "Inductance"
+msgstr "Instanța"
 
 msgid "Ineffective"
 msgstr "Ineficace"
@@ -29837,6 +29921,9 @@ msgstr "Iterator age"
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons pentru MDM (fostul MobileIron Cloud)"
 
+msgid "J"
+msgstr ""
+
 msgid "JIRA URL"
 msgstr "JIRA URL"
 
@@ -30015,6 +30102,10 @@ msgstr "Trebuie doar să eliminați etichetele afectate din reguli."
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Afișați doar disponibilitatea (de exemplu, OK/UP)"
+
+#, fuzzy
+msgid "K"
+msgstr "OK"
 
 msgid "KByte"
 msgstr "KByte"
@@ -30680,6 +30771,10 @@ msgstr ""
 
 msgid "Legal"
 msgstr "Legal"
+
+#, fuzzy
+msgid "Length"
+msgstr "Lungime maximă"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Lungimea cozii de așteptare a mesagerului Z1"
@@ -31871,6 +31966,10 @@ msgid ""
 msgstr ""
 "Listează membrii unui grup de gazde cu numărul de servicii în diferite stări."
 
+#, fuzzy
+msgid "Liter per second"
+msgstr "Litri pe secundă"
+
 msgid "Liters per second"
 msgstr "Litri pe secundă"
 
@@ -32787,6 +32886,12 @@ msgstr "Nivel de avertizare mai scăzut"
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
 
+msgid "Luminous flux"
+msgstr ""
+
+msgid "Luminous intensity"
+msgstr ""
+
 msgid "MAC Address"
 msgstr "Adresa MAC"
 
@@ -33045,6 +33150,14 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Factorul magic (adaptare automată a nivelului pentru spațiile de masă mari)"
+
+#, fuzzy
+msgid "Magnetic flux"
+msgstr "Spațiul volumelor magnetice"
+
+#, fuzzy
+msgid "Magnetic flux density"
+msgstr "Spațiul volumelor magnetice"
 
 msgid "Magnetic volumes space"
 msgstr "Spațiul volumelor magnetice"
@@ -33562,6 +33675,9 @@ msgstr "Marcați controlerul care se distinge în prezent ca fiind cel preferat"
 
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Marcați nodurile din resurse ca fiind cele preferate"
+
+msgid "Mass"
+msgstr ""
 
 msgid "Master Event Console"
 msgstr "Consola principală de evenimente"
@@ -35790,6 +35906,10 @@ msgstr "MySQL Slave"
 
 msgid "MySQL database sizes"
 msgstr "Dimensiunile bazei de date MySQL"
+
+#, fuzzy
+msgid "N"
+msgstr "N#"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -40250,6 +40370,10 @@ msgstr "Partiții (XEN)"
 msgid "Parts per Million"
 msgstr "Părți per milion"
 
+#, fuzzy
+msgid "Parts per million"
+msgstr "Părți per milion"
+
 msgid "Pascal"
 msgstr "Pascal"
 
@@ -40525,6 +40649,10 @@ msgstr ""
 msgid "Per entry"
 msgstr "Pe intrare"
 
+#, fuzzy
+msgid "Per second"
+msgstr "pe secundă"
+
 msgid "Per topic"
 msgstr "Pe subiect"
 
@@ -40655,6 +40783,10 @@ msgstr "Procentul din totalul RAM"
 
 msgid "Percentage of total service problems"
 msgstr "Procent din totalul problemelor de serviciu"
+
+#, fuzzy
+msgid "Percentage per meter"
+msgstr "Procent pe metru"
 
 msgid "Percentage used"
 msgstr "Procentul utilizat"
@@ -41127,6 +41259,9 @@ msgstr "Comunicarea în text simplu este activată pentru %s."
 
 msgid "Plaintext"
 msgstr "Plaintext"
+
+msgid "Plane angle"
+msgstr ""
 
 msgid "Platform Firmware level"
 msgstr "Platforma Nivelul firmware-ului"
@@ -43114,6 +43249,14 @@ msgstr "RabbitMQ vhosts"
 msgid "Radial layout"
 msgstr "Dispunere radială"
 
+#, fuzzy
+msgid "Radioactive activity"
+msgstr "activ / activ"
+
+#, fuzzy
+msgid "Radioactive dose"
+msgstr "gazde inactive"
+
 msgid "Raid controllers from Areca"
 msgstr "Controlere Raid de la Areca"
 
@@ -43242,6 +43385,10 @@ msgstr "Citire de octeți pe operațiune"
 
 msgid "Read capacity"
 msgstr "Capacitatea de citire"
+
+#, fuzzy
+msgid "Read capacity unit"
+msgstr "Unități de capacitate de citire"
 
 msgid "Read hits"
 msgstr "Citiți hiturile"
@@ -45551,6 +45698,10 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Nivelul de putere Rx"
 
+#, fuzzy
+msgid "S"
+msgstr "S."
+
 msgid "S."
 msgstr "S."
 
@@ -46439,6 +46590,10 @@ msgstr "Secunde înainte de expirarea conexiunii"
 
 msgid "Seconds of operation"
 msgstr "Secunde de funcționare"
+
+#, fuzzy
+msgid "Seconds per second"
+msgstr "secunde pe secundă"
 
 msgid "Seconds since service"
 msgstr "Secunde de la service"
@@ -49368,6 +49523,10 @@ msgstr "Solaris: PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris: TGZ (.tar.gz)"
 
+#, fuzzy
+msgid "Solid angle"
+msgstr "Single"
+
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -52016,6 +52175,10 @@ msgstr "Suspendat"
 msgid "Suspending"
 msgstr "Suspendarea"
 
+#, fuzzy
+msgid "Sv"
+msgstr "Salveaza"
+
 msgid "Swap"
 msgstr "Schimbați"
 
@@ -52341,6 +52504,10 @@ msgstr "Rezumatul socket-urilor Systemd"
 
 msgid "Systems larger than"
 msgstr "Sisteme mai mari de"
+
+#, fuzzy
+msgid "T"
+msgstr "TX"
 
 msgid "TCP"
 msgstr "TCP"
@@ -67464,6 +67631,10 @@ msgstr "Urmăriți dimensiunea totală a fișierului jurnal"
 msgid "Wato"
 msgstr "Wato"
 
+#, fuzzy
+msgid "Wb"
+msgstr "Web"
+
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
@@ -69348,6 +69519,10 @@ msgstr "Utilizarea cache-ului de scriere"
 
 msgid "Write capacity"
 msgstr "Capacitate de scriere"
+
+#, fuzzy
+msgid "Write capacity unit"
+msgstr "Unități de capacitate de scriere"
 
 msgid "Write latency"
 msgstr "Latență de scriere"
@@ -71700,6 +71875,10 @@ msgstr "cazul"
 msgid "cases"
 msgstr "cazuri"
 
+#, fuzzy
+msgid "cd"
+msgstr "d"
+
 msgid "check plugins"
 msgstr "verificați plugin-urile"
 
@@ -72419,8 +72598,15 @@ msgstr "locuri de muncă"
 msgid "kW"
 msgstr "kW"
 
+#, fuzzy
+msgid "kat"
+msgstr "la"
+
 msgid "kernel counter"
 msgstr "contor kernel"
+
+msgid "kg"
+msgstr ""
 
 msgid "l/s"
 msgstr "l/s"
@@ -72445,6 +72631,10 @@ msgstr "execuție moștenită"
 
 msgid "license details"
 msgstr "detalii despre licență"
+
+#, fuzzy
+msgid "lm"
+msgstr "m"
 
 msgid "local connect"
 msgstr "conexiune locală"
@@ -72580,6 +72770,9 @@ msgstr ""
 
 msgid "mm"
 msgstr "mm"
+
+msgid "mol"
+msgstr ""
 
 msgid "monitor"
 msgstr "monitor"
@@ -72945,6 +73138,10 @@ msgstr "pt"
 msgid "purchase a license"
 msgstr "achiziționați o licență"
 
+#, fuzzy
+msgid "rad"
+msgstr "și"
+
 msgid "radial"
 msgstr "radial"
 
@@ -73161,6 +73358,10 @@ msgstr "socket-ul așteaptă după închidere orice pachet rămas în rețea"
 
 msgid "specify manually ->"
 msgstr "specificați manual ->"
+
+#, fuzzy
+msgid "sr"
+msgstr "s"
 
 msgid "status entries"
 msgstr "intrări de stare"
@@ -73488,6 +73689,9 @@ msgstr "{actual} este prea mică. Valoarea minimă admisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+msgid "Ω"
+msgstr ""
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

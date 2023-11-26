@@ -980,6 +980,9 @@ msgstr "... (%d plus)"
 msgid ".Net/CLR Memory"
 msgstr "Mémoire .Net/CLR"
 
+msgid "/d"
+msgstr "/d"
+
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "Le fichier /etc/cma/backup.conf n'a pas les bonnes permissions. Refus de "
@@ -987,6 +990,10 @@ msgstr ""
 
 msgid "/m"
 msgstr "/m"
+
+#, fuzzy
+msgid "/op"
+msgstr "Top"
 
 msgid "/s"
 msgstr "/s"
@@ -5878,6 +5885,10 @@ msgstr "Quantité de fichiers dans le spool de notification"
 msgid "Amount of mails in queues"
 msgstr "Quantité de courriers dans les files d'attente"
 
+#, fuzzy
+msgid "Amount of substance"
+msgstr "Quantité de données traitées"
+
 msgid ""
 "Amount of time that the application of redo data on the standby database "
 "lags behind the primary database"
@@ -8022,6 +8033,10 @@ msgstr "Boîtes"
 msgid "Boxes (omit root)"
 msgstr "Boîtes (omettre la racine)"
 
+#, fuzzy
+msgid "Bq"
+msgstr "B"
+
 msgid "Breakdown"
 msgstr "Ventilation"
 
@@ -8973,6 +8988,10 @@ msgstr "Octets abandonnés"
 msgid "Bytes per day"
 msgstr "Octets par jour"
 
+#, fuzzy
+msgid "Bytes per operation"
+msgstr "Octets de lecture par opération"
+
 msgid "Bytes per second"
 msgstr "Octets par seconde"
 
@@ -9747,6 +9766,10 @@ msgstr "Impossible d'écrire le fichier de configuration \"%s\" : %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Impossible d'écrire le fichier \"%s\" : %s"
 
+#, fuzzy
+msgid "Capacitance"
+msgstr "Utilisation de capacité"
+
 msgid "Capacity filled"
 msgstr "Capacité remplie"
 
@@ -9803,6 +9826,10 @@ msgstr "Catalogue"
 
 msgid "Catalog of check plugins"
 msgstr "Catalogue des plugins de contrôle"
+
+#, fuzzy
+msgid "Catalytic activity"
+msgstr "Activation automatique"
 
 msgid "Categories"
 msgstr "Catégories"
@@ -15126,6 +15153,10 @@ msgstr "Décibel"
 msgid "Decibel-millivolt"
 msgstr "Décibel-millivolt"
 
+#, fuzzy
+msgid "Decibel-milliwatt"
+msgstr "Décibel-milliwatts"
+
 msgid "Decibel-milliwatts"
 msgstr "Décibel-milliwatts"
 
@@ -17935,6 +17966,9 @@ msgstr "N'existe pas"
 msgid "Does not match any service"
 msgstr "Ne correspond à aucun service"
 
+msgid "Dollar"
+msgstr ""
+
 msgid "Domain (only used for european accounts)"
 msgstr "Domaine (utilisé uniquement pour les comptes européens)"
 
@@ -18022,6 +18056,9 @@ msgstr "N'utilisez pas de guillemets"
 
 msgid "Don't wait for document body"
 msgstr "N'attendez pas le corps du document"
+
+msgid "Dose equivalent"
+msgstr ""
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "Niveaux de mémoire d'exécution de DotNet (.Net)"
@@ -19049,8 +19086,20 @@ msgstr "Nœuds Elasticsearch"
 msgid "Elbow"
 msgstr "Coude"
 
+#, fuzzy
+msgid "Electric charge"
+msgstr "Courant électrique"
+
+#, fuzzy
+msgid "Electric potential"
+msgstr "Énergie électrique"
+
 msgid "Electrical Apparent Power"
 msgstr "Puissance apparente électrique"
+
+#, fuzzy
+msgid "Electrical Current"
+msgstr "Courant électrique"
 
 msgid "Electrical Current (Amperage)"
 msgstr "Courant électrique (ampérage)"
@@ -19072,6 +19121,10 @@ msgstr "Tension électrique (Voltage)"
 
 msgid "Electrical apparent power"
 msgstr "Puissance apparente électrique"
+
+#, fuzzy
+msgid "Electrical conductance"
+msgstr "Tension électrique"
 
 msgid "Electrical current"
 msgstr "Courant électrique"
@@ -20795,6 +20848,9 @@ msgstr ""
 msgid "Extremes only"
 msgstr "Les extrêmes seulement"
 
+msgid "F"
+msgstr ""
+
 msgid "F5 BigIP configuration sync status"
 msgstr "État de la synchronisation de la configuration de F5 BigIP"
 
@@ -22158,6 +22214,10 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Interdit de voir l'arbre entier"
 
+#, fuzzy
+msgid "Force"
+msgstr "force"
+
 msgid "Force agent to run in single thread"
 msgstr "Forcer l'agent à s'exécuter dans un seul thread"
 
@@ -23374,6 +23434,14 @@ msgstr "Systèmes d'exploitation invités"
 msgid "Guest user"
 msgstr "Utilisateur invité"
 
+#, fuzzy
+msgid "Gy"
+msgstr "y"
+
+#, fuzzy
+msgid "H"
+msgstr "HA"
+
 msgid "H.Down"
 msgstr "H.Down"
 
@@ -23745,6 +23813,9 @@ msgstr "Clusters de battements de cœur"
 
 msgid "Heartbeat tools missing or not installed"
 msgstr "Outils Heartbeat manquants ou non installés"
+
+msgid "Heat"
+msgstr ""
 
 msgid "Height"
 msgstr "Hauteur"
@@ -27993,6 +28064,10 @@ msgstr "Ignorer les types d'attente"
 msgid "Ignored autostart services"
 msgstr "Services de démarrage automatique ignorés"
 
+#, fuzzy
+msgid "Illuminance"
+msgstr "Instance InfluxDB"
+
 msgid "Image"
 msgstr "Image"
 
@@ -28013,6 +28088,10 @@ msgstr "Contrôles immédiatement programmés"
 
 msgid "Impact"
 msgstr "Impact"
+
+#, fuzzy
+msgid "Impedance"
+msgstr "Apparence de l'article"
 
 msgid "Import"
 msgstr "Importation"
@@ -28787,6 +28866,10 @@ msgstr "États individuels par source de données"
 
 msgid "Individual topic"
 msgstr "Sujet individuel"
+
+#, fuzzy
+msgid "Inductance"
+msgstr "Instance"
 
 msgid "Ineffective"
 msgstr "Inefficace"
@@ -29969,6 +30052,9 @@ msgstr "Âge de l'itérateur"
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr ""
 
+msgid "J"
+msgstr ""
+
 msgid "JIRA URL"
 msgstr "URL JIRA"
 
@@ -30147,6 +30233,10 @@ msgstr "Il suffit de retirer les balises concernées des règles."
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Indiquez simplement la disponibilité (c'est-à-dire OK/UP)"
+
+#, fuzzy
+msgid "K"
+msgstr "OK"
 
 msgid "KByte"
 msgstr "KByte"
@@ -30817,6 +30907,10 @@ msgstr ""
 
 msgid "Legal"
 msgstr "Mentions légales"
+
+#, fuzzy
+msgid "Length"
+msgstr "Longueur maximale"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Longueur de la file d'attente du courrier du messager Z1"
@@ -32020,6 +32114,10 @@ msgstr ""
 "Liste les membres d'un groupe d'hôtes avec le nombre de services dans les "
 "différents états."
 
+#, fuzzy
+msgid "Liter per second"
+msgstr "Litres par seconde"
+
 msgid "Liters per second"
 msgstr "Litres par seconde"
 
@@ -32940,6 +33038,12 @@ msgstr "Niveau d'alerte inférieur"
 msgid "Lowest: No notification, update badge number"
 msgstr "Plus bas : Pas de notification, mise à jour du numéro de badge"
 
+msgid "Luminous flux"
+msgstr ""
+
+msgid "Luminous intensity"
+msgstr ""
+
 #, fuzzy
 msgid "MAC Address"
 msgstr "Adresse MAC"
@@ -33200,6 +33304,14 @@ msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Facteur magique (adaptation automatique des niveaux pour les grands "
 "tablespaces)"
+
+#, fuzzy
+msgid "Magnetic flux"
+msgstr "Espace des volumes magnétiques"
+
+#, fuzzy
+msgid "Magnetic flux density"
+msgstr "Espace des volumes magnétiques"
 
 msgid "Magnetic volumes space"
 msgstr "Espace des volumes magnétiques"
@@ -33723,6 +33835,9 @@ msgstr "Marquer le contrôleur actuellement distingué comme contrôleur préfé
 
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Marquez les nœuds des ressources comme préférés"
+
+msgid "Mass"
+msgstr ""
 
 msgid "Master Event Console"
 msgstr "Console d'événement principal"
@@ -35954,6 +36069,10 @@ msgstr "Esclave MySQL"
 
 msgid "MySQL database sizes"
 msgstr "Taille des bases de données MySQL"
+
+#, fuzzy
+msgid "N"
+msgstr "N#"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -40462,6 +40581,10 @@ msgstr "Partitions (XEN)"
 msgid "Parts per Million"
 msgstr "Parties par million"
 
+#, fuzzy
+msgid "Parts per million"
+msgstr "Parties par million"
+
 msgid "Pascal"
 msgstr "Pascal"
 
@@ -40742,6 +40865,10 @@ msgstr ""
 msgid "Per entry"
 msgstr "Par entrée"
 
+#, fuzzy
+msgid "Per second"
+msgstr "par seconde"
+
 msgid "Per topic"
 msgstr "Par sujet"
 
@@ -40875,6 +41002,10 @@ msgstr "Pourcentage de la RAM totale"
 
 msgid "Percentage of total service problems"
 msgstr "Pourcentage du total des problèmes de service"
+
+#, fuzzy
+msgid "Percentage per meter"
+msgstr "Pourcentage par mètre"
 
 msgid "Percentage used"
 msgstr "Pourcentage utilisé"
@@ -41353,6 +41484,9 @@ msgstr "La communication en texte clair est activée pour %s"
 
 msgid "Plaintext"
 msgstr "Texte en clair"
+
+msgid "Plane angle"
+msgstr ""
 
 msgid "Platform Firmware level"
 msgstr "Plate-forme Niveau du micrologiciel"
@@ -43353,6 +43487,14 @@ msgstr "Hôtes virtuels RabbitMQ"
 msgid "Radial layout"
 msgstr "Disposition radiale"
 
+#, fuzzy
+msgid "Radioactive activity"
+msgstr "actif / actif"
+
+#, fuzzy
+msgid "Radioactive dose"
+msgstr "hôtes inactifs"
+
 msgid "Raid controllers from Areca"
 msgstr "Contrôleurs Raid d'Areca"
 
@@ -43481,6 +43623,10 @@ msgstr "Octets de lecture par opération"
 
 msgid "Read capacity"
 msgstr "Capacité de lecture"
+
+#, fuzzy
+msgid "Read capacity unit"
+msgstr "Unités de capacité de lecture"
 
 msgid "Read hits"
 msgstr "Lire les articles"
@@ -45815,6 +45961,10 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Niveau de puissance Rx"
 
+#, fuzzy
+msgid "S"
+msgstr "S."
+
 msgid "S."
 msgstr "S."
 
@@ -46708,6 +46858,10 @@ msgstr "Secondes avant la fin de la connexion"
 
 msgid "Seconds of operation"
 msgstr "Secondes de fonctionnement"
+
+#, fuzzy
+msgid "Seconds per second"
+msgstr "secondes par seconde"
 
 msgid "Seconds since service"
 msgstr "Secondes depuis le service"
@@ -49636,6 +49790,10 @@ msgstr "Solaris : PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris : TGZ (.tar.gz)"
 
+#, fuzzy
+msgid "Solid angle"
+msgstr "Simple"
+
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -52283,6 +52441,10 @@ msgstr "Suspendu"
 msgid "Suspending"
 msgstr "Suspendre"
 
+#, fuzzy
+msgid "Sv"
+msgstr "Sauvez"
+
 msgid "Swap"
 msgstr "Échanger"
 
@@ -52610,6 +52772,10 @@ msgstr "Résumé des sockets Systemd"
 
 msgid "Systems larger than"
 msgstr "Les systèmes plus grands que"
+
+#, fuzzy
+msgid "T"
+msgstr "TX"
 
 msgid "TCP"
 msgstr "TCP"
@@ -67827,6 +67993,10 @@ msgstr "Surveiller la taille totale du fichier journal"
 msgid "Wato"
 msgstr "Wato"
 
+#, fuzzy
+msgid "Wb"
+msgstr "Web"
+
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
@@ -69738,6 +69908,10 @@ msgstr "Utilisation du cache d'écriture"
 
 msgid "Write capacity"
 msgstr "Capacité d'écriture"
+
+#, fuzzy
+msgid "Write capacity unit"
+msgstr "Unités de capacité d'écriture"
 
 msgid "Write latency"
 msgstr "Latence d'écriture"
@@ -72134,6 +72308,10 @@ msgstr "cas"
 msgid "cases"
 msgstr "cas"
 
+#, fuzzy
+msgid "cd"
+msgstr "d"
+
 msgid "check plugins"
 msgstr "vérifier les plugins"
 
@@ -72852,8 +73030,15 @@ msgstr "emplois"
 msgid "kW"
 msgstr "kW"
 
+#, fuzzy
+msgid "kat"
+msgstr "à l'adresse"
+
 msgid "kernel counter"
 msgstr "compteur de noyaux"
+
+msgid "kg"
+msgstr ""
 
 msgid "l/s"
 msgstr "l/s"
@@ -72879,6 +73064,10 @@ msgstr "legs de l'histoire"
 #, fuzzy
 msgid "license details"
 msgstr "Détails de la licence"
+
+#, fuzzy
+msgid "lm"
+msgstr "m"
 
 msgid "local connect"
 msgstr "connexion locale"
@@ -73012,6 +73201,9 @@ msgstr ""
 
 msgid "mm"
 msgstr "mm"
+
+msgid "mol"
+msgstr ""
 
 msgid "monitor"
 msgstr "moniteur"
@@ -73381,6 +73573,10 @@ msgstr "pt"
 msgid "purchase a license"
 msgstr "Nom de la licence"
 
+#, fuzzy
+msgid "rad"
+msgstr "et"
+
 msgid "radial"
 msgstr "radial"
 
@@ -73598,6 +73794,10 @@ msgstr ""
 
 msgid "specify manually ->"
 msgstr "spécifier manuellement ->"
+
+#, fuzzy
+msgid "sr"
+msgstr "s"
 
 msgid "status entries"
 msgstr "entrées de statut"
@@ -73921,6 +74121,9 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+msgid "Ω"
+msgstr ""
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"
@@ -79341,9 +79544,6 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 #~ msgid "(obsolete) Link to PNP4Nagios"
 #~ msgstr "(obsolète) Lien vers PNP4Nagios"
-
-#~ msgid "/d"
-#~ msgstr "/d"
 
 #~ msgid "2 hours"
 #~ msgstr "2 heures"

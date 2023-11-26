@@ -969,12 +969,20 @@ msgstr "... (%d more)"
 msgid ".Net/CLR Memory"
 msgstr ".Net/CLR Geheugen"
 
+#, fuzzy
+msgid "/d"
+msgstr "B/d"
+
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "/etc/cma/backup.conf heeft verkeerde rechten. Weigering om bestand te lezen"
 
 msgid "/m"
 msgstr "/m"
+
+#, fuzzy
+msgid "/op"
+msgstr "Top"
 
 msgid "/s"
 msgstr "/s"
@@ -5815,6 +5823,10 @@ msgstr "Aantal bestanden in kennisgevingsspool"
 msgid "Amount of mails in queues"
 msgstr "Aantal mails in wachtrijen"
 
+#, fuzzy
+msgid "Amount of substance"
+msgstr "Hoeveelheid verwerkte gegevens"
+
 msgid ""
 "Amount of time that the application of redo data on the standby database "
 "lags behind the primary database"
@@ -7944,6 +7956,10 @@ msgstr "Dozen"
 msgid "Boxes (omit root)"
 msgstr "Dozen (wortel weglaten)"
 
+#, fuzzy
+msgid "Bq"
+msgstr "B"
+
 msgid "Breakdown"
 msgstr "Breakdown"
 
@@ -8885,6 +8901,10 @@ msgstr "Gedropte bytes"
 msgid "Bytes per day"
 msgstr "Bytes per dag"
 
+#, fuzzy
+msgid "Bytes per operation"
+msgstr "Lees bytes per operatie"
+
 msgid "Bytes per second"
 msgstr "Bytes per seconde"
 
@@ -9649,6 +9669,10 @@ msgstr "Kan configuratiebestand \"%s\" niet schrijven: %s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "Kan bestand \"%s\" niet schrijven: %s"
 
+#, fuzzy
+msgid "Capacitance"
+msgstr "Capaciteit"
+
 msgid "Capacity filled"
 msgstr "Capaciteit gevuld"
 
@@ -9706,6 +9730,10 @@ msgstr "Catalogus"
 
 msgid "Catalog of check plugins"
 msgstr "Catalogus van controle plugins"
+
+#, fuzzy
+msgid "Catalytic activity"
+msgstr "Automatische activering"
 
 msgid "Categories"
 msgstr "Categorieën"
@@ -14980,6 +15008,10 @@ msgstr "Decibel"
 msgid "Decibel-millivolt"
 msgstr "Decibel-millivolt"
 
+#, fuzzy
+msgid "Decibel-milliwatt"
+msgstr "Decibel-milliwatt"
+
 msgid "Decibel-milliwatts"
 msgstr "Decibel-milliwatt"
 
@@ -17758,6 +17790,9 @@ msgstr "Bestaat niet"
 msgid "Does not match any service"
 msgstr "Komt niet overeen met een dienst"
 
+msgid "Dollar"
+msgstr ""
+
 msgid "Domain (only used for european accounts)"
 msgstr "Domein (alleen gebruikt voor Europese rekeningen)"
 
@@ -17843,6 +17878,9 @@ msgstr "Gebruik geen aanhalingstekens"
 
 msgid "Don't wait for document body"
 msgstr "Wacht niet op een document"
+
+msgid "Dose equivalent"
+msgstr ""
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "DotNet (.Net) runtime geheugen niveaus"
@@ -18857,8 +18895,20 @@ msgstr "Elasticsearch knooppunten"
 msgid "Elbow"
 msgstr "Elleboog"
 
+#, fuzzy
+msgid "Electric charge"
+msgstr "Elektrische stroom"
+
+#, fuzzy
+msgid "Electric potential"
+msgstr "Elektrisch vermogen"
+
 msgid "Electrical Apparent Power"
 msgstr "Elektrisch Schijnbaar Vermogen"
+
+#, fuzzy
+msgid "Electrical Current"
+msgstr "Elektrische stroom"
 
 msgid "Electrical Current (Amperage)"
 msgstr "Elektrische stroom (Amperage)"
@@ -18880,6 +18930,10 @@ msgstr "Elektrische spanning (Voltage)"
 
 msgid "Electrical apparent power"
 msgstr "Elektrisch schijnbaar vermogen"
+
+#, fuzzy
+msgid "Electrical conductance"
+msgstr "Elektrische spanning"
 
 msgid "Electrical current"
 msgstr "Elektrische stroom"
@@ -20583,6 +20637,9 @@ msgstr ""
 msgid "Extremes only"
 msgstr "Alleen extremen"
 
+msgid "F"
+msgstr ""
+
 msgid "F5 BigIP configuration sync status"
 msgstr "F5 BigIP configuratie synchronisatie status"
 
@@ -21937,6 +21994,10 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "Verboden de hele boom te zien"
 
+#, fuzzy
+msgid "Force"
+msgstr "kracht"
+
 msgid "Force agent to run in single thread"
 msgstr "Forceer agent om in enkele thread te draaien"
 
@@ -23145,6 +23206,14 @@ msgstr "Gast-besturingssystemen"
 msgid "Guest user"
 msgstr "Gastgebruiker"
 
+#, fuzzy
+msgid "Gy"
+msgstr "y"
+
+#, fuzzy
+msgid "H"
+msgstr "HA"
+
 msgid "H.Down"
 msgstr "H.Down"
 
@@ -23515,6 +23584,9 @@ msgstr "Hartslag clusters"
 
 msgid "Heartbeat tools missing or not installed"
 msgstr "Heartbeat tools ontbreken of zijn niet geïnstalleerd"
+
+msgid "Heat"
+msgstr ""
 
 msgid "Height"
 msgstr "Hoogte"
@@ -27698,6 +27770,10 @@ msgstr "Negeer wachttypes"
 msgid "Ignored autostart services"
 msgstr "Genegeerde autostart diensten"
 
+#, fuzzy
+msgid "Illuminance"
+msgstr "InfluxDB instantie"
+
 msgid "Image"
 msgstr "Afbeelding"
 
@@ -27718,6 +27794,10 @@ msgstr "Onmiddellijk geplande controles"
 
 msgid "Impact"
 msgstr "Impact"
+
+#, fuzzy
+msgid "Impedance"
+msgstr "Item verschijning"
 
 msgid "Import"
 msgstr "Importeren"
@@ -28474,6 +28554,10 @@ msgstr "Afzonderlijke staten per gegevensbron"
 
 msgid "Individual topic"
 msgstr "Individueel onderwerp"
+
+#, fuzzy
+msgid "Inductance"
+msgstr "Instantie"
 
 msgid "Ineffective"
 msgstr "Ondoeltreffend"
@@ -29648,6 +29732,9 @@ msgstr "Iterator leeftijd"
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr ""
 
+msgid "J"
+msgstr ""
+
 msgid "JIRA URL"
 msgstr "JIRA URL"
 
@@ -29826,6 +29913,10 @@ msgstr "Verwijder gewoon de betrokken tags uit de regels."
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "Toon alleen de beschikbaarheid (d.w.z. OK/UP)"
+
+#, fuzzy
+msgid "K"
+msgstr "OK"
 
 msgid "KByte"
 msgstr "KByte"
@@ -30491,6 +30582,10 @@ msgstr ""
 
 msgid "Legal"
 msgstr "Wettelijk"
+
+#, fuzzy
+msgid "Length"
+msgstr "Max. lengte"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Lengte van Z1 messenger mail wachtrij"
@@ -31689,6 +31784,10 @@ msgstr ""
 "Geeft een lijst van leden van een hostgroep met het aantal diensten in de "
 "verschillende staten."
 
+#, fuzzy
+msgid "Liter per second"
+msgstr "Liters per seconde"
+
 msgid "Liters per second"
 msgstr "Liters per seconde"
 
@@ -32597,6 +32696,12 @@ msgstr "Lager waarschuwingsniveau"
 msgid "Lowest: No notification, update badge number"
 msgstr "Laagste: Geen kennisgeving, update badge nummer"
 
+msgid "Luminous flux"
+msgstr ""
+
+msgid "Luminous intensity"
+msgstr ""
+
 #, fuzzy
 msgid "MAC Address"
 msgstr "MAC-adres"
@@ -32855,6 +32960,14 @@ msgstr ""
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr ""
 "Magische factor (automatische niveau-aanpassing voor grote tablespaces)"
+
+#, fuzzy
+msgid "Magnetic flux"
+msgstr "Magnetische volumes ruimte"
+
+#, fuzzy
+msgid "Magnetic flux density"
+msgstr "Magnetische volumes ruimte"
 
 msgid "Magnetic volumes space"
 msgstr "Magnetische volumes ruimte"
@@ -33367,6 +33480,9 @@ msgstr "Markeer de momenteel onderscheiden regelaar als voorkeursregelaar"
 
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "Markeer de knooppunten van de hulpbronnen als voorkeur"
+
+msgid "Mass"
+msgstr ""
 
 msgid "Master Event Console"
 msgstr "Hoofdgebeurtenis Console"
@@ -35573,6 +35689,10 @@ msgstr "MySQL Slaaf"
 
 msgid "MySQL database sizes"
 msgstr "MySQL databasegrootte"
+
+#, fuzzy
+msgid "N"
+msgstr "N#"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -40032,6 +40152,10 @@ msgstr "Partities (XEN)"
 msgid "Parts per Million"
 msgstr "Delen per miljoen"
 
+#, fuzzy
+msgid "Parts per million"
+msgstr "Delen per miljoen"
+
 msgid "Pascal"
 msgstr "Pascal"
 
@@ -40308,6 +40432,10 @@ msgstr ""
 msgid "Per entry"
 msgstr "Per item"
 
+#, fuzzy
+msgid "Per second"
+msgstr "per seconde"
+
 msgid "Per topic"
 msgstr "Per onderwerp"
 
@@ -40438,6 +40566,10 @@ msgstr "Percentage van totale RAM"
 
 msgid "Percentage of total service problems"
 msgstr "Percentage van totale dienstverleningsproblemen"
+
+#, fuzzy
+msgid "Percentage per meter"
+msgstr "Percentage per meter"
 
 msgid "Percentage used"
 msgstr "Percentage gebruikt"
@@ -40914,6 +41046,9 @@ msgstr "Communicatie via platte tekst is ingeschakeld voor %s"
 
 msgid "Plaintext"
 msgstr "Onduidelijke tekst"
+
+msgid "Plane angle"
+msgstr ""
 
 msgid "Platform Firmware level"
 msgstr "Platform Firmware niveau"
@@ -42872,6 +43007,14 @@ msgstr "RabbitMQ vhosts"
 msgid "Radial layout"
 msgstr "Radiale indeling"
 
+#, fuzzy
+msgid "Radioactive activity"
+msgstr "actief / actief"
+
+#, fuzzy
+msgid "Radioactive dose"
+msgstr "inactieve hosts"
+
 msgid "Raid controllers from Areca"
 msgstr "Raid controllers van Areca"
 
@@ -43000,6 +43143,10 @@ msgstr "Lees bytes per operatie"
 
 msgid "Read capacity"
 msgstr "Lees capaciteit"
+
+#, fuzzy
+msgid "Read capacity unit"
+msgstr "Lees Capaciteit Eenheden"
 
 msgid "Read hits"
 msgstr "Lees hits"
@@ -45282,6 +45429,10 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Rx vermogensniveau"
 
+#, fuzzy
+msgid "S"
+msgstr "S."
+
 msgid "S."
 msgstr "S."
 
@@ -46167,6 +46318,10 @@ msgstr "Seconden voordat verbinding verbroken wordt"
 
 msgid "Seconds of operation"
 msgstr "Seconden van werking"
+
+#, fuzzy
+msgid "Seconds per second"
+msgstr "seconden per seconde"
 
 msgid "Seconds since service"
 msgstr "Seconden sinds dienst"
@@ -49060,6 +49215,10 @@ msgstr "Solaris: PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris: TGZ (.tar.gz)"
 
+#, fuzzy
+msgid "Solid angle"
+msgstr "Single"
+
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -51680,6 +51839,10 @@ msgstr "Opgeschort"
 msgid "Suspending"
 msgstr "Opschorten"
 
+#, fuzzy
+msgid "Sv"
+msgstr "Save"
+
 msgid "Swap"
 msgstr "Wissel"
 
@@ -51999,6 +52162,10 @@ msgstr "Systemd sockets samenvatting"
 
 msgid "Systems larger than"
 msgstr "Systemen groter dan"
+
+#, fuzzy
+msgid "T"
+msgstr "TX"
 
 msgid "TCP"
 msgstr "TCP"
@@ -67006,6 +67173,10 @@ msgstr "Bekijk de totale grootte van het logbestand"
 msgid "Wato"
 msgstr "Wato"
 
+#, fuzzy
+msgid "Wb"
+msgstr "Web"
+
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
@@ -68888,6 +69059,10 @@ msgstr "Schrijf cache gebruik"
 
 msgid "Write capacity"
 msgstr "Schrijfcapaciteit"
+
+#, fuzzy
+msgid "Write capacity unit"
+msgstr "Schrijfcapaciteit Eenheden"
 
 msgid "Write latency"
 msgstr "Schrijf latentie"
@@ -71229,6 +71404,10 @@ msgstr "zaak"
 msgid "cases"
 msgstr "gevallen"
 
+#, fuzzy
+msgid "cd"
+msgstr "d"
+
 msgid "check plugins"
 msgstr "plugins controleren"
 
@@ -71949,8 +72128,15 @@ msgstr "banen"
 msgid "kW"
 msgstr "kW"
 
+#, fuzzy
+msgid "kat"
+msgstr "op"
+
 msgid "kernel counter"
 msgstr "kernelteller"
+
+msgid "kg"
+msgstr ""
 
 msgid "l/s"
 msgstr "l/s"
@@ -71976,6 +72162,10 @@ msgstr "erfenis run"
 #, fuzzy
 msgid "license details"
 msgstr "Licentiegegevens"
+
+#, fuzzy
+msgid "lm"
+msgstr "m"
 
 msgid "local connect"
 msgstr "lokale verbinding"
@@ -72109,6 +72299,9 @@ msgstr ""
 
 msgid "mm"
 msgstr "mm"
+
+msgid "mol"
+msgstr ""
 
 msgid "monitor"
 msgstr "monitor"
@@ -72478,6 +72671,10 @@ msgstr "pt"
 msgid "purchase a license"
 msgstr "Naam van de vergunning"
 
+#, fuzzy
+msgid "rad"
+msgstr "en"
+
 msgid "radial"
 msgstr "radiaal"
 
@@ -72694,6 +72891,10 @@ msgstr ""
 
 msgid "specify manually ->"
 msgstr "handmatig opgeven ->"
+
+#, fuzzy
+msgid "sr"
+msgstr "s"
 
 msgid "status entries"
 msgstr "statusvermeldingen"
@@ -73017,6 +73218,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+msgid "Ω"
+msgstr ""
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

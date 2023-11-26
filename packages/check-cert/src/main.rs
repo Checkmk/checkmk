@@ -38,21 +38,18 @@ struct Args {
     #[arg(long)]
     pub issuer: Option<String>,
 
-    /// Warn if certificate expires in n days
-    #[arg(long, default_value_t = 30)]
-    not_after_warn: u32,
+    /// Certificate expiration levels in days [WARN:CRIT]
+    #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
+    not_after: Vec<u32>,
 
-    /// Crit if certificate expires in n days
-    #[arg(long, default_value_t = 0)]
-    not_after_crit: u32,
-
-    /// Warn if response time is higher (milliseconds)
-    #[arg(long, default_value_t = 60_000)]
-    response_time_warn: u32,
-
-    /// Crit if response time is higher (milliseconds)
-    #[arg(long, default_value_t = 90_000)]
-    response_time_crit: u32,
+    /// Response time levels in milliseconds [WARN:CRIT]
+    #[arg(
+        long,
+        num_args = 2,
+        value_delimiter = ':',
+        default_value = "60000:90000"
+    )]
+    response_time: Vec<u32>,
 
     /// Disable SNI extension
     #[arg(long, action = clap::ArgAction::SetTrue)]
@@ -64,15 +61,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let Ok(not_after_levels) = LevelsChecker::try_new(
         LevelsStrategy::Lower,
-        Levels::from(&mut [args.not_after_warn, args.not_after_crit]).map(&|v| v * Duration::DAY),
+        Levels::from(
+            &mut args
+                .not_after
+                .try_into()
+                .expect("invalid arg count for not_after"),
+        )
+        .map(&|v| v * Duration::DAY),
     ) else {
         Writer::bail_out("invalid args: not after crit level larger than warn");
     };
 
     let Ok(response_time_levels) = LevelsChecker::try_new(
         LevelsStrategy::Upper,
-        Levels::from(&mut [args.response_time_warn, args.response_time_crit])
-            .map(&|v| v * Duration::MILLISECOND),
+        Levels::from(
+            &mut args
+                .response_time
+                .try_into()
+                .expect("invalid arg count for response_time"),
+        )
+        .map(&|v| v * Duration::MILLISECOND),
     ) else {
         Writer::bail_out("invalid args: response time crit higher than warn");
     };

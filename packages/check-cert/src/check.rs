@@ -416,8 +416,8 @@ impl From<SimpleCheckResult> for Writer {
     }
 }
 
-impl From<Vec<CheckResult<Real>>> for Writer {
-    fn from(check_results: Vec<CheckResult<Real>>) -> Self {
+impl From<&Vec<CheckResult<Real>>> for Writer {
+    fn from(check_results: &Vec<CheckResult<Real>>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.summary.state).max() {
                 Some(state) => *state,
@@ -639,7 +639,7 @@ mod test_writer_format {
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Writer::from(vec![])), "OK");
+        assert_eq!(format!("{}", Writer::from(&vec![])), "OK");
     }
 
     #[test]
@@ -648,7 +648,10 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::default();
         let cr3 = SimpleCheckResult::default();
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
+            format!(
+                "{}",
+                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+            ),
             "OK"
         );
     }
@@ -659,7 +662,10 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::ok(s("summary 2"));
         let cr3 = SimpleCheckResult::ok(s("summary 3"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
+            format!(
+                "{}",
+                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+            ),
             "OK - summary 1, summary 2, summary 3"
         );
     }
@@ -670,7 +676,10 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::warn(s("summary 2"));
         let cr3 = SimpleCheckResult::ok(s("summary 3"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
+            format!(
+                "{}",
+                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+            ),
             "WARNING - summary 1, summary 2 (!), summary 3"
         );
     }
@@ -681,7 +690,10 @@ mod test_writer_format {
         let cr2 = SimpleCheckResult::warn(s("summary 2"));
         let cr3 = SimpleCheckResult::crit(s("summary 3"));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1.into(), cr2.into(), cr3.into()])),
+            format!(
+                "{}",
+                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+            ),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
     }
@@ -695,7 +707,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
+                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
             ),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
@@ -711,7 +723,7 @@ mod test_writer_format {
         let cr2 = CheckResult::warn(s("summary 2"), m("m2", 37));
         let cr3 = CheckResult::crit(s("summary 3"), m("m3", 42));
         assert_eq!(
-            format!("{}", Writer::from(vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(&vec![cr1, cr2, cr3])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );
     }

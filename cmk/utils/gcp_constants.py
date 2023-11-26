@@ -30,6 +30,7 @@ RegionMap: typing.Final = {
     "europe-west8": "Milan",
     "europe-west9": "Paris",
     "europe-southwest1": "Madrid",
+    "me-central1": "Doha",
     "me-west1": "Tel Aviv",
     "northamerica-northeast1": "Montréal",
     "northamerica-northeast2": "Toronto",

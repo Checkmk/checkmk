@@ -680,6 +680,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _flush(self) -> None:
         self.__output.flush()
+        self.__output.close()
 
     def _markup(self, line: str, attr: str) -> str:
         # Replaces braces in the line but preserves the inner braces

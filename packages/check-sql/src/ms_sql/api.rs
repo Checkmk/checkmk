@@ -194,9 +194,7 @@ impl InstanceEngine {
             Ok(mut client) => {
                 for section in sections.iter() {
                     result += &section.to_header();
-                    result += &self
-                        .generate_known_sections(&mut client, endpoint, section)
-                        .await;
+                    result += &self.generate_section(&mut client, endpoint, section).await;
                 }
             }
             Err(err) => {
@@ -255,7 +253,7 @@ impl InstanceEngine {
         format!("{}{sep}state{sep}{}\n", self.mssql_name(), accessible as u8)
     }
 
-    pub async fn generate_known_sections(
+    pub async fn generate_section(
         &self,
         client: &mut Client,
         endpoint: &Endpoint,

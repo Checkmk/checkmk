@@ -13,18 +13,38 @@ use tiberius::Row;
 pub const INSTANCE_SECTION_NAME: &str = "instance";
 pub const COUNTERS_SECTION_NAME: &str = "counters";
 pub const BLOCKED_SESSIONS_SECTION_NAME: &str = "blocked_sessions";
-pub const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
 pub const BACKUP_SECTION_NAME: &str = "backup";
 pub const TRANSACTION_LOG_SECTION_NAME: &str = "transactionlogs";
 pub const DATAFILES_SECTION_NAME: &str = "datafiles";
 pub const DATABASES_SECTION_NAME: &str = "databases";
 pub const CLUSTERS_SECTION_NAME: &str = "clusters";
+
+pub const TABLE_SPACES_SECTION_NAME: &str = "tablespaces";
 pub const CONNECTIONS_SECTION_NAME: &str = "connections";
 
 // query based section
 pub const JOBS_SECTION_NAME: &str = "jobs";
 pub const MIRRORING_SECTION_NAME: &str = "mirroring";
 pub const AVAILABILITY_GROUPS_SECTION_NAME: &str = "availability_groups";
+
+const PIPE_SEP_SECTIONS: [&str; 8] = [
+    INSTANCE_SECTION_NAME,
+    COUNTERS_SECTION_NAME,
+    BLOCKED_SESSIONS_SECTION_NAME,
+    BACKUP_SECTION_NAME,
+    TRANSACTION_LOG_SECTION_NAME,
+    DATAFILES_SECTION_NAME,
+    DATABASES_SECTION_NAME,
+    CLUSTERS_SECTION_NAME,
+];
+
+const SPACE_SEP_SECTIONS: [&str; 2] = [TABLE_SPACES_SECTION_NAME, CONNECTIONS_SECTION_NAME];
+
+const QUERY_BASED_SECTIONS: [&str; 3] = [
+    JOBS_SECTION_NAME,
+    MIRRORING_SECTION_NAME,
+    AVAILABILITY_GROUPS_SECTION_NAME,
+];
 
 pub struct Section {
     name: String,
@@ -90,6 +110,7 @@ impl Section {
         {
             Ok(rows)
         } else {
+            log::warn!("No output from query");
             Err(anyhow::anyhow!("No output from query"))
         }
     }
@@ -108,11 +129,13 @@ pub fn get_work_sections(ms_sql: &config::ms_sql::Config) -> Vec<Section> {
 
 fn get_section_separator(name: &str) -> Option<char> {
     match name {
-        "instance" | "databases" | "counters" | "blocked_sessions" | "transactionlogs"
-        | "datafiles" | "clusters" | "backup" => Some('|'),
-        "jobs" | "mirroring" | "availability_groups" => Some('\t'),
-        "tablespaces" | "connections" => None,
-        _ => None,
+        _ if PIPE_SEP_SECTIONS.contains(&name) => Some('|'),
+        _ if SPACE_SEP_SECTIONS.contains(&name) => None,
+        _ if QUERY_BASED_SECTIONS.contains(&name) => Some('\t'),
+        _ => {
+            log::warn!("Unknown section: {}", name);
+            None
+        }
     }
 }
 
@@ -125,5 +148,16 @@ mod tests {
     async fn test_work_sections() {
         let config = Config::default();
         assert_eq!(get_work_sections(&config).len(), 13);
+    }
+
+    #[test]
+    fn test_known_sections() {
+        assert!(get_section_separator("zu").is_none());
+        assert!(get_section_separator("tablespaces").is_none());
+        assert!(get_section_separator("connections").is_none());
+        assert_eq!(get_section_separator("jobs").unwrap(), '\t');
+        assert_eq!(get_section_separator("mirroring").unwrap(), '\t');
+        assert_eq!(get_section_separator("availability_groups").unwrap(), '\t');
+        assert_eq!(get_section_separator("instance").unwrap(), '|');
     }
 }

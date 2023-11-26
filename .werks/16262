@@ -1,0 +1,15 @@
+Title: Browsing man pages from command line
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701023104
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Viewing a check plugins man page using <tt>cmk -M my_check</tt> left the terminal in a bad state.
+Browsing man pages using <tt>cmk -m</tt> did not work at all (still leaving the terminal in a bad state).
+This is fixed.
+
+After running the commands <tt>cmk -M my_check</tt> or <tt>cmk -m</tt> the tty was not properly restored.
+Affected users can fix their prompt running <tt>stty sane</tt> or <tt>restore</tt>.

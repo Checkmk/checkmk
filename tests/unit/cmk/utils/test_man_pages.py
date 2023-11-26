@@ -220,37 +220,17 @@ def test_no_subtree_and_entries_on_same_level(catalog: man_pages.ManPageCatalog)
 # TODO: print_man_page_browser()
 
 
-def test_print_man_page_nowiki_index(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    renderer = man_pages.NowikiManPageRenderer(_IF64_MAN_PAGE)
-    index_entry = renderer.index_entry()
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
-    assert "<tr>" in index_entry
-    assert "[check_if64|" in index_entry
-
-
-def test_print_man_page_nowiki_content(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    renderer = man_pages.NowikiManPageRenderer(_IF64_MAN_PAGE)
-    content = renderer.render()
-    out, err = capsys.readouterr()
-    assert out == ""
-    assert err == ""
-
+def test_print_man_page_nowiki_content() -> None:
+    content = man_pages.NowikiManPageRenderer(_IF64_MAN_PAGE).render_page()
     assert content.startswith("TI:")
     assert "\nSA:" in content
     assert "License:" in content
 
 
-@pytest.mark.skip("skip this until we don't need the capturing foo anymore")
-def test_print_man_page(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
-    man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).paint()
-    out, err = capsys.readouterr()
-    assert err == ""
-
-    assert out.startswith(" if64    ")
-    assert "\n License: " in out
+def test_print_man_page() -> None:
+    rendered = man_pages.ConsoleManPageRenderer(_IF64_MAN_PAGE).render_page()
+    assert rendered.startswith(" if64    ")
+    assert "\n License: " in rendered
 
 
 def test_missing_catalog_entries_of_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:

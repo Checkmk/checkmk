@@ -6,7 +6,7 @@ use anyhow::Result;
 use assert_cmd::output::OutputError;
 use assert_cmd::Command;
 use check_sql::config::ms_sql::{Authentication, Connection, Endpoint};
-use check_sql::ms_sql::api::Client;
+use check_sql::ms_sql::client::Client;
 use std::io::{self, Write};
 use std::path::Path;
 use std::process::Output;

@@ -6,15 +6,15 @@ mod common;
 use std::collections::HashSet;
 
 use check_sql::ms_sql::{
-    api::{Client, InstanceEngine},
+    api::{self, InstanceEngine},
+    client::{self, Client},
     queries,
     section::{self, Section},
 };
-use check_sql::{
-    config::ms_sql::{Config, Endpoint},
-    config::CheckConfig,
-    ms_sql::api,
-    ms_sql::client,
+
+use check_sql::config::{
+    ms_sql::{Config, Endpoint},
+    CheckConfig,
 };
 use common::tools::{self, SqlDbEndpoint};
 use tempfile::TempDir;
@@ -156,7 +156,7 @@ async fn validate_all(i: &InstanceEngine, c: &mut Client, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
-            && api::get_computer_name(c)
+            && api::get_computer_name(c, queries::QUERY_COMPUTER_NAME)
                 .await
                 .unwrap()
                 .unwrap()
@@ -546,7 +546,7 @@ mssql:
             match c {
                 Ok(mut c) => assert!(
                     tools::run_get_version(&mut c).await.is_some()
-                        && api::get_computer_name(&mut c)
+                        && api::get_computer_name(&mut c, queries::QUERY_COMPUTER_NAME)
                             .await
                             .unwrap()
                             .unwrap()
@@ -569,7 +569,9 @@ async fn test_get_computer_name() {
         let mut client = client::create_from_config(&endpoint.make_ep())
             .await
             .unwrap();
-        let name = api::get_computer_name(&mut client).await.unwrap();
+        let name = api::get_computer_name(&mut client, queries::QUERY_COMPUTER_NAME)
+            .await
+            .unwrap();
         assert!(name
             .clone()
             .unwrap()

@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::client;
+use super::client::{self, Client};
 use super::section::{self, Section};
 use crate::config::{self, ms_sql::AuthType, ms_sql::Endpoint, CheckConfig};
 use crate::ms_sql::queries;
@@ -11,11 +11,9 @@ use futures::stream::{self, StreamExt};
 use std::collections::HashSet;
 
 use tiberius::{ColumnData, Query, Row};
-use tokio::net::TcpStream;
-use tokio_util::compat::Compat;
 
 use super::defaults;
-pub type Client = tiberius::Client<Compat<TcpStream>>;
+type Answer = Vec<Row>;
 
 pub const SQL_LOGIN_ERROR_TAG: &str = "[SQL LOGIN ERROR]";
 pub const SQL_TCP_ERROR_TAG: &str = "[SQL TCP ERROR]";
@@ -41,6 +39,7 @@ pub struct InstanceEngineBuilder {
     port: Option<u16>,
     dynamic_port: Option<u16>,
     endpoint: Option<Endpoint>,
+    computer_name: Option<String>,
 }
 
 impl InstanceEngineBuilder {
@@ -84,6 +83,13 @@ impl InstanceEngineBuilder {
         self.endpoint = Some(endpoint.clone());
         self
     }
+    pub fn computer_name<'a, S>(mut self, computer_name: &'a Option<S>) -> Self
+    where
+        std::string::String: From<&'a S>,
+    {
+        self.computer_name = computer_name.as_ref().map(|s| s.into());
+        self
+    }
 
     pub fn row(self, row: &Row) -> Self {
         self.name(row.get_value_by_idx(0))
@@ -113,6 +119,7 @@ impl InstanceEngineBuilder {
             dynamic_port: self.dynamic_port,
             available: None,
             endpoint: self.endpoint.unwrap_or_default(),
+            computer_name: self.computer_name,
         }
     }
 }
@@ -129,6 +136,7 @@ pub struct InstanceEngine {
     dynamic_port: Option<u16>,
     pub available: Option<bool>,
     endpoint: Endpoint,
+    computer_name: Option<String>,
 }
 
 impl InstanceEngine {
@@ -148,6 +156,30 @@ impl InstanceEngine {
 
     pub fn full_name(&self) -> String {
         format!("{}/{}", self.endpoint.hostname(), self.name)
+    }
+
+    /// not tested, because it is a bit legacy
+    pub fn legacy_name(&self) -> String {
+        if self.name != "MSSQLSERVER" {
+            return format!("{}/{}", self.legacy_name_prefix(), self.name);
+        }
+
+        if let Some(cluster) = &self.cluster {
+            cluster.clone()
+        } else {
+            "(local)".to_string()
+        }
+    }
+
+    fn legacy_name_prefix(&self) -> &str {
+        if let Some(cluster) = &self.cluster {
+            return cluster;
+        }
+        if let Some(computer_name) = &self.computer_name {
+            computer_name
+        } else {
+            ""
+        }
     }
 
     pub async fn generate_sections(
@@ -1102,12 +1134,12 @@ async fn generate_result(
 }
 
 /// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
-pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Vec<Row>>> {
+pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
     if query.is_empty() {
         anyhow::bail!("Empty query");
     }
     let stream = Query::new(query).query(client).await?;
-    let rows: Vec<Vec<Row>> = stream.into_results().await?;
+    let rows: Vec<Answer> = stream.into_results().await?;
     Ok(rows)
 }
 
@@ -1127,29 +1159,46 @@ pub async fn detect_instance_engines(
         get_engines(&mut client, endpoint, &queries::get_32bit_instances_query()).await?,
     ))
 }
+
+/// return all MS SQL instances installed
 async fn get_engines(
     client: &mut Client,
     endpoint: &Endpoint,
     query: &str,
 ) -> Result<Vec<InstanceEngine>> {
-    let rows = run_query(client, query).await?;
-    Ok(rows[0]
-        .iter()
+    let answers = run_query(client, query).await?;
+    let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
+        .await
+        .unwrap_or_default();
+    if let Some(rows) = answers.get(0) {
+        Ok(to_engines(rows, endpoint, computer_name))
+    } else {
+        log::warn!("Empty answer by query: {query}");
+        Ok(vec![])
+    }
+}
+
+fn to_engines(
+    rows: &Answer,
+    endpoint: &Endpoint,
+    computer_name: Option<String>,
+) -> Vec<InstanceEngine> {
+    rows.iter()
         .map(|r| {
             InstanceEngineBuilder::new()
                 .row(r)
+                .computer_name(&computer_name)
                 .endpoint(endpoint)
                 .build()
         })
         .collect::<Vec<InstanceEngine>>()
-        .to_vec())
+        .to_vec()
 }
 
-/// return all MS SQL instances installed
-pub async fn get_computer_name(client: &mut Client) -> Result<Option<String>> {
-    let rows = run_query(client, queries::QUERY_COMPUTER_NAME).await?;
+pub async fn get_computer_name(client: &mut Client, query: &str) -> Result<Option<String>> {
+    let rows = run_query(client, query).await?;
     if rows.is_empty() || rows[0].is_empty() {
-        log::warn!("Computer name not found");
+        log::warn!("Computer name not found with query {query}");
         return Ok(None);
     }
     let row = &rows[0];

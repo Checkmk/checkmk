@@ -16,10 +16,11 @@ import subprocess
 import sys
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Reversible, Sequence
+from contextlib import suppress
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Final, TextIO
+from typing import Final
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -621,18 +622,10 @@ def _format_distribution(distr: str) -> str:
             return distr
 
 
-def _console_stream() -> TextIO:
-    if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
-        # NOTE: We actually want to use subprocess.Popen here, but the tty is in
-        # a horrible state after rendering the man page if we do that. Why???
-        return os.popen("/usr/bin/less -S -R -Q -u -L", "w")  # nosec B605 # BNS:f6c1b9
-    return sys.stdout
-
-
 class ConsoleManPageRenderer(ManPageRenderer):
     def __init__(self, man_page: ManPage) -> None:
         super().__init__(man_page)
-        self.__output = _console_stream()
+        self._buffer: list[str] = []
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
         # stuff might have been changed since import time, consider e.g. pytest.
         self.__width = tty.get_size()[1]
@@ -645,8 +638,17 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._header_color_right = tty.colorset(7, 2, 1)
 
     def _flush(self) -> None:
-        self.__output.flush()
-        self.__output.close()
+        rendered = "".join(self._buffer)
+        if sys.stdout.isatty():
+            with suppress(FileNotFoundError):
+                subprocess.run(
+                    ["/usr/bin/less", "-S", "-R", "-Q", "-u", "-L"],
+                    input=rendered,
+                    encoding="utf8",
+                    check=False,
+                )
+                return
+        sys.stdout.write("".join(self._buffer))
 
     def _patch_braces(self, line: str, *, color: str) -> str:
         """Replace braces in the line with a colors
@@ -673,7 +675,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _print_subheader(self, line: str) -> None:
         self._print_empty_line()
-        self.__output.write(
+        self._buffer.append(
             self._subheader_color
             + " "
             + tty.underline
@@ -695,17 +697,17 @@ class ConsoleManPageRenderer(ManPageRenderer):
             text = self._patch_braces(line, color=color)
             l = self._print_len(line)
 
-        self.__output.write(f"{color} ")
-        self.__output.write(text)
-        self.__output.write(" " * (self.__width - 2 - l))
-        self.__output.write(f" {tty.normal}\n")
+        self._buffer.append(f"{color} ")
+        self._buffer.append(text)
+        self._buffer.append(" " * (self.__width - 2 - l))
+        self._buffer.append(f" {tty.normal}\n")
 
     def _print_splitline(self, attr1: str, left: str, color: str, right: str) -> None:
-        self.__output.write(f"{attr1} {left}")
-        self.__output.write(color)
-        self.__output.write(self._patch_braces(right, color=color))
-        self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
-        self.__output.write(tty.normal + "\n")
+        self._buffer.append(f"{attr1} {left}")
+        self._buffer.append(color)
+        self._buffer.append(self._patch_braces(right, color=color))
+        self._buffer.append(" " * (self.__width - 1 - len(left) - self._print_len(right)))
+        self._buffer.append(tty.normal + "\n")
 
     def _print_empty_line(self) -> None:
         self._print_line("", color=tty.colorset(7, 4))

@@ -18,6 +18,7 @@ Please keep this in mind when trying to consolidate.
 """
 import importlib
 import os
+from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from types import ModuleType
@@ -67,32 +68,46 @@ def discover_plugins(
         for p_namespace in PLUGIN_NAMESPACES
         if (m := _import_optionally(p_namespace, raise_errors)) is not None
     )
-    namespaces_by_priority = find_namespaces(modules, plugin_group, ls=_ls_defensive)
+    module_names_by_priority = discover_modules(modules, plugin_group, ls=_ls_defensive)
 
     collector = Collector(plugin_prefixes, raise_errors=raise_errors)
-    for mod_name in namespaces_by_priority:
+    for mod_name in module_names_by_priority:
         collector.add_from_module(mod_name, _import_optionally)
 
     return DiscoveredPlugins(collector.errors, collector.plugins)
 
 
-def find_namespaces(
+def discover_families(
+    modules: Iterable[ModuleType],
+    *,
+    ls: Callable[[str], Iterable[str]],
+) -> Mapping[str, Sequence[str]]:
+    """Discover all families below `modules` and their paths"""
+    family_paths = defaultdict(list)
+    for module in modules:
+        for path in module.__path__:
+            for family in ls(path):
+                family_paths[f"{module.__name__}.{family}"].append(f"{path}/{family}")
+
+    return family_paths
+
+
+def discover_modules(
     modules: Iterable[ModuleType],
     plugin_group: str,
     *,
     ls: Callable[[str], Iterable[str]],
 ) -> Iterable[str]:
-    """Find all potetial namespaces implied by the passed modules.
+    """Discover all potetial plugin modules blow `modules`.
 
     Returned iterable should be deduplicated.
     """
     return _deduplicate(
         (
-            f"{module.__name__}.{family}.{plugin_group}.{fname.removesuffix('.py')}"
-            for module in modules
-            for path in module.__path__
-            for family in ls(path)
-            for fname in ls(f"{path}/{family}/{plugin_group}")
+            f"{family}.{plugin_group}.{fname.removesuffix('.py')}"
+            for family, paths in discover_families(modules, ls=ls).items()
+            for path in paths
+            for fname in ls(f"{path}/{plugin_group}")
             if fname not in {"__pycache__", "__init__.py"}
         )
     )

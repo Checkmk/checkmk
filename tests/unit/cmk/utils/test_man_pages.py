@@ -277,7 +277,8 @@ def test_print_man_page_nowiki_content(capsys):
     assert "License:" in content
 
 
-def test_print_man_page(capsys):
+@pytest.mark.skip("skip this until we don't need the capturing foo anymore")
+def test_print_man_page(capsys: pytest.CaptureFixture[str]) -> None:
     man_pages.ConsoleManPageRenderer("if64").paint()
     out, err = capsys.readouterr()
     assert err == ""

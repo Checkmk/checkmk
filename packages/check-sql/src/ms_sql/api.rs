@@ -9,6 +9,7 @@ use crate::ms_sql::queries;
 use anyhow::Result;
 use futures::stream::{self, StreamExt};
 use std::collections::HashSet;
+use std::time::Instant;
 
 use tiberius::{ColumnData, Query, Row};
 
@@ -1136,11 +1137,33 @@ async fn generate_result(
 /// return Vec<Vec<Row>> as a Results Vec: one Vec<Row> per one statement in query.
 pub async fn run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
     if query.is_empty() {
+        log::error!("Empty query");
         anyhow::bail!("Empty query");
     }
+    let start = Instant::now();
+    let result = _run_query(client, query).await;
+    log_query(start, &result, query);
+    result
+}
+
+fn log_query(start: Instant, result: &Result<Vec<Answer>>, query: &str) {
+    let total = (Instant::now() - start).as_millis();
+    let q = short_query(query);
+    match result {
+        Ok(_) => log::info!("Query [SUCCESS], took {total} ms, `{q}`"),
+        Err(err) => log::info!("Query [ERROR], took {total} ms, error: `{err}`, query: `{q}`",),
+    }
+}
+
+async fn _run_query(client: &mut Client, query: &str) -> Result<Vec<Answer>> {
+    log::debug!("Query to run: `{}`", short_query(query));
     let stream = Query::new(query).query(client).await?;
     let rows: Vec<Answer> = stream.into_results().await?;
     Ok(rows)
+}
+
+fn short_query(query: &str) -> String {
+    query.to_owned()[0..std::cmp::max(16, query.len() - 1)].to_string()
 }
 
 /// return all MS SQL instances installed

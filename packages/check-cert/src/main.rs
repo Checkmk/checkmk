@@ -91,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let response_time = start.elapsed();
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
-    let out = Writer::from(vec![
+    let out = Writer::from(&vec![
         SimpleCheckResult::from_levels(
             &response_time_levels,
             &response_time,

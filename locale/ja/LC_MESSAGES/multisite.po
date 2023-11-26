@@ -966,6 +966,10 @@ msgstr "...(%d more)"
 msgid ".Net/CLR Memory"
 msgstr ".Net/CLRメモリ"
 
+#, fuzzy
+msgid "/d"
+msgstr "B/d"
+
 msgid "/etc/cma/backup.conf has wrong permissions. Refusing to read file"
 msgstr ""
 "/etc/cma/backup.conf に間違った権限が設定されています。ファイルの読み取りを拒"
@@ -973,6 +977,10 @@ msgstr ""
 
 msgid "/m"
 msgstr "/m"
+
+#, fuzzy
+msgid "/op"
+msgstr "トップ"
 
 msgid "/s"
 msgstr "/s"
@@ -5661,6 +5669,10 @@ msgstr "通知スプール内のファイルの量"
 msgid "Amount of mails in queues"
 msgstr "キュー内のメールの量"
 
+#, fuzzy
+msgid "Amount of substance"
+msgstr "処理されたデータの量"
+
 msgid ""
 "Amount of time that the application of redo data on the standby database "
 "lags behind the primary database"
@@ -7756,6 +7768,10 @@ msgstr "ボックス"
 msgid "Boxes (omit root)"
 msgstr "ボックス(ルートを省略)"
 
+#, fuzzy
+msgid "Bq"
+msgstr "B"
+
 msgid "Breakdown"
 msgstr "ブレイクダウン"
 
@@ -8640,6 +8656,10 @@ msgstr "バイトがドロップされました"
 msgid "Bytes per day"
 msgstr "1日あたりのバイト数"
 
+#, fuzzy
+msgid "Bytes per operation"
+msgstr "操作ごとの読み取りバイト"
+
 msgid "Bytes per second"
 msgstr "1秒あたりのバイト数"
 
@@ -9397,6 +9417,10 @@ msgstr "構成ファイル \"%s\"を書き込めません:%s"
 msgid "Cannot write file \"%s\": %s"
 msgstr "ファイル \"%s\"を書き込めません: %s"
 
+#, fuzzy
+msgid "Capacitance"
+msgstr "容量使用状況"
+
 msgid "Capacity filled"
 msgstr "容量がいっぱい"
 
@@ -9453,6 +9477,10 @@ msgstr "カタログ"
 
 msgid "Catalog of check plugins"
 msgstr "チェックプラグインのカタログ"
+
+#, fuzzy
+msgid "Catalytic activity"
+msgstr "自動アクティベーション"
 
 msgid "Categories"
 msgstr "カテゴリ"
@@ -14605,6 +14633,10 @@ msgstr "デシベル"
 msgid "Decibel-millivolt"
 msgstr "デシベルミリボルト"
 
+#, fuzzy
+msgid "Decibel-milliwatt"
+msgstr "デシベルミリワット"
+
 msgid "Decibel-milliwatts"
 msgstr "デシベルミリワット"
 
@@ -17339,6 +17371,9 @@ msgstr "存在しない"
 msgid "Does not match any service"
 msgstr "どのサービスとも一致しません"
 
+msgid "Dollar"
+msgstr ""
+
 msgid "Domain (only used for european accounts)"
 msgstr "ドメイン(ヨーロッパのアカウントにのみ使用)"
 
@@ -17423,6 +17458,9 @@ msgstr "引用符は使用しないでください"
 
 msgid "Don't wait for document body"
 msgstr "ドキュメントの本文を待たないでください"
+
+msgid "Dose equivalent"
+msgstr ""
 
 msgid "DotNet (.Net) runtime memory levels"
 msgstr "DotNet (.Net)ランタイムメモリレベル"
@@ -18420,8 +18458,20 @@ msgstr "Elasticsearchノード"
 msgid "Elbow"
 msgstr "肘"
 
+#, fuzzy
+msgid "Electric charge"
+msgstr "電流"
+
+#, fuzzy
+msgid "Electric potential"
+msgstr "電力"
+
 msgid "Electrical Apparent Power"
 msgstr "電気的皮相電力"
+
+#, fuzzy
+msgid "Electrical Current"
+msgstr "電流"
 
 msgid "Electrical Current (Amperage)"
 msgstr "電流(アンペア数)"
@@ -18443,6 +18493,10 @@ msgstr "電気的張力(電圧)"
 
 msgid "Electrical apparent power"
 msgstr "電気皮相電力"
+
+#, fuzzy
+msgid "Electrical conductance"
+msgstr "電圧"
 
 msgid "Electrical current"
 msgstr "電流"
@@ -20116,6 +20170,9 @@ msgstr ""
 msgid "Extremes only"
 msgstr "極端な場合のみ"
 
+msgid "F"
+msgstr ""
+
 msgid "F5 BigIP configuration sync status"
 msgstr "F5 BigIP コンフィギュレーションの同期ステータス"
 
@@ -21453,6 +21510,10 @@ msgstr ""
 msgid "Forbid to see the whole tree"
 msgstr "ツリー全体を表示することを禁止する"
 
+#, fuzzy
+msgid "Force"
+msgstr "フォース"
+
 msgid "Force agent to run in single thread"
 msgstr "エージェントを強制的にシングルスレッドで実行する"
 
@@ -22639,6 +22700,14 @@ msgstr "ゲストオペレーティングシステム"
 msgid "Guest user"
 msgstr "ゲストユーザー"
 
+#, fuzzy
+msgid "Gy"
+msgstr "y"
+
+#, fuzzy
+msgid "H"
+msgstr "HA"
+
 msgid "H.Down"
 msgstr "H.ダウン"
 
@@ -23008,6 +23077,9 @@ msgstr "ハートビートクラスター"
 
 msgid "Heartbeat tools missing or not installed"
 msgstr "ハートビートツールがないか、インストールされていません"
+
+msgid "Heat"
+msgstr ""
 
 msgid "Height"
 msgstr "高さ"
@@ -27035,6 +27107,10 @@ msgstr "待機タイプを無視する"
 msgid "Ignored autostart services"
 msgstr "無視された自動開始サービス"
 
+#, fuzzy
+msgid "Illuminance"
+msgstr "InfluxDBインスタンス"
+
 msgid "Image"
 msgstr "画像"
 
@@ -27055,6 +27131,10 @@ msgstr "すぐにスケジュールされたチェック"
 
 msgid "Impact"
 msgstr "影響"
+
+#, fuzzy
+msgid "Impedance"
+msgstr "アイテム外観"
 
 msgid "Import"
 msgstr "インポート"
@@ -27791,6 +27871,10 @@ msgstr "データソースごとの個々の状態"
 
 msgid "Individual topic"
 msgstr "個別のトピック"
+
+#, fuzzy
+msgid "Inductance"
+msgstr "インスタンス"
 
 msgid "Ineffective"
 msgstr "効果がない"
@@ -28934,6 +29018,9 @@ msgstr "イテレータ時間"
 msgid "IvantiNeurons for MDM (formerly MobileIron Cloud)"
 msgstr "IvantiNeurons for MDM (旧MobileIron Cloud)"
 
+msgid "J"
+msgstr ""
+
 msgid "JIRA URL"
 msgstr "JIRA URL"
 
@@ -29112,6 +29199,10 @@ msgstr "影響を受けるタグをルールから削除するだけです。"
 
 msgid "Just show the availability (i.e. OK/UP)"
 msgstr "可用性を表示するだけです (i.e. OK/UP)"
+
+#, fuzzy
+msgid "K"
+msgstr "OK"
 
 msgid "KByte"
 msgstr "Kバイト"
@@ -29769,6 +29860,10 @@ msgstr ""
 
 msgid "Legal"
 msgstr "法的"
+
+#, fuzzy
+msgid "Length"
+msgstr "最大長"
 
 msgid "Length of Z1 messenger mail queue"
 msgstr "Z1メッセンジャーメールキューの長さ"
@@ -30934,6 +31029,10 @@ msgstr ""
 "さまざまな状態のサービスの数とともに、ホストグループのメンバーを一覧表示しま"
 "す。"
 
+#, fuzzy
+msgid "Liter per second"
+msgstr "1秒あたりのリットル"
+
 msgid "Liters per second"
 msgstr "1秒あたりのリットル"
 
@@ -31828,6 +31927,12 @@ msgstr "警告レベルを下げる"
 msgid "Lowest: No notification, update badge number"
 msgstr "最低: 通知なし、バッジ番号を更新"
 
+msgid "Luminous flux"
+msgstr ""
+
+msgid "Luminous intensity"
+msgstr ""
+
 msgid "MAC Address"
 msgstr "MACアドレス"
 
@@ -32082,6 +32187,14 @@ msgstr "マジックファクター(大規模なファイルシステムの自�
 
 msgid "Magic factor (automatic level adaptation for large tablespaces)"
 msgstr "マジックファクター(大規模なテーブルスペースの自動レベル適応)"
+
+#, fuzzy
+msgid "Magnetic flux"
+msgstr "磁気ボリュームスペース"
+
+#, fuzzy
+msgid "Magnetic flux density"
+msgstr "磁気ボリュームスペース"
 
 msgid "Magnetic volumes space"
 msgstr "磁気ボリュームスペース"
@@ -32576,6 +32689,9 @@ msgstr "現在区別されているコントローラーを優先コントロー
 
 msgid "Mark the nodes of the resources as preferred one"
 msgstr "リソースのノードを優先ノードとしてマークします"
+
+msgid "Mass"
+msgstr ""
 
 msgid "Master Event Console"
 msgstr "マスターイベントコンソール"
@@ -34752,6 +34868,10 @@ msgstr "MySQL スレーブ"
 
 msgid "MySQL database sizes"
 msgstr "MySQLデータベースのサイズ"
+
+#, fuzzy
+msgid "N"
+msgstr "N#"
 
 #, no-python-format
 msgid "N * 100% as each core contributes with 100% at full load"
@@ -39097,6 +39217,10 @@ msgstr "パーティション(XEN)"
 msgid "Parts per Million"
 msgstr "100万個当たり"
 
+#, fuzzy
+msgid "Parts per million"
+msgstr "100万個当たり"
+
 msgid "Pascal"
 msgstr "パスカル"
 
@@ -39366,6 +39490,10 @@ msgstr ""
 msgid "Per entry"
 msgstr "エントリごと"
 
+#, fuzzy
+msgid "Per second"
+msgstr "毎秒"
+
 msgid "Per topic"
 msgstr "トピックごと"
 
@@ -39496,6 +39624,10 @@ msgstr "合計RAMのパーセンテージ"
 
 msgid "Percentage of total service problems"
 msgstr "総サービス問題のパーセンテージ"
+
+#, fuzzy
+msgid "Percentage per meter"
+msgstr "メートルあたりのパーセント"
 
 msgid "Percentage used"
 msgstr "使用率"
@@ -39963,6 +40095,9 @@ msgstr "プレーンテキスト通信が %s で有効になっている"
 
 msgid "Plaintext"
 msgstr "プレーンテキスト"
+
+msgid "Plane angle"
+msgstr ""
 
 msgid "Platform Firmware level"
 msgstr "プラットフォームファームウェアレベル"
@@ -41886,6 +42021,14 @@ msgstr "RabbitMQ vhosts"
 msgid "Radial layout"
 msgstr "ラジアルレイアウト"
 
+#, fuzzy
+msgid "Radioactive activity"
+msgstr "アクティブ/アクティブ"
+
+#, fuzzy
+msgid "Radioactive dose"
+msgstr "非アクティブなホスト"
+
 msgid "Raid controllers from Areca"
 msgstr "アレカのRAIDコントローラー"
 
@@ -42014,6 +42157,10 @@ msgstr "操作ごとの読み取りバイト"
 
 msgid "Read capacity"
 msgstr "読み取り容量"
+
+#, fuzzy
+msgid "Read capacity unit"
+msgstr "容量単位の読み取り"
 
 msgid "Read hits"
 msgstr "ヒットを読む"
@@ -44280,6 +44427,10 @@ msgstr "Rx"
 msgid "Rx power level"
 msgstr "Rxパワーレベル"
 
+#, fuzzy
+msgid "S"
+msgstr "S."
+
 msgid "S."
 msgstr "S."
 
@@ -45157,6 +45308,10 @@ msgstr "接続がタイムアウトするまでの秒数"
 
 msgid "Seconds of operation"
 msgstr "操作の秒"
+
+#, fuzzy
+msgid "Seconds per second"
+msgstr "秒単位"
 
 msgid "Seconds since service"
 msgstr "サービスからの秒数"
@@ -47975,6 +48130,10 @@ msgstr "Solaris: PKG (.pkg)"
 msgid "Solaris: TGZ (.tar.gz)"
 msgstr "Solaris: TGZ (.tar.gz)"
 
+#, fuzzy
+msgid "Solid angle"
+msgstr "シングル"
+
 msgid ""
 "Some GUI extensions could not be loaded. This may be caused by some "
 "incompatible extension packages."
@@ -50515,6 +50674,10 @@ msgstr "一時停止"
 msgid "Suspending"
 msgstr "一時停止"
 
+#, fuzzy
+msgid "Sv"
+msgstr "保存する"
+
 msgid "Swap"
 msgstr "スワップ"
 
@@ -50830,6 +50993,10 @@ msgstr "Systemdソケットの概要"
 
 msgid "Systems larger than"
 msgstr "より大きいシステム"
+
+#, fuzzy
+msgid "T"
+msgstr "TX"
 
 msgid "TCP"
 msgstr "TCP"
@@ -65198,6 +65365,10 @@ msgstr "ログファイルの合計サイズを監視する"
 msgid "Wato"
 msgstr "Wato"
 
+#, fuzzy
+msgid "Wb"
+msgstr "ウェブ"
+
 #, python-format
 msgid ""
 "We are sorry, but you lack the permission for this operation. If you do not "
@@ -66964,6 +67135,10 @@ msgstr "書き込みキャッシュの使用量"
 
 msgid "Write capacity"
 msgstr "書き込み容量"
+
+#, fuzzy
+msgid "Write capacity unit"
+msgstr "容量単位の書き込み"
 
 msgid "Write latency"
 msgstr "書き込みレイテンシ"
@@ -69201,6 +69376,10 @@ msgstr "ケース"
 msgid "cases"
 msgstr "ケース"
 
+#, fuzzy
+msgid "cd"
+msgstr "d"
+
 msgid "check plugins"
 msgstr "プラグインを確認する"
 
@@ -69911,8 +70090,15 @@ msgstr "仕事"
 msgid "kW"
 msgstr "kW"
 
+#, fuzzy
+msgid "kat"
+msgstr "at"
+
 msgid "kernel counter"
 msgstr "カーネルカウンター"
+
+msgid "kg"
+msgstr ""
 
 msgid "l/s"
 msgstr "l/s"
@@ -69937,6 +70123,10 @@ msgstr "レガシーラン"
 
 msgid "license details"
 msgstr "ライセンス詳細"
+
+#, fuzzy
+msgid "lm"
+msgstr "m"
 
 msgid "local connect"
 msgstr "ローカルコネクト"
@@ -70069,6 +70259,9 @@ msgstr ""
 
 msgid "mm"
 msgstr "mm"
+
+msgid "mol"
+msgstr ""
 
 msgid "monitor"
 msgstr "モニター"
@@ -70433,6 +70626,10 @@ msgstr "pt"
 msgid "purchase a license"
 msgstr "ライセンス購入"
 
+#, fuzzy
+msgid "rad"
+msgstr "そして"
+
 msgid "radial"
 msgstr "放射状の"
 
@@ -70642,6 +70839,10 @@ msgstr "ソケットは、ネットワークに残っているパケットを閉
 
 msgid "specify manually ->"
 msgstr "手動で指定 ->"
+
+#, fuzzy
+msgid "sr"
+msgstr "s"
 
 msgid "status entries"
 msgstr "ステータスエントリ"
@@ -70966,6 +71167,9 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. All Rights Reserved."
+
+msgid "Ω"
+msgstr ""
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

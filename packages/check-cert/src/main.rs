@@ -89,11 +89,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let der = fetcher::fetch_server_cert(
         &args.url,
         &args.port,
-        if args.timeout == 0 {
-            None
-        } else {
-            Some(StdDuration::new(args.timeout, 0))
-        },
+        (args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)),
         !args.disable_sni,
     )?;
     let response_time = start.elapsed();

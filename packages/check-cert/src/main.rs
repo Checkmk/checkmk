@@ -4,13 +4,11 @@
 
 use anyhow::Result;
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy, Real, Writer};
-use check_cert::checker;
+use check_cert::checker::{self, Config as CheckCertConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use clap::Parser;
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
-use x509_parser::certificate::X509Certificate;
-use x509_parser::prelude::FromDer;
 
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
@@ -97,34 +95,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let response_time = start.elapsed();
 
-    let (_rem, cert) = X509Certificate::from_der(&der)?;
-    let out = Writer::from(&vec![
-        response_time_levels_checker
-            .check(
-                "response_time",
-                response_time,
-                format!(
-                    "Certificate obtained in {} ms",
-                    response_time.whole_milliseconds()
-                ),
-            )
-            .map(|x| Real::from(x.whole_milliseconds() as isize)),
-        checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
-            .unwrap_or_default()
-            .into(),
-        checker::check_details_subject(cert.tbs_certificate.subject(), args.subject)
-            .unwrap_or_default()
-            .into(),
-        checker::check_details_issuer(cert.tbs_certificate.issuer(), args.issuer)
-            .unwrap_or_default()
-            .into(),
-        checker::check_validity_not_after(
-            cert.tbs_certificate.validity().time_to_expiration(),
-            not_after_levels_checker,
-            cert.tbs_certificate.validity().not_after,
+    let mut checks = vec![response_time_levels_checker
+        .check(
+            "response_time",
+            response_time,
+            format!(
+                "Certificate obtained in {} ms",
+                response_time.whole_milliseconds()
+            ),
         )
-        .map(|x| Real::from(x.whole_days() as isize)),
-    ]);
+        .map(|x| Real::from(x.whole_milliseconds() as isize))];
+    checks.append(&mut checker::check_cert(
+        &der,
+        CheckCertConfig::builder()
+            .serial(args.serial)
+            .subject(args.subject)
+            .issuer(args.issuer)
+            .not_after_levels_checker(not_after_levels_checker)
+            .build(),
+    ));
+
+    let out = Writer::from(&checks);
     println!("HTTP {}", out);
     std::process::exit(out.exit_code())
 }

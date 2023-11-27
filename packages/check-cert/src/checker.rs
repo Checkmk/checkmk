@@ -2,12 +2,45 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, LevelsChecker, SimpleCheckResult};
+use crate::check::{CheckResult, LevelsChecker, Real, SimpleCheckResult};
 use time::Duration;
+use typed_builder::TypedBuilder;
+use x509_parser::certificate::X509Certificate;
+use x509_parser::prelude::FromDer;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
-pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
+#[derive(Debug, TypedBuilder)]
+pub struct Config {
+    serial: Option<String>,
+    subject: Option<String>,
+    issuer: Option<String>,
+    not_after_levels_checker: LevelsChecker<Duration>,
+}
+
+pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
+    // TODO: error handling!
+    let (_rem, cert) = X509Certificate::from_der(der).unwrap();
+    vec![
+        check_details_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
+            .unwrap_or_default()
+            .into(),
+        check_details_subject(cert.tbs_certificate.subject(), config.subject)
+            .unwrap_or_default()
+            .into(),
+        check_details_issuer(cert.tbs_certificate.issuer(), config.issuer)
+            .unwrap_or_default()
+            .into(),
+        check_validity_not_after(
+            cert.tbs_certificate.validity().time_to_expiration(),
+            config.not_after_levels_checker,
+            cert.tbs_certificate.validity().not_after,
+        )
+        .map(|x| Real::from(x.whole_days() as isize)),
+    ]
+}
+
+fn check_details_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         if serial == expected {
             SimpleCheckResult::ok(format!("Serial {}", serial))
@@ -17,7 +50,7 @@ pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<
     })
 }
 
-pub fn check_details_subject(
+fn check_details_subject(
     subject: &X509Name,
     expected: Option<String>,
 ) -> Option<SimpleCheckResult> {
@@ -32,10 +65,7 @@ pub fn check_details_subject(
     })
 }
 
-pub fn check_details_issuer(
-    issuer: &X509Name,
-    expected: Option<String>,
-) -> Option<SimpleCheckResult> {
+fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         let issuer = issuer.to_string();
 
@@ -47,7 +77,7 @@ pub fn check_details_issuer(
     })
 }
 
-pub fn check_validity_not_after(
+fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
     levels: LevelsChecker<Duration>,
     not_after: ASN1Time,

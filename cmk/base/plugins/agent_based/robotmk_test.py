@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from pathlib import Path
 from typing import assert_never, Literal, TypedDict
 
@@ -14,12 +13,8 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
     service_description,
 )
 
-from cmk.plugins.lib.robotmk_parse_xml import extract_tests_with_full_names, Outcome, Test
-from cmk.plugins.lib.robotmk_suite_execution_report import (
-    ExecutionReport,
-    ExecutionReportAlreadyRunning,
-    RebotOutcomeResult,
-)
+from cmk.plugins.lib.robotmk_parse_xml import Outcome, Test
+from cmk.plugins.lib.robotmk_suite_execution_report import Section
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -29,20 +24,9 @@ class Params(TypedDict):
     test_runtime: tuple[int, int] | None
 
 
-def discover(
-    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
-) -> DiscoveryResult:
-    for execution_report in section.values():
-        if isinstance(execution_report, ExecutionReport):
-            yield from _discover_tests(execution_report)
-
-
-def _discover_tests(report: ExecutionReport) -> DiscoveryResult:
-    if not isinstance(rebot_result := report.Executed.rebot, RebotOutcomeResult):
-        return
-
-    for test_name in extract_tests_with_full_names(rebot_result.Ok.xml.robot.suite):
-        yield Service(
+def discover(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(
             item=test_name,
             labels=[
                 ServiceLabel("robotmk", "true"),
@@ -50,27 +34,23 @@ def _discover_tests(report: ExecutionReport) -> DiscoveryResult:
                 ServiceLabel("robotmk/html_last_log", "yes"),
             ],
         )
+        for test_name in section.tests
+    )
 
 
 def check(
     item: str,
     params: Params,
-    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning],
+    section: Section,
 ) -> CheckResult:
-    for execution_report in section.values():
-        if not isinstance(execution_report, ExecutionReport):
-            continue
-        if not isinstance(rebot_result := execution_report.Executed.rebot, RebotOutcomeResult):
-            continue
+    if not (test_report := section.tests.get(item)):
+        return
 
-        if not (test := extract_tests_with_full_names(rebot_result.Ok.xml.robot.suite).get(item)):
-            continue
+    _transmit_to_livestatus(test_report.html_base64, "suite_last_log.html")
+    if test_report.test.status.status is Outcome.FAIL:
+        _transmit_to_livestatus(test_report.html_base64, "suite_last_error_log.html")
 
-        _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_log.html")
-        if test.status.status is Outcome.FAIL:
-            _transmit_to_livestatus(rebot_result.Ok.html_base64, "suite_last_error_log.html")
-
-        yield from _check_test(params, test)
+    yield from _check_test(params, test_report.test)
 
 
 def _check_test(params: Params, test: Test) -> CheckResult:

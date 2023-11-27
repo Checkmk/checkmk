@@ -265,13 +265,13 @@ where
         self
     }
 
-    pub fn levels(mut self, levels: Levels<T>) -> Self {
-        self.levels = Some(levels);
+    pub fn levels(mut self, levels: &Levels<T>) -> Self {
+        self.levels = Some(levels.clone());
         self
     }
 
-    pub fn bounds(mut self, bounds: Bounds<T>) -> Self {
-        self.bounds = Some(bounds);
+    pub fn bounds(mut self, bounds: &Bounds<T>) -> Self {
+        self.bounds = Some(bounds.clone());
         self
     }
 
@@ -591,7 +591,7 @@ mod test_metrics_display {
             format!(
                 "{}",
                 MetricBuilder::<Real>::new("name", i(42))
-                    .levels(Levels {
+                    .levels(&Levels {
                         warn: i(24),
                         crit: i(42)
                     })
@@ -608,11 +608,11 @@ mod test_metrics_display {
                 "{}",
                 MetricBuilder::<Real>::new("name", i(42))
                     .uom("ms")
-                    .levels(Levels {
+                    .levels(&Levels {
                         warn: i(24),
                         crit: i(42)
                     })
-                    .bounds(Bounds {
+                    .bounds(&Bounds {
                         min: i(0),
                         max: i(100)
                     })
@@ -629,11 +629,11 @@ mod test_metrics_display {
                 "{}",
                 MetricBuilder::<Real>::new("name", d(42.0))
                     .uom("ms")
-                    .levels(Levels {
+                    .levels(&Levels {
                         warn: d(24.0),
                         crit: d(42.0)
                     })
-                    .bounds(Bounds {
+                    .bounds(&Bounds {
                         min: d(0.0),
                         max: d(100.0)
                     })

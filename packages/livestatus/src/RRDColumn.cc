@@ -9,7 +9,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <cstring>
 #include <ctime>
 #include <filesystem>
 #include <memory>
@@ -90,9 +89,12 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::operator()(
 
 namespace {
 bool isVariableName(const std::string &token) {
-    auto is_operator = [](char c) { return strchr("+-/*", c) != nullptr; };
+    using namespace std::string_view_literals;
+    auto is_operator = [](char c) {
+        return "+-/*"sv.find_first_of(c) != std::string_view::npos;
+    };
     auto is_number_part = [](char c) {
-        return strchr("0123456789.", c) != nullptr;
+        return "0123456789."sv.find_first_of(c) != std::string_view::npos;
     };
 
     return !(is_operator(token[0]) ||

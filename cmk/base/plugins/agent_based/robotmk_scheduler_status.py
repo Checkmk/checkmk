@@ -218,14 +218,14 @@ def _check_config(config: Config | ConfigReadingError) -> CheckResult:
         ),
     )
 
-    for suite_name, suite_config in config.suites.items():
-        yield Result(state=State.OK, notice=_render_suite_config(suite_name, suite_config))
+    for suite_id, suite_config in config.suites.items():
+        yield Result(state=State.OK, notice=_render_suite_config(suite_id, suite_config))
 
 
-def _render_suite_config(suite_name: str, suite_config: SuiteConfig) -> str:
+def _render_suite_config(suite_id: str, suite_config: SuiteConfig) -> str:
     return "\n".join(
         [
-            f"Configuration of suite {suite_name}",
+            f"Configuration of suite {suite_id}",
             f"- Scheduling interval: {render.timespan(suite_config.execution_config.execution_interval_seconds)}",
             f"- RCC: {'Yes' if isinstance(suite_config.environment_config, EnvironmentConfigRcc) else 'No'}",
             f"- Maximum number of attempts: {suite_config.execution_config.n_attempts_max}",
@@ -274,13 +274,13 @@ def _check_environment_build_states(
     now: float,
 ) -> CheckResult:
     yield from chain.from_iterable(
-        _check_environment_build_status(suite_name, environment_build_status, now)
-        for suite_name, environment_build_status in environment_build_states.root.items()
+        _check_environment_build_status(suite_id, environment_build_status, now)
+        for suite_id, environment_build_status in environment_build_states.root.items()
     )
 
 
 def _check_environment_build_status(
-    suite_name: str,
+    suite_id: str,
     environment_build_status: EnvironmentBuildStatusNotNeeded
     | EnvironmentBuildStatusPending
     | EnvironmentBuildStatusSuccess
@@ -290,36 +290,36 @@ def _check_environment_build_status(
 ) -> CheckResult:
     match environment_build_status:
         case EnvironmentBuildStatusSuccess():
-            yield _check_environment_build_success(suite_name, environment_build_status)
+            yield _check_environment_build_success(suite_id, environment_build_status)
         case EnvironmentBuildStatusInProgress():
-            yield _check_environment_build_in_progress(suite_name, environment_build_status, now)
+            yield _check_environment_build_in_progress(suite_id, environment_build_status, now)
         case EnvironmentBuildStatusFailure():
-            yield _check_environment_build_failure(suite_name, environment_build_status.Failure)
+            yield _check_environment_build_failure(suite_id, environment_build_status.Failure)
 
 
 def _check_environment_build_success(
-    suite_name: str,
+    suite_id: str,
     environment_build_success: EnvironmentBuildStatusSuccess,
 ) -> Result:
     return Result(
         state=State.OK,
-        notice=f"Suite {suite_name}: Environment build took {render.timespan(environment_build_success.duration)}",
+        notice=f"Suite {suite_id}: Environment build took {render.timespan(environment_build_success.duration)}",
     )
 
 
 def _check_environment_build_in_progress(
-    suite_name: str,
+    suite_id: str,
     environment_build_in_progress: EnvironmentBuildStatusInProgress,
     now: float,
 ) -> Result:
     return Result(
         state=State.OK,
-        summary=f"Suite {suite_name}: Environment build currently running for {render.timespan(now - environment_build_in_progress.start_time)}",
+        summary=f"Suite {suite_id}: Environment build currently running for {render.timespan(now - environment_build_in_progress.start_time)}",
     )
 
 
 def _check_environment_build_failure(
-    suite_name: str,
+    suite_id: str,
     environment_build_failure: EnvironmentBuildStatusErrorNonZeroExit
     | EnvironmentBuildStatusErrorTimeout
     | EnviromentBuildStatusErrorMessage,
@@ -328,17 +328,17 @@ def _check_environment_build_failure(
         case EnvironmentBuildStatusErrorNonZeroExit():
             return Result(
                 state=State.CRIT,
-                summary=f"Suite {suite_name}: Environment building failed. Suite won't be scheduled.",
+                summary=f"Suite {suite_id}: Environment building failed. Suite won't be scheduled.",
             )
         case EnvironmentBuildStatusErrorTimeout():
             return Result(
                 state=State.CRIT,
-                summary=f"Suite {suite_name}: Environment building timed out. Suite won't be scheduled.",
+                summary=f"Suite {suite_id}: Environment building timed out. Suite won't be scheduled.",
             )
         case EnviromentBuildStatusErrorMessage():
             return Result(
                 state=State.CRIT,
-                summary=f"Suite {suite_name}: Error while attempting to build environment, see service details. Suite won't be scheduled.",
+                summary=f"Suite {suite_id}: Error while attempting to build environment, see service details. Suite won't be scheduled.",
                 details=environment_build_failure.Error,
             )
 

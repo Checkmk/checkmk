@@ -21,7 +21,7 @@ def parse(
     suite_execution_reports = {}
     for line in string_table:
         suite_execution_report = SuiteExecutionReport.model_validate_json(line[0])
-        suite_execution_reports[suite_execution_report.suite_name] = suite_execution_report.outcome
+        suite_execution_reports[suite_execution_report.suite_id] = suite_execution_report.outcome
     return suite_execution_reports
 
 

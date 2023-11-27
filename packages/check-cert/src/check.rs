@@ -4,6 +4,7 @@
 
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::mem;
+use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone)]
 pub enum Real {
@@ -149,7 +150,9 @@ where
             }
         };
         let r = SimpleCheckResult::new(evaluate(&value), summary);
-        let m = MetricBuilder::new(label, value)
+        let m = Metric::builder()
+            .label(label.to_string())
+            .value(value)
             .levels(&self.levels)
             .build();
         CheckResult {
@@ -179,25 +182,19 @@ impl Display for State {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Default, PartialEq, Clone, TypedBuilder)]
 pub struct Metric<T>
 where
     T: Clone,
 {
     label: String,
     value: T,
+    #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
     uom: Option<String>,
+    #[builder(default, setter(transform = |x: &Levels<T>| Some(x.clone()) ))]
     levels: Option<Levels<T>>,
+    #[builder(default, setter(transform = |x: &Bounds<T>| Some(x.clone()) ))]
     bounds: Option<Bounds<T>>,
-}
-
-impl<T> Metric<T>
-where
-    T: Clone + Display,
-{
-    pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
-        MetricBuilder::new(label, value)
-    }
 }
 
 impl<T> Metric<T>
@@ -244,58 +241,6 @@ where
                 .as_ref()
                 .map_or(String::new(), |v| v.max.to_string()),
         )
-    }
-}
-
-#[derive(Debug)]
-pub struct MetricBuilder<T>
-where
-    T: Clone,
-{
-    label: String,
-    value: T,
-    uom: Option<String>,
-    levels: Option<Levels<T>>,
-    bounds: Option<Bounds<T>>,
-}
-
-impl<T> MetricBuilder<T>
-where
-    T: Clone,
-{
-    pub fn new(label: &str, value: T) -> Self {
-        Self {
-            label: label.to_string(),
-            value,
-            uom: None,
-            levels: None,
-            bounds: None,
-        }
-    }
-
-    pub fn uom(mut self, uom: &str) -> Self {
-        self.uom = Some(uom.to_string());
-        self
-    }
-
-    pub fn levels(mut self, levels: &Levels<T>) -> Self {
-        self.levels = Some(levels.clone());
-        self
-    }
-
-    pub fn bounds(mut self, bounds: &Bounds<T>) -> Self {
-        self.bounds = Some(bounds.clone());
-        self
-    }
-
-    pub fn build(self) -> Metric<T> {
-        Metric {
-            label: self.label,
-            value: self.value,
-            uom: self.uom,
-            levels: self.levels,
-            bounds: self.bounds,
-        }
     }
 }
 
@@ -558,7 +503,7 @@ mod test_metrics_map {
 
 #[cfg(test)]
 mod test_metrics_display {
-    use super::{Bounds, Levels, Metric, MetricBuilder, Real};
+    use super::{Bounds, Levels, Metric, Real};
 
     fn i(x: isize) -> Real {
         Real::Integer(x)
@@ -571,11 +516,13 @@ mod test_metrics_display {
     #[test]
     fn test_default() {
         assert_eq!(
-            format!("{}", Metric::<Real>::builder("name", i(42)).build()),
-            "name=42;;;;"
-        );
-        assert_eq!(
-            format!("{}", MetricBuilder::<Real>::new("name", i(42)).build()),
+            format!(
+                "{}",
+                Metric::<Real>::builder()
+                    .label("name".to_string())
+                    .value(i(42))
+                    .build()
+            ),
             "name=42;;;;"
         );
     }
@@ -585,7 +532,11 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", i(42)).uom("ms").build()
+                Metric::<Real>::builder()
+                    .label("name".to_string())
+                    .value(i(42))
+                    .uom("ms")
+                    .build()
             ),
             "name=42ms;;;;"
         );
@@ -596,7 +547,9 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", i(42))
+                Metric::<Real>::builder()
+                    .label("name".to_string())
+                    .value(i(42))
                     .levels(&Levels {
                         warn: i(24),
                         crit: i(42)
@@ -612,7 +565,9 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", i(42))
+                Metric::<Real>::builder()
+                    .label("name".to_string())
+                    .value(i(42))
                     .uom("ms")
                     .levels(&Levels {
                         warn: i(24),
@@ -633,7 +588,9 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                MetricBuilder::<Real>::new("name", d(42.0))
+                Metric::<Real>::builder()
+                    .label("name".to_string())
+                    .value(d(42.0))
                     .uom("ms")
                     .levels(&Levels {
                         warn: d(24.0),
@@ -652,7 +609,7 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{CheckResult, Metric, MetricBuilder, Real, SimpleCheckResult, Writer};
+    use super::{CheckResult, Metric, Real, SimpleCheckResult, Writer};
 
     fn s(s: &str) -> String {
         String::from(s)
@@ -767,7 +724,10 @@ mod test_writer_format {
     }
 
     fn m(name: &str, x: isize) -> Metric<Real> {
-        MetricBuilder::<Real>::new(name, Real::Integer(x)).build()
+        Metric::<Real>::builder()
+            .label(name.to_string())
+            .value(Real::Integer(x))
+            .build()
     }
 
     #[test]

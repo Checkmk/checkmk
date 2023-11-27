@@ -13,7 +13,7 @@ from cmk.base.plugin_contexts import (  # pylint: disable=cmk-module-layer-viola
     service_description,
 )
 
-from cmk.plugins.lib.robotmk_parse_xml import Outcome, Test
+from cmk.plugins.lib.robotmk_rebot_xml import Outcome, Test
 from cmk.plugins.lib.robotmk_suite_execution_report import Section
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, ServiceLabel, State

@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based.robotmk_suite import (
     discover,
 )
 
-from cmk.plugins.lib.robotmk_parse_xml import Outcome, StatusV6, Suite
+from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, Suite
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptsConfig,

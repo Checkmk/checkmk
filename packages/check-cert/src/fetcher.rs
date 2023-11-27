@@ -6,22 +6,24 @@ use anyhow::{Context, Result};
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use std::net::TcpStream;
 use std::time::Duration;
+use typed_builder::TypedBuilder;
 
-pub fn fetch_server_cert(
-    server: &str,
-    port: &u16,
+#[derive(Debug, TypedBuilder)]
+pub struct Config {
     timeout: Option<Duration>,
     use_sni: bool,
-) -> Result<Vec<u8>> {
+}
+
+pub fn fetch_server_cert(server: &str, port: &u16, config: Config) -> Result<Vec<u8>> {
     let stream = TcpStream::connect(format!("{server}:{port}"))?;
-    stream.set_read_timeout(timeout)?;
+    stream.set_read_timeout(config.timeout)?;
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;
     connector_builder.set_verify(SslVerifyMode::NONE);
     let connector = connector_builder.build();
     connector
         .configure()
         .context("Cannot configure connection")?
-        .use_server_name_indication(use_sni);
+        .use_server_name_indication(config.use_sni);
     let mut stream = connector.connect(server, stream)?;
     let cert = stream
         .ssl()

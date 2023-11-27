@@ -4,7 +4,8 @@
 
 use anyhow::Result;
 use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy, Real, Writer};
-use check_cert::{checker, fetcher};
+use check_cert::checker;
+use check_cert::fetcher::{self, Config as FetcherConfig};
 use clap::Parser;
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
@@ -89,8 +90,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let der = fetcher::fetch_server_cert(
         &args.url,
         &args.port,
-        (args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)),
-        !args.disable_sni,
+        FetcherConfig::builder()
+            .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))
+            .use_sni(!args.disable_sni)
+            .build(),
     )?;
     let response_time = start.elapsed();
 

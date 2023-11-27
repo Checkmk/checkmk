@@ -97,6 +97,5 @@ def main(args: argparse.Namespace) -> None:
             werks=werks,
             release_type=release_type,
             version=args.version,
-            feedback_mail=args.feedback_mail,
         )
     )

@@ -89,7 +89,6 @@ def parse_arguments() -> argparse.Namespace:
     parser_announce.add_argument("werk_dir", type=path_dir, help=".werk folder in the git root")
     parser_announce.add_argument("version")
     parser_announce.add_argument("--format", choices=("txt", "md"), default="txt")
-    parser_announce.add_argument("--feedback-mail", default="feedback@checkmk.com")
     parser_announce.set_defaults(func=main_announce)
 
     parser_collect = subparsers.add_parser(

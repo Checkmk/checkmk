@@ -3,47 +3,79 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.kube_node_conditions import check, DEFAULT_PARAMS
 
-from cmk.base.plugins.agent_based import kube_node_conditions
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
+from cmk.plugins.lib.kube import NodeCondition, NodeConditions, NodeConditionStatus
 
-from cmk.plugins.lib.kube import (
-    NodeCondition,
-    NodeConditions,
-    NodeConditionStatus,
-    NodeCustomCondition,
-    NodeCustomConditions,
+READY = NodeCondition(
+    type_="Ready",
+    status=NodeConditionStatus.TRUE,
+    reason=None,
+    message=None,
 )
 
-PARAMS = kube_node_conditions.Params(
-    ready=int(State.CRIT),
-    memorypressure=int(State.CRIT),
-    diskpressure=int(State.CRIT),
-    pidpressure=int(State.CRIT),
-    networkunavailable=int(State.CRIT),
-    conditions=[],
+MEMORYPRESSURE = NodeCondition(
+    type_="MemoryPressure",
+    status=NodeConditionStatus.TRUE,
+    reason=None,
+    message=None,
 )
 
+NO_MEMORYPRESSURE = NodeCondition(
+    type_="MemoryPressure",
+    status=NodeConditionStatus.FALSE,
+    reason=None,
+    message=None,
+)
 
-def test_check_raises_when_section_is_none() -> None:
-    custom_section = NodeCustomConditions(custom_conditions=[])
-    with pytest.raises(IgnoreResultsError):
-        list(kube_node_conditions.check(PARAMS, None, custom_section))
+NO_DISKPRESSURE = NodeCondition(
+    type_="DiskPressure",
+    status=NodeConditionStatus.FALSE,
+    reason=None,
+    message=None,
+)
+
+NO_PIDPRESSURE = NodeCondition(
+    type_="PIDPressure",
+    status=NodeConditionStatus.FALSE,
+    reason=None,
+    message=None,
+)
+
+NETWORKAVAILABLE = NodeCondition(
+    type_="NetworkUnavailable",
+    status=NodeConditionStatus.FALSE,
+    reason=None,
+    message=None,
+)
+
+CUSTOMFALSE = NodeCondition(
+    type_="Custom",
+    status=NodeConditionStatus.FALSE,
+    reason=None,
+    message=None,
+)
+
+CUSTOMTRUE = NodeCondition(
+    type_="Custom",
+    status=NodeConditionStatus.TRUE,
+    reason=None,
+    message=None,
+)
 
 
 def test_check_all_conditions_ok() -> None:
-    section = NodeConditions(
-        ready=NodeCondition(status=NodeConditionStatus.TRUE),
-        memorypressure=NodeCondition(status=NodeConditionStatus.FALSE),
-        diskpressure=NodeCondition(status=NodeConditionStatus.FALSE),
-        pidpressure=NodeCondition(status=NodeConditionStatus.FALSE),
-        networkunavailable=NodeCondition(status=NodeConditionStatus.FALSE),
-    )
-    custom_section = NodeCustomConditions(
-        custom_conditions=[NodeCustomCondition(type_="custom", status=NodeConditionStatus.FALSE)]
-    )
-    results = list(kube_node_conditions.check(PARAMS, section, custom_section))
+    conditions = [
+        READY,
+        NO_MEMORYPRESSURE,
+        NO_DISKPRESSURE,
+        NO_PIDPRESSURE,
+        NETWORKAVAILABLE,
+        CUSTOMFALSE,
+    ]
+    section = NodeConditions(conditions=conditions)
+    results = list(check(DEFAULT_PARAMS, section))
     assert results == [
         Result(state=State.OK, summary="Ready, all conditions passed"),
         Result(state=State.OK, notice="READY: True (None: None)"),
@@ -56,15 +88,15 @@ def test_check_all_conditions_ok() -> None:
 
 
 def test_check_one_condition_bad() -> None:
-    section = NodeConditions(
-        ready=NodeCondition(status=NodeConditionStatus.TRUE),
-        memorypressure=NodeCondition(status=NodeConditionStatus.TRUE),
-        diskpressure=NodeCondition(status=NodeConditionStatus.FALSE),
-        pidpressure=NodeCondition(status=NodeConditionStatus.FALSE),
-        networkunavailable=NodeCondition(status=NodeConditionStatus.FALSE),
-    )
-    custom_section = NodeCustomConditions(custom_conditions=[])
-    results = list(kube_node_conditions.check(PARAMS, section, custom_section))
+    conditions = [
+        READY,
+        MEMORYPRESSURE,
+        NO_DISKPRESSURE,
+        NO_PIDPRESSURE,
+        NETWORKAVAILABLE,
+    ]
+    section = NodeConditions(conditions=conditions)
+    results = list(check(DEFAULT_PARAMS, section))
     assert results == [
         Result(
             state=State.OK,
@@ -93,9 +125,7 @@ def test_check_one_condition_bad() -> None:
     ]
 
 
-def test_check_custom() -> None:
-    custom_section = NodeCustomConditions(
-        custom_conditions=[NodeCustomCondition(type_="custom", status=NodeConditionStatus.TRUE)]
-    )
-    results = list(kube_node_conditions._check_node_custom_conditions(PARAMS, custom_section))
+def test_check_single() -> None:
+    section = NodeConditions(conditions=[CUSTOMTRUE])
+    results = list(check(DEFAULT_PARAMS, section))
     assert results == [Result(state=State.CRIT, summary="CUSTOM: True (None: None)")]

@@ -343,33 +343,17 @@ class NodeInfo(Section):
     kubernetes_cluster_hostname: str
 
 
-class NodeCondition(BaseModel):
-    status: api.NodeConditionStatus
-    reason: str | None = None
-    message: str | None = None
-
-
-class NodeCustomCondition(NodeCondition):
-    """NodeCustomCondition mainly come from Node Problem Detector.
-    Its type can be user-defined, hence it being a string."""
-
+class NodeCondition(BaseModel, extra="forbid"):
     type_: str
+    status: api.NodeConditionStatus
+    reason: str | None
+    message: str | None
 
 
 class NodeConditions(Section):
     """section: kube_node_conditions_v1"""
 
-    ready: NodeCondition
-    memorypressure: NodeCondition
-    diskpressure: NodeCondition
-    pidpressure: NodeCondition
-    networkunavailable: NodeCondition | None = None
-
-
-class NodeCustomConditions(Section):
-    """section: kube_node_custom_conditions_v1"""
-
-    custom_conditions: Sequence[NodeCustomCondition]
+    conditions: Sequence[NodeCondition]
 
 
 class DeploymentInfo(Section):

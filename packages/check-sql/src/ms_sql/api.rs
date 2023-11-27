@@ -108,8 +108,8 @@ impl InstanceEngineBuilder {
             )
     }
 
-    pub fn build(self) -> InstanceEngine {
-        InstanceEngine {
+    pub fn build(self) -> SqlInstance {
+        SqlInstance {
             alias: self.alias,
             name: self.name.unwrap_or_default(),
             id: self.id.unwrap_or_default(),
@@ -126,7 +126,7 @@ impl InstanceEngineBuilder {
 }
 
 #[derive(Clone, Debug)]
-pub struct InstanceEngine {
+pub struct SqlInstance {
     pub alias: Option<String>,
     pub name: String,
     pub id: String,
@@ -140,7 +140,7 @@ pub struct InstanceEngine {
     computer_name: Option<String>,
 }
 
-impl InstanceEngine {
+impl SqlInstance {
     pub fn generate_leading_entry(&self, sep: char) -> String {
         format!(
             "{}{sep}config{sep}{}{sep}{}{sep}{}\n",
@@ -1062,12 +1062,13 @@ impl CheckConfig {
     pub async fn exec(&self) -> Result<String> {
         if let Some(ms_sql) = self.ms_sql() {
             let dumb_header = Self::generate_dumb_header(ms_sql);
-            let instances_data = generate_instances_data(ms_sql).await.unwrap_or_else(|e| {
-                log::error!("Error generating instances data: {e}");
+            let instances_data = generate_data(ms_sql).await.unwrap_or_else(|e| {
+                log::error!("Error generating data: {e}");
                 format!("{e}\n")
             });
             Ok(dumb_header + &instances_data)
         } else {
+            log::error!("No config");
             anyhow::bail!("No Config")
         }
     }
@@ -1082,27 +1083,34 @@ impl CheckConfig {
     }
 }
 
-/// Generate header for each section without any data
-async fn generate_instances_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
-    let instances = discovery_instances(ms_sql)
-        .await?
-        .into_iter()
-        .filter(|i| ms_sql.is_instance_allowed(&i.name))
-        .collect::<Vec<InstanceEngine>>();
+/// Generate data as defined by config
+/// Consists from two parts: instance entries + sections for every instance
+async fn generate_data(ms_sql: &config::ms_sql::Config) -> Result<String> {
+    let instances = find_instances(ms_sql).await?;
+    let sections = section::get_work_sections(ms_sql);
+    Ok(generate_instance_entries(&instances)
+        + &generate_result(&instances, &sections, ms_sql).await?)
+}
 
+fn generate_instance_entries(instances: &[SqlInstance]) -> String {
     let section = Section::new(section::INSTANCE_SECTION_NAME);
-    let result = section.to_header() // as in old plugin
+    section.to_header() // as in old plugin
      + &instances
         .iter()
         .flat_map(|i| [section.to_header(), i.generate_leading_entry(section.sep())])
         .collect::<Vec<String>>()
-        .join("");
-
-    let sections = section::get_work_sections(ms_sql);
-    Ok(result + &generate_result(&instances, &sections, ms_sql).await?)
+        .join("")
 }
 
-async fn discovery_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<InstanceEngine>> {
+async fn find_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
+    Ok(discovery_instances(ms_sql)
+        .await?
+        .into_iter()
+        .filter(|i| ms_sql.is_instance_allowed(&i.name))
+        .collect::<Vec<SqlInstance>>())
+}
+
+async fn discovery_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
     let instances = if ms_sql.discovery().detect() {
         get_instance_engines(&ms_sql.endpoint()).await?
     } else {
@@ -1114,7 +1122,7 @@ async fn discovery_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<Inst
 
 /// Intelligent async processing of the data
 async fn generate_result(
-    instances: &[InstanceEngine],
+    instances: &[SqlInstance],
     sections: &[Section],
     ms_sql: &config::ms_sql::Config,
 ) -> Result<String> {
@@ -1165,7 +1173,7 @@ fn short_query(query: &str) -> String {
 }
 
 /// return all MS SQL instances installed
-async fn get_instance_engines(endpoint: &Endpoint) -> Result<Vec<InstanceEngine>> {
+async fn get_instance_engines(endpoint: &Endpoint) -> Result<Vec<SqlInstance>> {
     let all = detect_instance_engines(endpoint).await?;
     Ok([&all.0[..], &all.1[..]].concat().to_vec())
 }
@@ -1173,7 +1181,7 @@ async fn get_instance_engines(endpoint: &Endpoint) -> Result<Vec<InstanceEngine>
 /// [low level helper] return all MS SQL instances installed
 pub async fn detect_instance_engines(
     endpoint: &Endpoint,
-) -> Result<(Vec<InstanceEngine>, Vec<InstanceEngine>)> {
+) -> Result<(Vec<SqlInstance>, Vec<SqlInstance>)> {
     let mut client = client::create_from_config(endpoint).await?;
     Ok((
         get_engines(&mut client, endpoint, &queries::get_instances_query()).await?,
@@ -1186,24 +1194,26 @@ async fn get_engines(
     client: &mut Client,
     endpoint: &Endpoint,
     query: &str,
-) -> Result<Vec<InstanceEngine>> {
+) -> Result<Vec<SqlInstance>> {
     let answers = run_query(client, query).await?;
     let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
         .await
         .unwrap_or_default();
     if let Some(rows) = answers.get(0) {
-        Ok(to_engines(rows, endpoint, computer_name))
+        let engines = to_sql_instance(rows, endpoint, computer_name);
+        log::info!("Instances found {}", engines.len());
+        Ok(engines)
     } else {
         log::warn!("Empty answer by query: {query}");
         Ok(vec![])
     }
 }
 
-fn to_engines(
+fn to_sql_instance(
     rows: &Answer,
     endpoint: &Endpoint,
     computer_name: Option<String>,
-) -> Vec<InstanceEngine> {
+) -> Vec<SqlInstance> {
     rows.iter()
         .map(|r| {
             InstanceEngineBuilder::new()
@@ -1212,7 +1222,7 @@ fn to_engines(
                 .endpoint(endpoint)
                 .build()
         })
-        .collect::<Vec<InstanceEngine>>()
+        .collect::<Vec<SqlInstance>>()
         .to_vec()
 }
 

@@ -14,7 +14,7 @@ from cmk.graphing.v1 import Color
 from cmk.graphing.v1 import metric as metric_api
 from cmk.graphing.v1 import perfometer as perfometer_api
 
-from ._parser import make_hex_color, make_unit_info
+from ._parser import parse_color, parse_unit
 from ._type_defs import TranslatedMetric, UnitInfo
 
 
@@ -157,8 +157,8 @@ def evaluate_quantity(
         case metric_api.Constant():
             return EvaluatedQuantity(
                 str(quantity.title),
-                make_unit_info(quantity.unit),
-                make_hex_color(quantity.color),
+                parse_unit(quantity.unit),
+                parse_color(quantity.color),
                 quantity.value,
             )
         case metric_api.WarningOf():
@@ -166,7 +166,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 _("Warning of ") + metric["title"],
                 metric["unit"],
-                make_hex_color(Color.YELLOW),
+                parse_color(Color.YELLOW),
                 translated_metrics[quantity.name.value]["scalar"]["warn"],
             )
         case metric_api.CriticalOf():
@@ -174,7 +174,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 _("Critical of ") + metric["title"],
                 metric["unit"],
-                make_hex_color(Color.RED),
+                parse_color(Color.RED),
                 translated_metrics[quantity.name.value]["scalar"]["crit"],
             )
         case metric_api.MinimumOf():
@@ -182,7 +182,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 _("Minimum of ") + metric["title"],
                 metric["unit"],
-                make_hex_color(quantity.color),
+                parse_color(quantity.color),
                 translated_metrics[quantity.name.value]["scalar"]["min"],
             )
         case metric_api.MaximumOf():
@@ -190,7 +190,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 _("Maximum of ") + metric["title"],
                 metric["unit"],
-                make_hex_color(quantity.color),
+                parse_color(quantity.color),
                 translated_metrics[quantity.name.value]["scalar"]["max"],
             )
         case metric_api.Sum():
@@ -198,7 +198,7 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 str(quantity.title),
                 evaluated_first_summand.unit,
-                make_hex_color(quantity.color),
+                parse_color(quantity.color),
                 (
                     evaluated_first_summand.value
                     + sum(
@@ -213,8 +213,8 @@ def evaluate_quantity(
                 product *= evaluate_quantity(f, translated_metrics).value
             return EvaluatedQuantity(
                 str(quantity.title),
-                make_unit_info(quantity.unit),
-                make_hex_color(quantity.color),
+                parse_unit(quantity.unit),
+                parse_color(quantity.color),
                 product,
             )
         case metric_api.Difference():
@@ -223,14 +223,14 @@ def evaluate_quantity(
             return EvaluatedQuantity(
                 str(quantity.title),
                 evaluated_minuend.unit,
-                make_hex_color(quantity.color),
+                parse_color(quantity.color),
                 evaluated_minuend.value - evaluated_subtrahend.value,
             )
         case metric_api.Fraction():
             return EvaluatedQuantity(
                 str(quantity.title),
-                make_unit_info(quantity.unit),
-                make_hex_color(quantity.color),
+                parse_unit(quantity.unit),
+                parse_color(quantity.color),
                 (
                     evaluate_quantity(quantity.dividend, translated_metrics).value
                     / evaluate_quantity(quantity.divisor, translated_metrics).value

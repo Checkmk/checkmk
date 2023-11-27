@@ -12,7 +12,7 @@ from cmk.graphing.v1 import Color, PhysicalUnit, ScientificUnit, Unit
 from ._type_defs import UnitInfo
 
 
-def make_unit_info(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
+def parse_unit(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
     match unit:
         case Unit.BAR:
             return UnitInfo(
@@ -460,19 +460,19 @@ def make_unit_info(unit: Unit | PhysicalUnit | ScientificUnit) -> UnitInfo:
             )
         case PhysicalUnit():
             return UnitInfo(
-                title=unit.title.localize(lambda v: v),
+                title=unit.title.localize(_),
                 symbol=unit.symbol,
                 render=lambda v: render.physical_precision(v, 3, unit.symbol),
                 js_render=f"v => cmk.number_format.physical_precision(v, 3, '{unit.symbol}')",
             )
         case ScientificUnit():
             return UnitInfo(
-                title=unit.title.localize(lambda v: v),
+                title=unit.title.localize(_),
                 symbol=unit.symbol,
                 render=lambda v: "{} {}".format(render.scientific(v, 2), unit.symbol),
                 js_render=f"v => cmk.number_format.scientific(v, 2) + '{unit.symbol}'",
             )
 
 
-def make_hex_color(color: Color) -> str:
+def parse_color(color: Color) -> str:
     return f"#{color.value.red:02x}{color.value.green:02x}{color.value.blue:02x}"

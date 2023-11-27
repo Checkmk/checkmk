@@ -52,7 +52,7 @@ from ._color import (
 )
 from ._expression import CriticalOf, Metric, MetricExpression, parse_expression, WarningOf
 from ._graph_specification import MetricOperation, MetricOpRRDChoice
-from ._parser import make_hex_color, make_unit_info
+from ._parser import parse_color, parse_unit
 from ._type_defs import (
     GraphConsoldiationFunction,
     LineType,
@@ -349,11 +349,11 @@ def add_graphing_plugins(
     for plugin in plugins.plugins.values():
         if isinstance(plugin, metric_api.Metric):
             unit_name = plugin.unit.name if isinstance(plugin.unit, Unit) else plugin.unit.symbol
-            unit_info[unit_name] = make_unit_info(plugin.unit)
+            unit_info[unit_name] = parse_unit(plugin.unit)
             metric_info[MetricName_(plugin.name.value)] = {
                 "title": plugin.title.localize(_),
                 "unit": unit_name,
-                "color": make_hex_color(plugin.color),
+                "color": parse_color(plugin.color),
             }
 
         elif isinstance(plugin, translation_api.Translation):

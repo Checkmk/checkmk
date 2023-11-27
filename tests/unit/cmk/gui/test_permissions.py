@@ -557,7 +557,6 @@ def test_registered_permissions() -> None:
             "sidesnap.cmc_stats",
             "sidesnap.reports",
             "view.allhosts_deploy",
-            "view.ntop_interfaces",
             "wato.agent_deploy_custom_files",
             "wato.agent_deployment",
             "wato.agents",

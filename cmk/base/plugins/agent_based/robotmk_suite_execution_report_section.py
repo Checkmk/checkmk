@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.plugins.lib.robotmk_parse_xml import Suite, Test
+from cmk.plugins.lib.robotmk_rebot_xml import Suite, Test
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     ExecutionReportAlreadyRunning,
     RebotOutcomeResult,

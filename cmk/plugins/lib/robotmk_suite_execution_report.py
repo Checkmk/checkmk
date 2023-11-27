@@ -12,7 +12,7 @@ import xmltodict
 from pydantic import BaseModel, BeforeValidator, Field
 from typing_extensions import Annotated
 
-from .robotmk_parse_xml import Rebot, Suite, Test
+from .robotmk_rebot_xml import Rebot, Suite, Test
 
 
 class AttemptOutcome(Enum):

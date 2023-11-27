@@ -98,7 +98,7 @@ def _check_condition(
     cond: NodeCondition,
 ) -> Iterator[Result]:
     state = State.OK if EXPECTED_CONDITION_STATES[name] == cond.status else State(params[name])
-    details = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
+    details = condition_detailed_description(name, cond.status, cond.reason, cond.message)
     summary = condition_short_description(name, cond.status) if state is State.OK else details
     yield Result(state=state, summary=summary, details=details)
 
@@ -116,7 +116,7 @@ def _extract_state(state_map: StateMap, status: NodeConditionStatus) -> State:
 
 def _check_custom_condition(state_map: StateMap, cond: NodeCustomCondition) -> Iterator[Result]:
     state = _extract_state(state_map, cond.status)
-    details = condition_detailed_description(cond.type_, cond.status, cond.reason, cond.detail)
+    details = condition_detailed_description(cond.type_, cond.status, cond.reason, cond.message)
     summary = condition_short_description(cond.type_, cond.status) if state is State.OK else details
     yield Result(state=state, summary=summary, details=details)
 

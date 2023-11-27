@@ -360,8 +360,7 @@ class NodeCount(Section):
 class NodeCondition(BaseModel):
     status: NodeConditionStatus
     reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = None
+    message: str | None = None
 
 
 class NodeCustomCondition(NodeCondition):

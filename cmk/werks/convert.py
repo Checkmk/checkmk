@@ -28,7 +28,9 @@ def werkv1_metadata_to_werkv2_metadata(metadata: dict[str, str]) -> dict[str, st
     elif compatible == "incomp":
         metadata["compatible"] = "no"
     else:
-        raise ValueError("compatible of werkv1 has to be either 'compat' or 'incomp'")
+        raise ValueError(
+            f"compatible of werkv1 has to be either 'compat' or 'incomp', got {compatible!r}"
+        )
 
     if (date := metadata.get("date")) is not None:
         metadata["date"] = datetime.datetime.fromtimestamp(

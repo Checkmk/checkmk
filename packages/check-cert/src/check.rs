@@ -11,6 +11,12 @@ pub enum Real {
     Double(f64),
 }
 
+impl Default for Real {
+    fn default() -> Self {
+        Self::Integer(isize::default())
+    }
+}
+
 impl From<isize> for Real {
     fn from(x: isize) -> Self {
         Real::Integer(x)
@@ -120,7 +126,7 @@ pub struct LevelsChecker<T> {
 
 impl<T> LevelsChecker<T>
 where
-    T: PartialOrd,
+    T: Clone + PartialOrd,
 {
     pub fn try_new(
         strategy: LevelsStrategy,
@@ -132,7 +138,7 @@ where
             .ok_or(Box::from("bad values"))
     }
 
-    fn check(&self, value: &T, summary: String) -> SimpleCheckResult {
+    pub fn check(&self, label: &str, value: T, summary: String) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
             if self.strategy.cmp(value, &self.levels.crit) {
                 State::Crit
@@ -142,7 +148,14 @@ where
                 State::Ok
             }
         };
-        SimpleCheckResult::new(evaluate(value), summary)
+        let r = SimpleCheckResult::new(evaluate(&value), summary);
+        let m = MetricBuilder::new(label, value)
+            .levels(&self.levels)
+            .build();
+        CheckResult {
+            summary: r.summary,
+            metrics: Some(m),
+        }
     }
 }
 
@@ -340,13 +353,6 @@ impl SimpleCheckResult {
 
     pub fn unknown(summary: String) -> Self {
         Self::new(State::Unknown, summary)
-    }
-
-    pub fn from_levels<T>(levels: &LevelsChecker<T>, value: &T, summary: String) -> Self
-    where
-        T: PartialOrd,
-    {
-        levels.check(value, summary)
     }
 }
 

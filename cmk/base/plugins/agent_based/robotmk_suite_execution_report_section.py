@@ -54,7 +54,7 @@ def _post_process_suite_execution_report(
             {
                 test_name: TestReport(
                     test=test,
-                    html_base64=rebot.Ok.html_base64,
+                    html=rebot.Ok.html,
                     attempts_config=outcome.Executed.config,
                     rebot_timestamp=rebot.Ok.timestamp,
                 )

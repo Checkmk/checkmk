@@ -16,7 +16,7 @@ pub trait Get {
     fn get_string(&self, key: &str) -> Option<String>
     where
         Self: Sized;
-    fn get_int<T>(&self, key: &str, default: T) -> T
+    fn get_int<T: std::fmt::Debug>(&self, key: &str, default: T) -> T
     where
         Self: Sized,
         T: std::convert::TryFrom<i64>;
@@ -44,19 +44,21 @@ impl Get for Yaml {
     }
 
     /// always with default
-    fn get_int<T>(&self, key: &str, default: T) -> T
+    fn get_int<T: std::fmt::Debug>(&self, key: &str, default: T) -> T
     where
         T: std::convert::TryFrom<i64>,
     {
         if let Some(value) = self[key].as_i64() {
             TryInto::try_into(value).unwrap_or(default)
         } else {
+            log::debug!("{key} not found, using default {default:?}");
             default
         }
     }
 
     fn get_string_vector(&self, key: &str, default: &[&str]) -> Result<Vec<String>> {
         if self[key].is_badvalue() {
+            log::debug!("{key} no vector, using default {default:?}");
             Ok(default.iter().map(|&a| str::to_string(a)).collect())
         } else {
             self[key]

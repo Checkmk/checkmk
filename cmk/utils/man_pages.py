@@ -828,3 +828,40 @@ def _apply_markup(line: str) -> str:
         .replace("{", "<tt>")
         .replace("}", "</tt>")
     )
+
+
+def man_pages_for_website_export(man_page_paths: Reversible[Path]) -> Mapping[str, ManPage]:
+    """This is called from `scripts/create_man_pages.py` of the websites-essentials repo!"""
+    all_pages: dict[str, ManPage] = {}
+
+    man_page_path_map = make_man_page_path_map(man_page_paths)
+    for name, path in man_page_path_map.items():
+        parsed = parse_man_page(name, path)
+        cat = list(parsed.catalog)
+        cats = (
+            [[cat[0]] + [agent] + cat[1:] for agent in parsed.agents] if cat[0] == "os" else [cat]
+        )
+
+        a = []
+        for categories in cats:
+            c = {}
+            for category in categories:
+                if category in CATALOG_TITLES:
+                    c[category] = CATALOG_TITLES[category]
+                else:
+                    c[category] = category.title()
+            a.append(c)
+
+        b = {}
+        for agent in parsed.agents:
+            if agent in CHECK_MK_AGENTS:
+                b[agent] = CHECK_MK_AGENTS[agent]
+            else:
+                b[agent] = agent.title()
+
+        parsed.catalog = a  # type: ignore[assignment]
+        parsed.agents = b  # type: ignore[assignment]
+
+        all_pages.setdefault(name, parsed)
+
+    return all_pages

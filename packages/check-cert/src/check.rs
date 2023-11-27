@@ -359,6 +359,20 @@ impl<T> CheckResult<T> {
     }
 }
 
+impl<T> CheckResult<T> {
+    pub fn map<F, U>(self, f: F) -> CheckResult<U>
+    where
+        F: FnMut(T) -> U,
+        F: Copy,
+        U: Default,
+    {
+        CheckResult {
+            summary: self.summary,
+            metrics: self.metrics.map(|m| m.map(f)),
+        }
+    }
+}
+
 impl From<SimpleCheckResult> for CheckResult<Real> {
     fn from(x: SimpleCheckResult) -> Self {
         Self {

@@ -17,6 +17,12 @@ from werkzeug.exceptions import BadRequest
 from werkzeug.security import safe_join
 from werkzeug.serving import run_simple
 
+from cmk.utils.profile_switcher import (
+    DirectWrappingProfilingMiddleware,
+    ProfileConfigLoader,
+    ProfileSetting,
+)
+
 # WARNING:
 #   These are selected imports which *do not* pull in other modules from cmk!
 # WARNING:
@@ -182,8 +188,12 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
     @app.route("/<string:site>/check_mk/js/<string:file_name>")
     def js_file(site: str, file_name: str) -> flask.Response:
         # Remove cache busters from filename
-        main_file_name, rest = file_name.split("-", 1)
-        _, ext = rest.rsplit(".", 1)
+        try:
+            main_file_name, _rest = file_name.split("-", 1)
+        except ValueError:
+            main_file_name = file_name
+
+        _, ext = main_file_name.split(".", 1)
         return flask.send_from_directory(f"{paths.web_dir}/htdocs/js", f"{main_file_name}.{ext}")
 
     @app.route("/<string:site>/check_mk/themes/<string:theme>/<string:file_name>")
@@ -210,7 +220,23 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
 
         return current_app.redirect(joined)
 
-    return app
+    def load_actual_config() -> ProfileSetting:
+        """Load the profiling global setting from the Setup GUI config"""
+        from cmk.gui.wsgi.applications import utils
+
+        return ProfileSetting(
+            mode=utils.load_single_global_wato_setting("profile", deflt=False),
+            cachegrind_file=pathlib.Path(paths.var_dir) / "multisite.cachegrind",
+            profile_file=pathlib.Path(paths.var_dir) / "multisite.profile",
+            accumulate=False,
+            discard_first_request=False,
+        )
+
+    config_loader = ProfileConfigLoader(
+        fetch_actual_config=load_actual_config,
+        fetch_default_config=load_actual_config,
+    )
+    return DirectWrappingProfilingMiddleware(app, config_loader=config_loader)
 
 
 def main() -> None:

@@ -428,12 +428,7 @@ class NodeCondition(ClientModel):
     status: NodeConditionStatus
     type_: str = Field(..., alias="type")
     reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = Field(None, alias="lastTransitionTime")
-
-    _parse_last_transition_time = field_validator(
-        "last_transition_time", mode="before", check_fields=False
-    )(convert_to_timestamp)
+    message: str | None = None
 
 
 class NodeResources(BaseModel):

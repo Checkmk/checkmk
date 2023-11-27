@@ -346,8 +346,7 @@ class NodeInfo(Section):
 class NodeCondition(BaseModel):
     status: api.NodeConditionStatus
     reason: str | None = None
-    detail: str | None = None
-    last_transition_time: int | None = None
+    message: str | None = None
 
 
 class NodeCustomCondition(NodeCondition):

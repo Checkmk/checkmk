@@ -364,14 +364,18 @@ def load_man_page_catalog(man_page_dirs: Reversible[Path]) -> ManPageCatalog:
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
     for name, path in man_page_path_map.items():
         parsed = parse_man_page(name, path)
-
-        if parsed.catalog[0] == "os":
-            for agent in parsed.agents:
-                catalog[("os", agent, *parsed.catalog[1:])].append(parsed)
-        else:
-            catalog[tuple(parsed.catalog)].append(parsed)
+        for entry in _make_catalog_entries(parsed.catalog, parsed.agents):
+            catalog[entry].append(parsed)
 
     return catalog
+
+
+def _make_catalog_entries(
+    pages_catalog: Sequence[str], agents: Sequence[str]
+) -> Sequence[tuple[str, ...]]:
+    if pages_catalog[0] == "os":
+        return [("os", agent, *pages_catalog[1:]) for agent in agents]
+    return [tuple(pages_catalog)]
 
 
 def print_man_page_browser(
@@ -830,38 +834,36 @@ def _apply_markup(line: str) -> str:
     )
 
 
-def man_pages_for_website_export(man_page_paths: Reversible[Path]) -> Mapping[str, ManPage]:
-    """This is called from `scripts/create_man_pages.py` of the websites-essentials repo!"""
-    all_pages: dict[str, ManPage] = {}
+_SerializableManPageDerivative = dict[str, str | dict[str, str] | list[dict[str, str]] | None]
 
-    man_page_path_map = make_man_page_path_map(man_page_paths)
-    for name, path in man_page_path_map.items():
-        parsed = parse_man_page(name, path)
-        cat = list(parsed.catalog)
-        cats = (
-            [[cat[0]] + [agent] + cat[1:] for agent in parsed.agents] if cat[0] == "os" else [cat]
-        )
 
-        a = []
-        for categories in cats:
-            c = {}
-            for category in categories:
-                if category in CATALOG_TITLES:
-                    c[category] = CATALOG_TITLES[category]
-                else:
-                    c[category] = category.title()
-            a.append(c)
+def man_pages_for_website_export(
+    man_page_paths: Reversible[Path],
+) -> dict[str, _SerializableManPageDerivative]:
+    """This is called from `scripts/create_man_pages.py` of the websites-essentials repo!
 
-        b = {}
-        for agent in parsed.agents:
-            if agent in CHECK_MK_AGENTS:
-                b[agent] = CHECK_MK_AGENTS[agent]
-            else:
-                b[agent] = agent.title()
+    The result should be json serializable.
+    """
+    return {
+        name: _extend_categorization_info(parse_man_page(name, path))
+        for name, path in make_man_page_path_map(man_page_paths).items()
+    }
 
-        parsed.catalog = a  # type: ignore[assignment]
-        parsed.agents = b  # type: ignore[assignment]
 
-        all_pages.setdefault(name, parsed)
-
-    return all_pages
+def _extend_categorization_info(man_page: ManPage) -> _SerializableManPageDerivative:
+    return {
+        "name": man_page.name,
+        "path": man_page.path,
+        "title": man_page.title,
+        "agents": {agent: CHECK_MK_AGENTS.get(agent, agent.title()) for agent in man_page.agents},
+        "catalog": [
+            {category: CATALOG_TITLES.get(category, category.title()) for category in categories}
+            for categories in _make_catalog_entries(man_page.catalog, man_page.agents)
+        ],
+        "license": man_page.license,
+        "distribution": man_page.distribution,
+        "description": man_page.description,
+        "item": man_page.item,
+        "discovery": man_page.discovery,
+        "cluster": man_page.cluster,
+    }

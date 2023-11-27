@@ -46,9 +46,9 @@ def check(
     if not (test_report := section.tests.get(item)):
         return
 
-    _transmit_to_livestatus(test_report.html_base64, "suite_last_log.html")
+    _transmit_to_livestatus(test_report.html, "suite_last_log.html")
     if test_report.test.status.status is Outcome.FAIL:
-        _transmit_to_livestatus(test_report.html_base64, "suite_last_error_log.html")
+        _transmit_to_livestatus(test_report.html, "suite_last_error_log.html")
 
     yield from _check_test(params, test_report.test)
 
@@ -67,13 +67,13 @@ def _check_test(params: Params, test: Test) -> CheckResult:
 
 
 def _transmit_to_livestatus(
-    content: str,
+    content: bytes,
     filename: Literal["suite_last_log.html", "suite_last_error_log.html"],
 ) -> None:
     file_path = Path(robotmk_html_log_dir) / host_name() / service_description() / filename
     file_path.parent.absolute().mkdir(exist_ok=True, parents=True)
     # I'm sure there are no race conditions between livestatus and the checkengine here.
-    file_path.write_text(content)
+    file_path.write_bytes(content)
 
 
 def _remap_state(status: Outcome) -> State:

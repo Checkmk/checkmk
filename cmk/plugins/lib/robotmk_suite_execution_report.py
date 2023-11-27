@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from base64 import b64decode
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 
 import xmltodict
-from pydantic import BaseModel, BeforeValidator
+from pydantic import BaseModel, BeforeValidator, Field
 from typing_extensions import Annotated
 
 from .robotmk_parse_xml import Rebot, Suite, Test
@@ -30,9 +31,14 @@ def _parse_xml(xml_value: str) -> Rebot:
     return Rebot.model_validate(xmltodict.parse(xml_value))
 
 
+def _decode_b64(encoded: str) -> bytes:
+    return b64decode(encoded)
+
+
 class RebotResult(BaseModel, frozen=True):
     xml: Annotated[Rebot, BeforeValidator(_parse_xml)]
-    html_base64: str
+    # Note: pydantic complains if we replace _decode_b64 --> b64decode
+    html: Annotated[bytes, BeforeValidator(_decode_b64)] = Field(alias="html_base64")
     timestamp: int
 
 
@@ -85,7 +91,7 @@ class SuiteReport:
 @dataclass(frozen=True, kw_only=True)
 class TestReport:
     test: Test
-    html_base64: str
+    html: bytes
     attempts_config: AttemptsConfig
     rebot_timestamp: int
 

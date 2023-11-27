@@ -373,7 +373,7 @@ impl<T> CheckResult<T> {
     }
 }
 
-impl From<SimpleCheckResult> for CheckResult<Real> {
+impl<T> From<SimpleCheckResult> for CheckResult<T> {
     fn from(x: SimpleCheckResult) -> Self {
         Self {
             summary: x.summary,

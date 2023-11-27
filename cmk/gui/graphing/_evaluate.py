@@ -25,7 +25,21 @@ class _MetricNamesOrScalars:
         metric_api.WarningOf | metric_api.CriticalOf | metric_api.MinimumOf | metric_api.MaximumOf
     ]
 
-    def collect_quantity_names(self, quantity: metric_api.Quantity) -> None:
+    def collect_quantity_names(
+        self,
+        quantity: (
+            metric_api.Name
+            | metric_api.Constant
+            | metric_api.WarningOf
+            | metric_api.CriticalOf
+            | metric_api.MinimumOf
+            | metric_api.MaximumOf
+            | metric_api.Sum
+            | metric_api.Product
+            | metric_api.Difference
+            | metric_api.Fraction
+        ),
+    ) -> None:
         match quantity:
             case metric_api.Name():
                 self._metric_names.append(quantity)
@@ -142,7 +156,18 @@ class EvaluatedQuantity:
 
 
 def evaluate_quantity(
-    quantity: metric_api.Quantity,
+    quantity: (
+        metric_api.Name
+        | metric_api.Constant
+        | metric_api.WarningOf
+        | metric_api.CriticalOf
+        | metric_api.MinimumOf
+        | metric_api.MaximumOf
+        | metric_api.Sum
+        | metric_api.Product
+        | metric_api.Difference
+        | metric_api.Fraction
+    ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> EvaluatedQuantity:
     match quantity:

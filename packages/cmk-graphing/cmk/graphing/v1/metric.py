@@ -7,7 +7,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
-from typing import TypeAlias
 
 from ._color import Color
 from ._localize import Localizable
@@ -26,7 +25,6 @@ __all__ = [
     "Product",
     "Difference",
     "Fraction",
-    "Quantity",
 ]
 
 
@@ -72,7 +70,18 @@ class MaximumOf:
 class Sum:
     title: Localizable
     color: Color
-    summands: Sequence[Quantity]
+    summands: Sequence[
+        Name
+        | Constant
+        | WarningOf
+        | CriticalOf
+        | MinimumOf
+        | MaximumOf
+        | Sum
+        | Product
+        | Difference
+        | Fraction
+    ]
 
     def __post_init__(self) -> None:
         assert self.summands
@@ -83,7 +92,18 @@ class Product:
     title: Localizable
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color
-    factors: Sequence[Quantity]
+    factors: Sequence[
+        Name
+        | Constant
+        | WarningOf
+        | CriticalOf
+        | MinimumOf
+        | MaximumOf
+        | Sum
+        | Product
+        | Difference
+        | Fraction
+    ]
 
     def __post_init__(self) -> None:
         assert self.factors
@@ -94,8 +114,30 @@ class Difference:
     title: Localizable
     color: Color
     _: KW_ONLY
-    minuend: Quantity
-    subtrahend: Quantity
+    minuend: (
+        Name
+        | Constant
+        | WarningOf
+        | CriticalOf
+        | MinimumOf
+        | MaximumOf
+        | Sum
+        | Product
+        | Difference
+        | Fraction
+    )
+    subtrahend: (
+        Name
+        | Constant
+        | WarningOf
+        | CriticalOf
+        | MinimumOf
+        | MaximumOf
+        | Sum
+        | Product
+        | Difference
+        | Fraction
+    )
 
 
 @dataclass(frozen=True)
@@ -104,19 +146,27 @@ class Fraction:
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color
     _: KW_ONLY
-    dividend: Quantity
-    divisor: Quantity
-
-
-Quantity: TypeAlias = (
-    Name
-    | Constant
-    | WarningOf
-    | CriticalOf
-    | MinimumOf
-    | MaximumOf
-    | Sum
-    | Product
-    | Difference
-    | Fraction
-)
+    dividend: (
+        Name
+        | Constant
+        | WarningOf
+        | CriticalOf
+        | MinimumOf
+        | MaximumOf
+        | Sum
+        | Product
+        | Difference
+        | Fraction
+    )
+    divisor: (
+        Name
+        | Constant
+        | WarningOf
+        | CriticalOf
+        | MinimumOf
+        | MaximumOf
+        | Sum
+        | Product
+        | Difference
+        | Fraction
+    )

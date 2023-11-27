@@ -6,8 +6,8 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
 
-from . import metric
 from ._name import Name
+from ._type_defs import Bound, Quantity
 
 __all__ = [
     "Name",
@@ -22,12 +22,12 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Closed:
-    value: int | float | metric.Quantity
+    value: Bound
 
 
 @dataclass(frozen=True)
 class Open:
-    value: int | float | metric.Quantity
+    value: Bound
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ class FocusRange:
 class Perfometer:
     name: Name
     focus_range: FocusRange
-    segments: Sequence[metric.Quantity]
+    segments: Sequence[Quantity]
 
     def __post_init__(self) -> None:
         assert self.segments

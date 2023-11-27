@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, KW_ONLY
 from . import metric
 from ._localize import Localizable
 from ._name import Name
+from ._type_defs import Bound, Quantity
 
 __all__ = [
     "Name",
@@ -20,8 +21,8 @@ __all__ = [
 
 @dataclass(frozen=True)
 class MinimalRange:
-    lower: int | float | metric.Quantity
-    upper: int | float | metric.Quantity
+    lower: Bound
+    upper: Bound
 
 
 @dataclass(frozen=True)
@@ -30,8 +31,8 @@ class Graph:
     title: Localizable
     _: KW_ONLY
     minimal_range: MinimalRange | None = None
-    compound_lines: Sequence[metric.Quantity] = field(default_factory=list)
-    simple_lines: Sequence[metric.Quantity] = field(default_factory=list)
+    compound_lines: Sequence[Quantity] = field(default_factory=list)
+    simple_lines: Sequence[Quantity] = field(default_factory=list)
     optional: Sequence[metric.Name] = field(default_factory=list)
     conflicting: Sequence[metric.Name] = field(default_factory=list)
 

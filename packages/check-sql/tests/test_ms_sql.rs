@@ -6,7 +6,7 @@ mod common;
 use std::collections::HashSet;
 
 use check_sql::ms_sql::{
-    api::{self, InstanceEngine},
+    api::{self, SqlInstance},
     client::{self, Client},
     queries,
     section::{self, Section},
@@ -34,7 +34,7 @@ async fn test_local_connection() {
     assert!(client::create_local(None).await.is_ok());
 }
 
-fn is_instance_good(i: &InstanceEngine) -> bool {
+fn is_instance_good(i: &SqlInstance) -> bool {
     !i.name.is_empty()
         && i.id.contains(&i.name[..4])
         && i.id.contains("MSSQL")
@@ -49,7 +49,7 @@ async fn test_find_all_instances_local() {
     let instances = api::detect_instance_engines(&Endpoint::default())
         .await
         .unwrap();
-    let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
+    let all: Vec<SqlInstance> = [&instances.0[..], &instances.1[..]].concat();
     assert!(all.iter().all(is_instance_good), "{:?}", all);
     let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
     names.sort();
@@ -106,7 +106,7 @@ async fn test_find_all_instances_remote() {
         let instances = api::detect_instance_engines(&endpoint.make_ep())
             .await
             .unwrap();
-        let all: Vec<InstanceEngine> = [&instances.0[..], &instances.1[..]].concat();
+        let all: Vec<SqlInstance> = [&instances.0[..], &instances.1[..]].concat();
         assert!(all.iter().all(is_instance_good));
         let mut names: Vec<String> = all.into_iter().map(|i| i.name).collect();
         names.sort();
@@ -152,7 +152,7 @@ async fn test_validate_all_instances_remote() {
     }
 }
 
-async fn validate_all(i: &InstanceEngine, c: &mut Client, e: &Endpoint) {
+async fn validate_all(i: &SqlInstance, c: &mut Client, e: &Endpoint) {
     validate_database_names(i, c).await;
     assert!(
         tools::run_get_version(c).await.is_some()
@@ -191,14 +191,14 @@ async fn validate_all(i: &InstanceEngine, c: &mut Client, e: &Endpoint) {
     validate_availability_groups_section(i, e).await;
 }
 
-async fn validate_database_names(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_database_names(instance: &SqlInstance, client: &mut Client) {
     let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
     // O^2, but good enough for testing
     assert!(expected.iter().all(|item| databases.contains(item)),);
 }
 
-async fn validate_counters(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_counters(instance: &SqlInstance, client: &mut Client) {
     let counters = instance.generate_counters_entry(client, '|').await;
     assert!(
         counters.split('\n').collect::<Vec<&str>>().len() > 100,
@@ -209,7 +209,7 @@ async fn validate_counters(instance: &InstanceEngine, client: &mut Client) {
     assert!(!counters.contains('$'));
 }
 
-async fn validate_blocked_sessions(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_blocked_sessions(instance: &SqlInstance, client: &mut Client) {
     let blocked_sessions = &instance
         .generate_blocking_sessions_section(client, &queries::get_blocking_sessions_query(), '|')
         .await;
@@ -219,7 +219,7 @@ async fn validate_blocked_sessions(instance: &InstanceEngine, client: &mut Clien
     );
 }
 
-async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_all_sessions_to_check_format(instance: &SqlInstance, client: &mut Client) {
     let all_sessions = &instance
         .generate_blocking_sessions_section(client, queries::QUERY_WAITING_TASKS, '|')
         .await;
@@ -243,11 +243,7 @@ async fn validate_all_sessions_to_check_format(instance: &InstanceEngine, client
     }
 }
 
-async fn validate_table_spaces(
-    instance: &InstanceEngine,
-    client: &mut Client,
-    endpoint: &Endpoint,
-) {
+async fn validate_table_spaces(instance: &SqlInstance, client: &mut Client, endpoint: &Endpoint) {
     let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
 
@@ -269,7 +265,7 @@ async fn validate_table_spaces(
     }
 }
 
-async fn validate_backup(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_backup(instance: &SqlInstance, client: &mut Client) {
     let databases = instance.generate_databases(client).await;
     let mut to_be_found: HashSet<&str> = ["master", "model", "msdb"].iter().cloned().collect();
 
@@ -296,7 +292,7 @@ async fn validate_backup(instance: &InstanceEngine, client: &mut Client) {
 }
 
 async fn validate_transaction_logs(
-    instance: &InstanceEngine,
+    instance: &SqlInstance,
     client: &mut Client,
     endpoint: &Endpoint,
 ) {
@@ -327,7 +323,7 @@ async fn validate_transaction_logs(
     assert_eq!(found, expected);
 }
 
-async fn validate_datafiles(instance: &InstanceEngine, client: &mut Client, endpoint: &Endpoint) {
+async fn validate_datafiles(instance: &SqlInstance, client: &mut Client, endpoint: &Endpoint) {
     let expected: HashSet<String> = expected_databases();
     let databases = instance.generate_databases(client).await;
 
@@ -356,7 +352,7 @@ async fn validate_datafiles(instance: &InstanceEngine, client: &mut Client, endp
     assert_eq!(found, expected);
 }
 
-async fn validate_databases(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_databases(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let databases = instance.generate_databases(client).await;
@@ -389,7 +385,7 @@ async fn validate_databases(instance: &InstanceEngine, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_databases_error(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_databases_error(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let databases = instance.generate_databases(client).await;
@@ -414,7 +410,7 @@ async fn validate_databases_error(instance: &InstanceEngine, client: &mut Client
     assert_eq!(found, expected);
 }
 
-async fn validate_connections(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_connections(instance: &SqlInstance, client: &mut Client) {
     let expected: HashSet<String> = expected_databases();
 
     let result = instance
@@ -438,7 +434,7 @@ async fn validate_connections(instance: &InstanceEngine, client: &mut Client) {
     assert_eq!(found, expected);
 }
 
-async fn validate_connections_error(instance: &InstanceEngine, client: &mut Client) {
+async fn validate_connections_error(instance: &SqlInstance, client: &mut Client) {
     let result = instance
         .generate_connections_section(client, queries::BAD_QUERY, ' ')
         .await;
@@ -450,11 +446,11 @@ async fn validate_connections_error(instance: &InstanceEngine, client: &mut Clie
     assert!(lines[0].contains(" error: "));
 }
 
-async fn validate_clusters(_instance: &InstanceEngine, _client: &mut Client, _endpoint: &Endpoint) {
+async fn validate_clusters(_instance: &SqlInstance, _client: &mut Client, _endpoint: &Endpoint) {
     // TODO(sk): implement it on arriving config
 }
 
-async fn validate_jobs(instance: &InstanceEngine, endpoint: &Endpoint) {
+async fn validate_jobs(instance: &SqlInstance, endpoint: &Endpoint) {
     let result = instance
         .generate_query_section(endpoint, &Section::new(section::JOBS_SECTION_NAME), None)
         .await;
@@ -478,7 +474,7 @@ async fn validate_jobs(instance: &InstanceEngine, endpoint: &Endpoint) {
     assert!(values[11].len() > 10, "{values:?}");
 }
 
-async fn validate_query_error(instance: &InstanceEngine, endpoint: &Endpoint, section: &Section) {
+async fn validate_query_error(instance: &SqlInstance, endpoint: &Endpoint, section: &Section) {
     let result = instance
         .generate_query_section(endpoint, section, Some(queries::BAD_QUERY))
         .await;
@@ -490,7 +486,7 @@ async fn validate_query_error(instance: &InstanceEngine, endpoint: &Endpoint, se
     assert!(lines[0].contains(" error: "));
 }
 
-async fn validate_mirroring_section(instance: &InstanceEngine, endpoint: &Endpoint) {
+async fn validate_mirroring_section(instance: &SqlInstance, endpoint: &Endpoint) {
     let section = &Section::new(section::MIRRORING_SECTION_NAME);
     let lines: Vec<String> = instance
         .generate_query_section(endpoint, section, None)
@@ -503,7 +499,7 @@ async fn validate_mirroring_section(instance: &InstanceEngine, endpoint: &Endpoi
     assert!(lines[1].is_empty(), "bad line {}", lines[1]);
 }
 
-async fn validate_availability_groups_section(instance: &InstanceEngine, endpoint: &Endpoint) {
+async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: &Endpoint) {
     let section = &Section::new(section::AVAILABILITY_GROUPS_SECTION_NAME);
     let lines: Vec<String> = instance
         .generate_query_section(endpoint, section, None)

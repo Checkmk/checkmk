@@ -76,21 +76,3 @@ class Generator(BaseModel, frozen=True):
 
 class Rebot(BaseModel, frozen=True):
     robot: Generator
-
-
-def extract_tests_with_full_names(
-    suite: Suite,
-    parent_names: Sequence[str] = (),
-) -> dict[str, Test]:
-    tests_with_full_names = {}
-
-    for test in suite.test:
-        test_name = "-".join([*parent_names, suite.name, test.name])
-        tests_with_full_names[test_name] = test
-
-    for sub_suite in suite.suite:
-        tests_with_full_names |= extract_tests_with_full_names(
-            sub_suite, parent_names=[*parent_names, suite.name]
-        )
-
-    return tests_with_full_names

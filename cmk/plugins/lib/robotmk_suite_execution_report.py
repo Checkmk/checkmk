@@ -3,14 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from enum import Enum
 
 import xmltodict
 from pydantic import BaseModel, BeforeValidator
 from typing_extensions import Annotated
 
-from .robotmk_parse_xml import Rebot
+from .robotmk_parse_xml import Rebot, Suite, Test
 
 
 class AttemptOutcome(Enum):
@@ -66,3 +67,30 @@ class ExecutionReportAlreadyRunning(Enum):
 class SuiteExecutionReport(BaseModel, frozen=True):
     suite_id: str
     outcome: ExecutionReport | ExecutionReportAlreadyRunning
+
+
+@dataclass(frozen=True, kw_only=True)
+class SuiteRebotReport:
+    top_level_suite: Suite
+    timestamp: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class SuiteReport:
+    attempts: Sequence[AttemptOutcome | AttemptOutcomeOtherError]
+    config: AttemptsConfig
+    rebot: SuiteRebotReport | RebotOutcomeError | None
+
+
+@dataclass(frozen=True, kw_only=True)
+class TestReport:
+    test: Test
+    html_base64: str
+    attempts_config: AttemptsConfig
+    rebot_timestamp: int
+
+
+@dataclass(frozen=True, kw_only=True)
+class Section:
+    suites: Mapping[str, SuiteReport | ExecutionReportAlreadyRunning]
+    tests: Mapping[str, TestReport]

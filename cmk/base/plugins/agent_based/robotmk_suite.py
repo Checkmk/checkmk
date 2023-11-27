@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
 from itertools import chain
 from time import time
 from typing import TypedDict
@@ -13,20 +12,19 @@ from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptOutcomeOtherError,
     AttemptsConfig,
-    ExecutionReport,
     ExecutionReportAlreadyRunning,
     RebotOutcomeError,
-    RebotOutcomeResult,
+    Section,
+    SuiteRebotReport,
+    SuiteReport,
 )
 
 from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
-def discover(
-    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
-) -> DiscoveryResult:
-    yield from (Service(item=suite_id) for suite_id in section)
+def discover(section: Section) -> DiscoveryResult:
+    yield from (Service(item=suite_id) for suite_id in section.suites)
 
 
 class CheckParameters(TypedDict):
@@ -36,15 +34,15 @@ class CheckParameters(TypedDict):
 def check(
     item: str,
     params: CheckParameters,
-    section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning],
+    section: Section,
 ) -> CheckResult:
-    if not (execution_report := section.get(item)):
+    if not (report := section.suites.get(item)):
         return
-    yield from _check_suite_execution_report(execution_report, params, time())
+    yield from _check_suite_execution_report(report, params, time())
 
 
 def _check_suite_execution_report(
-    report: ExecutionReport | ExecutionReportAlreadyRunning,
+    report: SuiteReport | ExecutionReportAlreadyRunning,
     params: CheckParameters,
     now: float,
 ) -> CheckResult:
@@ -53,34 +51,34 @@ def _check_suite_execution_report(
         return
 
     yield from _check_rebot(
-        rebot=report.Executed.rebot,
-        config=report.Executed.config,
+        rebot=report.rebot,
+        config=report.config,
         upper_levels_runtime_percentage=params["upper_levels_runtime_percentage"],
         now=now,
     )
 
     yield from chain.from_iterable(
         _check_attempt(attempt_number, attempt)
-        for attempt_number, attempt in enumerate(report.Executed.attempts, start=1)
+        for attempt_number, attempt in enumerate(report.attempts, start=1)
     )
 
 
 def _check_rebot(
     *,
-    rebot: RebotOutcomeResult | RebotOutcomeError | None,
+    rebot: SuiteRebotReport | RebotOutcomeError | None,
     config: AttemptsConfig,
     upper_levels_runtime_percentage: tuple[float, float] | None,
     now: float,
 ) -> CheckResult:
     match rebot:
-        case RebotOutcomeResult():
+        case SuiteRebotReport():
             yield from _check_rebot_age(
-                rebot_timestamp=rebot.Ok.timestamp,
+                rebot_timestamp=rebot.timestamp,
                 execution_interval=config.interval,
                 now=now,
             )
             yield from _check_runtime(
-                status=rebot.Ok.xml.robot.suite.status,
+                status=rebot.top_level_suite.status,
                 config=config,
                 upper_levels_percentage=upper_levels_runtime_percentage,
             )

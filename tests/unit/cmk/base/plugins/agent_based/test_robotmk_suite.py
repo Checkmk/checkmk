@@ -13,149 +13,96 @@ from cmk.base.plugins.agent_based.robotmk_suite import (
     discover,
 )
 
-from cmk.plugins.lib.robotmk_parse_xml import Generator, Outcome, Rebot, StatusV6, Suite, Test
+from cmk.plugins.lib.robotmk_parse_xml import Outcome, StatusV6, Suite
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
     AttemptsConfig,
-    AttemptsOutcome,
-    ExecutionReport,
     RebotOutcomeError,
-    RebotOutcomeResult,
-    RebotResult,
+    Section,
+    SuiteRebotReport,
+    SuiteReport,
 )
 
-_SECTION = {
-    "suite_1": ExecutionReport(
-        Executed=AttemptsOutcome(
+_SECTION = Section(
+    suites={
+        "suite_1": SuiteReport(
             attempts=[AttemptOutcome.AllTestsPassed],
-            rebot=RebotOutcomeResult(
-                Ok=RebotResult.model_construct(
-                    xml=Rebot(
-                        robot=Generator(
-                            suite=Suite.model_construct(
-                                name="Suite 1",
-                                suite=[],
-                                test=[],
-                                status=StatusV6.model_construct(
-                                    status=Outcome.PASS,
-                                    starttime=datetime(2023, 11, 15, 8, 27, 40),
-                                    endtime=datetime(2023, 11, 15, 8, 27, 42),
-                                ),
-                            ),
-                        )
-                    ),
-                    html_base64="irrelevant",
-                    timestamp=100,
-                )
-            ),
             config=AttemptsConfig(
                 interval=1200,
                 timeout=10,
                 n_attempts_max=1,
             ),
-        )
-    ),
-    "suite_2": ExecutionReport(
-        Executed=AttemptsOutcome(
-            attempts=[AttemptOutcome.AllTestsPassed],
-            rebot=RebotOutcomeResult(
-                Ok=RebotResult.model_construct(
-                    xml=Rebot(
-                        robot=Generator(
-                            suite=Suite.model_construct(
-                                name="Suite 2",
-                                suite=[],
-                                test=[
-                                    Test.model_construct(
-                                        name="Some test",
-                                        status=StatusV6.model_construct(
-                                            status=Outcome.PASS,
-                                            starttime=datetime(2023, 11, 15, 8, 27, 41),
-                                            endtime=datetime(2023, 11, 15, 8, 37, 41),
-                                        ),
-                                    ),
-                                ],
-                                status=StatusV6.model_construct(
-                                    status=Outcome.PASS,
-                                    starttime=datetime(2023, 11, 15, 8, 27, 40),
-                                    endtime=datetime(2023, 11, 15, 8, 37, 42),
-                                ),
-                            ),
-                        )
+            rebot=SuiteRebotReport(
+                top_level_suite=Suite.model_construct(
+                    name="Suite 1",
+                    status=StatusV6.model_construct(
+                        status=Outcome.PASS,
+                        starttime=datetime(2023, 11, 15, 8, 27, 40),
+                        endtime=datetime(2023, 11, 15, 8, 27, 42),
                     ),
-                    html_base64="irrelevant",
-                    timestamp=100,
-                )
+                ),
+                timestamp=100,
             ),
+        ),
+        "suite_2": SuiteReport(
+            attempts=[AttemptOutcome.AllTestsPassed],
             config=AttemptsConfig(
                 interval=1200,
                 timeout=800,
                 n_attempts_max=1,
             ),
-        )
-    ),
-    "suite_3": ExecutionReport(
-        Executed=AttemptsOutcome(
-            attempts=[AttemptOutcome.TestFailures, AttemptOutcome.TimedOut],
-            rebot=RebotOutcomeResult(
-                Ok=RebotResult.model_construct(
-                    xml=Rebot(
-                        robot=Generator(
-                            suite=Suite.model_construct(
-                                name="Suite 3",
-                                suite=[],
-                                test=[
-                                    Test.model_construct(
-                                        name="Some test",
-                                        status=StatusV6.model_construct(
-                                            status=Outcome.FAIL,
-                                            starttime=datetime(2023, 11, 15, 8, 27, 41),
-                                            endtime=datetime(2023, 11, 15, 8, 33, 45),
-                                        ),
-                                    ),
-                                ],
-                                status=StatusV6.model_construct(
-                                    status=Outcome.FAIL,
-                                    starttime=datetime(2023, 11, 15, 8, 27, 40),
-                                    endtime=datetime(2023, 11, 15, 8, 40, 12),
-                                ),
-                            ),
-                        )
+            rebot=SuiteRebotReport(
+                top_level_suite=Suite.model_construct(
+                    name="Suite 2",
+                    status=StatusV6.model_construct(
+                        status=Outcome.PASS,
+                        starttime=datetime(2023, 11, 15, 8, 27, 40),
+                        endtime=datetime(2023, 11, 15, 8, 37, 42),
                     ),
-                    html_base64="irrelevant",
-                    timestamp=100,
-                )
+                ),
+                timestamp=100,
             ),
+        ),
+        "suite_3": SuiteReport(
+            attempts=[AttemptOutcome.TestFailures, AttemptOutcome.TimedOut],
             config=AttemptsConfig(
                 interval=1200,
                 timeout=400,
                 n_attempts_max=2,
             ),
-        )
-    ),
-    "suite_4": ExecutionReport(
-        Executed=AttemptsOutcome(
+            rebot=SuiteRebotReport(
+                top_level_suite=Suite.model_construct(
+                    name="Suite 3",
+                    status=StatusV6.model_construct(
+                        status=Outcome.FAIL,
+                        starttime=datetime(2023, 11, 15, 8, 27, 40),
+                        endtime=datetime(2023, 11, 15, 8, 40, 12),
+                    ),
+                ),
+                timestamp=100,
+            ),
+        ),
+        "suite_4": SuiteReport(
             attempts=[AttemptOutcome.AllTestsPassed],
+            config=AttemptsConfig(
+                interval=1200,
+                timeout=800,
+                n_attempts_max=1,
+            ),
             rebot=RebotOutcomeError(Error="Some failure"),
-            config=AttemptsConfig(
-                interval=1200,
-                timeout=800,
-                n_attempts_max=1,
-            ),
-        )
-    ),
-    "suite_5": ExecutionReport(
-        Executed=AttemptsOutcome(
+        ),
+        "suite_5": SuiteReport(
             attempts=[AttemptOutcome.RobotFrameworkFailure],
-            rebot=None,
             config=AttemptsConfig(
                 interval=1200,
                 timeout=800,
                 n_attempts_max=1,
             ),
-        )
-    ),
-}
+            rebot=None,
+        ),
+    },
+    tests={},
+)
 
 
 def test_discover_datadog_monitors() -> None:
@@ -173,7 +120,10 @@ def test_check_item_missing_no_output() -> None:
         check(
             "missing",
             CheckParameters(upper_levels_runtime_percentage=None),
-            {},
+            Section(
+                suites={},
+                tests={},
+            ),
         )
     )
 
@@ -181,7 +131,7 @@ def test_check_item_missing_no_output() -> None:
 def test_check_suite_execution_report_ok() -> None:
     assert list(
         _check_suite_execution_report(
-            _SECTION["suite_1"],
+            _SECTION.suites["suite_1"],
             CheckParameters(upper_levels_runtime_percentage=(80.0, 90.0)),
             now=123,
         )
@@ -194,7 +144,7 @@ def test_check_suite_execution_report_ok() -> None:
 def test_check_suite_execution_report_too_old() -> None:
     assert list(
         _check_suite_execution_report(
-            _SECTION["suite_1"],
+            _SECTION.suites["suite_1"],
             CheckParameters(upper_levels_runtime_percentage=(80.0, 90.0)),
             now=2734,
         )
@@ -211,7 +161,7 @@ def test_check_suite_execution_report_too_old() -> None:
 def test_check_suite_execution_report_runtime_too_high() -> None:
     assert list(
         _check_suite_execution_report(
-            _SECTION["suite_2"],
+            _SECTION.suites["suite_2"],
             CheckParameters(upper_levels_runtime_percentage=(70.0, 80.0)),
             now=123,
         )
@@ -227,7 +177,7 @@ def test_check_suite_execution_report_runtime_too_high() -> None:
 def test_check_suite_execution_report_failure_no_metric() -> None:
     assert list(
         _check_suite_execution_report(
-            _SECTION["suite_3"],
+            _SECTION.suites["suite_3"],
             CheckParameters(upper_levels_runtime_percentage=(70.0, 80.0)),
             now=123,
         )
@@ -243,7 +193,7 @@ def test_check_suite_execution_report_failure_no_metric() -> None:
 def test_check_suite_execution_report_rebot_error() -> None:
     assert list(
         _check_suite_execution_report(
-            _SECTION["suite_4"],
+            _SECTION.suites["suite_4"],
             CheckParameters(upper_levels_runtime_percentage=(80.0, 90.0)),
             now=1,
         )
@@ -259,7 +209,7 @@ def test_check_suite_execution_report_rebot_error() -> None:
 def test_check_suite_execution_report_no_rebot() -> None:
     assert list(
         _check_suite_execution_report(
-            _SECTION["suite_5"],
+            _SECTION.suites["suite_5"],
             CheckParameters(upper_levels_runtime_percentage=(80.0, 90.0)),
             now=1,
         )

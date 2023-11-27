@@ -1,4 +1,9 @@
 ---
+system:
+  logging:
+    level: "warn" # optional, default: "info"
+    max_size: 1000000
+    max_count: 5
 mssql:
   standard: # mandatory, to be used if no specific config
     authentication: # mandatory

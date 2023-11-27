@@ -2143,7 +2143,7 @@ sid_matches_defined_sids() {
     # split $1 into array on , or newline
     IFS=$',\n' read -d '' -ra sids_array <<<"$1"
     # check if array contains $2
-    printf '%s\n' "${sids_array[@]}" | grep -F -x -- "$2" >/dev/null
+    printf '%s\n' "${sids_array[@]}" | "${GREP}" -F -x -- "$2" >/dev/null
 }
 
 do_custom_sqls() {

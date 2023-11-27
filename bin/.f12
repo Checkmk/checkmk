@@ -24,7 +24,7 @@ sudo install -m 755 \
     init-redis \
     "$ROOT"/bin/
 sudo ln -sf check_mk "$ROOT"/bin/cmk
-sudo chown root.omd "$ROOT"/bin/mkeventd_open514
+sudo chown root:omd "$ROOT"/bin/mkeventd_open514
 sudo chmod 750 "$ROOT"/bin/mkeventd_open514
 sudo setcap "CAP_NET_BIND_SERVICE+ep" "$ROOT"/bin/mkeventd_open514
 echo "Installed to $ROOT/bin"

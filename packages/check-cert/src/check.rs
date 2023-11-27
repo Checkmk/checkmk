@@ -5,7 +5,7 @@
 use std::fmt::{Display, Formatter, Result as FormatResult};
 use std::mem;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Real {
     Integer(isize),
     Double(f64),
@@ -32,25 +32,31 @@ impl Display for Real {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Bounds<T> {
+#[derive(Debug, PartialEq, Clone)]
+pub struct Bounds<T>
+where
+    T: Clone,
+{
     pub min: T,
     pub max: T,
 }
 
-impl<T> Bounds<T> {
+impl<T> Bounds<T>
+where
+    T: Clone,
+{
     pub fn map<F, U>(self, f: F) -> Bounds<U>
     where
         F: FnMut(T) -> U,
-        U: Default,
+        U: Clone + Default,
     {
         Bounds::from(&mut [self.min, self.max].map(f))
     }
 }
 
-impl<T: Default> From<&mut [T; 2]> for Bounds<T>
+impl<T> From<&mut [T; 2]> for Bounds<T>
 where
-    T: Default,
+    T: Clone + Default,
 {
     fn from(arr: &mut [T; 2]) -> Self {
         Self {
@@ -60,17 +66,20 @@ where
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
 }
 
-impl<T> Levels<T> {
+impl<T> Levels<T>
+where
+    T: Clone,
+{
     pub fn map<F, U>(self, f: F) -> Levels<U>
     where
         F: FnMut(T) -> U,
-        U: Default,
+        U: Clone + Default,
     {
         Levels::from(&mut [self.warn, self.crit].map(f))
     }
@@ -157,8 +166,11 @@ impl Display for State {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub struct Metric<T> {
+#[derive(Debug, PartialEq, Clone)]
+pub struct Metric<T>
+where
+    T: Clone,
+{
     label: String,
     value: T,
     uom: Option<String>,
@@ -168,19 +180,22 @@ pub struct Metric<T> {
 
 impl<T> Metric<T>
 where
-    T: Display,
+    T: Clone + Display,
 {
     pub fn builder(label: &str, value: T) -> MetricBuilder<T> {
         MetricBuilder::new(label, value)
     }
 }
 
-impl<T> Metric<T> {
+impl<T> Metric<T>
+where
+    T: Clone,
+{
     pub fn map<F, U>(self, mut f: F) -> Metric<U>
     where
         F: FnMut(T) -> U,
         F: Copy,
-        U: Default,
+        U: Clone + Default,
     {
         Metric {
             label: self.label,
@@ -194,7 +209,7 @@ impl<T> Metric<T> {
 
 impl<T> Display for Metric<T>
 where
-    T: Display,
+    T: Clone + Display,
 {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         write!(
@@ -220,7 +235,10 @@ where
 }
 
 #[derive(Debug)]
-pub struct MetricBuilder<T> {
+pub struct MetricBuilder<T>
+where
+    T: Clone,
+{
     label: String,
     value: T,
     uom: Option<String>,
@@ -228,7 +246,10 @@ pub struct MetricBuilder<T> {
     bounds: Option<Bounds<T>>,
 }
 
-impl<T> MetricBuilder<T> {
+impl<T> MetricBuilder<T>
+where
+    T: Clone,
+{
     pub fn new(label: &str, value: T) -> Self {
         Self {
             label: label.to_string(),
@@ -329,12 +350,18 @@ impl SimpleCheckResult {
     }
 }
 
-pub struct CheckResult<T> {
+pub struct CheckResult<T>
+where
+    T: Clone,
+{
     summary: Summary,
     metrics: Option<Metric<T>>,
 }
 
-impl<T> CheckResult<T> {
+impl<T> CheckResult<T>
+where
+    T: Clone,
+{
     fn new(state: State, text: String, metrics: Option<Metric<T>>) -> Self {
         Self {
             summary: Summary::new(state, text),
@@ -359,12 +386,15 @@ impl<T> CheckResult<T> {
     }
 }
 
-impl<T> CheckResult<T> {
+impl<T> CheckResult<T>
+where
+    T: Clone,
+{
     pub fn map<F, U>(self, f: F) -> CheckResult<U>
     where
         F: FnMut(T) -> U,
         F: Copy,
-        U: Default,
+        U: Clone + Default,
     {
         CheckResult {
             summary: self.summary,
@@ -373,7 +403,10 @@ impl<T> CheckResult<T> {
     }
 }
 
-impl<T> From<SimpleCheckResult> for CheckResult<T> {
+impl<T> From<SimpleCheckResult> for CheckResult<T>
+where
+    T: Clone,
+{
     fn from(x: SimpleCheckResult) -> Self {
         Self {
             summary: x.summary,

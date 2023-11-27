@@ -19,8 +19,14 @@ pub struct Config {
 }
 
 pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
-    // TODO: error handling!
-    let (_rem, cert) = X509Certificate::from_der(der).unwrap();
+    let cert = match X509Certificate::from_der(der) {
+        Ok((_rem, cert)) => cert,
+        Err(_) => {
+            return vec![
+                SimpleCheckResult::crit(String::from("Failed to parse certificate")).into(),
+            ]
+        }
+    };
     vec![
         check_details_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
             .unwrap_or_default()

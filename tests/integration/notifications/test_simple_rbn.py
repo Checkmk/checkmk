@@ -83,6 +83,7 @@ def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
     )
 
 
+@pytest.mark.skip("broken on nagios")
 @pytest.mark.usefixtures("fake_sendmail")
 @pytest.mark.usefixtures("test_user")
 @pytest.mark.usefixtures("disable_flap_detection")

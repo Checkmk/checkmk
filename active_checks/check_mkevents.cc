@@ -214,13 +214,11 @@ int main(int argc, char **argv) {
             ioError("Cannot set socket reveive timeout");
         }
 
-        struct sockaddr_un addr;
-        memset(&addr, 0, sizeof(addr));
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, unixsocket_path.c_str(),
-                sizeof(addr.sun_path) - 1);
+        struct sockaddr_un addr {
+          .sun_family = AF_UNIX, .sun_path = ""
+        };
+        unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
         addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
-
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(addr)) == -1) {

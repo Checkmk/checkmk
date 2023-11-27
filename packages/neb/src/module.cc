@@ -464,10 +464,11 @@ void open_unix_socket() {
 
     // Bind it to its address. This creates the file with the name
     // fl_paths.livestatus_socket
-    struct sockaddr_un sockaddr;
-    sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, fl_paths.livestatus_socket.c_str(),
-            sizeof(sockaddr.sun_path) - 1);
+    struct sockaddr_un sockaddr {
+        .sun_family = AF_UNIX, .sun_path = ""
+    };
+    fl_paths.livestatus_socket.string().copy(&sockaddr.sun_path[0],
+                                             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     if (::bind(fl_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),

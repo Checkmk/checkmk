@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy, SimpleCheckResult, Writer};
+use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy, Real, Writer};
 use check_cert::{checker, fetcher};
 use clap::Parser;
 use std::time::Duration as StdDuration;
@@ -59,7 +59,7 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
-    let Ok(not_after_levels) = LevelsChecker::try_new(
+    let Ok(not_after_levels_checker) = LevelsChecker::try_new(
         LevelsStrategy::Lower,
         Levels::from(
             &mut args
@@ -72,7 +72,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         check::bail_out("invalid args: not after crit level larger than warn");
     };
 
-    let Ok(response_time_levels) = LevelsChecker::try_new(
+    let Ok(response_time_levels_checker) = LevelsChecker::try_new(
         LevelsStrategy::Upper,
         Levels::from(
             &mut args
@@ -100,15 +100,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (_rem, cert) = X509Certificate::from_der(&der)?;
     let out = Writer::from(&vec![
-        SimpleCheckResult::from_levels(
-            &response_time_levels,
-            &response_time,
-            format!(
-                "Certificate obtained in {} ms",
-                response_time.whole_milliseconds()
-            ),
-        )
-        .into(),
+        response_time_levels_checker
+            .check(
+                "response_time",
+                response_time,
+                format!(
+                    "Certificate obtained in {} ms",
+                    response_time.whole_milliseconds()
+                ),
+            )
+            .map(|x| Real::from(x.whole_milliseconds() as isize)),
         checker::check_details_serial(cert.tbs_certificate.raw_serial_as_string(), args.serial)
             .unwrap_or_default()
             .into(),
@@ -120,10 +121,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .into(),
         checker::check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),
-            not_after_levels,
+            not_after_levels_checker,
             cert.tbs_certificate.validity().not_after,
         )
-        .into(),
+        .map(|x| Real::from(x.whole_days() as isize)),
     ]);
     println!("HTTP {}", out);
     std::process::exit(out.exit_code())

@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
 import pathlib
 import threading
+from collections.abc import Iterator
+from unittest import mock
 
 import pytest
 
@@ -15,6 +18,7 @@ import cmk.ec.export as ec
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history_file import FileHistory
+from cmk.ec.history_mongo import MongoDBHistory
 from cmk.ec.main import (
     create_history,
     default_slave_status_master,
@@ -66,6 +70,32 @@ def fixture_history(settings: Settings, config: Config) -> FileHistory:
     )
     assert isinstance(history, FileHistory)
     return history
+
+
+@pytest.fixture(name="history_mongo")
+def fixture_history_mongo(settings: Settings, config: Config) -> Iterator[MongoDBHistory]:
+    """history_mongo with connection config file mocked"""
+
+    connection_string = os.getenv("MONGODB_CONNECTION_STRING") or ""
+
+    connection_opts = (
+        (connection_string,) if connection_string.startswith("mongodb://") else ("localhost", 27017)
+    )
+
+    with mock.patch(
+        "cmk.ec.history_mongo._mongodb_local_connection_opts",
+        mock.Mock(return_value=connection_opts),
+    ):
+        history = create_history(
+            settings,
+            {**config, "archive_mode": "mongodb"},
+            logging.getLogger("cmk.mkeventd"),
+            StatusTableEvents.columns,
+            StatusTableHistory.columns,
+        )
+        assert isinstance(history, MongoDBHistory)
+        yield history
+        history.flush()
 
 
 @pytest.fixture(name="perfcounters")

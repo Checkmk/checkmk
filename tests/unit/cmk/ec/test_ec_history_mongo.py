@@ -4,10 +4,53 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History mongo backend"""
 
+import logging
+import os
+
 import pytest
 
-from cmk.ec.history_mongo import filters_to_mongo_query
-from cmk.ec.query import QueryFilter
+from cmk.utils.hostaddress import HostName
+
+from cmk.ec.event import Event
+from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
+from cmk.ec.main import StatusTableHistory
+from cmk.ec.query import QueryFilter, QueryGET, StatusTable
+
+
+@pytest.mark.skipif(
+    os.getenv("MONGODB_CONNECTION_STRING") is None,
+    reason="""MONGODB_CONNECTION_STRING env var is not set.
+    Set it to any value(1 or True) to use the default host: "localhost", port: 27017.
+    Or use real mongodb connection string. E.g.:
+    MONGODB_CONNECTION_STRING="mongodb://<some_host>:<some_port>" """,
+)
+def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
+    """Add 2 documents to history, get filtered result with 1 document."""
+
+    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+
+    history_mongo.add(event=event1, what="NEW")
+    history_mongo.add(event=event2, what="NEW")
+
+    logger = logging.getLogger("cmk.mkeventd")
+
+    def get_table(name: str) -> StatusTable:
+        assert name == "history"
+        return StatusTableHistory(logger, history_mongo)
+
+    query = QueryGET(
+        get_table,
+        ["GET history", "Columns: history_what host_name", "Filter: event_host = ABC1"],
+        logger,
+    )
+
+    query_result = list(history_mongo.get(query))
+
+    (row,) = query_result
+    column_index = get_table("history").column_names.index
+    assert row[column_index("history_what")] == "NEW"
+    assert row[column_index("event_host")] == "ABC1"
 
 
 def test_filters_to_mongo_query() -> None:

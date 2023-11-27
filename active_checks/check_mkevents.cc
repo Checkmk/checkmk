@@ -153,10 +153,9 @@ int main(int argc, char **argv) {
         }
 
         auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
-        char remote_hostipaddress[64];
+        std::string remote_hostipaddress;
         for (int i = 0; addr_list[i] != nullptr; i++) {
-            strncpy(remote_hostipaddress, inet_ntoa(*addr_list[i]),
-                    sizeof(remote_hostipaddress));
+          remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
         }
 
         char *port_str = strtok(nullptr, ":");
@@ -178,15 +177,14 @@ int main(int argc, char **argv) {
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
-        inet_aton(remote_hostipaddress, &addr.sin_addr);
+        inet_aton(remote_hostipaddress.c_str(), &addr.sin_addr);
         addr.sin_port = htons(remote_port);
 
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         if (::connect(sock, reinterpret_cast<struct sockaddr *>(&addr),
                       sizeof(struct sockaddr_in)) == -1) {
             ioError("Cannot connect to event console at " +
-                    std::string(remote_hostipaddress) + ":" +
-                    std::to_string(remote_port));
+                    remote_hostipaddress + ":" + std::to_string(remote_port));
         }
 
     } else {

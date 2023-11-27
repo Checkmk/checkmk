@@ -566,7 +566,18 @@ def test_perfometer_matches(
     ],
 )
 def test_evaluate_quantity(
-    quantity: metric_api.Quantity,
+    quantity: (
+        metric_api.Name
+        | metric_api.Constant
+        | metric_api.WarningOf
+        | metric_api.CriticalOf
+        | metric_api.MinimumOf
+        | metric_api.MaximumOf
+        | metric_api.Sum
+        | metric_api.Product
+        | metric_api.Difference
+        | metric_api.Fraction
+    ),
     translated_metrics: Mapping[str, TranslatedMetric],
     result: float,
 ) -> None:

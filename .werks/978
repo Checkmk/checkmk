@@ -22,7 +22,7 @@ If you have a job running as user <tt>foo</tt>, then do:
 
 C+:
 RP:mkdir -p /var/lib/check_mk_agent/job
-RP:chown foo.foo /var/lib/check_mk_agent/job
+RP:chown foo:foo /var/lib/check_mk_agent/job
 C-:
 
 If you update the Check_MK Agent with RPMs/DEB from the new agent bakery or by

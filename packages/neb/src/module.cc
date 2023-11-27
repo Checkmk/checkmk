@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <cstring>
 #include <exception>
 #include <filesystem>
 #include <functional>
@@ -31,6 +30,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -56,6 +56,7 @@
 #include "neb/nagios.h"
 
 using namespace std::chrono_literals;
+using namespace std::string_literals;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
@@ -649,7 +650,7 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
         if (sc->command_type == CMD_CUSTOM_COMMAND &&
-            strcmp(sc->command_string, "_LOG") == 0) {
+            sc->command_string == "_LOG"s) {
             write_to_all_logs(sc->command_args, -1);
             counterIncrement(Counter::log_messages);
             fl_core->triggers().notify_all(Triggers::Kind::log);
@@ -891,7 +892,9 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     }
 
     // TODO(sp) Nuke next_field and friends. Use C++ strings everywhere.
-    std::vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
+    const std::string_view sv{args_orig};
+    std::vector<char> args_buf{sv.begin(), sv.end()};
+    args_buf.push_back('\0');
     char *args = args_buf.data();
     while (char *token = next_field(&args)) {
         /* find = */

@@ -64,5 +64,5 @@ class ExecutionReportAlreadyRunning(Enum):
 
 
 class SuiteExecutionReport(BaseModel, frozen=True):
-    suite_name: str
+    suite_id: str
     outcome: ExecutionReport | ExecutionReportAlreadyRunning

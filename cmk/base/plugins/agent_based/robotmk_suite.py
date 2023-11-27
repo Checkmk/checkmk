@@ -26,7 +26,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 def discover(
     section: Mapping[str, ExecutionReport | ExecutionReportAlreadyRunning]
 ) -> DiscoveryResult:
-    yield from (Service(item=suite_name) for suite_name in section)
+    yield from (Service(item=suite_id) for suite_id in section)
 
 
 class CheckParameters(TypedDict):

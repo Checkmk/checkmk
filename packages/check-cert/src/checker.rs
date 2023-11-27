@@ -8,61 +8,43 @@ use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
 pub fn check_details_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
-    match expected {
-        None => None,
-        Some(expected) => {
-            if serial == expected {
-                Some(SimpleCheckResult::ok(format!("Serial {}", serial)))
-            } else {
-                Some(SimpleCheckResult::warn(format!(
-                    "Serial is {} but expected {}",
-                    serial, expected
-                )))
-            }
+    expected.map(|expected| {
+        if serial == expected {
+            SimpleCheckResult::ok(format!("Serial {}", serial))
+        } else {
+            SimpleCheckResult::warn(format!("Serial is {} but expected {}", serial, expected))
         }
-    }
+    })
 }
 
 pub fn check_details_subject(
     subject: &X509Name,
     expected: Option<String>,
 ) -> Option<SimpleCheckResult> {
-    match expected {
-        None => None,
-        Some(expected) => {
-            let subject = subject.to_string();
-            // subject string has the form: `CN=domain`
-            if subject == expected {
-                Some(SimpleCheckResult::ok(subject.to_string()))
-            } else {
-                Some(SimpleCheckResult::warn(format!(
-                    "Subject is {} but expected {}",
-                    subject, expected
-                )))
-            }
+    expected.map(|expected| {
+        let subject = subject.to_string();
+        // subject string has the form: `CN=domain`
+        if subject == expected {
+            SimpleCheckResult::ok(subject.to_string())
+        } else {
+            SimpleCheckResult::warn(format!("Subject is {} but expected {}", subject, expected))
         }
-    }
+    })
 }
 
 pub fn check_details_issuer(
     issuer: &X509Name,
     expected: Option<String>,
 ) -> Option<SimpleCheckResult> {
-    match expected {
-        None => None,
-        Some(expected) => {
-            let issuer = issuer.to_string();
+    expected.map(|expected| {
+        let issuer = issuer.to_string();
 
-            if issuer == expected {
-                Some(SimpleCheckResult::ok(format!("Issuer {}", issuer)))
-            } else {
-                Some(SimpleCheckResult::warn(format!(
-                    "Issuer is {} but expected {}",
-                    issuer, expected
-                )))
-            }
+        if issuer == expected {
+            SimpleCheckResult::ok(format!("Issuer {}", issuer))
+        } else {
+            SimpleCheckResult::warn(format!("Issuer is {} but expected {}", issuer, expected))
         }
-    }
+    })
 }
 
 pub fn check_validity_not_after(

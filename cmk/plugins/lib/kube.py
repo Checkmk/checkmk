@@ -340,7 +340,7 @@ def condition_detailed_description(
 
     Examples:
         >>> condition_detailed_description("Ready", NodeConditionStatus.FALSE, "Waiting", "ContainerCreating")
-        'READY: NodeConditionStatus.FALSE (Waiting: ContainerCreating)'
+        'READY: False (Waiting: ContainerCreating)'
 
     """
     return f"{condition_short_description(name, status)} ({reason}: {message})"
@@ -357,48 +357,23 @@ class NodeCount(Section):
     nodes: Sequence[CountableNode]
 
 
-class NodeCondition(BaseModel):
-    status: NodeConditionStatus
-    reason: str | None = None
-    message: str | None = None
-
-
-class NodeCustomCondition(NodeCondition):
-    """NodeCustomCondition mainly come from Node Problem Detector.
-    Its type can be user-defined, hence it being a string."""
-
+class NodeCondition(BaseModel, extra="forbid"):
     type_: str
+    status: NodeConditionStatus
+    reason: str | None
+    message: str | None
 
 
 class NodeConditions(Section):
     """section: kube_node_conditions_v1"""
 
-    ready: NodeCondition
-    memorypressure: NodeCondition
-    diskpressure: NodeCondition
-    pidpressure: NodeCondition
-    networkunavailable: NodeCondition | None = None
-
-
-class NodeCustomConditions(Section):
-    """section: kube_node_custom_conditions_v1"""
-
-    custom_conditions: Sequence[NodeCustomCondition]
+    conditions: Sequence[NodeCondition]
 
 
 class ConditionStatus(enum.StrEnum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"
-
-
-EXPECTED_CONDITION_STATES = {
-    "ready": NodeConditionStatus.TRUE,
-    "memorypressure": NodeConditionStatus.FALSE,
-    "diskpressure": NodeConditionStatus.FALSE,
-    "pidpressure": NodeConditionStatus.FALSE,
-    "networkunavailable": NodeConditionStatus.FALSE,
-}
 
 
 class DeploymentCondition(BaseModel):

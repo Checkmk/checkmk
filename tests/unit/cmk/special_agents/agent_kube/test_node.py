@@ -11,7 +11,6 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
     ContainerStatusFactory,
     create_container_state,
-    node_status,
     NodeResourcesFactory,
     NodeStatusFactory,
 )
@@ -24,12 +23,9 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.node_handler import (
     _allocatable_cpu_resource,
     _allocatable_memory_resource,
     _allocatable_pods,
-    _conditions,
     _container_count,
-    _custom_conditions,
     _info,
     create_api_sections,
-    NATIVE_NODE_CONDITION_TYPES,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -46,7 +42,6 @@ def api_nodes_api_sections() -> set[str]:
         "kube_allocatable_cpu_resource_v1",
         "kube_allocatable_memory_resource_v1",
         "kube_node_conditions_v1",
-        "kube_node_custom_conditions_v1",
     }
 
 
@@ -97,68 +92,6 @@ def test_write_api_nodes_api_sections_registers_sections_to_be_written() -> None
         "node",
     )
     assert {s.section_name for s in sections} == api_nodes_api_sections()
-
-
-def test_conditions_returns_all_native_conditions() -> None:
-    api_node = api_to_agent_node(
-        APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
-    )
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-    conditions_dict = node_conditions.model_dump()
-    assert len(conditions_dict) == len(NATIVE_NODE_CONDITION_TYPES)
-    assert all(
-        condition_type.lower() in conditions_dict for condition_type in NATIVE_NODE_CONDITION_TYPES
-    )
-
-
-def test_conditions_respects_status_conditions() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    assert status.conditions is not None
-
-    native_conditions = [
-        cond for cond in status.conditions if cond.type_ in NATIVE_NODE_CONDITION_TYPES
-    ]
-
-    node_conditions = _conditions(api_node)
-    assert node_conditions is not None
-    conditions_dict = node_conditions.model_dump()
-    assert len(conditions_dict) == len(native_conditions)
-    assert all(
-        conditions_dict[condition.type_.lower()]["status"] == condition.status
-        for condition in native_conditions
-    )
-
-
-def test_custom_conditions_respects_status_conditions() -> None:
-    status = node_status(api.NodeConditionStatus.TRUE)
-    api_node = api_to_agent_node(APINodeFactory.build(status=status))
-    assert status.conditions is not None
-
-    npd_conditions_status = [
-        cond.status
-        for cond in sorted(status.conditions, key=lambda cond: cond.type_)
-        if cond.type_ not in NATIVE_NODE_CONDITION_TYPES
-    ]
-
-    api_node_custom_conditions = _custom_conditions(api_node)
-    assert api_node_custom_conditions is not None
-    custom_conditions_status = [
-        cond.status
-        for cond in sorted(
-            api_node_custom_conditions.custom_conditions, key=lambda cond: cond.type_
-        )
-    ]
-    assert npd_conditions_status == custom_conditions_status
-
-
-def test_conditions_with_status_conditions_none() -> None:
-    api_node = api_to_agent_node(
-        APINodeFactory.build(status=NodeStatusFactory.build(conditions=None))
-    )
-    node_conditions = _conditions(api_node)
-    assert node_conditions is None
 
 
 def test_api_node_info_section() -> None:

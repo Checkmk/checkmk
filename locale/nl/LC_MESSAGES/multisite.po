@@ -6387,6 +6387,10 @@ msgstr "Arcserve (Duitse) back-ups (Windows)"
 msgid "Area"
 msgstr "Gebied"
 
+#, fuzzy, python-format
+msgid "Argument files (%s)"
+msgstr "Agent voor %s (%s)"
+
 msgid "Arguments:"
 msgstr "Argumenten:"
 
@@ -6459,6 +6463,10 @@ msgstr "Wijs SLA-definitie toe aan dienst"
 
 msgid "Assign SLA to service"
 msgstr "Wijs SLA toe aan dienst"
+
+#, fuzzy
+msgid "Assign result to piggyback host"
+msgstr "Hostname vertaling voor piggybacked hosts"
 
 msgid "Assign service to following host"
 msgstr "Wijs de dienst toe aan de volgende host"
@@ -7696,6 +7704,10 @@ msgstr "Basismap voor <tt>plugins</tt> en <tt>local</tt>"
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Basismap voor variabele gegevens (caches, statusbestanden)"
 
+#, fuzzy
+msgid "Base directory of suites"
+msgstr "Alleen baseren op diensttijden"
+
 msgid "Base layout"
 msgstr "Basis layout"
 
@@ -8397,6 +8409,9 @@ msgstr ""
 "één regel toevoegt, zullen alleen hosts met een overeenstemmende regel "
 "gemonitord worden."
 
+msgid "By age of Robotmk executions"
+msgstr ""
+
 msgid "By aggregation group prefix"
 msgstr "Per aggregatiegroep prefix"
 
@@ -8846,6 +8861,10 @@ msgid ""
 msgstr ""
 "Door deze optie in te schakelen worden meldingen ook buiten de gedefinieerde "
 "periode gebulkt."
+
+#, fuzzy
+msgid "By number of Robotmk executions"
+msgstr "Aantal bezette uitvoerders"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -11151,6 +11170,10 @@ msgstr "Opruimen van achtergelaten host bestanden ouder dan"
 msgid "Cleanup messages"
 msgstr "Berichten opruimen"
 
+#, fuzzy
+msgid "Cleanup of working directory"
+msgstr "Inactief opruimen van werknemer"
+
 msgid "Cleanup when disk space is below"
 msgstr "Opschonen wanneer schijfruimte minder is"
 
@@ -11829,6 +11852,10 @@ msgstr "Compatibele Werks"
 
 msgid "Compatible and incompatible Werks"
 msgstr "Compatibele en incompatibele Werks"
+
+#, fuzzy
+msgid "Complete"
+msgstr "volledig"
 
 msgid "Complete the restore"
 msgstr "Voltooi de restauratie"
@@ -13845,6 +13872,10 @@ msgstr "Kritisch niveau voor resterende"
 
 msgid "Critical level is at least"
 msgstr "Kritisch niveau is ten minste"
+
+#, fuzzy
+msgid "Critical of "
+msgstr "Kritisch als %s"
 
 msgid "Critical threshold"
 msgstr "Kritieke drempel"
@@ -19648,6 +19679,10 @@ msgstr "Ingang"
 msgid "Environment Variables"
 msgstr "Omgevingsvariabelen"
 
+#, fuzzy
+msgid "Environment build timeout"
+msgstr "Omgevingsvariabelen"
+
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Aflevering 1: Checkmk installeren en uw eerste host monitoren"
 
@@ -20196,6 +20231,10 @@ msgstr ""
 "Sluit ruimte gereserveerd voor de <tt>root</tt> gebruiker uit van de "
 "berekening van gebruikte ruimte"
 
+#, fuzzy, python-format
+msgid "Exclude tests by tag (%s)"
+msgstr "Lege tag keuzes uitsluiten"
+
 msgid "Exclude the following SIDs (if found)"
 msgstr "Sluit de volgende SID's uit (indien gevonden)"
 
@@ -20288,6 +20327,10 @@ msgstr "Voer dit schema nu uit in een achtergrond opdracht"
 
 msgid "Execution Mode"
 msgstr "Uitvoeringsmodus"
+
+#, fuzzy
+msgid "Execution configuration"
+msgstr "Kennisgeving configuratie"
 
 msgid "Execution has been triggered"
 msgstr "De uitvoering is gestart"
@@ -21603,6 +21646,9 @@ msgstr "Vaste grootte"
 
 msgid "Fixed string to expect in the content"
 msgstr "Vaste tekenreeks te verwachten in de inhoud"
+
+msgid "FixedValue value is not serializable."
+msgstr ""
 
 msgid "Flap"
 msgstr "Flap"
@@ -23527,6 +23573,10 @@ msgstr "Moet het pad bevatten naar het Cert Key File."
 
 msgid "Hash"
 msgstr "Hash"
+
+#, fuzzy
+msgid "Headed execution"
+msgstr "Plan uitvoering"
 
 msgid "Headers at the left (single dataset)"
 msgstr "Koppen aan de linkerkant (enkele dataset)"
@@ -28388,6 +28438,10 @@ msgstr "Inclusief gereserveerde ruimte"
 msgid "Include service with zero base."
 msgstr "Inclusief dienst met nul basis."
 
+#, fuzzy, python-format
+msgid "Include tests by tag (%s)"
+msgstr "Lege tag keuzes uitsluiten"
+
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
 "Note: this requires using WMI for retrieving process information."
@@ -28495,6 +28549,10 @@ msgstr ""
 
 msgid "Increment size"
 msgstr "Vergroting"
+
+#, fuzzy
+msgid "Incremental"
+msgstr "#Increments"
 
 msgid "Index"
 msgstr "Index"
@@ -31906,6 +31964,10 @@ msgstr "Load balancers"
 msgid "Load balancers Target Groups"
 msgstr "Load balancers Doelgroepen"
 
+#, fuzzy
+msgid "Load environment variables from file"
+msgstr "Gebruik omgevingsvariabelen van host"
+
 msgid "Load in a new window / tab"
 msgstr "Laden in een nieuw venster / tabblad"
 
@@ -34028,6 +34090,10 @@ msgstr "Maximum aantal verbindingen of luisteraars"
 msgid "Maximum number of delivery attempts"
 msgstr "Maximum aantal leveringspogingen"
 
+#, fuzzy
+msgid "Maximum number of executions"
+msgstr "Maximum aantal cliënten"
+
 msgid "Maximum number of firewall connections"
 msgstr "Maximum aantal firewall verbindingen"
 
@@ -34040,6 +34106,10 @@ msgstr "Maximum aantal knooppunten overschreden %d/%d"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximum aantal geparseerde regels per logbestand"
+
+#, fuzzy
+msgid "Maximum number of re-executions"
+msgstr "Maximum aantal cliënten"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Maximum aantal gereedstaande besturingsvlakknooppunten"
@@ -34058,6 +34128,10 @@ msgid ""
 msgstr ""
 "Maximum aantal gestarte threads op een bepaald moment tijdens de levensduur "
 "van de JVM"
+
+#, fuzzy
+msgid "Maximum of "
+msgstr "Maximum"
 
 msgid "Maximum parallel connections"
 msgstr "Maximaal aantal parallelle verbindingen"
@@ -34773,6 +34847,10 @@ msgstr "Minimumaantal gereedstaande besturingsknooppunten"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Minimum aantal gereed werkend knooppunten"
+
+#, fuzzy
+msgid "Minimum of "
+msgstr "Minimum"
 
 msgid "Minimum password length"
 msgstr "Minimale lengte wachtwoord"
@@ -36733,6 +36811,10 @@ msgstr "Geen hangende wijzigingen"
 #, python-format
 msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
+
+#, fuzzy
+msgid "No re-executions"
+msgstr "Gelijktijdige uitvoeringen"
 
 #, fuzzy, python-format
 msgid "No remote %s processed."
@@ -40241,6 +40323,10 @@ msgstr "Pad naar categorieën"
 msgid "Path to nvidia-smi.exe"
 msgstr "Pad naar nvidia-smi.exe"
 
+#, fuzzy
+msgid "Path to robot.yaml"
+msgstr "Pad naar certificaatsleutelbestand"
+
 msgid "Path to sapgenpse"
 msgstr "Pad naar sapgenpse"
 
@@ -41349,10 +41435,18 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr "Zorg voor een '.xml' bestand"
 
+#, fuzzy
+msgid "Please provide a relative Windows path"
+msgstr "Geef een geldige naam"
+
 msgid "Please provide a valid host and port"
 msgstr "Geef een geldige host en poort"
 
 msgid "Please provide a valid name"
+msgstr "Geef een geldige naam"
+
+#, fuzzy
+msgid "Please provide an absolute Windows path"
 msgstr "Geef een geldige naam"
 
 msgid ""
@@ -43086,6 +43180,14 @@ msgstr "Ruwe bytes (HEXSTR)"
 
 msgid "Rcvd"
 msgstr "Rcvd"
+
+#, fuzzy
+msgid "Re-execution strategy"
+msgstr "uitvoeringstermijn"
+
+#, fuzzy
+msgid "Re-executions"
+msgstr "uitvoeringstermijn"
 
 msgid "Read"
 msgstr "Lees"
@@ -44999,6 +45101,18 @@ msgstr "Rittal CMC-III units: Actueel"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III units: Temperaturen"
 
+#, fuzzy
+msgid "Robot Framework parameters"
+msgstr "Robot Framework: %s"
+
+#, fuzzy
+msgid "Robot Framework re-executions"
+msgstr "Robot Framework: %s"
+
+#, fuzzy
+msgid "Robot Framework target"
+msgstr "Robot Framework: %s"
+
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Robot Framework: %s"
@@ -46552,6 +46666,14 @@ msgstr "Selecteer geluid"
 
 msgid "Select specific object type"
 msgstr "Selecteer specifiek objecttype"
+
+#, fuzzy, python-format
+msgid "Select suites by name (%s)"
+msgstr "Veiligheidsnaam"
+
+#, python-format
+msgid "Select tests by name (%s)"
+msgstr ""
 
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -51749,8 +51871,16 @@ msgid "Suite"
 msgstr ""
 
 #, fuzzy
+msgid "Suite IDs are not unique"
+msgstr "Verzoek ID's zijn niet gelijk"
+
+#, fuzzy
 msgid "Suite runtime"
 msgstr "Naam site"
+
+#, fuzzy
+msgid "Suites"
+msgstr "Sites"
 
 msgid "Sum"
 msgstr "Som"
@@ -62175,6 +62305,10 @@ msgstr "Time-out in seconden voordat het scriptproces wordt beëindigd"
 msgid "Timeout occured"
 msgstr "Er is een time-out opgetreden"
 
+#, fuzzy
+msgid "Timeout per attempt"
+msgstr "niet geprobeerd"
+
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout bij het wachten op een vrij kanaal"
 
@@ -63832,6 +63966,10 @@ msgstr ""
 "Unieke klant-ID gebruikt voor de makelaar. Wordt willekeurig gegenereerd als "
 "het niet is ingesteld."
 
+#, fuzzy
+msgid "Unique suite ID"
+msgstr "Gebruik site ID"
+
 msgid "Unit"
 msgstr "Eenheid"
 
@@ -64989,6 +65127,10 @@ msgstr "Gebruik Livestatus Proxy Daemon"
 
 msgid "Use Piggyback"
 msgstr "Gebruik Piggyback"
+
+#, fuzzy
+msgid "Use RCC for isolated execution"
+msgstr "Gebruik SSL voor de verbinding."
 
 msgid "Use Reporting"
 msgstr "Gebruik Rapportage"
@@ -66365,6 +66507,14 @@ msgstr "Verdwenen diensten - gecontroleerd, maar bestaan niet meer"
 msgid "Variable"
 msgstr "Variabele"
 
+#, fuzzy, python-format
+msgid "Variable files (%s)"
+msgstr "Verificatie mislukt (%s)"
+
+#, fuzzy, python-format
+msgid "Variables (%s)"
+msgstr "Variabele"
+
 msgid "Variables set in the site user's environment"
 msgstr "Variabelen ingesteld in de omgeving van de sitegebruiker's"
 
@@ -67145,6 +67295,10 @@ msgstr "Waarschuwingsniveaus voor Stratum"
 msgid "Warning levels for Time Offset"
 msgstr "Waarschuwingsniveaus voor tijdafwijking"
 
+#, fuzzy
+msgid "Warning of "
+msgstr "Waarschuwing als %s"
+
 msgid "Warning starts with"
 msgstr "Waarschuwing begint met"
 
@@ -67588,10 +67742,11 @@ msgstr ""
 "de map wanneer een nieuwe map wordt aangemaakt. Schakel deze optie uit als u "
 "de bestandsnamen handmatig wilt zien en instellen."
 
+#, fuzzy
 msgid ""
 "When enabled, this site is marked for synchronisation every time a Web GUI "
 "related option is changed and users are allowed to login to the Web GUI of "
-"this site."
+"this site.The access to the Rest API is unaffected by this option though."
 msgstr ""
 "Indien ingeschakeld, wordt deze site gemarkeerd voor synchronisatie telkens "
 "wanneer een Web GUI gerelateerde optie wordt gewijzigd en gebruikers mogen "
@@ -74022,9 +74177,6 @@ msgstr ""
 
 #~ msgid "years"
 #~ msgstr "jaren"
-
-#~ msgid "Request IDs are not equal"
-#~ msgstr "Verzoek ID's zijn niet gelijk"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "Indien weggelaten dan wordt het IP adres gebruikt."

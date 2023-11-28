@@ -6,7 +6,9 @@ use crate::check::{CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCh
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
+use x509_parser::prelude::AlgorithmIdentifier;
 use x509_parser::prelude::FromDer;
+use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
@@ -14,6 +16,7 @@ use x509_parser::x509::X509Name;
 #[builder(field_defaults(default))]
 pub struct Config {
     serial: Option<String>,
+    signature_algorithm: Option<String>,
     subject: Option<String>,
     issuer: Option<String>,
     not_after_levels_checker: Option<LevelsChecker<Duration>>,
@@ -36,6 +39,9 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
             .unwrap_or_default()
             .into(),
         check_issuer(cert.tbs_certificate.issuer(), config.issuer)
+            .unwrap_or_default()
+            .into(),
+        check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm)
             .unwrap_or_default()
             .into(),
         check_validity_not_after(
@@ -66,6 +72,34 @@ fn check_subject(subject: &X509Name, expected: Option<String>) -> Option<SimpleC
             SimpleCheckResult::ok(subject.to_string())
         } else {
             SimpleCheckResult::warn(format!("Subject is {} but expected {}", subject, expected))
+        }
+    })
+}
+
+fn check_signature_algorithm(
+    signature_algorithm: &AlgorithmIdentifier,
+    expected: Option<String>,
+) -> Option<SimpleCheckResult> {
+    expected.map(|expected| {
+        let signature_algorithm = match SignatureAlgorithm::try_from(signature_algorithm) {
+            Ok(SignatureAlgorithm::RSA) => "RSA",
+            Ok(SignatureAlgorithm::RSASSA_PSS(_)) => "RSASSA_PSS",
+            Ok(SignatureAlgorithm::RSAAES_OAEP(_)) => "RSAAES_OAEP",
+            Ok(SignatureAlgorithm::DSA) => "DSA",
+            Ok(SignatureAlgorithm::ECDSA) => "ECDSA",
+            Ok(SignatureAlgorithm::ED25519) => "ED25519",
+            Err(_) => {
+                return SimpleCheckResult::warn(String::from("Signature algorithm: Parser failed"))
+            }
+        };
+
+        if signature_algorithm == expected {
+            SimpleCheckResult::ok(format!("Signature algorithm: {}", signature_algorithm))
+        } else {
+            SimpleCheckResult::warn(format!(
+                "Signature algorithm is {} but expected {}",
+                signature_algorithm, expected
+            ))
         }
     })
 }

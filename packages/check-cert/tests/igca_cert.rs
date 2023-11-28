@@ -8,6 +8,7 @@ static SERIAL: &str = "39:11:45:10:94";
 static SUBJECT: &str =
     "C=FR, ST=France, L=Paris, O=PM/SGDN, OU=DCSSI, CN=IGC/A, Email=igca@sgdn.pm.gouv.fr";
 static ISSUER: &str = SUBJECT;
+static SIG_ALG: &str = "RSA";
 
 fn s(s: &str) -> Option<String> {
     Some(String::from(s))
@@ -21,11 +22,12 @@ fn test_cert_ok() {
             .serial(s(SERIAL))
             .subject(s(SUBJECT))
             .issuer(s(ISSUER))
+            .signature_algorithm(s(SIG_ALG))
             .build(),
     ));
     assert_eq!(
         format!("{}", out),
-        format!("OK - Serial {SERIAL}, {SUBJECT}, Issuer {ISSUER}")
+        format!("OK - Serial {SERIAL}, {SUBJECT}, Issuer {ISSUER}, Signature algorithm: {SIG_ALG}")
     );
 }
 

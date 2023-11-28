@@ -31,10 +31,11 @@ PLUGIN_NAMESPACES = ("cmk.plugins", "cmk_addons.plugins")
 class PluginGroup(enum.Enum):
     """Definitive list of discoverable plugin groups"""
 
-    GRAPHING = "graphing"
     AGENT_BASED = "agent_based"
-    SERVER_SIDE_CALLS = "server_side_calls"
+    CHECKMAN = "checkman"
+    GRAPHING = "graphing"
     RULESETS = "rulesets"
+    SERVER_SIDE_CALLS = "server_side_calls"
 
 
 class _PluginProtocol(Protocol):

@@ -125,6 +125,7 @@ from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.discover_plugins import discover_families, PluginGroup
 
 from ._localize import do_localize
 
@@ -446,7 +447,9 @@ def mode_list_checks() -> None:
 
     all_check_manuals = {
         n: man_pages.parse_man_page(n, p)
-        for n, p in man_pages.make_man_page_path_map(man_pages.get_man_page_dirs()).items()
+        for n, p in man_pages.make_man_page_path_map(
+            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        ).items()
     }
 
     all_checks: list[CheckPluginName | str] = [
@@ -1433,7 +1436,9 @@ modes.register(
 def mode_man(options: Mapping[str, str], args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
+    man_page_path_map = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+    )
     if not args:
         man_pages.print_man_page_table(man_page_path_map)
         return
@@ -1501,7 +1506,11 @@ modes.register(
 def mode_browse_man() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
-    man_pages.print_man_page_browser(man_pages.load_man_page_catalog(man_pages.get_man_page_dirs()))
+    man_pages.print_man_page_browser(
+        man_pages.load_man_page_catalog(
+            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        )
+    )
 
 
 modes.register(

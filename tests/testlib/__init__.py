@@ -126,7 +126,7 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
 
 

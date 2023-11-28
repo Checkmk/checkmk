@@ -15,7 +15,7 @@ from typing import Any, cast, Literal
 from typing_extensions import TypedDict
 
 import cmk.utils.werks.werk as utils_werks_werk
-from cmk.utils.man_pages import get_man_page_dirs, make_man_page_path_map
+from cmk.utils.man_pages import make_man_page_path_map
 from cmk.utils.version import __version__, Edition, Version
 from cmk.utils.werks.acknowledgement import is_acknowledged
 from cmk.utils.werks.acknowledgement import load_acknowledgements as werks_load_acknowledgements
@@ -70,6 +70,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.werks.models import Compatibility, Werk
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -869,4 +870,4 @@ def insert_manpage_links(text: str) -> HTML:
 
 @request_memoize()
 def _get_known_checks() -> Container[str]:
-    return make_man_page_path_map(get_man_page_dirs())
+    return make_man_page_path_map(discover_families(raise_errors=False), PluginGroup.CHECKMAN.value)

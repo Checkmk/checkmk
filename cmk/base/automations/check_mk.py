@@ -166,6 +166,7 @@ from cmk.base.plugins.server_side_calls import load_active_checks
 from cmk.base.sources import make_parser
 
 from cmk.agent_based.v1.value_store import set_value_store_manager
+from cmk.discover_plugins import discover_families, PluginGroup
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
@@ -1681,7 +1682,9 @@ class AutomationGetCheckInformation(Automation):
     needs_checks = True
 
     def execute(self, args: list[str]) -> GetCheckInformationResult:
-        man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
+        man_page_path_map = man_pages.make_man_page_path_map(
+            discover_families(raise_errors=cmk.utils.debug.enabled()), PluginGroup.CHECKMAN.value
+        )
 
         plugin_infos: dict[CheckPluginNameStr, dict[str, Any]] = {}
         for plugin in agent_based_register.iter_all_check_plugins():

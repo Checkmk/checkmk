@@ -15,7 +15,7 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Reversible, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass
 from io import StringIO
@@ -27,6 +27,12 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+
+# remove with 2.4 / after 2.3 is released
+_LEGACY_MAN_PAGE_PATHS = (
+    str(cmk.utils.paths.local_legacy_check_manpages_dir),
+    cmk.utils.paths.legacy_check_manpages_dir,
+)
 
 
 @dataclass
@@ -318,22 +324,25 @@ CHECK_MK_AGENTS: Final = {
 }
 
 
-def get_man_page_dirs() -> Sequence[Path]:
-    # first match wins
-    return [
-        cmk.utils.paths.local_check_manpages_dir,
-        Path(cmk.utils.paths.check_manpages_dir),
-    ]
-
-
 def _is_valid_basename(name: str) -> bool:
     return not name.startswith(".") and not name.endswith("~")
 
 
-def make_man_page_path_map(man_page_dirs: Reversible[Path]) -> Mapping[str, Path]:
+def make_man_page_path_map(
+    plugin_families: Mapping[str, Sequence[str]],
+    group_subdir: str,
+) -> Mapping[str, Path]:
+    families_man_paths = [
+        *(
+            os.path.join(p, group_subdir)
+            for _family, paths in plugin_families.items()
+            for p in paths
+        ),
+        *_LEGACY_MAN_PAGE_PATHS,
+    ]
     return {
         name: Path(dir, name)
-        for source in reversed(man_page_dirs)
+        for source in reversed(families_man_paths)
         for dir, _subdirs, files in os.walk(source)
         for name in files
         if _is_valid_basename(name)
@@ -359,8 +368,10 @@ def get_title_from_man_page(path: Path) -> str:
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
-def load_man_page_catalog(man_page_dirs: Reversible[Path]) -> ManPageCatalog:
-    man_page_path_map = make_man_page_path_map(man_page_dirs)
+def load_man_page_catalog(
+    plugin_families: Mapping[str, Sequence[str]], group_subdir: str
+) -> ManPageCatalog:
+    man_page_path_map = make_man_page_path_map(plugin_families, group_subdir)
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
     for name, path in man_page_path_map.items():
         parsed = parse_man_page(name, path)
@@ -838,7 +849,8 @@ _SerializableManPageDerivative = dict[str, str | dict[str, str] | list[dict[str,
 
 
 def man_pages_for_website_export(
-    man_page_paths: Reversible[Path],
+    plugin_families: Mapping[str, Sequence[str]],
+    group_subdir: str,
 ) -> dict[str, _SerializableManPageDerivative]:
     """This is called from `scripts/create_man_pages.py` of the websites-essentials repo!
 
@@ -846,7 +858,7 @@ def man_pages_for_website_export(
     """
     return {
         name: _extend_categorization_info(parse_man_page(name, path))
-        for name, path in make_man_page_path_map(man_page_paths).items()
+        for name, path in make_man_page_path_map(plugin_families, group_subdir).items()
     }
 
 

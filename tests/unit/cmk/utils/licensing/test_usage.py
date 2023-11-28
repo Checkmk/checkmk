@@ -34,6 +34,8 @@ from cmk.utils.licensing.usage import (
     try_update_license_usage,
 )
 
+from cmk.discover_plugins import discover_families, PluginGroup
+
 
 def test_try_update_license_usage() -> None:
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
@@ -795,7 +797,9 @@ def test_cloud_service_prefixes_up_to_date():
             catalog_path[0] == "cloud" and catalog_path[1] not in not_cloud_for_licensing_purposes
         )
 
-    catalog = man_pages.load_man_page_catalog(man_pages.get_man_page_dirs())
+    catalog = man_pages.load_man_page_catalog(
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+    )
 
     cloud_man_pages = [
         manpage

@@ -85,7 +85,7 @@ class SlaveStatus(TypedDict):
 
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
 
-Response = Iterable[list[object]] | dict[str, object] | None
+Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
 LimitKind = Literal["overall", "by_rule", "by_host"]
 
@@ -523,15 +523,17 @@ class EventServer(ECServerThread):
             ("status_event_limit_active_overall", False),
         ]
 
-    def get_status(self) -> list[list[object]]:
-        row: list[object] = []
-        row += self._add_general_status()
-        row += self._perfcounters.get_status()
-        row += self._add_replication_status()
-        row += self._add_event_limit_status()
-        return [row]
+    def get_status(self) -> Iterable[Sequence[object]]:
+        return [
+            [
+                *self._add_general_status(),
+                *self._perfcounters.get_status(),
+                *self._add_replication_status(),
+                *self._add_event_limit_status(),
+            ]
+        ]
 
-    def _add_general_status(self) -> list[object]:
+    def _add_general_status(self) -> Sequence[object]:
         return [
             self._config["last_reload"],
             self._event_status.num_existing_events,
@@ -1945,7 +1947,7 @@ class StatusTable:
         self.column_types = {name: type(def_val) for name, def_val in self.columns}
         self.column_indices = {name: index for index, name in enumerate(self.column_names)}
 
-    def query(self, query: QueryGET) -> Iterable[list[object]]:
+    def query(self, query: QueryGET) -> Iterable[Sequence[object]]:
         requested_column_indexes = query.requested_column_indexes()
 
         # Output the column headers
@@ -2013,7 +2015,7 @@ class StatusTableEvents(StatusTable):
             row = []
             for column_name in self.column_names:
                 try:
-                    row.append(event[column_name[6:]])
+                    row.append(event[column_name[6:]])  # type: ignore[literal-required]
                 except KeyError:
                     # The row does not have this value. Use the columns default value
                     row.append(self.column_defaults[column_name])
@@ -2311,7 +2313,7 @@ class StatusServer(ECServerThread):
 
         client_socket.close()  # TODO: This should be in a finally somehow.
 
-    def _answer_query(self, client_socket: socket.socket, query: Query, response: Any) -> None:
+    def _answer_query(self, client_socket: socket.socket, query: Query, response: Response) -> None:
         """
         Only GET queries have customizable output formats. COMMAND is always
         a dictionary and COMMAND is always None and always output as "python"
@@ -2337,9 +2339,7 @@ class StatusServer(ECServerThread):
         else:
             raise NotImplementedError()
 
-    def _answer_query_python(
-        self, client_socket: socket.socket, response: Iterable[list[object]] | None
-    ) -> None:
+    def _answer_query_python(self, client_socket: socket.socket, response: Response) -> None:
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
     # All commands are already locked with self._event_status.lock
@@ -3175,10 +3175,10 @@ class EventStatus:
                     event["owner"] = user
                 self.remove_event(event, "DELETE", user)
 
-    def get_events(self) -> list[Any]:
+    def get_events(self) -> Iterable[Event]:
         return self._events
 
-    def get_rule_stats(self) -> Iterable[Any]:
+    def get_rule_stats(self) -> Iterable[tuple[str, int]]:
         return sorted(self._rule_stats.items(), key=lambda x: x[0])
 
 
@@ -3213,7 +3213,7 @@ def replication_allow_command(config: Config, command: str, slave_status: SlaveS
 
 def replication_send(
     config: Config, lock_configuration: ECLock, event_status: EventStatus, last_update: int
-) -> dict[str, object]:
+) -> Mapping[str, object]:
     response: dict[str, object] = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
@@ -3338,7 +3338,7 @@ def replication_update_state(
     event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(settings: Settings, new_state: dict[str, object]) -> None:
+def save_master_config(settings: Settings, new_state: Mapping[str, object]) -> None:
     path = settings.paths.master_config_file.value
     path_new = path.parent / (path.name + ".new")
     path_new.write_text(

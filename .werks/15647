@@ -1,0 +1,12 @@
+Title: Don't Overwrite Existing diskspace.log
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1701186077
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the diskspace cronjob overwrote the $OMD_ROOT/var/log/diskspace.log on every run. This
+is not necessary, since the file is automatically logrotated.

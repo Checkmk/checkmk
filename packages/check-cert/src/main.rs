@@ -37,6 +37,31 @@ impl SignatureAlgorithm {
     }
 }
 
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, ValueEnum)]
+enum PubKeyAlgorithm {
+    RSA,
+    EC,
+    DSA,
+    Gost_R3410,
+    Gost_R3410_2012,
+    Unknown,
+}
+
+impl PubKeyAlgorithm {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::RSA => "RSA",
+            Self::EC => "EC",
+            Self::DSA => "DSA",
+            Self::Gost_R3410 => "GostR3410",
+            Self::Gost_R3410_2012 => "GostR3410_2012",
+            Self::Unknown => "Unknown",
+        }
+    }
+}
+
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
 struct Args {
@@ -67,6 +92,10 @@ struct Args {
     /// Expected signature algorithm
     #[arg(long)]
     pub signature_algorithm: Option<SignatureAlgorithm>,
+
+    /// Expected public key algorithm
+    #[arg(long)]
+    pub pubkey_algorithm: Option<PubKeyAlgorithm>,
 
     /// Certificate expiration levels in days [WARN:CRIT]
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
@@ -149,6 +178,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 args.signature_algorithm
                     .map(|sig| String::from(sig.as_str())),
             )
+            .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));

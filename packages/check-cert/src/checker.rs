@@ -8,13 +8,15 @@ use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::AlgorithmIdentifier;
 use x509_parser::prelude::FromDer;
+use x509_parser::public_key::PublicKey;
 use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
-use x509_parser::x509::X509Name;
+use x509_parser::x509::{SubjectPublicKeyInfo, X509Name};
 
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
+    pubkey_algorithm: Option<String>,
     serial: Option<String>,
     signature_algorithm: Option<String>,
     subject: Option<String>,
@@ -42,6 +44,9 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
             .unwrap_or_default()
             .into(),
         check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm)
+            .unwrap_or_default()
+            .into(),
+        check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm)
             .unwrap_or_default()
             .into(),
         check_validity_not_after(
@@ -99,6 +104,34 @@ fn check_signature_algorithm(
             SimpleCheckResult::warn(format!(
                 "Signature algorithm is {} but expected {}",
                 signature_algorithm, expected
+            ))
+        }
+    })
+}
+
+fn check_pubkey_algorithm(
+    pubkey: &SubjectPublicKeyInfo,
+    expected: Option<String>,
+) -> Option<SimpleCheckResult> {
+    expected.map(|expected| {
+        let pubkey_alg = match pubkey.parsed() {
+            // We could also check for the size but I'm not sure we can put
+            // everything into an enum then.
+            Ok(PublicKey::RSA(_)) => "RSA",
+            Ok(PublicKey::EC(_)) => "EC",
+            Ok(PublicKey::DSA(_)) => "DSA",
+            Ok(PublicKey::GostR3410(_)) => "GostR3410",
+            Ok(PublicKey::GostR3410_2012(_)) => "GostR3410_2012",
+            Ok(PublicKey::Unknown(_)) => "Unknown",
+            Err(_) => return SimpleCheckResult::warn(String::from("Invalid public key")),
+        };
+
+        if pubkey_alg == expected {
+            SimpleCheckResult::ok(format!("Public key algorithm: {}", pubkey_alg))
+        } else {
+            SimpleCheckResult::warn(format!(
+                "Public key algorithm is {} but expected {}",
+                pubkey_alg, expected
             ))
         }
     })

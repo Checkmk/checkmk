@@ -6,9 +6,13 @@
 
 # mypy: disable-error-code="var-annotated,index,attr-defined"
 
+from collections.abc import Mapping
+from typing import Any, Iterator
+
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dhcp_pools import check_dhcp_pools_levels
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.isc_dhcpd import DhcpdSection
 
 # Example output from agent:
 # <<<isc_dhcpd>>>
@@ -29,75 +33,32 @@ from cmk.base.config import check_info
 # 10.0.1.57
 
 
-def parse_isc_dhcpd(string_table):
-    def ip_to_number(ip):
-        number = 0
-        factor = 1
-        for part in ip.split(".")[::-1]:
-            number += factor * int(part)
-            factor *= 256
-        return number
-
-    parsed = {
-        "pids": [],
-        "pools": {},
-        "leases": [],
-    }
-
-    mode = None
-    for line in string_table:
-        if line[0] == "[general]":
-            mode = "general"
-        elif line[0] == "[pools]":
-            mode = "pools"
-        elif line[0] == "[leases]":
-            mode = "leases"
-
-        elif mode == "general":
-            if line[0] == "PID:":
-                parsed["pids"] = list(map(int, line[1:]))
-
-        elif mode == "pools":
-            if "bootp" in line[0]:
-                line = line[1:]
-            start, end = line[0], line[1]
-            item = f"{start}-{end}"
-            parsed["pools"][item] = (ip_to_number(start), ip_to_number(end))
-
-        elif mode == "leases":
-            parsed["leases"].append(ip_to_number(line[0]))
-
-    return parsed
+def inventory_isc_dhcpd(parsed: DhcpdSection) -> Iterator[Any]:
+    yield from ((item, None) for item in parsed.pools)
 
 
-def inventory_isc_dhcpd(parsed):
-    return [(item, None) for item in parsed["pools"]]
-
-
-def check_isc_dhcpd(item, params, parsed):
-    if len(parsed["pids"]) == 0:
+def check_isc_dhcpd(item: str, params: Mapping, parsed: DhcpdSection) -> Iterator[Any]:
+    if not parsed.pids:
         yield 2, "DHCP Daemon not running"
-    elif len(parsed["pids"]) > 1:
+    elif len(parsed.pids) > 1:
         yield 1, "DHCP Daemon running %d times (PIDs: %s)" % (
-            len(parsed["pids"]),
-            ", ".join(map(str, parsed["pids"])),
+            len(parsed.pids),
+            ", ".join(map(str, parsed.pids)),
         )
 
-    if item not in parsed["pools"]:
+    if item not in parsed.pools:
         return
 
-    range_from, range_to = parsed["pools"][item]
-    num_leases = range_to - range_from + 1
-    num_used = 0
-    for lease_dec in parsed["leases"]:
-        if range_from <= lease_dec <= range_to:
-            num_used += 1
+    ip_range = parsed.pools[item]
+    num_leases = int(ip_range.end) - int(ip_range.start) + 1
+    num_used = len(
+        [lease_dec for lease_dec in parsed.leases if ip_range.start <= lease_dec <= ip_range.end]
+    )
 
     yield from check_dhcp_pools_levels(num_leases - num_used, num_used, None, num_leases, params)
 
 
 check_info["isc_dhcpd"] = LegacyCheckDefinition(
-    parse_function=parse_isc_dhcpd,
     service_name="DHCP Pool %s",
     discovery_function=inventory_isc_dhcpd,
     check_function=check_isc_dhcpd,

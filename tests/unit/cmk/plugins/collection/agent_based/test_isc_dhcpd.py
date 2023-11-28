@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from cmk.base.legacy_checks.isc_dhcpd import check_isc_dhcpd, inventory_isc_dhcpd, parse_isc_dhcpd
+from cmk.base.legacy_checks.isc_dhcpd import check_isc_dhcpd, inventory_isc_dhcpd
+from cmk.base.plugins.agent_based.isc_dhcpd import DhcpdSection, parse_isc_dhcpd
 
 
 @pytest.fixture(name="section", scope="module")
-def fixture_section() -> dict[str, Any]:
+def fixture_section() -> DhcpdSection:
     return parse_isc_dhcpd(
         [
             ["[general]"],
@@ -41,7 +41,7 @@ def fixture_section() -> dict[str, Any]:
     )
 
 
-def test_inventory_cisco_ucs_mem(section: Mapping[str, Any]) -> None:
+def test_inventory_cisco_ucs_mem(section: DhcpdSection) -> None:
     assert list(inventory_isc_dhcpd(section)) == [
         ("10.42.97.30-10.42.97.191", None),
         ("10.42.101.30-10.42.101.191", None),
@@ -88,6 +88,6 @@ def test_check_cisco_ucs_mem(
     item: str,
     params: Mapping[str, tuple],
     expected_output: Sequence[object],
-    section: Mapping[str, Any],
+    section: DhcpdSection,
 ) -> None:
     assert list(check_isc_dhcpd(item, params, section)) == expected_output

@@ -163,11 +163,11 @@ def _get_builtin_legacy_main_group(
     functionality_to_convert: ruleset_api_v1.Functionality,
 ) -> type[legacy_rulespecs.RulespecGroup]:
     match functionality_to_convert:
-        case ruleset_api_v1.Functionality.MONITORING_CONFIGURATION:
+        case ruleset_api_v1.Functionality.SERVICE_MONITORING_RULES:
             return wato._rulespec_groups.RulespecGroupMonitoringConfiguration  # type: ignore[attr-defined]
         case ruleset_api_v1.Functionality.ENFORCED_SERVICES:
             return legacy_rulespecs.RulespecGroupEnforcedServices
-        case ruleset_api_v1.Functionality.DISCOVERY_CONFIGURATION:
+        case ruleset_api_v1.Functionality.SERVICE_DISCOVERY_RULES:
             return wato.RulespecGroupDiscoveryCheckParameters
     assert_never(functionality_to_convert)
 
@@ -177,7 +177,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
     topic_to_convert: ruleset_api_v1.Topic,
 ) -> type[legacy_rulespecs.RulespecSubGroup]:
     match functionality_to_convert:
-        case ruleset_api_v1.Functionality.MONITORING_CONFIGURATION:
+        case ruleset_api_v1.Functionality.SERVICE_MONITORING_RULES:
             match topic_to_convert:
                 case ruleset_api_v1.Topic.APPLICATIONS:
                     return wato.RulespecGroupCheckParametersApplications
@@ -185,7 +185,7 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return wato.RulespecGroupCheckParametersVirtualization
                 case ruleset_api_v1.Topic.OPERATING_SYSTEM:
                     return wato.RulespecGroupCheckParametersOperatingSystem
-                case ruleset_api_v1.Topic.INDIVIDUAL_SERVICE_DISCOVERY:
+                case ruleset_api_v1.Topic.GENERAL:
                     raise NotImplementedError
 
             assert_never(topic_to_convert)
@@ -198,14 +198,14 @@ def _get_builtin_legacy_sub_group_with_main_group(
                     return legacy_rulespec_groups.RulespecGroupEnforcedServicesVirtualization
                 case ruleset_api_v1.Topic.OPERATING_SYSTEM:
                     return legacy_rulespec_groups.RulespecGroupEnforcedServicesOperatingSystem
-                case ruleset_api_v1.Topic.INDIVIDUAL_SERVICE_DISCOVERY:
+                case ruleset_api_v1.Topic.GENERAL:
                     raise NotImplementedError
 
             assert_never(topic_to_convert)
 
-        case ruleset_api_v1.Functionality.DISCOVERY_CONFIGURATION:
+        case ruleset_api_v1.Functionality.SERVICE_DISCOVERY_RULES:
             match topic_to_convert:
-                case ruleset_api_v1.Topic.INDIVIDUAL_SERVICE_DISCOVERY:
+                case ruleset_api_v1.Topic.GENERAL:
                     return wato.RulespecGroupCheckParametersDiscovery
                 case ruleset_api_v1.Topic.APPLICATIONS | ruleset_api_v1.Topic.VIRTUALIZATION | ruleset_api_v1.Topic.OPERATING_SYSTEM:
                     raise NotImplementedError

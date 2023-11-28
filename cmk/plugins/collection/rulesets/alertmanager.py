@@ -114,8 +114,8 @@ def _discovery_parameters_form_alertmanager():
 
 
 rule_spec_discovery_alertmanager = HostRuleSpec(
-    functionality=Functionality.DISCOVERY_CONFIGURATION,
-    topic=Topic.INDIVIDUAL_SERVICE_DISCOVERY,
+    functionality=Functionality.SERVICE_DISCOVERY_RULES,
+    topic=Topic.GENERAL,
     eval_type=RuleEvalType.MERGE,
     name="discovery_alertmanager",
     parameter_form=_discovery_parameters_form_alertmanager,

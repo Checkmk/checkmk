@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from dataclasses import dataclass
+
+from cmk.utils.version import Edition
 
 from cmk.discover_plugins import discover_plugins, DiscoveredPlugins, PluginGroup
 from cmk.rulesets.v1 import (
@@ -37,9 +40,15 @@ RuleSpec = (
 )
 
 
+@dataclass(frozen=True)
+class LoadedRuleSpec:
+    rule_spec: RuleSpec
+    edition_only: Edition
+
+
 def load_api_v1_rule_specs(
     raise_errors: bool,
-) -> tuple[Sequence[str], Sequence[RuleSpec]]:
+) -> tuple[Sequence[str], Sequence[LoadedRuleSpec]]:
     discovered_plugins: DiscoveredPlugins[RuleSpec] = discover_plugins(
         PluginGroup.RULESETS,
         {
@@ -60,8 +69,13 @@ def load_api_v1_rule_specs(
     )
 
     errors = [str(e) for e in discovered_plugins.errors]
+
+    loaded_plugins = [
+        LoadedRuleSpec(rule_spec=plugin, edition_only=_get_edition_only(location.module))
+        for location, plugin in discovered_plugins.plugins.items()
+    ]
     loaded = [
-        *discovered_plugins.plugins.values(),
+        *loaded_plugins,
         *_generate_additional_plugins(discovered_plugins),
     ]
     # TODO:
@@ -71,32 +85,52 @@ def load_api_v1_rule_specs(
 
 def _generate_additional_plugins(
     discovered_plugins: DiscoveredPlugins[RuleSpec],
-) -> Sequence[RuleSpec]:
-    loaded: list[RuleSpec] = []
-    for plugin in discovered_plugins.plugins.values():
+) -> Sequence[LoadedRuleSpec]:
+    loaded: list[LoadedRuleSpec] = []
+    for location, plugin in discovered_plugins.plugins.items():
         if isinstance(plugin, CheckParameterRuleSpecWithItem) and plugin.create_enforced_service:
             loaded.append(
-                EnforcedServiceRuleSpecWithItem(
-                    title=plugin.title,
-                    topic=plugin.topic,
-                    parameter_form=plugin.parameter_form,
-                    item_form=plugin.item_form,
-                    name=plugin.name,
-                    is_deprecated=plugin.is_deprecated,
-                    help_text=plugin.help_text,
+                LoadedRuleSpec(
+                    rule_spec=EnforcedServiceRuleSpecWithItem(
+                        title=plugin.title,
+                        topic=plugin.topic,
+                        parameter_form=plugin.parameter_form,
+                        item_form=plugin.item_form,
+                        name=plugin.name,
+                        is_deprecated=plugin.is_deprecated,
+                        help_text=plugin.help_text,
+                    ),
+                    edition_only=_get_edition_only(location.module),
                 )
             )
         elif (
             isinstance(plugin, CheckParameterRuleSpecWithoutItem) and plugin.create_enforced_service
         ):
             loaded.append(
-                EnforcedServiceRuleSpecWithoutItem(
-                    title=plugin.title,
-                    topic=plugin.topic,
-                    parameter_form=plugin.parameter_form,
-                    name=plugin.name,
-                    is_deprecated=plugin.is_deprecated,
-                    help_text=plugin.help_text,
+                LoadedRuleSpec(
+                    rule_spec=EnforcedServiceRuleSpecWithoutItem(
+                        title=plugin.title,
+                        topic=plugin.topic,
+                        parameter_form=plugin.parameter_form,
+                        name=plugin.name,
+                        is_deprecated=plugin.is_deprecated,
+                        help_text=plugin.help_text,
+                    ),
+                    edition_only=_get_edition_only(location.module),
                 )
             )
     return loaded
+
+
+def _get_edition_only(plugin_module: str) -> Edition:
+    """
+    >>> _get_edition_only('cmk.plugins.family.rulesets.module_name')
+    <Edition.CRE: _EditionValue(short='cre', long='raw', title='Checkmk Raw Edition')>
+    >>> _get_edition_only('cmk.plugins.family.rulesets.cce')
+    <Edition.CCE: _EditionValue(short='cce', long='cloud', title='Checkmk Cloud Edition')>
+    """
+    edition_folder = plugin_module.split(".")[-1]
+    for edition in Edition:
+        if edition_folder == edition.short:
+            return edition
+    return Edition.CRE

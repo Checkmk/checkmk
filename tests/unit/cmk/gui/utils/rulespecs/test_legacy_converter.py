@@ -9,6 +9,8 @@ from typing import TypeVar
 
 import pytest
 
+from cmk.utils.version import Edition
+
 import cmk.gui.valuespec as legacy_valuespecs
 import cmk.gui.watolib.rulespecs as legacy_rulespecs
 from cmk.gui import wato, watolib
@@ -560,7 +562,7 @@ def test_convert_to_legacy_rulespec_group(
 def test_convert_to_legacy_rulespec(
     new_rulespec: APIV1RuleSpec, expected: legacy_rulespecs.Rulespec
 ) -> None:
-    _compare_specs(convert_to_legacy_rulespec(new_rulespec, _), expected)
+    _compare_specs(convert_to_legacy_rulespec(new_rulespec, Edition.CRE, _), expected)
 
 
 def _compare_specs(actual: object, expected: object) -> None:

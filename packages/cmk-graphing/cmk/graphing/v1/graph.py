@@ -8,11 +8,9 @@ from dataclasses import dataclass, field, KW_ONLY
 
 from . import metric
 from ._localize import Localizable
-from ._name import Name
 from ._type_defs import Bound, Quantity
 
 __all__ = [
-    "Name",
     "MinimalRange",
     "Graph",
     "Bidirectional",
@@ -27,7 +25,7 @@ class MinimalRange:
 
 @dataclass(frozen=True)
 class Graph:
-    name: Name
+    name: str
     title: Localizable
     _: KW_ONLY
     minimal_range: MinimalRange | None = None
@@ -37,13 +35,19 @@ class Graph:
     conflicting: Sequence[metric.Name] = field(default_factory=list)
 
     def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
         assert self.compound_lines or self.simple_lines
 
 
 @dataclass(frozen=True)
 class Bidirectional:
-    name: Name
+    name: str
     title: Localizable
     _: KW_ONLY
     lower: Graph
     upper: Graph
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)

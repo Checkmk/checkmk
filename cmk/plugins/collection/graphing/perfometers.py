@@ -6,7 +6,7 @@
 from cmk.graphing.v1 import metric, perfometer
 
 perfometer_active_connections = perfometer.Perfometer(
-    perfometer.Name("active_connections"),
+    "active_connections",
     perfometer.FocusRange(perfometer.Closed(0), perfometer.Open(2500.0)),
     [metric.Name("active_connections")],
 )

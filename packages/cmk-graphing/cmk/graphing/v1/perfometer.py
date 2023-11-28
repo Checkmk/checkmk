@@ -6,11 +6,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, KW_ONLY
 
-from ._name import Name
 from ._type_defs import Bound, Quantity
 
 __all__ = [
-    "Name",
     "Closed",
     "Open",
     "FocusRange",
@@ -38,25 +36,35 @@ class FocusRange:
 
 @dataclass(frozen=True)
 class Perfometer:
-    name: Name
+    name: str
     focus_range: FocusRange
     segments: Sequence[Quantity]
 
     def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
         assert self.segments
 
 
 @dataclass(frozen=True)
 class Bidirectional:
-    name: Name
+    name: str
     _: KW_ONLY
     left: Perfometer
     right: Perfometer
 
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
+
 
 @dataclass(frozen=True)
 class Stacked:
-    name: Name
+    name: str
     _: KW_ONLY
     lower: Perfometer
     upper: Perfometer
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)

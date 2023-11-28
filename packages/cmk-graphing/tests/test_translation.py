@@ -5,12 +5,7 @@
 
 import pytest
 
-from cmk.graphing.v1 import translation
-
-
-def test_name_error() -> None:
-    with pytest.raises(ValueError):
-        translation.Name("")
+from cmk.graphing.v1 import metric, translation
 
 
 def test_passive_check_error() -> None:
@@ -33,27 +28,36 @@ def test_nagios_plugin_error() -> None:
         translation.NagiosPlugin("")
 
 
-def test_scaling_error() -> None:
+def test_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
         translation.Scaling(0)
 
 
 def test_renaming_and_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
-        translation.RenamingAndScaling(translation.Name("new-name"), 0)
+        translation.RenamingAndScaling(metric.Name("new-metric-name"), 0)
 
 
-def test_translations_error_missing_check_commands() -> None:
-    name = translation.Name("name")
+def test_translation_error_empty_name() -> None:
+    check_commands = [translation.PassiveCheck("passive-check")]
     translations = {
-        translation.Name("old-name"): translation.Renaming(translation.Name("new-name"))
+        metric.Name("old-metric-name"): translation.Renaming(metric.Name("new-metric-name"))
+    }
+    with pytest.raises(ValueError):
+        translation.Translation("", check_commands, translations)
+
+
+def test_translation_error_missing_check_commands() -> None:
+    name = "name"
+    translations = {
+        metric.Name("old-metric-name"): translation.Renaming(metric.Name("new-metric-name"))
     }
     with pytest.raises(AssertionError):
         translation.Translation(name, [], translations)
 
 
-def test_translations_error_missing_translations() -> None:
-    name = translation.Name("name")
+def test_translation_error_missing_translations() -> None:
+    name = "name"
     check_commands = [translation.PassiveCheck("check-command-name")]
     with pytest.raises(AssertionError):
         translation.Translation(name, check_commands, {})

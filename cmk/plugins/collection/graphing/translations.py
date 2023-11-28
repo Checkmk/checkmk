@@ -6,19 +6,19 @@
 from cmk.graphing.v1 import metric, translation
 
 translation_citrix_serverload = translation.Translation(
-    translation.Name("citrix_serverload"),
+    "citrix_serverload",
     [translation.PassiveCheck("citrix_serverload")],
     {metric.Name("perf"): translation.RenamingAndScaling(metric.Name("citrix_load"), 0.01)},
 )
 
 translation_genau_fan = translation.Translation(
-    translation.Name("genau_fan"),
+    "genau_fan",
     [translation.PassiveCheck("genau_fan")],
     {metric.Name("rpm"): translation.Renaming(metric.Name("fan"))},
 )
 
 translation_ibm_svc_nodestats_disk_latency = translation.Translation(
-    translation.Name("ibm_svc_nodestats_disk_latency"),
+    "ibm_svc_nodestats_disk_latency",
     [translation.PassiveCheck("ibm_svc_nodestats_disk_latency")],
     {
         metric.Name("read_latency"): translation.Scaling(0.001),

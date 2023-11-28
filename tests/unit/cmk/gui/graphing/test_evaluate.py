@@ -18,7 +18,7 @@ from cmk.graphing.v1 import Unit
 
 def _make_perfometer(name: str, start_idx: int) -> perfometer_api.Perfometer:
     return perfometer_api.Perfometer(
-        perfometer_api.Name(name),
+        name,
         perfometer_api.FocusRange(
             perfometer_api.Closed(metric_api.Name(f"metric-name{start_idx+1}")),
             perfometer_api.Closed(metric_api.Name(f"metric-name{start_idx+2}")),
@@ -163,7 +163,7 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         ),
         pytest.param(
             perfometer_api.Bidirectional(
-                perfometer_api.Name("bidirectional"),
+                "bidirectional",
                 left=_make_perfometer("left", 0),
                 right=_make_perfometer("right", 14),
             ),
@@ -205,7 +205,7 @@ def _make_translated_metric(name: str, scalar: ScalarBounds) -> TranslatedMetric
         ),
         pytest.param(
             perfometer_api.Stacked(
-                perfometer_api.Name("stacked"),
+                "stacked",
                 lower=_make_perfometer("lower", 0),
                 upper=_make_perfometer("upper", 14),
             ),

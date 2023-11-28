@@ -11,8 +11,6 @@
 from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
-tsm_scratch_default_levels = (5, 7)
-
 
 def parse_tsm_scratch(string_table):
     parsed = {}
@@ -36,22 +34,17 @@ def parse_tsm_scratch(string_table):
 
 
 def inventory_tsm_scratch(parsed):
-    return [(lib, tsm_scratch_default_levels) for lib in parsed]
+    return [(lib, {}) for lib in parsed]
 
 
-def check_tsm_scratch(item, params, parsed):
-    # Conventionally upper or lower levels are of the form
-    #   warn, crit = levels
-    # Be aware of the following levels construction:
-    crit, warn = params
-
+def check_tsm_scratch(item, _no_params, parsed):
     num_tapes = parsed.get(item)
     if num_tapes is None:
         return None
     return check_levels(
         num_tapes,
         "tapes_free",
-        (None, None, warn, crit),
+        (None, None, 7, 5),
         human_readable_func=lambda x: "%d" % x,
         infoname="Found tapes",
     )

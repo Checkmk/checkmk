@@ -17,11 +17,10 @@ def inventory_windows_multipath(info):
     try:
         num_active = int(info[0][0])
     except (ValueError, IndexError):
-        return []
+        return
 
     if num_active > 0:
-        return [(None, num_active)]
-    return []
+        yield None, {"active_paths": num_active}
 
 
 def check_windows_multipath(item, params, info):

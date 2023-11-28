@@ -30,10 +30,10 @@ def vxvm_objstatus_disks(info):
 
 
 def inventory_vxvm_objstatus(info):
-    return list(vxvm_objstatus_disks(info).items())
+    return [(k, {}) for k in vxvm_objstatus_disks(info)]
 
 
-def check_vxvm_objstatus(item, params, info):
+def check_vxvm_objstatus(item, _no_params, info):
     groups = vxvm_objstatus_disks(info)
     volumes = groups.get(item)
     if volumes is not None:

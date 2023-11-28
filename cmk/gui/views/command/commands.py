@@ -18,6 +18,7 @@ import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.forms import open_submit_button_container_div
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -33,7 +34,7 @@ from cmk.gui.permissions import (
 from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
@@ -897,15 +898,17 @@ class CommandAcknowledge(Command):
         return ["host", "service", "aggr"]
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
+        submit_id = "_acknowledge"
         html.open_div(class_="group")
         html.text_input(
             "_ack_comment",
             id_="ack_comment",
             size=60,
-            submit="_acknowledge",
+            submit=submit_id,
             label=_("Comment"),
             required=True,
             placeholder=_("e.g. ticket ID"),
+            onkeyup=f"cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['{submit_id}']);",
         )
         html.close_div()
 
@@ -968,8 +971,16 @@ class CommandAcknowledge(Command):
         html.close_div()
 
         html.open_div(class_="group buttons")
-        html.button("_acknowledge", _("Acknowledge problems"), cssclass="hot")
-        html.jsbutton("_cancel", _("Cancel"), onclick="cmk.page_menu.close_popup(this)")
+        tooltip_submission_disabled = _("Enter a comment to acknowledge problems")
+        open_submit_button_container_div(tooltip_submission_disabled)
+        html.button(
+            submit_id,
+            _("Acknowledge problems"),
+            cssclass="hot disabled",
+        )
+        html.close_div()
+
+        html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
         html.close_div()
 
     def _action_defaults_url(self) -> str:
@@ -1334,6 +1345,7 @@ class CommandScheduleDowntimes(Command):
             required=not self._adhoc_downtime_configured(),
             placeholder=_("What is the occasion?"),
             submit="_down_custom",
+            onkeyup="cmk.forms.enable_submit_buttons_on_nonempty_input(this, ['_down_host', '_down_service']);",
         )
         html.close_div()
 
@@ -1464,10 +1476,16 @@ class CommandScheduleDowntimes(Command):
 
     def _render_confirm_buttons(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
-        html.button("_down_host", _("Schedule downtime on host"), cssclass="hot")
+        tooltip_submission_disabled = _("Enter a comment to schedule downtime")
+        open_submit_button_container_div(tooltip=tooltip_submission_disabled)
+        html.button("_down_host", _("Schedule downtime on host"), cssclass="hot disabled")
+        html.close_div()
         if what == "service":
-            html.button("_down_service", _("Schedule downtime on service"))
-        html.button("_cancel", _("Cancel"), formnovalidate=True)
+            open_submit_button_container_div(tooltip=tooltip_submission_disabled)
+            html.button("_down_service", _("Schedule downtime on service"), cssclass="disabled")
+            html.close_div()
+
+        html.buttonlink(makeuri(request, [], delvars=["filled_in"]), _("Cancel"))
         html.close_div()
 
     def _vs_host_downtime(self) -> Dictionary:

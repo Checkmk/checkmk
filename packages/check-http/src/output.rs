@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::checking::{CheckResult, State};
+use crate::checking_types::{CheckResult, State};
 use std::fmt::{Display, Formatter, Result as FormatResult};
 
 pub struct Output {
@@ -80,7 +80,7 @@ impl Output {
 #[cfg(test)]
 mod test_output_format {
     use super::*;
-    use crate::checking::UpperLevels;
+    use crate::checking_types::UpperLevels;
 
     fn summary(state: State, text: &str) -> CheckResult {
         CheckResult::summary(state, text).unwrap()

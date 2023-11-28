@@ -3,7 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result as AnyhowResult;
-use check_http::checking::{CheckParameters, State};
+use check_http::checking_types::State;
+use check_http::checks::CheckParameters;
 use check_http::http::{ClientConfig, OnRedirect, RequestConfig};
 use check_http::output::Output;
 use check_http::runner::collect_checks;

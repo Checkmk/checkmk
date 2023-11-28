@@ -97,9 +97,7 @@ fn check_validity_not_after(
                 time_to_expiration.whole_days(),
                 not_after
             ),
-            LevelsCheckerArgs::builder()
-                .label(String::from("validity"))
-                .build(),
+            LevelsCheckerArgs::builder().label("validity").build(),
         ),
     }
 }

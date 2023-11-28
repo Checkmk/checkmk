@@ -66,7 +66,6 @@ class StatusTable:
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger.getChild(f"status_table.{self.prefix}")
-        self.column_defaults = dict(self.columns)
         self.column_names = [name for name, _def_val in self.columns]
         self.column_types = {name: type(def_val) for name, def_val in self.columns}
         self.column_indices = {name: index for index, name in enumerate(self.column_names)}

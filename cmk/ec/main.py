@@ -1926,6 +1926,7 @@ class Queries:
 class StatusTable:
     """Common functionality for the event/history/rule/status tables."""
 
+    name: str
     prefix: str | None = None
     columns: Columns = []
 
@@ -1957,7 +1958,7 @@ class StatusTable:
                 break  # The maximum number of rows has been reached
             # Apply filters
             # TODO: History filtering is done in history load code. Check for improvements
-            if query.table_name == "history" or query.filter_row(row):
+            if query.table.name == "history" or query.filter_row(row):
                 yield self._build_result_row(row, requested_column_indexes)
                 num_rows += 1
 
@@ -1968,7 +1969,8 @@ class StatusTable:
 
 
 class StatusTableEvents(StatusTable):
-    prefix: str = "event"
+    name = "events"
+    prefix = "event"
     columns: Columns = [
         ("event_id", 1),
         ("event_count", 1),
@@ -2020,7 +2022,8 @@ class StatusTableEvents(StatusTable):
 
 
 class StatusTableHistory(StatusTable):
-    prefix: str = "history"
+    name = "history"
+    prefix = "history"
     columns: Columns = list(
         itertools.chain(
             [
@@ -2043,7 +2046,8 @@ class StatusTableHistory(StatusTable):
 
 
 class StatusTableRules(StatusTable):
-    prefix: str = "rule"
+    name = "rules"
+    prefix = "rule"
     columns: Columns = [
         ("rule_id", ""),
         ("rule_hits", 0),
@@ -2058,7 +2062,8 @@ class StatusTableRules(StatusTable):
 
 
 class StatusTableStatus(StatusTable):
-    prefix: str = "status"
+    name = "status"
+    prefix = "status"
     columns: Columns = EventServer.status_columns()
 
     def __init__(self, logger: Logger, event_server: EventServer) -> None:
@@ -2289,7 +2294,7 @@ class StatusServer(ECServerThread):
             with self._event_status.lock:
                 # TODO: What we really want is a method in Query returning a response instead of this dispatching horror.
                 if isinstance(query, QueryGET):
-                    response: Response = self.table(query.table_name).query(query)
+                    response: Response = query.table.query(query)
                 elif isinstance(query, QueryREPLICATE):
                     response = self.handle_replicate(query.method_arg, client_ip)
                 elif isinstance(query, QueryCOMMAND):

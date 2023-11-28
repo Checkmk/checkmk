@@ -182,13 +182,13 @@ enum State {
     Unknown,
 }
 
-impl Display for State {
-    fn fmt(&self, f: &mut Formatter) -> FormatResult {
+impl State {
+    fn as_str(&self) -> &'static str {
         match self {
-            Self::Ok => write!(f, "OK"),
-            Self::Warn => write!(f, "WARNING"),
-            Self::Crit => write!(f, "CRITICAL"),
-            Self::Unknown => write!(f, "UNKNOWN"),
+            Self::Ok => "OK",
+            Self::Warn => "WARNING",
+            Self::Crit => "CRITICAL",
+            Self::Unknown => "UNKNOWN",
         }
     }
 }
@@ -408,7 +408,7 @@ impl Writer {
 
 impl Display for Writer {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
-        let mut out = format!("{}", self.state);
+        let mut out = String::from(self.state.as_str());
         if !self.summary.is_empty() {
             out = format!("{} - {}", out, self.summary);
         }

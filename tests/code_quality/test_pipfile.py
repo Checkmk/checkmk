@@ -321,7 +321,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "cython",
-    "defusedxml",
     "docutils",
     "grpcio",
     "idna",
@@ -335,13 +334,11 @@ CEE_UNUSED_PACKAGES = [
     "ply",
     "psycopg2-binary",
     "pyasn1-modules",
-    "pycparser",
     "pykerberos",
     "pymssql",
     "pymysql",
     "pyrsistent",
     "requests-kerberos",
-    "requests-toolbelt",
     "s3transfer",
     "setuptools-scm",
     "snmpsim-lextudio",

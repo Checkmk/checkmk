@@ -56,12 +56,20 @@ from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_events_from_syslog_messages, Event, scrub_string
 from .helpers import ECLock, parse_bytes_into_syslog_messages
-from .history import ActiveHistoryPeriod, Columns, get_logfile, History, HistoryWhat, quote_tab
+from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
 from .history_file import FileHistory
 from .history_mongo import MongoDBHistory
 from .host_config import HostConfig
 from .perfcounters import Perfcounters
-from .query import filter_operator_in, MKClientError, Query, QueryCOMMAND, QueryGET, QueryREPLICATE
+from .query import (
+    Columns,
+    filter_operator_in,
+    MKClientError,
+    Query,
+    QueryCOMMAND,
+    QueryGET,
+    QueryREPLICATE,
+)
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings

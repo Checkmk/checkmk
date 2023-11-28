@@ -46,7 +46,7 @@ fn is_instance_good(i: &SqlInstance) -> bool {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_local() {
-    let instances = api::detect_instance_engines(&Endpoint::default())
+    let instances = api::obtain_sql_instances_from_registry(&Endpoint::default())
         .await
         .unwrap();
     let all: Vec<SqlInstance> = [&instances.0[..], &instances.1[..]].concat();
@@ -60,7 +60,7 @@ async fn test_find_all_instances_local() {
 #[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_local() {
-    let instances = api::detect_instance_engines(&Endpoint::default())
+    let instances = api::obtain_sql_instances_from_registry(&Endpoint::default())
         .await
         .unwrap();
     let names: Vec<String> = [&instances.0[..], &instances.1[..]]
@@ -103,7 +103,7 @@ async fn test_remote_connection() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_find_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::detect_instance_engines(&endpoint.make_ep())
+        let instances = api::obtain_sql_instances_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
         let all: Vec<SqlInstance> = [&instances.0[..], &instances.1[..]].concat();
@@ -128,7 +128,7 @@ async fn test_find_all_instances_remote() {
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::detect_instance_engines(&endpoint.make_ep())
+        let instances = api::obtain_sql_instances_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
         let is = [&instances.0[..], &instances.1[..]].concat();
@@ -518,7 +518,7 @@ async fn validate_availability_groups_section(instance: &SqlInstance, endpoint: 
 #[tokio::test(flavor = "multi_thread")]
 async fn test_validate_all_instances_remote_extra() {
     if let Some(endpoint) = tools::get_remote_sql_from_env_var() {
-        let instances = api::detect_instance_engines(&endpoint.make_ep())
+        let instances = api::obtain_sql_instances_from_registry(&endpoint.make_ep())
             .await
             .unwrap();
         let is = [&instances.0[..], &instances.1[..]].clone().concat();

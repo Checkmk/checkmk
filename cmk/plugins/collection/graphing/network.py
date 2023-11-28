@@ -20,7 +20,7 @@ metric_idle_connections = metric.Metric(
 )
 
 graph_db_connections = graph.Graph(
-    graph.Name("db_connections"),
+    "db_connections",
     Localizable("DB Connections"),
     simple_lines=[
         metric.Name("active_connections"),

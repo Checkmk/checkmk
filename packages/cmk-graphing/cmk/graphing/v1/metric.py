@@ -10,7 +10,6 @@ from dataclasses import dataclass, KW_ONLY
 
 from ._color import Color
 from ._localize import Localizable
-from ._name import Name
 from ._unit import PhysicalUnit, ScientificUnit, Unit
 
 __all__ = [
@@ -26,6 +25,15 @@ __all__ = [
     "Difference",
     "Fraction",
 ]
+
+
+@dataclass(frozen=True)
+class Name:
+    value: str
+
+    def __post_init__(self) -> None:
+        if not self.value:
+            raise ValueError(self.value)
 
 
 @dataclass(frozen=True)

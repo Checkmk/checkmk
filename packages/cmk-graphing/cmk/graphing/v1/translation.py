@@ -7,10 +7,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from . import metric
-from ._name import Name
 
 __all__ = [
-    "Name",
     "PassiveCheck",
     "ActiveCheck",
     "HostCheckCommand",
@@ -81,9 +79,11 @@ class RenamingAndScaling:
 
 @dataclass(frozen=True)
 class Translation:
-    name: Name
+    name: str
     check_commands: Sequence[PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin]
     translations: Mapping[metric.Name, Renaming | Scaling | RenamingAndScaling]
 
     def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
         assert self.check_commands and self.translations

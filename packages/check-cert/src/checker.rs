@@ -23,6 +23,7 @@ pub struct Config {
     subject: Option<String>,
     issuer: Option<String>,
     not_after_levels_checker: Option<LevelsChecker<Duration>>,
+    allow_self_signed: bool,
 }
 
 pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
@@ -44,6 +45,7 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
         check_issuer(cert.tbs_certificate.issuer(), config.issuer)
             .unwrap_or_default()
             .into(),
+        check_self_signed(&cert, config.allow_self_signed).into(),
         check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm)
             .unwrap_or_default()
             .into(),
@@ -61,6 +63,23 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
         .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize)))
         .unwrap_or_default(),
     ]
+}
+
+fn check_self_signed(cert: &X509Certificate, allow: bool) -> SimpleCheckResult {
+    if cert.subject() == cert.issuer() {
+        if cert.verify_signature(None).is_ok() {
+            match allow {
+                true => SimpleCheckResult::ok(String::from("Certificate is self signed")),
+                false => SimpleCheckResult::warn(String::from("Certificate is self signed")),
+            }
+        } else {
+            SimpleCheckResult::warn(String::from(
+                "Certificate looks self signed but signature verification failed",
+            ))
+        }
+    } else {
+        SimpleCheckResult::ok(String::from("Certificate is not self signed"))
+    }
 }
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {

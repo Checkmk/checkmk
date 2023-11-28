@@ -8,9 +8,34 @@ use check_cert::check::{
 };
 use check_cert::checker::{self, Config as CheckCertConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
+
+#[allow(non_camel_case_types)]
+#[allow(clippy::upper_case_acronyms)]
+#[derive(Debug, Clone, ValueEnum)]
+enum SignatureAlgorithm {
+    RSA,
+    RSASSA_PSS,
+    RSAAES_OAEP,
+    DSA,
+    ECDSA,
+    ED25519,
+}
+
+impl SignatureAlgorithm {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Self::RSA => "RSA",
+            Self::RSASSA_PSS => "RSASSA_PSS",
+            Self::RSAAES_OAEP => "RSAAES_OAEP",
+            Self::DSA => "DSA",
+            Self::ECDSA => "ECDSA",
+            Self::ED25519 => "ED25519",
+        }
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(about = "check_cert")]
@@ -38,6 +63,10 @@ struct Args {
     /// Expected issuer
     #[arg(long)]
     pub issuer: Option<String>,
+
+    /// Expected signature algorithm
+    #[arg(long)]
+    pub signature_algorithm: Option<SignatureAlgorithm>,
 
     /// Certificate expiration levels in days [WARN:CRIT]
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
@@ -116,6 +145,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .serial(args.serial)
             .subject(args.subject)
             .issuer(args.issuer)
+            .signature_algorithm(
+                args.signature_algorithm
+                    .map(|sig| String::from(sig.as_str())),
+            )
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));

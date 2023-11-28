@@ -116,7 +116,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .serial(args.serial)
             .subject(args.subject)
             .issuer(args.issuer)
-            .not_after_levels_checker(not_after_levels_checker)
+            .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));
 

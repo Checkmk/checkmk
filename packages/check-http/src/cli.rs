@@ -5,7 +5,7 @@
 use crate::pwstore;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
-use http::{HeaderName, HeaderValue, Method};
+use http::{HeaderName, HeaderValue, Method, StatusCode};
 use std::{str::FromStr, time::Duration};
 
 #[derive(Parser, Debug)]
@@ -93,6 +93,11 @@ pub struct Cli {
     /// they are expected to be latin-1
     #[arg(short = 'd', long, value_parser=parse_header_pair)]
     pub header_strings: Option<Vec<(String, String)>>,
+
+    /// Expected HTTP status code.
+    /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
+    #[arg(short = 'e', long)]
+    pub status_code: Option<StatusCode>,
 }
 
 type PageSizeLimits = (usize, Option<usize>);

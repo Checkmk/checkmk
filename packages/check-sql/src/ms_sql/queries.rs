@@ -13,7 +13,7 @@ EXECUTE xp_regread
 ";
 
 /// Script to be run in SQL instance
-const QUERY_ALL_BASE: &str = r"
+const QUERY_WINDOWS_REGISTRY_INSTANCES_BASE: &str = r"
 DECLARE @GetInstances TABLE
 ( Value nvarchar(100),
  InstanceNames nvarchar(100),
@@ -231,8 +231,8 @@ pub const QUERY_AVAILABILITY_GROUP: &str = "SELECT \
 FROM sys.dm_hadr_availability_group_states Groups \
 INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id";
 
-pub fn get_instances_query() -> String {
-    QUERY_ALL_BASE.to_string()
+pub fn get_win_registry_instances_query() -> String {
+    QUERY_WINDOWS_REGISTRY_INSTANCES_BASE.to_string()
 }
 
 // production
@@ -255,8 +255,8 @@ pub fn get_details_query() -> String {
     .to_string()
 }
 
-pub fn get_32bit_instances_query() -> String {
-    QUERY_ALL_BASE
+pub fn get_wow64_32_registry_instances_query() -> String {
+    QUERY_WINDOWS_REGISTRY_INSTANCES_BASE
         .to_string()
         .replace(r"SOFTWARE\Microsoft\", r"SOFTWARE\WOW6432Node\Microsoft\")
 }

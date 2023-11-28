@@ -1103,16 +1103,16 @@ fn generate_instance_entries(instances: &[SqlInstance]) -> String {
 }
 
 async fn find_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
-    Ok(discovery_instances(ms_sql)
+    Ok(discover_instances(ms_sql)
         .await?
         .into_iter()
         .filter(|i| ms_sql.is_instance_allowed(&i.name))
         .collect::<Vec<SqlInstance>>())
 }
 
-async fn discovery_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
+async fn discover_instances(ms_sql: &config::ms_sql::Config) -> Result<Vec<SqlInstance>> {
     let instances = if ms_sql.discovery().detect() {
-        get_instance_engines(&ms_sql.endpoint()).await?
+        get_sql_instances(&ms_sql.endpoint()).await?
     } else {
         Vec::new()
     };
@@ -1173,33 +1173,43 @@ fn short_query(query: &str) -> String {
 }
 
 /// return all MS SQL instances installed
-async fn get_instance_engines(endpoint: &Endpoint) -> Result<Vec<SqlInstance>> {
-    let all = detect_instance_engines(endpoint).await?;
+async fn get_sql_instances(endpoint: &Endpoint) -> Result<Vec<SqlInstance>> {
+    let all = obtain_sql_instances_from_registry(endpoint).await?;
     Ok([&all.0[..], &all.1[..]].concat().to_vec())
 }
 
 /// [low level helper] return all MS SQL instances installed
-pub async fn detect_instance_engines(
+pub async fn obtain_sql_instances_from_registry(
     endpoint: &Endpoint,
 ) -> Result<(Vec<SqlInstance>, Vec<SqlInstance>)> {
     let mut client = client::create_from_config(endpoint).await?;
     Ok((
-        get_engines(&mut client, endpoint, &queries::get_instances_query()).await?,
-        get_engines(&mut client, endpoint, &queries::get_32bit_instances_query()).await?,
+        exec_win_registry_sql_instances_query(
+            &mut client,
+            endpoint,
+            &queries::get_win_registry_instances_query(),
+        )
+        .await?,
+        exec_win_registry_sql_instances_query(
+            &mut client,
+            endpoint,
+            &queries::get_wow64_32_registry_instances_query(),
+        )
+        .await?,
     ))
 }
 
 /// return all MS SQL instances installed
-async fn get_engines(
+async fn exec_win_registry_sql_instances_query(
     client: &mut Client,
     endpoint: &Endpoint,
     query: &str,
 ) -> Result<Vec<SqlInstance>> {
     let answers = run_query(client, query).await?;
-    let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
-        .await
-        .unwrap_or_default();
     if let Some(rows) = answers.get(0) {
+        let computer_name = get_computer_name(client, queries::QUERY_COMPUTER_NAME)
+            .await
+            .unwrap_or_default();
         let engines = to_sql_instance(rows, endpoint, computer_name);
         log::info!("Instances found {}", engines.len());
         Ok(engines)

@@ -11,11 +11,12 @@ use x509_parser::time::ASN1Time;
 use x509_parser::x509::X509Name;
 
 #[derive(Debug, TypedBuilder)]
+#[builder(field_defaults(default))]
 pub struct Config {
     serial: Option<String>,
     subject: Option<String>,
     issuer: Option<String>,
-    not_after_levels_checker: LevelsChecker<Duration>,
+    not_after_levels_checker: Option<LevelsChecker<Duration>>,
 }
 
 pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
@@ -42,7 +43,8 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
             config.not_after_levels_checker,
             cert.tbs_certificate.validity().not_after,
         )
-        .map(|x| Real::from(x.whole_days() as isize)),
+        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize)))
+        .unwrap_or_default(),
     ]
 }
 
@@ -85,10 +87,10 @@ fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Option<S
 
 fn check_validity_not_after(
     time_to_expiration: Option<Duration>,
-    levels: LevelsChecker<Duration>,
+    levels: Option<LevelsChecker<Duration>>,
     not_after: ASN1Time,
-) -> CheckResult<Duration> {
-    match time_to_expiration {
+) -> Option<CheckResult<Duration>> {
+    levels.map(|levels| match time_to_expiration {
         None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
@@ -99,5 +101,5 @@ fn check_validity_not_after(
             ),
             LevelsCheckerArgs::builder().label("validity").build(),
         ),
-    }
+    })
 }

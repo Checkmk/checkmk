@@ -322,6 +322,15 @@ where
     metrics: Option<Metric<T>>,
 }
 
+impl<T> Default for CheckResult<T>
+where
+    T: Clone,
+{
+    fn default() -> Self {
+        SimpleCheckResult::default().into()
+    }
+}
+
 impl<T> CheckResult<T>
 where
     T: Clone,

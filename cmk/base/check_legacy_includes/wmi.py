@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping
 from math import ceil
 
 from cmk.base.check_api import check_levels, get_age_human_readable
@@ -110,7 +110,7 @@ def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
-    levels: tuple | dict | None = None,  # important for now: not str!
+    levels: Mapping[str, object] | None = None,
 ):
     if required_tables is None:
         required_tables = tables
@@ -130,14 +130,13 @@ def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     # don't include the summary line
     potential_instances.discard(None)
 
-    return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
+    return [(row, levels or {}) for row in potential_instances if filt is None or filt(tables, row)]
 
 
 def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
-    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables
@@ -154,7 +153,7 @@ def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
 
     if not total_present:
         return []
-    return [(None, levels)]
+    return [(None, {})]
 
 
 # .

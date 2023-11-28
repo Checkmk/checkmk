@@ -6412,15 +6412,15 @@ info = [
 ]
 
 discovery = {
-    "": [(None, None)],
+    "": [(None, {})],
     "conferencing": [],
     "data_proxy": [],
     "edge": [],
-    "edge_auth": [(None, None)],
-    "mcu": [(None, None)],
-    "mediation_server": [(None, None)],
-    "mobile": [(None, None)],
-    "sip_stack": [(None, None)],
+    "edge_auth": [(None, {})],
+    "mcu": [(None, {})],
+    "mediation_server": [(None, {})],
+    "mobile": [(None, {})],
+    "sip_stack": [(None, {})],
     "xmpp_proxy": [],
 }
 

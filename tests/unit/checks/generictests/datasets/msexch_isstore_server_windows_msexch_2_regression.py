@@ -560,7 +560,7 @@ info = [
     ],
 ]
 
-discovery = {"": [("_total", None), ("mailbox database 0356176343", None)]}
+discovery = {"": [("_total", {}), ("mailbox database 0356176343", {})]}
 
 checks = {
     "": [

@@ -30,12 +30,12 @@ class Query:
         if method == "GET":
             return QueryGET(status_server, raw_query, logger)
         if method == "REPLICATE":
-            return QueryREPLICATE(status_server, raw_query, logger)
+            return QueryREPLICATE(raw_query, logger)
         if method == "COMMAND":
-            return QueryCOMMAND(status_server, raw_query, logger)
+            return QueryCOMMAND(raw_query, logger)
         raise MKClientError(f"Invalid method {method} (allowed are GET, REPLICATE, COMMAND)")
 
-    def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
+    def __init__(self, raw_query: list[str], logger: Logger) -> None:
         self.output_format = "python"
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
@@ -82,7 +82,7 @@ def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
 
 class QueryGET(Query):
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
-        super().__init__(status_server, raw_query, logger)
+        super().__init__(raw_query, logger)
         self.table_name = self.method_arg
         self.table = status_server.table(self.table_name)
         self.requested_columns = self.table.column_names

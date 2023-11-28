@@ -70,23 +70,18 @@ def _fix_entry(
     hostname: str,
 ) -> AutocheckEntry:
     """Change names of removed plugins to the new ones and transform parameters"""
-    new_plugin_name = REPLACED_CHECK_PLUGINS.get(entry.check_plugin_name)
-    new_params = _transformed_params(
-        logger,
-        new_plugin_name or entry.check_plugin_name,
-        entry.parameters,
-        all_rulesets,
-        hostname,
-    )
-
-    if new_plugin_name is None and new_params is None:
-        # don't create a new entry if nothing has changed
-        return entry
+    new_plugin_name = REPLACED_CHECK_PLUGINS.get(entry.check_plugin_name, entry.check_plugin_name)
 
     return AutocheckEntry(
-        check_plugin_name=new_plugin_name or entry.check_plugin_name,
+        check_plugin_name=new_plugin_name,
         item=entry.item,
-        parameters=new_params or entry.parameters,
+        parameters=_transformed_params(
+            logger,
+            new_plugin_name or entry.check_plugin_name,
+            entry.parameters,
+            all_rulesets,
+            hostname,
+        ),
         service_labels=entry.service_labels,
     )
 
@@ -100,11 +95,11 @@ def _transformed_params(
 ) -> LegacyCheckParameters:
     check_plugin = register.get_check_plugin(plugin_name)
     if check_plugin is None:
-        return None
+        return params
 
     ruleset_name = RuleGroup.CheckgroupParameters(f"{check_plugin.check_ruleset_name}")
     if ruleset_name not in all_rulesets.get_rulesets():
-        return None
+        return params
 
     debug_info = "host={!r}, plugin={!r}, ruleset={!r}, params={!r}".format(
         hostname,
@@ -142,7 +137,7 @@ def _transformed_params(
             raise RuntimeError(msg) from exc
         logger.error(msg)
 
-    return None
+    return params
 
 
 # TODO(sk): remove this safe-convert'n'check'n'warning after fixing all of transform_value

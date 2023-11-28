@@ -20,8 +20,8 @@ info = [
 
 discovery = {
     "": [
-        ("Any.Lib2", (5, 7)),
-        ("Baz123 / Any.Lib1", (5, 7)),
+        ("Any.Lib2", {}),
+        ("Baz123 / Any.Lib1", {}),
     ]
 }
 

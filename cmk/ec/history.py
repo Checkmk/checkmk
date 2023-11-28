@@ -32,8 +32,6 @@ HistoryWhat = Literal[
     "CHANGESTATE",
 ]
 
-Columns = Sequence[tuple[str, float | int | str | list[object]]]
-
 
 class History(ABC):
     @abstractmethod

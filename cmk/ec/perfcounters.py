@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 from logging import Logger
 
 from .helpers import ECLock
-from .history import Columns
+from .query import Columns
 
 
 def lerp(a: float, b: float, t: float) -> float:

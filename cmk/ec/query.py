@@ -19,6 +19,8 @@ class MKClientError(MKException):
 # TODO: Extract StatusServer and friends...
 _StatusServer = Any
 
+Columns = Sequence[tuple[str, float | int | str | Sequence[object]]]
+
 
 class Query:
     @staticmethod

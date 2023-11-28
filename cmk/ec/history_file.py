@@ -17,16 +17,8 @@ from cmk.utils.render import date_and_time
 
 from .config import Config
 from .event import Event, scrub_string
-from .history import (
-    _log_event,
-    ActiveHistoryPeriod,
-    Columns,
-    get_logfile,
-    History,
-    HistoryWhat,
-    quote_tab,
-)
-from .query import OperatorName, QueryFilter, QueryGET
+from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
+from .query import Columns, OperatorName, QueryFilter, QueryGET
 from .settings import Settings
 
 

@@ -14,7 +14,7 @@ from typing import Any, Literal
 from .config import Config
 from .event import Event
 from .history import _log_event, History
-from .query import QueryFilter, QueryGET
+from .query import Columns, QueryFilter, QueryGET
 from .settings import Settings
 
 HistoryWhat = Literal[
@@ -34,8 +34,6 @@ HistoryWhat = Literal[
     "AUTODELETE",
     "CHANGESTATE",
 ]
-
-Columns = Sequence[tuple[str, float | int | str | list[object]]]
 
 
 class MongoDBHistory(History):

@@ -39,7 +39,8 @@ _PERMISSIONS: list[tuple[str, Callable[[Path], bool], list[str], list[str]]] = [
         ["*.checksum", "*.pyc"],
     ),
     ("checks/*", is_not_executable, [], []),
-    ("checkman/*", is_not_executable, [], []),
+    ("cmk/plugins/*/manpages/*", is_not_executable, [], []),
+    ("cmk/plugins/*/manpages/*/*", is_executable, [], []),  # THIS SHOULD FAIL
     ("pnp-templates/*", is_not_executable, [], []),
     ("notifications/*", is_executable, ["README", "debug"], []),
     ("bin/*", is_executable, ["Makefile", "mkevent.cc", "mkeventd_open514.cc"], []),

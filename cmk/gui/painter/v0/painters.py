@@ -66,6 +66,8 @@ from cmk.gui.view_utils import (
 )
 from cmk.gui.visual_link import render_link_to_view
 
+from cmk.discover_plugins import discover_families, PluginGroup
+
 from ..v1.helpers import get_perfdata_nth_value, is_stale, paint_stalified
 from .base import Cell, Painter, PainterRegistry
 from .helpers import (
@@ -1542,7 +1544,9 @@ class PainterCheckManpage(Painter):
         else:
             checktype = command[9:]
 
-        man_page_path_map = man_pages.make_man_page_path_map(man_pages.get_man_page_dirs())
+        man_page_path_map = man_pages.make_man_page_path_map(
+            discover_families(raise_errors=False), PluginGroup.CHECKMAN.value
+        )
         # some checks are run as commandlines (e.g. checks configured via the "Integrate nagios plugins" rule).
         name = checktype.split()[0]
 

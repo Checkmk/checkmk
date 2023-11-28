@@ -58,7 +58,7 @@ _STR_PATHS: Final = {
     "share_dir",
     "checks_dir",
     "inventory_dir",
-    "check_manpages_dir",
+    "legacy_check_manpages_dir",
     "agents_dir",
     "web_dir",
     "lib_dir",

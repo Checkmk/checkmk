@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
 
-from tests.testlib.utils import cce_path, cmk_path
+from tests.testlib.utils import cmk_path
 
 from tests.unit.conftest import FixPluginLegacy, FixRegister
 
@@ -18,9 +19,12 @@ from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.server_side_calls import load_active_checks
 
+from cmk.agent_based.v2 import CheckPlugin
+from cmk.discover_plugins import discover_families, discover_plugins, PluginGroup
+
 _IF64_MAN_PAGE = man_pages.ManPage(
     name="if64",
-    path="/omd/sites/heute/share/check_mk/checkman/if64",
+    path="/omd/sites/heute/lib/python3/cmk/plugins/collection/checkman/if64",
     title="Monitor Network Interfaces via Standard MIB Using 64-Bit Counters",
     agents=["snmp"],
     catalog=["hw", "network", "generic"],
@@ -38,49 +42,51 @@ _IF64_MAN_PAGE = man_pages.ManPage(
 )
 
 
-def man_page_dirs_for_test(*tmp_paths: Path) -> Sequence[Path]:
-    return [
-        *tmp_paths,
-        Path(cce_path(), "checkman"),
-        Path(cmk_path(), "checkman"),
-    ]
+def man_page_dirs_for_test(tmp_path: Path) -> Mapping[str, Sequence[str]]:
+    return {"additional_test_folders": [str(tmp_path)], **discover_families(raise_errors=True)}
 
 
 @pytest.fixture(scope="module", name="catalog")
 def get_catalog() -> man_pages.ManPageCatalog:
-    return man_pages.load_man_page_catalog(man_page_dirs_for_test())
+    return man_pages.load_man_page_catalog(
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+    )
 
 
 @pytest.fixture(scope="module", name="all_pages")
 def get_all_pages() -> Mapping[str, man_pages.ManPage]:
     mpm = man_pages.make_man_page_path_map(
-        [
-            Path(cce_path(), "checkman"),
-            Path(cmk_path(), "checkman"),
-        ]
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
     return {name: man_pages.parse_man_page(name, path) for name, path in mpm.items()}
 
 
 def test_man_page_path_only_shipped() -> None:
-    mpm = man_pages.make_man_page_path_map(man_page_dirs_for_test())
-    assert mpm["if64"] == Path(cmk_path()) / "checkman" / "if64"
+    mpm = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+    )
+    assert mpm["if64"] == Path(cmk_path(), "cmk", "plugins", "collection", "checkman", "if64")
 
 
 def test_man_page_path_both_dirs(tmp_path: Path) -> None:
-    f1 = tmp_path / "file1"
+    (tmp_checkman := tmp_path / "checkman").mkdir()
+    f1 = tmp_checkman / "file1"
     f1.write_text("x", encoding="utf-8")
 
-    man_page_path_map = man_pages.make_man_page_path_map(man_page_dirs_for_test(tmp_path))
-    assert man_page_path_map["file1"] == tmp_path / "file1"
+    man_page_path_map = man_pages.make_man_page_path_map(
+        man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
+    )
+    assert man_page_path_map["file1"] == tmp_checkman / "file1"
     assert "file2" not in man_page_path_map
 
-    (tmp_path / "file2").touch()
+    (tmp_checkman / "file2").touch()
 
     # This tests that make_manpage_path_map is not cached.
     # Not sure if this is realy required.
-    man_page_path_map = man_pages.make_man_page_path_map(man_page_dirs_for_test(tmp_path))
-    assert man_page_path_map["file2"] == tmp_path / "file2"
+    man_page_path_map = man_pages.make_man_page_path_map(
+        man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
+    )
+    assert man_page_path_map["file2"] == tmp_checkman / "file2"
 
 
 def test_all_manpages_migrated(all_pages: Mapping[str, man_pages.ManPage]) -> None:
@@ -91,18 +97,21 @@ def test_all_manpages_migrated(all_pages: Mapping[str, man_pages.ManPage]) -> No
 
 
 def test_all_man_pages(tmp_path: Path) -> None:
-    (tmp_path / ".asd").write_text("", encoding="utf-8")
-    (tmp_path / "asd~").write_text("", encoding="utf-8")
-    (tmp_path / "if").write_text("", encoding="utf-8")
+    (tmp_checkman := tmp_path / "checkman").mkdir()
+    (tmp_checkman / ".asd").write_text("", encoding="utf-8")
+    (tmp_checkman / "asd~").write_text("", encoding="utf-8")
+    (tmp_checkman / "if").write_text("", encoding="utf-8")
 
-    pages = man_pages.make_man_page_path_map(man_page_dirs_for_test(tmp_path))
+    pages = man_pages.make_man_page_path_map(
+        man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
+    )
 
     assert len(pages) > 1241
     assert ".asd" not in pages
     assert "asd~" not in pages
 
-    assert pages["if"] == tmp_path / "if"
-    assert pages["if64"] == Path(cmk_path(), "checkman/if64")
+    assert pages["if"] == tmp_checkman / "if"
+    assert pages["if64"] == Path(cmk_path(), "cmk", "plugins", "collection", "checkman", "if64")
 
 
 def test_load_all_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:
@@ -111,7 +120,9 @@ def test_load_all_man_pages(all_pages: Mapping[str, man_pages.ManPage]) -> None:
 
 
 def test_print_man_page_table(capsys: pytest.CaptureFixture[str]) -> None:
-    man_page_path_map = man_pages.make_man_page_path_map(man_page_dirs_for_test())
+    man_page_path_map = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+    )
     man_pages.print_man_page_table(man_page_path_map)
     out, err = capsys.readouterr()
     assert err == ""
@@ -149,6 +160,19 @@ def test_no_unsorted_man_pages(catalog: man_pages.ManPageCatalog) -> None:
 
 def test_manpage_files(all_pages: Mapping[str, man_pages.ManPage]) -> None:
     assert len(all_pages) > 1000
+
+
+def test_cmk_plugins_families_manpages() -> None:
+    """All v2 style check plugins should have the manpages in their families folder."""
+    man_page_path_map = man_pages.make_man_page_path_map(
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+    )
+    check_plugins = discover_plugins(
+        PluginGroup.AGENT_BASED, {CheckPlugin: "check_plugin_"}, raise_errors=True
+    )
+    for location, plugin in check_plugins.plugins.items():
+        family_path_segment = os.path.join(*location.module.split(".")[:3])
+        assert family_path_segment in str(man_page_path_map[plugin.name])
 
 
 def test_find_missing_manpages_passive(

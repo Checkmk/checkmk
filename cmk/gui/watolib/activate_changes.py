@@ -2584,7 +2584,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     agents_dir=paths.local_agents_dir,
                     alert_handlers_dir=paths.local_alert_handlers_dir,
                     bin_dir=paths.local_bin_dir,
-                    check_manpages_dir=paths.local_check_manpages_dir,
+                    check_manpages_dir=paths.local_legacy_check_manpages_dir,
                     checks_dir=paths.local_checks_dir,
                     doc_dir=paths.local_doc_dir,
                     gui_plugins_dir=paths.local_gui_plugins_dir,

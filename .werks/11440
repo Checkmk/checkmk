@@ -1,6 +1,6 @@
 Title: WATO Cluster Discovery: Fixed bug showing services of NodeA on NodeB
 Class: fix
-Compatible: compat
+Compatible: incomp
 Component: wato
 Date: 1607006216
 Edition: cre
@@ -10,3 +10,6 @@ Version: 2.1.0b1
 
 A WATO service discovery on a cluster host did incorrectly assign clustered services from NodeA to NodeB and vice versa.
 This was more of a GUI-related error, as it did not affect the computation of the core configuration.
+
+Affected users might have to trigger a rediscovery (tabula rasa).
+

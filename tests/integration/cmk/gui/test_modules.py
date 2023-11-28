@@ -44,7 +44,7 @@ def fixture_result_file(site: Site) -> Iterator[None]:
 
 
 @pytest.mark.usefixtures("plugin_path", "result_file")
-def test_load_dashboard_plugin(request: pytest.FixtureRequest, site: Site) -> None:
+def test_load_dashboard_plugin_omd_restart(request: pytest.FixtureRequest, site: Site) -> None:
     # Reload site apache to trigger the reload of our plugin
     site.omd("reload", "apache")
 

@@ -427,13 +427,13 @@ impl From<&Vec<CheckResult<Real>>> for Writer {
                 .iter()
                 .map(|cr| &cr.summary)
                 .filter(|s| !s.text.is_empty())
-                .map(|s| s.to_string())
+                .map(ToString::to_string)
                 .collect::<Vec<_>>()
                 .join(", "),
             metrics: check_results
                 .iter()
                 .flat_map(|cr| &cr.metrics)
-                .map(|s| s.to_string())
+                .map(ToString::to_string)
                 .collect::<Vec<_>>()
                 .join(", "),
         }

@@ -69,6 +69,7 @@ from .query import (
     QueryCOMMAND,
     QueryGET,
     QueryREPLICATE,
+    StatusTable,
 )
 from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
 from .rule_packs import load_config as load_config_using
@@ -1906,76 +1907,6 @@ class Queries:
 #   |    |____/ \__\__,_|\__|\__,_|___/   |_|\__,_|_.__/|_|\___||___/      |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Common functionality for the event/history/rule/status tables        |
-#   '----------------------------------------------------------------------'
-# If you need a new column here, then these are the places to change:
-# bin/mkeventd:
-# - add column to the end of StatusTableEvents.columns
-# - add column to grepping_filters if it is a str column
-# - deal with convert_history_line() (if not a str column)
-# - make sure that the new column is filled at *every* place where
-#   an event is being created:
-#   * _create_event_from_trap()
-#   * create_event_from_syslog_message()
-#   * _handle_absent_event()
-#   * _create_overflow_event()
-# - When loading the status file add the possibly missing column to all
-#   loaded events (load_status())
-# - Maybe add matching/rewriting for the new column
-# - write the actual code using the new column
-# web:
-# - Add column painter for the new column
-# - Create a sorter
-# - Create a filter
-# - Add painter and filter to all views where appropriate
-# - maybe add WATO code for matching rewriting
-# - do not forget event_rule_matches() in web!
-# - maybe add a field into the event simulator
-
-
-class StatusTable:
-    """Common functionality for the event/history/rule/status tables."""
-
-    name: str
-    prefix: str | None = None
-    columns: Columns = []
-
-    @abc.abstractmethod
-    def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
-        """
-        Must return a enumerable type containing fully populated lists (rows) matching the
-        columns of the table.
-        """
-        raise NotImplementedError()
-
-    def __init__(self, logger: Logger) -> None:
-        self._logger = logger.getChild(f"status_table.{self.prefix}")
-        self.column_defaults = dict(self.columns)
-        self.column_names = [name for name, _def_val in self.columns]
-        self.column_types = {name: type(def_val) for name, def_val in self.columns}
-        self.column_indices = {name: index for index, name in enumerate(self.column_names)}
-
-    def query(self, query: QueryGET) -> Iterable[Sequence[object]]:
-        requested_column_indexes = query.requested_column_indexes()
-
-        # Output the column headers
-        # TODO: Add support for ColumnHeaders like in livestatus?
-        yield query.requested_columns
-
-        num_rows = 0
-        for row in self._enumerate(query):
-            if query.limit is not None and num_rows >= query.limit:
-                break  # The maximum number of rows has been reached
-            # Apply filters
-            # TODO: History filtering is done in history load code. Check for improvements
-            if query.table.name == "history" or query.filter_row(row):
-                yield self._build_result_row(row, requested_column_indexes)
-                num_rows += 1
-
-    def _build_result_row(
-        self, row: Sequence[object], requested_column_indexes: list[int | None]
-    ) -> list[object]:
-        return [(None if index is None else row[index]) for index in requested_column_indexes]
 
 
 class StatusTableEvents(StatusTable):

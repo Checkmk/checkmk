@@ -6377,6 +6377,10 @@ msgstr "Arcserve (Deutsch) Backups (Windows)"
 msgid "Area"
 msgstr "Fläche"
 
+#, fuzzy, python-format
+msgid "Argument files (%s)"
+msgstr "Agent für %s (%s)"
+
 msgid "Arguments:"
 msgstr "Argumente:"
 
@@ -6453,6 +6457,10 @@ msgstr "Zuweisung einer SLA definition zu einem Service"
 
 msgid "Assign SLA to service"
 msgstr "Zuweisung SLA zu Service"
+
+#, fuzzy
+msgid "Assign result to piggyback host"
+msgstr "Übersetzung von Hostnamen für Piggyback-Hosts"
 
 msgid "Assign service to following host"
 msgstr "Service dem folgenden Host zuweisen"
@@ -7682,6 +7690,10 @@ msgstr "Basisverzeichnis für <tt>plugins</tt> und <tt>local</tt>"
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Basisverzeichnis für variable Daten (Caches, Zustandsdateien)"
 
+#, fuzzy
+msgid "Base directory of suites"
+msgstr "Report auf Basis von Servicezeiten erstellen"
+
 msgid "Base layout"
 msgstr "Grundlayout"
 
@@ -8383,6 +8395,9 @@ msgstr ""
 "werden alle Hosts überwacht. Sobald Sie mindestens eine Regel angelegt "
 "haben, werden nur mit der Regel übereinstimmende Hosts geprüft."
 
+msgid "By age of Robotmk executions"
+msgstr ""
+
 msgid "By aggregation group prefix"
 msgstr "Nach Aggregationsgruppenpräfix"
 
@@ -8827,6 +8842,10 @@ msgid ""
 msgstr ""
 "Wenn Sie diese Option aktivieren, werden die Benachrichtigungen auch "
 "außerhalb der festgelegten Zeitperiode zusammengefasst."
+
+#, fuzzy
+msgid "By number of Robotmk executions"
+msgstr "Anzahl der belegten Executors"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -11137,6 +11156,10 @@ msgstr "Veraltete Host-Dateien löschen, die älter sind als"
 msgid "Cleanup messages"
 msgstr "Nachrichten aufräumen"
 
+#, fuzzy
+msgid "Cleanup of working directory"
+msgstr "Idle clean up der Worker-Prozesse"
+
 msgid "Cleanup when disk space is below"
 msgstr "Aufräumen, wenn der freie Speicherplatz geringer ist als"
 
@@ -11811,6 +11834,10 @@ msgstr "Kompatible Werke"
 
 msgid "Compatible and incompatible Werks"
 msgstr "Kompatible und inkompatible Werks"
+
+#, fuzzy
+msgid "Complete"
+msgstr "vollständig"
 
 msgid "Complete the restore"
 msgstr "Wiederherstellung fertigstellen"
@@ -13829,6 +13856,10 @@ msgstr "Kritischer Level für verbleibende"
 
 msgid "Critical level is at least"
 msgstr "Kritische Schwelle ist mindestens"
+
+#, fuzzy
+msgid "Critical of "
+msgstr "Kritsch wenn %s"
 
 msgid "Critical threshold"
 msgstr "Kritischer Schwellwert"
@@ -19632,6 +19663,10 @@ msgstr "Eintrag"
 msgid "Environment Variables"
 msgstr "Umgebungsvariablen"
 
+#, fuzzy
+msgid "Environment build timeout"
+msgstr "Umgebungsvariablen"
+
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episode 1: Installation von Checkmk und Überwachung Ihres ersten Hosts"
 
@@ -20181,6 +20216,10 @@ msgstr ""
 "Schließe für den <tt>root</tt>-User reservierten Speicher von der Berechnung "
 "des benutzten Speichers aus"
 
+#, fuzzy, python-format
+msgid "Exclude tests by tag (%s)"
+msgstr "Leere Merkmale ausklammern"
+
 msgid "Exclude the following SIDs (if found)"
 msgstr "Folgende SIDs auslassen (falls vorhanden)"
 
@@ -20269,6 +20308,10 @@ msgstr "Diesen geplanten Bereicht jetzt als Hintergrund-Prozess ausführen"
 
 msgid "Execution Mode"
 msgstr "Ausführungsmodus"
+
+#, fuzzy
+msgid "Execution configuration"
+msgstr "Alarmierungskonfiguration"
 
 msgid "Execution has been triggered"
 msgstr "Die Ausführung wurde angestoßen"
@@ -21589,6 +21632,9 @@ msgstr "Feste Größe"
 
 msgid "Fixed string to expect in the content"
 msgstr "Im Inhalt erwartete Zeichenkette"
+
+msgid "FixedValue value is not serializable."
+msgstr ""
 
 msgid "Flap"
 msgstr "Unstetig"
@@ -23509,6 +23555,10 @@ msgstr "Muss den Pfad zum Cert Key File enthalten."
 
 msgid "Hash"
 msgstr "Hash"
+
+#, fuzzy
+msgid "Headed execution"
+msgstr "Geplante Ausführung"
 
 msgid "Headers at the left (single dataset)"
 msgstr "Überschriften links (Einzeldatensatz)"
@@ -28371,6 +28421,10 @@ msgstr "Reserviertern Platz mit einbeziehen"
 msgid "Include service with zero base."
 msgstr "Beziehe den Service mit der Bezugsgröße Null ein."
 
+#, fuzzy, python-format
+msgid "Include tests by tag (%s)"
+msgstr "Leere Merkmale ausklammern"
+
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
 "Note: this requires using WMI for retrieving process information."
@@ -28478,6 +28532,10 @@ msgstr ""
 
 msgid "Increment size"
 msgstr "Zuwachsgröße"
+
+#, fuzzy
+msgid "Incremental"
+msgstr "#Zuwachs"
 
 msgid "Index"
 msgstr "Index"
@@ -31859,6 +31917,10 @@ msgstr "Loadbalancer"
 msgid "Load balancers Target Groups"
 msgstr "Zielgruppen von Loadbalancers"
 
+#, fuzzy
+msgid "Load environment variables from file"
+msgstr "Verwende Umgebungsvariablen vom Host"
+
 msgid "Load in a new window / tab"
 msgstr "In einem neuen Fenster/Tab laden"
 
@@ -33961,6 +34023,10 @@ msgstr "Maximale Anzahl von Verbindungen oder Listeners"
 msgid "Maximum number of delivery attempts"
 msgstr "Maximale Anzahl Zustellungsversuche"
 
+#, fuzzy
+msgid "Maximum number of executions"
+msgstr "Maximale Anzahl an Clients"
+
 msgid "Maximum number of firewall connections"
 msgstr "Maximale Anzahl von Firewall-Verbindungen"
 
@@ -33973,6 +34039,10 @@ msgstr "Maximale Anzahl von Knoten überschritten %d/%d"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximale Anzahl Zeilen, die pro Datei gelesen werden"
+
+#, fuzzy
+msgid "Maximum number of re-executions"
+msgstr "Maximale Anzahl an Clients"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Maximale Anzahl einsatzbereiter Control-Plane-Nodes"
@@ -33991,6 +34061,10 @@ msgid ""
 msgstr ""
 "Maximale Anzahl von Threads, die zu irgendeinem Zeitpunkt für der JVM-"
 "Lebenszeit existierten"
+
+#, fuzzy
+msgid "Maximum of "
+msgstr "Maximum"
 
 msgid "Maximum parallel connections"
 msgstr "Maximale Anzahl paralleler Verbindungen"
@@ -34707,6 +34781,10 @@ msgstr "Mindestanzahl einsatzbereiter Control-Plane-Nodes"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Mindestanzahl von einsatzbereiten Worker-Nodes"
+
+#, fuzzy
+msgid "Minimum of "
+msgstr "Minimum"
 
 msgid "Minimum password length"
 msgstr "Minimale Passwortlänge"
@@ -36669,6 +36747,10 @@ msgstr "Keine ausstehenden Änderungen."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
+
+#, fuzzy
+msgid "No re-executions"
+msgstr "Gleichzeitige Ausführungen"
 
 #, python-format
 msgid "No remote %s processed."
@@ -40157,6 +40239,10 @@ msgstr "Pfad zu den Kategorien"
 msgid "Path to nvidia-smi.exe"
 msgstr "Pfad zur nvidia-smi.exe"
 
+#, fuzzy
+msgid "Path to robot.yaml"
+msgstr "Pfad zur Zertifizierungsschlüssel-Datei"
+
 msgid "Path to sapgenpse"
 msgstr "Pfad zu sapgenpse"
 
@@ -41284,10 +41370,18 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr "Bitte stellen Sie eine '.xml'-Datei zur Verfügung"
 
+#, fuzzy
+msgid "Please provide a relative Windows path"
+msgstr "Bitte geben Sie einen gültigen Namen an"
+
 msgid "Please provide a valid host and port"
 msgstr "Bitte geben Sie einen gültigen Host und Port an"
 
 msgid "Please provide a valid name"
+msgstr "Bitte geben Sie einen gültigen Namen an"
+
+#, fuzzy
+msgid "Please provide an absolute Windows path"
 msgstr "Bitte geben Sie einen gültigen Namen an"
 
 msgid ""
@@ -43025,6 +43119,14 @@ msgstr "Rohbytes (HEXSTR)"
 
 msgid "Rcvd"
 msgstr "Empfangen"
+
+#, fuzzy
+msgid "Re-execution strategy"
+msgstr "Ausführungszeit"
+
+#, fuzzy
+msgid "Re-executions"
+msgstr "Ausführungszeit"
 
 msgid "Read"
 msgstr "Lesen"
@@ -44934,6 +45036,18 @@ msgstr "Rittal CMC-III Units: Strom"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III Units: Temperaturen"
 
+#, fuzzy
+msgid "Robot Framework parameters"
+msgstr "Robot-Framework: %s"
+
+#, fuzzy
+msgid "Robot Framework re-executions"
+msgstr "Robot-Framework: %s"
+
+#, fuzzy
+msgid "Robot Framework target"
+msgstr "Robot-Framework: %s"
+
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Robot-Framework: %s"
@@ -46471,6 +46585,14 @@ msgstr "Klang auswählen"
 
 msgid "Select specific object type"
 msgstr "Spezifischen Objekttyp auswählen"
+
+#, fuzzy, python-format
+msgid "Select suites by name (%s)"
+msgstr "Sicherheitsname"
+
+#, python-format
+msgid "Select tests by name (%s)"
+msgstr ""
 
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -51666,8 +51788,16 @@ msgstr "Vorgeschlagene Tutorial Videos"
 msgid "Suite"
 msgstr "Suite"
 
+#, fuzzy
+msgid "Suite IDs are not unique"
+msgstr "Anfrage-IDs sind nicht gleich"
+
 msgid "Suite runtime"
 msgstr "Suite Laufzeit"
+
+#, fuzzy
+msgid "Suites"
+msgstr "Suite"
 
 msgid "Sum"
 msgstr "Summe"
@@ -62079,6 +62209,10 @@ msgstr "Timeout in Sekunden bevor der Prozess des Skripts beendet wird"
 msgid "Timeout occured"
 msgstr "Ein Timeout ist aufgetreten"
 
+#, fuzzy
+msgid "Timeout per attempt"
+msgstr "nicht ausgeführt"
+
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout für das Warten auf einen freien Kanal"
 
@@ -63752,6 +63886,10 @@ msgstr ""
 "Eindeutige Client-ID, die für den Broker verwendet wird. Wird zufällig "
 "generiert, wenn nicht festgelegt."
 
+#, fuzzy
+msgid "Unique suite ID"
+msgstr "Eindeutige Regel-ID"
+
 msgid "Unit"
 msgstr "Einheit"
 
@@ -64892,6 +65030,10 @@ msgstr "Livestatus-Proxy-Daemon verwenden"
 
 msgid "Use Piggyback"
 msgstr "Piggyback-Modus verwenden"
+
+#, fuzzy
+msgid "Use RCC for isolated execution"
+msgstr "SSL für Verbindung verwenden."
 
 msgid "Use Reporting"
 msgstr "Reporting verwenden"
@@ -66278,6 +66420,14 @@ msgstr "Verschwundene Services - überwacht, aber nicht mehr vorhanden"
 msgid "Variable"
 msgstr "Variable"
 
+#, fuzzy, python-format
+msgid "Variable files (%s)"
+msgstr "Verifizierung fehlgeschlagen (%s)"
+
+#, fuzzy, python-format
+msgid "Variables (%s)"
+msgstr "Variable"
+
 msgid "Variables set in the site user's environment"
 msgstr "Variablen festgelegt in der Instanz der Umgebung des Nutzers"
 
@@ -67050,6 +67200,10 @@ msgstr "Warnhchwellen für das Stratum"
 msgid "Warning levels for Time Offset"
 msgstr "Warnungschwellen für die Zeitversatz"
 
+#, fuzzy
+msgid "Warning of "
+msgstr "Warnung wenn %s"
+
 msgid "Warning starts with"
 msgstr "Warnung beginnt mit"
 
@@ -67491,10 +67645,11 @@ msgstr ""
 "Ordners abgeleitet, wenn ein neuer Ordner erstellt wird. Deaktivieren Sie "
 "diese Option, wenn Sie die Dateinamen manuell anzeigen und festlegen möchten."
 
+#, fuzzy
 msgid ""
 "When enabled, this site is marked for synchronisation every time a Web GUI "
 "related option is changed and users are allowed to login to the Web GUI of "
-"this site."
+"this site.The access to the Rest API is unaffected by this option though."
 msgstr ""
 "Wenn diese Option aktiviert ist, wird diese Instanz bei jeder Änderung einer "
 "Web-GUI-bezogenen Option für die Synchronisierung markiert, und die Benutzer "
@@ -73895,9 +74050,6 @@ msgstr ""
 
 #~ msgid "years"
 #~ msgstr "Jahre"
-
-#~ msgid "Request IDs are not equal"
-#~ msgstr "Anfrage-IDs sind nicht gleich"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr ""
@@ -82635,9 +82787,6 @@ msgstr ""
 
 #~ msgid "Undefined Perf-O-Meter type '%s'"
 #~ msgstr "Undefinierter Perf-O-Meter-Typ '%s'"
-
-#~ msgid "Unique Rule ID"
-#~ msgstr "Eindeutige Regel-ID"
 
 #~ msgid "Unsupported Perf-O-Meter type '%s'"
 #~ msgstr "Perf-O-Meter-Typ '%s' nicht unterstützt"

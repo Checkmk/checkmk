@@ -6395,6 +6395,10 @@ msgstr "Arcserve (alemão) backups (Windows)"
 msgid "Area"
 msgstr "Área"
 
+#, fuzzy, python-format
+msgid "Argument files (%s)"
+msgstr "Agente para %s (%s)"
+
 msgid "Arguments:"
 msgstr "Argumentos:"
 
@@ -6473,6 +6477,10 @@ msgstr "Atribuir definição de SLA ao serviço"
 
 msgid "Assign SLA to service"
 msgstr "Atribuir SLA ao serviço"
+
+#, fuzzy
+msgid "Assign result to piggyback host"
+msgstr "Tradução do nome do anfitrião para os anfitriões piggybacked"
 
 msgid "Assign service to following host"
 msgstr "Atribuir serviço ao seguinte anfitrião"
@@ -7708,6 +7716,10 @@ msgstr "Diretório base para <tt>plugins</tt> e <tt>local</tt>"
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Diretório base para dados variáveis (caches, arquivos de estado)"
 
+#, fuzzy
+msgid "Base directory of suites"
+msgstr "Relatório base apenas em tempos de serviço"
+
 msgid "Base layout"
 msgstr "Layout base"
 
@@ -8400,6 +8412,9 @@ msgstr ""
 "monitorados. Assim que você adicionar pelo menos uma regra, apenas os hosts "
 "com uma regra correspondente serão monitorados."
 
+msgid "By age of Robotmk executions"
+msgstr ""
+
 msgid "By aggregation group prefix"
 msgstr "Por prefixo de grupo de agregação"
 
@@ -8848,6 +8863,10 @@ msgid ""
 msgstr ""
 "Ao activar esta opção, as notificações também serão agrupadas fora do "
 "período de tempo definido."
+
+#, fuzzy
+msgid "By number of Robotmk executions"
+msgstr "Número de executores ocupados"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -11153,6 +11172,10 @@ msgstr "Limpeza de arquivos host abandonados mais antigos que"
 msgid "Cleanup messages"
 msgstr "Mensagens de limpeza"
 
+#, fuzzy
+msgid "Cleanup of working directory"
+msgstr "Limpeza do trabalhador em modo inativo"
+
 msgid "Cleanup when disk space is below"
 msgstr "Limpeza quando o espaço em disco está abaixo"
 
@@ -11828,6 +11851,10 @@ msgstr "Werks Compatíveis"
 
 msgid "Compatible and incompatible Werks"
 msgstr "Werks compatíveis e incompatíveis"
+
+#, fuzzy
+msgid "Complete"
+msgstr "completo"
 
 msgid "Complete the restore"
 msgstr "Complete a restauração"
@@ -13841,6 +13868,10 @@ msgstr "Nível crítico para permanecer"
 
 msgid "Critical level is at least"
 msgstr "O nível crítico é pelo menos"
+
+#, fuzzy
+msgid "Critical of "
+msgstr "Crítico se %s"
 
 msgid "Critical threshold"
 msgstr "Limiar crítico"
@@ -19632,6 +19663,10 @@ msgstr "Entrada"
 msgid "Environment Variables"
 msgstr "Variáveis de ambiente"
 
+#, fuzzy
+msgid "Environment build timeout"
+msgstr "Variáveis de ambiente"
+
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episódio 1: Instalando o Checkmk e monitorando seu primeiro host"
 
@@ -20175,6 +20210,10 @@ msgstr ""
 "Excluir o espaço reservado para o usuário <tt>root</tt> do cálculo do espaço "
 "usado"
 
+#, fuzzy, python-format
+msgid "Exclude tests by tag (%s)"
+msgstr "Excluir escolhas de etiquetas vazias"
+
 msgid "Exclude the following SIDs (if found)"
 msgstr "Excluir os seguintes SIDs (se encontrados)"
 
@@ -20264,6 +20303,10 @@ msgstr "Executar este cronograma agora em job de fundo"
 
 msgid "Execution Mode"
 msgstr "Modo de Execução"
+
+#, fuzzy
+msgid "Execution configuration"
+msgstr "Configuração da notificação"
 
 msgid "Execution has been triggered"
 msgstr "A execução foi acionada"
@@ -21584,6 +21627,9 @@ msgstr "Tamanho fixo"
 
 msgid "Fixed string to expect in the content"
 msgstr "Cadeia fixa a esperar no conteúdo"
+
+msgid "FixedValue value is not serializable."
+msgstr ""
 
 msgid "Flap"
 msgstr "Flap"
@@ -23510,6 +23556,10 @@ msgstr "Tem de conter o caminho para o ficheiro Cert Key."
 
 msgid "Hash"
 msgstr "Hash"
+
+#, fuzzy
+msgid "Headed execution"
+msgstr "Programação da execução"
 
 msgid "Headers at the left (single dataset)"
 msgstr "Cabeçalhos à esquerda (conjunto de dados único)"
@@ -28358,6 +28408,10 @@ msgstr "Incluir espaço reservado"
 msgid "Include service with zero base."
 msgstr "Incluir serviço com base zero."
 
+#, fuzzy, python-format
+msgid "Include tests by tag (%s)"
+msgstr "Excluir escolhas de etiquetas vazias"
+
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
 "Note: this requires using WMI for retrieving process information."
@@ -28465,6 +28519,10 @@ msgstr ""
 
 msgid "Increment size"
 msgstr "Tamanho do Incremento"
+
+#, fuzzy
+msgid "Incremental"
+msgstr "#Aumentos"
 
 msgid "Index"
 msgstr "Índice"
@@ -31861,6 +31919,10 @@ msgstr "Equilibradores de carga"
 msgid "Load balancers Target Groups"
 msgstr "Balanceadores de carga Grupos-alvo"
 
+#, fuzzy
+msgid "Load environment variables from file"
+msgstr "Usar variáveis de ambiente do host"
+
 msgid "Load in a new window / tab"
 msgstr "Carregar em uma nova janela / aba"
 
@@ -33987,6 +34049,10 @@ msgstr "Número máximo de ligações ou ouvintes"
 msgid "Maximum number of delivery attempts"
 msgstr "Número máximo de tentativas de entrega"
 
+#, fuzzy
+msgid "Maximum number of executions"
+msgstr "Número máximo de clientes"
+
 msgid "Maximum number of firewall connections"
 msgstr "Número máximo de conexões de firewall"
 
@@ -33999,6 +34065,10 @@ msgstr "Número máximo de nós excedidos %d/%d"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Número máximo de linhas analisadas por arquivo de log"
+
+#, fuzzy
+msgid "Maximum number of re-executions"
+msgstr "Número máximo de clientes"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Número máximo de nós do plano de controlo prontos"
@@ -34017,6 +34087,10 @@ msgid ""
 msgstr ""
 "Número máximo de roscas iniciadas em qualquer momento durante a vida útil da "
 "JVM"
+
+#, fuzzy
+msgid "Maximum of "
+msgstr "Máximo"
 
 msgid "Maximum parallel connections"
 msgstr "Máximo de ligações paralelas"
@@ -34730,6 +34804,10 @@ msgstr "Número mínimo de nós do plano de controlo prontos"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Número mínimo de nós de trabalho prontos"
+
+#, fuzzy
+msgid "Minimum of "
+msgstr "Mínimo"
 
 msgid "Minimum password length"
 msgstr "Comprimento mínimo da senha"
@@ -36690,6 +36768,10 @@ msgstr "Não há alterações pendentes."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Sem dados de desempenho: %s"
+
+#, fuzzy
+msgid "No re-executions"
+msgstr "Execuções simultâneas"
 
 #, fuzzy, python-format
 msgid "No remote %s processed."
@@ -40172,6 +40254,10 @@ msgstr "Caminho para as categorias"
 msgid "Path to nvidia-smi.exe"
 msgstr "Caminho para nvidia-smi.exe"
 
+#, fuzzy
+msgid "Path to robot.yaml"
+msgstr "Caminho para o ficheiro Cert Key"
+
 msgid "Path to sapgenpse"
 msgstr "Caminho para a sapgenpse"
 
@@ -41281,10 +41367,18 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr "Forneça um ficheiro '.xml'"
 
+#, fuzzy
+msgid "Please provide a relative Windows path"
+msgstr "Por favor, forneça um nome válido"
+
 msgid "Please provide a valid host and port"
 msgstr "Forneça um anfitrião e uma porta válidos"
 
 msgid "Please provide a valid name"
+msgstr "Por favor, forneça um nome válido"
+
+#, fuzzy
+msgid "Please provide an absolute Windows path"
 msgstr "Por favor, forneça um nome válido"
 
 msgid ""
@@ -43020,6 +43114,14 @@ msgstr "Bytes Brutos (HEXSTR)"
 
 msgid "Rcvd"
 msgstr "Rcvd"
+
+#, fuzzy
+msgid "Re-execution strategy"
+msgstr "tempo de execução"
+
+#, fuzzy
+msgid "Re-executions"
+msgstr "tempo de execução"
 
 msgid "Read"
 msgstr "Leia"
@@ -44953,6 +45055,18 @@ msgstr "Unidades Rittal CMC-III: Corrente"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unidades Rittal CMC-III: Temperaturas"
 
+#, fuzzy
+msgid "Robot Framework parameters"
+msgstr "Estrutura do robô: %s"
+
+#, fuzzy
+msgid "Robot Framework re-executions"
+msgstr "Estrutura do robô: %s"
+
+#, fuzzy
+msgid "Robot Framework target"
+msgstr "Estrutura do robô: %s"
+
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Estrutura do robô: %s"
@@ -46505,6 +46619,14 @@ msgstr "Selecione o som"
 
 msgid "Select specific object type"
 msgstr "Selecione o tipo de objeto específico"
+
+#, fuzzy, python-format
+msgid "Select suites by name (%s)"
+msgstr "Nome de segurança"
+
+#, python-format
+msgid "Select tests by name (%s)"
+msgstr ""
 
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -51701,8 +51823,16 @@ msgid "Suite"
 msgstr ""
 
 #, fuzzy
+msgid "Suite IDs are not unique"
+msgstr "Os IDs dos pedidos não são iguais"
+
+#, fuzzy
 msgid "Suite runtime"
 msgstr "Nome do local"
+
+#, fuzzy
+msgid "Suites"
+msgstr "Sites"
 
 msgid "Sum"
 msgstr "Soma"
@@ -62067,6 +62197,10 @@ msgstr "Tempo esgotado em segundos antes do processo de script ser terminado"
 msgid "Timeout occured"
 msgstr "Ocorreu um timeout"
 
+#, fuzzy
+msgid "Timeout per attempt"
+msgstr "não tentado"
+
 msgid "Timeout waiting for a free channel"
 msgstr "Tempo esgotado à espera de um canal gratuito"
 
@@ -63724,6 +63858,10 @@ msgstr ""
 "ID de cliente único utilizado para o corretor. Será gerado aleatoriamente "
 "quando não estiver definido."
 
+#, fuzzy
+msgid "Unique suite ID"
+msgstr "Use o ID do site"
+
 msgid "Unit"
 msgstr "Unidade"
 
@@ -64874,6 +65012,10 @@ msgstr "Use o Livestatus Proxy Daemon"
 
 msgid "Use Piggyback"
 msgstr "Use o Piggyback"
+
+#, fuzzy
+msgid "Use RCC for isolated execution"
+msgstr "Use SSL para a conexão."
 
 msgid "Use Reporting"
 msgstr "Utilizar relatórios"
@@ -66240,6 +66382,14 @@ msgstr "Serviços desaparecidos - monitorizados, mas que deixaram de existir"
 msgid "Variable"
 msgstr "Variável"
 
+#, fuzzy, python-format
+msgid "Variable files (%s)"
+msgstr "A verificação falhou (%s)"
+
+#, fuzzy, python-format
+msgid "Variables (%s)"
+msgstr "Variável"
+
 msgid "Variables set in the site user's environment"
 msgstr "Variáveis definidas no ambiente do utilizador do sítio'"
 
@@ -67014,6 +67164,10 @@ msgstr "Níveis de aviso para Stratum"
 msgid "Warning levels for Time Offset"
 msgstr "Níveis de advertência para Compensação de Tempo"
 
+#, fuzzy
+msgid "Warning of "
+msgstr "Aviso se %s"
+
 msgid "Warning starts with"
 msgstr "O aviso começa com"
 
@@ -67458,10 +67612,11 @@ msgstr ""
 "pasta quando uma nova pasta estiver sendo criada. Desactive esta opção se "
 "pretender ver e definir os nomes dos ficheiros manualmente."
 
+#, fuzzy
 msgid ""
 "When enabled, this site is marked for synchronisation every time a Web GUI "
 "related option is changed and users are allowed to login to the Web GUI of "
-"this site."
+"this site.The access to the Rest API is unaffected by this option though."
 msgstr ""
 "Quando ativado, este site é marcado para sincronização toda vez que uma "
 "opção relacionada à GUI da Web é alterada e os usuários têm permissão para "
@@ -73845,9 +74000,6 @@ msgstr ""
 
 #~ msgid "years"
 #~ msgstr "anos"
-
-#~ msgid "Request IDs are not equal"
-#~ msgstr "Os IDs dos pedidos não são iguais"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "Se omitido, então o endereço IP está sendo usado."

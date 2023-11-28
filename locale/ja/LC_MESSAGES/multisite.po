@@ -6219,6 +6219,10 @@ msgstr "Arcserve(ドイツ語)バックアップ(Windows)"
 msgid "Area"
 msgstr "範囲"
 
+#, fuzzy, python-format
+msgid "Argument files (%s)"
+msgstr "%sのエージェント(%s)"
+
 msgid "Arguments:"
 msgstr "引数:"
 
@@ -6290,6 +6294,10 @@ msgstr "SLA定義をサービスに割り当てます"
 
 msgid "Assign SLA to service"
 msgstr "SLAをサービスに割り当てる"
+
+#, fuzzy
+msgid "Assign result to piggyback host"
+msgstr "ピギーバックホストのホスト名変換"
 
 msgid "Assign service to following host"
 msgstr "次のホストにサービスを割り当てます"
@@ -7509,6 +7517,10 @@ msgstr "<tt>プラグイン</tt>および<tt>ローカル</tt>のベースディ
 msgid "Base directory for variable data (caches, state files)"
 msgstr "変数データ(キャッシュ、状態ファイル)のベースディレクトリ"
 
+#, fuzzy
+msgid "Base directory of suites"
+msgstr "サービス時間のみのベースレポート"
+
 msgid "Base layout"
 msgstr "基本レイアウト"
 
@@ -8180,6 +8192,9 @@ msgstr ""
 "されます。少なくとも1つのルールを追加するとすぐに、一致するルールを持つホスト"
 "のみが監視されます。"
 
+msgid "By age of Robotmk executions"
+msgstr ""
+
 msgid "By aggregation group prefix"
 msgstr "集計グループのプレフィックス別"
 
@@ -8602,6 +8617,10 @@ msgid ""
 "time period as well."
 msgstr ""
 "このオプションを有効にすると、定義された期間外にも通知がまとめられます。"
+
+#, fuzzy
+msgid "By number of Robotmk executions"
+msgstr "ビジーエグゼキュータの数"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -10855,6 +10874,10 @@ msgstr "設定日以上経過したホストファイルをクリーンアップ
 msgid "Cleanup messages"
 msgstr "クリーンアップメッセージ"
 
+#, fuzzy
+msgid "Cleanup of working directory"
+msgstr "ワーカーのアイドルクリーンアップ"
+
 msgid "Cleanup when disk space is below"
 msgstr "ディスク容量が次の値を下回るとクリーンアップ"
 
@@ -11524,6 +11547,10 @@ msgstr "互換性のあるワーク"
 
 msgid "Compatible and incompatible Werks"
 msgstr "互換性のあるおよび互換性のないWerks"
+
+#, fuzzy
+msgid "Complete"
+msgstr "コンプリート"
 
 msgid "Complete the restore"
 msgstr "復元を完了します"
@@ -13478,6 +13505,10 @@ msgstr "残りのクリティカルレベル"
 
 msgid "Critical level is at least"
 msgstr "少なくともクリティカルレベルです"
+
+#, fuzzy
+msgid "Critical of "
+msgstr "クリティカル %sの場合"
 
 msgid "Critical threshold"
 msgstr "クリティカルしきい値"
@@ -19192,6 +19223,10 @@ msgstr "エントリ"
 msgid "Environment Variables"
 msgstr "環境変数"
 
+#, fuzzy
+msgid "Environment build timeout"
+msgstr "環境変数"
+
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "エピソード1: Checkmkのインストールと最初のホスト監視"
 
@@ -19733,6 +19768,10 @@ msgstr ""
 "<tt>root</tt>ユーザー用に予約されたスペースを使用済みスペースの計算から除外し"
 "ます"
 
+#, fuzzy, python-format
+msgid "Exclude tests by tag (%s)"
+msgstr "空のタグの選択肢を除外する"
+
 msgid "Exclude the following SIDs (if found)"
 msgstr "次のSIDを除外します(見つかった場合)"
 
@@ -19821,6 +19860,10 @@ msgstr "このスケジュールをバックグラウンドジョブで今すぐ
 
 msgid "Execution Mode"
 msgstr "実行モード"
+
+#, fuzzy
+msgid "Execution configuration"
+msgstr "通知設定"
 
 msgid "Execution has been triggered"
 msgstr "実行がトリガーされました"
@@ -21129,6 +21172,9 @@ msgstr "固定サイズ"
 
 msgid "Fixed string to expect in the content"
 msgstr "コンテンツで期待される文字列を修正しました"
+
+msgid "FixedValue value is not serializable."
+msgstr ""
 
 msgid "Flap"
 msgstr "フラップ"
@@ -23020,6 +23066,10 @@ msgstr "認証キーファイルへのパスが必要です。"
 
 msgid "Hash"
 msgstr "ハッシュ"
+
+#, fuzzy
+msgid "Headed execution"
+msgstr "実行スケジュール"
 
 msgid "Headers at the left (single dataset)"
 msgstr "左側のヘッダー(シングルデータセット)"
@@ -27707,6 +27757,10 @@ msgstr "予約スペースを含める"
 msgid "Include service with zero base."
 msgstr "ゼロベースのサービスを含みます。"
 
+#, fuzzy, python-format
+msgid "Include tests by tag (%s)"
+msgstr "空のタグの選択肢を除外する"
+
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
 "Note: this requires using WMI for retrieving process information."
@@ -27812,6 +27866,10 @@ msgstr ""
 
 msgid "Increment size"
 msgstr "インクリメントサイズ"
+
+#, fuzzy
+msgid "Incremental"
+msgstr "#インクリメント"
 
 msgid "Index"
 msgstr "インデックス"
@@ -31150,6 +31208,10 @@ msgstr "ロードバランサー"
 msgid "Load balancers Target Groups"
 msgstr "ロードバランサーのターゲットグループ"
 
+#, fuzzy
+msgid "Load environment variables from file"
+msgstr "ホストからの環境変数を使用する"
+
 msgid "Load in a new window / tab"
 msgstr "新しいウィンドウ/タブにロード"
 
@@ -33234,6 +33296,10 @@ msgstr "接続またはリスナーの最大数"
 msgid "Maximum number of delivery attempts"
 msgstr "配信の最大試行回数"
 
+#, fuzzy
+msgid "Maximum number of executions"
+msgstr "最大クライアント数"
+
 msgid "Maximum number of firewall connections"
 msgstr "ファイアウォール接続の最大数"
 
@@ -33246,6 +33312,10 @@ msgstr "ノードの最大数が %d/%dを超えました"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "ログファイルごとに解析される最大行数"
+
+#, fuzzy
+msgid "Maximum number of re-executions"
+msgstr "最大クライアント数"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Readyコントロールプレーンノードの最大数"
@@ -33262,6 +33332,10 @@ msgstr "スレッドの最大数"
 msgid ""
 "Maximum number of threads started at any given time during the JVM lifetime"
 msgstr "JVMの存続期間中の任意の時点で開始されたスレッドの最大数"
+
+#, fuzzy
+msgid "Maximum of "
+msgstr "最大"
 
 msgid "Maximum parallel connections"
 msgstr "最大並列接続"
@@ -33961,6 +34035,10 @@ msgstr "Readyコントロールプレーンノードの最小数"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Readyワーカーノードの最小数"
+
+#, fuzzy
+msgid "Minimum of "
+msgstr "最小"
 
 msgid "Minimum password length"
 msgstr "パスワードの最小長"
@@ -35894,6 +35972,10 @@ msgstr "保留中の変更はありません。"
 #, python-format
 msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
+
+#, fuzzy
+msgid "No re-executions"
+msgstr "同時実行"
 
 #, python-format
 msgid "No remote %s processed."
@@ -39304,6 +39386,10 @@ msgstr "カテゴリのパス"
 msgid "Path to nvidia-smi.exe"
 msgstr "nvidia-smi.exeファイルへのパス"
 
+#, fuzzy
+msgid "Path to robot.yaml"
+msgstr "Cert Keyファイルへのパス"
+
 msgid "Path to sapgenpse"
 msgstr "sapgenpseへの道"
 
@@ -40394,10 +40480,18 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr ".xml'ファイルをご提供ください"
 
+#, fuzzy
+msgid "Please provide a relative Windows path"
+msgstr "有効な名前を入力してください"
+
 msgid "Please provide a valid host and port"
 msgstr "有効なホストとポートを入力してください"
 
 msgid "Please provide a valid name"
+msgstr "有効な名前を入力してください"
+
+#, fuzzy
+msgid "Please provide an absolute Windows path"
 msgstr "有効な名前を入力してください"
 
 msgid ""
@@ -42100,6 +42194,14 @@ msgstr "Rawバイト(HEXSTR)"
 
 msgid "Rcvd"
 msgstr "Rcvd"
+
+#, fuzzy
+msgid "Re-execution strategy"
+msgstr "実行時間"
+
+#, fuzzy
+msgid "Re-executions"
+msgstr "実行時間"
 
 msgid "Read"
 msgstr "読んだ"
@@ -44004,6 +44106,18 @@ msgstr "Rittal CMC-IIIユニット: 現在"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-IIIユニット:温度"
 
+#, fuzzy
+msgid "Robot Framework parameters"
+msgstr "ロボット・フレーム: %s"
+
+#, fuzzy
+msgid "Robot Framework re-executions"
+msgstr "ロボット・フレーム: %s"
+
+#, fuzzy
+msgid "Robot Framework target"
+msgstr "ロボット・フレーム: %s"
+
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "ロボット・フレーム: %s"
@@ -45533,6 +45647,14 @@ msgstr "サウンドを選択"
 
 msgid "Select specific object type"
 msgstr "特定のオブジェクトタイプを選択します"
+
+#, fuzzy, python-format
+msgid "Select suites by name (%s)"
+msgstr "セキュリティ名"
+
+#, python-format
+msgid "Select tests by name (%s)"
+msgstr ""
 
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -50587,8 +50709,16 @@ msgid "Suite"
 msgstr ""
 
 #, fuzzy
+msgid "Suite IDs are not unique"
+msgstr "ラベル \"%s\" は必須ではありません。"
+
+#, fuzzy
 msgid "Suite runtime"
 msgstr "サイト名"
+
+#, fuzzy
+msgid "Suites"
+msgstr "サイト"
 
 msgid "Sum"
 msgstr "和"
@@ -60481,6 +60611,10 @@ msgstr "スクリプトプロセスが終了するまでの秒単位のタイム
 msgid "Timeout occured"
 msgstr "タイムアウトが発生しました"
 
+#, fuzzy
+msgid "Timeout per attempt"
+msgstr "試みられなかった"
+
 msgid "Timeout waiting for a free channel"
 msgstr "空きチャネルを待機しているタイムアウト"
 
@@ -62119,6 +62253,10 @@ msgstr ""
 "ブローカーに使用される一意のクライアントID。設定されていない場合は、ランダム"
 "に生成されます。"
 
+#, fuzzy
+msgid "Unique suite ID"
+msgstr "サイトIDを使用する"
+
 msgid "Unit"
 msgstr "単位"
 
@@ -63244,6 +63382,10 @@ msgstr "Livestatusプロキシデーモンを使用する"
 
 msgid "Use Piggyback"
 msgstr "ピギーバックを使用する"
+
+#, fuzzy
+msgid "Use RCC for isolated execution"
+msgstr "接続にはSSLを使用します。"
 
 msgid "Use Reporting"
 msgstr "レポートを使用"
@@ -64570,6 +64712,14 @@ msgstr "消失したサービス -監視されているが存在しない"
 msgid "Variable"
 msgstr "変数"
 
+#, fuzzy, python-format
+msgid "Variable files (%s)"
+msgstr "検証失敗 (%s)"
+
+#, fuzzy, python-format
+msgid "Variables (%s)"
+msgstr "変数"
+
 msgid "Variables set in the site user's environment"
 msgstr "サイト利用者の環境に設定される変数"
 
@@ -65337,6 +65487,10 @@ msgstr "Stratumの警告レベル"
 msgid "Warning levels for Time Offset"
 msgstr "タイムオフセットの警告レベル"
 
+#, fuzzy
+msgid "Warning of "
+msgstr "%s の場合警告"
+
 msgid "Warning starts with"
 msgstr "警告の開始"
 
@@ -65757,10 +65911,11 @@ msgstr ""
 "得されます。ファイル名を手動で表示および設定する場合は、このオプションを無効"
 "にします。"
 
+#, fuzzy
 msgid ""
 "When enabled, this site is marked for synchronisation every time a Web GUI "
 "related option is changed and users are allowed to login to the Web GUI of "
-"this site."
+"this site.The access to the Rest API is unaffected by this option though."
 msgstr ""
 "有効にすると、このサイトは、Web GUI関連のオプションが変更されるたびに同期の"
 "マークが付けられ、ユーザーはこのサイトのWebGUIにログインできます。"
@@ -71956,11 +72111,6 @@ msgstr ""
 
 #~ msgid "years"
 #~ msgstr "年"
-
-#, fuzzy
-#~| msgid "The labels %s are not required."
-#~ msgid "Request IDs are not equal"
-#~ msgstr "ラベル \"%s\" は必須ではありません。"
 
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "省略した場合、IPアドレスが使用されます。"

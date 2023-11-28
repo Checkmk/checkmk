@@ -6434,6 +6434,10 @@ msgstr "Copii de rezervă Arcserve (germană) (Windows)"
 msgid "Area"
 msgstr "Zona"
 
+#, fuzzy, python-format
+msgid "Argument files (%s)"
+msgstr "Agent pentru %s (%s)"
+
 msgid "Arguments:"
 msgstr "Argumente:"
 
@@ -6511,6 +6515,10 @@ msgstr "Atribuiți definiția SLA la serviciu"
 
 msgid "Assign SLA to service"
 msgstr "Atribuiți SLA serviciului"
+
+#, fuzzy
+msgid "Assign result to piggyback host"
+msgstr "Traducerea numelui de gazdă pentru gazdele piggybacked"
 
 msgid "Assign service to following host"
 msgstr "Atribuiți serviciul la următoarea gazdă"
@@ -7752,6 +7760,10 @@ msgstr "Director de bază pentru <tt>plugins</tt> și <tt>local</tt>."
 msgid "Base directory for variable data (caches, state files)"
 msgstr "Director de bază pentru datele variabile (cache-uri, fișiere de stare)"
 
+#, fuzzy
+msgid "Base directory of suites"
+msgstr "Raport de bază numai pe baza timpilor de serviciu"
+
 msgid "Base layout"
 msgstr "Schema de bază"
 
@@ -8454,6 +8466,9 @@ msgstr ""
 "cel puțin o regulă, vor fi monitorizate numai gazdele cu o regulă "
 "corespunzătoare."
 
+msgid "By age of Robotmk executions"
+msgstr ""
+
 msgid "By aggregation group prefix"
 msgstr "Prin prefixul grupului de agregare"
 
@@ -8912,6 +8927,10 @@ msgid ""
 msgstr ""
 "Prin activarea acestei opțiuni, notificările vor fi grupate și în afara "
 "perioadei de timp definite."
+
+#, fuzzy
+msgid "By number of Robotmk executions"
+msgstr "Numărul de executanți ocupați"
 
 msgid ""
 "By specifying a customer here, you configure on which sites this object will "
@@ -11228,6 +11247,10 @@ msgstr "Curățați fișierele gazdă abandonate mai vechi de"
 msgid "Cleanup messages"
 msgstr "Mesaje de curățare"
 
+#, fuzzy
+msgid "Cleanup of working directory"
+msgstr "Curățarea în gol a lucrătorului"
+
 msgid "Cleanup when disk space is below"
 msgstr "Curățare atunci când spațiul pe disc este sub"
 
@@ -11911,6 +11934,10 @@ msgstr "Lucrări compatibile"
 
 msgid "Compatible and incompatible Werks"
 msgstr "Werks compatibile și incompatibile"
+
+#, fuzzy
+msgid "Complete"
+msgstr "complet"
 
 msgid "Complete the restore"
 msgstr "Finalizați restaurarea"
@@ -13939,6 +13966,10 @@ msgstr "Nivelul critic pentru restul"
 
 msgid "Critical level is at least"
 msgstr "Nivelul critic este de cel puțin"
+
+#, fuzzy
+msgid "Critical of "
+msgstr "Critic dacă %s"
 
 msgid "Critical threshold"
 msgstr "Pragul critic"
@@ -19771,6 +19802,10 @@ msgstr "Intrare"
 msgid "Environment Variables"
 msgstr "Variabile de mediu"
 
+#, fuzzy
+msgid "Environment build timeout"
+msgstr "Variabile de mediu"
+
 msgid "Episode 1: Installing Checkmk and monitoring your first host"
 msgstr "Episodul 1: Instalarea Checkmk și monitorizarea primei gazde"
 
@@ -20323,6 +20358,10 @@ msgstr ""
 "Excludeți spațiul rezervat pentru utilizatorul <tt>root</tt> din calculul "
 "spațiului utilizat"
 
+#, fuzzy, python-format
+msgid "Exclude tests by tag (%s)"
+msgstr "Excludeți alegerile de etichete goale"
+
 msgid "Exclude the following SIDs (if found)"
 msgstr "Excludeți următoarele SID-uri (dacă sunt găsite)"
 
@@ -20413,6 +20452,10 @@ msgstr "Executați acest program acum în jobul de fundal"
 
 msgid "Execution Mode"
 msgstr "Modul de execuție"
+
+#, fuzzy
+msgid "Execution configuration"
+msgstr "Configurația notificărilor"
 
 msgid "Execution has been triggered"
 msgstr "Execuția a fost declanșată"
@@ -21735,6 +21778,9 @@ msgstr "Dimensiune fixă"
 
 msgid "Fixed string to expect in the content"
 msgstr "Șir fixat pentru a aștepta în conținut"
+
+msgid "FixedValue value is not serializable."
+msgstr ""
 
 msgid "Flap"
 msgstr "Clapetă"
@@ -23666,6 +23712,10 @@ msgstr "Trebuie să conțină calea către fișierul cu cheia de certificare."
 
 msgid "Hash"
 msgstr "Hash"
+
+#, fuzzy
+msgid "Headed execution"
+msgstr "Programarea execuției"
 
 msgid "Headers at the left (single dataset)"
 msgstr "Antetele din stânga (set de date unic)"
@@ -28566,6 +28616,10 @@ msgstr "Includeți spațiul rezervat"
 msgid "Include service with zero base."
 msgstr "Includeți serviciul cu bază zero."
 
+#, fuzzy, python-format
+msgid "Include tests by tag (%s)"
+msgstr "Excludeți alegerile de etichete goale"
+
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
 "Note: this requires using WMI for retrieving process information."
@@ -28675,6 +28729,10 @@ msgstr ""
 
 msgid "Increment size"
 msgstr "Mărimea incrementului"
+
+#, fuzzy
+msgid "Incremental"
+msgstr "#Incremente"
 
 msgid "Index"
 msgstr "Index"
@@ -32090,6 +32148,10 @@ msgstr "Balansatoare de sarcină"
 msgid "Load balancers Target Groups"
 msgstr "Balansatoare de sarcină Grupuri țintă"
 
+#, fuzzy
+msgid "Load environment variables from file"
+msgstr "Utilizați variabilele de mediu de la gazdă"
+
 msgid "Load in a new window / tab"
 msgstr "Încărcați într-o fereastră / filă nouă"
 
@@ -34227,6 +34289,10 @@ msgstr "Numărul maxim de conexiuni sau de ascultători"
 msgid "Maximum number of delivery attempts"
 msgstr "Numărul maxim de încercări de livrare"
 
+#, fuzzy
+msgid "Maximum number of executions"
+msgstr "Numărul maxim de clienți"
+
 msgid "Maximum number of firewall connections"
 msgstr "Numărul maxim de conexiuni firewall"
 
@@ -34239,6 +34305,10 @@ msgstr "Numărul maxim de noduri depășit %d/%d"
 
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numarul maxim de linii parsate per fisier de loguri"
+
+#, fuzzy
+msgid "Maximum number of re-executions"
+msgstr "Numărul maxim de clienți"
 
 msgid "Maximum number of ready control plane nodes"
 msgstr "Numărul maxim de noduri de plan de control pregătite"
@@ -34257,6 +34327,10 @@ msgid ""
 msgstr ""
 "Numărul maxim de fire de execuție pornite la un moment dat pe durata de "
 "viață a JVM-ului"
+
+#, fuzzy
+msgid "Maximum of "
+msgstr "Maxim"
 
 msgid "Maximum parallel connections"
 msgstr "Număr maxim de conexiuni paralele"
@@ -34968,6 +35042,10 @@ msgstr "Numărul minim de noduri de plan de control pregătite"
 
 msgid "Minimum number of ready worker nodes"
 msgstr "Numărul minim de noduri de lucru pregătite"
+
+#, fuzzy
+msgid "Minimum of "
+msgstr "Minim"
 
 msgid "Minimum password length"
 msgstr "Lungimea minimă a parolei"
@@ -36949,6 +37027,10 @@ msgstr "Nu există modificări în așteptare."
 #, python-format
 msgid "No performance data: %s"
 msgstr "Nu există date privind performanța: %s."
+
+#, fuzzy
+msgid "No re-executions"
+msgstr "Execuții concurente"
 
 #, python-format
 msgid "No remote %s processed."
@@ -40457,6 +40539,10 @@ msgstr "Calea către categorii"
 msgid "Path to nvidia-smi.exe"
 msgstr "Cărare către nvidia-smi.exe"
 
+#, fuzzy
+msgid "Path to robot.yaml"
+msgstr "Calea de acces la fișierul Cert Key"
+
 msgid "Path to sapgenpse"
 msgstr "Calea către sapgenpse"
 
@@ -41580,10 +41666,18 @@ msgstr ""
 msgid "Please provide a '.xml' file"
 msgstr "Vă rugăm să furnizați un fișier '.xml'."
 
+#, fuzzy
+msgid "Please provide a relative Windows path"
+msgstr "Vă rugăm să furnizați un nume valid"
+
 msgid "Please provide a valid host and port"
 msgstr "Vă rugăm să furnizați o gazdă și un port valid"
 
 msgid "Please provide a valid name"
+msgstr "Vă rugăm să furnizați un nume valid"
+
+#, fuzzy
+msgid "Please provide an absolute Windows path"
 msgstr "Vă rugăm să furnizați un nume valid"
 
 msgid ""
@@ -43328,6 +43422,14 @@ msgstr "Biti brute (HEXSTR)"
 
 msgid "Rcvd"
 msgstr "Rcvd"
+
+#, fuzzy
+msgid "Re-execution strategy"
+msgstr "timpul de execuție"
+
+#, fuzzy
+msgid "Re-executions"
+msgstr "timpul de execuție"
 
 msgid "Read"
 msgstr "Citește"
@@ -45265,6 +45367,18 @@ msgstr "Unități Rittal CMC-III: Curent"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unități Rittal CMC-III: Temperaturi"
 
+#, fuzzy
+msgid "Robot Framework parameters"
+msgstr "Cadrul robotului: %s"
+
+#, fuzzy
+msgid "Robot Framework re-executions"
+msgstr "Cadrul robotului: %s"
+
+#, fuzzy
+msgid "Robot Framework target"
+msgstr "Cadrul robotului: %s"
+
 #, python-format
 msgid "Robot Framework: %s"
 msgstr "Cadrul robotului: %s"
@@ -46823,6 +46937,14 @@ msgstr "Selectați sunetul"
 
 msgid "Select specific object type"
 msgstr "Selectați un anumit tip de obiect"
+
+#, fuzzy, python-format
+msgid "Select suites by name (%s)"
+msgstr "Denumire de securitate"
+
+#, python-format
+msgid "Select tests by name (%s)"
+msgstr ""
 
 msgid ""
 "Select the Kubernetes objects you would like to monitor. Pods controlled by "
@@ -52088,8 +52210,16 @@ msgid "Suite"
 msgstr ""
 
 #, fuzzy
+msgid "Suite IDs are not unique"
+msgstr "ID-urile cererilor nu sunt egale"
+
+#, fuzzy
 msgid "Suite runtime"
 msgstr "Numele sitului"
+
+#, fuzzy
+msgid "Suites"
+msgstr "Site-uri"
 
 msgid "Sum"
 msgstr "Suma"
@@ -62602,6 +62732,10 @@ msgstr ""
 msgid "Timeout occured"
 msgstr "A apărut timeout"
 
+#, fuzzy
+msgid "Timeout per attempt"
+msgstr "nu s-a încercat"
+
 msgid "Timeout waiting for a free channel"
 msgstr "Timeout în așteptarea unui canal liber"
 
@@ -64270,6 +64404,10 @@ msgstr ""
 "ID unic de client utilizat pentru broker. Va fi generat în mod aleatoriu "
 "atunci când nu este setat."
 
+#, fuzzy
+msgid "Unique suite ID"
+msgstr "licente nefolosite"
+
 msgid "Unit"
 msgstr "Unitatea"
 
@@ -65427,6 +65565,10 @@ msgstr "Utilizați Livestatus Proxy Daemon"
 
 msgid "Use Piggyback"
 msgstr "Utilizați Piggyback"
+
+#, fuzzy
+msgid "Use RCC for isolated execution"
+msgstr "Utilizați SSL pentru conexiune."
 
 msgid "Use Reporting"
 msgstr "Utilizare Raportare"
@@ -66825,6 +66967,14 @@ msgstr "Servicii dispărute - monitorizate, dar care nu mai există"
 msgid "Variable"
 msgstr "Variabilă"
 
+#, fuzzy, python-format
+msgid "Variable files (%s)"
+msgstr "Verificarea a eșuat (%s)"
+
+#, fuzzy, python-format
+msgid "Variables (%s)"
+msgstr "Variabilă"
+
 msgid "Variables set in the site user's environment"
 msgstr "Variabilele setate în mediul utilizatorului site-ului"
 
@@ -67603,6 +67753,10 @@ msgstr "Niveluri de avertizare pentru Stratum"
 msgid "Warning levels for Time Offset"
 msgstr "Niveluri de avertizare pentru decalajul de timp"
 
+#, fuzzy
+msgid "Warning of "
+msgstr "Avertisment dacă %s"
+
 msgid "Warning starts with"
 msgstr "Avertismentul începe cu"
 
@@ -68049,10 +68203,11 @@ msgstr ""
 "dosarului atunci când se creează un nou dosar. Dezactivați această opțiune "
 "dacă doriți să vedeți și să setați manual numele fișierelor."
 
+#, fuzzy
 msgid ""
 "When enabled, this site is marked for synchronisation every time a Web GUI "
 "related option is changed and users are allowed to login to the Web GUI of "
-"this site."
+"this site.The access to the Rest API is unaffected by this option though."
 msgstr ""
 "Atunci când este activată, acest site este marcat pentru sincronizare de "
 "fiecare dată când se modifică o opțiune legată de interfața grafică web și "
@@ -74493,9 +74648,6 @@ msgstr ""
 #~ msgid "years"
 #~ msgstr "ani"
 
-#~ msgid "Request IDs are not equal"
-#~ msgstr "ID-urile cererilor nu sunt egale"
-
 #~ msgid "If omitted then the IP address is being used."
 #~ msgstr "Dacă este omisă, se utilizează adresa IP."
 
@@ -77719,10 +77871,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Unallocated Space"
 #~ msgstr "spatiu utilizat"
-
-#, fuzzy
-#~ msgid "Unique Rule ID"
-#~ msgstr "licente nefolosite"
 
 #, fuzzy
 #~ msgid "Unused"

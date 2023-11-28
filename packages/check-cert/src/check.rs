@@ -121,6 +121,7 @@ impl LevelsStrategy {
 
 #[derive(Debug, TypedBuilder)]
 pub struct LevelsCheckerArgs {
+    #[builder(setter(transform = |x: &str| x.to_string() ))]
     label: String,
     #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
     uom: Option<String>,
@@ -195,6 +196,7 @@ pub struct Metric<T>
 where
     T: Clone,
 {
+    #[builder(setter(transform = |x: &str| x.to_string() ))]
     label: String,
     value: T,
     #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
@@ -526,10 +528,7 @@ mod test_metrics_display {
         assert_eq!(
             format!(
                 "{}",
-                Metric::<Real>::builder()
-                    .label("name".to_string())
-                    .value(i(42))
-                    .build()
+                Metric::<Real>::builder().label("name").value(i(42)).build()
             ),
             "name=42;;;;"
         );
@@ -541,7 +540,7 @@ mod test_metrics_display {
             format!(
                 "{}",
                 Metric::<Real>::builder()
-                    .label("name".to_string())
+                    .label("name")
                     .value(i(42))
                     .uom("ms")
                     .build()
@@ -556,7 +555,7 @@ mod test_metrics_display {
             format!(
                 "{}",
                 Metric::<Real>::builder()
-                    .label("name".to_string())
+                    .label("name")
                     .value(i(42))
                     .levels(&Levels {
                         warn: i(24),
@@ -574,7 +573,7 @@ mod test_metrics_display {
             format!(
                 "{}",
                 Metric::<Real>::builder()
-                    .label("name".to_string())
+                    .label("name")
                     .value(i(42))
                     .uom("ms")
                     .levels(&Levels {
@@ -597,7 +596,7 @@ mod test_metrics_display {
             format!(
                 "{}",
                 Metric::<Real>::builder()
-                    .label("name".to_string())
+                    .label("name")
                     .value(d(42.0))
                     .uom("ms")
                     .levels(&Levels {
@@ -733,7 +732,7 @@ mod test_writer_format {
 
     fn m(name: &str, x: isize) -> Metric<Real> {
         Metric::<Real>::builder()
-            .label(name.to_string())
+            .label(name)
             .value(Real::Integer(x))
             .build()
     }

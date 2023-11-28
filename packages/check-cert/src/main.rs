@@ -105,7 +105,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 response_time.whole_milliseconds()
             ),
             LevelsCheckerArgs::builder()
-                .label(String::from("response_time"))
+                .label("response_time")
                 .uom("ms")
                 .build(),
         )

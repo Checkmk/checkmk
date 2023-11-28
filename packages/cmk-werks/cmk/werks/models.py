@@ -22,7 +22,6 @@ class Edition(Enum):
     CEE = "cee"
     CCE = "cce"
     CME = "cme"
-    CFE = "cfe"
 
 
 class Level(Enum):

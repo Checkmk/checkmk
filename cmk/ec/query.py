@@ -83,8 +83,7 @@ def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
 class QueryGET(Query):
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
         super().__init__(raw_query, logger)
-        self.table_name = self.method_arg
-        self.table = status_server.table(self.table_name)
+        self.table = status_server.table(self.method_arg)
         self.requested_columns = self.table.column_names
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
         self.filters: list[QueryFilter] = []

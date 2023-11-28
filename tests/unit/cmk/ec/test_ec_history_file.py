@@ -2,7 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# flake8: noqa
 """EC History file backend"""
+
 import logging
 import shlex
 from pathlib import Path
@@ -20,6 +22,7 @@ from cmk.ec.history_file import (
     parse_history_file,
 )
 from cmk.ec.main import StatusTableHistory
+from cmk.ec.query import QueryFilter
 
 
 @pytest.fixture(name="config_with_weekly_history_rotation")
@@ -64,13 +67,16 @@ def test_history_parse(history: FileHistory, tmp_path: Path) -> None:
 1666942292.2999856	DELETE	cmkadmin		6	1	5: # Network services, Internet style # # Updated from https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml . # # New ports will be added on request if they have been officially assigned # by IANA and used in the real-world or are needed by a debian package. # If you need a huge list of used numbers please install the nmap package. tcpmux 1/tcp # TCP port service multiplexer echo 7/tcp	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	
 1666942292.3000507	DELETE	cmkadmin		7	1	6: # Network services, Internet style # # Updated from https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml . # # New ports will be added on request if they have been officially assigned # by IANA and used in the real-world or are needed by a debian package. # If you need a huge list of used numbers please install the nmap package. tcpmux 1/tcp # TCP port service multiplexer echo 7/tcp	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	
     """
-
     path = tmp_path / "history_test.log"
     path.write_text(values)
-
-    filter_ = ("event_id", "=", lambda x: True, "1")
+    filter_ = QueryFilter(
+        column_name="event_id",
+        operator_name="=",
+        predicate=lambda x: True,
+        argument="1",
+    )
     tac = f"nl -b a {shlex.quote(str(path))} | tac"
-    cmd = " | ".join([tac] + _grep_pipeline([filter_]))  # type: ignore[list-item]
+    cmd = " | ".join([tac] + _grep_pipeline([filter_]))
 
     new_entries = parse_history_file(
         StatusTableHistory.columns,

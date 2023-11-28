@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC History mongo backend"""
 
-from collections.abc import Sequence
-
 import pytest
 
 from cmk.ec.history_mongo import filters_to_mongo_query
@@ -15,16 +13,61 @@ from cmk.ec.query import QueryFilter
 def test_filters_to_mongo_query() -> None:
     """Filters become proper mongo query"""
 
-    filters: Sequence[QueryFilter] = [
-        ("event_text", "=", lambda x: True, "test_event"),
-        ("event_time", "<", lambda x: True, 1234),
-        ("event_delay_until", "<=", lambda x: True, 120),
-        ("event_comment", "~", lambda x: True, "test"),
-        ("event_location", "=~", lambda x: True, "seattle"),
-        ("event_phase", "~~", lambda x: True, "test"),
-        ("event_owner", "in", lambda x: True, ["foo", "bar"]),
-        ("history_owner", "in", lambda x: True, "foobar"),
-        ("history_line", "in", lambda x: True, "some text"),
+    filters = [
+        QueryFilter(
+            column_name="event_text",
+            operator_name="=",
+            predicate=lambda x: True,
+            argument="test_event",
+        ),
+        QueryFilter(
+            column_name="event_time",
+            operator_name="<",
+            predicate=lambda x: True,
+            argument=1234,
+        ),
+        QueryFilter(
+            column_name="event_delay_until",
+            operator_name="<=",
+            predicate=lambda x: True,
+            argument=120,
+        ),
+        QueryFilter(
+            column_name="event_comment",
+            operator_name="~",
+            predicate=lambda x: True,
+            argument="test",
+        ),
+        QueryFilter(
+            column_name="event_location",
+            operator_name="=~",
+            predicate=lambda x: True,
+            argument="seattle",
+        ),
+        QueryFilter(
+            column_name="event_phase",
+            operator_name="~~",
+            predicate=lambda x: True,
+            argument="test",
+        ),
+        QueryFilter(
+            column_name="event_owner",
+            operator_name="in",
+            predicate=lambda x: True,
+            argument=["foo", "bar"],
+        ),
+        QueryFilter(
+            column_name="history_owner",
+            operator_name="in",
+            predicate=lambda x: True,
+            argument="foobar",
+        ),
+        QueryFilter(
+            column_name="history_line",
+            operator_name="in",
+            predicate=lambda x: True,
+            argument="some text",
+        ),
     ]
 
     expected_output = {
@@ -45,4 +88,13 @@ def test_filters_to_mongo_query_Exception() -> None:
     """Exception on a column name not starting with "event_" or "history_"."""
 
     with pytest.raises(Exception):
-        filters_to_mongo_query([("wrong_column_name", "=", lambda x: True, "test_event")])
+        filters_to_mongo_query(
+            [
+                QueryFilter(
+                    column_name="wrong_column_name",
+                    operator_name="=",
+                    predicate=lambda x: True,
+                    argument="test_event",
+                )
+            ]
+        )

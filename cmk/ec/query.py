@@ -8,6 +8,7 @@ from __future__ import annotations
 import abc
 import operator
 from collections.abc import Callable, Iterable, Sequence
+from dataclasses import dataclass
 from logging import Logger
 from typing import Any, Literal
 
@@ -129,7 +130,14 @@ def filter_operator_in(a: Any, b: Any) -> bool:
 
 
 OperatorName = Literal["=", ">", "<", ">=", "<=", "~", "=~", "~~", "in"]
-QueryFilter = tuple[str, OperatorName, Callable[[Any], bool], Any]
+
+
+@dataclass(frozen=True)
+class QueryFilter:
+    column_name: str
+    operator_name: OperatorName
+    predicate: Callable[[Any], bool]
+    argument: Any
 
 
 # NOTE: mypy is currently too dumb to narrow down a type via "in" or "get()", so we have to work
@@ -187,11 +195,11 @@ class QueryGET(Query):
         elif header == "Columns":
             self.requested_columns = argument.split(" ")
         elif header == "Filter":
-            column_name, operator_name, predicate, argument = self._parse_filter(argument)
+            f = self._parse_filter(argument)
             # Needed for later optimization (check_mkevents)
-            if column_name == "event_host" and operator_name == "in":
-                self.only_host = set(argument)
-            self.filters.append((column_name, operator_name, predicate, argument))
+            if f.column_name == "event_host" and f.operator_name == "in":
+                self.only_host = set(f.argument)
+            self.filters.append(f)
         elif header == "Limit":
             self.limit = int(argument)
         else:
@@ -228,7 +236,12 @@ class QueryGET(Query):
             else convert(raw_argument)  # type: ignore[call-arg]
         )
 
-        return (column, op_name, lambda x: operator_function(x, argument), argument)
+        return QueryFilter(
+            column_name=column,
+            operator_name=op_name,
+            predicate=lambda x: operator_function(x, argument),
+            argument=argument,
+        )
 
     def requested_column_indexes(self) -> list[int | None]:
         """If a column is not known: Use None as index and None value later."""
@@ -237,10 +250,7 @@ class QueryGET(Query):
         ]
 
     def filter_row(self, row: Sequence[Any]) -> bool:
-        return all(
-            predicate(row[self.table.column_indices[column_name]])
-            for column_name, _operator_name, predicate, _argument in self.filters
-        )
+        return all(f.predicate(row[self.table.column_indices[f.column_name]]) for f in self.filters)
 
 
 class QueryREPLICATE(Query):

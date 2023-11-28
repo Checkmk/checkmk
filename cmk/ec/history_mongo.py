@@ -128,28 +128,28 @@ def filters_to_mongo_query(
     """
 
     mongo_query = {}
-    for column_name, operator_name, _predicate, argument in filters:
+    for f in filters:
         mongo_filter: str | dict[str, str] = {
-            "=": argument,
-            ">": {"$gt": argument},
-            "<": {"$lt": argument},
-            ">=": {"$gte": argument},
-            "<=": {"$lte": argument},
-            "~": {"$regex": argument, "$options": ""},
-            "=~": {"$regex": argument, "$options": "mi"},
-            "~~": {"$regex": argument, "$options": "i"},
-            "in": {"$in": argument},
-        }[operator_name]
+            "=": f.argument,
+            ">": {"$gt": f.argument},
+            "<": {"$lt": f.argument},
+            ">=": {"$gte": f.argument},
+            "<=": {"$lte": f.argument},
+            "~": {"$regex": f.argument, "$options": ""},
+            "=~": {"$regex": f.argument, "$options": "mi"},
+            "~~": {"$regex": f.argument, "$options": "i"},
+            "in": {"$in": f.argument},
+        }[f.operator_name]
 
-        if column_name[:6] == "event_":
-            mongo_query["event." + column_name[6:]] = mongo_filter
-        elif column_name[:8] == "history_":
-            key = column_name[8:]
+        if f.column_name[:6] == "event_":
+            mongo_query["event." + f.column_name[6:]] = mongo_filter
+        elif f.column_name[:8] == "history_":
+            key = f.column_name[8:]
             if key == "line":
                 key = "_id"
             mongo_query[key] = mongo_filter
         else:
-            raise Exception(f"Filter {column_name} not implemented for MongoDB")
+            raise Exception(f"Filter {f.column_name} not implemented for MongoDB")
     return mongo_query
 
 

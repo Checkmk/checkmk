@@ -84,9 +84,7 @@ class FileHistory(History):
         grep_pipeline = _grep_pipeline(filters)
 
         time_filters = [
-            (operator_name, argument)
-            for column_name, operator_name, _predicate, argument in filters
-            if column_name.split("_")[-1] == "time"
+            (f.operator_name, f.argument) for f in filters if f.column_name.split("_")[-1] == "time"
         ]
         time_range = (
             _greatest_lower_bound_for_filters(time_filters),
@@ -186,9 +184,9 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     """
     return [
         command
-        for column_name, operator_name, _predicate, argument in filters
-        if column_name in _GREPABLE_COLUMNS
-        for command in [_grep_command(operator_name, str(argument))]
+        for f in filters
+        if f.column_name in _GREPABLE_COLUMNS
+        for command in [_grep_command(f.operator_name, str(f.argument))]
         if command is not None
     ]
 

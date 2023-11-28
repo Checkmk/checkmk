@@ -47,8 +47,9 @@ def _make_module(name: str, path: list[str], **kwargs: object) -> ModuleType:
 def test_find_namespaces_ignore_init() -> None:
     assert list(
         discover_modules(
-            (_make_module("cmk.plugins", ["/local/lib/cmk/plugins", "/lib/cmk/plugins"]),),
             PluginGroup.GRAPHING,
+            raise_errors=True,
+            modules=(_make_module("cmk.plugins", ["/local/lib/cmk/plugins", "/lib/cmk/plugins"]),),
             ls=AssumeDirs(
                 "/local/lib/cmk/plugins/foo/graphing/bar.py",
                 "/local/lib/cmk/plugins/foo/graphing/__init__.py",
@@ -66,8 +67,9 @@ def test_find_namespaces_ignore_init() -> None:
 def test_find_namespaces_ignore_non_path_match() -> None:
     assert list(
         discover_modules(
-            (_make_module("cmk.plugins", ["/mypath/cmk/plugins"]),),
             PluginGroup.GRAPHING,
+            raise_errors=True,
+            modules=(_make_module("cmk.plugins", ["/mypath/cmk/plugins"]),),
             ls=AssumeDirs(
                 "/mypath/cmk/plugins/my_foo/graphing/bar.py",
                 "/otherpath/cmk/plugins/other_foo/graphing/bar.py",
@@ -81,11 +83,12 @@ def test_find_namespaces_ignore_non_path_match() -> None:
 def test_find_namespaces_deduplicate_preserving_order() -> None:
     assert list(
         discover_modules(
-            (
+            PluginGroup.GRAPHING,
+            raise_errors=True,
+            modules=(
                 _make_module("cmk.plugins", ["/lib/cmk/plugins"]),
                 _make_module("cmk.plugins", ["/local/cmk/plugins"]),
             ),
-            PluginGroup.GRAPHING,
             ls=AssumeDirs(
                 "/lib/cmk/plugins/my_foo/graphing/bar.py",
                 "/lib/cmk/plugins/my_zoo/graphing/bar.py",

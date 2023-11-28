@@ -73,12 +73,7 @@ def discover_plugins(
 ) -> DiscoveredPlugins[_PluginType]:
     """Collect all plugins from well-known locations"""
 
-    modules = (
-        m
-        for p_namespace in PLUGIN_NAMESPACES
-        if (m := _import_optionally(p_namespace, raise_errors)) is not None
-    )
-    module_names_by_priority = discover_modules(modules, plugin_group, ls=_ls_defensive)
+    module_names_by_priority = discover_modules(plugin_group, raise_errors=raise_errors)
 
     collector = Collector(plugin_prefixes, raise_errors=raise_errors)
     for mod_name in module_names_by_priority:
@@ -87,12 +82,23 @@ def discover_plugins(
     return DiscoveredPlugins(collector.errors, collector.plugins)
 
 
+def _ls_defensive(path: str) -> Sequence[str]:
+    try:
+        return list(os.listdir(path))
+    except FileNotFoundError:
+        return []
+
+
 def discover_families(
-    modules: Iterable[ModuleType],
     *,
-    ls: Callable[[str], Iterable[str]],
+    raise_errors: bool,
+    modules: Iterable[ModuleType] | None = None,
+    ls: Callable[[str], Iterable[str]] = _ls_defensive,
 ) -> Mapping[str, Sequence[str]]:
     """Discover all families below `modules` and their paths"""
+    if modules is None:
+        modules = _get_plugin_modules(raise_errors=raise_errors)
+
     family_paths = defaultdict(list)
     for module in modules:
         for path in module.__path__:
@@ -103,10 +109,11 @@ def discover_families(
 
 
 def discover_modules(
-    modules: Iterable[ModuleType],
     plugin_group: PluginGroup,
     *,
-    ls: Callable[[str], Iterable[str]],
+    raise_errors: bool,
+    modules: Iterable[ModuleType] | None = None,
+    ls: Callable[[str], Iterable[str]] = _ls_defensive,
 ) -> Iterable[str]:
     """Discover all potetial plugin modules blow `modules`.
 
@@ -115,11 +122,21 @@ def discover_modules(
     return _deduplicate(
         (
             f"{family}.{plugin_group.value}.{fname.removesuffix('.py')}"
-            for family, paths in discover_families(modules, ls=ls).items()
+            for family, paths in discover_families(
+                raise_errors=raise_errors, modules=modules, ls=ls
+            ).items()
             for path in paths
             for fname in ls(f"{path}/{plugin_group.value}")
             if fname not in {"__pycache__", "__init__.py"}
         )
+    )
+
+
+def _get_plugin_modules(*, raise_errors: bool) -> Iterable[ModuleType]:
+    return (
+        m
+        for p_namespace in PLUGIN_NAMESPACES
+        if (m := _import_optionally(p_namespace, raise_errors)) is not None
     )
 
 
@@ -144,13 +161,6 @@ def _import_optionally(module_name: str, raise_errors: bool) -> ModuleType | Non
         if raise_errors:
             raise
         return None
-
-
-def _ls_defensive(path: str) -> Sequence[str]:
-    try:
-        return list(os.listdir(path))
-    except FileNotFoundError:
-        return []
 
 
 class Collector(Generic[_PluginType]):

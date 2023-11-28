@@ -29,7 +29,6 @@ def discover(section: Section) -> DiscoveryResult:
         Service(
             item=test_name,
             labels=[
-                ServiceLabel("robotmk", "true"),
                 ServiceLabel("robotmk/html_last_error_log", "yes"),
                 ServiceLabel("robotmk/html_last_log", "yes"),
             ],

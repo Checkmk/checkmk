@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, LevelsChecker, Real, SimpleCheckResult};
+use crate::check::{CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult};
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
@@ -91,13 +91,15 @@ fn check_validity_not_after(
     match time_to_expiration {
         None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
-            "validity",
             time_to_expiration,
             format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after
             ),
+            LevelsCheckerArgs::builder()
+                .label(String::from("validity"))
+                .build(),
         ),
     }
 }

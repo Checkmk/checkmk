@@ -1948,24 +1948,18 @@ class StatusTableEvents(StatusTable):
     def __init__(self, logger: Logger, event_status: EventStatus) -> None:
         super().__init__(logger)
         self._event_status = event_status
-        self._column_defaults = dict(self.columns)
+        # NOTE: We depend on the dict insertion order below, but this is guaranteed for Python >= 3.7.
+        self._columns_dict = dict(self.columns)
 
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
-            if query.only_host and not filter_operator_in(event["host"], query.only_host):
-                continue
-
-            row = []
-            for column_name in self.column_names:
-                try:
-                    row.append(event[column_name[6:]])  # type: ignore[literal-required]
-                except KeyError:
-                    # The row does not have this value. Use the columns default value
-                    row.append(self._column_defaults[column_name])
-
-            yield row
+            if not query.only_host or filter_operator_in(event["host"], query.only_host):
+                yield [
+                    event.get(column_name[6:], default)
+                    for column_name, default in self._columns_dict.items()
+                ]
 
 
 class StatusTableHistory(StatusTable):

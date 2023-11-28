@@ -664,8 +664,9 @@ def _get_manual_check_parameter_rulespec_instance(
     title: Callable[[], str] | None = None,
     parameter_valuespec: Callable[[], ValueSpec] | None = None,
     item_spec: Callable[[], ValueSpec] | None = None,
-    is_optional: bool | None = None,
-    is_deprecated: bool | None = None,
+    is_optional: bool = False,
+    is_deprecated: bool = False,
+    is_cloud_and_managed_edition_only: bool = False,
 ) -> "ManualCheckParameterRulespec":
     # There may be no RulespecGroup declaration for the static checks.
     # Create some based on the regular check groups (which should have a definition)
@@ -690,6 +691,7 @@ def _get_manual_check_parameter_rulespec_instance(
         item_spec=item_spec,
         is_optional=is_optional,
         is_deprecated=is_deprecated,
+        is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
     )
 
 
@@ -796,15 +798,16 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     def __init__(  # pylint: disable=dangerous-default-value
         self,
         *,
-        check_group_name,
-        group,
-        parameter_valuespec,
-        title=None,
-        match_type=None,
-        is_optional=False,
-        is_deprecated=False,
-        factory_default=Rulespec.NO_FACTORY_DEFAULT,
-        create_manual_check=True,
+        check_group_name: str,
+        group: type[RulespecBaseGroup],
+        parameter_valuespec: Callable[[], ValueSpec],
+        title: Callable[[], str] | None = None,
+        match_type: str | None = None,
+        is_optional: bool = False,
+        is_deprecated: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
+        create_manual_check: bool = True,
     ):
         self._check_group_name = check_group_name
         name = "checkgroup_parameters:%s" % self._check_group_name
@@ -822,6 +825,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
             title=title,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             # Excplicit set
             name=name,
             is_binary_ruleset=False,
@@ -870,16 +874,17 @@ class ManualCheckParameterRulespec(HostRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
         self,
-        group,
-        check_group_name,
-        parameter_valuespec=None,
-        title=None,
-        item_spec=None,
-        is_optional=False,
-        is_deprecated=False,
-        name=None,
-        match_type="all",
-        factory_default=Rulespec.NO_FACTORY_DEFAULT,
+        group: type[RulespecBaseGroup],
+        check_group_name: str,
+        parameter_valuespec: Callable[[], ValueSpec] | None = None,
+        title: Callable[[], str] | None = None,
+        item_spec: Callable[[], ValueSpec] | None = None,
+        is_optional: bool = False,
+        is_deprecated: bool = False,
+        is_cloud_and_managed_edition_only: bool = False,
+        name: str | None = None,
+        match_type: str = "all",
+        factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
     ):
         # Mandatory keys
         self._check_group_name = check_group_name
@@ -901,6 +906,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             is_optional=is_optional,
             is_deprecated=is_deprecated,
             factory_default=factory_default,
+            is_cloud_and_managed_edition_only=is_cloud_and_managed_edition_only,
             # Explicit set
             valuespec=self._rulespec_valuespec,
         )

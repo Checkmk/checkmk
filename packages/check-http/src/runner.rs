@@ -2,7 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::checking::{self, CheckParameters, CheckResult};
+use crate::checking_types::CheckResult;
+use crate::checks::{self, CheckParameters};
 use crate::http::{self, ClientConfig, RequestConfig};
 
 pub async fn collect_checks(
@@ -11,5 +12,5 @@ pub async fn collect_checks(
     check_params: CheckParameters,
 ) -> Vec<CheckResult> {
     let response = http::perform_request(client_cfg, request_cfg).await;
-    checking::collect_response_checks(response, check_params)
+    checks::collect_response_checks(response, check_params)
 }

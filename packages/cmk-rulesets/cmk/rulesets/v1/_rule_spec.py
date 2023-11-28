@@ -55,7 +55,7 @@ class CheckParameterRuleSpecWithItem:
 
     @property
     def functionality(self) -> Functionality:
-        return Functionality.MONITORING_CONFIGURATION
+        return Functionality.SERVICE_MONITORING_RULES
 
     def __post_init__(self) -> None:
         assert isinstance(self.item_form, (TextInput, DropdownChoice))
@@ -75,7 +75,7 @@ class CheckParameterRuleSpecWithoutItem:
 
     @property
     def functionality(self) -> Functionality:
-        return Functionality.MONITORING_CONFIGURATION
+        return Functionality.SERVICE_MONITORING_RULES
 
 
 @dataclass(frozen=True)

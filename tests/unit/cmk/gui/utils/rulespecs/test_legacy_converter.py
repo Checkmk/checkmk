@@ -383,7 +383,7 @@ def test_convert_to_legacy_valuespec(
     ["new_functionality", "new_topic", "expected"],
     [
         pytest.param(
-            api_v1.Functionality.MONITORING_CONFIGURATION,
+            api_v1.Functionality.SERVICE_MONITORING_RULES,
             api_v1.Topic.APPLICATIONS,
             wato.RulespecGroupCheckParametersApplications,
             id="CheckParametersApplications",

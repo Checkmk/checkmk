@@ -17,6 +17,7 @@ use x509_parser::x509::{SubjectPublicKeyInfo, X509Name};
 #[builder(field_defaults(default))]
 pub struct Config {
     pubkey_algorithm: Option<String>,
+    pubkey_size: Option<usize>,
     serial: Option<String>,
     signature_algorithm: Option<String>,
     subject: Option<String>,
@@ -47,6 +48,9 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
             .unwrap_or_default()
             .into(),
         check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm)
+            .unwrap_or_default()
+            .into(),
+        check_pubkey_size(cert.public_key(), config.pubkey_size)
             .unwrap_or_default()
             .into(),
         check_validity_not_after(
@@ -115,8 +119,6 @@ fn check_pubkey_algorithm(
 ) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         let pubkey_alg = match pubkey.parsed() {
-            // We could also check for the size but I'm not sure we can put
-            // everything into an enum then.
             Ok(PublicKey::RSA(_)) => "RSA",
             Ok(PublicKey::EC(_)) => "EC",
             Ok(PublicKey::DSA(_)) => "DSA",
@@ -132,6 +134,33 @@ fn check_pubkey_algorithm(
             SimpleCheckResult::warn(format!(
                 "Public key algorithm is {} but expected {}",
                 pubkey_alg, expected
+            ))
+        }
+    })
+}
+
+fn check_pubkey_size(
+    pubkey: &SubjectPublicKeyInfo,
+    expected: Option<usize>,
+) -> Option<SimpleCheckResult> {
+    expected.map(|expected| {
+        let pubkey_size = match pubkey.parsed() {
+            // more or less stolen from upstream `examples/print-cert.rs`.
+            Ok(PublicKey::RSA(rsa)) => rsa.key_size(),
+            Ok(PublicKey::EC(ec)) => ec.key_size(),
+            Ok(PublicKey::DSA(k))
+            | Ok(PublicKey::GostR3410(k))
+            | Ok(PublicKey::GostR3410_2012(k))
+            | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
+            Err(_) => return SimpleCheckResult::warn(String::from("Invalid public key")),
+        };
+
+        if pubkey_size == expected {
+            SimpleCheckResult::ok(format!("Public key size: {}", pubkey_size))
+        } else {
+            SimpleCheckResult::warn(format!(
+                "Public key size is {} but expected {}",
+                pubkey_size, expected
             ))
         }
     })

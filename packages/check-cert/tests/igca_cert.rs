@@ -10,6 +10,7 @@ static SUBJECT: &str =
 static ISSUER: &str = SUBJECT;
 static SIG_ALG: &str = "RSA";
 static PUBKEY_ALG: &str = "RSA";
+static PUBKEY_SZ: usize = 2048;
 
 fn s(s: &str) -> Option<String> {
     Some(String::from(s))
@@ -25,11 +26,12 @@ fn test_cert_ok() {
             .issuer(s(ISSUER))
             .signature_algorithm(s(SIG_ALG))
             .pubkey_algorithm(s(PUBKEY_ALG))
+            .pubkey_size(Some(PUBKEY_SZ))
             .build(),
     ));
     assert_eq!(
         format!("{}", out),
-        format!("OK - Serial {SERIAL}, {SUBJECT}, Issuer {ISSUER}, Signature algorithm: {SIG_ALG}, Public key algorithm: {PUBKEY_ALG}")
+        format!("OK - Serial {SERIAL}, {SUBJECT}, Issuer {ISSUER}, Signature algorithm: {SIG_ALG}, Public key algorithm: {PUBKEY_ALG}, Public key size: {PUBKEY_SZ}")
     );
 }
 

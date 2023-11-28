@@ -506,3 +506,24 @@ export function add_filter_form_error_listener(elem_id: string) {
 
     observer.observe(elem, {childList: true, subtree: true});
 }
+
+export function enable_submit_buttons_on_nonempty_input(
+    input: HTMLInputElement,
+    submit_ids: string[]
+) {
+    for (const submit_id of submit_ids) {
+        const submit = document.getElementById(submit_id) as HTMLInputElement;
+        if (submit == null) continue;
+
+        const submit_container = submit.parentNode as HTMLDivElement;
+        if (input.value != "") {
+            utils.remove_class(submit, "disabled");
+            submit_container.title = "";
+        } else {
+            utils.add_class(submit, "disabled");
+            if (submit_container.dataset.title) {
+                submit_container.title = submit_container.dataset.title;
+            }
+        }
+    }
+}

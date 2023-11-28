@@ -90,6 +90,25 @@ form {
     color: $font-color-green;
     content: " (required)";
   }
+
+  div.submit_button_container {
+    display: inline-block;
+    margin-right: 2 * $spacing;
+
+    &.disable_tooltip {
+      pointer-events: none;
+    }
+
+    input[type="submit"] {
+      margin-right: 0;
+      pointer-events: auto;
+
+      &.disabled {
+        pointer-events: none;
+        opacity: $inactive-opacity;
+      }
+    }
+  }
 }
 
 input:hover,
@@ -1372,7 +1391,7 @@ input.hidden_submit {
       }
 
       span.select2-container--default {
-        opacity: $label-filter-last-row-opacity;
+        opacity: $inactive-opacity;
       }
 
       &.active,

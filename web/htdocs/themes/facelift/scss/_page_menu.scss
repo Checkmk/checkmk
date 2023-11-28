@@ -693,9 +693,7 @@ div.page_menu_popup {
     }
 
     .button {
-      &:not(.duration) {
-        margin: 0px 20px 0px 0px;
-      }
+      margin-left: 0px;
 
       &.border_hot {
         border: 1px solid $success-dimmed;
@@ -800,6 +798,15 @@ div.page_menu_popup {
 
         span.checkbox {
           padding-right: 0;
+        }
+
+        &.disabled {
+          color: $font-color-dimmed;
+
+          input,
+          label {
+            pointer-events: none;
+          }
         }
       }
     }

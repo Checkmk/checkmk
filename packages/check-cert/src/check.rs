@@ -119,6 +119,13 @@ impl LevelsStrategy {
     }
 }
 
+#[derive(Debug, TypedBuilder)]
+pub struct LevelsCheckerArgs {
+    label: String,
+    #[builder(default, setter(transform = |x: &str| Some(x.to_string()) ))]
+    uom: Option<String>,
+}
+
 #[derive(Debug)]
 pub struct LevelsChecker<T> {
     pub strategy: LevelsStrategy,
@@ -139,7 +146,7 @@ where
             .ok_or(Box::from("bad values"))
     }
 
-    pub fn check(&self, label: &str, value: T, summary: String) -> CheckResult<T> {
+    pub fn check(&self, value: T, summary: String, args: LevelsCheckerArgs) -> CheckResult<T> {
         let evaluate = |value: &T| -> State {
             if self.strategy.cmp(value, &self.levels.crit) {
                 State::Crit
@@ -150,14 +157,15 @@ where
             }
         };
         let r = SimpleCheckResult::new(evaluate(&value), summary);
-        let m = Metric::builder()
-            .label(label.to_string())
-            .value(value)
-            .levels(&self.levels)
-            .build();
         CheckResult {
             summary: r.summary,
-            metrics: Some(m),
+            metrics: Some(Metric::<T> {
+                label: args.label,
+                value,
+                uom: args.uom,
+                levels: Some(self.levels.clone()),
+                bounds: None,
+            }),
         }
     }
 }

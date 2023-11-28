@@ -3,7 +3,9 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use anyhow::Result;
-use check_cert::check::{self, Levels, LevelsChecker, LevelsStrategy, Real, Writer};
+use check_cert::check::{
+    self, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real, Writer,
+};
 use check_cert::checker::{self, Config as CheckCertConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use clap::Parser;
@@ -97,12 +99,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut checks = vec![response_time_levels_checker
         .check(
-            "response_time",
             response_time,
             format!(
                 "Certificate obtained in {} ms",
                 response_time.whole_milliseconds()
             ),
+            LevelsCheckerArgs::builder()
+                .label(String::from("response_time"))
+                .uom("ms")
+                .build(),
         )
         .map(|x| Real::from(x.whole_milliseconds() as isize))];
     checks.append(&mut checker::check_cert(

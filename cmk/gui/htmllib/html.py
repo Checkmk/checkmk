@@ -1383,7 +1383,7 @@ class HTMLGenerator(HTMLWriter):
         var: str,
         value: str,
         id_: str,
-        onclick: str | None = None,
+        onchange: str | None = None,
     ) -> None:
         self.write_html(
             self.render_input(
@@ -1391,7 +1391,7 @@ class HTMLGenerator(HTMLWriter):
                 value=value,
                 type_="date",
                 id=id_,
-                onclick=onclick,
+                onchange=onchange,
             )
         )
 
@@ -1400,7 +1400,7 @@ class HTMLGenerator(HTMLWriter):
         var: str,
         value: str,
         id_: str,
-        onclick: str | None = None,
+        onchange: str | None = None,
     ) -> None:
         self.write_html(
             self.render_input(
@@ -1408,7 +1408,7 @@ class HTMLGenerator(HTMLWriter):
                 value=value,
                 type_="time",
                 id=id_,
-                onclick=onclick,
+                onchange=onchange,
             )
         )
 

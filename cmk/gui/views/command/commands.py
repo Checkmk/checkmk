@@ -1416,13 +1416,13 @@ class CommandScheduleDowntimes(Command):
     def _vs_date(self) -> DatePicker:
         return DatePicker(
             title=_("Downtime datepicker"),
-            onclick="cmk.page_menu.update_down_duration_button();",
+            onchange="cmk.page_menu.update_down_duration_button();",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
             title=_("Downtime timepicker"),
-            onclick="cmk.page_menu.update_down_duration_button();",
+            onchange="cmk.page_menu.update_down_duration_button();",
         )
 
     def _get_onclick(

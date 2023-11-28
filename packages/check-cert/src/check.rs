@@ -39,7 +39,8 @@ impl Display for Real {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Bounds<T>
 where
     T: Clone,
@@ -73,7 +74,8 @@ where
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Levels<T> {
     pub warn: T,
     pub crit: T,
@@ -191,7 +193,8 @@ impl Display for State {
     }
 }
 
-#[derive(Debug, Default, PartialEq, Clone, TypedBuilder)]
+#[derive(Debug, Default, Clone, TypedBuilder)]
+#[cfg_attr(test, derive(PartialEq))]
 pub struct Metric<T>
 where
     T: Clone,

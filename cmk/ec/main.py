@@ -1948,6 +1948,7 @@ class StatusTableEvents(StatusTable):
     def __init__(self, logger: Logger, event_status: EventStatus) -> None:
         super().__init__(logger)
         self._event_status = event_status
+        self._column_defaults = dict(self.columns)
 
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
         for event in self._event_status.get_events():
@@ -1962,7 +1963,7 @@ class StatusTableEvents(StatusTable):
                     row.append(event[column_name[6:]])  # type: ignore[literal-required]
                 except KeyError:
                     # The row does not have this value. Use the columns default value
-                    row.append(self.column_defaults[column_name])
+                    row.append(self._column_defaults[column_name])
 
             yield row
 

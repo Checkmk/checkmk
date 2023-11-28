@@ -1872,14 +1872,19 @@ def create_event_from_trap(trap: Iterable[tuple[str, str]], ipaddress_: str) -> 
 class Queries:
     """Parsing and processing of status queries."""
 
-    def __init__(self, status_server: StatusServer, sock: socket.socket, logger: Logger) -> None:
-        self._status_server = status_server
+    def __init__(
+        self,
+        get_table: Callable[[str], StatusTable],
+        sock: socket.socket,
+        logger: Logger,
+    ) -> None:
+        self._get_table = get_table
         self._socket = sock
         self._logger = logger
         self._buffer = b""
 
     def _query(self, request: bytes) -> Query:
-        return Query.make(self._status_server, request.decode("utf-8").splitlines(), self._logger)
+        return Query.make(self._get_table, request.decode("utf-8").splitlines(), self._logger)
 
     def __iter__(self) -> Iterator[Query]:
         while True:
@@ -2229,7 +2234,7 @@ class StatusServer(ECServerThread):
     def handle_client(
         self, client_socket: socket.socket, allow_commands: bool, client_ip: str
     ) -> None:
-        for query in Queries(self, client_socket, self._logger):
+        for query in Queries(self.table, client_socket, self._logger):
             self._logger.log(VERBOSE, "Client livestatus query: %r", query)
 
             with self._event_status.lock:

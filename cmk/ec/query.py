@@ -19,9 +19,6 @@ class MKClientError(MKException):
     pass
 
 
-# TODO: Extract StatusServer and friends...
-_StatusServer = Any
-
 Columns = Sequence[tuple[str, float | int | str | Sequence[object]]]
 
 #  Common functionality for the event/history/rule/status tables
@@ -98,13 +95,15 @@ class StatusTable:
 
 class Query:
     @staticmethod
-    def make(status_server: _StatusServer, raw_query: list[str], logger: Logger) -> Query:
+    def make(
+        get_table: Callable[[str], StatusTable], raw_query: list[str], logger: Logger
+    ) -> Query:
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
         method = parts[0]
         if method == "GET":
-            return QueryGET(status_server, raw_query, logger)
+            return QueryGET(get_table, raw_query, logger)
         if method == "REPLICATE":
             return QueryREPLICATE(raw_query, logger)
         if method == "COMMAND":
@@ -157,9 +156,11 @@ def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
 
 
 class QueryGET(Query):
-    def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
+    def __init__(
+        self, get_table: Callable[[str], StatusTable], raw_query: list[str], logger: Logger
+    ) -> None:
         super().__init__(raw_query, logger)
-        self.table = status_server.table(self.method_arg)
+        self.table = get_table(self.method_arg)
         self.requested_columns = self.table.column_names
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
         self.filters: list[QueryFilter] = []
@@ -196,7 +197,7 @@ class QueryGET(Query):
         else:
             logger.info("Ignoring not-implemented header %s", header)
 
-    def _parse_filter(self, textspec: str) -> tuple[str, OperatorName, Callable[[Any], bool], Any]:
+    def _parse_filter(self, textspec: str) -> QueryFilter:
         """Examples:
         id = 17
         name ~= This is some .* text
@@ -222,9 +223,9 @@ class QueryGET(Query):
         # here (for performance reasons) because argument is already unicode.
         # TODO: Fix the typing chaos below!
         argument = (
-            [convert(arg) for arg in raw_argument.split()]
+            [convert(arg) for arg in raw_argument.split()]  # type: ignore[call-arg]
             if op_name == "in"
-            else convert(raw_argument)
+            else convert(raw_argument)  # type: ignore[call-arg]
         )
 
         return (column, op_name, lambda x: operator_function(x, argument), argument)

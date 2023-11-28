@@ -423,9 +423,9 @@ impl Sections {
             return Ok(None);
         }
         Ok(Some(Self {
-            always: sections.get_string_vector(keys::ALWAYS, defaults::SECTIONS_ALWAYS)?,
-            cached: sections.get_string_vector(keys::CACHED, defaults::SECTIONS_CACHED)?,
-            disabled: sections.get_string_vector(keys::DISABLED, &[])?,
+            always: sections.get_string_vector(keys::ALWAYS, defaults::SECTIONS_ALWAYS),
+            cached: sections.get_string_vector(keys::CACHED, defaults::SECTIONS_CACHED),
+            disabled: sections.get_string_vector(keys::DISABLED, &[]),
             cache_age: sections.get_int(keys::CACHE_AGE, defaults::SECTIONS_CACHE_AGE),
         }))
     }
@@ -492,8 +492,8 @@ impl Discovery {
         Ok(Self {
             detect: discovery.get_bool(keys::DETECT, defaults::DISCOVERY_DETECT)?,
             all: discovery.get_bool(keys::ALL, defaults::DISCOVERY_ALL)?,
-            include: discovery.get_string_vector(keys::INCLUDE, &[])?,
-            exclude: discovery.get_string_vector(keys::EXCLUDE, &[])?,
+            include: discovery.get_string_vector(keys::INCLUDE, &[]),
+            exclude: discovery.get_string_vector(keys::EXCLUDE, &[]),
         })
     }
     pub fn detect(&self) -> bool {

@@ -58,7 +58,7 @@ PerfometerSpec: TypeAlias = (
     _LinearPerfometerSpec | LogarithmicPerfometerSpec | _DualPerfometerSpec | _StackedPerfometerSpec
 )
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
-MetricRendererStack = list[list[tuple[int | float, str]]]
+MetricRendererStack = Sequence[Sequence[tuple[int | float, str]]]
 
 
 def _parse_perfometers(perfometers: list[LegacyPerfometer | PerfometerSpec]) -> None:

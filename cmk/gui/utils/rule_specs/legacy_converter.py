@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, TypeVar
 
+from cmk.utils.version import Edition
+
 from cmk.gui import valuespec as legacy_valuespecs
 from cmk.gui import wato
 from cmk.gui.exceptions import MKUserError
@@ -32,20 +34,26 @@ def _localize_optional(
 
 
 def convert_to_legacy_rulespec(
-    to_convert: APIV1RuleSpec, localizer: Callable[[str], str]
+    to_convert: APIV1RuleSpec, edition_only: Edition, localizer: Callable[[str], str]
 ) -> legacy_rulespecs.Rulespec:
     match to_convert:
         case ruleset_api_v1.CheckParameterRuleSpecWithItem():
-            return _convert_to_legacy_check_parameter_with_item_rulespec(to_convert, localizer)
+            return _convert_to_legacy_check_parameter_with_item_rulespec(
+                to_convert, edition_only, localizer
+            )
         case ruleset_api_v1.CheckParameterRuleSpecWithoutItem():
-            return _convert_to_legacy_check_parameter_without_item_rulespec(to_convert, localizer)
+            return _convert_to_legacy_check_parameter_without_item_rulespec(
+                to_convert, edition_only, localizer
+            )
         case ruleset_api_v1.EnforcedServiceRuleSpecWithItem():
             item_spec = partial(_convert_to_legacy_item_spec, to_convert.item_form, localizer)
             return _convert_to_legacy_manual_check_parameter_rulespec(
-                to_convert, localizer, item_spec
+                to_convert, edition_only, localizer, item_spec
             )
         case ruleset_api_v1.EnforcedServiceRuleSpecWithoutItem():
-            return _convert_to_legacy_manual_check_parameter_rulespec(to_convert, localizer)
+            return _convert_to_legacy_manual_check_parameter_rulespec(
+                to_convert, edition_only, localizer
+            )
         case ruleset_api_v1.HostRuleSpec():
             return _convert_to_legacy_host_rule_spec_rulespec(to_convert, localizer)
         case ruleset_api_v1.ServiceRuleSpec() | ruleset_api_v1.InventoryParameterRuleSpec() | ruleset_api_v1.ActiveChecksRuleSpec() | ruleset_api_v1.AgentConfigRuleSpec() | ruleset_api_v1.SpecialAgentRuleSpec() | ruleset_api_v1.ExtraHostConfRuleSpec() | ruleset_api_v1.ExtraServiceConfRuleSpec():
@@ -55,7 +63,9 @@ def convert_to_legacy_rulespec(
 
 
 def _convert_to_legacy_check_parameter_with_item_rulespec(
-    to_convert: ruleset_api_v1.CheckParameterRuleSpecWithItem, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.CheckParameterRuleSpecWithItem,
+    edition_only: Edition,
+    localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithItem:
     return CheckParameterRulespecWithItem(
         check_group_name=to_convert.name,
@@ -70,11 +80,16 @@ def _convert_to_legacy_check_parameter_with_item_rulespec(
         ),
         is_deprecated=to_convert.is_deprecated,
         create_manual_check=False,
+        # weird field since the CME, as well as the CSE is based on a CCE, but we currently only
+        # want to mark rulespecs that are available in both the CCE and CME as such
+        is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
     )
 
 
 def _convert_to_legacy_check_parameter_without_item_rulespec(
-    to_convert: ruleset_api_v1.CheckParameterRuleSpecWithoutItem, localizer: Callable[[str], str]
+    to_convert: ruleset_api_v1.CheckParameterRuleSpecWithoutItem,
+    edition_only: Edition,
+    localizer: Callable[[str], str],
 ) -> CheckParameterRulespecWithoutItem:
     return CheckParameterRulespecWithoutItem(
         check_group_name=to_convert.name,
@@ -87,12 +102,14 @@ def _convert_to_legacy_check_parameter_without_item_rulespec(
             _convert_to_legacy_valuespec, to_convert.parameter_form(), localizer
         ),
         create_manual_check=False,
+        is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
     )
 
 
 def _convert_to_legacy_manual_check_parameter_rulespec(
     to_convert: ruleset_api_v1.EnforcedServiceRuleSpecWithItem
     | ruleset_api_v1.EnforcedServiceRuleSpecWithoutItem,
+    edition_only: Edition,
     localizer: Callable[[str], str],
     item_spec: Callable[[], legacy_valuespecs.ValueSpec] | None = None,
 ) -> ManualCheckParameterRulespec:
@@ -110,6 +127,7 @@ def _convert_to_legacy_manual_check_parameter_rulespec(
         is_deprecated=False,
         match_type="dict",
         item_spec=item_spec,
+        is_cloud_and_managed_edition_only=edition_only is Edition.CCE,
     )
 
 

@@ -756,7 +756,8 @@ mod test_writer_format {
         let cr3 = CheckResult::crit(s("summary 3"), m("m3", 42));
         assert_eq!(
             format!("{}", Writer::from(&vec![cr1, cr2, cr3])),
-            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) | m1=13;;;;, m2=37;;;;, m3=42;;;;"
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
+            | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );
     }
 }

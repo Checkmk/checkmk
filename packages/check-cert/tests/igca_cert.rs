@@ -32,7 +32,16 @@ fn test_cert_ok() {
     ));
     assert_eq!(
         format!("{}", out),
-        format!("OK - Serial {SERIAL}, {SUBJECT}, Issuer {ISSUER}, Certificate is self signed, Signature algorithm: {SIG_ALG}, Public key algorithm: {PUBKEY_ALG}, Public key size: {PUBKEY_SZ}")
+        format!(
+            "OK - \
+            Serial {SERIAL}, \
+            {SUBJECT}, \
+            Issuer {ISSUER}, \
+            Certificate is self signed, \
+            Signature algorithm: {SIG_ALG}, \
+            Public key algorithm: {PUBKEY_ALG}, \
+            Public key size: {PUBKEY_SZ}"
+        )
     );
 }
 
@@ -51,7 +60,11 @@ fn test_cert_wrong_serial() {
     assert_eq!(
         format!("{}", out),
         format!(
-            "WARNING - Serial is {SERIAL} but expected {serial} (!), {SUBJECT}, Issuer {ISSUER}, Certificate is self signed (!)"
+            "WARNING - \
+            Serial is {SERIAL} but expected {serial} (!), \
+            {SUBJECT}, \
+            Issuer {ISSUER}, \
+            Certificate is self signed (!)"
         )
     );
 }

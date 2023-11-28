@@ -29,13 +29,13 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
         }
     };
     vec![
-        check_details_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
+        check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
             .unwrap_or_default()
             .into(),
-        check_details_subject(cert.tbs_certificate.subject(), config.subject)
+        check_subject(cert.tbs_certificate.subject(), config.subject)
             .unwrap_or_default()
             .into(),
-        check_details_issuer(cert.tbs_certificate.issuer(), config.issuer)
+        check_issuer(cert.tbs_certificate.issuer(), config.issuer)
             .unwrap_or_default()
             .into(),
         check_validity_not_after(
@@ -48,7 +48,7 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
     ]
 }
 
-fn check_details_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
+fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         if serial == expected {
             SimpleCheckResult::ok(format!("Serial {}", serial))
@@ -58,10 +58,7 @@ fn check_details_serial(serial: String, expected: Option<String>) -> Option<Simp
     })
 }
 
-fn check_details_subject(
-    subject: &X509Name,
-    expected: Option<String>,
-) -> Option<SimpleCheckResult> {
+fn check_subject(subject: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         let subject = subject.to_string();
         // subject string has the form: `CN=domain`
@@ -73,7 +70,7 @@ fn check_details_subject(
     })
 }
 
-fn check_details_issuer(issuer: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
+fn check_issuer(issuer: &X509Name, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         let issuer = issuer.to_string();
 

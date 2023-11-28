@@ -590,7 +590,7 @@ info = [
     ],
 ]
 
-discovery = {"": [("_total", None), ("db3", None)]}
+discovery = {"": [("_total", {}), ("db3", {})]}
 
 checks = {
     "": [

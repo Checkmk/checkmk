@@ -402,7 +402,7 @@ info = [
     ],
 ]
 
-discovery = {"": [("Default Web Site", None), ("Exchange Back End", None)]}
+discovery = {"": [("Default Web Site", {}), ("Exchange Back End", {})]}
 
 checks = {
     "": [

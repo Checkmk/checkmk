@@ -20152,23 +20152,23 @@ info = [
 ]
 
 discovery = {
-    "": [(None, None)],
-    "conferencing": [(None, None)],
+    "": [(None, {})],
+    "conferencing": [(None, {})],
     "data_proxy": [
-        ("pbwvw-skype03.intern.rossmann.de", None),
-        ("pbwvw-skype04.intern.rossmann.de", None),
+        ("pbwvw-skype03.intern.rossmann.de", {}),
+        ("pbwvw-skype04.intern.rossmann.de", {}),
     ],
     "edge": [
-        ("Private IPv4 Network Interface", None),
-        ("Private IPv6 Network Interface", None),
-        ("Public IPv4 Network Interface", None),
-        ("Public IPv6 Network Interface", None),
+        ("Private IPv4 Network Interface", {}),
+        ("Private IPv6 Network Interface", {}),
+        ("Public IPv4 Network Interface", {}),
+        ("Public IPv6 Network Interface", {}),
     ],
-    "edge_auth": [(None, None)],
-    "mcu": [(None, None)],
-    "mediation_server": [(None, None)],
-    "mobile": [(None, None)],
-    "sip_stack": [(None, None)],
+    "edge_auth": [(None, {})],
+    "mcu": [(None, {})],
+    "mediation_server": [(None, {})],
+    "mobile": [(None, {})],
+    "sip_stack": [(None, {})],
     "xmpp_proxy": [],
 }
 

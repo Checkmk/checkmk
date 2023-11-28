@@ -97,6 +97,10 @@ struct Args {
     #[arg(long)]
     pub pubkey_algorithm: Option<PubKeyAlgorithm>,
 
+    /// Expected public key size
+    #[arg(long)]
+    pub pubkey_size: Option<usize>,
+
     /// Certificate expiration levels in days [WARN:CRIT]
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]
     not_after: Vec<u32>,
@@ -179,6 +183,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .map(|sig| String::from(sig.as_str())),
             )
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
+            .pubkey_size(args.pubkey_size)
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));

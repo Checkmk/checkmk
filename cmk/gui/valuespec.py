@@ -8393,9 +8393,9 @@ class DatePicker(ValueSpec[str]):
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
-        onclick: str | None = None,
+        onchange: str | None = None,
     ):
-        self._onclick = onclick
+        self._onchange = onchange
         super().__init__(
             title=title,
             help=help,
@@ -8408,7 +8408,7 @@ class DatePicker(ValueSpec[str]):
             var=varprefix,
             value=value,
             id_="date_" + varprefix,
-            onclick=self._onclick,
+            onchange=self._onchange,
         )
 
     def canonical_value(self) -> str:
@@ -8440,9 +8440,9 @@ class TimePicker(ValueSpec[str]):
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
-        onclick: str | None = None,
+        onchange: str | None = None,
     ):
-        self._onclick = onclick
+        self._onchange = onchange
         super().__init__(
             title=title,
             help=help,
@@ -8455,7 +8455,7 @@ class TimePicker(ValueSpec[str]):
             var=varprefix,
             value=value,
             id_="time_" + varprefix,
-            onclick=self._onclick,
+            onchange=self._onchange,
         )
 
     def canonical_value(self) -> str:

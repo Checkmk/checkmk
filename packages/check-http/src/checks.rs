@@ -12,6 +12,7 @@ use crate::http::{Body, OnRedirect, ProcessedResponse};
 
 pub struct CheckParameters {
     pub onredirect: OnRedirect,
+    pub status_code: Option<StatusCode>,
     pub page_size: Option<Bounds<usize>>,
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
@@ -29,8 +30,9 @@ pub fn collect_response_checks(
         Err(err) => return check_reqwest_error(err),
     };
 
-    check_status(response.status, response.version, params.onredirect)
+    check_status(response.status, response.version, params.status_code)
         .into_iter()
+        .chain(check_redirect(response.status, params.onredirect))
         .chain(check_headers(&response.headers, params.header_strings))
         .chain(check_body(
             response.body,
@@ -77,27 +79,41 @@ fn check_reqwest_error(err: reqwest::Error) -> Vec<CheckResult> {
 fn check_status(
     status: StatusCode,
     version: Version,
-    onredirect: OnRedirect,
+    expected_status: Option<StatusCode>,
 ) -> Vec<Option<CheckResult>> {
-    let state = if status.is_client_error() {
-        State::Warn
-    } else if status.is_server_error() {
-        State::Crit
-    } else if status.is_redirection() {
-        match onredirect {
-            OnRedirect::Warning => State::Warn,
-            OnRedirect::Critical => State::Crit,
-            _ => State::Ok, // If we reach this point, the redirect is ok
+    fn default_statuscode_state(status: StatusCode) -> State {
+        if status.is_client_error() {
+            State::Warn
+        } else if status.is_server_error() {
+            State::Crit
+        } else {
+            State::Ok
         }
-    } else {
-        State::Ok
-    };
+    }
 
-    let text = format!("{:?} {}", version, status);
+    let (state, status_text) = expected_status
+        .map(|exp_status| {
+            if status == exp_status {
+                (State::Ok, String::new())
+            } else {
+                (State::Crit, format!(" (expected {})", exp_status))
+            }
+        })
+        .unwrap_or((default_statuscode_state(status), String::new()));
+
+    let text = format!("{:?} {}{}", version, status, status_text);
     vec![
         CheckResult::summary(state.clone(), &text),
         CheckResult::details(state, &text),
     ]
+}
+
+fn check_redirect(status: StatusCode, onredirect: OnRedirect) -> Vec<Option<CheckResult>> {
+    match (status.is_redirection(), onredirect) {
+        (true, OnRedirect::Warning) => notice(State::Warn, "Detected redirect"),
+        (true, OnRedirect::Critical) => notice(State::Crit, "Detected redirect"),
+        _ => vec![],
+    }
 }
 
 fn check_headers(
@@ -253,6 +269,125 @@ fn check_document_age(
         Some(" seconds"),
         &document_age_levels,
     )
+}
+
+#[cfg(test)]
+mod test_check_status {
+    use super::*;
+    use http::{StatusCode, Version};
+
+    #[test]
+    fn test_success_unchecked() {
+        assert!(
+            check_status(StatusCode::OK, Version::HTTP_11, None)
+                == vec![
+                    CheckResult::summary(State::Ok, "HTTP/1.1 200 OK"),
+                    CheckResult::details(State::Ok, "HTTP/1.1 200 OK"),
+                ]
+        )
+    }
+
+    #[test]
+    fn test_client_error_unchecked() {
+        assert!(
+            check_status(StatusCode::EXPECTATION_FAILED, Version::HTTP_11, None)
+                == vec![
+                    CheckResult::summary(State::Warn, "HTTP/1.1 417 Expectation Failed"),
+                    CheckResult::details(State::Warn, "HTTP/1.1 417 Expectation Failed"),
+                ]
+        )
+    }
+
+    #[test]
+    fn test_server_error_unchecked() {
+        assert!(
+            check_status(StatusCode::INTERNAL_SERVER_ERROR, Version::HTTP_11, None)
+                == vec![
+                    CheckResult::summary(State::Crit, "HTTP/1.1 500 Internal Server Error"),
+                    CheckResult::details(State::Crit, "HTTP/1.1 500 Internal Server Error"),
+                ]
+        )
+    }
+
+    #[test]
+    fn test_success_checked_ok() {
+        assert!(
+            check_status(StatusCode::OK, Version::HTTP_11, Some(StatusCode::OK))
+                == vec![
+                    CheckResult::summary(State::Ok, "HTTP/1.1 200 OK"),
+                    CheckResult::details(State::Ok, "HTTP/1.1 200 OK"),
+                ]
+        )
+    }
+
+    #[test]
+    fn test_success_checked_not_ok() {
+        assert!(
+            check_status(StatusCode::OK, Version::HTTP_11, Some(StatusCode::IM_USED))
+                == vec![
+                    CheckResult::summary(State::Crit, "HTTP/1.1 200 OK (expected 226 IM Used)"),
+                    CheckResult::details(State::Crit, "HTTP/1.1 200 OK (expected 226 IM Used)"),
+                ]
+        )
+    }
+
+    #[test]
+    fn test_client_error_checked_ok() {
+        assert!(
+            check_status(
+                StatusCode::IM_A_TEAPOT,
+                Version::HTTP_11,
+                Some(StatusCode::IM_A_TEAPOT)
+            ) == vec![
+                CheckResult::summary(State::Ok, "HTTP/1.1 418 I'm a teapot"),
+                CheckResult::details(State::Ok, "HTTP/1.1 418 I'm a teapot"),
+            ]
+        )
+    }
+}
+
+#[cfg(test)]
+mod test_check_redirect {
+    use super::*;
+    use http::StatusCode;
+
+    #[test]
+    fn test_no_redirect() {
+        assert!(check_redirect(StatusCode::OK, OnRedirect::Critical) == vec![]);
+    }
+
+    #[test]
+    fn test_redirect_ok() {
+        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Ok) == vec![]);
+    }
+
+    #[test]
+    fn test_redirect_warn() {
+        assert!(
+            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Warning)
+                == vec![
+                    CheckResult::summary(State::Warn, "Detected redirect"),
+                    CheckResult::details(State::Warn, "Detected redirect"),
+                ]
+        );
+    }
+
+    #[test]
+    fn test_redirect_crit() {
+        assert!(
+            check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Critical)
+                == vec![
+                    CheckResult::summary(State::Crit, "Detected redirect"),
+                    CheckResult::details(State::Crit, "Detected redirect"),
+                ]
+        );
+    }
+
+    #[test]
+    fn test_redirect_not_handled() {
+        // This can happen when hitting "max_redirs", but is handled by check_reqwest_error
+        assert!(check_redirect(StatusCode::MOVED_PERMANENTLY, OnRedirect::Follow) == vec![]);
+    }
 }
 
 #[cfg(test)]

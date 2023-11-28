@@ -71,6 +71,7 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 cli::OnRedirect::Sticky => http::OnRedirect::Sticky,
                 cli::OnRedirect::Stickyport => http::OnRedirect::Stickyport,
             },
+            status_code: args.status_code,
             page_size: args.page_size.map(|val| match val {
                 (x, None) => Bounds::lower(x),
                 (x, Some(y)) => Bounds::lower_upper(x, y),

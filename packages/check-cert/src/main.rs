@@ -114,6 +114,10 @@ struct Args {
     )]
     response_time: Vec<u32>,
 
+    /// Allow self-signed certificates
+    #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
+    allow_self_signed: bool,
+
     /// Disable SNI extension
     #[arg(long, action = clap::ArgAction::SetTrue)]
     disable_sni: bool,
@@ -178,6 +182,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .serial(args.serial)
             .subject(args.subject)
             .issuer(args.issuer)
+            .allow_self_signed(args.allow_self_signed)
             .signature_algorithm(
                 args.signature_algorithm
                     .map(|sig| String::from(sig.as_str())),

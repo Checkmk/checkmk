@@ -366,7 +366,7 @@ def _check_generic_attribute(attribute: DiskAttribute, value: int, ref_value: in
             attribute,
             value,
             State.CRIT,
-            "during discovery: {ref} (!!)",
+            f"during discovery: {ref_value} (!!)",
         )
 
     return _default_check_results(

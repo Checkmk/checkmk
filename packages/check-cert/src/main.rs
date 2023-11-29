@@ -126,28 +126,24 @@ struct Args {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
+    let not_after: [_; 2] = args
+        .not_after
+        .try_into()
+        .expect("invalid arg count for not_after");
     let Ok(not_after_levels_checker) = LevelsChecker::try_new(
         LevelsStrategy::Lower,
-        Levels::from(
-            &mut args
-                .not_after
-                .try_into()
-                .expect("invalid arg count for not_after"),
-        )
-        .map(&|v| v * Duration::DAY),
+        Levels::from(&mut not_after.map(|v| v * Duration::DAY)),
     ) else {
         check::bail_out("invalid args: not after crit level larger than warn");
     };
 
+    let response_time: [_; 2] = args
+        .response_time
+        .try_into()
+        .expect("invalid arg count for response_time");
     let Ok(response_time_levels_checker) = LevelsChecker::try_new(
         LevelsStrategy::Upper,
-        Levels::from(
-            &mut args
-                .response_time
-                .try_into()
-                .expect("invalid arg count for response_time"),
-        )
-        .map(&|v| v * Duration::MILLISECOND),
+        Levels::from(&mut response_time.map(|v| v * Duration::MILLISECOND)),
     ) else {
         check::bail_out("invalid args: response time crit higher than warn");
     };

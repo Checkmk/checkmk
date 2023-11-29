@@ -1,0 +1,14 @@
+Title: Logwatch EC: Mergetype of forwarding rule is more consistent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701294709
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+The ruleset <i>"Logwatch Event Console Forwarding"</i> is more consistent now.
+The rules usually are merged, unless one of the rules configured "No forwarding", in which case the first such rule is applied.
+This is fixed now, this setting is now over-ridable as all the other settings.
+
+Existing rules are migrated automatically, the behaviour of existing rule combinations will not change.

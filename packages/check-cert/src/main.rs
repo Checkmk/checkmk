@@ -152,14 +152,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let start = Instant::now();
-    let der = fetcher::fetch_server_cert(
+    let der = match fetcher::fetch_server_cert(
         &args.url,
         &args.port,
         FetcherConfig::builder()
             .timeout((args.timeout != 0).then_some(StdDuration::new(args.timeout, 0)))
             .use_sni(!args.disable_sni)
             .build(),
-    )?;
+    ) {
+        Ok(der) => der,
+        Err(err) => check::abort(&format!("{:?}", err)),
+    };
     let response_time = start.elapsed();
 
     let cert = match X509Certificate::from_der(&der) {

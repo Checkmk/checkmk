@@ -6,8 +6,13 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.legacy_checks.isc_dhcpd import check_isc_dhcpd, inventory_isc_dhcpd
-from cmk.base.plugins.agent_based.isc_dhcpd import DhcpdSection, parse_isc_dhcpd
+from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.plugins.collection.agent_based.isc_dhcpd import (
+    check_isc_dhcpd,
+    DhcpdSection,
+    discovery_isc_dhcpd,
+    parse_isc_dhcpd,
+)
 
 
 @pytest.fixture(name="section", scope="module")
@@ -41,14 +46,14 @@ def fixture_section() -> DhcpdSection:
     )
 
 
-def test_inventory_cisco_ucs_mem(section: DhcpdSection) -> None:
-    assert list(inventory_isc_dhcpd(section)) == [
-        ("10.42.97.30-10.42.97.191", None),
-        ("10.42.101.30-10.42.101.191", None),
-        ("10.42.103.101-10.42.103.191", None),
-        ("10.42.153.30-10.42.153.191", None),
-        ("10.42.155.101-10.42.155.191", None),
-        ("10.42.157.30-10.42.157.191", None),
+def test_discovery_cisco_ucs_mem(section: DhcpdSection) -> None:
+    assert list(discovery_isc_dhcpd(section)) == [
+        Service(item="10.42.97.30-10.42.97.191"),
+        Service(item="10.42.101.30-10.42.101.191"),
+        Service(item="10.42.103.101-10.42.103.191"),
+        Service(item="10.42.153.30-10.42.153.191"),
+        Service(item="10.42.155.101-10.42.155.191"),
+        Service(item="10.42.157.30-10.42.157.191"),
     ]
 
 
@@ -60,12 +65,12 @@ def test_inventory_cisco_ucs_mem(section: DhcpdSection) -> None:
             "10.42.97.30-10.42.97.191",
             {"free_leases": (15.0, 5.0)},
             [
-                (0, "Free leases: 155", []),
-                (0, "95.68%", []),
-                (0, "", [("free_dhcp_leases", 155.0, 24.3, 8.1, 0.0, 162.0)]),
-                (0, "Used leases: 7", []),
-                (0, "4.32%", []),
-                (0, "", [("used_dhcp_leases", 7.0, None, None, 0.0, 162.0)]),
+                Result(state=State.OK, summary="Free leases: 155"),
+                Result(state=State.OK, summary="95.68%"),
+                Metric("free_dhcp_leases", 155.0, levels=(24.3, 8.1), boundaries=(0.0, 162.0)),
+                Result(state=State.OK, summary="Used leases: 7"),
+                Result(state=State.OK, summary="4.32%"),
+                Metric("used_dhcp_leases", 7.0, boundaries=(0.0, 162.0)),
             ],
             id="Some used leases",
         ),
@@ -73,12 +78,12 @@ def test_inventory_cisco_ucs_mem(section: DhcpdSection) -> None:
             "10.42.101.30-10.42.101.191",
             {"free_leases": (15.0, 5.0)},
             [
-                (0, "Free leases: 162", []),
-                (0, "100.00%", []),
-                (0, "", [("free_dhcp_leases", 162.0, 24.3, 8.1, 0.0, 162.0)]),
-                (0, "Used leases: 0", []),
-                (0, "0%", []),
-                (0, "", [("used_dhcp_leases", 0.0, None, None, 0.0, 162.0)]),
+                Result(state=State.OK, summary="Free leases: 162"),
+                Result(state=State.OK, summary="100.00%"),
+                Metric("free_dhcp_leases", 162.0, levels=(24.3, 8.1), boundaries=(0.0, 162.0)),
+                Result(state=State.OK, summary="Used leases: 0"),
+                Result(state=State.OK, summary="0%"),
+                Metric("used_dhcp_leases", 0.0, boundaries=(0.0, 162.0)),
             ],
             id="No used leases",
         ),

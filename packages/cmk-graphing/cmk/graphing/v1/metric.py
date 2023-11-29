@@ -13,7 +13,6 @@ from ._localize import Localizable
 from ._unit import PhysicalUnit, ScientificUnit, Unit
 
 __all__ = [
-    "Name",
     "Metric",
     "Constant",
     "WarningOf",
@@ -28,20 +27,15 @@ __all__ = [
 
 
 @dataclass(frozen=True)
-class Name:
-    value: str
-
-    def __post_init__(self) -> None:
-        if not self.value:
-            raise ValueError(self.value)
-
-
-@dataclass(frozen=True)
 class Metric:
-    name: Name
+    name: str
     title: Localizable
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
 
 
 @dataclass(frozen=True)
@@ -54,24 +48,40 @@ class Constant:
 
 @dataclass(frozen=True)
 class WarningOf:
-    name: Name
+    name: str
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
 
 
 @dataclass(frozen=True)
 class CriticalOf:
-    name: Name
+    name: str
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
 
 
 @dataclass(frozen=True)
 class MinimumOf:
-    name: Name
+    name: str
     color: Color
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
 
 
 @dataclass(frozen=True)
 class MaximumOf:
-    name: Name
+    name: str
     color: Color
+
+    def __post_init__(self) -> None:
+        if not self.name:
+            raise ValueError(self.name)
 
 
 @dataclass(frozen=True)
@@ -79,7 +89,7 @@ class Sum:
     title: Localizable
     color: Color
     summands: Sequence[
-        Name
+        str
         | Constant
         | WarningOf
         | CriticalOf
@@ -93,6 +103,9 @@ class Sum:
 
     def __post_init__(self) -> None:
         assert self.summands
+        for s in self.summands:
+            if isinstance(s, str) and not s:
+                raise ValueError(s)
 
 
 @dataclass(frozen=True)
@@ -101,7 +114,7 @@ class Product:
     unit: Unit | PhysicalUnit | ScientificUnit
     color: Color
     factors: Sequence[
-        Name
+        str
         | Constant
         | WarningOf
         | CriticalOf
@@ -115,6 +128,9 @@ class Product:
 
     def __post_init__(self) -> None:
         assert self.factors
+        for f in self.factors:
+            if isinstance(f, str) and not f:
+                raise ValueError(f)
 
 
 @dataclass(frozen=True)
@@ -123,7 +139,7 @@ class Difference:
     color: Color
     _: KW_ONLY
     minuend: (
-        Name
+        str
         | Constant
         | WarningOf
         | CriticalOf
@@ -135,7 +151,7 @@ class Difference:
         | Fraction
     )
     subtrahend: (
-        Name
+        str
         | Constant
         | WarningOf
         | CriticalOf
@@ -147,6 +163,12 @@ class Difference:
         | Fraction
     )
 
+    def __post_init__(self) -> None:
+        if isinstance(self.minuend, str) and not self.minuend:
+            raise ValueError(self.minuend)
+        if isinstance(self.subtrahend, str) and not self.subtrahend:
+            raise ValueError(self.subtrahend)
+
 
 @dataclass(frozen=True)
 class Fraction:
@@ -155,7 +177,7 @@ class Fraction:
     color: Color
     _: KW_ONLY
     dividend: (
-        Name
+        str
         | Constant
         | WarningOf
         | CriticalOf
@@ -167,7 +189,7 @@ class Fraction:
         | Fraction
     )
     divisor: (
-        Name
+        str
         | Constant
         | WarningOf
         | CriticalOf
@@ -178,3 +200,9 @@ class Fraction:
         | Difference
         | Fraction
     )
+
+    def __post_init__(self) -> None:
+        if isinstance(self.dividend, str) and not self.dividend:
+            raise ValueError(self.dividend)
+        if isinstance(self.divisor, str) and not self.divisor:
+            raise ValueError(self.divisor)

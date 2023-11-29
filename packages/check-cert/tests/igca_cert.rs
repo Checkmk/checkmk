@@ -28,7 +28,6 @@ fn test_cert_ok() {
             .serial(s(SERIAL))
             .subject(s(SUBJECT))
             .issuer(s(ISSUER))
-            .allow_self_signed(true)
             .signature_algorithm(s(SIG_ALG))
             .pubkey_algorithm(s(PUBKEY_ALG))
             .pubkey_size(Some(PUBKEY_SZ))
@@ -41,7 +40,6 @@ fn test_cert_ok() {
             Serial {SERIAL}, \
             {SUBJECT}, \
             Issuer {ISSUER}, \
-            Certificate is self signed, \
             Signature algorithm: {SIG_ALG}, \
             Public key algorithm: {PUBKEY_ALG}, \
             Public key size: {PUBKEY_SZ}"
@@ -68,8 +66,7 @@ fn test_cert_wrong_serial() {
             "WARNING - \
             Serial is {SERIAL} but expected {serial} (!), \
             {SUBJECT}, \
-            Issuer {ISSUER}, \
-            Certificate is self signed (!)"
+            Issuer {ISSUER}"
         )
     );
 }

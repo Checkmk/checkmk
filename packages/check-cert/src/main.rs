@@ -8,6 +8,7 @@ use check_cert::check::{
 };
 use check_cert::checker::{self, Config as CheckCertConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
+use check_cert::validation::{self, Config as ValidationConfig};
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
@@ -185,7 +186,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .serial(args.serial)
             .subject(args.subject)
             .issuer(args.issuer)
-            .allow_self_signed(args.allow_self_signed)
             .signature_algorithm(
                 args.signature_algorithm
                     .map(|sig| String::from(sig.as_str())),
@@ -193,6 +193,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .pubkey_algorithm(args.pubkey_algorithm.map(|sig| String::from(sig.as_str())))
             .pubkey_size(args.pubkey_size)
             .not_after_levels_checker(Some(not_after_levels_checker))
+            .build(),
+    ));
+    checks.append(&mut validation::validate_cert(
+        &cert,
+        ValidationConfig::builder()
+            .allow_self_signed(args.allow_self_signed)
             .build(),
     ));
 

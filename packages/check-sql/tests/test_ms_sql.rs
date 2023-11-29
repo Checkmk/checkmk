@@ -525,7 +525,7 @@ async fn test_validate_all_instances_remote_extra() {
         let ms_sql = Config::from_string(
             r"---
 mssql:
-  standard:
+  main:
     authentication:
       username: your_user
       password: your_password
@@ -767,9 +767,9 @@ fn create_config_contents() -> Vec<(String, String)> {
         let content_local = r#"
 ---
 mssql:
-  standard:
+  main:
     authentication:
-       username: ""
+       username: "user"
        type: "integrated"
     connection:
        hostname: "localhost"
@@ -791,7 +791,7 @@ fn create_remote_config(endpoint: SqlDbEndpoint) -> String {
         r#"
 ---
 mssql:
-  standard:
+  main:
     authentication:
        username: {}
        password: {}

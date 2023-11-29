@@ -10,7 +10,7 @@ use yaml_rust::YamlLoader;
 
 mod keys {
     pub const MSSQL: &str = "mssql";
-    pub const STANDARD: &str = "standard";
+    pub const MAIN: &str = "main";
 
     pub const AUTHENTICATION: &str = "authentication";
     pub const USERNAME: &str = "username";
@@ -42,11 +42,13 @@ mod keys {
 
     pub const MODE: &str = "mode";
 
-    pub const INSTANCES: &str = "instances";
+    pub const CUSTOM: &str = "custom";
 
     pub const SID: &str = "sid";
     pub const ALIAS: &str = "alias";
     pub const PIGGYBACK: &str = "piggyback";
+
+    pub const CONFIGS: &str = "configs";
 }
 
 mod values {
@@ -103,7 +105,8 @@ pub struct Config {
     sections: Sections,
     discovery: Discovery,
     mode: Mode,
-    instances: Vec<Instance>,
+    custom_instances: Vec<CustomInstance>,
+    configs: Vec<Config>,
 }
 
 impl Default for Config {
@@ -114,7 +117,8 @@ impl Default for Config {
             sections: Sections::default(),
             discovery: Discovery::default(),
             mode: Mode::Port,
-            instances: vec![],
+            custom_instances: vec![],
+            configs: vec![],
         }
     }
 }
@@ -128,31 +132,53 @@ impl Config {
     }
 
     pub fn from_yaml(yaml: &Yaml) -> Result<Option<Self>> {
-        let mssql = yaml.get(keys::MSSQL);
-        if mssql.is_badvalue() {
+        let root = yaml.get(keys::MSSQL);
+        if root.is_badvalue() {
             return Ok(None);
         }
-        let standard = mssql.get(keys::STANDARD);
-        if standard.is_badvalue() {
-            bail!("standard key is absent");
+        let c = Config::parse_main_from_yaml(root);
+        match c {
+            Ok(Some(c)) if c.auth().username().is_empty() => {
+                anyhow::bail!("Bad/absent user name");
+            }
+            _ => c,
         }
+    }
 
-        let auth = Authentication::from_yaml(standard)?;
-        let conn = Connection::from_yaml(standard)?.unwrap_or_default();
-        let sections = Sections::from_yaml(standard)?.unwrap_or_default();
-        let instances: Result<Vec<Instance>> = mssql
-            .get_yaml_vector(keys::INSTANCES)
+    fn parse_main_from_yaml(root: &Yaml) -> Result<Option<Self>> {
+        let main = root.get(keys::MAIN);
+        if main.is_badvalue() {
+            bail!("main key is absent");
+        }
+        let auth = Authentication::from_yaml(main)?;
+        let conn = Connection::from_yaml(main)?.unwrap_or_default();
+        let sections = Sections::from_yaml(main)?.unwrap_or_default();
+        let custom_instances: Result<Vec<CustomInstance>> = main
+            .get_yaml_vector(keys::CUSTOM)
             .into_iter()
-            .map(|v| Instance::from_yaml(&v, &auth, &conn, &sections))
+            .map(|v| CustomInstance::from_yaml(&v, &auth, &conn, &sections))
+            .collect();
+
+        let configs: Result<Vec<Config>> = root
+            .get_yaml_vector(keys::CONFIGS)
+            .into_iter()
+            .filter_map(|v| {
+                trace_tools::write_stdout(&format!(
+                    "\n---\n{}\n---\n",
+                    &trace_tools::dump_yaml(&v)
+                ));
+                Config::parse_main_from_yaml(&v).transpose()
+            })
             .collect();
 
         Ok(Some(Self {
             auth,
             conn,
             sections,
-            discovery: Discovery::from_yaml(standard)?,
-            mode: Mode::from_yaml(standard)?,
-            instances: instances?,
+            discovery: Discovery::from_yaml(main)?,
+            mode: Mode::from_yaml(main)?,
+            custom_instances: custom_instances?,
+            configs: configs?,
         }))
     }
     pub fn endpoint(&self) -> Endpoint {
@@ -173,8 +199,11 @@ impl Config {
     pub fn mode(&self) -> &Mode {
         &self.mode
     }
-    pub fn instances(&self) -> &Vec<Instance> {
-        &self.instances
+    pub fn instances(&self) -> &Vec<CustomInstance> {
+        &self.custom_instances
+    }
+    pub fn configs(&self) -> &Vec<Config> {
+        &self.configs
     }
 
     pub fn is_instance_allowed(&self, name: &impl ToString) -> bool {
@@ -216,9 +245,7 @@ impl Authentication {
     pub fn from_yaml(yaml: &Yaml) -> Result<Self> {
         let auth = yaml.get(keys::AUTHENTICATION);
         Ok(Self {
-            username: auth
-                .get_string(keys::USERNAME)
-                .context("bad/absent username")?,
+            username: auth.get_string(keys::USERNAME).unwrap_or_default(),
             password: auth.get_string(keys::PASSWORD),
             auth_type: AuthType::try_from(
                 auth.get_string(keys::TYPE)
@@ -541,7 +568,7 @@ impl TryFrom<&str> for Mode {
 }
 
 #[derive(PartialEq, Debug)]
-pub struct Instance {
+pub struct CustomInstance {
     sid: String,
     auth: Authentication,
     conn: Connection,
@@ -549,7 +576,7 @@ pub struct Instance {
     piggyback: Option<Piggyback>,
 }
 
-impl Instance {
+impl CustomInstance {
     pub fn from_yaml(
         yaml: &Yaml,
         auth: &Authentication,
@@ -612,6 +639,25 @@ impl Piggyback {
     }
 }
 
+mod trace_tools {
+    use std::io::{self, Write};
+    use yaml_rust::{Yaml, YamlEmitter};
+    #[allow(dead_code)]
+    pub fn dump_yaml(yaml: &Yaml) -> String {
+        let mut writer = String::new();
+
+        let mut emitter = YamlEmitter::new(&mut writer);
+        emitter.dump(yaml).unwrap();
+        writer
+    }
+
+    #[allow(dead_code)]
+    pub fn write_stdout(s: &impl ToString) {
+        #[allow(clippy::explicit_write)]
+        write!(io::stdout(), "{}", s.to_string()).unwrap();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -621,7 +667,7 @@ mod tests {
         pub const TEST_CONFIG: &str = r#"
 ---
 mssql:
-  standard: # mandatory, to be used if no specific config
+  main: # mandatory, to be used if no specific config
     authentication: # mandatory
       username: "foo" # mandatory
       password: "bar" # optional
@@ -661,16 +707,37 @@ mssql:
       include: ["foo", "bar"] # optional prio 2; use instance even if excluded
       exclude: ["baz"] # optional, prio 3
     mode: "port" # optional(default:"port") - "socket", "port" or "special"
-  instances: # optional
-    - sid: "INST1" # mandatory
-      authentication: # optional, same as above
-      connection: # optional,  same as above
-      alias: "someApplicationName" # optional
-      piggyback: # optional
-        hostname: "myPiggybackHost" # mandatory
-        sections: # optional, same as above
-    - sid: "INST2" # mandatory
-"#;
+    custom: # optional
+      - sid: "INST1" # mandatory
+        authentication: # optional, same as above
+        connection: # optional,  same as above
+        alias: "someApplicationName" # optional
+        piggyback: # optional
+          hostname: "myPiggybackHost" # mandatory
+          sections: # optional, same as above
+      - sid: "INST2" # mandatory
+  configs:
+    - main:
+        authentication: # mandatory
+          username: "f" # mandatory
+          password: "b"
+          type: "sql_server"
+        connection: # optional
+          hostname: "localhost" # optional(default: "localhost")
+          timeout: 5 # optional(default: 5)
+        discovery: # optional
+          detect: yes # optional(default:yes)
+    - main:
+        authentication: # mandatory
+          username: "f"
+          password: "b"
+          type: "sql_server"
+        connection: # optional
+          hostname: "localhost" # optional(default: "localhost")
+          timeout: 5 # optional(default: 5)
+        discovery: # optional
+          detect: yes # optional(default:yes)
+  "#;
         pub const AUTHENTICATION_FULL: &str = r#"
 authentication:
   username: "foo"
@@ -770,9 +837,17 @@ piggyback:
                 sections: Sections::default(),
                 discovery: Discovery::default(),
                 mode: Mode::Port,
-                instances: vec![],
+                custom_instances: vec![],
+                configs: vec![],
             }
         );
+    }
+
+    #[test]
+    fn test_config_all() {
+        let c = Config::from_string(data::TEST_CONFIG).unwrap().unwrap();
+        assert_eq!(c.configs.len(), 2);
+        assert_eq!(c.custom_instances.len(), 2);
     }
 
     #[test]
@@ -786,7 +861,7 @@ piggyback:
 
     #[test]
     fn test_authentication_from_yaml_empty() {
-        assert!(Authentication::from_yaml(&create_yaml(r"authentication:")).is_err());
+        assert!(Authentication::from_yaml(&create_yaml(r"authentication:")).is_ok());
     }
 
     #[test]
@@ -797,7 +872,7 @@ authentication:
   _username: 'aa'
 "#
         ))
-        .is_err());
+        .is_ok());
     }
 
     #[test]
@@ -989,8 +1064,8 @@ discovery:
         );
     }
     #[test]
-    fn test_instance() {
-        let instance = Instance::from_yaml(
+    fn test_custom_instance() {
+        let instance = CustomInstance::from_yaml(
             &create_yaml(data::INSTANCE),
             &Authentication::default(),
             &Connection::default(),
@@ -1066,7 +1141,7 @@ discovery:
         let source = format!(
             r"---
 mssql:
-  standard:
+  main:
     authentication:
       username: foo
     discovery:
@@ -1074,11 +1149,11 @@ mssql:
       all: {}
       include: {include:?}
       exclude: {exclude:?}
-  instances:
-    - sid: sid1
-    - sid: sid2
-      connection:
-        hostname: ab
+    custom:
+      - sid: sid1
+      - sid: sid2
+        connection:
+          hostname: ab
 ",
             if all { "yes" } else { "no" }
         );

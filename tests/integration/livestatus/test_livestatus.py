@@ -58,7 +58,7 @@ def test_host_custom_variables(site: Site) -> None:
     assert isinstance(rows, list)
     assert len(rows) == 1
     custom_variables, tags = rows[0]
-    assert custom_variables == {
+    expected_variables = {
         "ADDRESS_FAMILY": "4",
         "TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp"
         % site.id,
@@ -68,6 +68,9 @@ def test_host_custom_variables(site: Site) -> None:
         "ADDRESS_4": "127.0.0.1",
         "ADDRESS_6": "",
     }
+    if site.version.is_managed_edition():
+        expected_variables["CUSTOMER"] = "provider"
+    assert custom_variables == expected_variables
     assert tags == {
         "address_family": "ip-v4-only",
         "agent": "cmk-agent",

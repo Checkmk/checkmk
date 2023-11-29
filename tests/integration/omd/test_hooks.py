@@ -32,11 +32,7 @@ def test_hooks(site: Site) -> None:
         "TMPFS",
     ]
 
-    if (
-        site.version.is_enterprise_edition()
-        or site.version.is_cloud_edition()
-        or site.version.is_saas_edition()
-    ):
+    if not site.version.is_raw_edition():
         hooks += [
             "LIVEPROXYD",
         ]

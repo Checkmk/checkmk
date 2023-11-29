@@ -38,8 +38,8 @@ editions:
         testbuild: []
     managed:
         release: [*common, "cma-3", "cma-4"]
-        daily: []
-        daily_tests: []
+        daily: *daily_reduced
+        daily_tests: *daily_reduced
         testbuild: []
     raw:
         release: [*common]

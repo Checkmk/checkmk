@@ -22,10 +22,9 @@ from typing_extensions import TypedDict
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
@@ -563,15 +562,14 @@ def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
 #   '----------------------------------------------------------------------'
 
 
-def check_for_valid_hostname(hostname: HostName) -> None:
+def check_for_valid_hostname(hostname: str) -> None:
     """test hostname for invalid chars, raises MKUserError if invalid chars are found
     >>> check_for_valid_hostname("klappspaten")
     >>> check_for_valid_hostname("../../etc/passwd")
     Traceback (most recent call last):
     cmk.gui.exceptions.MKUserError: You need to provide a valid "hostname". Only letters, digits, dash, underscore and dot are allowed.
     """
-    hostname_regex = cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME)
-    if hostname_regex.match(str(hostname)):
+    if HostAddress.is_valid(hostname):
         return
     raise MKUserError(
         None,

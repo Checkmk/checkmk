@@ -314,14 +314,10 @@ def test_load_filtered_and_merged_tree(
 
 
 def test_get_history_empty() -> None:
-    for hostname in [
-        HostName("inv-host"),
-        HostName("/inv-host"),
-    ]:
-        history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
+    history, corrupted_history_files = cmk.gui.inventory.get_history(HostName("inv-host"))
 
-        assert len(history) == 0
-        assert len(corrupted_history_files) == 0
+    assert len(history) == 0
+    assert len(corrupted_history_files) == 0
 
 
 def test_get_history_archive_but_no_inv_tree() -> None:

@@ -754,6 +754,7 @@ div.page_menu_popup {
     a.upgrade img.iconbutton {
       width: auto;
       height: auto;
+      margin-left: 0.5 * $spacing;
     }
 
     hr {
@@ -782,22 +783,29 @@ div.page_menu_popup {
       div {
         margin-top: 1.5 * $spacing;
 
-        &.example,
-        input + span {
-          color: $font-color-dimmed;
-        }
-
         &.example {
           margin-top: 0.5 * $spacing;
           margin-left: 2 * $spacing;
-        }
-
-        input + span {
-          margin-left: $spacing;
+          color: $font-color-dimmed;
         }
 
         span.checkbox {
           padding-right: 0;
+        }
+
+        &.date_time_picker {
+          display: inline-block;
+          margin-top: 0;
+
+          input[type="date"]:not(.active),
+          input[type="time"]:not(.active) {
+            color: $font-color-dimmed;
+          }
+
+          + span {
+            margin-left: $spacing;
+            color: $font-color-dimmed;
+          }
         }
 
         &.disabled {

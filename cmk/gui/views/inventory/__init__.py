@@ -24,6 +24,7 @@ from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
+    RetentionInterval,
     SDKey,
     SDNodeName,
     SDPath,
@@ -81,6 +82,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
@@ -2103,7 +2105,7 @@ class _MinType:
 class _InventoryTreeValueInfo(NamedTuple):
     key: SDKey
     value: SDValue
-    keep_until: int | None
+    retention_interval: RetentionInterval | None
 
 
 def _sort_pairs(
@@ -2111,13 +2113,7 @@ def _sort_pairs(
 ) -> Sequence[_InventoryTreeValueInfo]:
     sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        _InventoryTreeValueInfo(
-            k,
-            attributes.pairs[k],
-            None
-            if (ri := attributes.retentions.get(k)) is None or ri.source == "current"
-            else ri.keep_until,
-        )
+        _InventoryTreeValueInfo(k, attributes.pairs[k], attributes.retentions.get(k))
         for k in sorted_keys
         if k in attributes.pairs
     ]
@@ -2130,13 +2126,7 @@ def _sort_rows(
         ident: SDRowIdent, row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
     ) -> Sequence[_InventoryTreeValueInfo]:
         return [
-            _InventoryTreeValueInfo(
-                c,
-                row.get(c),
-                None
-                if (ri := table.retentions.get(ident, {}).get(c)) is None or ri.source == "current"
-                else ri.keep_until,
-            )
+            _InventoryTreeValueInfo(c, row.get(c), table.retentions.get(ident, {}).get(c))
             for c in columns
         ]
 
@@ -2205,12 +2195,43 @@ def _show_value(
         _show_delta_value(value_info.value, hint)
         return
 
-    if value_info.keep_until is not None and time.time() > value_info.keep_until:
-        html.write_html(
-            HTMLWriter.render_span(_get_html_value(value_info.value, hint).value, css="muted_text")
+    html_value = _get_html_value(value_info.value, hint)
+    if value_info.retention_interval is None or value_info.retention_interval.source == "current":
+        html.write_html(html_value)
+        return
+
+    now = int(time.time())
+    valid_until = (
+        value_info.retention_interval.cached_at + value_info.retention_interval.cache_interval
+    )
+    keep_until = valid_until + value_info.retention_interval.retention_interval
+    if now > keep_until:
+        html_value = HTMLWriter.render_span(
+            html_value
+            + HTML("&nbsp;")
+            + HTMLWriter.render_img(
+                theme.detect_icon_path("svc_problems", "icon_"),
+                class_=["icon"],
+            ),
+            title=_("Data is outdated and will be removed with the next check execution"),
         )
-    else:
-        html.write_html(_get_html_value(value_info.value, hint))
+
+    elif now > valid_until:
+        html_value = HTMLWriter.render_span(
+            html_value
+            + HTML("&nbsp;")
+            + HTMLWriter.render_img(
+                theme.detect_icon_path("service_duration", "icon_"),
+                class_=["icon"],
+            ),
+            title=_("Data was provided at %s and is considered valid until %s")
+            % (
+                cmk.utils.render.date_and_time(value_info.retention_interval.cached_at),
+                cmk.utils.render.date_and_time(keep_until),
+            ),
+        )
+
+    html.write_html(html_value)
 
 
 def _show_delta_value(

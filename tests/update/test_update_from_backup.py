@@ -61,7 +61,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 @pytest.fixture(name="site_factory_demo", scope="function")
 def _site_factory_demo():
     base_version = CMKVersion(
-        "2.2.0p4", Edition.CCE, current_base_branch_name(), current_branch_version()
+        "2.2.0p8", Edition.CCE, current_base_branch_name(), current_branch_version()
     )
     return SiteFactory(version=base_version, prefix="")
 
@@ -152,15 +152,12 @@ def test_update_from_backup(site_factory: SiteFactory, base_site: Site, agent_ct
         assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg
 
 
-@pytest.mark.skip(
-    reason="Backup currently using v2.2.0p4. It needs to be re-generated with at least 2.2.0p8"
-)  # TODO: re-generate backup file
+@pytest.mark.cce
+@skip_if_not_cloud_edition
 @pytest.mark.skipif(
     os.environ.get("DISTRO") not in ("ubuntu-20.04", "ubuntu-22.04", "debian-10"),
     reason=f"The CCE currently does not support {os.environ.get('DISTRO')}",
 )
-@skip_if_not_cloud_edition
-@pytest.mark.cce
 def test_update_from_backup_demo(
     site_factory_demo: SiteFactory, base_site_demo: Site, request: pytest.FixtureRequest
 ) -> None:

@@ -5,10 +5,7 @@
     "hp.ilo4.company.com": [],
     "printer-1.company.com": [],
     "switch-1.company.com": [],
-    "switch-2.company.com": [
-        "Memory",
-        "CPU utilization"
-    ],
+    "switch-2.company.com": [],
     "srv001.vms.company.com": [],
     "srv002.vms.company.com": [],
     "srv004.vms.company.com": [],
@@ -34,31 +31,17 @@
     "srv051.company.com": [],
     "srv051.vms.company.com": [],
     "windows-server.company.com": [],
-    "app-1.erp.company.com": [
-        "Nginx 10.0.10.10:80 Status"
-    ],
-    "app-2.erp.company.com": [
-        "Nginx 10.0.10.10:80 Status"
-    ],
+    "app-1.erp.company.com": [],
+    "app-2.erp.company.com": [],
     "exchange-1.company.com": [],
     "exchange-2.company.com": [],
     "exchange.company.com": [],
-    "ldap-1.company.com": [
-        "Postfix status",
-        "Postfix Queue"
-    ],
-    "ldap-2.company.com": [
-        "Postfix status",
-        "Postfix Queue"
-    ],
+    "ldap-1.company.com": [],
+    "ldap-2.company.com": [],
     "loadbalancer1.company.com": [],
     "loadbalancer2.company.com": [],
-    "mysql-1.erp.company.com": [
-        "Postfix Queue"
-    ],
-    "mysql-2.erp.company.com": [
-        "Postfix Queue"
-    ],
+    "mysql-1.erp.company.com": [],
+    "mysql-2.erp.company.com": [],
     "vcenter.company.com": [],
     "kubernetes.company.com": [],
     "daemonset_eks_checkmk-monitoring_checkmk-node-collector-container-metrics": [],
@@ -115,6 +98,9 @@
         "PING"
     ],
     "15.0.11.75-eu-central-1-i-0d7776d349d81f15c": [
+        "PING"
+    ],
+    "15.0.13.227-eu-central-1-i-097d561a218e0590b": [
         "PING"
     ],
     "15.0.3.186-eu-central-1-i-04998884db9ab59be": [

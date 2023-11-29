@@ -173,7 +173,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut checks = vec![response_time_levels_checker
         .check(
             response_time,
-            format!(
+            &format!(
                 "Certificate obtained in {} ms",
                 response_time.whole_milliseconds()
             ),

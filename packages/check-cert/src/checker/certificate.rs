@@ -57,9 +57,9 @@ pub fn check(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {
     expected.map(|expected| {
         if serial == expected {
-            SimpleCheckResult::ok(format!("Serial {}", serial))
+            SimpleCheckResult::ok(&format!("Serial {}", serial))
         } else {
-            SimpleCheckResult::warn(format!("Serial is {} but expected {}", serial, expected))
+            SimpleCheckResult::warn(&format!("Serial is {} but expected {}", serial, expected))
         }
     })
 }
@@ -69,9 +69,9 @@ fn check_subject(subject: &X509Name, expected: Option<String>) -> Option<SimpleC
         let subject = subject.to_string();
         // subject string has the form: `CN=domain`
         if subject == expected {
-            SimpleCheckResult::ok(subject.to_string())
+            SimpleCheckResult::ok(&subject)
         } else {
-            SimpleCheckResult::warn(format!("Subject is {} but expected {}", subject, expected))
+            SimpleCheckResult::warn(&format!("Subject is {} but expected {}", subject, expected))
         }
     })
 }
@@ -88,15 +88,13 @@ fn check_signature_algorithm(
             Ok(SignatureAlgorithm::DSA) => "DSA",
             Ok(SignatureAlgorithm::ECDSA) => "ECDSA",
             Ok(SignatureAlgorithm::ED25519) => "ED25519",
-            Err(_) => {
-                return SimpleCheckResult::warn(String::from("Signature algorithm: Parser failed"))
-            }
+            Err(_) => return SimpleCheckResult::warn("Signature algorithm: Parser failed"),
         };
 
         if signature_algorithm == expected {
-            SimpleCheckResult::ok(format!("Signature algorithm: {}", signature_algorithm))
+            SimpleCheckResult::ok(&format!("Signature algorithm: {}", signature_algorithm))
         } else {
-            SimpleCheckResult::warn(format!(
+            SimpleCheckResult::warn(&format!(
                 "Signature algorithm is {} but expected {}",
                 signature_algorithm, expected
             ))
@@ -116,13 +114,13 @@ fn check_pubkey_algorithm(
             Ok(PublicKey::GostR3410(_)) => "GostR3410",
             Ok(PublicKey::GostR3410_2012(_)) => "GostR3410_2012",
             Ok(PublicKey::Unknown(_)) => "Unknown",
-            Err(_) => return SimpleCheckResult::warn(String::from("Invalid public key")),
+            Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
 
         if pubkey_alg == expected {
-            SimpleCheckResult::ok(format!("Public key algorithm: {}", pubkey_alg))
+            SimpleCheckResult::ok(&format!("Public key algorithm: {}", pubkey_alg))
         } else {
-            SimpleCheckResult::warn(format!(
+            SimpleCheckResult::warn(&format!(
                 "Public key algorithm is {} but expected {}",
                 pubkey_alg, expected
             ))
@@ -143,13 +141,13 @@ fn check_pubkey_size(
             | Ok(PublicKey::GostR3410(k))
             | Ok(PublicKey::GostR3410_2012(k))
             | Ok(PublicKey::Unknown(k)) => 8 * k.len(),
-            Err(_) => return SimpleCheckResult::warn(String::from("Invalid public key")),
+            Err(_) => return SimpleCheckResult::warn("Invalid public key"),
         };
 
         if pubkey_size == expected {
-            SimpleCheckResult::ok(format!("Public key size: {}", pubkey_size))
+            SimpleCheckResult::ok(&format!("Public key size: {}", pubkey_size))
         } else {
-            SimpleCheckResult::warn(format!(
+            SimpleCheckResult::warn(&format!(
                 "Public key size is {} but expected {}",
                 pubkey_size, expected
             ))
@@ -162,9 +160,9 @@ fn check_issuer(issuer: &X509Name, expected: Option<String>) -> Option<SimpleChe
         let issuer = issuer.to_string();
 
         if issuer == expected {
-            SimpleCheckResult::ok(format!("Issuer {}", issuer))
+            SimpleCheckResult::ok(&format!("Issuer {}", issuer))
         } else {
-            SimpleCheckResult::warn(format!("Issuer is {} but expected {}", issuer, expected))
+            SimpleCheckResult::warn(&format!("Issuer is {} but expected {}", issuer, expected))
         }
     })
 }
@@ -175,10 +173,10 @@ fn check_validity_not_after(
     not_after: ASN1Time,
 ) -> Option<CheckResult<Duration>> {
     levels.map(|levels| match time_to_expiration {
-        None => SimpleCheckResult::crit(format!("Certificate expired ({})", not_after)).into(),
+        None => SimpleCheckResult::crit(&format!("Certificate expired ({})", not_after)).into(),
         Some(time_to_expiration) => levels.check(
             time_to_expiration,
-            format!(
+            &format!(
                 "Certificate expires in {} day(s) ({})",
                 time_to_expiration.whole_days(),
                 not_after

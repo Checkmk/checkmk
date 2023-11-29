@@ -20,15 +20,15 @@ fn check_self_signed(cert: &X509Certificate, allow: bool) -> SimpleCheckResult {
     if cert.subject() == cert.issuer() {
         if cert.verify_signature(None).is_ok() {
             match allow {
-                true => SimpleCheckResult::ok(String::from("Certificate is self signed")),
-                false => SimpleCheckResult::warn(String::from("Certificate is self signed")),
+                true => SimpleCheckResult::ok("Certificate is self signed"),
+                false => SimpleCheckResult::warn("Certificate is self signed"),
             }
         } else {
-            SimpleCheckResult::warn(String::from(
+            SimpleCheckResult::warn(
                 "Certificate looks self signed but signature verification failed",
-            ))
+            )
         }
     } else {
-        SimpleCheckResult::ok(String::from("Certificate is not self signed"))
+        SimpleCheckResult::ok("Certificate is not self signed")
     }
 }

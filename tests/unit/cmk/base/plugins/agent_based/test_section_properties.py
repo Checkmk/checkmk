@@ -52,7 +52,7 @@ def test_detect_spec_dedup(
         ("dell_powerconnect_fans", "dell_powerconnect_psu"),
         ("docsis_channels_downstream", "docsis_channels_upstream"),
         ("emerson_stat", "emerson_temp"),
-        ("fjdarye_pcie_flash_modules", "fjdarye_pools"),
+        ("fjdarye_pcie_flash_modules", "fjdarye_pools_150"),
         ("gude_humidity", "gude_temp"),
         ("h3c_lanswitch_cpu", "h3c_lanswitch_sensors"),
         ("hitachi_hus_dkc", "hitachi_hus_dku"),

@@ -137,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         LevelsStrategy::Lower,
         Levels::from(&mut not_after.map(|v| v * Duration::DAY)),
     ) else {
-        check::bail_out("invalid args: not after crit level larger than warn");
+        check::bail_out("invalid args: not after crit level larger than warn")
     };
 
     let response_time: [_; 2] = args
@@ -148,7 +148,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         LevelsStrategy::Upper,
         Levels::from(&mut response_time.map(|v| v * Duration::MILLISECOND)),
     ) else {
-        check::bail_out("invalid args: response time crit higher than warn");
+        check::bail_out("invalid args: response time crit higher than warn")
     };
 
     let start = Instant::now();

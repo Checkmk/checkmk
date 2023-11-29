@@ -17,9 +17,14 @@ def main() {
             bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
         }
 
-        windows.build(
-            TARGET: 'check_sql_no_sign',
-        )
+        withCredentials([string(
+            credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
+            variable:"CI_TEST_SQL_DB_ENDPOINT"
+        )]) {
+            windows.build(
+                TARGET: 'check_sql_no_sign',
+            )
+        }
     }
 }
 

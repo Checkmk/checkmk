@@ -79,27 +79,27 @@ struct Args {
 
     /// Expected serial
     #[arg(long)]
-    pub serial: Option<String>,
+    serial: Option<String>,
 
     /// Expected subject
     #[arg(long)]
-    pub subject: Option<String>,
+    subject: Option<String>,
 
     /// Expected issuer
     #[arg(long)]
-    pub issuer: Option<String>,
+    issuer: Option<String>,
 
     /// Expected signature algorithm
     #[arg(long)]
-    pub signature_algorithm: Option<SignatureAlgorithm>,
+    signature_algorithm: Option<SignatureAlgorithm>,
 
     /// Expected public key algorithm
     #[arg(long)]
-    pub pubkey_algorithm: Option<PubKeyAlgorithm>,
+    pubkey_algorithm: Option<PubKeyAlgorithm>,
 
     /// Expected public key size
     #[arg(long)]
-    pub pubkey_size: Option<usize>,
+    pubkey_size: Option<usize>,
 
     /// Certificate expiration levels in days [WARN:CRIT]
     #[arg(long, num_args = 2, value_delimiter = ':', default_value = "30:0")]

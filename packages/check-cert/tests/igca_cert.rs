@@ -1,5 +1,7 @@
 use check_cert::check::Writer;
 use check_cert::checker::{self, Config as CheckCertConfig};
+use x509_parser::certificate::X509Certificate;
+use x509_parser::prelude::FromDer;
 
 // Taken from `x509-parser`.
 static DER: &[u8] = include_bytes!("../assets/IGC_A.der");
@@ -18,8 +20,10 @@ fn s(s: &str) -> Option<String> {
 
 #[test]
 fn test_cert_ok() {
+    let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
+
     let out = Writer::from(&checker::check_cert(
-        DER,
+        &cert,
         CheckCertConfig::builder()
             .serial(s(SERIAL))
             .subject(s(SUBJECT))
@@ -48,9 +52,10 @@ fn test_cert_ok() {
 #[test]
 fn test_cert_wrong_serial() {
     let serial = "01:02:03:04:05";
+    let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
     let out = Writer::from(&checker::check_cert(
-        DER,
+        &cert,
         CheckCertConfig::builder()
             .serial(s(serial))
             .subject(s(SUBJECT))

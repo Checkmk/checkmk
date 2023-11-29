@@ -3,6 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 pub mod check;
-pub mod checker;
+pub mod checker {
+    pub mod certificate;
+    pub mod validation;
+}
 pub mod fetcher;
-pub mod validation;

@@ -12,7 +12,7 @@ pub struct Config {
     allow_self_signed: bool,
 }
 
-pub fn validate_cert(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
+pub fn check(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
     vec![check_self_signed(cert, config.allow_self_signed).into()]
 }
 

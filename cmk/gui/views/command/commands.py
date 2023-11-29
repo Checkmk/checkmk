@@ -1275,17 +1275,13 @@ class CommandScheduleDowntimes(Command):
         html.open_table(class_=["down_date_and_time"])
 
         # Duration section
-        html.tr(
-            HTMLWriter.render_td(_("Duration"))
-            + HTMLWriter.render_td(self._get_duration_options(), class_="down_duration")
-            + HTMLWriter.render_td(
-                html.render_a(
-                    _("(Edit presets)"),
-                    href=self._get_presets_url(),
-                    class_="down_presets",
-                )
-            )
-        )
+        html.open_tr()
+        html.td(_("Duration"))
+        html.open_td(class_="down_duration")
+        html.write_html(self._get_duration_options())
+        html.a(_("(Edit presets)"), href=self._get_presets_url(), class_="down_presets")
+        html.close_td()
+        html.close_tr()
 
         html.open_tr()
         html.open_td()

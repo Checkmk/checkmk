@@ -52,12 +52,14 @@ class ActiveCheckResult:
     metrics: tuple[str, ...] | list[str] = ()
 
     def as_text(self) -> str:
+        safe_summary = self._replace_pipe(self.summary)
+        safe_details = "".join(f"{self._replace_pipe(line)}\n" for line in self.details)
         return "\n".join(
             (
-                " | ".join((self.summary, " ".join(self.metrics)))
+                " | ".join((safe_summary, " ".join(self.metrics)))
                 if self.metrics
-                else self.summary,
-                "".join(f"{line}\n" for line in self.details),
+                else safe_summary,
+                safe_details,
             )
         ).strip()
 
@@ -81,3 +83,10 @@ class ActiveCheckResult:
     def _add_marker(txt: str, state: int) -> str:
         marker = state_markers[state]
         return txt if txt.endswith(marker) else f"{txt}{marker}"
+
+    @staticmethod
+    def _replace_pipe(txt: str) -> str:
+        """The vertical bar indicates end of service output and start of metrics.
+        Replace the ones in the output by a Uniocode "Light vertical bar"
+        """
+        return txt.replace("|", "\u2758")

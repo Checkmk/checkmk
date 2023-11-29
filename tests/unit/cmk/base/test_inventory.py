@@ -15,11 +15,11 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
-    _RetentionInterval,
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
     MutableTree,
+    RetentionInterval,
     SDKey,
     SDRowIdent,
     UpdateResult,
@@ -236,13 +236,13 @@ def test__inventorize_real_host_only_items() -> None:
         (
             "all",
             {
-                "foo0": _RetentionInterval(10, 0, 3, "current"),
-                "foo1": _RetentionInterval(10, 0, 3, "current"),
-                "foo2": _RetentionInterval(10, 0, 3, "current"),
+                "foo0": RetentionInterval(10, 0, 3, "current"),
+                "foo1": RetentionInterval(10, 0, 3, "current"),
+                "foo2": RetentionInterval(10, 0, 3, "current"),
             },
         ),
         ("nothing", {}),
-        (("choices", ["foo0"]), {"foo0": _RetentionInterval(10, 0, 3, "current")}),
+        (("choices", ["foo0"]), {"foo0": RetentionInterval(10, 0, 3, "current")}),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -253,14 +253,14 @@ def test__inventorize_real_host_only_items() -> None:
             "all",
             {
                 ("bar0",): {
-                    "foo": _RetentionInterval(10, 0, 5, "current"),
-                    "col0": _RetentionInterval(10, 0, 5, "current"),
-                    "col1": _RetentionInterval(10, 0, 5, "current"),
+                    "foo": RetentionInterval(10, 0, 5, "current"),
+                    "col0": RetentionInterval(10, 0, 5, "current"),
+                    "col1": RetentionInterval(10, 0, 5, "current"),
                 },
                 ("bar1",): {
-                    "foo": _RetentionInterval(10, 0, 5, "current"),
-                    "col0": _RetentionInterval(10, 0, 5, "current"),
-                    "col1": _RetentionInterval(10, 0, 5, "current"),
+                    "foo": RetentionInterval(10, 0, 5, "current"),
+                    "col0": RetentionInterval(10, 0, 5, "current"),
+                    "col1": RetentionInterval(10, 0, 5, "current"),
                 },
             },
         ),
@@ -268,8 +268,8 @@ def test__inventorize_real_host_only_items() -> None:
         (
             ("choices", ["col0"]),
             {
-                ("bar0",): {"col0": _RetentionInterval(10, 0, 5, "current")},
-                ("bar1",): {"col0": _RetentionInterval(10, 0, 5, "current")},
+                ("bar0",): {"col0": RetentionInterval(10, 0, 5, "current")},
+                ("bar1",): {"col0": RetentionInterval(10, 0, 5, "current")},
             },
         ),
         (("choices", ["unknown"]), {}),
@@ -277,9 +277,9 @@ def test__inventorize_real_host_only_items() -> None:
 )
 def test__inventorize_real_host_only_intervals(
     attrs_choices: Literal["all"] | tuple[str, list[str]],
-    attrs_expected_retentions: Mapping[SDKey, _RetentionInterval],
+    attrs_expected_retentions: Mapping[SDKey, RetentionInterval],
     table_choices: Literal["all"] | tuple[str, list[str]],
-    table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
+    table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -445,13 +445,13 @@ def test__inventorize_real_host_only_intervals(
         (
             "all",
             {
-                "foo0": _RetentionInterval(1, 2, 3, "current"),
-                "foo1": _RetentionInterval(1, 2, 3, "current"),
-                "foo2": _RetentionInterval(1, 2, 3, "current"),
+                "foo0": RetentionInterval(1, 2, 3, "current"),
+                "foo1": RetentionInterval(1, 2, 3, "current"),
+                "foo2": RetentionInterval(1, 2, 3, "current"),
             },
         ),
         ("nothing", {}),
-        (("choices", ["foo0"]), {"foo0": _RetentionInterval(1, 2, 3, "current")}),
+        (("choices", ["foo0"]), {"foo0": RetentionInterval(1, 2, 3, "current")}),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -462,14 +462,14 @@ def test__inventorize_real_host_only_intervals(
             "all",
             {
                 ("bar0",): {
-                    "foo": _RetentionInterval(1, 2, 5, "current"),
-                    "col0": _RetentionInterval(1, 2, 5, "current"),
-                    "col1": _RetentionInterval(1, 2, 5, "current"),
+                    "foo": RetentionInterval(1, 2, 5, "current"),
+                    "col0": RetentionInterval(1, 2, 5, "current"),
+                    "col1": RetentionInterval(1, 2, 5, "current"),
                 },
                 ("bar1",): {
-                    "foo": _RetentionInterval(1, 2, 5, "current"),
-                    "col0": _RetentionInterval(1, 2, 5, "current"),
-                    "col1": _RetentionInterval(1, 2, 5, "current"),
+                    "foo": RetentionInterval(1, 2, 5, "current"),
+                    "col0": RetentionInterval(1, 2, 5, "current"),
+                    "col1": RetentionInterval(1, 2, 5, "current"),
                 },
             },
         ),
@@ -477,8 +477,8 @@ def test__inventorize_real_host_only_intervals(
         (
             ("choices", ["col0"]),
             {
-                ("bar0",): {"col0": _RetentionInterval(1, 2, 5, "current")},
-                ("bar1",): {"col0": _RetentionInterval(1, 2, 5, "current")},
+                ("bar0",): {"col0": RetentionInterval(1, 2, 5, "current")},
+                ("bar1",): {"col0": RetentionInterval(1, 2, 5, "current")},
             },
         ),
         (("choices", ["unknown"]), {}),
@@ -486,9 +486,9 @@ def test__inventorize_real_host_only_intervals(
 )
 def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     attrs_choices: Literal["all"] | tuple[str, list[str]],
-    attrs_expected_retentions: Mapping[SDKey, _RetentionInterval],
+    attrs_expected_retentions: Mapping[SDKey, RetentionInterval],
     table_choices: Literal["all"] | tuple[str, list[str]],
-    table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
+    table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -650,8 +650,8 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 
 def _make_tree_or_items(
     *,
-    previous_attributes_retentions: Mapping[SDKey, _RetentionInterval],
-    previous_table_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
+    previous_attributes_retentions: Mapping[SDKey, RetentionInterval],
+    previous_table_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
     raw_cache_info: tuple[int, int] | None,
 ) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
     previous_tree = ImmutableTree.deserialize(
@@ -801,15 +801,15 @@ def test__inventorize_real_host_no_items(
     "choices, expected_retentions",
     [
         (("choices", ["unknown", "keyz"]), {}),
-        (("choices", ["old", "keyz"]), {"old": _RetentionInterval(1, 2, 3, "previous")}),
+        (("choices", ["old", "keyz"]), {"old": RetentionInterval(1, 2, 3, "previous")}),
     ],
 )
 def test_updater_merge_previous_attributes(
     choices: tuple[str, list[str]],
-    expected_retentions: Mapping[SDKey, _RetentionInterval],
+    expected_retentions: Mapping[SDKey, RetentionInterval],
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        previous_attributes_retentions={"old": _RetentionInterval(1, 2, 3, "current")},
+        previous_attributes_retentions={"old": RetentionInterval(1, 2, 3, "current")},
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
@@ -849,7 +849,7 @@ def test_updater_merge_previous_attributes(
 )
 def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str]]) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        previous_attributes_retentions={"old": _RetentionInterval(1, 2, 3, "current")},
+        previous_attributes_retentions={"old": RetentionInterval(1, 2, 3, "current")},
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
@@ -881,21 +881,21 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         (
             ("choices", ["old", "keyz"]),
             {
-                ("Ident 1",): {"old": _RetentionInterval(1, 2, 3, "previous")},
-                ("Ident 2",): {"old": _RetentionInterval(1, 2, 3, "previous")},
+                ("Ident 1",): {"old": RetentionInterval(1, 2, 3, "previous")},
+                ("Ident 2",): {"old": RetentionInterval(1, 2, 3, "previous")},
             },
         ),
     ],
 )
 def test_updater_merge_previous_tables(
     choices: tuple[str, list[str]],
-    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
+    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": _RetentionInterval(1, 2, 3, "current")},
-            ("Ident 2",): {"old": _RetentionInterval(1, 2, 3, "current")},
+            ("Ident 1",): {"old": RetentionInterval(1, 2, 3, "current")},
+            ("Ident 2",): {"old": RetentionInterval(1, 2, 3, "current")},
         },
         raw_cache_info=(-1, -2),
     )
@@ -938,8 +938,8 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": _RetentionInterval(1, 2, 3, "current")},
-            ("Ident 2",): {"old": _RetentionInterval(1, 2, 3, "current")},
+            ("Ident 1",): {"old": RetentionInterval(1, 2, 3, "current")},
+            ("Ident 2",): {"old": RetentionInterval(1, 2, 3, "current")},
         },
         raw_cache_info=(-1, -2),
     )
@@ -971,21 +971,21 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "old": _RetentionInterval(1, 2, 3, "previous"),
-                "new": _RetentionInterval(4, 5, 6, "current"),
-                "keys": _RetentionInterval(4, 5, 6, "current"),
+                "old": RetentionInterval(1, 2, 3, "previous"),
+                "new": RetentionInterval(4, 5, 6, "current"),
+                "keys": RetentionInterval(4, 5, 6, "current"),
             },
         ),
     ],
 )
 def test_updater_merge_attributes(
     choices: tuple[str, list[str]],
-    expected_retentions: Mapping[SDKey, _RetentionInterval],
+    expected_retentions: Mapping[SDKey, RetentionInterval],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={
-            "old": _RetentionInterval(1, 2, 3, "current"),
-            "keys": _RetentionInterval(1, 2, 3, "current"),
+            "old": RetentionInterval(1, 2, 3, "current"),
+            "keys": RetentionInterval(1, 2, 3, "current"),
         },
         previous_table_retentions={},
         raw_cache_info=(4, 5),
@@ -1025,20 +1025,20 @@ def test_updater_merge_attributes(
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "new": _RetentionInterval(4, 5, 6, "current"),
-                "keys": _RetentionInterval(4, 5, 6, "current"),
+                "new": RetentionInterval(4, 5, 6, "current"),
+                "keys": RetentionInterval(4, 5, 6, "current"),
             },
         ),
     ],
 )
 def test_updater_merge_attributes_outdated(
     choices: tuple[str, list[str]],
-    expected_retentions: Mapping[SDKey, _RetentionInterval],
+    expected_retentions: Mapping[SDKey, RetentionInterval],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={
-            "old": _RetentionInterval(1, 2, 3, "current"),
-            "keys": _RetentionInterval(1, 2, 3, "current"),
+            "old": RetentionInterval(1, 2, 3, "current"),
+            "keys": RetentionInterval(1, 2, 3, "current"),
         },
         previous_table_retentions={},
         raw_cache_info=(4, 5),
@@ -1078,14 +1078,14 @@ def test_updater_merge_attributes_outdated(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "old": _RetentionInterval(1, 2, 3, "previous"),
-                    "new": _RetentionInterval(4, 5, 6, "current"),
-                    "keys": _RetentionInterval(4, 5, 6, "current"),
+                    "old": RetentionInterval(1, 2, 3, "previous"),
+                    "new": RetentionInterval(4, 5, 6, "current"),
+                    "keys": RetentionInterval(4, 5, 6, "current"),
                 },
                 ("Ident 2",): {
-                    "old": _RetentionInterval(1, 2, 3, "previous"),
-                    "new": _RetentionInterval(4, 5, 6, "current"),
-                    "keys": _RetentionInterval(4, 5, 6, "current"),
+                    "old": RetentionInterval(1, 2, 3, "previous"),
+                    "new": RetentionInterval(4, 5, 6, "current"),
+                    "keys": RetentionInterval(4, 5, 6, "current"),
                 },
             },
         ),
@@ -1093,18 +1093,18 @@ def test_updater_merge_attributes_outdated(
 )
 def test_updater_merge_tables(
     choices: tuple[str, list[str]],
-    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
+    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
             ("Ident 1",): {
-                "old": _RetentionInterval(1, 2, 3, "current"),
-                "keys": _RetentionInterval(1, 2, 3, "current"),
+                "old": RetentionInterval(1, 2, 3, "current"),
+                "keys": RetentionInterval(1, 2, 3, "current"),
             },
             ("Ident 2",): {
-                "old": _RetentionInterval(1, 2, 3, "current"),
-                "keys": _RetentionInterval(1, 2, 3, "current"),
+                "old": RetentionInterval(1, 2, 3, "current"),
+                "keys": RetentionInterval(1, 2, 3, "current"),
             },
         },
         raw_cache_info=(4, 5),
@@ -1150,12 +1150,12 @@ def test_updater_merge_tables(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "new": _RetentionInterval(4, 5, 6, "current"),
-                    "keys": _RetentionInterval(4, 5, 6, "current"),
+                    "new": RetentionInterval(4, 5, 6, "current"),
+                    "keys": RetentionInterval(4, 5, 6, "current"),
                 },
                 ("Ident 2",): {
-                    "new": _RetentionInterval(4, 5, 6, "current"),
-                    "keys": _RetentionInterval(4, 5, 6, "current"),
+                    "new": RetentionInterval(4, 5, 6, "current"),
+                    "keys": RetentionInterval(4, 5, 6, "current"),
                 },
             },
         ),
@@ -1163,18 +1163,18 @@ def test_updater_merge_tables(
 )
 def test_updater_merge_tables_outdated(
     choices: tuple[str, list[str]],
-    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
+    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
             ("Ident 1",): {
-                "old": _RetentionInterval(1, 2, 3, "current"),
-                "keys": _RetentionInterval(1, 2, 3, "current"),
+                "old": RetentionInterval(1, 2, 3, "current"),
+                "keys": RetentionInterval(1, 2, 3, "current"),
             },
             ("Ident 2",): {
-                "old": _RetentionInterval(1, 2, 3, "current"),
-                "keys": _RetentionInterval(1, 2, 3, "current"),
+                "old": RetentionInterval(1, 2, 3, "current"),
+                "keys": RetentionInterval(1, 2, 3, "current"),
             },
         },
         raw_cache_info=(4, 5),

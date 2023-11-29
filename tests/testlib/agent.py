@@ -198,7 +198,11 @@ def wait_until_host_receives_data(
     interval: int = 20,
 ) -> None:
     wait_until(
-        lambda: not site.execute(["cmk", "-d", hostname]).wait(),
+        lambda: not site.execute(
+            ["cmk", "-d", hostname],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).wait(),
         timeout=timeout,
         interval=interval,
     )

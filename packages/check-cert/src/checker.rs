@@ -7,7 +7,6 @@ use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::AlgorithmIdentifier;
-use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
 use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
@@ -26,15 +25,7 @@ pub struct Config {
     allow_self_signed: bool,
 }
 
-pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
-    let cert = match X509Certificate::from_der(der) {
-        Ok((_rem, cert)) => cert,
-        Err(_) => {
-            return vec![
-                SimpleCheckResult::crit(String::from("Failed to parse certificate")).into(),
-            ]
-        }
-    };
+pub fn check_cert(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
     vec![
         check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
             .unwrap_or_default()
@@ -45,7 +36,7 @@ pub fn check_cert(der: &[u8], config: Config) -> Vec<CheckResult<Real>> {
         check_issuer(cert.tbs_certificate.issuer(), config.issuer)
             .unwrap_or_default()
             .into(),
-        check_self_signed(&cert, config.allow_self_signed).into(),
+        check_self_signed(cert, config.allow_self_signed).into(),
         check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm)
             .unwrap_or_default()
             .into(),

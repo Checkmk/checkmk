@@ -11,6 +11,8 @@ use check_cert::fetcher::{self, Config as FetcherConfig};
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
+use x509_parser::certificate::X509Certificate;
+use x509_parser::prelude::FromDer;
 
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
@@ -159,6 +161,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     let response_time = start.elapsed();
 
+    let cert = match X509Certificate::from_der(&der) {
+        Ok((_rem, cert)) => cert,
+        Err(_) => check::abort("Failed to parse certificate"),
+    };
+
     let mut checks = vec![response_time_levels_checker
         .check(
             response_time,
@@ -173,7 +180,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .map(|x| Real::from(x.whole_milliseconds() as isize))];
     checks.append(&mut checker::check_cert(
-        &der,
+        &cert,
         CheckCertConfig::builder()
             .serial(args.serial)
             .subject(args.subject)

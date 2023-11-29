@@ -460,6 +460,12 @@ pub fn bail_out(message: &str) -> ! {
     std::process::exit(out.exit_code())
 }
 
+pub fn abort(message: &str) -> ! {
+    let out = Writer::from(SimpleCheckResult::crit(String::from(message)));
+    eprintln!("{}", out);
+    std::process::exit(out.exit_code())
+}
+
 #[cfg(test)]
 mod test_metrics_map {
     use super::{Bounds, Levels, Metric};

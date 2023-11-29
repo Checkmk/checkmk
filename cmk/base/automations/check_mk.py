@@ -124,6 +124,7 @@ from cmk.checkengine.discovery import (
     CheckPreviewEntry,
     DiscoveryMode,
     DiscoveryResult,
+    DiscoverySettings,
     get_check_preview,
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
@@ -242,7 +243,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME"
             )
 
-        mode = DiscoveryMode.from_str(args[0])
+        settings = DiscoverySettings.from_discovery_mode(DiscoveryMode.from_str(args[0]))
         hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
@@ -310,7 +311,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                     get_service_description=functools.partial(
                         config.service_description, ruleset_matcher
                     ),
-                    mode=mode,
+                    settings=settings,
                     keep_clustered_vanished_services=True,
                     service_filters=None,
                     enforced_services=config_cache.enforced_services_table(hostname),

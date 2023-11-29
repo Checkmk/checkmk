@@ -6,9 +6,9 @@ use anyhow::Result;
 use check_cert::check::{
     self, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real, Writer,
 };
-use check_cert::checker::{self, Config as CheckCertConfig};
+use check_cert::checker::certificate::{self, Config as CertConfig};
+use check_cert::checker::validation::{self, Config as ValidationConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
-use check_cert::validation::{self, Config as ValidationConfig};
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
@@ -180,9 +180,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .build(),
         )
         .map(|x| Real::from(x.whole_milliseconds() as isize))];
-    checks.append(&mut checker::check_cert(
+    checks.append(&mut certificate::check(
         &cert,
-        CheckCertConfig::builder()
+        CertConfig::builder()
             .serial(args.serial)
             .subject(args.subject)
             .issuer(args.issuer)
@@ -195,7 +195,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));
-    checks.append(&mut validation::validate_cert(
+    checks.append(&mut validation::check(
         &cert,
         ValidationConfig::builder()
             .allow_self_signed(args.allow_self_signed)

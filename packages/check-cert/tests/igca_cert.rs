@@ -1,5 +1,5 @@
 use check_cert::check::Writer;
-use check_cert::checker::{self, Config as CheckCertConfig};
+use check_cert::checker::certificate::{self, Config as CertConfig};
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::FromDer;
 
@@ -22,9 +22,9 @@ fn s(s: &str) -> Option<String> {
 fn test_cert_ok() {
     let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
-    let out = Writer::from(&checker::check_cert(
+    let out = Writer::from(&certificate::check(
         &cert,
-        CheckCertConfig::builder()
+        CertConfig::builder()
             .serial(s(SERIAL))
             .subject(s(SUBJECT))
             .issuer(s(ISSUER))
@@ -52,9 +52,9 @@ fn test_cert_wrong_serial() {
     let serial = "01:02:03:04:05";
     let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
-    let out = Writer::from(&checker::check_cert(
+    let out = Writer::from(&certificate::check(
         &cert,
-        CheckCertConfig::builder()
+        CertConfig::builder()
             .serial(s(serial))
             .subject(s(SUBJECT))
             .issuer(s(ISSUER))

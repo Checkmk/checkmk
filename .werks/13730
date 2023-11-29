@@ -10,8 +10,8 @@ State: unknown
 Version: 2.2.0b1
 
 Since Checkmk version 2.1.0 the check_temperature function required
-{{unique_name}} and {{value_store}}. Both are only needed for trend
+"unique_name" and "value_store". Both are only needed for trend
 computation.
 
-Now {{unique_name}} and {{value_store}} are optional again. The check engine
+Now "unique_name" and "value_store" are optional again. The check engine
 raises a ValueError if only one of both are set.

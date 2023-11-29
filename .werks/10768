@@ -15,7 +15,7 @@ describe the front matter of the report, like cover page, table of contents
 and other static elements one wishes the report to include.
 
 Reports wishing to use the front matter template need simply to select it
-in the {{report properties}}->{{Use settings and page layout from}}. The
+in the "report properties"->"Use settings and page layout from". The
 front matter always generates an even number of pages and is numbered with
 roman numerals.
 

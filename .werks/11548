@@ -8,8 +8,8 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0b1
 
-In case a check provides metrics for deduplication rate ({{dedup_rate}}) and filesystem
-usage ({{fs_size}} and {{fs_usage}}) the Perf-O-Meter would display the (less important)
+In case a check provides metrics for deduplication rate ("dedup_rate") and filesystem
+usage ("fs_size" and "fs_usage") the Perf-O-Meter would display the (less important)
 deduplication rate.
-This change makes perfometer definition for {{dedup_rate}} appear after {{fs_size}} and
-{{fs_usage}}.
+This change makes perfometer definition for "dedup_rate" appear after "fs_size" and
+"fs_usage".

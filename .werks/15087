@@ -9,15 +9,14 @@ Level: 1
 Version: 2.2.0b1
 
 With werk 15086 different inventory tables can be joined. The configured macros
-can now also be used in {{Joined columns}} in order to connect services with
+can now also be used in "Joined columns" in order to connect services with
 the columns of this data source.
 
 Example:
 
 <ul>
-<li>Choose {{Oracle instances}} as the data source</li>
-<li>Choose {{SID}} with {{$SID$}} below macros</li>
-<li>Now you can connect {{Services: Summary}} of the services {{ORA $SID$ Uptime}}
-below {{Joined column}}</li>
+<li>Choose "Oracle instances" as the data source</li>
+<li>Choose "SID" with "$SID$" below macros</li>
+<li>Now you can connect "Services: Summary" of the services "ORA $SID$ Uptime"
+below "Joined column"</li>
 </ul>
-

@@ -9,5 +9,5 @@ Level: 1
 Version: 2.0.0i1
 
 A customer specific report layout can be configured for each customer. This
-layout can the be accessed generically from the report property {{"Use
-settings and page layout from"}} as {{"Customer specific report layout"}}
+layout can the be accessed generically from the report property "Use
+settings and page layout from" as "Customer specific report layout"

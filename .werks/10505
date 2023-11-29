@@ -8,6 +8,6 @@ Knowledge: undoc
 Level: 1
 Version: 2.0.0i1
 
-The content of the agent plugin {{mk_oracle_asm}} is completely included in the
-agent plugin {{mk_oracle}}, ie. the section {{oracle_asm_diskgroup}}.  Please
+The content of the agent plugin "mk_oracle_asm" is completely included in the
+agent plugin "mk_oracle", ie. the section "oracle_asm_diskgroup".  Please
 use latter one.

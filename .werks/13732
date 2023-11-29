@@ -8,30 +8,30 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0b1
 
-The agent plugin {{mk_oracle}} implements its own caching functionality because
+The agent plugin "mk_oracle" implements its own caching functionality because
 of long running SQL statements (and custom SQLs with own cache interalls). But
 the execution of synchronous and asynchronous SQls does not work properly with
-systemd anymore if the plugin is installed to {{../check_mk_agent/plugins/}}
-because the {{check-mk-agent-sync.service}} would wait for all child processes
+systemd anymore if the plugin is installed to `../check_mk_agent/plugins/`
+because the "check-mk-agent-sync.service" would wait for all child processes
 and may take too long.
 
-In order to solve this situation on hosts with systemd the {{mk_oracle}} must
-be installed to {{../check_mk_agent/plugins/NUMBER}} and is now triggered by
-the {{check-mk-agent-async.service}} (which runs permanently, every minute).
+In order to solve this situation on hosts with systemd the "mk_oracle" must
+be installed to `../check_mk_agent/plugins/NUMBER` and is now triggered by
+the "check-mk-agent-async.service" (which runs permanently, every minute).
 
 Details:
 <ul>
 <li>The plugin is now able to detect the installation folder</li>
-<li>On distros without systemd you can keep the plugin below {{../check_mk_agent/plugins/}}</li>
-<li>On distros with systemd you have to install the plugin to {{../check_mk_agent/plugins/NUMBER/}}</li>
+<li>On distros without systemd you can keep the plugin below <tt>../check_mk_agent/plugins/</tt></li>
+<li>On distros with systemd you have to install the plugin to <tt>../check_mk_agent/plugins/NUMBER/</tt></li>
 <li>The recommended NUMBER for this folder is 60</li>
 </ul>
 
-If the {{mk_oracle}} is installed to {{../check_mk_agent/plugins/NUMBER}} the
+If the "mk_oracle" is installed to `../check_mk_agent/plugins/NUMBER` the
 result (which consists of the sync. and async. SQLs) is saved into the Checkmk
 agent's spool directory
 
 The limit of this spoolfile is three times the NUMBER (interval).
 
 If the plugin is executed with any CL option, then the output is shown on
-{{stdout}} as before.
+"stdout" as before.

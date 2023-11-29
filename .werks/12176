@@ -9,12 +9,12 @@ Level: 1
 State: unknown
 Version: 2.1.0b1
 
-The check plugin {{statgrab_disk}} is merged into the check
-plugin {{diskstat}}.
+The check plugin "statgrab_disk" is merged into the check
+plugin "diskstat".
 The same rulesets apply, the metrics are kept.
 
 Already discovered services are 'moved' during `cmk-update-config`.
 
 This may slightly change the "Service check command" count
-of the {{site_objects_counts}} plugin, depending on its
+of the "site_objects_counts" plugin, depending on its
 configuration.

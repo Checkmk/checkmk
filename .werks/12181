@@ -13,8 +13,8 @@ SNMP data <b>and</b> data provided by the Checkmk agent
 for FreeBSD.
 
 In these cases we now prefer the services discovered by
-the {{if64}} check over the ones discovered by the
-{{interfaces}} check using the {{statgrab_net}} section.
+the "if64" check over the ones discovered by the
+"interfaces" check using the "statgrab_net" section.
 
 The same rulesets and parameters apply.
 
@@ -23,6 +23,6 @@ services, as the SNMP services provide more information
 in this case.
 
 However, if you want to continue using the services
-driven by the {{statgrab_net}} section, you can disable
-the SNMP section {{if64}} for the affected host using
+driven by the "statgrab_net" section, you can disable
+the SNMP section "if64" for the affected host using
 the rule "Disabled and enabled sections (SNMP)".

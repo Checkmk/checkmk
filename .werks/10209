@@ -10,12 +10,12 @@ Version: 2.0.0i1
 
 It is now possible to override the builtin active checks by copying them to the
 local hierarchy of the monitoring site. Checks created with the
-{{WATO > Host & service parameters > Active checks}}
+"WATO > Host & service parameters > Active checks"
 rulesets are now automatically using active checks in the local hierarchy when
 they are available.
 
-If you want to use your own path defined via {{$USER*$}} then you have to copy
-the check file {{share/check_mk/checks/check_ACTIVE_CHECK_NAME}} to the local
-hierarchy, ie. {{local/share/check_mk/checks/check_ACTIVE_CHECK_NAME}} and
-adapted the {{command_line}} within this file:
-{{"command_line": "$USER*$/check_ACTIVE_CHECK_NAME $ARG1$",}}
+If you want to use your own path defined via `$USER*$` then you have to copy
+the check file "share/check_mk/checks/check_ACTIVE_CHECK_NAME" to the local
+hierarchy, ie. "local/share/check_mk/checks/check_ACTIVE_CHECK_NAME" and
+adapted the "command_line" within this file:
+`"command_line": "$USER*$/check_ACTIVE_CHECK_NAME $ARG1$",`

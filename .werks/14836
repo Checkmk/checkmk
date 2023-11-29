@@ -12,15 +12,15 @@ Previously the cluster property was added in any case even if the newly
 computed tree was empty (ie. no data or inventory plugins did not add any
 entries).
 
-This led to a rather confusing result message of the {{HW/SW Inventory}}
-service: {{Cannot update tree, Found 1 inventory entries, Got no data, ...}}.
+This led to a rather confusing result message of the "HW/SW Inventory"
+service: "Cannot update tree, Found 1 inventory entries, Got no data, ...".
 
-In order to avoid some warnings ({{Cannot update tree WARN}}) on trees from
+In order to avoid some warnings ("Cannot update tree WARN") on trees from
 Checkmk <2.2 the state is OK if a tree contains only the cluster property.
 
-Moreover there was no possibility for removing the {{HW/SW Inventory}} tree at
-all, ie. the icon {{Show hardware/software inventory of this host}} in the
-dropdown menu of the {{HW/SW Inventory}} stays all the time.
+Moreover there was no possibility for removing the "HW/SW Inventory" tree at
+all, ie. the icon "Show hardware/software inventory of this host" in the
+dropdown menu of the "HW/SW Inventory" stays all the time.
 
 Now the mechanism works as follows:
 LI: Apply all related inventory plugins

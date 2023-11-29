@@ -10,5 +10,4 @@ Version: 2.3.0b1
 
 The name of executable files are not unique. Thus multiple same-named files
 with different paths are stored below one entry. This has been fixed by adding
-the path to {{key columns}}.
-
+the path to "key columns".

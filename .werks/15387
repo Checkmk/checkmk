@@ -8,4 +8,4 @@ Knowledge: doc
 Level: 1
 Version: 2.3.0b1
 
-The API name for organisation IDs was wrong, ie. {{id}} instead of {{organizationId}}.
+The API name for organisation IDs was wrong, ie. "id" instead of "organizationId".

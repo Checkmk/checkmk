@@ -22,10 +22,18 @@ __all__ = [
 class Closed:
     value: Bound
 
+    def __post_init__(self) -> None:
+        if isinstance(self.value, str) and not self.value:
+            raise ValueError(self.value)
+
 
 @dataclass(frozen=True)
 class Open:
     value: Bound
+
+    def __post_init__(self) -> None:
+        if isinstance(self.value, str) and not self.value:
+            raise ValueError(self.value)
 
 
 @dataclass(frozen=True)
@@ -44,6 +52,9 @@ class Perfometer:
         if not self.name:
             raise ValueError(self.name)
         assert self.segments
+        for s in self.segments:
+            if isinstance(s, str) and not s:
+                raise ValueError(s)
 
 
 @dataclass(frozen=True)

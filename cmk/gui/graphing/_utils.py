@@ -327,11 +327,11 @@ def _parse_translation(
 ) -> CheckMetricEntry:
     match translation:
         case translation_api.Renaming():
-            return {"name": translation.rename_to.value}
+            return {"name": translation.rename_to}
         case translation_api.Scaling():
             return {"scale": translation.scale_by}
         case translation_api.RenamingAndScaling():
-            return {"name": translation.rename_to.value, "scale": translation.scale_by}
+            return {"name": translation.rename_to, "scale": translation.scale_by}
 
 
 def add_graphing_plugins(
@@ -350,7 +350,7 @@ def add_graphing_plugins(
         if isinstance(plugin, metric_api.Metric):
             unit_name = plugin.unit.name if isinstance(plugin.unit, Unit) else plugin.unit.symbol
             unit_info[unit_name] = parse_unit(plugin.unit)
-            metric_info[MetricName_(plugin.name.value)] = {
+            metric_info[MetricName_(plugin.name)] = {
                 "title": plugin.title.localize(_),
                 "unit": unit_name,
                 "color": parse_color(plugin.color),
@@ -359,7 +359,7 @@ def add_graphing_plugins(
         elif isinstance(plugin, translation_api.Translation):
             for check_command in plugin.check_commands:
                 check_metrics[_parse_check_command(check_command)] = {
-                    MetricName_(old_name.value): _parse_translation(translation)
+                    MetricName_(old_name): _parse_translation(translation)
                     for old_name, translation in plugin.translations.items()
                 }
 

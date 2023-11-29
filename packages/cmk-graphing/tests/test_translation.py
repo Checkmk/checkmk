@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.graphing.v1 import metric, translation
+from cmk.graphing.v1 import translation
 
 
 def test_passive_check_error() -> None:
@@ -28,30 +28,36 @@ def test_nagios_plugin_error() -> None:
         translation.NagiosPlugin("")
 
 
+def test_renaming_error_empty_rename_to() -> None:
+    with pytest.raises(ValueError):
+        translation.Renaming("")
+
+
 def test_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
         translation.Scaling(0)
 
 
+def test_renaming_and_scaling_error_empty_rename_to() -> None:
+    with pytest.raises(ValueError):
+        translation.RenamingAndScaling("", 1)
+
+
 def test_renaming_and_scaling_error_scale_by_zero() -> None:
     with pytest.raises(AssertionError):
-        translation.RenamingAndScaling(metric.Name("new-metric-name"), 0)
+        translation.RenamingAndScaling("new-metric-name", 0)
 
 
 def test_translation_error_empty_name() -> None:
     check_commands = [translation.PassiveCheck("passive-check")]
-    translations = {
-        metric.Name("old-metric-name"): translation.Renaming(metric.Name("new-metric-name"))
-    }
+    translations = {"old-metric-name": translation.Renaming("new-metric-name")}
     with pytest.raises(ValueError):
         translation.Translation("", check_commands, translations)
 
 
 def test_translation_error_missing_check_commands() -> None:
     name = "name"
-    translations = {
-        metric.Name("old-metric-name"): translation.Renaming(metric.Name("new-metric-name"))
-    }
+    translations = {"old-metric-name": translation.Renaming("new-metric-name")}
     with pytest.raises(AssertionError):
         translation.Translation(name, [], translations)
 
@@ -61,3 +67,10 @@ def test_translation_error_missing_translations() -> None:
     check_commands = [translation.PassiveCheck("check-command-name")]
     with pytest.raises(AssertionError):
         translation.Translation(name, check_commands, {})
+
+
+def test_translation_error_empty_old_name() -> None:
+    name = "name"
+    check_commands = [translation.PassiveCheck("check-command-name")]
+    with pytest.raises(ValueError):
+        translation.Translation(name, check_commands, {"": translation.Renaming("new-metric-name")})

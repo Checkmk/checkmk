@@ -6,14 +6,14 @@
 from cmk.graphing.v1 import Color, graph, Localizable, metric, Unit
 
 metric_active_connections = metric.Metric(
-    metric.Name("active_connections"),
+    "active_connections",
     Localizable("Active connections"),
     Unit.COUNT,
     Color.DARK_ORCHID,
 )
 
 metric_idle_connections = metric.Metric(
-    metric.Name("idle_connections"),
+    "idle_connections",
     Localizable("Idle connections"),
     Unit.COUNT,
     Color.MEDIUM_PURPLE,
@@ -23,9 +23,9 @@ graph_db_connections = graph.Graph(
     "db_connections",
     Localizable("DB Connections"),
     simple_lines=[
-        metric.Name("active_connections"),
-        metric.Name("idle_connections"),
-        metric.WarningOf(metric.Name("active_connections")),
-        metric.CriticalOf(metric.Name("active_connections")),
+        "active_connections",
+        "idle_connections",
+        metric.WarningOf("active_connections"),
+        metric.CriticalOf("active_connections"),
     ],
 )

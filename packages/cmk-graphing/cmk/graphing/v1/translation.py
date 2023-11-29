@@ -6,8 +6,6 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from . import metric
-
 __all__ = [
     "PassiveCheck",
     "ActiveCheck",
@@ -57,7 +55,11 @@ class NagiosPlugin:
 
 @dataclass(frozen=True)
 class Renaming:
-    rename_to: metric.Name
+    rename_to: str
+
+    def __post_init__(self) -> None:
+        if not self.rename_to:
+            raise ValueError(self.rename_to)
 
 
 @dataclass(frozen=True)
@@ -70,10 +72,12 @@ class Scaling:
 
 @dataclass(frozen=True)
 class RenamingAndScaling:
-    rename_to: metric.Name
+    rename_to: str
     scale_by: int | float
 
     def __post_init__(self) -> None:
+        if not self.rename_to:
+            raise ValueError(self.rename_to)
         assert self.scale_by
 
 
@@ -81,9 +85,12 @@ class RenamingAndScaling:
 class Translation:
     name: str
     check_commands: Sequence[PassiveCheck | ActiveCheck | HostCheckCommand | NagiosPlugin]
-    translations: Mapping[metric.Name, Renaming | Scaling | RenamingAndScaling]
+    translations: Mapping[str, Renaming | Scaling | RenamingAndScaling]
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError(self.name)
         assert self.check_commands and self.translations
+        for name in self.translations:
+            if isinstance(name, str) and not name:
+                raise ValueError(self.name)

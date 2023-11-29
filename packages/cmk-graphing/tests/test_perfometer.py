@@ -5,12 +5,22 @@
 
 import pytest
 
-from cmk.graphing.v1 import metric, perfometer
+from cmk.graphing.v1 import perfometer
+
+
+def test_closed_error_empty_bound() -> None:
+    with pytest.raises(ValueError):
+        perfometer.Closed("")
+
+
+def test_open_error_empty_bound() -> None:
+    with pytest.raises(ValueError):
+        perfometer.Open("")
 
 
 def test_perfometer_error_empty_name() -> None:
     focus_range = perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100))
-    segments = [metric.Name("metric-name")]
+    segments = ["metric-name"]
     with pytest.raises(ValueError):
         perfometer.Perfometer("", focus_range, segments)
 
@@ -22,16 +32,23 @@ def test_perfometer_error_missing_segments() -> None:
         perfometer.Perfometer(name, focus_range, [])
 
 
+def test_perfometer_error_segments_empty_name() -> None:
+    name = "name"
+    focus_range = perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100))
+    with pytest.raises(ValueError):
+        perfometer.Perfometer(name, focus_range, [""])
+
+
 def test_bidirectional_error_empty_name() -> None:
     left = perfometer.Perfometer(
         "left",
         perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
-        [metric.Name("metric-name-1")],
+        ["metric-name-1"],
     )
     right = perfometer.Perfometer(
         "right",
         perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
-        [metric.Name("metric-name-2")],
+        ["metric-name-2"],
     )
     with pytest.raises(ValueError):
         perfometer.Bidirectional("", left=left, right=right)
@@ -41,12 +58,12 @@ def test_stacked_error_empty_name() -> None:
     lower = perfometer.Perfometer(
         "lower",
         perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
-        [metric.Name("metric-name-1")],
+        ["metric-name-1"],
     )
     upper = perfometer.Perfometer(
         "upper",
         perfometer.FocusRange(perfometer.Closed(0), perfometer.Closed(100)),
-        [metric.Name("metric-name-2")],
+        ["metric-name-2"],
     )
     with pytest.raises(ValueError):
         perfometer.Stacked("", lower=lower, upper=upper)

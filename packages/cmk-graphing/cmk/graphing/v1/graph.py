@@ -6,7 +6,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field, KW_ONLY
 
-from . import metric
 from ._localize import Localizable
 from ._type_defs import Bound, Quantity
 
@@ -22,6 +21,12 @@ class MinimalRange:
     lower: Bound
     upper: Bound
 
+    def __post_init__(self) -> None:
+        if isinstance(self.lower, str) and not self.lower:
+            raise ValueError(self.lower)
+        if isinstance(self.upper, str) and not self.upper:
+            raise ValueError(self.upper)
+
 
 @dataclass(frozen=True)
 class Graph:
@@ -31,13 +36,25 @@ class Graph:
     minimal_range: MinimalRange | None = None
     compound_lines: Sequence[Quantity] = field(default_factory=list)
     simple_lines: Sequence[Quantity] = field(default_factory=list)
-    optional: Sequence[metric.Name] = field(default_factory=list)
-    conflicting: Sequence[metric.Name] = field(default_factory=list)
+    optional: Sequence[str] = field(default_factory=list)
+    conflicting: Sequence[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if not self.name:
             raise ValueError(self.name)
         assert self.compound_lines or self.simple_lines
+        for c in self.compound_lines:
+            if isinstance(c, str) and not c:
+                raise ValueError(c)
+        for s in self.simple_lines:
+            if isinstance(s, str) and not s:
+                raise ValueError(s)
+        for o in self.optional:
+            if isinstance(o, str) and not o:
+                raise ValueError(o)
+        for c in self.conflicting:
+            if isinstance(c, str) and not c:
+                raise ValueError(c)
 
 
 @dataclass(frozen=True)

@@ -20,20 +20,20 @@ def _make_perfometer(name: str, start_idx: int) -> perfometer_api.Perfometer:
     return perfometer_api.Perfometer(
         name,
         perfometer_api.FocusRange(
-            perfometer_api.Closed(metric_api.Name(f"metric-name{start_idx+1}")),
-            perfometer_api.Closed(metric_api.Name(f"metric-name{start_idx+2}")),
+            perfometer_api.Closed(f"metric-name{start_idx+1}"),
+            perfometer_api.Closed(f"metric-name{start_idx+2}"),
         ),
         [
-            metric_api.WarningOf(metric_api.Name(f"metric-name{start_idx+3}")),
-            metric_api.CriticalOf(metric_api.Name(f"metric-name{start_idx+4}")),
-            metric_api.MinimumOf(metric_api.Name(f"metric-name{start_idx+5}"), Color.BLUE),
-            metric_api.MaximumOf(metric_api.Name(f"metric-name{start_idx+6}"), Color.BLUE),
+            metric_api.WarningOf(f"metric-name{start_idx+3}"),
+            metric_api.CriticalOf(f"metric-name{start_idx+4}"),
+            metric_api.MinimumOf(f"metric-name{start_idx+5}", Color.BLUE),
+            metric_api.MaximumOf(f"metric-name{start_idx+6}", Color.BLUE),
             metric_api.Sum(
                 Localizable("Title"),
                 Color.BLUE,
                 [
-                    metric_api.Name(f"metric-name{start_idx+7}"),
-                    metric_api.Name(f"metric-name{start_idx+8}"),
+                    f"metric-name{start_idx+7}",
+                    f"metric-name{start_idx+8}",
                 ],
             ),
             metric_api.Product(
@@ -41,22 +41,22 @@ def _make_perfometer(name: str, start_idx: int) -> perfometer_api.Perfometer:
                 Unit.COUNT,
                 Color.BLUE,
                 [
-                    metric_api.Name(f"metric-name{start_idx+9}"),
-                    metric_api.Name(f"metric-name{start_idx+10}"),
+                    f"metric-name{start_idx+9}",
+                    f"metric-name{start_idx+10}",
                 ],
             ),
             metric_api.Difference(
                 Localizable("Title"),
                 Color.BLUE,
-                minuend=metric_api.Name(f"metric-name{start_idx+11}"),
-                subtrahend=metric_api.Name(f"metric-name{start_idx+12}"),
+                minuend=f"metric-name{start_idx+11}",
+                subtrahend=f"metric-name{start_idx+12}",
             ),
             metric_api.Fraction(
                 Localizable("Title"),
                 Unit.COUNT,
                 Color.BLUE,
-                dividend=metric_api.Name(f"metric-name{start_idx+13}"),
-                divisor=metric_api.Name(f"metric-name{start_idx+14}"),
+                dividend=f"metric-name{start_idx+13}",
+                divisor=f"metric-name{start_idx+14}",
             ),
         ],
     )
@@ -259,7 +259,7 @@ def test_perfometer_matches(
     "quantity, translated_metrics, result",
     [
         pytest.param(
-            metric_api.Name("name"),
+            "name",
             {
                 "name": {
                     "orig_name": ["name"],
@@ -278,7 +278,7 @@ def test_perfometer_matches(
                 }
             },
             10.0,
-            id="metric.Name",
+            id="metric-name",
         ),
         pytest.param(
             metric_api.Constant(
@@ -308,7 +308,7 @@ def test_perfometer_matches(
             id="metric.Constant",
         ),
         pytest.param(
-            metric_api.WarningOf(metric_api.Name("name")),
+            metric_api.WarningOf("name"),
             {
                 "name": {
                     "orig_name": ["name"],
@@ -330,7 +330,7 @@ def test_perfometer_matches(
             id="metric.WarningOf",
         ),
         pytest.param(
-            metric_api.CriticalOf(metric_api.Name("name")),
+            metric_api.CriticalOf("name"),
             {
                 "name": {
                     "orig_name": ["name"],
@@ -352,7 +352,7 @@ def test_perfometer_matches(
             id="metric.CriticalOf",
         ),
         pytest.param(
-            metric_api.MinimumOf(metric_api.Name("name"), Color.BLUE),
+            metric_api.MinimumOf("name", Color.BLUE),
             {
                 "name": {
                     "orig_name": ["name"],
@@ -374,7 +374,7 @@ def test_perfometer_matches(
             id="metric.MinimumOf",
         ),
         pytest.param(
-            metric_api.MaximumOf(metric_api.Name("name"), Color.BLUE),
+            metric_api.MaximumOf("name", Color.BLUE),
             {
                 "name": {
                     "orig_name": ["name"],
@@ -399,7 +399,7 @@ def test_perfometer_matches(
             metric_api.Sum(
                 Localizable("Title"),
                 Color.BLUE,
-                [metric_api.Name("name1"), metric_api.Name("name2")],
+                ["name1", "name2"],
             ),
             {
                 "name1": {
@@ -441,7 +441,7 @@ def test_perfometer_matches(
                 Localizable("Title"),
                 Unit.COUNT,
                 Color.BLUE,
-                [metric_api.Name("name1"), metric_api.Name("name2")],
+                ["name1", "name2"],
             ),
             {
                 "name1": {
@@ -482,8 +482,8 @@ def test_perfometer_matches(
             metric_api.Difference(
                 Localizable("Title"),
                 Color.BLUE,
-                minuend=metric_api.Name("name1"),
-                subtrahend=metric_api.Name("name2"),
+                minuend="name1",
+                subtrahend="name2",
             ),
             {
                 "name1": {
@@ -525,8 +525,8 @@ def test_perfometer_matches(
                 Localizable("Title"),
                 Unit.COUNT,
                 Color.BLUE,
-                dividend=metric_api.Name("name1"),
-                divisor=metric_api.Name("name2"),
+                dividend="name1",
+                divisor="name2",
             ),
             {
                 "name1": {
@@ -567,7 +567,7 @@ def test_perfometer_matches(
 )
 def test_evaluate_quantity(
     quantity: (
-        metric_api.Name
+        str
         | metric_api.Constant
         | metric_api.WarningOf
         | metric_api.CriticalOf

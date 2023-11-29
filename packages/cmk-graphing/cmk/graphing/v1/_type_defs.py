@@ -8,7 +8,7 @@ from typing import TypeAlias
 from . import metric
 
 Quantity: TypeAlias = (
-    metric.Name
+    str
     | metric.Constant
     | metric.WarningOf
     | metric.CriticalOf

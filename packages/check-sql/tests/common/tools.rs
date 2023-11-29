@@ -115,7 +115,7 @@ pub fn create_remote_config(end_point: &SqlDbEndpoint) -> NamedTempFile {
         r#"
 ---
 mssql:
-  standard:
+  main:
     authentication:
        username: {}
        password: {}
@@ -134,7 +134,7 @@ pub fn create_local_config() -> NamedTempFile {
     let config = r#"
 ---
 mssql:
-  standard:
+  main:
     authentication:
        username: "nobody"
        type: "integrated"
@@ -150,7 +150,7 @@ pub fn create_config_with_missing_ms_sql() -> NamedTempFile {
     let config = r#"
 ---
 mssql:
-  standard:
+  main:
     authentication:
        username: "nobody"
        password: "doesnt_matter"

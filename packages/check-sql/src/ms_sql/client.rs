@@ -246,7 +246,7 @@ mod tests {
         const BASE: &str = r#"
 ---
 mssql:
-  standard:
+  main:
     authentication:
        username: "bad_user"
        password: "bad_password"

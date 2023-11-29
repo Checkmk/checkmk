@@ -85,5 +85,8 @@ rm -rf /var/lib/apt/lists/*
 if [ "$CLANG_VERSION" = 16 ]; then
     (cd /usr/lib/llvm-16/lib/clang && ln -s 16 16.0.0)
 fi
+if [[ "$CLANG_VERSION" = 17 && "$DIST_VERSION" = Ubuntu_20.04 ]]; then
+    (cd /usr/lib/llvm-17/lib && ln -s libclang-17.so{,.1})
+fi
 
 "${SCRIPT_DIR}/install-iwyu.sh" --clang-version="$CLANG_VERSION"

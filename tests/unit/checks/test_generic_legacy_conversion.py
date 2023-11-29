@@ -1406,7 +1406,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "vms_system.ios",
         "vms_system.procs",
         "vms_users",
-        "vmstat_aix",
         "vnx_version",
         "vutlan_ems_humidity",
         "vutlan_ems_leakage",

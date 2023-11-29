@@ -220,7 +220,9 @@ cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}
 bulkwalk_hosts: list[RuleSpec[bool]] = []
 snmpv2c_hosts: list[RuleSpec[bool]] = []
 snmp_without_sys_descr: list[RuleSpec[bool]] = []
-snmpv3_contexts: list[RuleSpec[tuple[str | None, Sequence[str]]]] = []
+snmpv3_contexts: list[
+    RuleSpec[tuple[str | None, Sequence[str], Literal["continue_on_timeout", "stop_on_timeout"]]]
+] = []
 usewalk_hosts: list[RuleSpec[bool]] = []
 # use host name as ip address for these hosts
 dyndns_hosts: list[RuleSpec[bool]] = []

@@ -1,0 +1,11 @@
+Title: Broken discovery result if services contained pipe symbol
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701253848
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If a services item contained the pipe symbol ("<tt>|</tt>"), the discovery check produced invalid metrics.
+This resulted in a rapidly growing <tt>var/log/web.log</tt>.

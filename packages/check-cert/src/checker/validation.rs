@@ -6,6 +6,29 @@ use crate::check::{CheckResult, Real, SimpleCheckResult};
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
 
+mod details {
+    use super::X509Certificate;
+
+    pub enum SelfSigned {
+        Yes,
+        No,
+        Invalid,
+    }
+
+    pub fn is_self_signed(cert: &X509Certificate) -> SelfSigned {
+        if cert.subject() == cert.issuer() {
+            match cert.verify_signature(None) {
+                Ok(_) => SelfSigned::Yes,
+                Err(_) => SelfSigned::Invalid,
+            }
+        } else {
+            SelfSigned::No
+        }
+    }
+}
+
+use details::SelfSigned;
+
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
@@ -13,22 +36,16 @@ pub struct Config {
 }
 
 pub fn check(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
-    vec![check_self_signed(cert, config.allow_self_signed).into()]
+    vec![check_self_signed(details::is_self_signed(cert), config.allow_self_signed).into()]
 }
 
-fn check_self_signed(cert: &X509Certificate, allow: bool) -> SimpleCheckResult {
-    if cert.subject() == cert.issuer() {
-        if cert.verify_signature(None).is_ok() {
-            match allow {
-                true => SimpleCheckResult::ok("Certificate is self signed"),
-                false => SimpleCheckResult::warn("Certificate is self signed"),
-            }
-        } else {
-            SimpleCheckResult::warn(
-                "Certificate looks self signed but signature verification failed",
-            )
-        }
-    } else {
-        SimpleCheckResult::ok("Certificate is not self signed")
+fn check_self_signed(self_signed: SelfSigned, allow: bool) -> SimpleCheckResult {
+    match self_signed {
+        SelfSigned::No => SimpleCheckResult::ok("Certificate is not self signed"),
+        SelfSigned::Yes => match allow {
+            true => SimpleCheckResult::ok("Certificate is self signed"),
+            false => SimpleCheckResult::warn("Certificate is self signed"),
+        },
+        SelfSigned::Invalid => SimpleCheckResult::warn("Self signed signature is invalid"),
     }
 }

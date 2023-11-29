@@ -401,12 +401,6 @@ class ErrorReporter:
             "blade_bx_powerfan",
             RuleGroup.CheckgroupParameters("hw_fans_perc"),
         ),
-        ("check", "brocade_fan", RuleGroup.CheckgroupParameters("hw_fans")),
-        (
-            "check",
-            "brocade_mlx_module_mem",
-            RuleGroup.CheckgroupParameters("memory_multiitem"),
-        ),
         (
             "check",
             "brocade_optical",

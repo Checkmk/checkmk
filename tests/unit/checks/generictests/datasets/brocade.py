@@ -5,7 +5,6 @@
 
 # fmt: off
 # mypy: disable-error-code=var-annotated
-brocade_fan_default_levels = {"lower": (3000, 2800)}
 
 checkname = "brocade"
 
@@ -21,7 +20,7 @@ info = [
 ]
 
 discovery = {
-    "fan": [("1", brocade_fan_default_levels), ("2", brocade_fan_default_levels)],
+    "fan": [("1", {}), ("2", {})],
     "power": [("1", None), ("2", None)],
     "temp": [
         ("1", {}),

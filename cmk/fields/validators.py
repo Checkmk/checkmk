@@ -9,9 +9,7 @@ from collections.abc import Iterable
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
 
-import cmk.utils.regex
-
-HOST_NAME_RE = cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME)
+from cmk.utils.hostaddress import HostAddress
 
 
 class ValidateIPv4(Validator):
@@ -198,9 +196,8 @@ class HostNameValidator(Validator):
 
 class ValidateHostName(Validator):
     def __call__(self, value, **kwargs):
-        if HOST_NAME_RE.match(value):
+        try:
+            HostAddress.validate(value)
             return True
-
-        raise ValidationError(
-            f"Hostname {value!r} doesn't match pattern '^{HOST_NAME_RE.pattern}$'"
-        )
+        except ValueError as exception:
+            raise ValidationError(str(exception)) from exception

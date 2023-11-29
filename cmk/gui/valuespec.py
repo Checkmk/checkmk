@@ -72,6 +72,7 @@ import cmk.utils.plugin_registry
 import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress as HostAddressType
 from cmk.utils.labels import AndOrNotLiteral
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
@@ -1357,6 +1358,23 @@ def IPv4Address(  # pylint: disable=redefined-builtin
     )
 
 
+def _validate_hostname(text: str | None, varprefix: str) -> None:
+    # MonitoredHostname accepts also Nones
+    if text is None:
+        return
+
+    try:
+        HostAddressType(text)
+    except ValueError as exception:
+        raise MKUserError(
+            varprefix,
+            _(
+                "Please enter a valid hostname or IPv4 address. "
+                "Only letters, digits, dash, underscore and dot are allowed."
+            ),
+        ) from exception
+
+
 def Hostname(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # TextInput
     allow_empty=False,
@@ -1369,15 +1387,11 @@ def Hostname(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builti
     """A host name with or without domain part. Also allow IP addresses"""
     return TextInput(
         size=size,
-        regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
-        regex_error=_(
-            "Please enter a valid hostname or IPv4 address. "
-            "Only letters, digits, dash, underscore and dot are allowed."
-        ),
         allow_empty=allow_empty,
         title=title,
         help=help,
         default_value=default_value,
+        validate=_validate_hostname,
     )
 
 
@@ -3163,14 +3177,8 @@ class MonitoredHostname(AjaxDropdownChoice):
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[str] = DEF_VALUE,
-        validate: ValueSpecValidateFunc[str | None] | None = None,
     ):
         super().__init__(
-            regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_HOST_NAME),
-            regex_error=_(
-                "Please enter a valid hostname or IPv4 address. "
-                "Only letters, digits, dash, underscore and dot are allowed."
-            ),
             strict=strict,
             autocompleter=autocompleter,
             label=label,
@@ -3178,7 +3186,7 @@ class MonitoredHostname(AjaxDropdownChoice):
             title=title,
             help=help,
             default_value=default_value,
-            validate=validate,
+            validate=_validate_hostname,
         )
 
     def value_to_html(self, value: str | None) -> ValueSpecText:

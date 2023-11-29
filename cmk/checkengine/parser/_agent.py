@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import abc
 import logging
-import re
 import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import final, Final, NamedTuple
@@ -15,8 +14,7 @@ from typing import final, Final, NamedTuple
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.hostaddress import HostName
-from cmk.utils.regex import REGEX_HOST_NAME_CHARS
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions
 
@@ -31,11 +29,6 @@ from ._parser import (
     Parser,
     SectionNameCollection,
 )
-
-# cmk.utils.regex.REGEX_HOST_NAME is too relaxed and accepts, for example, "."
-# as a valid host name.  Fixing it over there, however, could break its
-# current users.
-is_valid_hostname = re.compile(rf"^\w[{REGEX_HOST_NAME_CHARS}]*$").match
 
 
 class SectionWithHeader(NamedTuple):
@@ -264,6 +257,11 @@ class ParserState(abc.ABC):
                 raise
             return self.to_error(line)
 
+    def should_be_ignored(self, piggyback_header: PiggybackMarker) -> bool:
+        return piggyback_header.hostname is None or not HostAddress.is_valid(
+            piggyback_header.hostname
+        )
+
 
 class NOOPParser(ParserState):
     def do_action(self, line: bytes) -> ParserState:
@@ -278,7 +276,7 @@ class NOOPParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self
-        if not is_valid_hostname(piggyback_header.hostname):
+        if self.should_be_ignored(piggyback_header):
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
@@ -328,7 +326,7 @@ class PiggybackParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self.to_noop_parser()
-        if not is_valid_hostname(piggyback_header.hostname):
+        if self.should_be_ignored(piggyback_header):
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
@@ -381,7 +379,7 @@ class PiggybackSectionParser(ParserState):
             self.translation,
             encoding_fallback=self.encoding_fallback,
         )
-        if not is_valid_hostname(piggyback_header.hostname):
+        if self.should_be_ignored(piggyback_header):
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
@@ -433,7 +431,7 @@ class PiggybackNOOPParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self.to_noop_parser()
-        if not is_valid_hostname(piggyback_header.hostname):
+        if self.should_be_ignored(piggyback_header):
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
@@ -464,7 +462,7 @@ class PiggybackIgnoreParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self.to_noop_parser()
-        if not is_valid_hostname(piggyback_header.hostname):
+        if self.should_be_ignored(piggyback_header):
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
@@ -517,7 +515,7 @@ class HostSectionParser(ParserState):
         if piggyback_header.hostname == self.hostname:
             # Unpiggybacked "normal" host
             return self
-        if not is_valid_hostname(piggyback_header.hostname):
+        if self.should_be_ignored(piggyback_header):
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
 
@@ -626,6 +624,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
                 )
             )
             for header, content in piggyback_sections.items()
+            if header.hostname is not None
         }
         cache_info = {
             header.name: cache_info_tuple

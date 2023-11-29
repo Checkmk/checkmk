@@ -9,8 +9,7 @@ description:
  rack units in percent. Internal to the server the metric is measured as CUPS Index (Compute Units
  per Second) and is a composition of the CPU RMCs (Resource Monitoring Counters), memory RMCs and
  the PCI IO RMCs. For more info about a description about these mertics refer to the check manuals
- of this checks sub checks {checkman/ucs_c_rack_server_util.cpu,
- checkman/ucs_c_rack_server_util.io, checkman/ucs_c_rack_server_util.mem}.
+ of {ucs_c_rack_server_util_cpu}, {ucs_c_rack_server_util_io}, and {ucs_c_rack_server_util_mem}.
 
  This check supports the following C-Series Rack Server models providing XML API 2.0
  [Cisco UCS Rack-Mount Servers Cisco IMC XML API 2.0]:

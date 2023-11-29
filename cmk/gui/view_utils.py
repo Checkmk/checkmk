@@ -333,3 +333,13 @@ def get_themed_perfometer_bg_color() -> str:
         return "#bdbdbd"
     # else (classic and modern theme)
     return "#ffffff"
+
+
+def render_cre_upgrade_button() -> None:
+    html.icon_button(
+        url="https://checkmk.com/pricing?services=3000?utm_source=checkmk_product&utm_medium=referral&utm_campaign=commercial_editions_link",
+        title=_("Upgrade to Cloud or Enterprise edition to use this feature"),
+        icon="upgrade",
+        target="_blank",
+        cssclass="upgrade",
+    )

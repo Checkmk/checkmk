@@ -8,6 +8,7 @@ import "element-closest-polyfill";
 
 import * as foldable_container from "foldable_container";
 import * as forms from "forms";
+import $ from "jquery";
 import * as popup_menu from "popup_menu";
 import * as utils from "utils";
 
@@ -66,6 +67,26 @@ export function update_down_duration_button(
     if (new_selection_id) {
         const target_button = document.getElementById(new_selection_id);
         if (target_button) utils.add_class(target_button, "active");
+    }
+}
+
+export function ack_problems_update_expiration_active_state(
+    changed_input: HTMLInputElement
+) {
+    if (changed_input.type == "checkbox") {
+        // Toggle the date and time picker input fields' "active" class
+        for (const what of ["date", "time"]) {
+            const input_field = document.getElementById(
+                what + "__ack_expire_" + what
+            ) as HTMLInputElement;
+            if (input_field) utils.toggle_class(input_field, "active", "");
+        }
+    } else {
+        // Activate, i.e. check, the expiration checkbox
+        const checkbox_input = document.getElementById(
+            "cb__ack_expire"
+        ) as HTMLInputElement;
+        if ($(checkbox_input).prop("checked") == false) checkbox_input.click();
     }
 }
 

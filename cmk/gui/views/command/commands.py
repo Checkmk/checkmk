@@ -9,6 +9,7 @@ from typing import Any, Literal, Protocol
 
 import livestatus
 
+import cmk.utils.version as cmk_version
 from cmk.utils.hostaddress import HostName
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
@@ -36,6 +37,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
+from cmk.gui.view_utils import render_cre_upgrade_button
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
 from .base import Command, CommandActionResult, CommandConfirmDialogOptions, CommandSpec
@@ -924,14 +926,25 @@ class CommandAcknowledge(Command):
         date, time_ = self._expiration_date_and_time(
             active_config.view_action_defaults.get("ack_expire", 3600)
         )
-        html.open_div()
-        html.checkbox("_ack_expire", False, label=_("Expire on"))
+        is_raw_edition: bool = cmk_version.edition() is cmk_version.Edition.CRE
+        html.open_div(class_="disabled" if is_raw_edition else "")
+        html.checkbox(
+            "_ack_expire",
+            False,
+            label=_("Expire on"),
+            onclick="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
+        )
+        html.open_div(class_="date_time_picker")
         self._vs_date().render_input("_ack_expire_date", date)
         self._vs_time().render_input("_ack_expire_time", time_)
+        html.close_div()
+
         html.span(
             _("Server time (currently: %s)")
             % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time()))
         )
+        if is_raw_edition:
+            render_cre_upgrade_button()
         html.help(
             _("Note: Expiration of acknowledgements only works when using the Checkmk Micro Core.")
         )
@@ -1087,11 +1100,13 @@ class CommandAcknowledge(Command):
     def _vs_date(self) -> DatePicker:
         return DatePicker(
             title=_("Acknowledge problems datepicker"),
+            onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
 
     def _vs_time(self) -> TimePicker:
         return TimePicker(
             title=_("Acknowledge problems timepicker"),
+            onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
 
 
@@ -1244,13 +1259,7 @@ class NoRecurringDowntimes:
             deflt=default,
             read_only=True,
         )
-        html.icon_button(
-            url="https://checkmk.com/pricing?services=3000?utm_source=checkmk_product&utm_medium=referral&utm_campaign=commercial_editions_link",
-            title=_("Upgrade to Cloud or Enterprise edition to use this feature"),
-            icon="upgrade",
-            target="_blank",
-            cssclass="upgrade",
-        )
+        render_cre_upgrade_button()
         html.close_div()
 
     def number(self) -> int:

@@ -41,6 +41,7 @@ from cmk.checkengine.discovery import (
     DiscoveryCheckParameters,
     DiscoveryMode,
     DiscoveryResult,
+    DiscoverySettings,
     find_plugins,
     QualifiedDiscovery,
 )
@@ -401,7 +402,7 @@ def test__get_post_discovery_services(
             service_filters,
             result,
             get_service_description=lambda *args: f"Test Description {args[-1]}",
-            mode=mode,
+            settings=DiscoverySettings.from_discovery_mode(mode),
             keep_clustered_vanished_services=True,
         ).values()
     ]

@@ -8,7 +8,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal, TypeVar
+from typing import assert_never, Literal, Self, TypeVar
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -90,6 +90,25 @@ ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 
 
+@dataclass(frozen=True)
+class DiscoverySettings:
+    update_host_labels: bool
+    add_new_services: bool
+    remove_vanished_services: bool
+    # this will be separated into service labels and parameters at some point
+    update_changed_services: bool
+
+    @classmethod
+    def from_discovery_mode(cls, mode: DiscoveryMode) -> Self:
+        return cls(
+            update_host_labels=mode is not DiscoveryMode.REMOVE,
+            add_new_services=mode
+            in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH),
+            remove_vanished_services=mode in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL),
+            update_changed_services=mode is DiscoveryMode.REFRESH,
+        )
+
+
 # determine changed services on host.
 # param mode: can be one of "new", "remove", "fixall", "refresh", "only-host-labels"
 # param servic_filter: if a filter is set, it controls whether items are touched by the discovery.
@@ -112,14 +131,14 @@ def automation_discovery(
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    mode: DiscoveryMode,
+    settings: DiscoverySettings,
     keep_clustered_vanished_services: bool,
     service_filters: _ServiceFilters | None,
     enforced_services: Container[ServiceID],
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
 ) -> DiscoveryResult:
-    console.verbose("  Doing discovery with mode '%s'...\n" % mode)
+    console.verbose("  Doing discovery with '%r'...\n" % settings)
     result = DiscoveryResult()
     if host_name not in active_hosts:
         result.error_text = ""
@@ -129,7 +148,9 @@ def automation_discovery(
         # in "refresh" mode we first need to remove all previously discovered
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
-        if mode is DiscoveryMode.REFRESH:
+        # this is a weird way of updating changed services:
+        # forgetting the old onces, add adding changed ones, that now appear to be "new"
+        if settings.update_changed_services:
             result.self_removed += sum(
                 # this is cluster-aware!
                 remove_autochecks_of_host(
@@ -153,7 +174,7 @@ def automation_discovery(
             error_handling=section_error_handling,
         )
 
-        if mode is not DiscoveryMode.REMOVE:
+        if settings.update_host_labels:
             host_labels = QualifiedDiscovery[HostLabel](
                 preexisting=DiscoveredHostLabelsStore(host_name).load(),
                 current=discover_host_labels(
@@ -171,7 +192,7 @@ def automation_discovery(
                 # Rulesets for service discovery can match based on the hosts labels.
                 ruleset_matcher.clear_caches()
 
-            if mode is DiscoveryMode.ONLY_HOST_LABELS:
+            if not settings.add_new_services and not settings.remove_vanished_services:
                 result.diff_text = _make_diff(host_labels.vanished, host_labels.new, (), ())
                 return result
         else:
@@ -201,7 +222,7 @@ def automation_discovery(
             service_filters or _ServiceFilters.accept_all(),
             result,
             get_service_description,
-            mode,
+            settings,
             keep_clustered_vanished_services,
         )
         new_services = list(final_services.values())
@@ -241,7 +262,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
-    mode: DiscoveryMode,
+    settings: DiscoverySettings,
     keep_clustered_vanished_services: bool,
 ) -> Mapping[ServiceID, AutocheckServiceWithNodes]:
     """
@@ -258,7 +279,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
     post_discovery_services = {}
     for check_source, discovered_services_with_nodes in services.items():
         if check_source == "new":
-            if mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH):
+            if settings.add_new_services:
                 new = {
                     s.service.id(): s
                     for s in discovered_services_with_nodes
@@ -280,10 +301,7 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             for entry in discovered_services_with_nodes:
-                if mode in (
-                    DiscoveryMode.FIXALL,
-                    DiscoveryMode.REMOVE,
-                ) and service_filters.vanished(
+                if settings.remove_vanished_services and service_filters.vanished(
                     get_service_description(host_name, *entry.service.id())
                 ):
                     result.self_removed += 1
@@ -402,7 +420,9 @@ def autodiscovery(
         ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=get_service_description,
-        mode=DiscoveryMode(rediscovery_parameters.get("mode")),
+        settings=DiscoverySettings.from_discovery_mode(
+            DiscoveryMode(rediscovery_parameters.get("mode"))
+        ),
         keep_clustered_vanished_services=rediscovery_parameters.get(
             "keep_clustered_vanished_services", True
         ),

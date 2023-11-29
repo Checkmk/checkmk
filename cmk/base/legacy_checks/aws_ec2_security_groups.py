@@ -11,8 +11,7 @@ from cmk.base.config import check_info
 
 def inventory_aws_ec2_security_groups(parsed):
     if parsed:
-        return [(None, "%r" % [group["GroupId"] for group in parsed])]
-    return []
+        yield None, {"groups": [group["GroupId"] for group in parsed]}
 
 
 def check_aws_ec2_security_groups(item, params, parsed):
@@ -24,7 +23,7 @@ def check_aws_ec2_security_groups(item, params, parsed):
         else:
             prefix = ""
         infotext = "{}{}: {}".format(prefix, group["GroupName"], group["GroupId"])
-        if group["GroupId"] not in params:
+        if group["GroupId"] not in params["groups"]:
             infotext += " (has changed)"
             state = 2
         yield state, infotext
@@ -35,4 +34,5 @@ check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
     service_name="AWS/EC2 Security Groups",
     discovery_function=inventory_aws_ec2_security_groups,
     check_function=check_aws_ec2_security_groups,
+    check_default_parameters={},
 )

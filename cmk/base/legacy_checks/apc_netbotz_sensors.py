@@ -199,14 +199,9 @@ check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-# Suggested by customer
-apc_netbotz_sensors_humidity_default_levels = (30, 35, 60, 65)
-
 
 def inventory_apc_netbotz_sensors_humidity(parsed):
-    return [
-        (item, apc_netbotz_sensors_humidity_default_levels) for item in parsed.get("humidity", [])
-    ]
+    return [(item, {}) for item in parsed.get("humidity", [])]
 
 
 def check_apc_netbotz_sensors_humidity(item, params, parsed):
@@ -223,4 +218,8 @@ check_info["apc_netbotz_sensors.humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_apc_netbotz_sensors_humidity,
     check_function=check_apc_netbotz_sensors_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={
+        "levels": (60.0, 65.0),
+        "levels_lower": (35.0, 30.0),
+    },
 )

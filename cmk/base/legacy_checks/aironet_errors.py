@@ -17,11 +17,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
-aironet_default_error_levels = (1.0, 10.0)  # per second
-
 
 def inventory_aironet_errors(info):
-    yield from ((line[0], aironet_default_error_levels) for line in info)
+    yield from ((line[0], {}) for line in info)
 
 
 def check_aironet_errors(item, params, info):
@@ -38,7 +36,7 @@ def check_aironet_errors(item, params, info):
                     raise_overflow=True,
                 ),
                 "errors",
-                params,
+                (1.0, 10.0),
                 infoname="Errors/s",
             )
             return

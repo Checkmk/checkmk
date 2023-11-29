@@ -31,6 +31,21 @@ from cmk.update_config.update_state import UpdateActionState
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName, Callable[[LegacyCheckParameters], LegacyCheckParameters]
 ] = {
+    CheckPluginName("aironet_clients"): (lambda p: {}),
+    CheckPluginName("aironet_errors"): (lambda p: {}),
+    CheckPluginName("alcatel_cpu"): (lambda p: {}),
+    CheckPluginName("alcatel_cpu_aos7"): (lambda p: {}),
+    CheckPluginName("allnet_ip_sensoric_humidity"): (lambda p: {}),
+    CheckPluginName("apc_ats_status"): (
+        lambda p: p if isinstance(p, dict) else {"power_source": p}
+    ),
+    CheckPluginName("apc_netbotz_sensors_humidity"): (lambda p: {}),
+    CheckPluginName("apc_inrow_airflow"): (lambda p: {}),
+    CheckPluginName("arc_raid_status"): (lambda p: p if isinstance(p, dict) else {"n_disks": p}),
+    CheckPluginName("arris_cmts_cpu"): (lambda p: {}),
+    CheckPluginName("aws_ec2_security_groups"): (
+        lambda p: p if isinstance(p, dict) else {"groups": p}
+    ),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

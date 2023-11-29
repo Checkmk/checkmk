@@ -1,9 +1,0 @@
-title: CPU Utilization
-agents: aix
-catalog: os/kernel
-license: GPLv2
-distribution: check_mk
-description:
- Get CPU utilization (user, system, idle, IO-Wait) on an AIX system.
- Only performance data is written. Alerting is not implemented (returns always
- {OK} if input data is valid).

@@ -1,0 +1,11 @@
+Title: fjdarye_pools: Discover on additional systems
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1701265703
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+As of this werk, the services "Thin Provisioning Pool ..." are discovered on additional Fujitsu
+storage systems, such as ETERNUS AF250 S3.

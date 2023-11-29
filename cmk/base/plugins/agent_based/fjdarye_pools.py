@@ -41,7 +41,14 @@ def parse_fjdarye_pools(string_table: StringTable) -> dict[str, Pool]:
 
 
 register.snmp_section(
-    name="fjdarye_pools",
+    # 150 does not refer to a specific device model, but to the OID
+    # this section applies to a range of models (see AF250S2.pdf in SUP-16226):
+    # ETERNUS AF250 S2/AF650S2
+    # ETERNUS AF250/AF650
+    # ETERNUS DX200F All-Flash Arrays
+    # etc.
+    name="fjdarye_pools_150",
+    parsed_section_name="fjdarye_pools",
     parse_function=parse_fjdarye_pools,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.211.1.21.1.150.14.5.2.1",
@@ -52,6 +59,28 @@ register.snmp_section(
         ],
     ),
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.211.1.21.1.150"),
+)
+
+
+register.snmp_section(
+    # 153 does not refer to a specific device model, but to the OID
+    # this section applies to a range of models (see AF250S3.pdf in SUP-16226):
+    # ETERNUS AF150 S3/AF250 S3
+    # ETERNUS AF650 S3 All-Flash Arrays
+    # ETERNUS DX60 S5/DX100 S5/DX200 S5
+    # etc.
+    name="fjdarye_pools_153",
+    parsed_section_name="fjdarye_pools",
+    parse_function=parse_fjdarye_pools,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.211.1.21.1.153.14.5.2.1",
+        oids=[
+            "1",  # fjdaryMgtTpPoolNumber
+            "3",  # fjdaryMgtTpPoolTotalCapacity
+            "4",  # fjdaryMgtTpPoolUsedCapacity
+        ],
+    ),
+    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.211.1.21.1.153"),
 )
 
 

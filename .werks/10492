@@ -8,6 +8,6 @@ Knowledge: undoc
 Level: 1
 Version: 2.0.0i1
 
-In the {{Edit tag group}} dialog an optional help text can be configured. The
-help texts appear on the {{Tag groups}} and {{Properties of host}} page if the
+In the "Edit tag group" dialog an optional help text can be configured. The
+help texts appear on the "Tag groups" and "Properties of host" page if the
 context help texts is toggled top right.

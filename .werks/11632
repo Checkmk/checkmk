@@ -9,7 +9,7 @@ Level: 1
 State: unknown
 Version: 2.1.0b1
 
-Old bulk performance parameters in {{etc/check_mk/multisite.d/wato/global.mk}}
+Old bulk performance parameters in `etc/check_mk/multisite.d/wato/global.mk`
 may consists of three values: use-cache, do-scan, bulk-size.
 With some refactorings the first parameter was removed (which had no effect
 since Checkmk 1.5.0) and causes above error while executing bulk discovery.

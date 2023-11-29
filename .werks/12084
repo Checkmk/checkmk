@@ -10,11 +10,11 @@ State: unknown
 Version: 2.1.0b1
 
 Some command line arguments for the check_mail active check had been assembled in a way that
-allowed invalid values for {{forward_app}} or {{match_subject}}.
+allowed invalid values for "forward_app" or "match_subject".
 Activating "Forward mails as events to Event Console" in WATO without specifying forward app or
-a regex for subject would provide the sting "None" to forward-app and leave {{match_subject}}
-empty resulting in an Unhandled exception: 
+a regex for subject would provide the sting "None" to forward-app and leave "match_subject"
+empty resulting in an Unhandled exception:
 
 TypeError('first argument must be string or compiled pattern')
 
-This change fixes command line argument generation and checks for {{match_subject}} being set.
+This change fixes command line argument generation and checks for "match_subject" being set.

@@ -2112,8 +2112,8 @@ class ConfigCache:
                     )
                 },
                 snmpv3_contexts=[
-                    (SectionName(name) if name is not None else None, rule)
-                    for name, rule in self.ruleset_matcher.get_host_values(
+                    (SectionName(name) if name is not None else None, contexts, error_handling)
+                    for name, contexts, error_handling in self.ruleset_matcher.get_host_values(
                         host_name, snmpv3_contexts
                     )
                 ],

@@ -5989,6 +5989,15 @@ def _valuespec_snmpv3_contexts():
                 title=_("SNMP Context IDs"),
                 allow_empty=False,
             ),
+            DropdownChoice(
+                title=_("Error Handling"),
+                choices=lambda: [
+                    ("stop_on_timeout", _("Stop SNMP processing on timeout")),
+                    ("continue_on_timeout", _("Continue with other SNMP contexts on timeout")),
+                ],
+                help="You should not configure an unnecessarily large number of SNMP contexts, "
+                "as this can lead to unnecessarily long runtimes due to accumulated timeouts.",
+            ),
         ],
     )
 

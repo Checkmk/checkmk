@@ -45,12 +45,9 @@ def brocade_sensor_convert(info, what):
     return return_list
 
 
-brocade_fan_default_levels = {"lower": (3000, 2800)}
-
-
 def inventory_brocade_fan(info):
     converted = brocade_sensor_convert(info, "FAN")
-    return [(x[0], brocade_fan_default_levels) for x in converted]
+    return [(x[0], {}) for x in converted]
 
 
 def check_brocade_fan(item, params, info):
@@ -70,6 +67,7 @@ check_info["brocade.fan"] = LegacyCheckDefinition(
     discovery_function=inventory_brocade_fan,
     check_function=check_brocade_fan,
     check_ruleset_name="hw_fans",
+    check_default_parameters={"lower": (3000, 2800)},
 )
 
 

@@ -277,6 +277,10 @@ class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
 
 
+class NodeConditionFactory(ModelFactory):
+    __model__ = api.NodeCondition
+
+
 class NodeStatusFactory(ModelFactory):
     __model__ = api.NodeStatus
 

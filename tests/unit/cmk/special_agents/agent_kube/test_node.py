@@ -11,6 +11,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
     ContainerStatusFactory,
     create_container_state,
+    NodeConditionFactory,
     NodeResourcesFactory,
     NodeStatusFactory,
 )
@@ -23,6 +24,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.node_handler import (
     _allocatable_cpu_resource,
     _allocatable_memory_resource,
     _allocatable_pods,
+    _conditions,
     _container_count,
     _info,
     create_api_sections,
@@ -105,6 +107,21 @@ def test_api_node_info_section() -> None:
     assert node_info.name == api_node.metadata.name
     assert node_info.labels == api_node.metadata.labels
     assert isinstance(node_info.creation_timestamp, float)
+
+
+def test_api_node_conditions() -> None:
+    # Assemble
+    expected_condition = NodeConditionFactory.build()
+    status = NodeStatusFactory.build(conditions=[expected_condition])
+    api_node = APINodeFactory.build(status=status)
+    # Act
+    conditions = _conditions(api_node).conditions
+    assert len(conditions) == 1
+    condition = conditions[0]
+    assert condition.status == expected_condition.status
+    assert condition.message == expected_condition.message
+    assert condition.reason == expected_condition.reason
+    assert condition.type_ == expected_condition.type_
 
 
 @pytest.mark.parametrize("pod_containers_count", [0, 5, 10])

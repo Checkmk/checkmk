@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.kube_node_conditions import check, DEFAULT_PARAMS
+from cmk.base.plugins.agent_based.kube_node_conditions import (
+    _check_condition,
+    check,
+    DEFAULT_PARAMS,
+    DEFAULT_STATE_MAP,
+)
 
 from cmk.plugins.lib.kube import NodeCondition, NodeConditions, NodeConditionStatus
 
@@ -129,3 +134,9 @@ def test_check_single() -> None:
     section = NodeConditions(conditions=[CUSTOMTRUE])
     results = list(check(DEFAULT_PARAMS, section))
     assert results == [Result(state=State.CRIT, summary="CUSTOM: True (None: None)")]
+
+
+def test_check_details() -> None:
+    cond = NodeCondition(type_="Ready", status=NodeConditionStatus.TRUE, reason="r", message="m")
+    results = list(_check_condition(DEFAULT_STATE_MAP, cond))
+    assert results == [Result(state=State.CRIT, summary="READY: True (r: m)")]

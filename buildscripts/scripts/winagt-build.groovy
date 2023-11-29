@@ -26,7 +26,11 @@ def main() {
             usernamePassword(
                 credentialsId: 'win_sign',
                 passwordVariable: 'WIN_SIGN_PASSWORD',
-                usernameVariable: '')]) {
+                usernameVariable: ''),
+            string(
+                credentialsId: "CI_TEST_SQL_DB_ENDPOINT",
+                variable:"CI_TEST_SQL_DB_ENDPOINT"
+        )]) {
             windows.build(
                 TARGET: 'agent_with_sign',
                 PASSWORD: WIN_SIGN_PASSWORD,

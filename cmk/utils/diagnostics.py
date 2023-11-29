@@ -71,44 +71,6 @@ _FILES_OPTS = [
 ]
 
 
-_MODULE_TO_PATH = {
-    "agent_based": "lib/check_mk/base/plugins/agent_based",
-    "agents": "share/check_mk/agents",
-    "alert_handlers": "share/check_mk/alert_handlers",
-    "bin": "bin",
-    "checkman": "share/check_mk/checkman",
-    "checks": "share/check_mk/checks",
-    "doc": "share/doc/check_mk",
-    "ec_rule_packs": "EC_RULE",
-    "inventory": "share/check_mk/inventory",
-    "lib": "lib",
-    "locales": "share/check_mk/locale",
-    "mibs": "share/snmp/mibs",
-    "notifications": "share/check_mk/notifications",
-    "pnp-templates": "share/check_mk/pnp-templates",
-    "web": "share/check_mk/web",
-}
-
-_CSV_COLUMNS = [
-    "path",
-    "exists",
-    "package",
-    "author",
-    "description",
-    "download_url",
-    "name",
-    "title",
-    "version",
-    "version.min_required",
-    "version.packaged",
-    "version.usable_until",
-    "permissions",
-    "installed",
-    "optional_packages",
-    "unpackaged",
-]
-
-
 def serialize_wato_parameters(  # pylint: disable=too-many-branches
     wato_parameters: DiagnosticsParameters,
 ) -> list[DiagnosticsCLParameters]:

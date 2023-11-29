@@ -8,3 +8,4 @@ pub mod checker {
     pub mod validation;
 }
 pub mod fetcher;
+pub mod truststore;

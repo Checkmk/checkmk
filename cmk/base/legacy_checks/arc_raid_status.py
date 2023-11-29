@@ -13,7 +13,7 @@ from cmk.base.config import check_info
 
 
 def inventory_arc_raid_status(info):
-    return [(x[0], saveint(x[-5])) for x in info]
+    return [(x[0], {"n_disks": int(x[-5])}) for x in info]
 
 
 def check_arc_raid_status(item, params, info):
@@ -39,7 +39,7 @@ def check_arc_raid_status(item, params, info):
             messages.append(f"Raid in state: {raid_state}{label}")
 
             # Check the number of disks
-            i_disks = params
+            i_disks = params["n_disks"]
             c_disks = saveint(line[-5])
             if i_disks != c_disks:
                 messages.append(

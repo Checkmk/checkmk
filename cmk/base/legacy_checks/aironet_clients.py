@@ -22,16 +22,14 @@ aironet_default_quality_levels = (40, 35)
 
 
 def inventory_aironet_clients(info):
-    if len(info) > 0:
-        return [
-            ("strength", aironet_default_strength_levels),
-            ("quality", aironet_default_quality_levels),
-            ("clients", None),
-        ]
-    return []
+    if not info:
+        return
+    yield "strength", {}
+    yield "quality", {}
+    yield "clients", {}
 
 
-def check_aironet_clients(item, params, info):
+def check_aironet_clients(item, _no_params, info):
     info = [line for line in info if line[0] != ""]
 
     if len(info) == 0:
@@ -59,7 +57,9 @@ def check_aironet_clients(item, params, info):
         neg = -1
 
     avg = sum(saveint(line[index]) for line in info) / float(len(info))
-    warn, crit = params
+    warn, crit = (
+        aironet_default_quality_levels if item == "quality" else aironet_default_strength_levels
+    )
     perfdata = [(item, avg, warn, crit, mmin, mmax)]
     infotxt = f"signal {item} at {avg:.1f}{unit} (warn/crit at {warn}{unit}/{crit}{unit})"
 

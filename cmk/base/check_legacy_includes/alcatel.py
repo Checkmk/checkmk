@@ -5,8 +5,6 @@
 
 from collections.abc import Iterable
 
-alcatel_cpu_default_levels = (90.0, 95.0)
-
 ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS = {
     "levels": (45.0, 50.0),
 }
@@ -19,12 +17,12 @@ DiscoveryResult = (
 
 
 def inventory_alcatel_cpu(info):
-    yield None, alcatel_cpu_default_levels
+    yield None, {}
 
 
-def check_alcatel_cpu(_no_item, params, info):
+def check_alcatel_cpu(_no_item, _no_params, info):
     cpu_perc = int(info[0][0])
-    warn, crit = params
+    warn, crit = (90.0, 95.0)
     status = 0
     levelstext = ""
     if cpu_perc >= crit:

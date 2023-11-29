@@ -11,11 +11,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 def inventory_apc_ats_status(info):
     if len(info) == 1:
-        return [(None, saveint(info[0][1]))]
-    return []
+        yield None, {"power_source": int(info[0][1])}
 
 
-def check_apc_ats_status(_no_item, source, info):
+def check_apc_ats_status(_no_item, params, info):
+    source = params["power_source"]
     comstatus, selected_source, redundancy, overcurrent, ps5, ps24 = map(saveint, info[0])
     state = 0
     messages = []
@@ -78,4 +78,5 @@ check_info["apc_ats_status"] = LegacyCheckDefinition(
     service_name="ATS Status",
     discovery_function=inventory_apc_ats_status,
     check_function=check_apc_ats_status,
+    check_default_parameters={},
 )

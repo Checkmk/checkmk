@@ -159,15 +159,10 @@ check_info["allnet_ip_sensoric.temp"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-allnet_ip_sensoric_humidity_default_levels = (35, 40, 60, 65)
-
 
 def inventory_allnet_ip_sensoric_humidity(parsed):
     return [
-        (
-            allnet_ip_sensoric_compose_item(sensor, sensor_data),
-            allnet_ip_sensoric_humidity_default_levels,
-        )
+        (allnet_ip_sensoric_compose_item(sensor, sensor_data), {})
         for sensor, sensor_data in parsed.items()
         if _match_function_or_unit(sensor_data, "2", "%")
     ]
@@ -188,6 +183,10 @@ check_info["allnet_ip_sensoric.humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_allnet_ip_sensoric_humidity,
     check_function=check_allnet_ip_sensoric_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={
+        "levels": (60.0, 65.0),
+        "levels_lower": (40.0, 35.0),
+    },
 )
 
 # .

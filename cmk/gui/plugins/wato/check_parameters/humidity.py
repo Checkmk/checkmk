@@ -12,15 +12,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
-def transform_humidity(p):
-    if isinstance(p, (list, tuple)):
-        p = {
-            "levels_lower": (float(p[1]), float(p[0])),
-            "levels": (float(p[2]), float(p[3])),
-        }
-    return p
-
-
 def _item_spec_humidity():
     return TextInput(
         title=_("Sensor name"),

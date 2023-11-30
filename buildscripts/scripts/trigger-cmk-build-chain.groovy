@@ -50,13 +50,13 @@ def main() {
     assert edition in ["enterprise", "raw", "managed", "cloud", "saas"] : (
         "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
 
-    def build_image = true;
+    def build_image = edition != "managed";
     def build_cloud_images = edition == "cloud";
 
     // TODO: saas has all tests disabled for now. Need some way to login in those tests, SAASDEV-664
     def run_int_tests = true;
-    def run_comp_tests = edition != "saas";
-    def run_image_tests = true;
+    def run_comp_tests = !(edition in ["saas", "managed"]);
+    def run_image_tests = edition != "managed";
     def run_update_tests = (edition in ["enterprise", "cloud"]);
 
     print(

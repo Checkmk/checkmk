@@ -22,24 +22,6 @@ from cmk.gui.i18n import _l
 # Title are always lower case - except the first character!
 # Colors: See indexed_color() in cmk/gui/plugins/metrics/utils.py
 
-metric_info["load1"] = {
-    "title": _l("CPU load average of last minute"),
-    "unit": "",
-    "color": "34/a",
-}
-
-metric_info["load5"] = {
-    "title": _l("CPU load average of last 5 minutes"),
-    "unit": "",
-    "color": "#428399",
-}
-
-metric_info["load15"] = {
-    "title": _l("CPU load average of last 15 minutes"),
-    "unit": "",
-    "color": "#2c5766",
-}
-
 metric_info["predict_load15"] = {
     "title": _l("Predicted average for 15 minute CPU load"),
     "unit": "",
@@ -515,23 +497,6 @@ graph_info["storage_processor_utilization"] = {
     "scalars": [
         "storage_processor_util:warn",
         "storage_processor_util:crit",
-    ],
-}
-
-graph_info["cpu_load"] = {
-    "title": _l("CPU Load - %(load1:max@count) CPU Cores"),
-    "metrics": [
-        ("load1", "area"),
-        ("load5", "line"),
-        ("load15", "line"),
-    ],
-    "scalars": [
-        "load15:warn",
-        "load15:crit",
-    ],
-    "optional_metrics": [
-        "load5",
-        "load15",
     ],
 }
 

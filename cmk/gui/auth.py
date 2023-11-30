@@ -11,11 +11,15 @@ import re
 import uuid
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 from typing import Literal
 
+import cmk.utils.paths
+from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.log.security_event import log_security_event
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 from cmk.gui import userdb
@@ -344,9 +348,16 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     Returns:
         True if user_id is an automation user and the secret matches.
     """
+
+    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    password_hash = htpwd_entries.get(user_id)
+
     return (
         secret != ""
+        and password_hash is not None
+        and not password_hash.startswith("!")  # user is locked
         and (stored_secret := AutomationUserSecret(user_id)).exists()
+        and password_hashing.matches(Password(secret), password_hash)
         and stored_secret.check(secret)
     )
 

@@ -13,7 +13,6 @@ given password (see `verify`).
 """
 import logging
 import re
-import sys
 
 import bcrypt
 
@@ -75,14 +74,20 @@ def verify(password: Password, password_hash: PasswordHash) -> None:
 
     :raise: PasswordInvalidError if the password does not match the hash.
     """
-    if not bcrypt.checkpw(password.raw_bytes, password_hash.encode("utf-8")):
-        logger.warning(
-            "Invalid hash. Only bcrypt is supported.",
-            exc_info=sys.exc_info(),
-        )
-        if "\0" in password_hash:
-            raise ValueError("Null character identified in password hash.")
+    if not matches(password, password_hash):
         raise PasswordInvalidError("Checkmk failed to validate the provided password")
+
+
+def matches(password: Password, password_hash: PasswordHash) -> bool:
+    """check if a password matches the password hash
+
+    If you can please use verify()"""
+
+    # Null bytes in the password are prohibited by the Password type
+    if "\0" in password_hash:
+        raise ValueError("Null character identified in password hash.")
+
+    return bcrypt.checkpw(password.raw_bytes, password_hash.encode("utf-8"))
 
 
 def is_unsupported_legacy_hash(password_hash: PasswordHash) -> bool:

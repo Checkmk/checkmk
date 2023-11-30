@@ -115,7 +115,7 @@ pub struct Cli {
     /// Values are matched case-sensitive. If they contain non-ASCII characters,
     /// they are expected to be latin-1
     #[arg(short = 'd', long, value_parser=parse_header_pair)]
-    pub header_strings: Option<Vec<(String, String)>>,
+    pub header_strings: Vec<(String, String)>,
 
     /// Expected HTTP status code.
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"

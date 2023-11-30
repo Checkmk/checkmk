@@ -96,7 +96,7 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                         !args.body_regex_invert,
                     )
                 })),
-            header_strings: args.header_strings.unwrap_or_default(),
+            header_strings: args.header_strings,
         },
     )
 }

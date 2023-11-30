@@ -5,10 +5,11 @@
 
 from __future__ import annotations
 
+import dataclasses
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import assert_never, Literal, TypeVar
+from typing import assert_never, Generic, Literal, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.auto_queue import AutoQueue
@@ -83,7 +84,14 @@ _Transition = (
 
 _L = TypeVar("_L", bound=str)
 
-ServicesTableEntry = tuple[_L, AutocheckEntry, list[HostName]]
+
+@dataclasses.dataclass
+class ServicesTableEntry(Generic[_L]):
+    transition: _L
+    autocheck_entry: AutocheckEntry
+    hosts: list[HostName]
+
+
 ServicesTable = dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 
@@ -628,8 +636,8 @@ def make_table(
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
     return {
-        entry.id(): (
-            _node_service_source(
+        entry.id(): ServicesTableEntry(
+            transition=_node_service_source(
                 host_name,
                 ignore_service=ignore_service,
                 ignore_plugin=ignore_plugin,
@@ -638,8 +646,8 @@ def make_table(
                 check_plugin_name=entry.check_plugin_name,
                 service_name=service_name,
             ),
-            entry,
-            [host_name],
+            autocheck_entry=entry,
+            hosts=[host_name],
         )
         for check_source, entry in entries.chain_with_qualifier()
         if (service_name := get_service_description(host_name, *entry.id()))
@@ -678,10 +686,19 @@ def _reclassify_disabled_items(
 ) -> Iterable[tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
-        (service.id(), ("ignored", service, [host_name]))
-        for check_source, service, _found_on_nodes in services.values()
-        if ignore_service(host_name, get_service_description(host_name, *service.id()))
-        or ignore_plugin(host_name, service.check_plugin_name)
+        (
+            service.autocheck_entry.id(),
+            ServicesTableEntry(
+                transition="ignored",
+                autocheck_entry=service.autocheck_entry,
+                hosts=[host_name],
+            ),
+        )
+        for service in services.values()
+        if ignore_service(
+            host_name, get_service_description(host_name, *service.autocheck_entry.id())
+        )
+        or ignore_plugin(host_name, service.autocheck_entry.check_plugin_name)
     )
 
 
@@ -689,11 +706,11 @@ def _group_by_transition(
     transition_services: ServicesTable[_Transition],
 ) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
-    for transition, service, found_on_nodes in transition_services.values():
+    for service in transition_services.values():
         services_by_transition.setdefault(
-            transition,
+            service.transition,
             [],
-        ).append(AutocheckServiceWithNodes(service, found_on_nodes))
+        ).append(AutocheckServiceWithNodes(service.autocheck_entry, service.hosts))
     return services_by_transition
 
 
@@ -708,7 +725,7 @@ def _get_cluster_services(
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
-    cluster_items: ServicesTable[_BasicTransition] = {}
+    cluster_items: ServicesTable[_Transition] = {}  # actually _BasicTransition but typing...
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
@@ -756,7 +773,7 @@ def _get_cluster_services(
                 )
             )
 
-    return {**cluster_items}  # for the typing...
+    return cluster_items
 
 
 def _cluster_service_entry(
@@ -766,16 +783,22 @@ def _cluster_service_entry(
     node_name: HostName,
     services_cluster: HostName,
     entry: AutocheckEntry,
-    existing_entry: ServicesTableEntry[_BasicTransition] | None,
-) -> Iterable[tuple[ServiceID, ServicesTableEntry[_BasicTransition]]]:
+    existing_entry: ServicesTableEntry[_Transition] | None,
+) -> Iterable[tuple[ServiceID, ServicesTableEntry[_Transition]]]:
     if host_name != services_cluster:
         return  # not part of this host
 
     if existing_entry is None:
-        yield entry.id(), (check_source, entry, [node_name])
+        yield entry.id(), ServicesTableEntry(
+            transition=check_source,
+            autocheck_entry=entry,
+            hosts=[node_name],
+        )
         return
 
-    first_check_source, existing_ac_entry, nodes_with_service = existing_entry
+    first_check_source = existing_entry.transition
+    existing_ac_entry = existing_entry.autocheck_entry
+    nodes_with_service = existing_entry.hosts
     if node_name not in nodes_with_service:
         nodes_with_service.append(node_name)
 
@@ -783,11 +806,19 @@ def _cluster_service_entry(
         return
 
     if check_source == "old":
-        yield entry.id(), (check_source, entry, nodes_with_service)
+        yield entry.id(), ServicesTableEntry(
+            transition=check_source,
+            autocheck_entry=entry,
+            hosts=nodes_with_service,
+        )
         return
 
     if {first_check_source, check_source} == {"vanished", "new"}:
-        yield existing_ac_entry.id(), ("old", existing_ac_entry, nodes_with_service)
+        yield existing_ac_entry.id(), ServicesTableEntry(
+            transition="old",
+            autocheck_entry=existing_ac_entry,
+            hosts=nodes_with_service,
+        )
         return
 
     # In all other cases either both must be "new" or "vanished" -> let it be

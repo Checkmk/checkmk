@@ -53,6 +53,7 @@ from cmk.checkengine.discovery._autodiscovery import (
     make_table,
     ServicesByTransition,
     ServicesTable,
+    ServicesTableEntry,
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.discovery._impl import _check_host_labels, _check_service_lists
@@ -92,45 +93,45 @@ def _as_plugin(plugin: SectionPluginAPI) -> SectionPlugin:
 @pytest.fixture
 def service_table() -> ServicesTable:
     return {
-        ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): (
-            "new",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): ServicesTableEntry(
+            transition="new",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 1",
                 "Test Description New Item 1",
                 {},
             ),
-            [],
+            hosts=[],
         ),
-        ServiceID(CheckPluginName("check_plugin_name"), "New Item 2"): (
-            "new",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("check_plugin_name"), "New Item 2"): ServicesTableEntry(
+            transition="new",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "New Item 2",
                 "Test Description New Item 2",
                 {},
             ),
-            [],
+            hosts=[],
         ),
-        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 1"): (
-            "vanished",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 1"): ServicesTableEntry(
+            transition="vanished",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 1",
                 "Test Description Vanished Item 1",
                 {},
             ),
-            [],
+            hosts=[],
         ),
-        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 2"): (
-            "vanished",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 2"): ServicesTableEntry(
+            transition="vanished",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("check_plugin_name"),
                 "Vanished Item 2",
                 "Test Description Vanished Item 2",
                 {},
             ),
-            [],
+            hosts=[],
         ),
     }
 
@@ -2010,26 +2011,26 @@ def test_get_node_services() -> None:
         get_effective_host=lambda hn, *args, **kw: hn,
         get_service_description=lambda *args, **kw: "desc",
     ) == {
-        ServiceID(CheckPluginName("plugin_vanished"), item=None): (
-            "vanished",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("plugin_vanished"), item=None): ServicesTableEntry(
+            transition="vanished",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
             ),
-            [host_name],
+            hosts=[host_name],
         ),
-        ServiceID(CheckPluginName("plugin_old"), item=None): (
-            "old",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("plugin_old"), item=None): ServicesTableEntry(
+            transition="old",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
             ),
-            [host_name],
+            hosts=[host_name],
         ),
-        ServiceID(CheckPluginName("plugin_new"), item=None): (
-            "new",
-            AutocheckEntry(
+        ServiceID(CheckPluginName("plugin_new"), item=None): ServicesTableEntry(
+            transition="new",
+            autocheck_entry=AutocheckEntry(
                 CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
             ),
-            [host_name],
+            hosts=[host_name],
         ),
     }
 

@@ -91,11 +91,10 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> _Cl
         title = _title(line_txt)
 
         if title == "Last updated":
-            if "Last change:" in line_txt:
-                # Some versions seem to combine both lines
-                last_updated = line_txt[: line_txt.index("Last change:")].split(": ")[1].strip()
-            else:
-                last_updated = " ".join(line[2:])
+            if line.count("Last") > 1:
+                # Sometimes, `Last updated` and `Last changed` are combined into a single line
+                line = line[: line.index("Last", 1)]
+            last_updated = " ".join(line[2:7])
             continue
 
         if title == "Current DC":

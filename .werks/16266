@@ -1,0 +1,11 @@
+Title: Cached MRPE plugins: display cache info at the end of the service output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1701331517
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This Werk changes the caching information of MRPE plugins to be displayed at the end of the service output.
+This is consistent with the plugin for loacl checks, which shows the same type of information.

@@ -97,8 +97,8 @@ class _Discoverable(Protocol):
     def id(self) -> Hashable:
         ...
 
-    # tbd: def comperator(self) -> object:
-    #    ...
+    def comparator(self) -> object:
+        ...
 
 
 _DiscoveredItem = TypeVar("_DiscoveredItem", bound=_Discoverable)
@@ -127,16 +127,22 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
             for k, v in preexisting_dict.items()
             if k not in current_dict
         ]
-        self._old: Final = [
-            DiscoveredItem(previous=v, new=current_dict[k])
-            for k, v in preexisting_dict.items()
-            if k in current_dict
-        ]
         self._new: Final = [
             DiscoveredItem(previous=None, new=v)
             for k, v in current_dict.items()
             if k not in preexisting_dict
         ]
+        self._changed: Final = [
+            DiscoveredItem(previous=v, new=current_dict[k])
+            for k, v in preexisting_dict.items()
+            if k in current_dict and v.comparator() != current_dict[k].comparator()
+        ]
+        self._unchanged: Final = [
+            DiscoveredItem(previous=v, new=v)
+            for k, v in current_dict.items()
+            if k in preexisting_dict and v.comparator() == preexisting_dict[k].comparator()
+        ]
+        self._old: Final = self._changed + self._unchanged
 
     @classmethod
     def empty(cls) -> QualifiedDiscovery:

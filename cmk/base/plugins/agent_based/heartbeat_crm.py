@@ -102,7 +102,7 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> Clu
         title = _title(line_txt)
 
         if title == "Last updated":
-            last_updated = _parse_last_updated(line=line, line_txt=line_txt)
+            last_updated = _parse_last_updated(line)
             continue
 
         if title == "Current DC":
@@ -137,12 +137,19 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> Clu
     )
 
 
-def _parse_last_updated(*, line: Sequence[str], line_txt: str) -> int:
+def _parse_last_updated(line: Sequence[str]) -> int:
+    """
+    >>> _parse_last_updated(["Last", "updated:", "Tue", "Sep", "8", "10:36:12", "2020"])
+    1599561372
+    >>> _parse_last_updated(['Last', 'updated:', 'Tue', 'Sep', '22', '11:20:53', '2015', 'Last', 'change:', 'Thu', 'Sep', '17', '14:52:42', '2015', 'by', 'root', 'via', 'crm_resource', 'on', 'bl64lnx-priv'])
+    1442920853
+    """
+    if line.count("Last") > 1:
+        # Sometimes, `Last updated` and `Last changed` are combined into a single line
+        line = line[: line.index("Last", 1)]
     return calendar.timegm(
         time.strptime(
-            line_txt[: line_txt.index("Last change:")].split(": ")[1].strip()
-            if "Last change:" in line_txt
-            else " ".join(line[2:]),
+            " ".join(line[2:]),
             "%a %b %d %H:%M:%S %Y",
         )
     )

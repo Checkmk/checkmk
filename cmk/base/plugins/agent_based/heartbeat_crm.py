@@ -41,7 +41,7 @@ KNOWN_FAILED_RESOURCE_ACTION_HEADERS = {
 
 @dataclass(frozen=True, kw_only=True)
 class Cluster:
-    last_updated: str
+    last_updated: float | None
     dc: str | None
     num_nodes: int | None
     num_resources: int | None
@@ -86,14 +86,14 @@ def _title(title: str) -> str:
 def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> Cluster:
     if (error := _parse_for_error(" ".join(general_section[0]))) is not None:
         return Cluster(
-            last_updated="",
+            last_updated=None,
             dc=None,
             num_nodes=None,
             num_resources=None,
             error=error,
         )
 
-    last_updated = ""
+    last_updated = None
     dc = None
     num_nodes = None
     num_resources = None
@@ -102,11 +102,7 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> Clu
         title = _title(line_txt)
 
         if title == "Last updated":
-            if "Last change:" in line_txt:
-                # Some versions seem to combine both lines
-                last_updated = line_txt[: line_txt.index("Last change:")].split(": ")[1].strip()
-            else:
-                last_updated = " ".join(line[2:])
+            last_updated = _parse_last_updated(line=line, line_txt=line_txt)
             continue
 
         if title == "Current DC":
@@ -138,6 +134,17 @@ def heartbeat_crm_parse_general(general_section: Sequence[Sequence[str]]) -> Clu
         num_nodes=num_nodes,
         num_resources=num_resources,
         error=None,
+    )
+
+
+def _parse_last_updated(*, line: Sequence[str], line_txt: str) -> int:
+    return calendar.timegm(
+        time.strptime(
+            line_txt[: line_txt.index("Last change:")].split(": ")[1].strip()
+            if "Last change:" in line_txt
+            else " ".join(line[2:]),
+            "%a %b %d %H:%M:%S %Y",
+        )
     )
 
 
@@ -350,13 +357,12 @@ def _check_heartbeat_crm(
 
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
-    dt = calendar.timegm(time.strptime(section.cluster.last_updated, "%a %b %d %H:%M:%S %Y"))
-    delta = now - dt
-    if delta > params["max_age"]:
-        yield Result(
-            state=State.CRIT,
-            summary=f"Ignoring reported data (Status output too old: {render.timespan(delta)})",
-        )
+    if too_old_result := _check_last_cluster_update(
+        last_update=section.cluster.last_updated,
+        now=now,
+        max_age=params["max_age"],
+    ):
+        yield too_old_result
         return
 
     # Check for correct DC when enabled
@@ -392,6 +398,22 @@ def _check_heartbeat_crm(
 
     for action in section.resources.failed_actions:
         yield Result(state=State.WARN, summary=f"Failed: {action}")
+
+
+def _check_last_cluster_update(
+    *,
+    last_update: float | None,
+    now: float,
+    max_age: float,
+) -> Result | None:
+    if last_update is None:
+        return None
+    if (delta := now - last_update) > max_age:
+        return Result(
+            state=State.CRIT,
+            summary=f"Ignoring reported data (Status output too old: {render.timespan(delta)})",
+        )
+    return None
 
 
 register.check_plugin(

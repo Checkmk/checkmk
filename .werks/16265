@@ -1,0 +1,12 @@
+Title: Inconsistent Check_MK services for clusters with partial piggyback data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701326283
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Clusters configured to "Use piggyback data from other hosts if present" expected piggyback data from <i>all</i> hosts, if one host had piggyback data.
+
+This could lead to an inconsistent state where every nodes datasources were OK individually, but they would lead to a warning state on the cluster.

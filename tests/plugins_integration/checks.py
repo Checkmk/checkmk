@@ -33,6 +33,7 @@ class SkippedDumps:
 class SkippedChecks:
     SKIPPED_CHECKS = [
         "snmp-fw-fortigate:Signatures",  # TODO: dynamic data need to be regexed
+        "agent-2_2_0_p12-redis:Redis 127.0.0.1:6379 Server Info",  # TODO: dynamic data need to be regexed
     ]
 
 

@@ -128,6 +128,7 @@ from cmk.checkengine.discovery import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
+from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
@@ -792,8 +793,11 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         new_services = [
             AutocheckServiceWithNodes(
-                AutocheckEntry(
-                    CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
+                DiscoveredItem[AutocheckEntry](
+                    previous=AutocheckEntry(
+                        CheckPluginName(raw_check_plugin_name), item, params, raw_service_labels
+                    ),
+                    new=None,
                 ),
                 found_on_nodes,
             )

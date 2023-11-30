@@ -32,11 +32,11 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckEntry
+from ._autochecks import AutocheckEntry, DiscoveredService
 from ._autodiscovery import _Transition, get_host_services
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._utils import QualifiedDiscovery
+from ._utils import DiscoveredItem, QualifiedDiscovery
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
 
@@ -158,17 +158,21 @@ def get_check_preview(
         on_error=on_error,
     )
 
+    entry: DiscoveredItem[AutocheckEntry]
     passive_rows = [
         _check_preview_table_row(
             host_name,
             check_plugins=check_plugins,
             service=ConfiguredService(
-                check_plugin_name=entry.check_plugin_name,
-                item=entry.item,
-                description=find_service_description(host_name, *entry.id()),
-                parameters=compute_check_parameters(host_name, entry),
-                discovered_parameters=entry.parameters,
-                service_labels={n: ServiceLabel(n, v) for n, v in entry.service_labels.items()},
+                check_plugin_name=DiscoveredService.check_plugin_name(entry),
+                item=DiscoveredService.item(entry),
+                description=find_service_description(host_name, *DiscoveredService.id(entry)),
+                parameters=compute_check_parameters(host_name, DiscoveredService.older(entry)),
+                discovered_parameters=DiscoveredService.older(entry).parameters,
+                service_labels={
+                    n: ServiceLabel(n, v)
+                    for n, v in DiscoveredService.older(entry).service_labels.items()
+                },
                 is_enforced=False,
             ),
             check_source=check_source,

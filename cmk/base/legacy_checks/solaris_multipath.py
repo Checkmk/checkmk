@@ -72,4 +72,5 @@ check_info["solaris_multipath"] = LegacyCheckDefinition(
     discovery_function=inventory_solaris_multipath,
     check_function=check_solaris_multipath,
     check_ruleset_name="multipath",
+    check_default_parameters={},  # overwritten by discovery
 )

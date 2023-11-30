@@ -46,6 +46,10 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("aws_ec2_security_groups"): (
         lambda p: p if isinstance(p, dict) else {"groups": p}
     ),
+    CheckPluginName("siemens_plc_flag"): (lambda p: {}),
+    CheckPluginName("strem1_sensors"): (lambda p: {}),
+    CheckPluginName("stulz_humidity"): (lambda p: {}),
+    CheckPluginName("sylo"): (lambda p: {}),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

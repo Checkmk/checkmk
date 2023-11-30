@@ -93,6 +93,21 @@ _Section = Section(
             attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
             rebot_timestamp=1701098145,
         ),
+        "skipped_test": TestReport(
+            test=Test.model_construct(
+                name="Skipped Test",
+                status=StatusV6.model_construct(
+                    status=Outcome.FAIL,
+                    starttime=datetime(2023, 11, 27, 7, 15, 45, 515000),
+                    endtime=datetime(2023, 11, 27, 7, 15, 45, 518000),
+                    elapsed=None,
+                ),
+                robot_exit=True,
+            ),
+            html=b"irrelevant",
+            attempts_config=AttemptsConfig(interval=15, timeout=5, n_attempts_max=1),
+            rebot_timestamp=1701098145,
+        ),
     },
 )
 
@@ -129,6 +144,13 @@ def test_discover_robotmk_test() -> None:
         ),
         Service(
             item="crit_fail",
+            labels=[
+                ServiceLabel("robotmk/html_last_error_log", "yes"),
+                ServiceLabel("robotmk/html_last_log", "yes"),
+            ],
+        ),
+        Service(
+            item="skipped_test",
             labels=[
                 ServiceLabel("robotmk/html_last_error_log", "yes"),
                 ServiceLabel("robotmk/html_last_log", "yes"),
@@ -200,6 +222,12 @@ def test_discover_robotmk_test() -> None:
                 Metric("test_runtime", 0.003),
             ],
             id="Test failed",
+        ),
+        pytest.param(
+            "skipped_test",
+            Params(test_runtime=None),
+            [],
+            id="Skipped test with robot:exit tag",
         ),
     ],
 )

@@ -53,6 +53,9 @@ def check(
 
 
 def _check_test(params: Params, test: Test) -> CheckResult:
+    if test.robot_exit:
+        return
+
     yield Result(state=State.OK, summary=test.name)
     yield Result(state=_remap_state(test.status.status), summary=f"{test.status.status.value}")
     if (runtime := test.status.runtime()) is not None:

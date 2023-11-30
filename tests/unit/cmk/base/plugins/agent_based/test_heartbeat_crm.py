@@ -9,7 +9,7 @@ from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.heartbeat_crm import (
-    check_heartbeat_crm,
+    _check_heartbeat_crm,
     check_heartbeat_crm_resources,
     discover_heartbeat_crm,
     parse_heartbeat_crm,
@@ -228,23 +228,27 @@ def test_discovery_heartbeat_crm_dc_naildown(section_1: Section) -> None:
 
 
 def test_check_heartbeat_crm_too_old(section_1: Section) -> None:
-    (result,) = check_heartbeat_crm(
-        {"max_age": 60, "num_nodes": 2, "num_resources": 3},
-        section_1,
-    )
-
-    assert isinstance(result, Result)
-    assert result.state is State.CRIT
-    # Note: going crit is not the same as ignoring data.
-    assert result.summary.startswith("Ignoring reported data ")
+    assert list(
+        _check_heartbeat_crm(
+            {"max_age": 60, "num_nodes": 2, "num_resources": 3},
+            section_1,
+            1601339704.5458105,
+        )
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="Ignoring reported data (Status output too old: 20 days 13 hours)",
+        )
+    ]
 
 
 def test_check_heartbeat_crm_ok(section_1: Section) -> None:
     with on_time("2020-09-08 10:36:36", "UTC"):
         assert list(
-            check_heartbeat_crm(
+            _check_heartbeat_crm(
                 {"max_age": 60, "num_nodes": 2, "num_resources": 3},
                 section_1,
+                1589939704.5458105,
             )
         ) == [
             Result(state=State.OK, summary="DC: ha02"),
@@ -256,7 +260,7 @@ def test_check_heartbeat_crm_ok(section_1: Section) -> None:
 def test_check_heartbeat_crm_crit(section_2: Section) -> None:
     with on_time("2019-08-18 10:36:36", "UTC"):
         assert list(
-            check_heartbeat_crm(
+            _check_heartbeat_crm(
                 {
                     "dc": "hasi",
                     "max_age": 60,
@@ -265,6 +269,7 @@ def test_check_heartbeat_crm_crit(section_2: Section) -> None:
                     "show_failed_actions": True,
                 },
                 section_2,
+                1559939704.5458105,
             )
         ) == [
             Result(state=State.CRIT, summary="DC: cluster (Expected hasi)"),

@@ -84,6 +84,29 @@ pub struct Cli {
     #[arg(short = 's', long, conflicts_with = "without_body")]
     pub body_string: Option<String>,
 
+    /// Regular expression to expect in the response body.
+    #[arg(
+        short = 'r',
+        long,
+        conflicts_with = "body_string",
+        conflicts_with = "without_body"
+    )]
+    pub body_regex: Option<String>,
+
+    /// Case insensitive matching for specified body regex.
+    #[arg(long, requires = "body_regex", default_value_t = false)]
+    pub body_regex_case_insensitive: bool,
+
+    /// Allow body regex to span newlines.
+    /// When set: Dot (.) also matches newlines, Anchors (^,$) only match start and end of body
+    /// When unset: Dot doesn't match newlines, Anchors match start and end of single lines
+    #[arg(long, requires = "body_regex", default_value_t = false)]
+    pub body_regex_linespan: bool,
+
+    /// Expect the specified regex to *not* match on the body.
+    #[arg(long, requires = "body_regex", default_value_t = false)]
+    pub body_regex_invert: bool,
+
     /// Strings to expect in the headers. Format: [KEY]:[VALUE]
     /// Specify multiple times for additional headers.
     /// It's possible to only specify key or value, but a separating colon is

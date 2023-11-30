@@ -407,6 +407,65 @@ class TimeSpan:
     custom_validate: Callable[[int], object] | None = None
 
 
+@dataclass(frozen=True)
+class FixedLevels:
+    """Definition for levels that remain static. Usable only in conjunction with `Levels`
+
+    Args:
+        prefill_value: Value to pre-populate the form fields with. If None, the backend will decide
+                       whether to leave the field empty or to prefill it with a canonical value.
+    """
+
+    prefill_value: tuple[float, float] | None = None
+
+
+@dataclass(frozen=True)
+class PredictiveLevels:
+    """Definition for levels that change over time based on a prediction of the monitored value.
+    Usable only in conjunction with `Levels`
+
+    Args:
+        prefill_abs_diff: Value to pre-populate the form fields with when the levels depend on the
+         absolute difference to the predicted value. If None, the backend will decide whether to
+         leave the field empty or to prefill it with a canonical value.
+        prefill_rel_diff: Value to pre-populate the form fields with when the levels depend on the
+         relative difference to the predicted value. If None, the backend will decide whether to
+         leave the field empty or to prefill it with a canonical value.
+        prefill_stddev_diff: Value to pre-populate the form fields with when the levels depend on
+         the relation of the predicted value to the standard deviation. If None, the backend will
+         decide whether to leave the field empty or to prefill it with a canonical value.
+    """
+
+    prefill_abs_diff: tuple[float, float] | None = None
+    prefill_rel_diff: tuple[float, float] | None = None
+    prefill_stddev_diff: tuple[float, float] | None = None
+
+
+@dataclass(frozen=True)
+class Levels:
+    """Specifies a form for configuring levels
+
+    Args:
+        form_spec: Specification for the form fields of the warning and critical levels
+        lower: Lower levels
+        upper: Upper levels
+        title: Human readable title
+        help_text: Description to help the user with the configuration
+        unit: Unit of the value to apply levels on (only for display)
+        transform: Transformation of the stored level configuration
+    """
+
+    form_spec: type[Integer | Percentage]  # TODO: any numeric FormSpec
+    lower: tuple[FixedLevels, PredictiveLevels | None] | None
+    upper: tuple[FixedLevels, PredictiveLevels | None] | None
+
+    title: Localizable | None = None
+    help_text: Localizable | None = None
+    unit: Localizable | None = None
+
+    transform: Transform[object] | Migrate[object] | None = None
+
+
 ItemFormSpec = TextInput | DropdownChoice
 
 
@@ -422,4 +481,5 @@ FormSpec = (
     | List
     | FixedValue
     | TimeSpan
+    | Levels
 )

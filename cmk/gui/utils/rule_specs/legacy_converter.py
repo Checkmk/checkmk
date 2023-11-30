@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any, assert_never, Callable, TypeVar
@@ -321,6 +321,9 @@ def _convert_to_inner_legacy_valuespec(
         case ruleset_api_v1.TimeSpan():
             return _convert_to_legacy_age(to_convert, localizer)
 
+        case ruleset_api_v1.Levels():
+            return _convert_to_legacy_levels(to_convert, localizer)
+
         case other:
             assert_never(other)
 
@@ -611,3 +614,384 @@ def _convert_to_legacy_age(
         )
 
     return legacy_valuespecs.Age(**converted_kwargs)
+
+
+class _LevelDirection(enum.Enum):
+    UPPER = "upper"
+    LOWER = "lower"
+
+
+def _get_fixed_level_titles(
+    level_direction: _LevelDirection, localizer: Callable[[str], str]
+) -> tuple[str, str]:
+    if level_direction is _LevelDirection.LOWER:
+        warn_title = localizer("Warning below")
+        crit_title = localizer("Critical below")
+    elif level_direction is _LevelDirection.UPPER:
+        warn_title = localizer("Warning at")
+        crit_title = localizer("Critical at")
+    else:
+        assert_never(level_direction)
+    return warn_title, crit_title
+
+
+_TNumericSpec = ruleset_api_v1.Integer | ruleset_api_v1.Percentage
+
+
+def _get_legacy_level_spec(
+    form_spec: type[_TNumericSpec],
+    title: str,
+    unit: str,
+    prefill: float | legacy_valuespecs.Sentinel,
+) -> legacy_valuespecs.Integer | legacy_valuespecs.Percentage:
+    if issubclass(form_spec, ruleset_api_v1.Integer):
+        return legacy_valuespecs.Integer(
+            title=title,
+            unit=unit,
+            default_value=int(prefill) if isinstance(prefill, float) else prefill,
+        )
+
+    if issubclass(form_spec, ruleset_api_v1.Percentage):
+        return legacy_valuespecs.Percentage(title=title, unit="%", default_value=prefill)
+
+    # TODO: allow all numeric specs
+    raise NotImplementedError(form_spec)
+
+
+def _get_fixed_levels_choice_element(
+    form_spec: type[_TNumericSpec],
+    levels: ruleset_api_v1.FixedLevels,
+    level_direction: _LevelDirection,
+    unit: str,
+    localizer: Callable[[str], str],
+) -> legacy_valuespecs.Tuple:
+    warn_title, crit_title = _get_fixed_level_titles(level_direction, localizer)
+
+    prefill_value: tuple[float, float] | tuple[
+        legacy_valuespecs.Sentinel, legacy_valuespecs.Sentinel
+    ] = (legacy_valuespecs.DEF_VALUE, legacy_valuespecs.DEF_VALUE)
+    if levels.prefill_value is not None:
+        prefill_value = levels.prefill_value
+
+    return legacy_valuespecs.Tuple(
+        elements=[
+            _get_legacy_level_spec(form_spec, warn_title, unit, prefill_value[0]),
+            _get_legacy_level_spec(form_spec, crit_title, unit, prefill_value[1]),
+        ],
+    )
+
+
+@dataclass
+class _WarnCritTupleInfo:
+    warn: str
+    crit: str
+    unit: str
+    prefill: tuple[int, int] | tuple[float, float]
+
+
+@dataclass
+class _FixedLimitsInfo:
+    warn: str
+    crit: str
+    help: str
+
+
+def _get_level_computation_info(
+    valuespec: type[legacy_valuespecs.Integer | legacy_valuespecs.Float],
+    to_convert: ruleset_api_v1.PredictiveLevels,
+    unit: str,
+    level_dir: str,
+    limit: str,
+    limit_dir: str,
+    level_magnitude: str,
+    localizer: Callable[[str], str],
+) -> tuple[_WarnCritTupleInfo, _WarnCritTupleInfo, _WarnCritTupleInfo, _FixedLimitsInfo]:
+    def _default_prefill(
+        prefill: tuple[float, float] | None, default: tuple[float, float]
+    ) -> tuple[float, float]:
+        return prefill if prefill is not None else default
+
+    def _get_warn_crit_tuple_info(prefill: tuple[float, float], _unit: str) -> _WarnCritTupleInfo:
+        return _WarnCritTupleInfo(
+            warn=localizer("Warning %s") % level_dir,
+            crit=localizer("Critical %s") % level_dir,
+            unit=_unit,
+            prefill=prefill,
+        )
+
+    if issubclass(valuespec, legacy_valuespecs.Percentage):
+        default = (0.0, 0.0)
+        unit = "%"
+    elif issubclass(valuespec, legacy_valuespecs.Integer):
+        default = (0, 0)
+    elif issubclass(valuespec, legacy_valuespecs.Float):
+        default = (0.0, 0.0)
+    else:
+        raise NotImplementedError(valuespec)
+
+    abs_info = _get_warn_crit_tuple_info(
+        _default_prefill(to_convert.prefill_abs_diff, default), unit
+    )
+    rel_info = _get_warn_crit_tuple_info(
+        _default_prefill(to_convert.prefill_rel_diff, (10.0, 20.0)), "%"
+    )
+    stddev_info = _get_warn_crit_tuple_info(
+        _default_prefill(to_convert.prefill_stddev_diff, (2.0, 4.0)),
+        localizer("times the standard deviation"),
+    )
+
+    fixed_info = _FixedLimitsInfo(
+        warn=localizer("Warning level is at %s") % limit,
+        crit=localizer("Critical level is at %s") % limit,
+        help=localizer(
+            "Regardless of how the dynamic levels are computed according to the prediction: they "
+            "will never be set %s the following limits. This avoids false alarms during times where"
+            " the predicted levels would be very %s."
+        )
+        % (limit_dir, level_magnitude),
+    )
+    return abs_info, rel_info, stddev_info, fixed_info
+
+
+def _get_level_computation_dropdown_choice(
+    ident: str,
+    spec: type[legacy_valuespecs.Integer] | type[legacy_valuespecs.Float],
+    title: str,
+    help_text: str,
+    info: _WarnCritTupleInfo,
+) -> tuple[str, str, legacy_valuespecs.Tuple]:
+    elements: list[legacy_valuespecs.Integer | legacy_valuespecs.Float] = []
+    if issubclass(spec, legacy_valuespecs.Integer):
+        elements.extend(
+            [
+                spec(title=info.warn, unit=info.unit, default_value=int(info.prefill[0])),
+                spec(title=info.crit, unit=info.unit, default_value=int(info.prefill[1])),
+            ]
+        )
+    elif issubclass(spec, legacy_valuespecs.Float):
+        elements.extend(
+            [
+                spec(title=info.warn, unit=info.unit, default_value=info.prefill[0]),
+                spec(title=info.crit, unit=info.unit, default_value=info.prefill[1]),
+            ]
+        )
+    else:
+        raise NotImplementedError(spec)
+    return ident, title, legacy_valuespecs.Tuple(help=help_text, elements=elements)
+
+
+class _PredictiveLevelDefinition(enum.StrEnum):
+    ABSOLUTE = "absolute"
+    RELATIVE = "relative"
+    STDDEV = "stddev"
+
+
+def _get_level_computation_dropdown(
+    valuespec: type[legacy_valuespecs.Integer] | type[legacy_valuespecs.Float],
+    abs_info: _WarnCritTupleInfo,
+    rel_info: _WarnCritTupleInfo,
+    stddev_info: _WarnCritTupleInfo,
+    localizer: Callable[[str], str],
+) -> legacy_valuespecs.CascadingDropdown:
+    return legacy_valuespecs.CascadingDropdown(
+        title=localizer("Level definition in relation to the predicted value"),
+        choices=[
+            _get_level_computation_dropdown_choice(
+                _PredictiveLevelDefinition.ABSOLUTE.value,
+                valuespec,
+                localizer("Absolute difference"),
+                localizer(
+                    "The thresholds are calculated by increasing or decreasing the predicted value by a fixed absolute value"
+                ),
+                abs_info,
+            ),
+            _get_level_computation_dropdown_choice(
+                _PredictiveLevelDefinition.RELATIVE.value,
+                legacy_valuespecs.Percentage,
+                localizer("Relative difference"),
+                localizer(
+                    "The thresholds are calculated by increasing or decreasing the predicted value by a percentage"
+                ),
+                rel_info,
+            ),
+            _get_level_computation_dropdown_choice(
+                _PredictiveLevelDefinition.STDDEV.value,
+                legacy_valuespecs.Float,
+                localizer("Standard deviation difference"),
+                localizer(
+                    "The thresholds are calculated by increasing or decreasing the predicted value by a multiple of the standard deviation"
+                ),
+                stddev_info,
+            ),
+        ],
+    )
+
+
+def _get_predictive_levels_choice_element(
+    form_spec: type[_TNumericSpec],
+    to_convert: ruleset_api_v1.PredictiveLevels,
+    level_direction: _LevelDirection,
+    unit: str,
+    localizer: Callable[[str], str],
+) -> legacy_valuespecs.Dictionary:
+    valuespec = type(_get_legacy_level_spec(form_spec, "", "", legacy_valuespecs.Sentinel()))
+
+    if level_direction is _LevelDirection.UPPER:
+        abs_info, rel_info, stddev_info, fixed_info = _get_level_computation_info(
+            valuespec, to_convert, unit, "above", "least", "below", "low", localizer
+        )
+    elif level_direction is _LevelDirection.LOWER:
+        abs_info, rel_info, stddev_info, fixed_info = _get_level_computation_info(
+            valuespec, to_convert, unit, "below", "most", "above", "high", localizer
+        )
+    else:
+        assert_never(level_direction)
+
+    # This is a placeholder:
+    # The backend uses this marker to inject a callback to get the prediction.
+    # Its main purpose it to bind the host name and service description,
+    # which are not known to the plugin.
+    predictive_callback_key = "__get_predictive_levels__"
+
+    predictive_elements: Sequence[tuple[str, legacy_valuespecs.ValueSpec]] = [
+        (
+            "period",
+            legacy_valuespecs.DropdownChoice(
+                choices=[
+                    ("wday", localizer("Day of the week")),
+                    ("day", localizer("Day of the month")),
+                    ("hour", localizer("Hour of the day")),
+                    ("minute", localizer("Minute of the hour")),
+                ],
+                title=localizer("Base prediction on"),
+                help=localizer(
+                    "Define the periodicity in which the repetition of the measured data is expected (monthly, weekly, daily or hourly)"
+                ),
+            ),
+        ),
+        (
+            "horizon",
+            legacy_valuespecs.Integer(
+                title=localizer("Length of historic data to consider"),
+                help=localizer(
+                    "How many days in the past Checkmk should evaluate the measurement data"
+                ),
+                unit=localizer("days"),
+                minvalue=1,
+                default_value=90,
+            ),
+        ),
+        (
+            "levels",
+            _get_level_computation_dropdown(valuespec, abs_info, rel_info, stddev_info, localizer),
+        ),
+        (
+            "bound",
+            legacy_valuespecs.Tuple(
+                title=localizer("Fixed limits"),
+                help=fixed_info.help,
+                elements=[
+                    _get_legacy_level_spec(
+                        form_spec, fixed_info.warn, unit, legacy_valuespecs.Sentinel()
+                    ),
+                    _get_legacy_level_spec(
+                        form_spec, fixed_info.crit, unit, legacy_valuespecs.Sentinel()
+                    ),
+                ],
+            ),
+        ),
+        (predictive_callback_key, legacy_valuespecs.FixedValue(None)),
+    ]
+    return legacy_valuespecs.Dictionary(
+        elements=predictive_elements,
+        optional_keys=["bound"],
+        ignored_keys=[predictive_callback_key],
+        hidden_keys=[predictive_callback_key],
+    )
+
+
+class _LevelDynamicChoice(enum.StrEnum):
+    NO_LEVELS = "no_levels"
+    FIXED = "fixed"
+    PREDICTIVE = "predictive"
+
+
+def _get_level_dynamic(
+    form_spec: type[_TNumericSpec],
+    levels: tuple[ruleset_api_v1.FixedLevels, ruleset_api_v1.PredictiveLevels | None] | None,
+    level_direction: _LevelDirection,
+    unit: str,
+    localizer: Callable[[str], str],
+) -> legacy_valuespecs.CascadingDropdown:
+    default_value = _LevelDynamicChoice.NO_LEVELS.value
+    choices: list[tuple[str, str, legacy_valuespecs.ValueSpec]] = [
+        (
+            _LevelDynamicChoice.NO_LEVELS.value,
+            localizer("No levels"),
+            legacy_valuespecs.FixedValue(
+                value=None,
+                title=localizer("No levels"),
+                totext=localizer("Do not impose levels, always be OK"),
+            ),
+        ),
+    ]
+
+    if levels is not None:
+        default_value = _LevelDynamicChoice.FIXED.value
+        choices.append(
+            (
+                _LevelDynamicChoice.FIXED.value,
+                localizer("Fixed levels"),
+                _get_fixed_levels_choice_element(
+                    form_spec, levels[0], level_direction, unit, localizer
+                ),
+            )
+        )
+        if (predictive_levels := levels[1]) is not None:
+            choices.append(
+                (
+                    _LevelDynamicChoice.PREDICTIVE.value,
+                    localizer("Predictive levels (only on CMC)"),
+                    _get_predictive_levels_choice_element(
+                        form_spec,
+                        predictive_levels,
+                        level_direction,
+                        unit,
+                        localizer,
+                    ),
+                )
+            )
+    return legacy_valuespecs.CascadingDropdown(
+        choices=choices,
+        title=localizer("Upper levels")
+        if level_direction is _LevelDirection.UPPER
+        else localizer("Lower levels"),
+        default_value=default_value,
+    )
+
+
+def _convert_to_legacy_levels(
+    to_convert: ruleset_api_v1.Levels, localizer: Callable[[str], str]
+) -> legacy_valuespecs.Dictionary:
+    unit = "" if to_convert.unit is None else to_convert.unit.localize(localizer)
+
+    elements = [
+        (
+            "levels_lower",
+            _get_level_dynamic(
+                to_convert.form_spec, to_convert.lower, _LevelDirection.LOWER, unit, localizer
+            ),
+        ),
+        (
+            "levels_upper",
+            _get_level_dynamic(
+                to_convert.form_spec, to_convert.upper, _LevelDirection.UPPER, unit, localizer
+            ),
+        ),
+    ]
+
+    return legacy_valuespecs.Dictionary(
+        title=_localize_optional(to_convert.title, localizer),
+        elements=elements,
+        required_keys=["levels_lower", "levels_upper"],
+    )

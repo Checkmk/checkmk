@@ -16,7 +16,6 @@ ARGS = [
     "--hw-changes=0",
     "--sw-changes=0",
     "--sw-missing=0",
-    "--inventory-as-check",
     "$HOSTNAME$",
 ]
 

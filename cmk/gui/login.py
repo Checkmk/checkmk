@@ -20,8 +20,10 @@ from werkzeug.local import LocalProxy
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
 from cmk.utils.site import omd_site, url_prefix
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 from cmk.utils.urls import is_allowed_url
 
@@ -369,18 +371,24 @@ def _check_auth(req: Request) -> Optional[UserId]:
 
 
 def verify_automation_secret(user_id: UserId, secret: str) -> bool:
-    if secret and user_id and "/" not in user_id:
-        path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
-        if not path.is_file():
-            return False
+    if not secret or not user_id or "/" in user_id:
+        return False
 
-        with path.open(encoding="utf-8") as f:
-            return secrets.compare_digest(
-                f.read().strip().encode("utf-8"),
-                secret.encode("utf-8"),
-            )
+    path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
+    if not path.is_file():
+        return False
 
-    return False
+    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    password_hash = htpwd_entries.get(user_id)
+
+    if not password_hash or password_hash.startswith("!"):
+        return False
+
+    with path.open(encoding="utf-8") as f:
+        return password_hashing.matches(Password(secret), password_hash) and secrets.compare_digest(
+            f.read().strip().encode("utf-8"),
+            secret.encode("utf-8"),
+        )
 
 
 def _check_auth_automation() -> UserId:

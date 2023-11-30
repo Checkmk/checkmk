@@ -103,6 +103,17 @@ def verify(password: Password, password_hash: str) -> None:
         raise PasswordInvalidError
 
 
+def matches(password: Password, password_hash: str) -> bool:
+    """check if a password matches the password hash
+
+    If you can please use verify()"""
+    try:
+        verify(password, password_hash)
+        return True
+    except (ValueError, PasswordInvalidError):
+        return False
+
+
 def needs_update(password_hash: str) -> bool:
     """Check if a password hash should be re-calculated because the hash algorithm is deprecated.
 

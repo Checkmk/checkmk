@@ -56,7 +56,8 @@ from cmk.utils import password_store, version
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.crypto.password_hashing import is_insecure_hash
+from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto.password import Password
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.license_usage.samples import hash_site_id, LicenseUsageHistoryDump
@@ -69,6 +70,7 @@ from cmk.utils.store import (
     save_bytes_to_file,
     save_mk_file,
 )
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import (
     BakeryTargetFolder,
     CheckPluginName,
@@ -400,6 +402,7 @@ class UpdateConfig:
             (self._remove_old_custom_logos, "Remove old custom logos (CME)"),
             (self._fix_agent_receiver_symlinks, "Fix registered hosts symlinks"),
             (self._update_license_usage_history, "Update license usage history"),
+            (self._synchronize_automationuser_secrets, "Synchronize automationuser secrets"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1578,7 +1581,7 @@ class UpdateConfig:
             if (
                 (users[user_id].get("connector") == "htpasswd")
                 and (pw := users[user_id].get("password"))
-                and is_insecure_hash(pw)
+                and password_hashing.is_insecure_hash(pw)
                 # Automation users' password hashes are irrelevant, as they are not used for login.
                 and "automation_secret" not in users[user_id]
             )
@@ -2133,6 +2136,55 @@ The following users in your current installation will become incompatible with C
                 hash_site_id(cmk.utils.site.omd_site()),
             ).serialize(),
         )
+
+    def _synchronize_automationuser_secrets(self) -> None:
+        """Set the Htpasswd has of an automation user to its secret
+
+        When changing a automation secret in the UI we also change it in the htpasswd file.
+        This value was previously never used since we currently still store the secret in plain
+        text and that value was used for verification.
+
+        Now we want to be able to disable automation users so we need to prepend the password hash
+        with a `!`. To be consistent we now check both the htpasswd hash and the automation secret.
+        In this step we set the hash to the secret that was used previously and log if the hash was
+        outdated. So hopefully all users now keep them in sync (if they have custom scripts) until
+        we can finally get rid of the plain text secret.
+        """
+
+        htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
+        htpasswd_entries = htpasswd.load(allow_missing_file=True)
+
+        for user_id, user_spec in load_users().items():
+            if (automation_user_secret := user_spec.get("automation_secret")) is None:
+                # not an automation user
+                continue
+            automation_user_password = Password(automation_user_secret)
+
+            password_hash = htpasswd_entries.get(user_id)
+            locked = False
+            assert password_hash is not None
+            if password_hash.startswith("!"):
+                locked = True
+                password_hash = password_hash[1:]
+
+            if locked:
+                self._logger.warning(
+                    "Automation user %r is locked!",
+                    user_id,
+                )
+            if password_hashing.matches(automation_user_password, password_hash):
+                continue
+
+            htpasswd.save(
+                user_id,
+                "!" + password_hashing.hash_password(automation_user_password)
+                if locked
+                else password_hashing.hash_password(automation_user_password),
+            )
+            self._logger.warning(
+                "Automationuser's (%r) secret does not match the password hash in etc/htpasswd. Updating the hash.",
+                user_id,
+            )
 
 
 class PasswordSanitizer:

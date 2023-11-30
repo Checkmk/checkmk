@@ -82,6 +82,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
@@ -2374,22 +2375,46 @@ class ABCNodeRenderer(abc.ABC):
         hint: ColumnDisplayHint | AttributeDisplayHint,
         retention_intervals: RetentionIntervals | None = None,
     ) -> None:
-        if not isinstance(value, HTML):
-            _tdclass, code = hint.paint_function(value)
-            value = HTML(code)
-
-        if self._is_outdated(retention_intervals):
-            html.write_html(HTMLWriter.render_span(value.value, css="muted_text"))
+        if isinstance(value, HTML):
+            html_value = value
         else:
-            html.write_html(value)
+            _tdclass, code = hint.paint_function(value)
+            html_value = HTML(code)
 
-    @staticmethod
-    def _is_outdated(retention_intervals: RetentionIntervals | None) -> bool:
-        return (
-            False
-            if retention_intervals is None or retention_intervals.source == "current"
-            else time.time() > retention_intervals.keep_until
-        )
+        if retention_intervals is None or retention_intervals.source == "current":
+            html.write_html(html_value)
+            return
+
+        now = int(time.time())
+        valid_until = retention_intervals.cached_at + retention_intervals.cache_interval
+        keep_until = valid_until + retention_intervals.retention_interval
+        if now > keep_until:
+            html_value = HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("svc_problems", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data is outdated and will be removed with the next check execution"),
+            )
+
+        elif now > valid_until:
+            html_value = HTMLWriter.render_span(
+                html_value
+                + HTML("&nbsp;")
+                + HTMLWriter.render_img(
+                    theme.detect_icon_path("service_duration", "icon_"),
+                    class_=["icon"],
+                ),
+                title=_("Data was provided at %s and is considered valid until %s")
+                % (
+                    cmk.utils.render.date_and_time(retention_intervals.cached_at),
+                    cmk.utils.render.date_and_time(keep_until),
+                ),
+            )
+
+        html.write_html(value)
 
 
 class NodeRenderer(ABCNodeRenderer):

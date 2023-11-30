@@ -17,8 +17,22 @@ pub struct CheckParameters {
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
     pub timeout: Duration,
-    pub body_string: Option<String>,
+    pub body_matcher: Option<TextMatcher>,
     pub header_strings: Vec<(String, String)>,
+}
+
+pub struct TextMatcher(String);
+
+impl TextMatcher {
+    pub fn match_on(&self, text: &str) -> bool {
+        text.contains(&self.0)
+    }
+}
+
+impl From<String> for TextMatcher {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
 }
 
 pub fn collect_response_checks(
@@ -37,7 +51,7 @@ pub fn collect_response_checks(
         .chain(check_body(
             response.body,
             params.page_size,
-            params.body_string,
+            params.body_matcher,
         ))
         .chain(check_response_time(
             response_time,
@@ -159,7 +173,7 @@ fn latin1_to_string(bytes: &[u8]) -> String {
 fn check_body<T: std::error::Error>(
     body: Option<Result<Body, T>>,
     page_size_limits: Option<Bounds<usize>>,
-    body_string: Option<String>,
+    body_matcher: Option<TextMatcher>,
 ) -> Vec<Option<CheckResult>> {
     let Some(body) = body else {
         // We assume that a None-Body means that we didn't fetch it at all
@@ -170,15 +184,19 @@ fn check_body<T: std::error::Error>(
     let Ok(body) = body else {
         return notice(State::Crit, "Error fetching the response body");
     };
-    let mut ret = check_page_size(body.length, page_size_limits);
 
-    if body_string.map_or(false, |string| !body.text.contains(&string)) {
-        ret.append(&mut notice(
-            State::Warn,
-            "Specified string not found in response body",
-        ));
-    };
-    ret
+    check_page_size(body.length, page_size_limits)
+        .into_iter()
+        .chain(check_body_matching(&body.text, body_matcher))
+        .collect()
+}
+
+fn check_body_matching(body_text: &str, matcher: Option<TextMatcher>) -> Vec<Option<CheckResult>> {
+    if matcher.is_some_and(|m| !m.match_on(body_text)) {
+        notice(State::Warn, "Specified string not found in response body")
+    } else {
+        vec![]
+    }
 }
 
 fn check_page_size(
@@ -537,96 +555,96 @@ mod test_check_body {
                     length: 7
                 })),
                 Some(Bounds::lower_upper(3, 10)),
-                Some("foo".to_string()),
+                Some("foo".to_string().into()),
             ) == vec![
                 CheckResult::details(State::Ok, "Page size: 7 Bytes"),
                 CheckResult::metric("size", 7., Some('B'), None, Some(0.), None)
             ]
         );
     }
+}
 
-    #[test]
-    fn test_string_not_found() {
-        assert!(
-            check_body::<DummyError>(
-                Some(Ok(Body {
-                    text: "foobär".to_string(),
-                    length: 7
-                })),
-                Some(Bounds::lower_upper(3, 10)),
-                Some("foobar".to_string()),
-            ) == vec![
-                CheckResult::details(State::Ok, "Page size: 7 Bytes"),
-                CheckResult::metric("size", 7., Some('B'), None, Some(0.), None),
-                CheckResult::summary(State::Warn, "Specified string not found in response body"),
-                CheckResult::details(State::Warn, "Specified string not found in response body"),
-            ]
-        );
-    }
+#[cfg(test)]
+mod test_check_page_size {
+    use super::*;
 
     #[test]
     fn test_size_lower_out_of_bounds() {
         assert!(
-            check_body::<DummyError>(
-                Some(Ok(Body {
-                    text: "don't care".to_string(),
-                    length: 42
-                })),
-                Some(Bounds::lower(56)),
-                None,
-            ) == vec![
-                CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
-                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-            ]
+            check_page_size(42, Some(Bounds::lower(56)),)
+                == vec![
+                    CheckResult::summary(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                    CheckResult::details(State::Warn, "Page size: 42 Bytes (warn below 56 Bytes)"),
+                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                ]
         );
     }
 
     #[test]
     fn test_size_lower_and_higher_too_low() {
         assert!(
-            check_body::<DummyError>(
-                Some(Ok(Body {
-                    text: "don't care".to_string(),
-                    length: 42,
-                })),
-                Some(Bounds::lower_upper(56, 100)),
-                None,
-            ) == vec![
-                CheckResult::summary(
-                    State::Warn,
-                    "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                ),
-                CheckResult::details(
-                    State::Warn,
-                    "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                ),
-                CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
-            ]
+            check_page_size(42, Some(Bounds::lower_upper(56, 100)),)
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Page size: 42 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::metric("size", 42., Some('B'), None, Some(0.), None)
+                ]
         );
     }
 
     #[test]
     fn test_size_lower_and_higher_too_high() {
         assert!(
-            check_body::<DummyError>(
-                Some(Ok(Body {
-                    text: "don't care".to_string(),
-                    length: 142,
-                })),
-                Some(Bounds::lower_upper(56, 100)),
-                None,
-            ) == vec![
-                CheckResult::summary(
-                    State::Warn,
-                    "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                ),
-                CheckResult::details(
-                    State::Warn,
-                    "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
-                ),
-                CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
-            ]
+            check_page_size(142, Some(Bounds::lower_upper(56, 100)),)
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Page size: 142 Bytes (warn below/above 56 Bytes/100 Bytes)"
+                    ),
+                    CheckResult::metric("size", 142., Some('B'), None, Some(0.), None)
+                ]
+        );
+    }
+}
+
+#[cfg(test)]
+mod test_check_body_matching {
+    use super::*;
+
+    #[test]
+    fn test_no_matcher() {
+        assert!(check_body_matching("foobar", None) == vec![]);
+    }
+
+    #[test]
+    fn test_string_ok() {
+        assert!(check_body_matching("foobar", Some("foobar".to_string().into())) == vec![]);
+    }
+
+    #[test]
+    fn test_string_not_found() {
+        assert!(
+            check_body_matching("foobär", Some("foobar".to_string().into()))
+                == vec![
+                    CheckResult::summary(
+                        State::Warn,
+                        "Specified string not found in response body"
+                    ),
+                    CheckResult::details(
+                        State::Warn,
+                        "Specified string not found in response body"
+                    ),
+                ]
         );
     }
 }

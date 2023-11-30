@@ -9,6 +9,7 @@ use check_cert::check::{
 use check_cert::checker::certificate::{self, Config as CertConfig};
 use check_cert::checker::validation::{self, Config as ValidationConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
+use check_cert::truststore;
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
@@ -198,6 +199,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     writer.join(&mut validation::check(
         &chain,
         ValidationConfig::builder()
+            .trust_store(&truststore::system().unwrap_or_default())
             .allow_self_signed(args.allow_self_signed)
             .build(),
     ));

@@ -73,13 +73,13 @@ def inventory_cisco_hsrp(info):
         # inventorize HSRP group name+IP and the standby state as seen from "this" box.
         if hsrp_state in [5, 6]:
             vip_grp = f"{vip}-{hsrp_grp}"
-            inventory.append((vip_grp, (hsrp_grp, hsrp_state)))
+            inventory.append((vip_grp, {"group": hsrp_grp, "state": hsrp_state}))
 
     return inventory
 
 
 def check_cisco_hsrp(item, params, info):
-    _hsrp_grp_wanted, hsrp_state_wanted = params
+    _hsrp_grp_wanted, hsrp_state_wanted = params["group"], params["state"]
 
     for line in info:
         hsrp_grp_entry, vip, _actrouter, _sbrouter, hsrp_state, _vmac = line

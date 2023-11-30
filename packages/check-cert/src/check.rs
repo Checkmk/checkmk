@@ -391,7 +391,7 @@ where
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Writer {
     state: State,
     summary: Vec<Summary>,
@@ -406,6 +406,14 @@ impl Writer {
             State::Crit => 2,
             State::Unknown => 3,
         }
+    }
+}
+
+impl Writer {
+    pub fn join(&mut self, other: &mut Writer) {
+        self.state = std::cmp::max(self.state, other.state);
+        self.summary.append(&mut other.summary);
+        self.metrics.append(&mut other.metrics);
     }
 }
 
@@ -769,6 +777,28 @@ mod test_writer_format {
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         assert_eq!(
             format!("{}", Writer::from(&mut vec![cr1, cr2, cr3])),
+            "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
+            | m1=13;;;;, m2=37;;;;, m3=42;;;;"
+        );
+    }
+
+    #[test]
+    fn test_join_writers_with_metrics() {
+        let mut w = Writer::default();
+        w.join(&mut Writer::from(&mut vec![CheckResult::ok(
+            "summary 1",
+            m("m1", 13),
+        )]));
+        w.join(&mut Writer::from(&mut vec![CheckResult::warn(
+            "summary 2",
+            m("m2", 37),
+        )]));
+        w.join(&mut Writer::from(&mut vec![CheckResult::crit(
+            "summary 3",
+            m("m3", 42),
+        )]));
+        assert_eq!(
+            format!("{}", w),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
             | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );

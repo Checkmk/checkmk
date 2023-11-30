@@ -103,14 +103,17 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
     )
 }
 
-fn regex_from_args(pattern: &str, case_insensitive: bool, linespan: bool) -> Regex {
+fn regex_from_args(
+    pattern: &str,
+    case_insensitive: bool,
+    linespan: bool,
+) -> Result<Regex, regex::Error> {
     RegexBuilder::new(pattern)
         .crlf(true)
         .case_insensitive(case_insensitive)
         .multi_line(!linespan)
         .dot_matches_new_line(linespan)
         .build()
-        .unwrap() //TODO(au): This would panic. Better handle this with an UNKNOWN state.
 }
 
 #[cfg(test)]
@@ -119,61 +122,85 @@ mod test_regex_from_args {
 
     #[test]
     fn test_simple() {
-        assert!(regex_from_args("f.*r", false, false).is_match("foobar"))
+        assert!(regex_from_args("f.*r", false, false)
+            .unwrap()
+            .is_match("foobarunwrap()."))
     }
 
     #[test]
     fn test_case_insensitive_false() {
-        assert!(!regex_from_args("f.*r", false, false).is_match("foobaR"))
+        assert!(!regex_from_args("f.*r", false, false)
+            .unwrap()
+            .is_match("foobaR"))
     }
 
     #[test]
     fn test_case_insensitive_true() {
-        assert!(regex_from_args("f.*r", true, false).is_match("foobaR"))
+        assert!(regex_from_args("f.*r", true, false)
+            .unwrap()
+            .is_match("foobaR"))
     }
 
     #[test]
     fn test_no_linespan_true() {
-        assert!(regex_from_args("^f.*r$", true, false).is_match("baz\nfoobar\nmooh"))
+        assert!(regex_from_args("^f.*r$", true, false)
+            .unwrap()
+            .is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_no_linespan_false() {
-        assert!(!regex_from_args("f.*h", true, false).is_match("baz\nfoobar\nmooh"))
+        assert!(!regex_from_args("f.*h", true, false)
+            .unwrap()
+            .is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_linespan_false() {
-        assert!(!regex_from_args("^f.*r$", true, true).is_match("baz\nfoobar\nmooh"))
+        assert!(!regex_from_args("^f.*r$", true, true)
+            .unwrap()
+            .is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_linespan_anchors_true() {
-        assert!(regex_from_args("^b.*h$", true, true).is_match("baz\nfoobar\nmooh"))
+        assert!(regex_from_args("^b.*h$", true, true)
+            .unwrap()
+            .is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_linespan_no_anchors_true() {
-        assert!(regex_from_args("f.*h", true, true).is_match("baz\nfoobar\nmooh"))
+        assert!(regex_from_args("f.*h", true, true)
+            .unwrap()
+            .is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_no_linespan_crlf() {
-        assert!(regex_from_args("^f.*r$", true, false).is_match("baz\r\nfoobar\r\nmooh"))
+        assert!(regex_from_args("^f.*r$", true, false)
+            .unwrap()
+            .is_match("baz\r\nfoobar\r\nmooh"))
     }
 
     #[test]
     fn test_no_linespan_cr() {
-        assert!(regex_from_args("^f.*r$", true, false).is_match("baz\rfoobar\rmooh"))
+        assert!(regex_from_args("^f.*r$", true, false)
+            .unwrap()
+            .is_match("baz\rfoobar\rmooh"))
     }
 
     #[test]
     fn test_unicode_no_match() {
-        assert!(!regex_from_args("^foobar..baz$", true, false).is_match("foobar💩baz"))
+        assert!(!regex_from_args("^foobar..baz$", true, false)
+            .unwrap()
+            .is_match("foobar💩baz"))
     }
 
     #[test]
     fn test_unicode_match() {
-        assert!(regex_from_args("^foobar.baz$", true, false).is_match("foobar🦀baz"))
+        assert!(regex_from_args("^foobar.baz$", true, false)
+            .unwrap()
+            .is_match("foobar🦀baz"))
     }
 }

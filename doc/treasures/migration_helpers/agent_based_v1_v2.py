@@ -106,7 +106,8 @@ def main(argv: list[str]) -> int:
     for file_name in args.file_name:
         _transform(file_name, args.inplace)
 
-    _autoflake(args.file_name)
+    if args.inplace:
+        _autoflake(args.file_name)
 
     return 0
 

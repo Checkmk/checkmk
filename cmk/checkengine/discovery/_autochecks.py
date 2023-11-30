@@ -17,6 +17,7 @@ from cmk.utils.servicename import Item, ServiceName
 from cmk.utils.store import ObjectStore
 
 from cmk.checkengine.checking import CheckPluginName, ConfiguredService, ServiceID
+from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
@@ -25,6 +26,7 @@ __all__ = [
     "AutocheckEntry",
     "AutochecksStore",
     "AutochecksManager",
+    "DiscoveredService",
     "remove_autochecks_of_host",
     "set_autochecks_of_cluster",
     "set_autochecks_of_real_hosts",
@@ -40,7 +42,7 @@ GetEffectviveHost = Callable[[HostName, str], HostName]
 
 
 class AutocheckServiceWithNodes(NamedTuple):
-    service: AutocheckEntry
+    service: DiscoveredItem[AutocheckEntry]
     nodes: Sequence[HostName]
 
 
@@ -243,12 +245,13 @@ def _consolidate_autochecks_of_real_hosts(
     existing_autochecks: Sequence[AutocheckEntry],
 ) -> Sequence[AutocheckEntry]:
     consolidated = {
-        discovered.id(): discovered
+        DiscoveredService.id(discovered): DiscoveredService.newer(discovered)
         for discovered, found_on_nodes in new_services_with_nodes
         if hostname in found_on_nodes
     }
+
     # overwrite parameters from existing ones for those which are kept
-    new_services = {x.service.id() for x in new_services_with_nodes}
+    new_services = {DiscoveredService.id(x.service) for x in new_services_with_nodes}
     consolidated.update((id_, ex) for ex in existing_autochecks if (id_ := ex.id()) in new_services)
 
     return list(consolidated.values())
@@ -270,7 +273,7 @@ def set_autochecks_of_cluster(
             for existing in AutochecksStore(node).read()
             if hostname != get_effective_host(node, get_service_description(node, *existing.id()))
         ] + [
-            discovered
+            DiscoveredService.newer(discovered)
             for discovered, found_on_nodes in new_services_with_nodes
             if node in found_on_nodes
         ]
@@ -326,3 +329,33 @@ def remove_autochecks_of_host(
     store.write(new_entries)
 
     return len(existing_entries) - len(new_entries)
+
+
+class DiscoveredService:
+    @staticmethod
+    def check_plugin_name(discovered_item: DiscoveredItem[AutocheckEntry]) -> CheckPluginName:
+        return DiscoveredService.older(discovered_item).check_plugin_name
+
+    @staticmethod
+    def item(discovered_item: DiscoveredItem[AutocheckEntry]) -> Item:
+        return DiscoveredService.older(discovered_item).item
+
+    @staticmethod
+    def id(discovered_item: DiscoveredItem[AutocheckEntry]) -> ServiceID:
+        return DiscoveredService.older(discovered_item).id()
+
+    @staticmethod
+    def older(discovered_item: DiscoveredItem[AutocheckEntry]) -> AutocheckEntry:
+        if discovered_item.previous is not None:
+            return discovered_item.previous
+        if discovered_item.new is not None:
+            return discovered_item.new
+        raise ValueError("Neither previous nor new service is set.")
+
+    @staticmethod
+    def newer(discovered_item: DiscoveredItem[AutocheckEntry]) -> AutocheckEntry:
+        if discovered_item.new is not None:
+            return discovered_item.new
+        if discovered_item.previous is not None:
+            return discovered_item.previous
+        raise ValueError("Neither previous nor new service is set.")

@@ -28,7 +28,7 @@ from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_p
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
-from ._autochecks import AutocheckServiceWithNodes
+from ._autochecks import AutocheckServiceWithNodes, DiscoveredService
 from ._autodiscovery import get_host_services, ServicesByTransition
 from ._discovery import DiscoveryPlugin
 from ._filters import ServiceFilter as _ServiceFilter
@@ -201,13 +201,17 @@ def _check_service_lists(
         filtered = True
 
         for service, _found_on_nodes in discovered_services:
-            affected_check_plugins[service.check_plugin_name] += 1
-            filtered &= not service_filter(find_service_description(host_name, *service.id()))
+            affected_check_plugins[DiscoveredService.check_plugin_name(service)] += 1
+            filtered &= not service_filter(
+                find_service_description(host_name, *DiscoveredService.id(service))
+            )
             subresults.append(
                 _make_active_check_result(
                     transition,
-                    service.check_plugin_name,
-                    service_description=find_service_description(host_name, *service.id()),
+                    DiscoveredService.check_plugin_name(service),
+                    service_description=find_service_description(
+                        host_name, *DiscoveredService.id(service)
+                    ),
                 )
             )
 
@@ -221,8 +225,10 @@ def _check_service_lists(
 
     subresults.extend(
         _make_ignored_active_check_result(
-            ignored_service.check_plugin_name,
-            service_description=find_service_description(host_name, *ignored_service.id()),
+            DiscoveredService.check_plugin_name(ignored_service),
+            service_description=find_service_description(
+                host_name, *DiscoveredService.id(ignored_service)
+            ),
         )
         for ignored_service, _found_on_nodes in services_by_transition.get("ignored", [])
     )

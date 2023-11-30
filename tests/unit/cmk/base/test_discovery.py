@@ -45,6 +45,7 @@ from cmk.checkengine.discovery import (
     find_plugins,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._autochecks import DiscoveredService
 from cmk.checkengine.discovery._autodiscovery import (
     _get_cluster_services,
     _get_post_discovery_autocheck_services,
@@ -58,6 +59,7 @@ from cmk.checkengine.discovery._autodiscovery import (
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.discovery._impl import _check_host_labels, _check_service_lists
 from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
+from cmk.checkengine.discovery._utils import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.sectionparser import (
@@ -95,41 +97,53 @@ def service_table() -> ServicesTable:
     return {
         ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): ServicesTableEntry(
             transition="new",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("check_plugin_name"),
-                "New Item 1",
-                "Test Description New Item 1",
-                {},
+            autocheck=DiscoveredItem[AutocheckEntry](
+                new=AutocheckEntry(
+                    CheckPluginName("check_plugin_name"),
+                    "New Item 1",
+                    "Test Description New Item 1",
+                    {},
+                ),
+                previous=None,
             ),
             hosts=[],
         ),
         ServiceID(CheckPluginName("check_plugin_name"), "New Item 2"): ServicesTableEntry(
             transition="new",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("check_plugin_name"),
-                "New Item 2",
-                "Test Description New Item 2",
-                {},
+            autocheck=DiscoveredItem[AutocheckEntry](
+                new=AutocheckEntry(
+                    CheckPluginName("check_plugin_name"),
+                    "New Item 2",
+                    "Test Description New Item 2",
+                    {},
+                ),
+                previous=None,
             ),
             hosts=[],
         ),
         ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 1"): ServicesTableEntry(
             transition="vanished",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("check_plugin_name"),
-                "Vanished Item 1",
-                "Test Description Vanished Item 1",
-                {},
+            autocheck=DiscoveredItem[AutocheckEntry](
+                previous=AutocheckEntry(
+                    CheckPluginName("check_plugin_name"),
+                    "Vanished Item 1",
+                    "Test Description Vanished Item 1",
+                    {},
+                ),
+                new=None,
             ),
             hosts=[],
         ),
         ServiceID(CheckPluginName("check_plugin_name"), "Vanished Item 2"): ServicesTableEntry(
             transition="vanished",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("check_plugin_name"),
-                "Vanished Item 2",
-                "Test Description Vanished Item 2",
-                {},
+            autocheck=DiscoveredItem[AutocheckEntry](
+                previous=AutocheckEntry(
+                    CheckPluginName("check_plugin_name"),
+                    "Vanished Item 2",
+                    "Test Description Vanished Item 2",
+                    {},
+                ),
+                new=None,
             ),
             hosts=[],
         ),
@@ -141,40 +155,52 @@ def grouped_services() -> ServicesByTransition:
     return {
         "new": [
             AutocheckServiceWithNodes(
-                AutocheckEntry(
-                    CheckPluginName("check_plugin_name"),
-                    "New Item 1",
-                    "Test Description New Item 1",
-                    {},
+                DiscoveredItem[AutocheckEntry](
+                    new=AutocheckEntry(
+                        CheckPluginName("check_plugin_name"),
+                        "New Item 1",
+                        "Test Description New Item 1",
+                        {},
+                    ),
+                    previous=None,
                 ),
                 [],
             ),
             AutocheckServiceWithNodes(
-                AutocheckEntry(
-                    CheckPluginName("check_plugin_name"),
-                    "New Item 2",
-                    "Test Description New Item 2",
-                    {},
+                DiscoveredItem[AutocheckEntry](
+                    new=AutocheckEntry(
+                        CheckPluginName("check_plugin_name"),
+                        "New Item 2",
+                        "Test Description New Item 2",
+                        {},
+                    ),
+                    previous=None,
                 ),
                 [],
             ),
         ],
         "vanished": [
             AutocheckServiceWithNodes(
-                AutocheckEntry(
-                    CheckPluginName("check_plugin_name"),
-                    "Vanished Item 1",
-                    "Test Description Vanished Item 1",
-                    {},
+                DiscoveredItem[AutocheckEntry](
+                    previous=AutocheckEntry(
+                        CheckPluginName("check_plugin_name"),
+                        "Vanished Item 1",
+                        "Test Description Vanished Item 1",
+                        {},
+                    ),
+                    new=None,
                 ),
                 [],
             ),
             AutocheckServiceWithNodes(
-                AutocheckEntry(
-                    CheckPluginName("check_plugin_name"),
-                    "Vanished Item 2",
-                    "Test Description Vanished Item 2",
-                    {},
+                DiscoveredItem[AutocheckEntry](
+                    previous=AutocheckEntry(
+                        CheckPluginName("check_plugin_name"),
+                        "Vanished Item 2",
+                        "Test Description Vanished Item 2",
+                        {},
+                    ),
+                    new=None,
                 ),
                 [],
             ),
@@ -613,7 +639,7 @@ def test__get_post_discovery_services(
     service_filters = ServiceFilters.from_settings(parameters_rediscovery)
 
     new_item_names = [
-        entry.service.item or ""
+        DiscoveredService.item(entry.service) or ""
         for entry in _get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
@@ -2013,22 +2039,33 @@ def test_get_node_services() -> None:
     ) == {
         ServiceID(CheckPluginName("plugin_vanished"), item=None): ServicesTableEntry(
             transition="vanished",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
+            autocheck=DiscoveredItem[AutocheckEntry](
+                previous=AutocheckEntry(
+                    CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
+                ),
+                new=None,
             ),
             hosts=[host_name],
         ),
         ServiceID(CheckPluginName("plugin_old"), item=None): ServicesTableEntry(
             transition="old",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
+            autocheck=DiscoveredItem[AutocheckEntry](
+                previous=AutocheckEntry(
+                    CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
+                ),
+                new=AutocheckEntry(
+                    CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
+                ),
             ),
             hosts=[host_name],
         ),
         ServiceID(CheckPluginName("plugin_new"), item=None): ServicesTableEntry(
             transition="new",
-            autocheck_entry=AutocheckEntry(
-                CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
+            autocheck=DiscoveredItem[AutocheckEntry](
+                new=AutocheckEntry(
+                    CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
+                ),
+                previous=None,
             ),
             hosts=[host_name],
         ),
@@ -2048,8 +2085,8 @@ def test_make_discovery_diff() -> None:
     assert _make_diff(
         (HostLabel("foo", "bar"),),
         (HostLabel("gee", "boo"),),
-        (_MockService(CheckPluginName("norris"), "chuck"),),  # type: ignore[arg-type]
-        (_MockService(CheckPluginName("chan"), None),),  # type: ignore[arg-type]
+        (DiscoveredItem(previous=_MockService(CheckPluginName("norris"), "chuck"), new=None),),  # type: ignore[arg-type]
+        (DiscoveredItem(previous=_MockService(CheckPluginName("chan"), None), new=None),),  # type: ignore[arg-type]
     ) == (
         "Removed host label: 'foo:bar'.\n"
         "Added host label: 'gee:boo'.\n"

@@ -19,6 +19,7 @@ from cmk.checkengine.discovery import (
     DiscoveryMode,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._utils import DiscoveredItem
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:
@@ -161,10 +162,16 @@ def test_qualified_discovery() -> None:
     assert result.new == [_Discoverable("three")]
     assert result.present == [_Discoverable("two"), _Discoverable("three")]
 
-    assert list(result.chain_with_qualifier()) == [
-        ("vanished", _Discoverable("one")),
-        ("old", _Discoverable("two")),
-        ("new", _Discoverable("three")),
+    assert list(result.chain_with_transition()) == [
+        ("vanished", DiscoveredItem(previous=_Discoverable(name="one", value=""), new=None)),
+        (
+            "old",
+            DiscoveredItem(
+                previous=_Discoverable(name="two", value=""),
+                new=_Discoverable(name="two", value=""),
+            ),
+        ),
+        ("new", DiscoveredItem(previous=None, new=_Discoverable(name="three", value=""))),
     ]
 
 

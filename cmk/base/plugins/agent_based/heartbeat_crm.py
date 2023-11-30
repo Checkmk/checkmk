@@ -336,6 +336,14 @@ def discover_heartbeat_crm(
 
 
 def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_heartbeat_crm(params, section, time.time())
+
+
+def _check_heartbeat_crm(
+    params: Mapping[str, Any],
+    section: Section,
+    now: float,
+) -> CheckResult:
     if section.cluster.error is not None:
         yield Result(state=State.CRIT, summary=section.cluster.error)
         return
@@ -343,7 +351,6 @@ def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckRes
     # Check the freshness of the crm_mon output and terminate with CRITICAL
     # when too old information are found
     dt = calendar.timegm(time.strptime(section.cluster.last_updated, "%a %b %d %H:%M:%S %Y"))
-    now = time.time()
     delta = now - dt
     if delta > params["max_age"]:
         yield Result(

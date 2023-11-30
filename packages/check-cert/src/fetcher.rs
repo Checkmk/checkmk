@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::prelude::Chain;
 use anyhow::{Context, Result};
 use openssl::ssl::{SslConnector, SslMethod, SslVerifyMode};
 use std::net::TcpStream;
@@ -15,7 +14,7 @@ pub struct Config {
     use_sni: bool,
 }
 
-pub fn fetch_server_cert(server: &str, port: &u16, config: Config) -> Result<Chain> {
+pub fn fetch_server_cert(server: &str, port: &u16, config: Config) -> Result<Vec<Vec<u8>>> {
     let stream = TcpStream::connect(format!("{server}:{port}"))?;
     stream.set_read_timeout(config.timeout)?;
     let mut connector_builder = SslConnector::builder(SslMethod::tls())?;

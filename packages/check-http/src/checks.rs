@@ -24,17 +24,24 @@ pub struct CheckParameters {
 
 pub enum TextMatcher {
     Plain(String),
-    Regex { regex: Regex, expectation: bool },
+    Regex {
+        regex: Result<Regex, regex::Error>,
+        expectation: bool,
+    },
 }
 
 impl TextMatcher {
-    pub fn match_on(&self, text: &str) -> bool {
+    pub fn match_on(&self, text: &str) -> Result<bool, regex::Error> {
         match self {
-            Self::Plain(string) => text.contains(string),
+            Self::Plain(string) => Ok(text.contains(string)),
             Self::Regex {
-                regex,
+                regex: Err(err),
+                expectation: _,
+            } => Err(err.clone()),
+            Self::Regex {
+                regex: Ok(regex),
                 expectation: expect_match,
-            } => &regex.is_match(text) == expect_match,
+            } => Ok(&regex.is_match(text) == expect_match),
         }
     }
 }
@@ -46,7 +53,7 @@ impl From<String> for TextMatcher {
 }
 
 impl TextMatcher {
-    pub fn from_regex(regex: Regex, expectation: bool) -> Self {
+    pub fn from_regex(regex: Result<Regex, regex::Error>, expectation: bool) -> Self {
         Self::Regex { regex, expectation }
     }
 }
@@ -208,11 +215,14 @@ fn check_body<T: std::error::Error>(
 }
 
 fn check_body_matching(body_text: &str, matcher: Vec<TextMatcher>) -> Vec<Option<CheckResult>> {
-    if matcher.iter().any(|m| !m.match_on(body_text)) {
-        notice(State::Warn, "String validation failed on response body")
-    } else {
-        vec![]
+    for m in matcher.iter() {
+        match m.match_on(body_text) {
+            Err(_) => return notice(State::Unknown, "Error compiling regex"),
+            Ok(false) => return notice(State::Warn, "String validation failed on response body"),
+            _ => (),
+        }
     }
+    vec![]
 }
 
 fn check_page_size(
@@ -663,7 +673,7 @@ mod test_check_body_matching {
         assert!(
             check_body_matching(
                 "foobar",
-                vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
+                vec![TextMatcher::from_regex(Regex::new("f.*r"), true)]
             ) == vec![]
         );
     }
@@ -673,7 +683,7 @@ mod test_check_body_matching {
         assert!(
             check_body_matching(
                 "foobar",
-                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
+                vec![TextMatcher::from_regex(Regex::new("f.*z"), true)]
             ) == vec![
                 CheckResult::summary(State::Warn, "String validation failed on response body"),
                 CheckResult::details(State::Warn, "String validation failed on response body"),
@@ -686,8 +696,21 @@ mod test_check_body_matching {
         assert!(
             check_body_matching(
                 "foobar",
-                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
+                vec![TextMatcher::from_regex(Regex::new("f.*z"), false)]
             ) == vec![]
+        );
+    }
+
+    #[test]
+    fn test_regex_compile_error() {
+        assert!(
+            check_body_matching(
+                "foobar",
+                vec![TextMatcher::from_regex(Regex::new("(?=.{3,30}$)"), false)]
+            ) == vec![
+                CheckResult::summary(State::Unknown, "Error compiling regex"),
+                CheckResult::details(State::Unknown, "Error compiling regex"),
+            ]
         );
     }
 

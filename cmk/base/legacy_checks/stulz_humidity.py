@@ -11,11 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 
 from cmk.plugins.lib.stulz import DETECT_STULZ
 
-stulz_humidity_default_levels = (35, 40, 60, 65)
-
 
 def inventory_stulz_humidity(info):
-    return [(x[0], stulz_humidity_default_levels) for x in info]
+    return [(x[0], {}) for x in info]
 
 
 def check_stulz_humidity(item, params, info):
@@ -35,4 +33,8 @@ check_info["stulz_humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_stulz_humidity,
     check_function=check_stulz_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={
+        "levels": (60.0, 65.0),
+        "levels_lower": (40.0, 35.0),
+    },
 )

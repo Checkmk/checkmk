@@ -80,7 +80,7 @@ check_info["siemens_plc.temp"] = LegacyCheckDefinition(
 
 
 def inventory_siemens_plc_flag(info):
-    return [(l[0] + " " + l[2], False) for l in info if l[1] == "flag"]
+    return [(l[0] + " " + l[2], {}) for l in info if l[1] == "flag"]
 
 
 def check_siemens_plc_flag(item, params, info):

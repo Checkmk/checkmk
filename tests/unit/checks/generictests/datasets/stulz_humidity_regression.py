@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
 
 
@@ -18,8 +17,8 @@ info = [
 
 discovery = {
     "": [
-        ("MICOS11Q", (35, 40, 60, 65)),
-        ("MICOS11Q", (35, 40, 60, 65)),
+        ("MICOS11Q", {}),
+        ("MICOS11Q", {}),
     ]
 }
 
@@ -28,12 +27,18 @@ checks = {
     "": [
         (
             "MICOS11Q",
-            (35, 40, 60, 65),
+            {
+                "levels_lower": (40.0, 35.0),
+                "levels": (60.0, 65.0),
+            },
             [(2, "1.20% (warn/crit below 40.00%/35.00%)", [("humidity", 1.2, 60, 65, 0, 100)])],
         ),
         (
             "MICOS11Q",
-            (35, 40, 60, 65),
+            {
+                "levels_lower": (40.0, 35.0),
+                "levels": (60.0, 65.0),
+            },
             [(2, "1.20% (warn/crit below 40.00%/35.00%)", [("humidity", 1.2, 60, 65, 0, 100)])],
         ),
     ]

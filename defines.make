@@ -92,7 +92,7 @@ AGENT_PLUGIN_PYTHON_VERSIONS := 2.7 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11
 PIPENV_VERSION := 2023.2.18
 VIRTUALENV_VERSION := 20.20.0
 NODEJS_VERSION := 18
-NPM_VERSION := 9
+NPM_VERSION := 10
 
 # PyPi Mirror Configuration
 # By default our internal Python mirror is used.

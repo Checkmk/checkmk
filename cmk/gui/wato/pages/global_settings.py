@@ -458,8 +458,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
 
-        if self.page_menu_dropdowns_hook is not None:
-            dropdowns.append(self.page_menu_dropdowns_hook())
+        if ModeEditGlobals.page_menu_dropdowns_hook is not None:
+            dropdowns.append(ModeEditGlobals.page_menu_dropdowns_hook())
 
         dropdowns.append(
             PageMenuDropdown(

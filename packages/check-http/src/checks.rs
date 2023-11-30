@@ -4,6 +4,7 @@
 
 use http::{HeaderMap, HeaderValue};
 use httpdate::parse_http_date;
+use regex::Regex;
 use reqwest::{StatusCode, Version};
 use std::time::{Duration, SystemTime};
 
@@ -21,17 +22,32 @@ pub struct CheckParameters {
     pub header_strings: Vec<(String, String)>,
 }
 
-pub struct TextMatcher(String);
+pub enum TextMatcher {
+    Plain(String),
+    Regex { regex: Regex, expectation: bool },
+}
 
 impl TextMatcher {
     pub fn match_on(&self, text: &str) -> bool {
-        text.contains(&self.0)
+        match self {
+            Self::Plain(string) => text.contains(string),
+            Self::Regex {
+                regex,
+                expectation: expect_match,
+            } => &regex.is_match(text) == expect_match,
+        }
     }
 }
 
 impl From<String> for TextMatcher {
     fn from(value: String) -> Self {
-        Self(value)
+        Self::Plain(value)
+    }
+}
+
+impl TextMatcher {
+    pub fn from_regex(regex: Regex, expectation: bool) -> Self {
+        Self::Regex { regex, expectation }
     }
 }
 
@@ -193,7 +209,7 @@ fn check_body<T: std::error::Error>(
 
 fn check_body_matching(body_text: &str, matcher: Option<TextMatcher>) -> Vec<Option<CheckResult>> {
     if matcher.is_some_and(|m| !m.match_on(body_text)) {
-        notice(State::Warn, "Specified string not found in response body")
+        notice(State::Warn, "String validation failed on response body")
     } else {
         vec![]
     }
@@ -628,23 +644,50 @@ mod test_check_body_matching {
 
     #[test]
     fn test_string_ok() {
-        assert!(check_body_matching("foobar", Some("foobar".to_string().into())) == vec![]);
+        assert!(check_body_matching("foobar", Some("bar".to_string().into())) == vec![]);
     }
 
     #[test]
     fn test_string_not_found() {
         assert!(
-            check_body_matching("foobär", Some("foobar".to_string().into()))
+            check_body_matching("foobär", Some("bar".to_string().into()))
                 == vec![
-                    CheckResult::summary(
-                        State::Warn,
-                        "Specified string not found in response body"
-                    ),
-                    CheckResult::details(
-                        State::Warn,
-                        "Specified string not found in response body"
-                    ),
+                    CheckResult::summary(State::Warn, "String validation failed on response body"),
+                    CheckResult::details(State::Warn, "String validation failed on response body"),
                 ]
+        );
+    }
+
+    #[test]
+    fn test_regex_ok() {
+        assert!(
+            check_body_matching(
+                "foobar",
+                Some(TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true))
+            ) == vec![]
+        );
+    }
+
+    #[test]
+    fn test_regex_not_ok() {
+        assert!(
+            check_body_matching(
+                "foobar",
+                Some(TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true))
+            ) == vec![
+                CheckResult::summary(State::Warn, "String validation failed on response body"),
+                CheckResult::details(State::Warn, "String validation failed on response body"),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_regex_inverse_ok() {
+        assert!(
+            check_body_matching(
+                "foobar",
+                Some(TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false))
+            ) == vec![]
         );
     }
 }

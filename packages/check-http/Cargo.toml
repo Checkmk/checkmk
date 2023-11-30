@@ -22,3 +22,4 @@ openssl = { version = "*", features = ["vendored"] }
 httpdate = { version = "*" }
 mime = { version = "*" }
 encoding_rs = { version = "*" }
+regex = { version = "*" }

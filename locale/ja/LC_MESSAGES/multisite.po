@@ -3608,9 +3608,6 @@ msgstr "ジョブを追加する"
 msgid "Add key"
 msgstr "キーを追加"
 
-msgid "Add label condition"
-msgstr "ラベル条件を追加"
-
 msgid "Add limits"
 msgstr "制限を追加する"
 
@@ -3706,6 +3703,10 @@ msgstr "新しい一致条件を追加"
 msgid "Add new metric"
 msgstr "新しいメトリックを追加する"
 
+#, fuzzy
+msgid "Add new node condition"
+msgstr "タグ条件を追加"
+
 msgid "Add new pattern"
 msgstr "新しいパターンを追加する"
 
@@ -3741,6 +3742,10 @@ msgstr "新しいトピックを追加する"
 
 msgid "Add new user configuration"
 msgstr "新しいユーザー構成を追加する"
+
+#, fuzzy
+msgid "Add node condition"
+msgstr "タグ条件を追加"
 
 msgid "Add notification rule"
 msgstr "通知ルールを追加する"
@@ -3910,6 +3915,10 @@ msgstr "%sに追加"
 
 msgid "Add to bookmark list"
 msgstr "ブックマークリストに追加"
+
+#, fuzzy
+msgid "Add to condition"
+msgstr "タグ条件を追加"
 
 msgid "Add to graph collection"
 msgstr "グラフコレクションに追加"
@@ -18664,6 +18673,10 @@ msgstr "自動ホストキー受け入れを有効にする (OpenSSH version >= 
 msgid "Enable automatic host removal"
 msgstr "ホストの自動削除を有効化"
 
+#, fuzzy
+msgid "Enable automation user authentication via HTTP parameters"
+msgstr "認証リクエスト作成不可"
+
 msgid "Enable community translated languages"
 msgstr "コミュニティの翻訳言語を有効にする"
 
@@ -27572,6 +27585,15 @@ msgstr ""
 "多くのRAMが必要になります。注意:これを0に設定しても、メッセージをキャッシュす"
 "る必要がある場合があります。"
 
+msgid ""
+"In previous Checkmk versions it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests it was "
+"possible to add the _username and _secret parameters to the parameters (e.g. "
+"append them to the URL). GET parameters are usually logged by proxies and "
+"webservers and are not deemed secure for secrets. See Werk  #16223 for more "
+"information."
+msgstr ""
+
 msgid "In relation to normal check interval"
 msgstr "通常のチェック間隔に関連して"
 
@@ -29439,6 +29461,10 @@ msgstr "Kubernetes デプロイ条件"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetesメモリー使用率"
+
+#, fuzzy
+msgid "Kubernetes node conditions"
+msgstr "Kubernetes Podコンテナー"
 
 msgid "Kubernetes node containers"
 msgstr "Kubernetesノードコンテナー"
@@ -32625,6 +32651,16 @@ msgstr "GCPの状態をcheckmkにマップ"
 msgid "Map RWVDMS names"
 msgstr "RWVDMS名をマップします"
 
+msgid "Map `False` to"
+msgstr ""
+
+msgid "Map `True` to"
+msgstr ""
+
+#, fuzzy
+msgid "Map `Unknown` to"
+msgstr "日付不明"
+
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr "マップ管理状態(64ビットカウンターのみのSNMP)"
 
@@ -34669,22 +34705,6 @@ msgstr "タスクが有効になっていない場合の状態の監視"
 msgid "Monitoring state if the Cluster Collector reports no Machine Metrics"
 msgstr "クラスタコレクターがマシンメトリクスを報告しない場合の監視状態"
 
-msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
-msgstr "DISKPRESSURE 状態に異常がある場合、または不明の場合の監視状態"
-
-msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
-msgstr "MEMORYPRESSURE 状態に異常がある場合、または不明の場合の監視状態"
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
-msgstr "NETWORKUNAVAILABLE 状態に異常がある場合、または不明の場合の監視状態"
-
-msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
-msgstr "PIDPRESSURE 状態に異常がある場合、または不明の場合の監視状態"
-
-msgid "Monitoring state if the READY condition is faulty or unknown"
-msgstr "READY状態に異常がある場合、または不明の場合の監視状態"
-
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "誤ったユニットがアクティブ/スタンバイの場合の監視状態"
 
@@ -35092,6 +35112,14 @@ msgstr "チャンネル名"
 
 msgid "Name of Checkmk site of update server"
 msgstr "更新サーバーのCheckmkサイトの名前"
+
+#, fuzzy
+msgid "Name of HAproxy Frontend"
+msgstr "HAproxy フロントエンドの状態"
+
+#, fuzzy
+msgid "Name of HAproxy Server"
+msgstr "VServerの名前"
 
 msgid "Name of Queue"
 msgstr "キューの名前"
@@ -35569,9 +35597,6 @@ msgstr "実行されたことはありません"
 
 msgid "Never install Python with the agent"
 msgstr "エージェントと一緒にPythonをインストールしないでください"
-
-msgid "Never logged in"
-msgstr "ログインしたことはありません"
 
 msgid "Never remove files newer than"
 msgstr "設定期間より新しいファイルは削除しない"
@@ -36129,9 +36154,6 @@ msgstr "ノード統計"
 
 msgid "Node Status"
 msgstr "ノードステータス"
-
-msgid "Node conditions"
-msgstr "ノードの状態"
 
 msgid "Node name"
 msgstr "ノード名"
@@ -37700,6 +37722,10 @@ msgstr "公式リリース版"
 msgid "Offline"
 msgstr "オフライン"
 
+#, fuzzy, python-format
+msgid "Offline (%s %s via %s)"
+msgstr "オンライン (%s)"
+
 msgid "Offline hosts"
 msgstr "オフラインホスト"
 
@@ -37871,6 +37897,10 @@ msgstr "進行中のシャード情報リクエスト"
 
 msgid "Online"
 msgstr "オンライン"
+
+#, fuzzy, python-format
+msgid "Online (%s %s via %s)"
+msgstr "オンライン (%s)"
 
 #, python-format
 msgid "Online (%s)"
@@ -38739,12 +38769,6 @@ msgid ""
 "states."
 msgstr ""
 "さまざまな状態のサービスの数を含む、すべてのDockerノードの全体的な状態。"
-
-msgid ""
-"Overall state of all hosts known by Ntop, with counts of services in the "
-"various states.\n"
-msgstr ""
-"Ntopが把握している全ホストの全体的な状態と、様々な状態にあるサービスの数。\n"
 
 msgid ""
 "Overall state of all hosts, with counts of services in the various states."
@@ -43011,9 +43035,6 @@ msgstr ""
 
 msgid "Remove filter"
 msgstr "フィルタを取り外します"
-
-msgid "Remove label condition"
-msgstr "ラベル条件を削除します"
 
 msgid "Remove only matching vanished services"
 msgstr "一致する消失したサービスのみを削除する"
@@ -62031,11 +62052,11 @@ msgstr "提供されたデータを解析できません: %s"
 msgid "Unable to process request"
 msgstr "リクエスト処理不可"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
-"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an "
+"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
 "issue may be caused by an inconsistent configuration, e.g. when rules refer "
 "to tag groups or tags that do not exist anymore."
 msgstr ""
@@ -62045,11 +62066,11 @@ msgstr ""
 "因である可能性があります。たとえば、ルールがタググループまたは存在しないタグ"
 "を参照している場合などです。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
-"When saving this rule now, your previous settings will be overwritten. "
-"Problem was: %s."
+"When saving this rule now, your previous settings will be overwritten. The "
+"problem was: %s."
 msgstr ""
 "このルールの現在のオプションを読み取ることができません。デフォルト値にフォー"
 "ルバックします。このルールを今すぐ保存すると、以前の設定が上書きされます。問"
@@ -69414,9 +69435,6 @@ msgstr "TCP経由でのコマンドやアクションの実行を許可する"
 msgid "allow users to deactivate this notification"
 msgstr "ユーザーがこの通知を非アクティブ化できるようにする"
 
-msgid "and"
-msgstr "そして"
-
 msgid "any"
 msgstr "どれか"
 
@@ -69969,12 +69987,6 @@ msgstr "h"
 msgid "handles"
 msgstr "ハンドル"
 
-msgid "has"
-msgstr "持っている"
-
-msgid "has not"
-msgstr "していません"
-
 msgid "height"
 msgstr "高さ"
 
@@ -70514,9 +70526,6 @@ msgstr "のどれも"
 msgid "normal connection"
 msgstr "通常の接続"
 
-msgid "not"
-msgstr "ではない"
-
 #, python-format
 msgid "not %s states"
 msgstr "%s以外の状態"
@@ -70550,9 +70559,6 @@ msgstr "ntopng管理者ユーザー"
 
 msgid "ntopng Connection Parameters (chargeable add-on)"
 msgstr "Ntopng接続パラメーター(有料アドオン)"
-
-msgid "ntopng Hosts"
-msgstr "ntopng のホスト"
 
 msgid "ntopng Username"
 msgstr "ntopngユーザー名"
@@ -71325,6 +71331,57 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+#~ msgstr "DISKPRESSURE 状態に異常がある場合、または不明の場合の監視状態"
+
+#~ msgid ""
+#~ "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+#~ msgstr "MEMORYPRESSURE 状態に異常がある場合、または不明の場合の監視状態"
+
+#~ msgid ""
+#~ "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+#~ msgstr "NETWORKUNAVAILABLE 状態に異常がある場合、または不明の場合の監視状態"
+
+#~ msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+#~ msgstr "PIDPRESSURE 状態に異常がある場合、または不明の場合の監視状態"
+
+#~ msgid "Monitoring state if the READY condition is faulty or unknown"
+#~ msgstr "READY状態に異常がある場合、または不明の場合の監視状態"
+
+#~ msgid "Node conditions"
+#~ msgstr "ノードの状態"
+
+#~ msgid "Add label condition"
+#~ msgstr "ラベル条件を追加"
+
+#~ msgid "Never logged in"
+#~ msgstr "ログインしたことはありません"
+
+#~ msgid ""
+#~ "Overall state of all hosts known by Ntop, with counts of services in the "
+#~ "various states.\n"
+#~ msgstr ""
+#~ "Ntopが把握している全ホストの全体的な状態と、様々な状態にあるサービスの"
+#~ "数。\n"
+
+#~ msgid "Remove label condition"
+#~ msgstr "ラベル条件を削除します"
+
+#~ msgid "and"
+#~ msgstr "そして"
+
+#~ msgid "has"
+#~ msgstr "持っている"
+
+#~ msgid "has not"
+#~ msgstr "していません"
+
+#~ msgid "not"
+#~ msgstr "ではない"
+
+#~ msgid "ntopng Hosts"
+#~ msgstr "ntopng のホスト"
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

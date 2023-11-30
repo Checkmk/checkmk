@@ -68,6 +68,10 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("brocade_mlx_module_cpu"): (lambda p: {}),
     CheckPluginName("brocade_mlx_module_mem"): (lambda p: {}),
     CheckPluginName("bvip_util"): (lambda p: {}),
+    CheckPluginName("cisco_hsrp"): (
+        lambda p: p if not isinstance(p, tuple) else {"group": p[0], "state": p[1]}
+    ),
+    CheckPluginName("cpsecure_sessions"): (lambda p: {}),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

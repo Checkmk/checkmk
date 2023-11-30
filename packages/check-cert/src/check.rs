@@ -257,7 +257,7 @@ where
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Summary {
     state: State,
     text: String,
@@ -394,8 +394,8 @@ where
 #[derive(Debug)]
 pub struct Writer {
     state: State,
-    summary: String,
-    metrics: String,
+    summary: Vec<Summary>,
+    metrics: Vec<Metric<Real>>,
 }
 
 impl Writer {
@@ -412,11 +412,24 @@ impl Writer {
 impl Display for Writer {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         let mut out = String::from(self.state.as_str());
-        if !self.summary.is_empty() {
-            out = format!("{} - {}", out, self.summary);
+        let summary = self
+            .summary
+            .iter()
+            .filter(|s| !s.text.is_empty())
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        if !summary.is_empty() {
+            out = format!("{} - {}", out, summary);
         }
-        if !self.metrics.is_empty() {
-            out = format!("{} | {}", out, self.metrics);
+        let metrics = self
+            .metrics
+            .iter()
+            .map(ToString::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        if !metrics.is_empty() {
+            out = format!("{} | {}", out, metrics);
         }
         write!(f, "{}", out)?;
         Ok(())
@@ -427,32 +440,27 @@ impl From<SimpleCheckResult> for Writer {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
             state: check_result.summary.state,
-            summary: check_result.summary.to_string(),
-            metrics: String::new(),
+            summary: vec![check_result.summary],
+            metrics: Vec::<Metric<Real>>::default(),
         }
     }
 }
 
-impl From<&Vec<CheckResult<Real>>> for Writer {
-    fn from(check_results: &Vec<CheckResult<Real>>) -> Self {
+impl From<&mut Vec<CheckResult<Real>>> for Writer {
+    fn from(check_results: &mut Vec<CheckResult<Real>>) -> Self {
         Self {
             state: match check_results.iter().map(|cr| &cr.summary.state).max() {
                 Some(state) => *state,
                 None => State::Ok,
             },
             summary: check_results
-                .iter()
-                .map(|cr| &cr.summary)
-                .filter(|s| !s.text.is_empty())
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", "),
+                .iter_mut()
+                .map(|cr| cr.summary.clone())
+                .collect::<Vec<_>>(),
             metrics: check_results
-                .iter()
-                .flat_map(|cr| &cr.metrics)
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", "),
+                .iter_mut()
+                .flat_map(|cr| cr.metrics.clone())
+                .collect::<Vec<_>>(),
         }
     }
 }
@@ -673,7 +681,7 @@ mod test_writer_format {
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Writer::from(&vec![])), "OK");
+        assert_eq!(format!("{}", Writer::from(&mut vec![])), "OK");
     }
 
     #[test]
@@ -684,7 +692,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "OK"
         );
@@ -698,7 +706,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "OK - summary 1, summary 2, summary 3"
         );
@@ -712,7 +720,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "WARNING - summary 1, summary 2 (!), summary 3"
         );
@@ -726,7 +734,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into()])
+                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
@@ -741,7 +749,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
+                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
             ),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
@@ -760,7 +768,7 @@ mod test_writer_format {
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         assert_eq!(
-            format!("{}", Writer::from(&vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(&mut vec![cr1, cr2, cr3])),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
             | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );

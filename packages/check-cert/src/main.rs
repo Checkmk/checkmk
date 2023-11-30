@@ -205,7 +205,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ));
 
-    let out = Writer::from(&checks);
+    let out = Writer::from(&mut checks);
     println!("HTTP {}", out);
     std::process::exit(out.exit_code())
 }

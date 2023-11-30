@@ -83,10 +83,11 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
             }),
             document_age_levels: args.document_age_levels.map(UpperLevels::warn),
             timeout: args.timeout,
-            body_matcher: args
+            body_matchers: args
                 .body_string
+                .into_iter()
                 .map(Into::into)
-                .or(args.body_regex.map(|pattern| {
+                .chain(args.body_regex.into_iter().map(|pattern| {
                     TextMatcher::from_regex(
                         regex_from_args(
                             &pattern,
@@ -95,7 +96,8 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                         ),
                         !args.body_regex_invert,
                     )
-                })),
+                }))
+                .collect(),
             header_strings: args.header_strings,
         },
     )

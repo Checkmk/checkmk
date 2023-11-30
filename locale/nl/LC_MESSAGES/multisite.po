@@ -3694,9 +3694,6 @@ msgstr "Baan toevoegen"
 msgid "Add key"
 msgstr "Sleutel toevoegen"
 
-msgid "Add label condition"
-msgstr "Etiketvoorwaarde toevoegen"
-
 msgid "Add limits"
 msgstr "Grenzen toevoegen"
 
@@ -3793,6 +3790,10 @@ msgstr "Nieuwe wedstrijdcriteria toevoegen"
 msgid "Add new metric"
 msgstr "Nieuwe metriek toevoegen"
 
+#, fuzzy
+msgid "Add new node condition"
+msgstr "Voeg tag voorwaarde toe"
+
 msgid "Add new pattern"
 msgstr "Nieuw patroon toevoegen"
 
@@ -3828,6 +3829,10 @@ msgstr "Nieuw onderwerp toevoegen"
 
 msgid "Add new user configuration"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "Add node condition"
+msgstr "Voeg tag voorwaarde toe"
 
 msgid "Add notification rule"
 msgstr "Meldingsregel toevoegen"
@@ -3997,6 +4002,10 @@ msgstr "Toevoegen aan %s"
 
 msgid "Add to bookmark list"
 msgstr "Toevoegen aan favorietenlijst"
+
+#, fuzzy
+msgid "Add to condition"
+msgstr "Voeg tag voorwaarde toe"
 
 msgid "Add to graph collection"
 msgstr "Toevoegen aan grafiekverzameling"
@@ -19102,6 +19111,10 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Automatische hostverwijdering inschakelen"
 
+#, fuzzy
+msgid "Enable automation user authentication via HTTP parameters"
+msgstr "Kan geen authenticatieverzoek aanmaken"
+
 msgid "Enable community translated languages"
 msgstr "Maak vertaalde gemeenschapstalen mogelijk"
 
@@ -28247,6 +28260,15 @@ msgstr ""
 "je dit op 0 zet, kunnen er gevallen zijn waarin berichten toch in de cache "
 "moeten worden geplaatst."
 
+msgid ""
+"In previous Checkmk versions it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests it was "
+"possible to add the _username and _secret parameters to the parameters (e.g. "
+"append them to the URL). GET parameters are usually logged by proxies and "
+"webservers and are not deemed secure for secrets. See Werk  #16223 for more "
+"information."
+msgstr ""
+
 msgid "In relation to normal check interval"
 msgstr "In verhouding tot het normale controle-interval"
 
@@ -30155,6 +30177,10 @@ msgstr "Kubernetes implementatie voorwaarden"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Kubernetes geheugen gebruik"
+
+#, fuzzy
+msgid "Kubernetes node conditions"
+msgstr "Kubernetes pod voorwaarden"
 
 msgid "Kubernetes node containers"
 msgstr "Kubernetes node containers"
@@ -33406,6 +33432,16 @@ msgstr "Kaart GCP status te controleren mk"
 msgid "Map RWVDMS names"
 msgstr "Kaart RWVDMS namen"
 
+msgid "Map `False` to"
+msgstr ""
+
+msgid "Map `True` to"
+msgstr ""
+
+#, fuzzy
+msgid "Map `Unknown` to"
+msgstr "Onbekende datum"
+
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr "Beheerdersstatus in kaart brengen (alleen SNMP met 64-bit tellers)"
 
@@ -35489,23 +35525,6 @@ msgid "Monitoring state if the Cluster Collector reports no Machine Metrics"
 msgstr ""
 "Bewakingsstatus als de Cluster Collector geen Machine Metrics rapporteert"
 
-msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
-msgstr "Bewakingsstatus als de DISKPRESSURE toestand defect of onbekend is"
-
-msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
-msgstr "Bewakingsstatus als de toestand MEMORYPRESSURE defect of onbekend is"
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
-msgstr ""
-"Controlestatus als de toestand NETWORKUNAVAILABLE defect of onbekend is"
-
-msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
-msgstr "Bewakingsstatus als de PIDPRESSURE toestand foutief of onbekend is"
-
-msgid "Monitoring state if the READY condition is faulty or unknown"
-msgstr "Bewakingsstatus als de READY-toestand defect of onbekend is"
-
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "Bewakingstoestand als de verkeerde eenheid actief/standby is"
 
@@ -35915,6 +35934,14 @@ msgstr "Naam van het kanaal"
 
 msgid "Name of Checkmk site of update server"
 msgstr "Naam van Checkmk site van update server"
+
+#, fuzzy
+msgid "Name of HAproxy Frontend"
+msgstr "HAproxy Frontend Staat"
+
+#, fuzzy
+msgid "Name of HAproxy Server"
+msgstr "Naam van VServer"
 
 msgid "Name of Queue"
 msgstr "Naam van wachtrij"
@@ -36399,9 +36426,6 @@ msgstr "Nooit geëxecuteerd"
 
 msgid "Never install Python with the agent"
 msgstr "Installeer nooit Python met de agent"
-
-msgid "Never logged in"
-msgstr "Nooit ingelogd"
 
 msgid "Never remove files newer than"
 msgstr "Verwijder nooit bestanden die nieuwer zijn dan"
@@ -36971,9 +36995,6 @@ msgstr "Node Stats"
 
 msgid "Node Status"
 msgstr "Knooppuntstatus"
-
-msgid "Node conditions"
-msgstr "Node voorwaarden"
 
 msgid "Node name"
 msgstr "Naam knooppunt"
@@ -38592,6 +38613,10 @@ msgstr "Officiële versie"
 msgid "Offline"
 msgstr "Offline"
 
+#, fuzzy, python-format
+msgid "Offline (%s %s via %s)"
+msgstr "Online (%s)"
+
 msgid "Offline hosts"
 msgstr "Offline gastheren"
 
@@ -38767,6 +38792,10 @@ msgstr "Lopende shard info verzoeken"
 
 msgid "Online"
 msgstr "Online"
+
+#, fuzzy, python-format
+msgid "Online (%s %s via %s)"
+msgstr "Online (%s)"
 
 #, python-format
 msgid "Online (%s)"
@@ -39664,13 +39693,6 @@ msgid ""
 msgstr ""
 "Algemene toestand van alle docker nodes, met tellingen van diensten in de "
 "verschillende toestanden."
-
-msgid ""
-"Overall state of all hosts known by Ntop, with counts of services in the "
-"various states.\n"
-msgstr ""
-"Algemene toestand van alle door Ntop bekende hosts, met tellingen van "
-"diensten in de verschillende toestanden.\n"
 
 msgid ""
 "Overall state of all hosts, with counts of services in the various states."
@@ -44007,9 +44029,6 @@ msgstr "Verwijder bestanden en submappen beheerd door de Checkmk agent"
 
 msgid "Remove filter"
 msgstr "Verwijder filter"
-
-msgid "Remove label condition"
-msgstr "Etiketvoorwaarde verwijderen"
 
 msgid "Remove only matching vanished services"
 msgstr "Alleen overeenkomende verdwenen diensten verwijderen"
@@ -63736,11 +63755,11 @@ msgstr "Kan verstrekte gegevens niet ontleden: %s"
 msgid "Unable to process request"
 msgstr "Kan verzoek niet verwerken"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
-"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an "
+"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
 "issue may be caused by an inconsistent configuration, e.g. when rules refer "
 "to tag groups or tags that do not exist anymore."
 msgstr ""
@@ -63751,11 +63770,11 @@ msgstr ""
 "configuratie, bv. wanneer regels verwijzen naar tag groepen of tags die niet "
 "meer bestaan."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
-"When saving this rule now, your previous settings will be overwritten. "
-"Problem was: %s."
+"When saving this rule now, your previous settings will be overwritten. The "
+"problem was: %s."
 msgstr ""
 "Kan huidige opties van deze regel niet lezen. Terugvallen op "
 "standaardwaarden. Wanneer je deze regel nu opslaat, zullen je vorige "
@@ -71440,9 +71459,6 @@ msgstr "de uitvoering van commando's en acties via TCP mogelijk te maken"
 msgid "allow users to deactivate this notification"
 msgstr "gebruikers in staat stellen deze melding te deactiveren"
 
-msgid "and"
-msgstr "en"
-
 msgid "any"
 msgstr "elke"
 
@@ -72002,12 +72018,6 @@ msgstr "h"
 msgid "handles"
 msgstr "handvatten"
 
-msgid "has"
-msgstr "heeft"
-
-msgid "has not"
-msgstr "heeft niet"
-
 msgid "height"
 msgstr "hoogte"
 
@@ -72554,9 +72564,6 @@ msgstr "geen van"
 msgid "normal connection"
 msgstr "normale verbinding"
 
-msgid "not"
-msgstr "niet"
-
 #, python-format
 msgid "not %s states"
 msgstr "niet %s staten"
@@ -72592,10 +72599,6 @@ msgstr "ntopng Admin gebruiker"
 #, fuzzy
 msgid "ntopng Connection Parameters (chargeable add-on)"
 msgstr "Ntopng Verbindingsparameters (betalend add-on)"
-
-#, fuzzy
-msgid "ntopng Hosts"
-msgstr "Ntop Hosts"
 
 msgid "ntopng Username"
 msgstr "ntopng Gebruikersnaam"
@@ -73376,6 +73379,61 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+#~ msgstr "Bewakingsstatus als de DISKPRESSURE toestand defect of onbekend is"
+
+#~ msgid ""
+#~ "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Bewakingsstatus als de toestand MEMORYPRESSURE defect of onbekend is"
+
+#~ msgid ""
+#~ "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Controlestatus als de toestand NETWORKUNAVAILABLE defect of onbekend is"
+
+#~ msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+#~ msgstr "Bewakingsstatus als de PIDPRESSURE toestand foutief of onbekend is"
+
+#~ msgid "Monitoring state if the READY condition is faulty or unknown"
+#~ msgstr "Bewakingsstatus als de READY-toestand defect of onbekend is"
+
+#~ msgid "Node conditions"
+#~ msgstr "Node voorwaarden"
+
+#~ msgid "Add label condition"
+#~ msgstr "Etiketvoorwaarde toevoegen"
+
+#~ msgid "Never logged in"
+#~ msgstr "Nooit ingelogd"
+
+#~ msgid ""
+#~ "Overall state of all hosts known by Ntop, with counts of services in the "
+#~ "various states.\n"
+#~ msgstr ""
+#~ "Algemene toestand van alle door Ntop bekende hosts, met tellingen van "
+#~ "diensten in de verschillende toestanden.\n"
+
+#~ msgid "Remove label condition"
+#~ msgstr "Etiketvoorwaarde verwijderen"
+
+#~ msgid "and"
+#~ msgstr "en"
+
+#~ msgid "has"
+#~ msgstr "heeft"
+
+#~ msgid "has not"
+#~ msgstr "heeft niet"
+
+#~ msgid "not"
+#~ msgstr "niet"
+
+#, fuzzy
+#~| msgid "Ntop Hosts"
+#~ msgid "ntopng Hosts"
+#~ msgstr "Ntop Hosts"
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

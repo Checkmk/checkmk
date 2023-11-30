@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-11-23 07:00+0000\n"
+"PO-Revision-Date: 2023-11-30 07:00+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: French <https://translate.checkmk.com/projects/checkmk/"
 "software/fr/>\n"
@@ -594,9 +594,9 @@ msgstr "%s n'est pas un élément existant dans cette sélection."
 msgid "%s is parent of %s."
 msgstr "%s est le parent de %s."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s is too %s. The %s allowed value is %s."
-msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
+msgstr "%s est trop %s. La valeur %s autorisée est %s."
 
 #, python-format
 msgid "%s latency"
@@ -1944,9 +1944,8 @@ msgstr ""
 "<tt>TNS_ADMIN</tt> à utiliser pour <tt>sqlnet.ora</tt> et <tt>tnsnames.ora</"
 "tt> %s"
 
-#, fuzzy
 msgid "<u>Info</u>: Downtime also applies to services."
-msgstr "Temps d'arrêt du service"
+msgstr "<u>Info</u> : Les temps d'arrêt s'appliquent également aux services."
 
 msgid "??"
 msgstr "??"
@@ -3737,9 +3736,6 @@ msgstr "Ajouter un emploi"
 msgid "Add key"
 msgstr "Ajouter une clé"
 
-msgid "Add label condition"
-msgstr "Ajouter une condition d'étiquette"
-
 msgid "Add limits"
 msgstr "Ajouter des limites"
 
@@ -3836,6 +3832,10 @@ msgstr "Ajouter de nouveaux critères de correspondance"
 msgid "Add new metric"
 msgstr "Ajouter une nouvelle métrique"
 
+#, fuzzy
+msgid "Add new node condition"
+msgstr "Ajouter une condition d'étiquetage"
+
 msgid "Add new pattern"
 msgstr "Ajouter un nouveau modèle"
 
@@ -3871,6 +3871,10 @@ msgstr "Ajouter un nouveau sujet"
 
 msgid "Add new user configuration"
 msgstr "Ajouter une nouvelle configuration utilisateur"
+
+#, fuzzy
+msgid "Add node condition"
+msgstr "Ajouter une condition d'étiquetage"
 
 msgid "Add notification rule"
 msgstr "Ajouter une règle de notification"
@@ -4040,6 +4044,10 @@ msgstr "Ajouter à %s"
 
 msgid "Add to bookmark list"
 msgstr "Ajouter à la liste des signets"
+
+#, fuzzy
+msgid "Add to condition"
+msgstr "Ajouter une condition d'étiquetage"
 
 msgid "Add to graph collection"
 msgstr "Ajouter à la collection de graphiques"
@@ -6451,9 +6459,9 @@ msgstr "Sauvegardes Arcserve (allemand) (Windows)"
 msgid "Area"
 msgstr "Zone"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Argument files (%s)"
-msgstr "Agent pour %s (%s)"
+msgstr "Fichiers d'arguments (%s)"
 
 msgid "Arguments:"
 msgstr "Arguments :"
@@ -6592,10 +6600,10 @@ msgid_plural ""
 "Overview. The %s sites are %s."
 msgstr[0] ""
 "Les hôtes, services et événements associés ne sont pas inclus dans l'aperçu "
-"tactique. Le site %s site est %s."
+"tactique. Le %s site est %s."
 msgstr[1] ""
 "Les hôtes, services et événements associés ne sont pas inclus dans l'aperçu "
-"tactique. Le site %s site sont %s."
+"tactique. Les %s sites sont %s."
 
 msgid "Associative selection of multiple sites"
 msgstr "Sélection associative de sites multiples"
@@ -14013,9 +14021,8 @@ msgstr "Niveau critique pour rester"
 msgid "Critical level is at least"
 msgstr "Le niveau critique est d'au moins"
 
-#, fuzzy
 msgid "Critical of "
-msgstr "Critique si %s"
+msgstr "Critique à "
 
 msgid "Critical threshold"
 msgstr "Seuil critique"
@@ -19297,6 +19304,10 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Activer la suppression automatique des hôtes"
 
+#, fuzzy
+msgid "Enable automation user authentication via HTTP parameters"
+msgstr "Impossible de créer une demande d'authentification"
+
 msgid "Enable community translated languages"
 msgstr "Permettre la traduction des langues de la communauté"
 
@@ -20435,9 +20446,9 @@ msgstr ""
 "Exclure l'espace réservé à l'utilisateur <tt>root</tt> du calcul de l'espace "
 "utilisé"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Exclude tests by tag (%s)"
-msgstr "Exclure les choix de balises vides"
+msgstr "Exclure des tests par étiquette (%s)"
 
 msgid "Exclude the following SIDs (if found)"
 msgstr "Exclure les SID suivants (s'ils sont trouvés)"
@@ -28551,6 +28562,15 @@ msgstr ""
 "même si vous définissez cette valeur à 0, il peut y avoir des cas où les "
 "messages doivent être mis en cache de toute façon."
 
+msgid ""
+"In previous Checkmk versions it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests it was "
+"possible to add the _username and _secret parameters to the parameters (e.g. "
+"append them to the URL). GET parameters are usually logged by proxies and "
+"webservers and are not deemed secure for secrets. See Werk  #16223 for more "
+"information."
+msgstr ""
+
 msgid "In relation to normal check interval"
 msgstr "Par rapport à l'intervalle normal de contrôle"
 
@@ -28747,9 +28767,9 @@ msgstr "Inclure l'espace réservé"
 msgid "Include service with zero base."
 msgstr "Inclure le service avec une base zéro."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Include tests by tag (%s)"
-msgstr "Exclure les choix de balises vides"
+msgstr "Inclure des tests par étiquette (%s)"
 
 msgid ""
 "Include the full path of a process and its arguments in the process list. "
@@ -30477,6 +30497,10 @@ msgstr "Conditions de déploiement de Kubernetes"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Utilisation des ressources mémoire de Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes node conditions"
+msgstr "Conditions des pods Kubernetes"
 
 msgid "Kubernetes node containers"
 msgstr "Conteneurs de nœuds Kubernetes"
@@ -33757,6 +33781,16 @@ msgstr "Statut de la carte GCP à vérifier mk"
 msgid "Map RWVDMS names"
 msgstr "Carte des noms RWVDMS"
 
+msgid "Map `False` to"
+msgstr ""
+
+msgid "Map `True` to"
+msgstr ""
+
+#, fuzzy
+msgid "Map `Unknown` to"
+msgstr "Date inconnue"
+
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr ""
 "Cartographie des états d'administration (SNMP avec compteurs 64 bits "
@@ -34486,9 +34520,8 @@ msgstr ""
 "Nombre maximum de threads lancés à un moment donné pendant la durée de vie "
 "de la JVM"
 
-#, fuzzy
 msgid "Maximum of "
-msgstr "Maximum"
+msgstr "Maximum à "
 
 msgid "Maximum parallel connections"
 msgstr "Nombre maximal de connexions parallèles"
@@ -35213,9 +35246,8 @@ msgstr "Nombre minimum de nœuds du plan de contrôle prêts"
 msgid "Minimum number of ready worker nodes"
 msgstr "Nombre minimal de nœuds de travail prêts"
 
-#, fuzzy
 msgid "Minimum of "
-msgstr "Minimum"
+msgstr "Minimum à "
 
 msgid "Minimum password length"
 msgstr "Longueur minimale du mot de passe"
@@ -35863,27 +35895,6 @@ msgstr ""
 "État de la surveillance si le collecteur de clusters ne signale aucune "
 "mesure de machine"
 
-msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
-msgstr ""
-"État de surveillance si la condition DISKPRESSURE est défectueuse ou inconnue"
-
-msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
-msgstr ""
-"État de surveillance si la condition MEMORYPRESSURE est défectueuse ou "
-"inconnue"
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
-msgstr ""
-"État de surveillance si l'état NETWORKUNAVAILABLE est défectueux ou inconnu"
-
-msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
-msgstr ""
-"État de surveillance si la condition PIDPRESSURE est défectueuse ou inconnue"
-
-msgid "Monitoring state if the READY condition is faulty or unknown"
-msgstr "État de surveillance si la condition READY est défectueuse ou inconnue"
-
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "État de surveillance si la mauvaise unité est active/en veille"
 
@@ -36295,6 +36306,14 @@ msgstr "Nom de la chaîne"
 
 msgid "Name of Checkmk site of update server"
 msgstr "Nom du site Checkmk du serveur de mise à jour"
+
+#, fuzzy
+msgid "Name of HAproxy Frontend"
+msgstr "HAproxy Frontend State"
+
+#, fuzzy
+msgid "Name of HAproxy Server"
+msgstr "Nom du VServer"
 
 msgid "Name of Queue"
 msgstr "Nom de la file d'attente"
@@ -36783,9 +36802,6 @@ msgstr "Jamais exécuté"
 
 msgid "Never install Python with the agent"
 msgstr "Ne jamais installer Python avec l'agent"
-
-msgid "Never logged in"
-msgstr "Jamais connecté"
 
 msgid "Never remove files newer than"
 msgstr "Ne jamais supprimer les fichiers plus récents que"
@@ -37359,9 +37375,6 @@ msgstr "Statistiques des nœuds"
 
 msgid "Node Status"
 msgstr "Statut du nœud"
-
-msgid "Node conditions"
-msgstr "Conditions des nœuds"
 
 msgid "Node name"
 msgstr "Nom du nœud"
@@ -38996,6 +39009,10 @@ msgstr "Version officielle"
 msgid "Offline"
 msgstr "Hors ligne"
 
+#, python-format
+msgid "Offline (%s %s via %s)"
+msgstr "Hors ligne (%s %s par %s)"
+
 msgid "Offline hosts"
 msgstr "Hôtes hors ligne"
 
@@ -39178,6 +39195,10 @@ msgstr "Demandes d'informations continues sur les shards"
 
 msgid "Online"
 msgstr "En ligne"
+
+#, python-format
+msgid "Online (%s %s via %s)"
+msgstr "En ligne (%s %s par %s)"
 
 #, python-format
 msgid "Online (%s)"
@@ -40086,13 +40107,6 @@ msgid ""
 msgstr ""
 "État général de tous les nœuds Docker, avec le nombre de services dans les "
 "différents états."
-
-msgid ""
-"Overall state of all hosts known by Ntop, with counts of services in the "
-"various states.\n"
-msgstr ""
-"État général de tous les hôtes connus par Ntop, avec le nombre de services "
-"dans les différents états.\n"
 
 msgid ""
 "Overall state of all hosts, with counts of services in the various states."
@@ -44499,9 +44513,6 @@ msgstr "Suppression des fichiers et sous-répertoires gérés par l'agent Checkm
 msgid "Remove filter"
 msgstr "Supprimer le filtre"
 
-msgid "Remove label condition"
-msgstr "Enlever la condition de l'étiquette"
-
 msgid "Remove only matching vanished services"
 msgstr "Supprimer uniquement les services disparus correspondants"
 
@@ -47208,9 +47219,9 @@ msgstr "Sélectionner le son"
 msgid "Select specific object type"
 msgstr "Sélectionner un type d'objet spécifique"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Select suites by name (%s)"
-msgstr "Nom de sécurité"
+msgstr "Sélectionner les suites par nom (%s)"
 
 #, python-format
 msgid "Select tests by name (%s)"
@@ -50558,7 +50569,7 @@ msgstr ""
 "laquelle les niveaux de tension doivent s'appliquer. La liste est triée "
 "automatiquement lors de la sauvegarde."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Specify how Checkmk will translate the exit code of a task into a monitoring "
 "state. This will overwrite the default mapping used by the check plugin. You "
@@ -50573,8 +50584,10 @@ msgstr ""
 "défaut utilisée par le plugin de vérification. Vous pouvez également décider "
 "de ne remplacer que partiellement le mappage par défaut en ne spécifiant que "
 "le nouvel état de surveillance. Le texte par défaut sera alors conservé "
-"comme résumé.<br><br>Les codes de sortie/états de surveillance/sommaires "
-"suivants sont spécifiés par défaut:<br>%s"
+"comme résumé.\n"
+"\n"
+" Les valeurs par défaut sont indiquées dans la page de manuel checks (voir "
+"<i>%s</i>)."
 
 msgid "Specify input state evaluation"
 msgstr "Spécifier l'évaluation de l'état d'entrée"
@@ -64496,11 +64509,11 @@ msgstr "Impossible d'analyser les données fournies : %s"
 msgid "Unable to process request"
 msgstr "Impossible de traiter la demande"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
-"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an "
+"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
 "issue may be caused by an inconsistent configuration, e.g. when rules refer "
 "to tag groups or tags that do not exist anymore."
 msgstr ""
@@ -64511,11 +64524,11 @@ msgstr ""
 "configuration incohérente, par exemple lorsque les règles font référence à "
 "des groupes de balises ou à des balises qui n'existent plus."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
-"When saving this rule now, your previous settings will be overwritten. "
-"Problem was: %s."
+"When saving this rule now, your previous settings will be overwritten. The "
+"problem was: %s."
 msgstr ""
 "Impossible de lire les options actuelles de cette règle. Retour aux valeurs "
 "par défaut. Si vous enregistrez cette règle maintenant, vos paramètres "
@@ -64927,9 +64940,8 @@ msgstr "Mise à jour"
 msgid "Update & acknowledge"
 msgstr "Mise à jour et accusé de réception"
 
-#, fuzzy
 msgid "Update & acknowledge event?"
-msgstr "Mise à jour et accusé de réception"
+msgstr "Mise à jour et accusé de réception?"
 
 msgid "Update DNS cache"
 msgstr "Mise à jour du cache DNS"
@@ -67327,9 +67339,9 @@ msgstr "Variable"
 msgid "Variable files (%s)"
 msgstr "La vérification a échoué (%s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Variables (%s)"
-msgstr "Variable"
+msgstr "Variables (%s)"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variables définies dans l’environnement de l’utilisateur du site"
@@ -68116,9 +68128,8 @@ msgstr "Niveaux d'alerte pour Stratum"
 msgid "Warning levels for Time Offset"
 msgstr "Niveaux d'alerte pour le décalage horaire"
 
-#, fuzzy
 msgid "Warning of "
-msgstr "Avertissement si %s"
+msgstr "Avertissement à "
 
 msgid "Warning starts with"
 msgstr "L'avertissement commence par"
@@ -72021,9 +72032,9 @@ msgstr ""
 "Votre icône est en conflit avec une icône intégrée de Checkmk. Veuillez "
 "choisir un autre nom pour votre icône."
 
-#, fuzzy, python-format
+#, python-format
 msgid "Your input '%s' does not match the required format '%s'."
-msgstr "Votre entrée ne correspond pas au format requis."
+msgstr "Votre entrée '%s' ne correspond pas au format requis '%s'."
 
 msgid "Your input does not match the required format."
 msgstr "Votre entrée ne correspond pas au format requis."
@@ -72343,9 +72354,6 @@ msgstr "permettre l'exécution de commandes et d'actions via TCP"
 
 msgid "allow users to deactivate this notification"
 msgstr "permettre aux utilisateurs de désactiver cette notification"
-
-msgid "and"
-msgstr "et"
 
 msgid "any"
 msgstr "tout"
@@ -72905,12 +72913,6 @@ msgstr "h"
 msgid "handles"
 msgstr "poignées"
 
-msgid "has"
-msgstr "a"
-
-msgid "has not"
-msgstr "n'a pas"
-
 msgid "height"
 msgstr "hauteur"
 
@@ -73456,9 +73458,6 @@ msgstr "aucun de"
 msgid "normal connection"
 msgstr "connexion normale"
 
-msgid "not"
-msgstr "pas"
-
 #, python-format
 msgid "not %s states"
 msgstr "pas %s États"
@@ -73494,10 +73493,6 @@ msgstr "ntopng Admin User"
 #, fuzzy
 msgid "ntopng Connection Parameters (chargeable add-on)"
 msgstr "Paramètres de connexion Ntopng (supplément payant)"
-
-#, fuzzy
-msgid "ntopng Hosts"
-msgstr "Hôtes Ntop"
 
 msgid "ntopng Username"
 msgstr "Nom d'utilisateur ntopng"
@@ -74279,6 +74274,68 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "État de surveillance si la condition DISKPRESSURE est défectueuse ou "
+#~ "inconnue"
+
+#~ msgid ""
+#~ "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "État de surveillance si la condition MEMORYPRESSURE est défectueuse ou "
+#~ "inconnue"
+
+#~ msgid ""
+#~ "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+#~ msgstr ""
+#~ "État de surveillance si l'état NETWORKUNAVAILABLE est défectueux ou "
+#~ "inconnu"
+
+#~ msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "État de surveillance si la condition PIDPRESSURE est défectueuse ou "
+#~ "inconnue"
+
+#~ msgid "Monitoring state if the READY condition is faulty or unknown"
+#~ msgstr ""
+#~ "État de surveillance si la condition READY est défectueuse ou inconnue"
+
+#~ msgid "Node conditions"
+#~ msgstr "Conditions des nœuds"
+
+#~ msgid "Add label condition"
+#~ msgstr "Ajouter une condition d'étiquette"
+
+#~ msgid "Never logged in"
+#~ msgstr "Jamais connecté"
+
+#~ msgid ""
+#~ "Overall state of all hosts known by Ntop, with counts of services in the "
+#~ "various states.\n"
+#~ msgstr ""
+#~ "État général de tous les hôtes connus par Ntop, avec le nombre de "
+#~ "services dans les différents états.\n"
+
+#~ msgid "Remove label condition"
+#~ msgstr "Enlever la condition de l'étiquette"
+
+#~ msgid "and"
+#~ msgstr "et"
+
+#~ msgid "has"
+#~ msgstr "a"
+
+#~ msgid "has not"
+#~ msgstr "n'a pas"
+
+#~ msgid "not"
+#~ msgstr "pas"
+
+#, fuzzy
+#~| msgid "Ntop Hosts"
+#~ msgid "ntopng Hosts"
+#~ msgstr "Hôtes Ntop"
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

@@ -3695,9 +3695,6 @@ msgstr "Adicionar emprego"
 msgid "Add key"
 msgstr "Adicionar chave"
 
-msgid "Add label condition"
-msgstr "Adicionar condição de etiqueta"
-
 msgid "Add limits"
 msgstr "Acrescentar limites"
 
@@ -3795,6 +3792,10 @@ msgstr "Adicionar novos critérios de correspondência"
 msgid "Add new metric"
 msgstr "Adicionar nova métrica"
 
+#, fuzzy
+msgid "Add new node condition"
+msgstr "Adicionar condição de etiqueta"
+
 msgid "Add new pattern"
 msgstr "Adicionar novo padrão"
 
@@ -3830,6 +3831,10 @@ msgstr "Adicionar novo tópico"
 
 msgid "Add new user configuration"
 msgstr "Adicionar nova configuração de usuário"
+
+#, fuzzy
+msgid "Add node condition"
+msgstr "Adicionar condição de etiqueta"
 
 msgid "Add notification rule"
 msgstr "Adicionar regra de notificação"
@@ -3999,6 +4004,10 @@ msgstr "Adicionar a %s"
 
 msgid "Add to bookmark list"
 msgstr "Adicionar à lista de favoritos"
+
+#, fuzzy
+msgid "Add to condition"
+msgstr "Adicionar condição de etiqueta"
 
 msgid "Add to graph collection"
 msgstr "Adicionar à colecção de gráficos"
@@ -19084,6 +19093,10 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Activar a remoção automática do anfitrião"
 
+#, fuzzy
+msgid "Enable automation user authentication via HTTP parameters"
+msgstr "Não é possível criar um pedido de autenticação"
+
 msgid "Enable community translated languages"
 msgstr "Activar as línguas traduzidas pela comunidade"
 
@@ -28220,6 +28233,15 @@ msgstr ""
 "configure este número para 0, pode haver alguns casos em que as mensagens "
 "precisam ser armazenadas em cache de qualquer forma."
 
+msgid ""
+"In previous Checkmk versions it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests it was "
+"possible to add the _username and _secret parameters to the parameters (e.g. "
+"append them to the URL). GET parameters are usually logged by proxies and "
+"webservers and are not deemed secure for secrets. See Werk  #16223 for more "
+"information."
+msgstr ""
+
 msgid "In relation to normal check interval"
 msgstr "Em relação ao intervalo normal de verificação"
 
@@ -30116,6 +30138,10 @@ msgstr "Condições de implantação do Kubernetes"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Utilização de recursos de memória do Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes node conditions"
+msgstr "Condições do pod Kubernetes"
 
 msgid "Kubernetes node containers"
 msgstr "Contentores de nós Kubernetes"
@@ -33366,6 +33392,16 @@ msgstr "Mapear o estado do GCP para verificar mk"
 msgid "Map RWVDMS names"
 msgstr "Mapas de nomes RWVDMS"
 
+msgid "Map `False` to"
+msgstr ""
+
+msgid "Map `True` to"
+msgstr ""
+
+#, fuzzy
+msgid "Map `Unknown` to"
+msgstr "Data desconhecida"
+
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr ""
 "Estados de administração do mapa (SNMP com contadores de 64 bits apenas)"
@@ -35448,29 +35484,6 @@ msgstr ""
 "Estado de monitorização se o Colector de Clusters não reportar métricas de "
 "máquina"
 
-msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
-msgstr ""
-"Estado de controlo se a condição DISKPRESSURE for defeituosa ou desconhecida"
-
-msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
-msgstr ""
-"Estado de controlo se a condição MEMORYPRESSURE for defeituosa ou "
-"desconhecida"
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
-msgstr ""
-"Estado de controlo se a condição NETWORKUNAVAILABLE for defeituosa ou "
-"desconhecida"
-
-msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
-msgstr ""
-"Estado de controlo se a condição PIDPRESSURE for defeituosa ou desconhecida"
-
-msgid "Monitoring state if the READY condition is faulty or unknown"
-msgstr ""
-"Estado de monitorização se a condição READY for defeituosa ou desconhecida"
-
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr "Estado de monitorização se a unidade errada estiver activa/em espera"
 
@@ -35880,6 +35893,14 @@ msgstr "Nome do Canal"
 
 msgid "Name of Checkmk site of update server"
 msgstr "Nome do site Checkmk do servidor de atualização"
+
+#, fuzzy
+msgid "Name of HAproxy Frontend"
+msgstr "HAproxy Frontend State"
+
+#, fuzzy
+msgid "Name of HAproxy Server"
+msgstr "Nome do VServer"
 
 msgid "Name of Queue"
 msgstr "Nome da Fila de espera"
@@ -36360,9 +36381,6 @@ msgstr "Nunca executado"
 
 msgid "Never install Python with the agent"
 msgstr "Nunca instale o Python com o agente"
-
-msgid "Never logged in"
-msgstr "Nunca fez login"
 
 msgid "Never remove files newer than"
 msgstr "Nunca remova arquivos mais novos do que"
@@ -36927,9 +36945,6 @@ msgstr "Estatísticas de Nó"
 
 msgid "Node Status"
 msgstr "Estado do Nó"
-
-msgid "Node conditions"
-msgstr "Condições do nó"
 
 msgid "Node name"
 msgstr "Nome do nó"
@@ -38526,6 +38541,10 @@ msgstr "Versão de lançamento oficial"
 msgid "Offline"
 msgstr "Offline"
 
+#, fuzzy, python-format
+msgid "Offline (%s %s via %s)"
+msgstr "Em linha (%s)"
+
 msgid "Offline hosts"
 msgstr "Anfitriões off-line"
 
@@ -38701,6 +38720,10 @@ msgstr "Pedidos de informações sobre fragmentos em andamento"
 
 msgid "Online"
 msgstr "Online"
+
+#, fuzzy, python-format
+msgid "Online (%s %s via %s)"
+msgstr "Em linha (%s)"
 
 #, python-format
 msgid "Online (%s)"
@@ -39596,13 +39619,6 @@ msgid ""
 msgstr ""
 "Estado geral de todos os nós de doca, com contagens de serviços nos vários "
 "estados."
-
-msgid ""
-"Overall state of all hosts known by Ntop, with counts of services in the "
-"various states.\n"
-msgstr ""
-"Estado geral de todos os anfitriões conhecidos pelo Ntop, com contagens de "
-"serviços nos vários estados.\n"
 
 msgid ""
 "Overall state of all hosts, with counts of services in the various states."
@@ -43944,9 +43960,6 @@ msgstr "Remover arquivos e subdiretórios gerenciados pelo agente Checkmk"
 
 msgid "Remove filter"
 msgstr "Remover filtro"
-
-msgid "Remove label condition"
-msgstr "Remover o estado da etiqueta"
 
 msgid "Remove only matching vanished services"
 msgstr "Remover apenas os serviços desaparecidos correspondentes"
@@ -63631,11 +63644,11 @@ msgstr "Incapacidade de analisar os dados fornecidos: %s"
 msgid "Unable to process request"
 msgstr "Não é possível processar o pedido"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
-"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an "
+"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
 "issue may be caused by an inconsistent configuration, e.g. when rules refer "
 "to tag groups or tags that do not exist anymore."
 msgstr ""
@@ -63645,11 +63658,11 @@ msgstr ""
 "problema pode ser causado por uma configuração inconsistente, por exemplo, "
 "quando as regras se referem a grupos de tags ou tags que já não existem."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
-"When saving this rule now, your previous settings will be overwritten. "
-"Problem was: %s."
+"When saving this rule now, your previous settings will be overwritten. The "
+"problem was: %s."
 msgstr ""
 "Incapaz de ler as opções atuais desta regra. Caindo de volta aos valores "
 "padrão. Ao salvar esta regra agora, suas configurações anteriores serão "
@@ -71277,9 +71290,6 @@ msgstr "permitir a execução de comandos e ações via TCP"
 msgid "allow users to deactivate this notification"
 msgstr "permitir que os usuários desativem esta notificação"
 
-msgid "and"
-msgstr "e"
-
 msgid "any"
 msgstr "qualquer"
 
@@ -71834,12 +71844,6 @@ msgstr "h"
 msgid "handles"
 msgstr "alças"
 
-msgid "has"
-msgstr "tem"
-
-msgid "has not"
-msgstr "não o fez"
-
 msgid "height"
 msgstr "altura"
 
@@ -72383,9 +72387,6 @@ msgstr "nenhum dos"
 msgid "normal connection"
 msgstr "ligação normal"
 
-msgid "not"
-msgstr "não"
-
 #, python-format
 msgid "not %s states"
 msgstr "não %s estados"
@@ -72419,9 +72420,6 @@ msgstr "ntopng Usuário Admin"
 
 msgid "ntopng Connection Parameters (chargeable add-on)"
 msgstr "Parâmetros de ligação ntopng (suplemento a pagar)"
-
-msgid "ntopng Hosts"
-msgstr "ntopng Hosts"
 
 msgid "ntopng Username"
 msgstr "ntopng Nome de usuário"
@@ -73199,6 +73197,66 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Estado de controlo se a condição DISKPRESSURE for defeituosa ou "
+#~ "desconhecida"
+
+#~ msgid ""
+#~ "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Estado de controlo se a condição MEMORYPRESSURE for defeituosa ou "
+#~ "desconhecida"
+
+#~ msgid ""
+#~ "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Estado de controlo se a condição NETWORKUNAVAILABLE for defeituosa ou "
+#~ "desconhecida"
+
+#~ msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Estado de controlo se a condição PIDPRESSURE for defeituosa ou "
+#~ "desconhecida"
+
+#~ msgid "Monitoring state if the READY condition is faulty or unknown"
+#~ msgstr ""
+#~ "Estado de monitorização se a condição READY for defeituosa ou desconhecida"
+
+#~ msgid "Node conditions"
+#~ msgstr "Condições do nó"
+
+#~ msgid "Add label condition"
+#~ msgstr "Adicionar condição de etiqueta"
+
+#~ msgid "Never logged in"
+#~ msgstr "Nunca fez login"
+
+#~ msgid ""
+#~ "Overall state of all hosts known by Ntop, with counts of services in the "
+#~ "various states.\n"
+#~ msgstr ""
+#~ "Estado geral de todos os anfitriões conhecidos pelo Ntop, com contagens "
+#~ "de serviços nos vários estados.\n"
+
+#~ msgid "Remove label condition"
+#~ msgstr "Remover o estado da etiqueta"
+
+#~ msgid "and"
+#~ msgstr "e"
+
+#~ msgid "has"
+#~ msgstr "tem"
+
+#~ msgid "has not"
+#~ msgstr "não o fez"
+
+#~ msgid "not"
+#~ msgstr "não"
+
+#~ msgid "ntopng Hosts"
+#~ msgstr "ntopng Hosts"
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

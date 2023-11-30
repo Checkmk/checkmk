@@ -3714,9 +3714,6 @@ msgstr "Adăugați un loc de muncă"
 msgid "Add key"
 msgstr "Adăugați cheia"
 
-msgid "Add label condition"
-msgstr "Adăugați o condiție de etichetare"
-
 msgid "Add limits"
 msgstr "Adaugă limite"
 
@@ -3813,6 +3810,10 @@ msgstr "Adăugați noi criterii de potrivire"
 msgid "Add new metric"
 msgstr "Adăugați o nouă măsurătoare"
 
+#, fuzzy
+msgid "Add new node condition"
+msgstr "Adăugați o condiție de etichetare"
+
 msgid "Add new pattern"
 msgstr "Adăugați un nou model"
 
@@ -3848,6 +3849,10 @@ msgstr "Adăugați un nou subiect"
 
 msgid "Add new user configuration"
 msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Add node condition"
+msgstr "Adăugați o condiție de etichetare"
 
 msgid "Add notification rule"
 msgstr "Adăugați o regulă de notificare"
@@ -4018,6 +4023,10 @@ msgstr "Adăugați la %s"
 
 msgid "Add to bookmark list"
 msgstr "Adăugați la lista de favorite"
+
+#, fuzzy
+msgid "Add to condition"
+msgstr "Adăugați o condiție de etichetare"
 
 msgid "Add to graph collection"
 msgstr "Adăugați la colecția de grafice"
@@ -19218,6 +19227,10 @@ msgstr ""
 msgid "Enable automatic host removal"
 msgstr "Activați eliminarea automată a gazdei"
 
+#, fuzzy
+msgid "Enable automation user authentication via HTTP parameters"
+msgstr "Nu se poate crea o cerere de autentificare"
+
 msgid "Enable community translated languages"
 msgstr "Activați limbile traduse de comunitate"
 
@@ -28427,6 +28440,15 @@ msgstr ""
 "chiar dacă setați acest lucru la 0, ar putea exista cazuri în care mesajele "
 "trebuie să fie oricum stocate în memoria cache."
 
+msgid ""
+"In previous Checkmk versions it was possible to use an automation user to "
+"display specific pages within Checkmk. To authenticate these requests it was "
+"possible to add the _username and _secret parameters to the parameters (e.g. "
+"append them to the URL). GET parameters are usually logged by proxies and "
+"webservers and are not deemed secure for secrets. See Werk  #16223 for more "
+"information."
+msgstr ""
+
 msgid "In relation to normal check interval"
 msgstr "În raport cu intervalul normal de verificare"
 
@@ -30344,6 +30366,10 @@ msgstr "Condiții de implementare Kubernetes"
 
 msgid "Kubernetes memory resource utilization"
 msgstr "Utilizarea resurselor de memorie Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes node conditions"
+msgstr "Condițiile podurilor Kubernetes"
 
 msgid "Kubernetes node containers"
 msgstr "Containere de noduri Kubernetes"
@@ -33603,6 +33629,16 @@ msgstr "Starea GCP pentru a verifica mk"
 msgid "Map RWVDMS names"
 msgstr "Hartă denumiri RWVDMS"
 
+msgid "Map `False` to"
+msgstr ""
+
+msgid "Map `True` to"
+msgstr ""
+
+#, fuzzy
+msgid "Map `Unknown` to"
+msgstr "Data necunoscută"
+
 msgid "Map admin states (SNMP with 64-bit counters only)"
 msgstr ""
 "Harta stărilor administratorului (numai SNMP cu contoare pe 64 de biți)"
@@ -35696,28 +35732,6 @@ msgstr ""
 "Starea de monitorizare în cazul în care Cluster Collector nu raportează "
 "Metrici mașină"
 
-msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare dacă starea DISKPRESSURE este defectă sau necunoscută"
-
-msgid "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare dacă starea MEMORYPRESSURE este defectă sau "
-"necunoscută"
-
-msgid ""
-"Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare în cazul în care starea NETWORKUNAVAILABLE este "
-"defectă sau necunoscută"
-
-msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
-msgstr ""
-"Starea de monitorizare dacă starea PIDPRESSURE este defectă sau necunoscută"
-
-msgid "Monitoring state if the READY condition is faulty or unknown"
-msgstr "Starea de monitorizare dacă starea READY este defectă sau necunoscută"
-
 msgid "Monitoring state if the wrong unit is active/standby"
 msgstr ""
 "Starea de monitorizare în cazul în care unitatea greșită este activă/în "
@@ -36132,6 +36146,14 @@ msgstr "Numele canalului"
 
 msgid "Name of Checkmk site of update server"
 msgstr "Numele site-ului Checkmk al serverului de actualizare"
+
+#, fuzzy
+msgid "Name of HAproxy Frontend"
+msgstr "HAproxy Frontend State"
+
+#, fuzzy
+msgid "Name of HAproxy Server"
+msgstr "Numele VServerului"
 
 msgid "Name of Queue"
 msgstr "Numele cozii de așteptare"
@@ -36616,9 +36638,6 @@ msgstr "Niciodată executat"
 
 msgid "Never install Python with the agent"
 msgstr "Nu instalați niciodată Python cu agentul"
-
-msgid "Never logged in"
-msgstr "Niciodată conectat"
 
 msgid "Never remove files newer than"
 msgstr "Nu eliminați niciodată fișiere mai noi decât"
@@ -37186,9 +37205,6 @@ msgstr "Statisticile nodurilor"
 
 msgid "Node Status"
 msgstr "Starea nodului"
-
-msgid "Node conditions"
-msgstr "Condițiile nodurilor"
 
 msgid "Node name"
 msgstr "Numele nodului"
@@ -38801,6 +38817,10 @@ msgstr "Versiunea oficială de lansare"
 msgid "Offline"
 msgstr "Offline"
 
+#, fuzzy, python-format
+msgid "Offline (%s %s via %s)"
+msgstr "Online (%s)"
+
 msgid "Offline hosts"
 msgstr "Gazde offline"
 
@@ -38979,6 +38999,10 @@ msgstr "Cereri de informații în curs de desfășurare"
 
 msgid "Online"
 msgstr "Online"
+
+#, fuzzy, python-format
+msgid "Online (%s %s via %s)"
+msgstr "Online (%s)"
 
 #, python-format
 msgid "Online (%s)"
@@ -39879,13 +39903,6 @@ msgid ""
 msgstr ""
 "Starea generală a tuturor nodurilor docker, cu numărul de servicii în "
 "diferite stări."
-
-msgid ""
-"Overall state of all hosts known by Ntop, with counts of services in the "
-"various states.\n"
-msgstr ""
-"Starea generală a tuturor gazdelor cunoscute de Ntop, cu numărul de servicii "
-"în diferitele stări.\n"
 
 msgid ""
 "Overall state of all hosts, with counts of services in the various states."
@@ -44254,9 +44271,6 @@ msgstr "Îndepărtați fișierele și subdirectoarele gestionate de agentul Chec
 
 msgid "Remove filter"
 msgstr "Eliminați filtrul"
-
-msgid "Remove label condition"
-msgstr "Îndepărtarea condiției de etichetare"
 
 msgid "Remove only matching vanished services"
 msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
@@ -64174,11 +64188,11 @@ msgstr "Nu se poate analiza datele furnizate: %s."
 msgid "Unable to process request"
 msgstr "Imposibilitatea de a procesa cererea"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current conditions of this rule. Falling back to default "
 "values. When saving this rule now, your previous settings will be "
-"overwritten. Problem was: %s, Previous conditions: <pre>%s</pre>Such an "
+"overwritten. The problem was: %s, Previous conditions: <pre>%s</pre>Such an "
 "issue may be caused by an inconsistent configuration, e.g. when rules refer "
 "to tag groups or tags that do not exist anymore."
 msgstr ""
@@ -64189,11 +64203,11 @@ msgstr ""
 "exemplu, atunci când regulile se referă la grupuri de etichete sau etichete "
 "care nu mai există."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Unable to read current options of this rule. Falling back to default values. "
-"When saving this rule now, your previous settings will be overwritten. "
-"Problem was: %s."
+"When saving this rule now, your previous settings will be overwritten. The "
+"problem was: %s."
 msgstr ""
 "Nu se pot citi opțiunile curente ale acestei reguli. Se revine la valorile "
 "implicite. Când salvați această regulă acum, setările anterioare vor fi "
@@ -71913,9 +71927,6 @@ msgstr "permit executarea de comenzi și acțiuni prin TCP"
 msgid "allow users to deactivate this notification"
 msgstr "permite utilizatorilor să dezactiveze această notificare"
 
-msgid "and"
-msgstr "și"
-
 msgid "any"
 msgstr "orice"
 
@@ -72472,12 +72483,6 @@ msgstr "h"
 msgid "handles"
 msgstr "mânere"
 
-msgid "has"
-msgstr "are"
-
-msgid "has not"
-msgstr "nu a"
-
 msgid "height"
 msgstr "înălțime"
 
@@ -73025,9 +73030,6 @@ msgstr "niciunul dintre"
 msgid "normal connection"
 msgstr "conexiune normală"
 
-msgid "not"
-msgstr "nu"
-
 #, python-format
 msgid "not %s states"
 msgstr "nu %s state"
@@ -73061,9 +73063,6 @@ msgstr "ntopng Admin Utilizator"
 
 msgid "ntopng Connection Parameters (chargeable add-on)"
 msgstr "Parametrii de conectare ntopng (add-on taxabil)"
-
-msgid "ntopng Hosts"
-msgstr "Gazde ntopng"
 
 msgid "ntopng Username"
 msgstr "ntopng Nume utilizator"
@@ -73847,6 +73846,66 @@ msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea DISKPRESSURE este defectă sau "
+#~ "necunoscută"
+
+#~ msgid ""
+#~ "Monitoring state if the MEMORYPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea MEMORYPRESSURE este defectă sau "
+#~ "necunoscută"
+
+#~ msgid ""
+#~ "Monitoring state if the NETWORKUNAVAILABLE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare în cazul în care starea NETWORKUNAVAILABLE este "
+#~ "defectă sau necunoscută"
+
+#~ msgid "Monitoring state if the PIDPRESSURE condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea PIDPRESSURE este defectă sau "
+#~ "necunoscută"
+
+#~ msgid "Monitoring state if the READY condition is faulty or unknown"
+#~ msgstr ""
+#~ "Starea de monitorizare dacă starea READY este defectă sau necunoscută"
+
+#~ msgid "Node conditions"
+#~ msgstr "Condițiile nodurilor"
+
+#~ msgid "Add label condition"
+#~ msgstr "Adăugați o condiție de etichetare"
+
+#~ msgid "Never logged in"
+#~ msgstr "Niciodată conectat"
+
+#~ msgid ""
+#~ "Overall state of all hosts known by Ntop, with counts of services in the "
+#~ "various states.\n"
+#~ msgstr ""
+#~ "Starea generală a tuturor gazdelor cunoscute de Ntop, cu numărul de "
+#~ "servicii în diferitele stări.\n"
+
+#~ msgid "Remove label condition"
+#~ msgstr "Îndepărtarea condiției de etichetare"
+
+#~ msgid "and"
+#~ msgstr "și"
+
+#~ msgid "has"
+#~ msgstr "are"
+
+#~ msgid "has not"
+#~ msgstr "nu a"
+
+#~ msgid "not"
+#~ msgstr "nu"
+
+#~ msgid "ntopng Hosts"
+#~ msgstr "Gazde ntopng"
 
 #, python-format
 #~ msgid "Created new event correlation rule with id %s"

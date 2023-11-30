@@ -170,7 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(_) => check::abort("Failed to parse certificate"),
     };
 
-    let mut checks = vec![response_time_levels_checker
+    let mut writer = Writer::from(&mut vec![response_time_levels_checker
         .check(
             response_time,
             &format!(
@@ -182,8 +182,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .uom("ms")
                 .build(),
         )
-        .map(|x| Real::from(x.whole_milliseconds() as isize))];
-    checks.append(&mut certificate::check(
+        .map(|x| Real::from(x.whole_milliseconds() as isize))]);
+    writer.join(&mut certificate::check(
         &cert,
         CertConfig::builder()
             .serial(args.serial)
@@ -198,14 +198,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));
-    checks.append(&mut validation::check(
+    writer.join(&mut validation::check(
         &cert,
         ValidationConfig::builder()
             .allow_self_signed(args.allow_self_signed)
             .build(),
     ));
 
-    let out = Writer::from(&mut checks);
-    println!("HTTP {}", out);
-    std::process::exit(out.exit_code())
+    println!("HTTP {}", writer);
+    std::process::exit(writer.exit_code())
 }

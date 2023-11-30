@@ -1,0 +1,21 @@
+Title: Drop 'cmk --paths' command
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701358971
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+This Werk removes the <tt>cmk --paths</tt> command.
+It has not been proberly maintained in the last years and bitrotted over time.
+
+From a developers point of view:
+
+This command introduces dependencies that are the wrong way around, hence getting in the way of a more sustainable architecture.
+It would be likely to further decay over time.
+As unreliable information is helping nobody, we drop this command.
+
+Building it properly instead of dropping it would require much more effort, which we believe to be disproportionate.
+
+

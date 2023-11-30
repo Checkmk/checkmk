@@ -22,7 +22,7 @@ fn s(s: &str) -> Option<String> {
 fn test_cert_ok() {
     let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
-    let out = Writer::from(&certificate::check(
+    let out = Writer::from(&mut certificate::check(
         &cert,
         CertConfig::builder()
             .serial(s(SERIAL))
@@ -52,7 +52,7 @@ fn test_cert_wrong_serial() {
     let serial = "01:02:03:04:05";
     let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
-    let out = Writer::from(&certificate::check(
+    let out = Writer::from(&mut certificate::check(
         &cert,
         CertConfig::builder()
             .serial(s(serial))

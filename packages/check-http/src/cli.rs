@@ -80,18 +80,20 @@ pub struct Cli {
     #[arg(short = 'T', long, requires = "body")]
     pub content_type: Option<HeaderValue>,
 
-    /// String to expect in the response body.
+    /// String(s) to expect in the response body.
+    /// Specify multiple times for additional search strings.
     #[arg(short = 's', long, conflicts_with = "without_body")]
-    pub body_string: Option<String>,
+    pub body_string: Vec<String>,
 
-    /// Regular expression to expect in the response body.
+    /// Regular expression(s) to expect in the response body.
+    /// Specify multiple times for regexes.
     #[arg(
         short = 'r',
         long,
         conflicts_with = "body_string",
         conflicts_with = "without_body"
     )]
-    pub body_regex: Option<String>,
+    pub body_regex: Vec<String>,
 
     /// Case insensitive matching for specified body regex.
     #[arg(long, requires = "body_regex", default_value_t = false)]

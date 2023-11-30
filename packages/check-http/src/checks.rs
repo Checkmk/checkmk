@@ -18,7 +18,7 @@ pub struct CheckParameters {
     pub response_time_levels: Option<UpperLevels<f64>>,
     pub document_age_levels: Option<UpperLevels<u64>>,
     pub timeout: Duration,
-    pub body_matcher: Option<TextMatcher>,
+    pub body_matchers: Vec<TextMatcher>,
     pub header_strings: Vec<(String, String)>,
 }
 
@@ -67,7 +67,7 @@ pub fn collect_response_checks(
         .chain(check_body(
             response.body,
             params.page_size,
-            params.body_matcher,
+            params.body_matchers,
         ))
         .chain(check_response_time(
             response_time,
@@ -189,7 +189,7 @@ fn latin1_to_string(bytes: &[u8]) -> String {
 fn check_body<T: std::error::Error>(
     body: Option<Result<Body, T>>,
     page_size_limits: Option<Bounds<usize>>,
-    body_matcher: Option<TextMatcher>,
+    body_matchers: Vec<TextMatcher>,
 ) -> Vec<Option<CheckResult>> {
     let Some(body) = body else {
         // We assume that a None-Body means that we didn't fetch it at all
@@ -203,12 +203,12 @@ fn check_body<T: std::error::Error>(
 
     check_page_size(body.length, page_size_limits)
         .into_iter()
-        .chain(check_body_matching(&body.text, body_matcher))
+        .chain(check_body_matching(&body.text, body_matchers))
         .collect()
 }
 
-fn check_body_matching(body_text: &str, matcher: Option<TextMatcher>) -> Vec<Option<CheckResult>> {
-    if matcher.is_some_and(|m| !m.match_on(body_text)) {
+fn check_body_matching(body_text: &str, matcher: Vec<TextMatcher>) -> Vec<Option<CheckResult>> {
+    if matcher.iter().any(|m| !m.match_on(body_text)) {
         notice(State::Warn, "String validation failed on response body")
     } else {
         vec![]
@@ -548,13 +548,13 @@ mod test_check_body {
 
     #[test]
     fn test_no_body() {
-        assert!(check_body::<DummyError>(None, None, None,) == vec![])
+        assert!(check_body::<DummyError>(None, None, vec![],) == vec![])
     }
 
     #[test]
     fn test_error_body() {
         assert!(
-            check_body(Some(Err(DummyError {})), None, None)
+            check_body(Some(Err(DummyError {})), None, vec![])
                 == vec![
                     CheckResult::summary(State::Crit, "Error fetching the response body"),
                     CheckResult::details(State::Crit, "Error fetching the response body"),
@@ -571,7 +571,7 @@ mod test_check_body {
                     length: 7
                 })),
                 Some(Bounds::lower_upper(3, 10)),
-                Some("foo".to_string().into()),
+                vec!["foo".to_string().into()],
             ) == vec![
                 CheckResult::details(State::Ok, "Page size: 7 Bytes"),
                 CheckResult::metric("size", 7., Some('B'), None, Some(0.), None)
@@ -639,18 +639,18 @@ mod test_check_body_matching {
 
     #[test]
     fn test_no_matcher() {
-        assert!(check_body_matching("foobar", None) == vec![]);
+        assert!(check_body_matching("foobar", vec![]) == vec![]);
     }
 
     #[test]
     fn test_string_ok() {
-        assert!(check_body_matching("foobar", Some("bar".to_string().into())) == vec![]);
+        assert!(check_body_matching("foobar", vec!["bar".to_string().into()]) == vec![]);
     }
 
     #[test]
     fn test_string_not_found() {
         assert!(
-            check_body_matching("foobär", Some("bar".to_string().into()))
+            check_body_matching("foobär", vec!["bar".to_string().into()])
                 == vec![
                     CheckResult::summary(State::Warn, "String validation failed on response body"),
                     CheckResult::details(State::Warn, "String validation failed on response body"),
@@ -663,7 +663,7 @@ mod test_check_body_matching {
         assert!(
             check_body_matching(
                 "foobar",
-                Some(TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true))
+                vec![TextMatcher::from_regex(Regex::new("f.*r").unwrap(), true)]
             ) == vec![]
         );
     }
@@ -673,7 +673,7 @@ mod test_check_body_matching {
         assert!(
             check_body_matching(
                 "foobar",
-                Some(TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true))
+                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), true)]
             ) == vec![
                 CheckResult::summary(State::Warn, "String validation failed on response body"),
                 CheckResult::details(State::Warn, "String validation failed on response body"),
@@ -686,8 +686,31 @@ mod test_check_body_matching {
         assert!(
             check_body_matching(
                 "foobar",
-                Some(TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false))
+                vec![TextMatcher::from_regex(Regex::new("f.*z").unwrap(), false)]
             ) == vec![]
+        );
+    }
+
+    #[test]
+    fn test_multiple_matchers_ok() {
+        assert!(
+            check_body_matching(
+                "foobar",
+                vec!["bar".to_string().into(), "foo".to_string().into()]
+            ) == vec![]
+        );
+    }
+
+    #[test]
+    fn test_multiple_matchers_not_ok() {
+        assert!(
+            check_body_matching(
+                "foobar",
+                vec!["bar".to_string().into(), "baz".to_string().into()]
+            ) == vec![
+                CheckResult::summary(State::Warn, "String validation failed on response body"),
+                CheckResult::details(State::Warn, "String validation failed on response body"),
+            ]
         );
     }
 }

@@ -143,13 +143,15 @@ def _parse_last_updated(line: Sequence[str]) -> int:
     1599561372
     >>> _parse_last_updated(['Last', 'updated:', 'Tue', 'Sep', '22', '11:20:53', '2015', 'Last', 'change:', 'Thu', 'Sep', '17', '14:52:42', '2015', 'by', 'root', 'via', 'crm_resource', 'on', 'bl64lnx-priv'])
     1442920853
+    >>> _parse_last_updated(['Last', 'updated:', 'Wed', 'Nov', '29', '08:29:27', '2023', 'on', 'hdenagapp269'])
+    1701246567
     """
     if line.count("Last") > 1:
         # Sometimes, `Last updated` and `Last changed` are combined into a single line
         line = line[: line.index("Last", 1)]
     return calendar.timegm(
         time.strptime(
-            " ".join(line[2:]),
+            " ".join(line[2:7]),
             "%a %b %d %H:%M:%S %Y",
         )
     )

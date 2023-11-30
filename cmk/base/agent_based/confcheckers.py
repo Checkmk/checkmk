@@ -158,7 +158,7 @@ class ConfiguredSummarizer:
                 time_settings=self.config_cache.get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=source.hostname
                 ),
-                is_piggyback=self.config_cache.is_piggyback_host(self.host_name),
+                is_piggyback=self.config_cache.is_piggyback_host(source.hostname),
             )
             for source, host_sections in host_sections
         ]

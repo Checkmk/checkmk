@@ -3,12 +3,13 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult, Writer,
+    self, CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult, Writer,
 };
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::AlgorithmIdentifier;
+use x509_parser::prelude::FromDer;
 use x509_parser::public_key::PublicKey;
 use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
@@ -26,7 +27,12 @@ pub struct Config {
     not_after_levels_checker: Option<LevelsChecker<Duration>>,
 }
 
-pub fn check(cert: &X509Certificate, config: Config) -> Writer {
+pub fn check(der: &[u8], config: Config) -> Writer {
+    let cert = match X509Certificate::from_der(der) {
+        Ok((_rem, cert)) => cert,
+        Err(_) => check::abort("Failed to parse certificate"),
+    };
+
     Writer::from(&mut vec![
         check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
             .unwrap_or_default()

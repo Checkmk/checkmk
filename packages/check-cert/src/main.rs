@@ -12,8 +12,6 @@ use check_cert::fetcher::{self, Config as FetcherConfig};
 use clap::{Parser, ValueEnum};
 use std::time::Duration as StdDuration;
 use time::{Duration, Instant};
-use x509_parser::certificate::X509Certificate;
-use x509_parser::prelude::FromDer;
 
 #[allow(non_camel_case_types)]
 #[allow(clippy::upper_case_acronyms)]
@@ -169,11 +167,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         check::abort("Empty or invalid certificate chain on host")
     }
 
-    let cert = match X509Certificate::from_der(&chain[0]) {
-        Ok((_rem, cert)) => cert,
-        Err(_) => check::abort("Failed to parse certificate"),
-    };
-
     let mut writer = Writer::from(&mut vec![response_time_levels_checker
         .check(
             response_time,
@@ -188,7 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .map(|x| Real::from(x.whole_milliseconds() as isize))]);
     writer.join(&mut certificate::check(
-        &cert,
+        &chain[0],
         CertConfig::builder()
             .serial(args.serial)
             .subject(args.subject)
@@ -203,7 +196,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ));
     writer.join(&mut validation::check(
-        &cert,
+        &chain[0],
         ValidationConfig::builder()
             .allow_self_signed(args.allow_self_signed)
             .build(),

@@ -16,7 +16,9 @@ from typing import Callable, Literal
 
 import cmk.utils
 import cmk.utils.paths
+from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
@@ -324,16 +326,21 @@ def _verify_automation_login(user_id: UserId, secret: str) -> bool:
     Returns:
         True if user_id is an automation user and the secret matches.
     """
-    if secret == "":
-        return False
+
+    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    password_hash = htpwd_entries.get(user_id)
 
     path = Path(cmk.utils.paths.var_dir) / "web" / user_id / "automation.secret"
-    if not path.is_file():
-        return False
-
-    return secrets.compare_digest(
-        path.read_text().strip().encode("utf-8"),
-        secret.encode("utf-8"),
+    return (
+        secret != ""
+        and password_hash is not None
+        and not password_hash.startswith("!")  # user is locked
+        and path.is_file()
+        and password_hashing.matches(Password(secret), password_hash)
+        and secrets.compare_digest(
+            path.read_text().strip().encode("utf-8"),
+            secret.encode("utf-8"),
+        )
     )
 
 

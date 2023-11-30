@@ -10,6 +10,7 @@ from cmk.base.plugins.agent_based.heartbeat_crm import (
     check_heartbeat_crm_resources,
     discover_heartbeat_crm_resources,
     parse_heartbeat_crm,
+    Resources,
     Section,
 )
 
@@ -248,7 +249,13 @@ def _section_pacemaker_v2() -> Section:
 
 
 def test_discovery_heartbeat_crm_resources_nothing(section_1: Section) -> None:
-    section = Section(section_1.cluster, section_1.resources._replace(resources={}))
+    section = Section(
+        cluster=section_1.cluster,
+        resources=Resources(
+            resources={},
+            failed_actions=section_1.resources.failed_actions,
+        ),
+    )
     assert not list(discover_heartbeat_crm_resources({}, section))
 
 

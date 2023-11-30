@@ -1,4 +1,3 @@
-use check_cert::check::Writer;
 use check_cert::checker::certificate::{self, Config as CertConfig};
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::FromDer;
@@ -22,7 +21,7 @@ fn s(s: &str) -> Option<String> {
 fn test_cert_ok() {
     let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
-    let out = Writer::from(&mut certificate::check(
+    let out = certificate::check(
         &cert,
         CertConfig::builder()
             .serial(s(SERIAL))
@@ -32,7 +31,7 @@ fn test_cert_ok() {
             .pubkey_algorithm(s(PUBKEY_ALG))
             .pubkey_size(Some(PUBKEY_SZ))
             .build(),
-    ));
+    );
     assert_eq!(
         format!("{}", out),
         format!(
@@ -52,14 +51,14 @@ fn test_cert_wrong_serial() {
     let serial = "01:02:03:04:05";
     let (_rem, cert) = X509Certificate::from_der(DER).unwrap();
 
-    let out = Writer::from(&mut certificate::check(
+    let out = certificate::check(
         &cert,
         CertConfig::builder()
             .serial(s(serial))
             .subject(s(SUBJECT))
             .issuer(s(ISSUER))
             .build(),
-    ));
+    );
     assert_eq!(
         format!("{}", out),
         format!(

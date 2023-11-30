@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, Real, SimpleCheckResult};
+use crate::check::{SimpleCheckResult, Writer};
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
 
@@ -35,8 +35,12 @@ pub struct Config {
     allow_self_signed: bool,
 }
 
-pub fn check(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
-    vec![check_self_signed(details::is_self_signed(cert), config.allow_self_signed).into()]
+pub fn check(cert: &X509Certificate, config: Config) -> Writer {
+    Writer::from(&mut vec![check_self_signed(
+        details::is_self_signed(cert),
+        config.allow_self_signed,
+    )
+    .into()])
 }
 
 fn check_self_signed(self_signed: SelfSigned, allow: bool) -> SimpleCheckResult {

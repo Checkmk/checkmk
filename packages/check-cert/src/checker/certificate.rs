@@ -2,7 +2,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult};
+use crate::check::{
+    CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult, Writer,
+};
 use time::Duration;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
@@ -24,8 +26,8 @@ pub struct Config {
     not_after_levels_checker: Option<LevelsChecker<Duration>>,
 }
 
-pub fn check(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
-    vec![
+pub fn check(cert: &X509Certificate, config: Config) -> Writer {
+    Writer::from(&mut vec![
         check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
             .unwrap_or_default()
             .into(),
@@ -51,7 +53,7 @@ pub fn check(cert: &X509Certificate, config: Config) -> Vec<CheckResult<Real>> {
         )
         .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize)))
         .unwrap_or_default(),
-    ]
+    ])
 }
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {

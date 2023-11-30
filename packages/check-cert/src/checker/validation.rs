@@ -3,6 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{self, SimpleCheckResult, Writer};
+use crate::prelude::Chain;
 use typed_builder::TypedBuilder;
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::FromDer;
@@ -36,8 +37,10 @@ pub struct Config {
     allow_self_signed: bool,
 }
 
-pub fn check(der: &[u8], config: Config) -> Writer {
-    let cert = match X509Certificate::from_der(der) {
+pub fn check(chain: &Chain, config: Config) -> Writer {
+    assert!(!chain.is_empty());
+
+    let cert = match X509Certificate::from_der(&chain[0]) {
         Ok((_rem, cert)) => cert,
         Err(_) => check::abort("Failed to parse certificate"),
     };

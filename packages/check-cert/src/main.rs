@@ -196,7 +196,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ));
     writer.join(&mut validation::check(
-        &chain[0],
+        &chain,
         ValidationConfig::builder()
             .allow_self_signed(args.allow_self_signed)
             .build(),

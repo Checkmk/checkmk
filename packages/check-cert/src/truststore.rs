@@ -2,12 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::prelude::Chain;
 use anyhow::{Context, Result};
 use openssl::x509::store::X509StoreBuilder;
 
-type Der = Vec<u8>;
-
-pub fn system() -> Result<Vec<Der>> {
+pub fn system() -> Result<Chain> {
     let mut store = X509StoreBuilder::new().context("Failed to load trust store")?;
     store
         .set_default_paths()

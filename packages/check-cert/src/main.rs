@@ -152,7 +152,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let start = Instant::now();
-    let der = match fetcher::fetch_server_cert(
+    let chain = match fetcher::fetch_server_cert(
         &args.url,
         &args.port,
         FetcherConfig::builder()
@@ -160,12 +160,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .use_sni(!args.disable_sni)
             .build(),
     ) {
-        Ok(der) => der,
+        Ok(chain) => chain,
         Err(err) => check::abort(&format!("{:?}", err)),
     };
     let response_time = start.elapsed();
 
-    let cert = match X509Certificate::from_der(&der) {
+    if chain.is_empty() {
+        check::abort("Empty or invalid certificate chain on host")
+    }
+
+    let cert = match X509Certificate::from_der(&chain[0]) {
         Ok((_rem, cert)) => cert,
         Err(_) => check::abort("Failed to parse certificate"),
     };

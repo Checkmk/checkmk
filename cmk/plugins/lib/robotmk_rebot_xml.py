@@ -22,6 +22,10 @@ def _parse_datetime_v6(value: str) -> datetime | None:
 DateTimeFormatV6 = Annotated[datetime | None, PlainValidator(_parse_datetime_v6)]
 
 
+def _is_robot_exit(value: str) -> bool:
+    return value == "robot:exit"
+
+
 class Outcome(enum.Enum):
     FAIL = "FAIL"
     PASS = "PASS"
@@ -55,6 +59,7 @@ class StatusV7(BaseModel, frozen=True):
 class Test(BaseModel, frozen=True):
     name: str = Field(alias="@name")
     status: StatusV6 | StatusV7
+    robot_exit: Annotated[bool, BeforeValidator(_is_robot_exit)] = Field(alias="tag", default=False)
 
 
 def _ensure_sequence(

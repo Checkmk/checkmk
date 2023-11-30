@@ -118,6 +118,9 @@ class HostLabel(_Label):
         """
         return self.label  # Fairly certain this is wrong. Shouldn't this be 'name'?
 
+    def comparator(self) -> str:
+        return self.value
+
     # rather use (de)serialize
     def to_dict(self) -> HostLabelValueDict:
         return {

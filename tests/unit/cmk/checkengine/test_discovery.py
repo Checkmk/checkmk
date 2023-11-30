@@ -146,6 +146,9 @@ class _Discoverable:
     def id(self) -> str:
         return self.name
 
+    def comparator(self) -> str:
+        return self.value
+
 
 def test_qualified_discovery() -> None:
     result = QualifiedDiscovery(

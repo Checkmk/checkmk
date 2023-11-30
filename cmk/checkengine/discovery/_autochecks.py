@@ -76,6 +76,9 @@ class AutocheckEntry(NamedTuple):
         """
         return ServiceID(self.check_plugin_name, self.item)
 
+    def comparator(self) -> tuple[LegacyCheckParameters, Mapping[str, str]]:
+        return self.parameters, self.service_labels
+
     def dump(self) -> Mapping[str, Any]:
         return {
             "check_plugin_name": str(self.check_plugin_name),

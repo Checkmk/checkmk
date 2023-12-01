@@ -148,13 +148,10 @@ check_info["papouch_th2e_sensors.dewpoint"] = LegacyCheckDefinition(
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
 
-# Suggested by customer
-papouch_th2e_sensors_humidity_default_levels = (8, 12, 30, 35)
-
 
 def inventory_papouch_th2e_sensors_humidity(parsed):
     for item in parsed["humidity"]:
-        yield item, papouch_th2e_sensors_humidity_default_levels
+        yield item, {}
 
 
 def check_papouch_th2e_sensors_humidity(item, params, parsed):
@@ -170,4 +167,8 @@ check_info["papouch_th2e_sensors.humidity"] = LegacyCheckDefinition(
     discovery_function=inventory_papouch_th2e_sensors_humidity,
     check_function=check_papouch_th2e_sensors_humidity,
     check_ruleset_name="humidity",
+    check_default_parameters={
+        "levels": (30.0, 35.0),
+        "levels_lower": (12.0, 8.0),
+    },
 )

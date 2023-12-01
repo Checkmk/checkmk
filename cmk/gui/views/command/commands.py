@@ -358,10 +358,6 @@ class CommandToggleActiveChecks(Command):
     def confirm_dialog_icon_class(self) -> Literal["question", "warning"]:
         return "warning"
 
-    @property
-    def show_command_form(self):
-        return False
-
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.button("_enable_checks", _("Enable"), cssclass="border_hot")

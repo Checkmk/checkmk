@@ -401,7 +401,18 @@ class GUIViewRenderer(ABCViewRenderer):
                 yield PageMenuEntry(
                     title=command.title,
                     icon_name=command.icon_name,
-                    item=PageMenuPopup(self._render_command_form(info_name, command)),
+                    item=PageMenuPopup(self._render_command_form(info_name, command))
+                    if command.show_command_form
+                    else make_simple_link(
+                        makeuri(
+                            request,
+                            [
+                                ("_transid", str(transactions.get())),
+                                ("_do_actions", "yes"),
+                                (f"_{command.ident}", True),
+                            ],
+                        )
+                    ),
                     name="command_%s" % command.ident,
                     is_enabled=should_show_command_form(self.view.datasource),
                     is_show_more=command.is_show_more,

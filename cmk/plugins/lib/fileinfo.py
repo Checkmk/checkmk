@@ -52,6 +52,9 @@ class MetricInfo(NamedTuple):
     verbose_func: Callable
 
 
+_DATE_MACRO_PATTERN = re.compile(r"\$(DATE|YESTERDAY):((?:%\w.?){1,})\$")
+
+
 def _cast_value(value: Any, data_type: type) -> Any:
     try:
         return data_type(value)
@@ -167,16 +170,24 @@ def _match(name: str, pattern: str) -> bool | Match | None:
 
 
 def fileinfo_process_date(pattern: str, reftime: int) -> str:
-    for what, the_time in [("DATE", reftime), ("YESTERDAY", reftime - 86400)]:
-        the_regex = r"((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)" % what
-        disect = re.match(the_regex, pattern)
-        if disect:
-            prefix = disect.group(1)
-            datepattern = time.strftime(disect.group(2), time.localtime(the_time))
-            postfix = disect.group(3)
-            pattern = prefix + datepattern + postfix
-            return pattern
-    return pattern
+    r"""Replace date macros like "$DATE:%Y%m%d$" in the pattern
+
+    You can have both macros in the string:
+
+    >>> fileinfo_process_date(r"\\hi\there\($DATE:%Y$|$YESTERDAY:%Y$).log", 0)
+    '\\\\hi\\there\\(1970|1969).log'
+
+    Multiple occurances are considered:
+
+    >>> fileinfo_process_date(r"$DATE:%w$.$DATE:%Y$", -17502393600)
+    '3.1415'
+    """
+
+    def fileinfo_date_macro_replacer(m: re.Match) -> str:
+        offset = 0 if m.group(1) == "DATE" else 86400
+        return time.strftime(m.group(2), time.localtime(reftime - offset))
+
+    return _DATE_MACRO_PATTERN.sub(fileinfo_date_macro_replacer, pattern)
 
 
 def fileinfo_groups_get_group_name(

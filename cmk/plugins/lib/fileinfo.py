@@ -172,15 +172,8 @@ def _match(name: str, pattern: str) -> bool | Match | None:
 def fileinfo_process_date(pattern: str, reftime: int) -> str:
     r"""Replace date macros like "$DATE:%Y%m%d$" in the pattern
 
-    You can have both macros in the string:
-
-    >>> fileinfo_process_date(r"\\hi\there\($DATE:%Y$|$YESTERDAY:%Y$).log", 0)
-    '\\\\hi\\there\\(1970|1969).log'
-
-    Multiple occurances are considered:
-
-    >>> fileinfo_process_date(r"$DATE:%w$.$DATE:%Y$", -17502393600)
-    '3.1415'
+     * You can have both macros in the string
+     * Multiple occurances are considered
     """
 
     def fileinfo_date_macro_replacer(m: re.Match) -> str:

@@ -16688,6 +16688,10 @@ msgid "Disable notifications?"
 msgstr "abilitare le notifiche"
 
 #, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "Sezioni disabilitate o abilitate (SNMP)"
+
+#, fuzzy
 msgid "Disable passive checks"
 msgstr "Disattivare i controlli attivi"
 
@@ -22292,9 +22296,6 @@ msgstr "Inoltrare le mail come eventi a Event Console"
 
 msgid "Forward to remote site by notification spooler"
 msgstr "Inoltro al sito remoto tramite spooler di notifica"
-
-msgid "Forwarding"
-msgstr "Inoltro"
 
 msgid "Forwarding Method"
 msgstr "Metodo di inoltro"
@@ -34710,6 +34711,9 @@ msgstr "Conteggio dei messaggi"
 msgid "Message Rate"
 msgstr "Tasso del messaggio"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "Media dei messaggi"
 
@@ -36826,9 +36830,6 @@ msgstr "Nessun intervallo di esclusione configurato"
 
 msgid "No explicit credentials"
 msgstr "Nessuna credenziale esplicita"
-
-msgid "No forwarding"
-msgstr "Nessun inoltro"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -73613,6 +73614,12 @@ msgstr "© %s Checkmk GmbH. Tutti i diritti riservati."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Forwarding"
+#~ msgstr "Inoltro"
+
+#~ msgid "No forwarding"
+#~ msgstr "Nessun inoltro"
 
 #~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 #~ msgstr ""

@@ -16231,6 +16231,10 @@ msgstr "通知を無効にする"
 msgid "Disable notifications?"
 msgstr "通知を無効にしますか?"
 
+#, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "無効または有効なセクション(SNMP)"
+
 msgid "Disable passive checks"
 msgstr "パッシブチェックを無効にする"
 
@@ -21721,9 +21725,6 @@ msgstr "メールをイベントとしてイベントコンソールに転送す
 
 msgid "Forward to remote site by notification spooler"
 msgstr "通知スプーラでリモートサイトに転送する"
-
-msgid "Forwarding"
-msgstr "フォワーディング"
 
 msgid "Forwarding Method"
 msgstr "転送方法"
@@ -33793,6 +33794,9 @@ msgstr "メッセージ数"
 msgid "Message Rate"
 msgstr "メッセージレート"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "メッセージの平均化"
 
@@ -35874,9 +35878,6 @@ msgstr "除外範囲が構成されていません"
 
 msgid "No explicit credentials"
 msgstr "明示的な資格情報はありません"
-
-msgid "No forwarding"
-msgstr "転送なし"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -71331,6 +71332,12 @@ msgstr "© %s Checkmk GmbH. All Rights Reserved."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Forwarding"
+#~ msgstr "フォワーディング"
+
+#~ msgid "No forwarding"
+#~ msgstr "転送なし"
 
 #~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 #~ msgstr "DISKPRESSURE 状態に異常がある場合、または不明の場合の監視状態"

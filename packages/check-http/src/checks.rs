@@ -19,7 +19,7 @@ pub struct CheckParameters {
     pub document_age_levels: Option<UpperLevels<u64>>,
     pub timeout: Duration,
     pub body_matchers: Vec<TextMatcher>,
-    pub header_strings: Vec<(String, String)>,
+    pub header_matchers: Vec<(TextMatcher, TextMatcher)>,
 }
 
 pub enum TextMatcher {
@@ -63,7 +63,7 @@ pub fn collect_response_checks(
     check_status(response.status, response.version, params.status_code)
         .into_iter()
         .chain(check_redirect(response.status, params.onredirect))
-        .chain(check_headers(&response.headers, params.header_strings))
+        .chain(check_headers(&response.headers, params.header_matchers))
         .chain(check_body(
             response.body,
             params.page_size,
@@ -148,13 +148,13 @@ fn check_redirect(status: StatusCode, onredirect: OnRedirect) -> Vec<Option<Chec
 
 fn check_headers(
     headers: &HeaderMap,
-    search_strings: Vec<(String, String)>,
+    matchers: Vec<(TextMatcher, TextMatcher)>,
 ) -> Vec<Option<CheckResult>> {
-    if search_strings.is_empty() {
+    if matchers.is_empty() {
         return vec![];
     };
 
-    if contains_search_strings(headers, &search_strings) {
+    if match_on_headers(headers, &matchers) {
         vec![]
     } else {
         notice(
@@ -164,7 +164,7 @@ fn check_headers(
     }
 }
 
-fn contains_search_strings(headers: &HeaderMap, search_strings: &[(String, String)]) -> bool {
+fn match_on_headers(headers: &HeaderMap, matchers: &[(TextMatcher, TextMatcher)]) -> bool {
     let headers_as_strings: Vec<(&str, String)> = headers
         .iter()
         // The header name (coming from reqwest) is guaranteed to be ASCII, so we can have it as string.
@@ -173,9 +173,9 @@ fn contains_search_strings(headers: &HeaderMap, search_strings: &[(String, Strin
         .map(|(hk, hv)| (hk.as_str(), latin1_to_string(hv.as_bytes())))
         .collect();
 
-    search_strings.iter().all(|(search_key, search_value)| {
+    matchers.iter().all(|(key_matcher, value_matcher)| {
         headers_as_strings.iter().any(|(header_key, header_value)| {
-            header_key.contains(search_key) && header_value.contains(search_value)
+            key_matcher.match_on(header_key) && value_matcher.match_on(header_value)
         })
     })
 }
@@ -459,9 +459,12 @@ mod test_check_headers {
                     .try_into()
                     .unwrap(),
                 vec![
-                    (("some_key1".to_string()), "value1".to_string()),
-                    (String::new(), "value".to_string()),
-                    ("some_key3".to_string(), String::new()),
+                    (
+                        ("some_key1".to_string().into()),
+                        "value1".to_string().into()
+                    ),
+                    (String::new().into(), "value".to_string().into()),
+                    ("some_key3".to_string().into(), String::new().into()),
                 ]
             ) == vec![]
         )
@@ -478,7 +481,7 @@ mod test_check_headers {
                 ]))
                     .try_into()
                     .unwrap(),
-                vec![("key1".to_string(), "value2".to_string()),]
+                vec![("key1".to_string().into(), "value2".to_string().into()),]
             ) == vec![
                 CheckResult::summary(
                     State::Crit,
@@ -499,7 +502,10 @@ mod test_check_headers {
                 &(&HashMap::from([("some_key1".to_string(), "ßome_value1".to_string()),]))
                     .try_into()
                     .unwrap(),
-                vec![("some_key1".to_string(), "ßome_value1".to_string()),]
+                vec![(
+                    "some_key1".to_string().into(),
+                    "ßome_value1".to_string().into()
+                ),]
             ) == vec![
                 CheckResult::summary(
                     State::Crit,
@@ -523,7 +529,7 @@ mod test_check_headers {
         assert!(
             check_headers(
                 &header_map,
-                vec![("some_key".to_string(), "öäü".to_string()),]
+                vec![("some_key".to_string().into(), "öäü".to_string().into()),]
             ) == vec![]
         )
     }

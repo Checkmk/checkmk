@@ -17,7 +17,7 @@ from tests.testlib.agent import (
     download_and_install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, current_branch_version, restart_httpd
+from tests.testlib.utils import current_base_branch_name, current_branch_version
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition
@@ -126,6 +126,12 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
     By default, both installing and updating is done directly via spawn_expect_process()."""
     update = base_site is not None and base_site.exists()
     update_conflict_mode = "keepold"
+    min_version = CMKVersion(
+        BaseVersions.MIN_VERSION,
+        Edition.CEE,
+        current_base_branch_name(),
+        current_branch_version(),
+    )
     sf = SiteFactory(
         version=CMKVersion(
             version.version,
@@ -170,13 +176,8 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
         if update:
             sf.interactive_update(
                 base_site,  # type: ignore
-                version,
-                CMKVersion(
-                    BaseVersions.MIN_VERSION,
-                    Edition.CEE,
-                    current_base_branch_name(),
-                    current_branch_version(),
-                ),
+                target_version=version,
+                min_version=min_version,
             )
         else:  # interactive site creation
             site = sf.interactive_create(site.id, logfile_path)
@@ -184,7 +185,7 @@ def _get_site(version: CMKVersion, interactive: bool, base_site: Site | None = N
     else:
         if update:
             # non-interactive update as site-user
-            _update_as_site_user(sf, site, target_version=version)
+            sf.update_as_site_user(site, target_version=version, min_version=min_version)
 
         else:
             # use SiteFactory for non-interactive site creation
@@ -245,55 +246,3 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state
-
-
-def _update_as_site_user(  # TODO: move this funtion to the Site.py module
-    site_factory: SiteFactory,
-    test_site: Site,
-    target_version: CMKVersion,
-    conflict_mode: str = "keepold",
-) -> Site:
-    if not version_supported(target_version.version):
-        pytest.skip(f"{test_site.version} is not a supported version for {target_version.version}")
-
-    site = site_factory.get_existing_site(test_site.id)
-    site.install_cmk()
-    site.stop()
-
-    logger.info(
-        "Updating %s site from %s version to %s version...",
-        test_site.id,
-        test_site.version.version,
-        target_version.version_directory(),
-    )
-
-    cmd = [
-        "omd",
-        "-f",
-        "-V",
-        target_version.version_directory(),
-        "update",
-        f"--conflict={conflict_mode}",
-    ]
-    test_site.stop()
-    proc = test_site.run_as_site_user(cmd)
-    assert proc.returncode == 0, proc.stdout
-
-    # refresh the site object after creating the site
-    site = site_factory.get_existing_site("central")
-    # open the livestatus port
-    site.open_livestatus_tcp(encrypted=False)
-    # start the site after manually installing it
-    site.start()
-
-    assert site.is_running(), "Site is not running!"
-    logger.info("Site %s is up", site.id)
-
-    restart_httpd()
-
-    assert site.version.version == target_version.version, "Version mismatch during update!"
-    assert (
-        site.version.edition.short == target_version.edition.short
-    ), "Edition mismatch during update!"
-
-    return test_site

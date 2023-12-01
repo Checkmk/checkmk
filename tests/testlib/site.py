@@ -1555,6 +1555,61 @@ class SiteFactory:
 
         return site
 
+    def update_as_site_user(
+        self,
+        test_site: Site,
+        target_version: CMKVersion,
+        min_version: CMKVersion,
+        conflict_mode: str = "keepold",
+    ) -> Site:
+        version_supported = self._version_supported(test_site.version.version, min_version.version)
+        if not version_supported:
+            pytest.skip(
+                f"{test_site.version} is not a supported version for {target_version.version}"
+            )
+
+        site = self.get_existing_site(test_site.id)
+        site.install_cmk()
+        site.stop()
+
+        logger.info(
+            "Updating %s site from %s version to %s version...",
+            test_site.id,
+            test_site.version.version,
+            target_version.version_directory(),
+        )
+
+        cmd = [
+            "omd",
+            "-f",
+            "-V",
+            target_version.version_directory(),
+            "update",
+            f"--conflict={conflict_mode}",
+        ]
+        test_site.stop()
+        proc = test_site.run_as_site_user(cmd)
+        assert proc.returncode == 0, proc.stdout
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site("central")
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+        # start the site after manually installing it
+        site.start()
+
+        assert site.is_running(), "Site is not running!"
+        logger.info("Site %s is up", site.id)
+
+        restart_httpd()
+
+        assert site.version.version == target_version.version, "Version mismatch during update!"
+        assert (
+            site.version.edition.short == target_version.edition.short
+        ), "Edition mismatch during update!"
+
+        return test_site
+
     @staticmethod
     def _version_supported(version: str, min_version: str) -> bool:
         """Check if the given version is supported for updating."""

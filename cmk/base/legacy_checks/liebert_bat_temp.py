@@ -11,8 +11,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 from cmk.plugins.lib.lgp import DETECT_LGP
 
-liebert_bat_temp_default = (40, 50)  # warning / critical
-
 
 def parse_liebert_bat_temp(string_table):
     try:
@@ -22,7 +20,7 @@ def parse_liebert_bat_temp(string_table):
 
 
 def discover_liebert_bat_temp(section):
-    yield from ((key, liebert_bat_temp_default) for key in section)
+    yield from ((key, {}) for key in section)
 
 
 def check_liebert_bat_temp(item, params, parsed):
@@ -42,4 +40,5 @@ check_info["liebert_bat_temp"] = LegacyCheckDefinition(
     discovery_function=discover_liebert_bat_temp,
     check_function=check_liebert_bat_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={"levels": (40.0, 50.0)},
 )

@@ -17,7 +17,7 @@ info = [
 
 discovery = {
     "": [
-        ("Battery", (40, 50)),
+        ("Battery", {}),
     ],
 }
 
@@ -26,11 +26,11 @@ checks = {
     "": [
         (
             "Battery",
-            (30, 40),
+            {"levels": (30.0, 40.0)},
             [
                 (
                     1,
-                    "37 \xb0C (warn/crit at 30/40 \xb0C)",
+                    "37 \xb0C (warn/crit at 30.0/40.0 \xb0C)",
                     [
                         ("temp", 37.0, 30.0, 40.0, None, None),
                     ],

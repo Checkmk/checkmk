@@ -1,0 +1,10 @@
+Title: bi: Deleting a non-existent bi pack now returns a proper 404 response
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1701432941
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+Previous this Werk, when trying to delete a non-existen bi pack would result in a 500 status error code. This Werk fixes that behavior and now returns a proper 404 response

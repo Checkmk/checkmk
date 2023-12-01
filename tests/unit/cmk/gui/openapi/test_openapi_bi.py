@@ -363,6 +363,13 @@ def test_delete_pack_forbidden(clients: ClientRegistry) -> None:
     ).assert_status_code(404)
 
 
+def test_delete_non_existent_pack(clients: ClientRegistry) -> None:
+    clients.BiPack.delete(
+        pack_id="i-do-not-exist",
+        expect_ok=False,
+    ).assert_status_code(404)
+
+
 @pytest.mark.parametrize("wato_enabled", [True, False])
 def test_get_aggregation_state_empty(
     clients: ClientRegistry,

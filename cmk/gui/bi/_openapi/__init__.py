@@ -597,7 +597,7 @@ def delete_bi_pack(params: Mapping[str, Any]) -> Response:
     pack_id = params["pack_id"]
     try:
         target_pack = bi_packs.get_pack_mandatory(pack_id)
-    except KeyError:
+    except PackNotFoundException:
         raise _make_error("Unknown bi_pack: %s" % pack_id)
 
     num_rules = target_pack.num_rules()

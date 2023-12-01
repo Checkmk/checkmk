@@ -165,22 +165,31 @@ class CMKOpenApiSession(requests.Session):
             return self.activate_changes(sites, force_foreign_changes)
 
     def create_user(
-        self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]
+        self,
+        username: str,
+        fullname: str,
+        password: str,
+        email: str,
+        contactgroups: list[str],
+        customer: None | str = None,
     ) -> None:
+        body = {
+            "username": username,
+            "fullname": fullname,
+            "auth_option": {
+                "auth_type": "password",
+                "password": password,
+            },
+            "contact_options": {
+                "email": email,
+            },
+            "contactgroups": contactgroups,
+        }
+        if customer:
+            body["customer"] = customer
         response = self.post(
             "domain-types/user_config/collections/all",
-            json={
-                "username": username,
-                "fullname": fullname,
-                "auth_option": {
-                    "auth_type": "password",
-                    "password": password,
-                },
-                "contact_options": {
-                    "email": email,
-                },
-                "contactgroups": contactgroups,
-            },
+            json=body,
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)

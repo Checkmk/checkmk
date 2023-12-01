@@ -8,7 +8,6 @@ from itertools import chain
 
 from livestatus import LivestatusColumn, MultiSiteConnection
 
-from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex
 
 import cmk.gui.sites as sites
@@ -17,7 +16,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing._utils import (
     get_graph_templates,
     graph_templates_internal,
-    metric_info,
+    metric_title,
     metrics_of_query,
     registered_metrics,
     translated_metrics_from_row,
@@ -264,14 +263,10 @@ def label_autocompleter(value: str, params: dict) -> Choices:
 def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
     row,
 ) -> Iterable[tuple[str, str]]:
-    def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
-        metric_id = metric_or_graph_id.replace("METRIC_", "")
-        return str(metric_info.get(metric_id, {}).get("title", metric_id))
-
     yield from (
         (
             template.id,
-            template.title or _metric_title_from_id(template.id),
+            template.title or metric_title(template.id),
         )
         for template in get_graph_templates(translated_metrics_from_row(row))
     )

@@ -152,7 +152,7 @@ check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
     check_ruleset_name="humidity",
     check_default_parameters={
         "levels": (60.0, 65.0),
-        "levels_lower": (35.0, 40.0),
+        "levels_lower": (40.0, 35.0),
     },
 )
 

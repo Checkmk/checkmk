@@ -29,7 +29,11 @@ from cmk.update_config.update_state import UpdateActionState
 
 # some autocheck parameters need transformation even though there is no ruleset.
 _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
-    CheckPluginName, Callable[[LegacyCheckParameters], LegacyCheckParameters]
+    CheckPluginName,
+    Callable[
+        [Any],  # should be LegacyCheckParameters, but this makes writing transforms cumbersome ...
+        LegacyCheckParameters,
+    ],
 ] = {
     CheckPluginName("aironet_clients"): (lambda p: {}),
     CheckPluginName("aironet_errors"): (lambda p: {}),
@@ -45,6 +49,12 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("arris_cmts_cpu"): (lambda p: {}),
     CheckPluginName("aws_ec2_security_groups"): (
         lambda p: p if isinstance(p, dict) else {"groups": p}
+    ),
+    CheckPluginName("mbg_lantime_ng_refclock_gps"): (lambda p: {}),
+    CheckPluginName("mbg_lantime_refclock"): (lambda p: {}),
+    CheckPluginName("mem_vmalloc"): (lambda p: {}),
+    CheckPluginName("msexch_dag_dbcopy"): (
+        lambda p: p if isinstance(p, dict) else {"inv_key": p[0], "inv_val": p[1]}
     ),
     CheckPluginName("netctr_combined"): (lambda p: {}),
     CheckPluginName("papouch_th2e_sensors_humidity"): (lambda p: {}),

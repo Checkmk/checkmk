@@ -122,13 +122,14 @@ def inventory_msexch_dag_dbcopy(info):
                 dbname = line[1].strip()
                 getit = True
             elif getit and line[0].strip() == key:
-                yield dbname, (key, line[1].strip())
+                yield dbname, {"inv_key": key, "inv_val": line[1].strip()}
                 getit = False
 
 
 def check_msexch_dag_dbcopy(item, params, info):
     getit = False
-    inv_key, inv_val = params
+    inv_key = params["inv_key"]
+    inv_val = params["inv_val"]
     for line in info:
         if len(line) == 2:
             key, val = (i.strip() for i in line)
@@ -150,6 +151,7 @@ check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
     sections=["msexch_dag"],
     discovery_function=inventory_msexch_dag_dbcopy,
     check_function=check_msexch_dag_dbcopy,
+    check_default_parameters={},
 )
 
 # .

@@ -231,4 +231,5 @@ check_info["netapp_api_fcp"] = LegacyCheckDefinition(
     discovery_function=inventory_netapp_api_fcp,
     check_function=check_netapp_api_fcp,
     check_ruleset_name="fcp",
+    check_default_parameters={},
 )

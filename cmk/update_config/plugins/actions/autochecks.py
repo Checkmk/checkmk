@@ -46,6 +46,7 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("aws_ec2_security_groups"): (
         lambda p: p if isinstance(p, dict) else {"groups": p}
     ),
+    CheckPluginName("netctr_combined"): (lambda p: {}),
     CheckPluginName("papouch_th2e_sensors_humidity"): (lambda p: {}),
     CheckPluginName("siemens_plc_flag"): (lambda p: {}),
     CheckPluginName("strem1_sensors"): (lambda p: {}),

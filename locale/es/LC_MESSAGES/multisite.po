@@ -16769,6 +16769,10 @@ msgid "Disable notifications?"
 msgstr "activar las notificaciones"
 
 #, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "Secciones desactivadas o activadas (SNMP)"
+
+#, fuzzy
 msgid "Disable passive checks"
 msgstr "Desactivar las comprobaciones activas"
 
@@ -22385,9 +22389,6 @@ msgstr "Reenviar los correos como eventos a la Consola de Eventos"
 
 msgid "Forward to remote site by notification spooler"
 msgstr "Reenvío a sitio remoto mediante spooler de notificaciones"
-
-msgid "Forwarding"
-msgstr "Reenvío"
 
 msgid "Forwarding Method"
 msgstr "Método de reenvío"
@@ -34862,6 +34863,9 @@ msgstr "Recuento de mensajes"
 msgid "Message Rate"
 msgstr "Tasa de mensajes"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "Promedio de mensajes"
 
@@ -36985,9 +36989,6 @@ msgstr "No se ha configurado ningún rango de exclusión"
 
 msgid "No explicit credentials"
 msgstr "No hay credenciales explícitas"
-
-msgid "No forwarding"
-msgstr "No hay reenvío"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -73951,6 +73952,12 @@ msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Forwarding"
+#~ msgstr "Reenvío"
+
+#~ msgid "No forwarding"
+#~ msgstr "No hay reenvío"
 
 #~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 #~ msgstr ""

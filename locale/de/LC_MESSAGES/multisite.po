@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2023-11-30 16:54+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
@@ -16597,6 +16597,10 @@ msgstr "Benachrichtigungen deaktivieren"
 msgid "Disable notifications?"
 msgstr "Benachrichtigungen deaktivieren?"
 
+#, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "Deaktivierte oder aktivierte Sektionen (SNMP)"
+
 msgid "Disable passive checks"
 msgstr "Passive Checks abschalten"
 
@@ -22173,9 +22177,6 @@ msgstr "Emails als Ereignisse an die Event Console senden"
 
 msgid "Forward to remote site by notification spooler"
 msgstr "An eine entfernte Instanz weiterleiten mit Hilfe des Alarmspooler"
-
-msgid "Forwarding"
-msgstr "Weiterleitung"
 
 msgid "Forwarding Method"
 msgstr "Weiterleitungsmethode"
@@ -34497,6 +34498,9 @@ msgstr "Nachrichtenanzahl"
 msgid "Message Rate"
 msgstr "Meldungsrate"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "Meldungen mitteln"
 
@@ -36600,9 +36604,6 @@ msgstr "Kein Ausschlussbereich definiert"
 
 msgid "No explicit credentials"
 msgstr "Keine expliziten Zugangsdaten"
-
-msgid "No forwarding"
-msgstr "Keine Weiterleitung"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -73186,6 +73187,12 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 msgid "Ω"
 msgstr "Ω"
+
+#~ msgid "Forwarding"
+#~ msgstr "Weiterleitung"
+
+#~ msgid "No forwarding"
+#~ msgstr "Keine Weiterleitung"
 
 #~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 #~ msgstr ""

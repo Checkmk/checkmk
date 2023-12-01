@@ -16792,6 +16792,10 @@ msgid "Disable notifications?"
 msgstr "Désactiver les notifications?"
 
 #, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "Sections désactivées ou activées (SNMP)"
+
+#, fuzzy
 msgid "Disable passive checks"
 msgstr "Désactiver les contrôles actifs"
 
@@ -22433,9 +22437,6 @@ msgstr ""
 
 msgid "Forward to remote site by notification spooler"
 msgstr "Transmission au site distant par spooler de notification"
-
-msgid "Forwarding"
-msgstr "Transférer"
 
 msgid "Forwarding Method"
 msgstr "Méthode d'acheminement"
@@ -34956,6 +34957,9 @@ msgstr "Nombre de messages"
 msgid "Message Rate"
 msgstr "Taux de messages"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "Moyenne des messages"
 
@@ -37085,9 +37089,6 @@ msgstr "Aucune plage d'exclusion configurée"
 
 msgid "No explicit credentials"
 msgstr "Pas d'accréditation explicite"
-
-msgid "No forwarding"
-msgstr "Pas de transfert"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -74274,6 +74275,12 @@ msgstr "© %s Checkmk GmbH. Tous droits réservés."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Forwarding"
+#~ msgstr "Transférer"
+
+#~ msgid "No forwarding"
+#~ msgstr "Pas de transfert"
 
 #~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 #~ msgstr ""

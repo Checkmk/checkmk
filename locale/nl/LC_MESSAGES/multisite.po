@@ -16637,6 +16637,10 @@ msgid "Disable notifications?"
 msgstr "Meldingen uitschakelen"
 
 #, fuzzy
+msgid "Disable or enable forwarding"
+msgstr "Uitgeschakelde of ingeschakelde secties (SNMP)"
+
+#, fuzzy
 msgid "Disable passive checks"
 msgstr "Actieve controles uitschakelen"
 
@@ -22212,9 +22216,6 @@ msgstr "Mails doorsturen als gebeurtenissen naar Event Console"
 
 msgid "Forward to remote site by notification spooler"
 msgstr "Doorsturen naar externe site door notificatie spooler"
-
-msgid "Forwarding"
-msgstr "Doorsturen"
 
 msgid "Forwarding Method"
 msgstr "Doorstuur Methode"
@@ -34598,6 +34599,9 @@ msgstr "Berichtentelling"
 msgid "Message Rate"
 msgstr "Berichtensnelheid"
 
+msgid "Message are forwarded according to below or inherited settings."
+msgstr ""
+
 msgid "Message averaging"
 msgstr "Bericht gemiddelde"
 
@@ -36708,9 +36712,6 @@ msgstr "Geen uitsluitingsbereik geconfigureerd"
 
 msgid "No explicit credentials"
 msgstr "Geen expliciete geloofsbrieven"
-
-msgid "No forwarding"
-msgstr "Geen doorsturing"
 
 msgid ""
 "No fresh discovery information available. Using latest cached information. "
@@ -73379,6 +73380,12 @@ msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
 
 msgid "Ω"
 msgstr ""
+
+#~ msgid "Forwarding"
+#~ msgstr "Doorsturen"
+
+#~ msgid "No forwarding"
+#~ msgstr "Geen doorsturing"
 
 #~ msgid "Monitoring state if the DISKPRESSURE condition is faulty or unknown"
 #~ msgstr "Bewakingsstatus als de DISKPRESSURE toestand defect of onbekend is"

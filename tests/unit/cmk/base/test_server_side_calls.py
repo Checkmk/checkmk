@@ -5,19 +5,19 @@
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple, Type
+from typing import NamedTuple
 
 import pytest
 
 import cmk.utils.paths
 from cmk.utils import password_store
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
 import cmk.base.config as base_config
 from cmk.base.server_side_calls import (
     _get_host_address_config,
     ActiveCheck,
+    ActiveCheckError,
     ActiveServiceData,
     ActiveServiceDescription,
     commandline_arguments,
@@ -51,6 +51,10 @@ HOST_ATTRS = {
 class TestSpecialAgentLegacyConfiguration(NamedTuple):
     args: Sequence[str]
     stdin: str | None
+
+
+def argument_function_with_exception(*args, **kwargs):
+    raise Exception("Can't create argument list")
 
 
 @pytest.mark.parametrize(
@@ -400,8 +404,6 @@ def test_get_active_service_data(
     expected_result: Sequence[ActiveServiceData],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(base_config.ConfigCache, "get_host_attributes", lambda e, s: host_attrs)
-
     active_check = ActiveCheck(
         active_check_plugins,
         legacy_active_check_plugins,
@@ -414,6 +416,127 @@ def test_get_active_service_data(
 
     services = list(active_check.get_active_service_data(active_check_rules))
     assert services == expected_result
+
+
+@pytest.mark.parametrize(
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    commands_function=argument_function_with_exception,
+                )
+            },
+            id="active check",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "echo $ARG1$",
+                    "service_generator": argument_function_with_exception,
+                }
+            },
+            {},
+            id="legacy active check",
+        ),
+    ],
+)
+def test_test_get_active_service_data_crash(
+    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
+    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: False,
+    )
+
+    active_check = ActiveCheck(
+        active_check_plugins,
+        legacy_active_check_plugins,
+        HostName("test_host"),
+        HOST_ATTRS,
+        translations={},
+    )
+
+    list(active_check.get_active_service_data(active_check_rules))
+
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == "\nWARNING: Config creation for active check my_active_check failed on test_host: Can't create argument list\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "active_check_rules, legacy_active_check_plugins, active_check_plugins",
+    [
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {},
+            {
+                "my_active_check": ActiveCheckConfig(
+                    name="my_active_check",
+                    parameter_parser=lambda p: p,
+                    commands_function=argument_function_with_exception,
+                )
+            },
+            id="active check",
+        ),
+        pytest.param(
+            [
+                ("my_active_check", [{"description": "My active check", "param1": "param1"}]),
+            ],
+            {
+                "my_active_check": {
+                    "command_line": "echo $ARG1$",
+                    "service_generator": argument_function_with_exception,
+                }
+            },
+            {},
+            id="legacy active check",
+        ),
+    ],
+)
+def test_test_get_active_service_data_crash_with_debug(
+    active_check_rules: Sequence[tuple[str, Sequence[Mapping[str, object]]]],
+    legacy_active_check_plugins: Mapping[str, Mapping[str, str]],
+    active_check_plugins: Mapping[str, ActiveCheckConfig],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: True,
+    )
+
+    active_check = ActiveCheck(
+        active_check_plugins,
+        legacy_active_check_plugins,
+        HostName("test_host"),
+        HOST_ATTRS,
+        translations={},
+    )
+
+    with pytest.raises(
+        Exception,
+        match="Can't create argument list",
+    ):
+        list(active_check.get_active_service_data(active_check_rules))
 
 
 @pytest.mark.parametrize(
@@ -961,40 +1084,96 @@ def test_iter_special_agent_commands(
 
 
 @pytest.mark.parametrize(
-    "debug_enabled,exception_type,exception_message",
+    "plugins, legacy_plugins",
     [
-        (
-            False,
-            Exception,
-            "Can't create argument list",
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    commands_function=argument_function_with_exception,
+                )
+            },
+            {},
+            id="special agent",
         ),
-        (True, Exception, "Can't create argument list"),
+        pytest.param(
+            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
+        ),
     ],
 )
-def test_iter_special_agent_commands_info_func_crash(
-    debug_enabled: bool,
-    exception_type: Type[Exception],
-    exception_message: str,
+def test_iter_special_agent_commands_crash(
+    plugins: Mapping[str, SpecialAgentConfig],
+    legacy_plugins: Mapping[str, InfoFunc],
     monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
-    def argument_function_with_exception(_a, _b, _c):
-        raise Exception("Can't create argument list")
-
     monkeypatch.setattr(
         cmk.utils.debug,
         "enabled",
-        lambda: debug_enabled,
+        lambda: False,
     )
 
-    legacy_plugins: Mapping[str, Any] = {"test_agent": argument_function_with_exception}
+    special_agent = SpecialAgent(
+        plugins,
+        legacy_plugins,
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_ATTRS,
+        {},
+    )
+
+    list(special_agent.iter_special_agent_commands("test_agent", {}))
+
+    captured = capsys.readouterr()
+    assert (
+        captured.out
+        == "\nWARNING: Config creation for special agent test_agent failed on test_host: Can't create argument list\n"
+    )
+
+
+@pytest.mark.parametrize(
+    "plugins, legacy_plugins",
+    [
+        pytest.param(
+            {
+                "test_agent": SpecialAgentConfig(
+                    name="test_agent",
+                    parameter_parser=lambda e: e,
+                    commands_function=argument_function_with_exception,
+                )
+            },
+            {},
+            id="special agent",
+        ),
+        pytest.param(
+            {}, {"test_agent": argument_function_with_exception}, id="legacy special agent"
+        ),
+    ],
+)
+def test_iter_special_agent_commands_crash_with_debug(
+    plugins: Mapping[str, SpecialAgentConfig],
+    legacy_plugins: Mapping[str, InfoFunc],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: True,
+    )
 
     special_agent = SpecialAgent(
-        {}, legacy_plugins, HostName("test_host"), HostAddress("127.0.0.1"), {}, {}
+        plugins,
+        legacy_plugins,
+        HostName("test_host"),
+        HostAddress("127.0.0.1"),
+        HOST_ATTRS,
+        {},
     )
 
     with pytest.raises(
-        exception_type,
-        match=exception_message,
+        Exception,
+        match="Can't create argument list",
     ):
         list(special_agent.iter_special_agent_commands("test_agent", {}))
 
@@ -1122,15 +1301,15 @@ def test_commandline_arguments_nonexisting_password(
 )
 def test_commandline_arguments_invalid_arguments_type(args: int | tuple[int, int] | None) -> None:
     with pytest.raises(
-        MKGeneralException,
-        match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Host: test, Service: test service\).",
+        ActiveCheckError,
+        match=r"The check argument function needs to return either a list of arguments or a string of the concatenated arguments \(Service: test service\).",
     ):
         commandline_arguments(HostName("test"), "test service", args)  # type: ignore[arg-type]
 
 
 def test_commandline_arguments_invalid_argument() -> None:
     with pytest.raises(
-        MKGeneralException,
+        ActiveCheckError,
         match=r"Invalid argument for command line: \(1, 2\)",
     ):
         commandline_arguments(HostName("test"), "test service", ["arg1", (1, 2), "arg3"])  # type: ignore[list-item]

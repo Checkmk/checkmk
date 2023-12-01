@@ -6,6 +6,7 @@ use crate::pwstore;
 use anyhow::{bail, Result as AnyhowResult};
 use clap::{Args, Parser, ValueEnum};
 use http::{HeaderName, HeaderValue, Method, StatusCode};
+use regex::{Regex, RegexBuilder};
 use std::{str::FromStr, time::Duration};
 
 #[derive(Parser, Debug)]
@@ -87,23 +88,19 @@ pub struct Cli {
 
     /// Regular expression(s) to expect in the response body.
     /// Specify multiple times for regexes.
+    /// Inline flags with "(?...)" are supported.
+    /// E.g., "(?im)^myregexpattern" will match case-insensitively,
+    /// and the caret will match on every beginning line.
+    /// Regexes with more than O(len(pattnern)*len(text)) complexity,
+    /// like backreferences and lookaround, are unsupported.
     #[arg(
         short = 'r',
         long,
         conflicts_with = "body_string",
-        conflicts_with = "without_body"
+        conflicts_with = "without_body",
+        value_parser = parse_regex_pattern,
     )]
-    pub body_regex: Vec<String>,
-
-    /// Case insensitive matching for specified body regex.
-    #[arg(long, requires = "body_regex", default_value_t = false)]
-    pub body_regex_case_insensitive: bool,
-
-    /// Allow body regex to span newlines.
-    /// When set: Dot (.) also matches newlines, Anchors (^,$) only match start and end of body
-    /// When unset: Dot doesn't match newlines, Anchors match start and end of single lines
-    #[arg(long, requires = "body_regex", default_value_t = false)]
-    pub body_regex_linespan: bool,
+    pub body_regex: Vec<Regex>,
 
     /// Expect the specified regex to *not* match on the body.
     #[arg(long, requires = "body_regex", default_value_t = false)]
@@ -116,18 +113,18 @@ pub struct Cli {
     /// Keys are matched case-insensitive and may only contain ASCII characters.
     /// Values are matched case-sensitive. If they contain non-ASCII characters,
     /// they are expected to be latin-1
-    #[arg(short = 'd', long, value_parser=parse_header_pair)]
+    #[arg(short = 'd', long, value_parser=parse_string_header_pair)]
     pub header_strings: Vec<(String, String)>,
 
-    /// Regular expressions to expect in the headers. Format: [KEY]:[VALUE]
+    /// Regular expressions to expect in the HTTP headers. Format: [KEY]:[VALUE]
     /// Again, the first colon will be recognized as the KEY-VALUE separator, so
     /// a colon is not allowed in the KEY part of the regex specification.
-    #[arg(long, conflicts_with = "header_strings", value_parser = split_header::<String, String>)]
-    pub header_regexes: Vec<(String, String)>,
-
-    /// This only influences the case sensitivity of the value part, as header names are always case insensitive
-    #[arg(long, requires = "header_regexes", default_value_t = false)]
-    pub header_regexes_case_insensitive: bool,
+    /// The same rules as for the body regex apply, while key and value are taken as two separate
+    /// regex patterns.
+    /// Also note that case-insensitive matching is enabled for the the header name part by default,
+    /// and flags affecting newlines would have no effect, since newlines are not allowed within headers
+    #[arg(long, conflicts_with = "header_strings", value_parser = parse_regex_pattern_header_pair)]
+    pub header_regexes: Vec<(Regex, Regex)>,
 
     /// Expect the specified regexes to *not* match on the headers.
     #[arg(long, requires = "header_regexes", default_value_t = false)]
@@ -183,7 +180,7 @@ where
     Ok((name.trim().parse()?, value.trim().parse()?))
 }
 
-fn parse_header_pair(header_pair: &str) -> AnyhowResult<(String, String)> {
+fn parse_string_header_pair(header_pair: &str) -> AnyhowResult<(String, String)> {
     let (name, value): (String, String) = split_header(header_pair)?;
 
     Ok((
@@ -219,6 +216,18 @@ where
         Some((a, b)) => Ok((a.parse()?, Some(b.parse()?))),
         None => Ok((input.parse()?, None)),
     }
+}
+
+fn parse_regex_pattern_header_pair(pattern_pair: &str) -> AnyhowResult<(String, String)> {
+    let (name, value): (String, String) = split_header(pattern_pair)?;
+    RegexBuilder::new(&name).case_insensitive(true).build()?;
+    Regex::new(&value)?;
+    Ok((name, value))
+}
+
+fn parse_regex_pattern(pattern: &str) -> Result<String, regex::Error> {
+    RegexBuilder::new(pattern).crlf(true).build()?;
+    Ok(pattern.to_string())
 }
 
 #[cfg(test)]
@@ -279,15 +288,15 @@ mod tests {
         assert!(split_header("name:some\r\nvalue").is_err());
         assert!(split_header("näme:value").is_err());
         assert_eq!(
-            parse_header_pair(":value").unwrap(),
+            parse_string_header_pair(":value").unwrap(),
             ("".to_string(), "value".to_string())
         );
         assert_eq!(
-            parse_header_pair("name:").unwrap(),
+            parse_string_header_pair("name:").unwrap(),
             ("name".to_string(), "".to_string())
         );
         assert_eq!(
-            parse_header_pair("NaMe:VaLüE").unwrap(),
+            parse_string_header_pair("NaMe:VaLüE").unwrap(),
             ("name".to_string(), "VaLüE".to_string())
         );
     }

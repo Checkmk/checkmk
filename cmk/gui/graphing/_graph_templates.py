@@ -28,7 +28,6 @@ from ._expression import (
     Maximum,
     Merge,
     Metric,
-    MetricDeclaration,
     MetricExpression,
     Minimum,
     parse_expression,
@@ -259,14 +258,14 @@ def create_graph_recipe_from_template(
 
 
 def _to_metric_operation(
-    declaration: MetricDeclaration,
+    expression: MetricExpression,
     translated_metrics: Mapping[str, TranslatedMetric],
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
-    if isinstance(declaration, Constant):
-        return MetricOpConstant(value=float(declaration.value))
-    if isinstance(declaration, Metric):
+    if isinstance(expression, Constant):
+        return MetricOpConstant(value=float(expression.value))
+    if isinstance(expression, Metric):
         sources = [
             MetricOpRRDSource(
                 site_id=lq_row["site"],
@@ -274,13 +273,13 @@ def _to_metric_operation(
                 service_name=lq_row.get("service_description", "_HOST_"),
                 metric_name=pnp_cleanup(orig_name),
                 consolidation_func_name=(
-                    declaration.consolidation_func_name or enforced_consolidation_function
+                    expression.consolidation_func_name or enforced_consolidation_function
                 ),
                 scale=scale,
             )
             for orig_name, scale in zip(
-                translated_metrics[declaration.name]["orig_name"],
-                translated_metrics[declaration.name]["scale"],
+                translated_metrics[expression.name]["orig_name"],
+                translated_metrics[expression.name]["scale"],
             )
         ]
         if len(sources) > 1:
@@ -289,7 +288,7 @@ def _to_metric_operation(
                 operands=sources,
             )
         return sources[0]
-    if isinstance(declaration, Sum):
+    if isinstance(expression, Sum):
         return MetricOpOperator(
             operator_name="+",
             operands=[
@@ -299,10 +298,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for s in declaration.summands
+                for s in expression.summands
             ],
         )
-    if isinstance(declaration, Product):
+    if isinstance(expression, Product):
         return MetricOpOperator(
             operator_name="*",
             operands=[
@@ -312,46 +311,46 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for f in declaration.factors
+                for f in expression.factors
             ],
         )
-    if isinstance(declaration, Difference):
+    if isinstance(expression, Difference):
         return MetricOpOperator(
             operator_name="-",
             operands=[
                 _to_metric_operation(
-                    declaration.minuend,
+                    expression.minuend,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
                 _to_metric_operation(
-                    declaration.subtrahend,
+                    expression.subtrahend,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
             ],
         )
-    if isinstance(declaration, Fraction):
+    if isinstance(expression, Fraction):
         return MetricOpOperator(
             operator_name="/",
             operands=[
                 _to_metric_operation(
-                    declaration.dividend,
+                    expression.dividend,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
                 _to_metric_operation(
-                    declaration.divisor,
+                    expression.divisor,
                     translated_metrics,
                     lq_row,
                     enforced_consolidation_function,
                 ),
             ],
         )
-    if isinstance(declaration, Maximum):
+    if isinstance(expression, Maximum):
         return MetricOpOperator(
             operator_name="MAX",
             operands=[
@@ -361,10 +360,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    if isinstance(declaration, Minimum):
+    if isinstance(expression, Minimum):
         return MetricOpOperator(
             operator_name="MIN",
             operands=[
@@ -374,10 +373,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    if isinstance(declaration, Average):
+    if isinstance(expression, Average):
         return MetricOpOperator(
             operator_name="AVERAGE",
             operands=[
@@ -387,10 +386,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    if isinstance(declaration, Merge):
+    if isinstance(expression, Merge):
         return MetricOpOperator(
             operator_name="MERGE",
             operands=[
@@ -400,10 +399,10 @@ def _to_metric_operation(
                     lq_row,
                     enforced_consolidation_function,
                 )
-                for o in declaration.operands
+                for o in expression.operands
             ],
         )
-    raise TypeError(declaration)
+    raise TypeError(expression)
 
 
 def metric_expression_to_graph_recipe_expression(
@@ -413,7 +412,7 @@ def metric_expression_to_graph_recipe_expression(
     enforced_consolidation_function: GraphConsoldiationFunction | None,
 ) -> MetricOpRRDSource | MetricOpOperator | MetricOpConstant:
     return _to_metric_operation(
-        metric_expression.declaration,
+        metric_expression,
         translated_metrics,
         lq_row,
         enforced_consolidation_function,

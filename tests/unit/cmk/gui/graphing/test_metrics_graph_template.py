@@ -17,7 +17,6 @@ from cmk.gui.graphing._expression import (
     Difference,
     MaximumOf,
     Metric,
-    MetricExpression,
     parse_expression,
     WarningOf,
 )
@@ -104,42 +103,37 @@ def test_create_graph_recipe_from_template() -> None:
         title=None,
         metrics=[
             MetricDefinition(
-                expression=MetricExpression(Metric("fs_used")),
+                expression=Metric("fs_used"),
                 line_type="area",
             ),
             MetricDefinition(
-                expression=MetricExpression(
-                    declaration=Difference(
-                        minuend=Metric("fs_size"),
-                        subtrahend=Metric("fs_used"),
-                    ),
-                    explicit_color="e3fff9",
+                expression=Difference(
+                    minuend=Metric("fs_size"),
+                    subtrahend=Metric("fs_used"),
+                    explicit_color="#e3fff9",
                 ),
                 line_type="stack",
                 title="Free space",
             ),
             MetricDefinition(
-                expression=MetricExpression(Metric("fs_size")),
+                expression=Metric("fs_size"),
                 line_type="line",
             ),
         ],
         scalars=[
             ScalarDefinition(
-                expression=MetricExpression(WarningOf(Metric(("fs_used")))),
+                expression=WarningOf(Metric(("fs_used"))),
                 title="Warning",
             ),
             ScalarDefinition(
-                expression=MetricExpression(CriticalOf(Metric(("fs_used")))),
+                expression=CriticalOf(Metric(("fs_used"))),
                 title="Critical",
             ),
         ],
         conflicting_metrics=["fs_free"],
         optional_metrics=[],
         consolidation_function=None,
-        range=(
-            MetricExpression(Constant(0)),
-            MetricExpression(MaximumOf(Metric("fs_used"))),
-        ),
+        range=(Constant(0), MaximumOf(Metric("fs_used"))),
         omit_zero_metrics=False,
     )
     translated_metrics = translate_perf_data(

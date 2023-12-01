@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.graphing._expression import CriticalOf, Metric, MetricExpression, WarningOf
+from cmk.gui.graphing._expression import CriticalOf, Metric, WarningOf
 from cmk.gui.graphing._loader import load_graphing_plugins
 from cmk.gui.graphing._utils import (
     add_graphing_plugins,
@@ -56,11 +56,11 @@ def test_add_graphing_plugins() -> None:
         title="DB Connections",
         scalars=[
             ScalarDefinition(
-                MetricExpression(declaration=WarningOf(Metric("active_connections"))),
+                WarningOf(Metric("active_connections")),
                 "Active connections",
             ),
             ScalarDefinition(
-                MetricExpression(declaration=CriticalOf(Metric("active_connections"))),
+                CriticalOf(Metric("active_connections")),
                 "Active connections",
             ),
         ],
@@ -71,12 +71,12 @@ def test_add_graphing_plugins() -> None:
         omit_zero_metrics=False,
         metrics=[
             MetricDefinition(
-                MetricExpression(Metric("active_connections")),
+                Metric("active_connections"),
                 "line",
                 "Active connections",
             ),
             MetricDefinition(
-                MetricExpression(Metric("idle_connections")),
+                Metric("idle_connections"),
                 "line",
                 "Idle connections",
             ),

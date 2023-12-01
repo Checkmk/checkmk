@@ -181,92 +181,74 @@ def _parse_quantity(
         case str():
             metric = metric_info[quantity]
             return MetricDefinition(
-                expression=MetricExpression(Metric(quantity)),
+                expression=Metric(quantity),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.Constant():
             return MetricDefinition(
-                expression=MetricExpression(Constant(quantity.value)),
+                expression=Constant(quantity.value),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
             )
         case metric_api.WarningOf():
             metric = metric_info[quantity.name]
             return MetricDefinition(
-                expression=MetricExpression(WarningOf(Metric(quantity.name))),
+                expression=WarningOf(Metric(quantity.name)),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.CriticalOf():
             metric = metric_info[quantity.name]
             return MetricDefinition(
-                expression=MetricExpression(CriticalOf(Metric(quantity.name))),
+                expression=CriticalOf(Metric(quantity.name)),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.MinimumOf():
             metric = metric_info[quantity.name]
             return MetricDefinition(
-                expression=MetricExpression(MinimumOf(Metric(quantity.name))),
+                expression=MinimumOf(Metric(quantity.name)),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.MaximumOf():
             metric = metric_info[quantity.name]
             return MetricDefinition(
-                expression=MetricExpression(MaximumOf(Metric(quantity.name))),
+                expression=MaximumOf(Metric(quantity.name)),
                 line_type=line_type,
                 title=str(metric["title"]),
             )
         case metric_api.Sum():
             return MetricDefinition(
-                expression=MetricExpression(
-                    Sum(
-                        [
-                            _parse_quantity(s, line_type).expression.declaration
-                            for s in quantity.summands
-                        ]
-                    )
+                expression=Sum(
+                    [_parse_quantity(s, line_type).expression for s in quantity.summands]
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
             )
         case metric_api.Product():
             return MetricDefinition(
-                expression=MetricExpression(
-                    Product(
-                        [
-                            _parse_quantity(f, line_type).expression.declaration
-                            for f in quantity.factors
-                        ]
-                    )
+                expression=Product(
+                    [_parse_quantity(f, line_type).expression for f in quantity.factors]
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
             )
         case metric_api.Difference():
             return MetricDefinition(
-                expression=MetricExpression(
-                    Difference(
-                        minuend=_parse_quantity(quantity.minuend, line_type).expression.declaration,
-                        subtrahend=_parse_quantity(
-                            quantity.subtrahend, line_type
-                        ).expression.declaration,
-                    )
+                expression=Difference(
+                    minuend=_parse_quantity(quantity.minuend, line_type).expression,
+                    subtrahend=_parse_quantity(quantity.subtrahend, line_type).expression,
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
             )
         case metric_api.Fraction():
             return MetricDefinition(
-                expression=MetricExpression(
-                    Fraction(
-                        dividend=_parse_quantity(
-                            quantity.dividend, line_type
-                        ).expression.declaration,
-                        divisor=_parse_quantity(quantity.divisor, line_type).expression.declaration,
-                    )
+                expression=Fraction(
+                    dividend=_parse_quantity(quantity.dividend, line_type).expression,
+                    divisor=_parse_quantity(quantity.divisor, line_type).expression,
                 ),
                 line_type=line_type,
                 title=str(quantity.title.localize(_)),
@@ -278,12 +260,12 @@ def _parse_minimal_range(
 ) -> tuple[MetricExpression, MetricExpression]:
     return (
         (
-            MetricExpression(Constant(minimal_range.lower))
+            Constant(minimal_range.lower)
             if isinstance(minimal_range.lower, (int, float))
             else _parse_quantity(minimal_range.lower, "line").expression
         ),
         (
-            MetricExpression(Constant(minimal_range.upper))
+            Constant(minimal_range.upper)
             if isinstance(minimal_range.upper, (int, float))
             else _parse_quantity(minimal_range.upper, "line").expression
         ),
@@ -311,17 +293,17 @@ class GraphTemplate:
             title=None,
             metrics=[
                 MetricDefinition(
-                    expression=MetricExpression(Metric(name)),
+                    expression=Metric(name),
                     line_type="area",
                 ),
             ],
             scalars=[
                 ScalarDefinition(
-                    expression=MetricExpression(WarningOf(Metric(name))),
+                    expression=WarningOf(Metric(name)),
                     title=str(_("Warning")),
                 ),
                 ScalarDefinition(
-                    expression=MetricExpression(CriticalOf(Metric(name))),
+                    expression=CriticalOf(Metric(name)),
                     title=str(_("Critical")),
                 ),
             ],
@@ -423,10 +405,7 @@ class GraphTemplate:
             id=graph.name,
             title=graph.title.localize(_),
             range=(
-                (
-                    MetricExpression(Minimum([l.declaration for l in lower_ranges])),
-                    MetricExpression(Maximum([u.declaration for u in upper_ranges])),
-                )
+                (Minimum(lower_ranges), Maximum(upper_ranges))
                 if lower_ranges and upper_ranges
                 else None
             ),

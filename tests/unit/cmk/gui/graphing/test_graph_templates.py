@@ -179,17 +179,15 @@ def test_horizontal_rules_from_thresholds(
         gt._horizontal_rules_from_thresholds(
             [
                 ScalarDefinition(
-                    expression=MetricExpression(WarningOf(Metric("one"))),
+                    expression=WarningOf(Metric("one")),
                     title="Warning",
                 ),
                 ScalarDefinition(
-                    expression=MetricExpression(CriticalOf(Metric("power"))),
+                    expression=CriticalOf(Metric("power")),
                     title="Critical power",
                 ),
                 ScalarDefinition(
-                    expression=MetricExpression(
-                        Product([WarningOf(Metric("output")), Constant(-1)])
-                    ),
+                    expression=Product([WarningOf(Metric("output")), Constant(-1)]),
                     title="Warning output",
                 ),
             ],
@@ -209,7 +207,7 @@ def test_duplicate_graph_templates() -> None:
             expressions.extend(template.range)
 
         idents_by_metrics.setdefault(
-            tuple(sorted(m.name for e in expressions for m in e.declaration.metrics())), []
+            tuple(sorted(m.name for e in expressions for m in e.metrics())), []
         ).append(ident)
 
     assert {tuple(idents) for idents in idents_by_metrics.values() if len(idents) >= 2} == {
@@ -345,7 +343,7 @@ def test_conditional_perfometer() -> None:
 def _is_non_trivial(expressions: Sequence[MetricExpression]) -> bool:
     return any(
         not isinstance(
-            e.declaration,
+            e,
             (Constant, Metric, WarningOf, CriticalOf, MinimumOf, MaximumOf),
         )
         for e in expressions

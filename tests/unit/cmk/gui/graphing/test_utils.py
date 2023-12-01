@@ -21,7 +21,6 @@ from cmk.gui.graphing._expression import (
     Maximum,
     MaximumOf,
     Metric,
-    MetricExpression,
     Minimum,
     MinimumOf,
     Product,
@@ -881,15 +880,15 @@ def test_automatic_dict_append() -> None:
                 title=None,
                 scalars=[
                     utils.ScalarDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         title="metric",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(WarningOf(Metric("metric"))),
+                        expression=WarningOf(Metric("metric")),
                         title="Warning",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(CriticalOf(Metric("metric"))),
+                        expression=CriticalOf(Metric("metric")),
                         title="Critical",
                     ),
                 ],
@@ -912,15 +911,15 @@ def test_automatic_dict_append() -> None:
                 title=None,
                 scalars=[
                     utils.ScalarDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         title="Title",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(WarningOf(Metric("metric"))),
+                        expression=WarningOf(Metric("metric")),
                         title="Warn",
                     ),
                     utils.ScalarDefinition(
-                        expression=MetricExpression(CriticalOf(Metric("metric"))),
+                        expression=CriticalOf(Metric("metric")),
                         title="Crit",
                     ),
                 ],
@@ -948,7 +947,7 @@ def test_automatic_dict_append() -> None:
                 omit_zero_metrics=False,
                 metrics=[
                     MetricDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         line_type="line",
                     ),
                 ],
@@ -970,7 +969,7 @@ def test_automatic_dict_append() -> None:
                 omit_zero_metrics=False,
                 metrics=[
                     MetricDefinition(
-                        expression=MetricExpression(Metric("metric")),
+                        expression=Metric("metric"),
                         line_type="line",
                         title="Title",
                     ),
@@ -1053,61 +1052,57 @@ def test_graph_template_from_template(
                 omit_zero_metrics=False,
                 metrics=[
                     MetricDefinition(
-                        MetricExpression(Metric("metric-name-1")),
+                        Metric("metric-name-1"),
                         "stack",
                         "metric-name-1",
                     ),
                     MetricDefinition(
-                        MetricExpression(Constant(value=10)),
+                        Constant(value=10),
                         "stack",
                         "Constant",
                     ),
                     MetricDefinition(
-                        MetricExpression(WarningOf(Metric("metric-name-2"))),
+                        WarningOf(Metric("metric-name-2")),
                         "stack",
                         "metric-name-2",
                     ),
                     MetricDefinition(
-                        MetricExpression(CriticalOf(Metric("metric-name-3"))),
+                        CriticalOf(Metric("metric-name-3")),
                         "stack",
                         "metric-name-3",
                     ),
                     MetricDefinition(
-                        MetricExpression(MinimumOf(Metric("metric-name-4"))),
+                        MinimumOf(Metric("metric-name-4")),
                         "stack",
                         "metric-name-4",
                     ),
                     MetricDefinition(
-                        MetricExpression(MaximumOf(Metric("metric-name-5"))),
+                        MaximumOf(Metric("metric-name-5")),
                         "stack",
                         "metric-name-5",
                     ),
                     MetricDefinition(
-                        MetricExpression(Sum([Metric("metric-name-6")])),
+                        Sum([Metric("metric-name-6")]),
                         "stack",
                         "Sum",
                     ),
                     MetricDefinition(
-                        MetricExpression(Product([Metric("metric-name-7")])),
+                        Product([Metric("metric-name-7")]),
                         "stack",
                         "Product",
                     ),
                     MetricDefinition(
-                        MetricExpression(
-                            Difference(
-                                minuend=Metric("metric-name-7"),
-                                subtrahend=Metric("metric-name-8"),
-                            ),
+                        Difference(
+                            minuend=Metric("metric-name-7"),
+                            subtrahend=Metric("metric-name-8"),
                         ),
                         "stack",
                         "Difference",
                     ),
                     MetricDefinition(
-                        MetricExpression(
-                            Fraction(
-                                dividend=Metric("metric-name-9"),
-                                divisor=Metric("metric-name-10"),
-                            ),
+                        Fraction(
+                            dividend=Metric("metric-name-9"),
+                            divisor=Metric("metric-name-10"),
                         ),
                         "stack",
                         "Fraction",
@@ -1170,19 +1165,19 @@ def test_graph_template_from_template(
                 title="Title",
                 scalars=[
                     utils.ScalarDefinition(
-                        MetricExpression(WarningOf(Metric("metric-name-2"))),
+                        WarningOf(Metric("metric-name-2")),
                         "metric-name-2",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(CriticalOf(Metric("metric-name-3"))),
+                        CriticalOf(Metric("metric-name-3")),
                         "metric-name-3",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(MinimumOf(Metric("metric-name-4"))),
+                        MinimumOf(Metric("metric-name-4")),
                         "metric-name-4",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(MaximumOf(Metric("metric-name-5"))),
+                        MaximumOf(Metric("metric-name-5")),
                         "metric-name-5",
                     ),
                 ],
@@ -1193,41 +1188,37 @@ def test_graph_template_from_template(
                 omit_zero_metrics=False,
                 metrics=[
                     MetricDefinition(
-                        MetricExpression(Metric("metric-name-1")),
+                        Metric("metric-name-1"),
                         "line",
                         "metric-name-1",
                     ),
                     MetricDefinition(
-                        MetricExpression(Constant(value=10)),
+                        Constant(value=10),
                         "line",
                         "Constant",
                     ),
                     MetricDefinition(
-                        MetricExpression(Sum([Metric("metric-name-6")])),
+                        Sum([Metric("metric-name-6")]),
                         "line",
                         "Sum",
                     ),
                     MetricDefinition(
-                        MetricExpression(Product([Metric("metric-name-7")])),
+                        Product([Metric("metric-name-7")]),
                         "line",
                         "Product",
                     ),
                     MetricDefinition(
-                        MetricExpression(
-                            Difference(
-                                minuend=Metric("metric-name-7"),
-                                subtrahend=Metric("metric-name-8"),
-                            ),
+                        Difference(
+                            minuend=Metric("metric-name-7"),
+                            subtrahend=Metric("metric-name-8"),
                         ),
                         "line",
                         "Difference",
                     ),
                     MetricDefinition(
-                        MetricExpression(
-                            Fraction(
-                                dividend=Metric("metric-name-9"),
-                                divisor=Metric("metric-name-10"),
-                            ),
+                        Fraction(
+                            dividend=Metric("metric-name-9"),
+                            divisor=Metric("metric-name-10"),
                         ),
                         "line",
                         "Fraction",
@@ -1247,15 +1238,13 @@ def test_graph_template_from_template(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(MetricExpression(Constant(0)), MetricExpression(Constant(100.0))),
+                range=(Constant(0), Constant(100.0)),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
                 consolidation_function=None,
                 omit_zero_metrics=False,
-                metrics=[
-                    MetricDefinition(MetricExpression(Metric("metric-name")), "line", "metric-name")
-                ],
+                metrics=[MetricDefinition(Metric("metric-name"), "line", "metric-name")],
             ),
             id="explicit-range",
         ),
@@ -1277,9 +1266,7 @@ def test_graph_template_from_template(
                 optional_metrics=["metric-name-opt"],
                 consolidation_function=None,
                 omit_zero_metrics=False,
-                metrics=[
-                    MetricDefinition(MetricExpression(Metric("metric-name")), "line", "metric-name")
-                ],
+                metrics=[MetricDefinition(Metric("metric-name"), "line", "metric-name")],
             ),
             id="optional-conflicting",
         ),
@@ -1349,35 +1336,35 @@ def test_graph_template_from_graph(
                 range=None,
                 scalars=[
                     utils.ScalarDefinition(
-                        MetricExpression(WarningOf(Metric("metric-name-l3"), "warn")),
+                        WarningOf(Metric("metric-name-l3"), "warn"),
                         "metric-name-l3",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(CriticalOf(Metric("metric-name-l4"), "crit")),
+                        CriticalOf(Metric("metric-name-l4"), "crit"),
                         "metric-name-l4",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(MinimumOf(Metric("metric-name-l5"), "min")),
+                        MinimumOf(Metric("metric-name-l5"), "min"),
                         "metric-name-l5",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(MaximumOf(Metric("metric-name-l6"), "max")),
+                        MaximumOf(Metric("metric-name-l6"), "max"),
                         "metric-name-l6",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(WarningOf(Metric("metric-name-u3"), "warn")),
+                        WarningOf(Metric("metric-name-u3"), "warn"),
                         "metric-name-u3",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(CriticalOf(Metric("metric-name-u4"), "crit")),
+                        CriticalOf(Metric("metric-name-u4"), "crit"),
                         "metric-name-u4",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(MinimumOf(Metric("metric-name-u5"), "min")),
+                        MinimumOf(Metric("metric-name-u5"), "min"),
                         "metric-name-u5",
                     ),
                     utils.ScalarDefinition(
-                        MetricExpression(MaximumOf(Metric("metric-name-u6"), "max")),
+                        MaximumOf(Metric("metric-name-u6"), "max"),
                         "metric-name-u6",
                     ),
                 ],
@@ -1386,18 +1373,10 @@ def test_graph_template_from_graph(
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-l1")), "-stack", "metric-name-l1"
-                    ),
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-u1")), "stack", "metric-name-u1"
-                    ),
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-l2")), "-line", "metric-name-l2"
-                    ),
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-u2")), "line", "metric-name-u2"
-                    ),
+                    MetricDefinition(Metric("metric-name-l1"), "-stack", "metric-name-l1"),
+                    MetricDefinition(Metric("metric-name-u1"), "stack", "metric-name-u1"),
+                    MetricDefinition(Metric("metric-name-l2"), "-line", "metric-name-l2"),
+                    MetricDefinition(Metric("metric-name-u2"), "line", "metric-name-u2"),
                 ],
             ),
             id="lower-upper",
@@ -1423,22 +1402,15 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(
-                    MetricExpression(Minimum([Constant(1), Constant(2)])),
-                    MetricExpression(Maximum([Constant(10), Constant(11)])),
-                ),
+                range=(Minimum([Constant(1), Constant(2)]), Maximum([Constant(10), Constant(11)])),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-l")), "-line", "metric-name-l"
-                    ),
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-u")), "line", "metric-name-u"
-                    ),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
                 ],
             ),
             id="range-both",
@@ -1463,22 +1435,15 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(
-                    MetricExpression(Minimum([Constant(1)])),
-                    MetricExpression(Maximum([Constant(10)])),
-                ),
+                range=(Minimum([Constant(1)]), Maximum([Constant(10)])),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-l")), "-line", "metric-name-l"
-                    ),
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-u")), "line", "metric-name-u"
-                    ),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
                 ],
             ),
             id="range-only-lower",
@@ -1503,22 +1468,15 @@ def test_graph_template_from_graph(
             utils.GraphTemplate(
                 id="name",
                 title="Title",
-                range=(
-                    MetricExpression(Minimum([Constant(2)])),
-                    MetricExpression(Maximum([Constant(11)])),
-                ),
+                range=(Minimum([Constant(2)]), Maximum([Constant(11)])),
                 scalars=[],
                 conflicting_metrics=[],
                 optional_metrics=[],
                 consolidation_function=None,
                 omit_zero_metrics=False,
                 metrics=[
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-l")), "-line", "metric-name-l"
-                    ),
-                    MetricDefinition(
-                        MetricExpression(Metric("metric-name-u")), "line", "metric-name-u"
-                    ),
+                    MetricDefinition(Metric("metric-name-l"), "-line", "metric-name-l"),
+                    MetricDefinition(Metric("metric-name-u"), "line", "metric-name-u"),
                 ],
             ),
             id="range-only-upper",

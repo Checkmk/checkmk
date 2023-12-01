@@ -1289,7 +1289,7 @@ def test_graph_template_from_graph(
     graph: graph_api.Graph, raw_metric_names: Sequence[str], expected_template: utils.GraphTemplate
 ) -> None:
     for r in raw_metric_names:
-        utils.metric_info[r] = {"title": r}
+        utils.metric_info[r] = {"title": r, "unit": "", "color": "#000000"}
     assert utils.GraphTemplate.from_graph(graph) == expected_template
 
 
@@ -1531,5 +1531,5 @@ def test_graph_template_from_bidirectional(
     expected_template: utils.GraphTemplate,
 ) -> None:
     for r in raw_metric_names:
-        utils.metric_info[r] = {"title": r}
+        utils.metric_info[r] = {"title": r, "unit": "", "color": "#000000"}
     assert utils.GraphTemplate.from_bidirectional(graph) == expected_template

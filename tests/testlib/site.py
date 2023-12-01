@@ -1567,7 +1567,7 @@ class SiteFactory:
             pytest.skip(
                 f"{test_site.version} is not a supported version for {target_version.version}"
             )
-
+        self.version = target_version
         site = self.get_existing_site(test_site.id)
         site.install_cmk()
         site.stop()
@@ -1607,6 +1607,8 @@ class SiteFactory:
         assert (
             site.version.edition.short == target_version.edition.short
         ), "Edition mismatch during update!"
+
+        site.openapi.activate_changes_and_wait_for_completion()
 
         return test_site
 

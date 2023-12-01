@@ -10,7 +10,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Annotated, Callable, Literal, Self, Union
 
-from pydantic import BaseModel, Field, field_validator, SerializeAsAny, TypeAdapter
+from pydantic import BaseModel, Field, field_validator, PlainValidator, SerializeAsAny, TypeAdapter
 from typing_extensions import TypedDict
 
 from livestatus import SiteId
@@ -71,9 +71,55 @@ RetranslationMap = Mapping[
 ]
 
 
-class MetricOpConstant(BaseModel, frozen=True):
+class MetricOperation(BaseModel, ABC, frozen=True):
+    ident: str
+
+    @staticmethod
+    @abstractmethod
+    def name() -> str:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def needed_elements(
+        self,
+        resolve_combined_single_metric_spec: Callable[
+            [CombinedSingleMetricSpec], Sequence[GraphMetric]
+        ],
+    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
+        raise NotImplementedError()
+
+
+class MetricOperationRegistry(Registry[type[MetricOperation]]):
+    def plugin_name(self, instance: type[MetricOperation]) -> str:
+        return instance.name()
+
+
+metric_operation_registry = MetricOperationRegistry()
+
+
+def parse_metric_operation(raw: object) -> MetricOperation:
+    parsed = TypeAdapter(
+        Annotated[
+            Union[*metric_operation_registry.values()],
+            Field(discriminator="ident"),
+        ],
+    ).validate_python(raw)
+    # mypy apparently doesn't understand TypeAdapter.validate_python
+    assert isinstance(parsed, MetricOperation)
+    return parsed
+
+
+class MetricOpConstant(MetricOperation, frozen=True):
     ident: Literal["constant"] = "constant"
     value: float
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_constant"
 
     def needed_elements(
         self,
@@ -87,12 +133,16 @@ class MetricOpConstant(BaseModel, frozen=True):
         return self
 
 
-class MetricOpScalar(BaseModel, frozen=True):
+class MetricOpScalar(MetricOperation, frozen=True):
     ident: Literal["scalar"] = "scalar"
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
     scalar_name: Literal["warn", "crit", "min", "max"] | None
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_scalar"
 
     def needed_elements(
         self,
@@ -110,10 +160,14 @@ class MetricOpScalar(BaseModel, frozen=True):
         return MetricOpConstant(value=value)
 
 
-class MetricOpOperator(BaseModel, frozen=True):
+class MetricOpOperator(MetricOperation, frozen=True):
     ident: Literal["operator"] = "operator"
     operator_name: Operators
-    operands: Sequence[MetricOperation] = []
+    operands: Sequence[Annotated[MetricOperation, PlainValidator(parse_metric_operation)]] = []
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_operator"
 
     def needed_elements(
         self,
@@ -230,10 +284,14 @@ class TransformationParametersForecast(BaseModel, frozen=True):
 
 
 # TODO transformation is not part of cre but we first have to fix all types
-class MetricOpTransformation(BaseModel, frozen=True):
+class MetricOpTransformation(MetricOperation, frozen=True):
     ident: Literal["transformation"] = "transformation"
     parameters: TransformationParametersPercentile | TransformationParametersForecast
-    operands: Sequence[MetricOperation]
+    operands: Sequence[Annotated[MetricOperation, PlainValidator(parse_metric_operation)]] = []
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_transformation"
 
     def needed_elements(
         self,
@@ -265,9 +323,13 @@ class SingleMetricSpec(TypedDict):
 
 
 # TODO combined is not part of cre but we first have to fix all types
-class MetricOpCombined(BaseModel, frozen=True):
+class MetricOpCombined(MetricOperation, frozen=True):
     ident: Literal["combined"] = "combined"
     single_metric_spec: SingleMetricSpec
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_combined"
 
     def needed_elements(
         self,
@@ -293,7 +355,7 @@ class MetricOpCombined(BaseModel, frozen=True):
         return self
 
 
-class MetricOpRRDSource(BaseModel, frozen=True):
+class MetricOpRRDSource(MetricOperation, frozen=True):
     ident: Literal["rrd"] = "rrd"
     site_id: SiteId
     host_name: HostName
@@ -301,6 +363,10 @@ class MetricOpRRDSource(BaseModel, frozen=True):
     metric_name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None
     scale: float
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_rrd"
 
     def needed_elements(
         self,
@@ -337,12 +403,16 @@ class MetricOpRRDSource(BaseModel, frozen=True):
         return metrics[0]
 
 
-class MetricOpRRDChoice(BaseModel, frozen=True):
+class MetricOpRRDChoice(MetricOperation, frozen=True):
     ident: Literal["rrd_choice"] = "rrd_choice"
     host_name: HostName
     service_name: ServiceName
     metric_name: MetricName
     consolidation_func_name: GraphConsoldiationFunction | None
+
+    @staticmethod
+    def name() -> str:
+        return "metric_op_rrd_choice"
 
     def needed_elements(
         self,
@@ -370,17 +440,6 @@ class MetricOpRRDChoice(BaseModel, frozen=True):
             return MetricOpOperator(operator_name="MERGE", operands=metrics)
 
         return metrics[0]
-
-
-MetricOperation = (
-    MetricOpConstant
-    | MetricOpOperator
-    | MetricOpTransformation
-    | MetricOpCombined
-    | MetricOpRRDSource
-    | MetricOpRRDChoice
-    | MetricOpScalar
-)
 
 
 MetricOpOperator.model_rebuild()

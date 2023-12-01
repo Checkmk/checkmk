@@ -8,7 +8,17 @@ from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from . import _perfometer
 from ._explicit_graphs import ExplicitGraphSpecification
-from ._graph_specification import graph_specification_registry
+from ._graph_specification import (
+    graph_specification_registry,
+    metric_operation_registry,
+    MetricOpCombined,
+    MetricOpConstant,
+    MetricOpOperator,
+    MetricOpRRDChoice,
+    MetricOpRRDSource,
+    MetricOpScalar,
+    MetricOpTransformation,
+)
 from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
     get_first_matching_perfometer,
@@ -26,6 +36,13 @@ from ._valuespecs import PageVsAutocomplete
 
 def register(page_registry: PageRegistry, config_variable_registry: ConfigVariableRegistry) -> None:
     page_registry.register_page("ajax_vs_unit_resolver")(PageVsAutocomplete)
+    metric_operation_registry.register(MetricOpConstant)
+    metric_operation_registry.register(MetricOpScalar)
+    metric_operation_registry.register(MetricOpOperator)
+    metric_operation_registry.register(MetricOpTransformation)
+    metric_operation_registry.register(MetricOpCombined)
+    metric_operation_registry.register(MetricOpRRDSource)
+    metric_operation_registry.register(MetricOpRRDChoice)
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
     register_time_series_expressions(time_series_expression_registry)

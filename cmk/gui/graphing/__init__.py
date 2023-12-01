@@ -16,7 +16,6 @@ from ._graph_specification import (
     MetricOpRRDChoice,
     MetricOpRRDSource,
     MetricOpScalar,
-    MetricOpTransformation,
 )
 from ._graph_templates import TemplateGraphSpecification
 from ._perfometer import (
@@ -38,7 +37,6 @@ def register(page_registry: PageRegistry, config_variable_registry: ConfigVariab
     metric_operation_registry.register(MetricOpConstant)
     metric_operation_registry.register(MetricOpScalar)
     metric_operation_registry.register(MetricOpOperator)
-    metric_operation_registry.register(MetricOpTransformation)
     metric_operation_registry.register(MetricOpRRDSource)
     metric_operation_registry.register(MetricOpRRDChoice)
     graph_specification_registry.register(ExplicitGraphSpecification)

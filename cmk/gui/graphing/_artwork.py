@@ -30,8 +30,6 @@ from ._graph_specification import (
     GraphMetric,
     GraphRecipe,
     HorizontalRule,
-    MetricOpTransformation,
-    TransformationParametersForecast,
 )
 from ._rrd_fetch import fetch_rrd_data_for_graph
 from ._timeseries import clean_time_series_point, evaluate_time_series_expression
@@ -347,10 +345,7 @@ def _compute_graph_curves(
                 title += " - " + ts.metadata.title
 
             color = ts.metadata.color or metric.color
-            if i % 2 == 1 and not (
-                isinstance(metric.operation, MetricOpTransformation)
-                and isinstance(metric.operation.parameters, TransformationParametersForecast)
-            ):
+            if i % 2 == 1 and metric.operation.fade_odd_color():
                 color = render_color(fade_color(parse_color(color), 0.3))
 
             yield Curve(

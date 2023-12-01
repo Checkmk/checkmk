@@ -19,7 +19,7 @@ pub struct Cli {
     pub auth_pw: AuthPw,
 
     /// Additional header in the form NAME:VALUE. Use multiple times for additional headers.
-    #[arg(short = 'k', long="header", value_parser=split_header)]
+    #[arg(short = 'k', long="header", value_parser=split_header::<HeaderName, HeaderValue>)]
     pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
 
     /// URL to check
@@ -111,13 +111,27 @@ pub struct Cli {
 
     /// Strings to expect in the headers. Format: [KEY]:[VALUE]
     /// Specify multiple times for additional headers.
-    /// It's possible to only specify key or value, but a separating colon is
+    /// It's possible to only specify key or value, but a (first) separating colon is
     /// mandatory to identify them.
     /// Keys are matched case-insensitive and may only contain ASCII characters.
     /// Values are matched case-sensitive. If they contain non-ASCII characters,
     /// they are expected to be latin-1
     #[arg(short = 'd', long, value_parser=parse_header_pair)]
     pub header_strings: Vec<(String, String)>,
+
+    /// Regular expressions to expect in the headers. Format: [KEY]:[VALUE]
+    /// Again, the first colon will be recognized as the KEY-VALUE separator, so
+    /// a colon is not allowed in the KEY part of the regex specification.
+    #[arg(long, conflicts_with = "header_strings", value_parser = split_header::<String, String>)]
+    pub header_regexes: Vec<(String, String)>,
+
+    /// This only influences the case sensitivity of the value part, as header names are always case insensitive
+    #[arg(long, requires = "header_regexes", default_value_t = false)]
+    pub header_regexes_case_insensitive: bool,
+
+    /// Expect the specified regexes to *not* match on the headers.
+    #[arg(long, requires = "header_regexes", default_value_t = false)]
+    pub header_regexes_invert: bool,
 
     /// Expected HTTP status code.
     /// Note: Avoid setting this to a 3xx code while setting "--onredirect=warning/critical"
@@ -156,34 +170,39 @@ pub struct AuthPw {
     pub auth_pwstore: Option<String>,
 }
 
-fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
+fn split_header<T, U>(header: &str) -> AnyhowResult<(T, U)>
+where
+    T: FromStr,
+    T::Err: 'static + std::error::Error + std::marker::Send + std::marker::Sync,
+    U: FromStr,
+    U::Err: 'static + std::error::Error + std::marker::Send + std::marker::Sync,
+{
     let Some((name, value)) = header.split_once(':') else {
         bail!("Invalid HTTP header: {} (missing ':')", header);
     };
     Ok((name.trim().parse()?, value.trim().parse()?))
 }
 
-fn parse_header_pair(header: &str) -> AnyhowResult<(String, String)> {
-    let Some((name, value)) = header.split_once(':') else {
-        bail!("Invalid HTTP header: {} (missing ':')", header);
-    };
+fn parse_header_pair(header_pair: &str) -> AnyhowResult<(String, String)> {
+    let (name, value): (String, String) = split_header(header_pair)?;
 
     Ok((
-        if name.trim().is_empty() {
-            String::new()
+        // HeaderNames have some properties and requirements (case insensitive, only ASCII).
+        // Instead of checking and formatting manually, we convert to HeaderName and back.
+        // But we want to allow an empty name.
+        if name.is_empty() {
+            name
         } else {
-            // HeaderNames have some properties and requirements (case insensitive, only ASCII).
-            // Instead of checking and formatting manually, we convert the search
-            // string to HeaderName and back.
-            HeaderName::from_str(name.trim())?.to_string()
+            HeaderName::from_str(&name)?.to_string()
         },
+        // We leave the value string unchecked:
         // HeaderValues, while they *should* only contain ASCII chars, are allowed to be
         // ISO-8859-1 ("latin-1") encoded, and are even ophaque bytes in general.
         // By that, it makes sense to search for arbitrary text in the latin-1-decoded
         // HeaderValue text, as this also includes ASCII. Characters that can't be encoded in
         // latin-1 can't be found in a latin-1 HeaderValue, but thats rather a problem of the
         // caller than invalid input.
-        value.trim().to_string(),
+        value,
     ))
 }
 
@@ -208,6 +227,10 @@ mod tests {
     use clap::CommandFactory;
     use http::{HeaderName, HeaderValue};
     use std::str::FromStr;
+
+    fn split_header(header: &str) -> AnyhowResult<(HeaderName, HeaderValue)> {
+        super::split_header(header)
+    }
 
     #[test]
     fn verify_cli() {

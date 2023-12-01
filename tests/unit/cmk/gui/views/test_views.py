@@ -182,6 +182,12 @@ def test_registered_commands() -> None:
             "tables": ["event"],
             "title": "Custom action",
         },
+        "remove_acknowledgments": {
+            "group": "acknowledge",
+            "permission": "action.acknowledge",
+            "tables": ["host", "service", "aggr"],
+            "title": "Remove acknowledgments",
+        },
         "remove_comments": {
             "permission": "action.addcomment",
             "tables": ["comment"],

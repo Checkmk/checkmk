@@ -63,6 +63,7 @@ def register(
     command_registry.register(CommandFakeCheckResult)
     command_registry.register(CommandCustomNotification)
     command_registry.register(CommandAcknowledge)
+    command_registry.register(CommandRemoveAcknowledgments)
     command_registry.register(CommandAddComment)
     command_registry.register(CommandScheduleDowntimes)
     command_registry.register(CommandRemoveDowntime)
@@ -861,15 +862,11 @@ class CommandAcknowledge(Command):
 
     @property
     def confirm_title(self) -> str:
-        return (
-            _("Acknowledge problems?")
-            if request.var("_acknowledge")
-            else _("Remove acknowledgement?")
-        )
+        return _("Acknowledge problems?")
 
     @property
     def confirm_button(self) -> LazyString:
-        return _l("Acknowledge") if request.var("_acknowledge") else _l("Remove")
+        return _l("Yes, acknowledge")
 
     @property
     def icon_name(self):
@@ -894,6 +891,43 @@ class CommandAcknowledge(Command):
     @property
     def tables(self):
         return ["host", "service", "aggr"]
+
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        if request.var("_ack_expire"):
+            date = request.get_str_input("_ack_expire_date")
+            time_ = request.get_str_input("_ack_expire_time")
+            timestamp = time.mktime(time.strptime(f"{date} {time_}", "%Y-%m-%d %H:%M"))
+            formatted_datetime_str = self.confirm_dialog_date_and_time_format(timestamp)
+
+        expire_conditions_li = html.render_li(
+            _("On core restart OR recovery (OK/UP)")
+            if request.var("_ack_sticky")
+            else _("If state changes OR core restarts OR on recovery (OK/UP)")
+        )
+        expire_time_li = html.render_li(
+            _("On %s (server time).") % formatted_datetime_str
+            if request.var("_ack_expire")
+            else _("No expiration date")
+        )
+        persistent_comment_div = html.render_div(
+            _("Comment will be kept after acknowledgment expires.")
+            if request.var("_ack_persistent")
+            else _("Comment will be removed after acknowledgment expires."),
+            class_="confirm_block",
+        )
+
+        return html.render_div(
+            content=html.render_div(_("Acknowledgment expires:"), class_="confirm_block")
+            + expire_conditions_li
+            + expire_time_li
+            + persistent_comment_div,
+            class_="confirm_block",
+        )
 
     def render(self, what) -> None:  # type: ignore[no-untyped-def]
         submit_id = "_acknowledge"
@@ -1077,20 +1111,6 @@ class CommandAcknowledge(Command):
                 len(action_rows),
             )
 
-        # TODO: Move this into a new, separate command "Remove acknowledgments"
-        # if request.var("_remove_ack"):
-
-        # def make_command_rem(spec, cmdtag):
-        # return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
-
-        # if "aggr_tree" in row:  # BI mode
-        # commands = [
-        # (site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs
-        # ]
-        # else:
-        # commands = [make_command_rem(spec, cmdtag)]
-        # return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
-
         return None
 
     def _vs_date(self) -> DatePicker:
@@ -1104,6 +1124,96 @@ class CommandAcknowledge(Command):
             title=_("Acknowledge problems timepicker"),
             onchange="cmk.page_menu.ack_problems_update_expiration_active_state(this);",
         )
+
+
+class CommandRemoveAcknowledgments(Command):
+    @property
+    def ident(self) -> str:
+        return "remove_acknowledgments"
+
+    @property
+    def title(self) -> str:
+        return _("Remove acknowledgments")
+
+    @property
+    def confirm_title(self) -> str:
+        return _("Remove all acknowledgments?")
+
+    @property
+    def confirm_button(self) -> LazyString:
+        return _l("Remove all")
+
+    @property
+    def icon_name(self):
+        return "ack"
+
+    @property
+    def permission(self) -> Permission:
+        return PermissionActionAcknowledge
+
+    @property
+    def group(self) -> type[CommandGroup]:
+        return CommandGroupAcknowledge
+
+    @property
+    def tables(self):
+        return ["host", "service", "aggr"]
+
+    @property
+    def show_command_form(self) -> bool:
+        return False
+
+    def confirm_dialog_additions(
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        row: Row,
+        len_action_rows: int,
+    ) -> HTML:
+        return (
+            html.render_div(_("Acknowledgments: ") + str(self._number_of_acknowledgments))
+            if self._number_of_acknowledgments
+            else HTML()
+        )
+
+    def _action(
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
+    ) -> CommandActionResult:
+        if not request.var("_remove_acknowledgments"):
+            return None
+
+        def make_command_rem(spec, cmdtag):
+            return "REMOVE_" + cmdtag + "_ACKNOWLEDGEMENT;%s" % spec
+
+        # TODO: Can we also find out the number of acknowledgments for BI aggregation rows?
+        self._number_of_acknowledgments: int | None = None
+        if "aggr_tree" in row:  # BI mode
+            specs = []
+            for site, host, service in _find_all_leaves(row["aggr_tree"]):
+                if service:
+                    spec = f"{host};{service}"
+                    cmdtag = "SVC"
+                else:
+                    spec = host
+                    cmdtag = "HOST"
+                specs.append((site, spec, cmdtag))
+            commands = [(site, make_command_rem(spec, cmdtag)) for site, spec_, cmdtag_ in specs]
+        else:
+            commands = [make_command_rem(spec, cmdtag)]
+
+            what = "host" if cmdtag == "HOST" else "service"
+            unique_acknowledgments: set[tuple[str, str]] = set()
+            for row_ in action_rows:
+                unique_acknowledgments.update(
+                    {
+                        # take author and timestamp as unique acknowledgment key
+                        # comment_spec = [id, author, comment, type, timestamp]
+                        (comment_spec[1], comment_spec[4])
+                        for comment_spec in row_.get(f"{what}_comments_with_extra_info", [])
+                    }
+                )
+            self._number_of_acknowledgments = len(unique_acknowledgments)
+
+        return commands, self.confirm_dialog_options(cmdtag, row, len(action_rows))
 
 
 # .
@@ -1607,34 +1717,6 @@ class CommandScheduleDowntimes(Command):
             self.confirm_button,
         )
 
-    def _get_start_msg(self, start_at: float) -> str:
-        start_weekday, start_month, start_day, start_time, start_year = time.asctime(
-            time.localtime(start_at)
-        ).split()
-        return _("%s, %s. %s %s at %s") % (
-            start_weekday,
-            start_day,
-            start_month,
-            start_year,
-            start_time,
-        )
-
-    def _get_end_msg(self, start_at: float) -> str:
-        end_weekday, end_month, end_day, end_time, end_year = time.asctime(
-            time.localtime(
-                self._get_adhoc_end_time(start_at)
-                if request.var("_down_adhoc")
-                else self._custom_end_time(start_at)
-            )
-        ).split()
-        return _("%s, %s. %s %s at %s") % (
-            end_weekday,
-            end_day,
-            end_month,
-            end_year,
-            end_time,
-        )
-
     def _get_adhoc_end_time(self, start_time: float) -> float:
         return start_time + active_config.adhoc_downtime.get("duration", 0) * 60
 
@@ -1648,10 +1730,17 @@ class CommandScheduleDowntimes(Command):
         additions = HTMLWriter.render_table(
             HTMLWriter.render_tr(
                 HTMLWriter.render_td(_("Start:"))
-                + HTMLWriter.render_td(self._get_start_msg(start_at))
+                + HTMLWriter.render_td(self.confirm_dialog_date_and_time_format(start_at))
             )
             + HTMLWriter.render_tr(
-                HTMLWriter.render_td(_("End:")) + HTMLWriter.render_td(self._get_end_msg(start_at))
+                HTMLWriter.render_td(_("End:"))
+                + HTMLWriter.render_td(
+                    self.confirm_dialog_date_and_time_format(
+                        self._get_adhoc_end_time(start_at)
+                        if request.var("_down_adhoc")
+                        else self._custom_end_time(start_at)
+                    )
+                )
             )
         )
 

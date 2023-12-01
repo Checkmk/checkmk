@@ -634,8 +634,9 @@ div#page_menu_popups {
   .confirm_content {
     margin: 5px 25px 0px;
 
-    div.confirm_info {
-      margin-top: 4px;
+    div.confirm_info,
+    div.confirm_block {
+      margin-top: 0.5 * $spacing;
     }
   }
 

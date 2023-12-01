@@ -94,6 +94,10 @@ class Command(abc.ABC):
             self.confirm_button,
         )
 
+    def confirm_dialog_date_and_time_format(self, timestamp: float) -> str:
+        # Return date and time in the format of e.g. "Mon, 01. January 2042 at 01:23"
+        return time.strftime(_("%a, %d. %B %Y at %H:%M"), time.localtime(timestamp))
+
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML(
             _("Affected %s: %s")

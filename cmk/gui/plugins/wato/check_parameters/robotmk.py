@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, TextInput
+from cmk.gui.valuespec import Age, Dictionary, ListOf, RegExp, TextInput, Tuple
 
 
 def _item_spec() -> TextInput:
@@ -26,6 +26,31 @@ def _parameter_valuespec() -> Dictionary:
                     Age,
                     title=_("Maximum runtime of a test run"),
                     default_levels=(0, 0),
+                ),
+            ),
+            (
+                "runtime_thresholds_keywords",
+                ListOf(
+                    valuespec=Tuple(
+                        title=_("<b>Keyword</b> monitoring"),
+                        show_titles=True,
+                        orientation="horizontal",
+                        elements=[
+                            RegExp(
+                                title=("<b>Keyword</b> pattern"),
+                                allow_empty=False,
+                                mode="complete",
+                            ),
+                            SimpleLevels(
+                                Age,
+                                title=_("Maximum runtime of a keyword run"),
+                                default_levels=(0, 0),
+                            ),
+                        ],
+                    ),
+                    add_label=_("Add new threshold"),
+                    movable=False,
+                    title=_("<b>Keyword</b> thresholds"),
                 ),
             ),
         ],

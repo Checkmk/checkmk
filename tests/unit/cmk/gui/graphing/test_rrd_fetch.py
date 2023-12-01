@@ -21,12 +21,11 @@ from cmk.gui.graphing._graph_specification import (
     GraphRecipe,
     MetricOpRRDChoice,
     MetricOpRRDSource,
-    MetricOpTransformation,
     NeededElementForTranslation,
-    TransformationParametersPercentile,
 )
 from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._rrd_fetch import fetch_rrd_data_for_graph, translate_and_merge_rrd_columns
+from cmk.gui.graphing.cee._graphs import MetricOpTransformation, TransformationParametersPercentile
 from cmk.gui.time_series import TimeSeries, TimeSeriesValues
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 

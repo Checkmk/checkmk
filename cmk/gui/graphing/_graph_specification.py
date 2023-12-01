@@ -82,9 +82,7 @@ class MetricOperation(BaseModel, ABC, frozen=True):
     @abstractmethod
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         raise NotImplementedError()
 
@@ -123,9 +121,7 @@ class MetricOpConstant(MetricOperation, frozen=True):
 
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield from ()
 
@@ -146,9 +142,7 @@ class MetricOpScalar(MetricOperation, frozen=True):
 
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForTranslation(self.host_name, self.service_name)
 
@@ -171,15 +165,9 @@ class MetricOpOperator(MetricOperation, frozen=True):
 
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (
-            ne
-            for o in self.operands
-            for ne in o.needed_elements(resolve_combined_single_metric_spec)
-        )
+        yield from (ne for o in self.operands for ne in o.needed_elements(resolver))
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         return MetricOpOperator(
@@ -295,64 +283,15 @@ class MetricOpTransformation(MetricOperation, frozen=True):
 
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        yield from (
-            ne
-            for o in self.operands
-            for ne in o.needed_elements(resolve_combined_single_metric_spec)
-        )
+        yield from (ne for o in self.operands for ne in o.needed_elements(resolver))
 
     def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
         return MetricOpTransformation(
             parameters=self.parameters,
             operands=[o.reverse_translate(retranslation_map) for o in self.operands],
         )
-
-
-# TODO Check: Similar to CombinedSingleMetricSpec
-class SingleMetricSpec(TypedDict):
-    datasource: str
-    context: VisualContext
-    selected_metric: SelectedMetric
-    consolidation_function: GraphConsoldiationFunction | None
-    presentation: GraphPresentation
-    single_infos: list[str]
-
-
-# TODO combined is not part of cre but we first have to fix all types
-class MetricOpCombined(MetricOperation, frozen=True):
-    ident: Literal["combined"] = "combined"
-    single_metric_spec: SingleMetricSpec
-
-    @staticmethod
-    def name() -> str:
-        return "metric_op_combined"
-
-    def needed_elements(
-        self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
-    ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
-        if (consolidation_func_name := self.single_metric_spec["consolidation_function"]) is None:
-            raise TypeError(consolidation_func_name)
-
-        for metric in resolve_combined_single_metric_spec(
-            CombinedSingleMetricSpec(
-                datasource=self.single_metric_spec["datasource"],
-                context=self.single_metric_spec["context"],
-                selected_metric=self.single_metric_spec["selected_metric"],
-                consolidation_function=consolidation_func_name,
-                presentation=self.single_metric_spec["presentation"],
-            )
-        ):
-            yield from metric.operation.needed_elements(resolve_combined_single_metric_spec)
-
-    def reverse_translate(self, retranslation_map: RetranslationMap) -> MetricOperation:
-        return self
 
 
 class MetricOpRRDSource(MetricOperation, frozen=True):
@@ -370,9 +309,7 @@ class MetricOpRRDSource(MetricOperation, frozen=True):
 
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForRRDDataKey(
             self.site_id,
@@ -416,9 +353,7 @@ class MetricOpRRDChoice(MetricOperation, frozen=True):
 
     def needed_elements(
         self,
-        resolve_combined_single_metric_spec: Callable[
-            [CombinedSingleMetricSpec], Sequence[GraphMetric]
-        ],
+        resolver: Callable[[CombinedSingleMetricSpec], Sequence[GraphMetric]],
     ) -> Iterator[NeededElementForTranslation | NeededElementForRRDDataKey]:
         yield NeededElementForTranslation(self.host_name, self.service_name)
 

@@ -4,11 +4,11 @@
 
 use crate::check::{self, SimpleCheckResult, Writer};
 use typed_builder::TypedBuilder;
-use x509_parser::certificate::X509Certificate;
-use x509_parser::prelude::FromDer;
 
-mod details {
-    use super::X509Certificate;
+mod selfsigned {
+    use super::check;
+    use x509_parser::certificate::X509Certificate;
+    use x509_parser::prelude::FromDer;
 
     pub enum SelfSigned {
         Yes,
@@ -16,7 +16,12 @@ mod details {
         Invalid,
     }
 
-    pub fn is_self_signed(cert: &X509Certificate) -> SelfSigned {
+    pub fn is_self_signed(der: &[u8]) -> SelfSigned {
+        let cert = match X509Certificate::from_der(der) {
+            Ok((_rem, cert)) => cert,
+            Err(_) => check::abort("Failed to parse certificate"),
+        };
+
         if cert.subject() == cert.issuer() {
             match cert.verify_signature(None) {
                 Ok(_) => SelfSigned::Yes,
@@ -28,7 +33,7 @@ mod details {
     }
 }
 
-use details::SelfSigned;
+use selfsigned::SelfSigned;
 
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
@@ -39,16 +44,14 @@ pub struct Config {
 pub fn check(chain: &Vec<Vec<u8>>, config: Config) -> Writer {
     assert!(!chain.is_empty());
 
-    let cert = match X509Certificate::from_der(&chain[0]) {
-        Ok((_rem, cert)) => cert,
-        Err(_) => check::abort("Failed to parse certificate"),
-    };
-
-    Writer::from(&mut vec![check_self_signed(
-        details::is_self_signed(&cert),
-        config.allow_self_signed,
-    )
-    .into()])
+    Writer::from(&mut vec![
+        check_self_signed(
+            selfsigned::is_self_signed(&chain[0]),
+            config.allow_self_signed,
+        )
+        .into(),
+        // more checks
+    ])
 }
 
 fn check_self_signed(self_signed: SelfSigned, allow: bool) -> SimpleCheckResult {

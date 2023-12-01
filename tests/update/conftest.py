@@ -6,7 +6,6 @@ import dataclasses
 import json
 import logging
 import os
-import subprocess
 from collections.abc import Generator, Iterator
 from pathlib import Path
 
@@ -77,28 +76,11 @@ class BaseVersions:
     ]
 
 
-def _run_as_site_user(
-    site: Site, cmd: list[str], input_value: str | None = None
-) -> subprocess.CompletedProcess:
-    """Run a command as the site user and return the completed_process."""
-    cmd = ["/usr/bin/sudo", "-i", "-u", site.id] + cmd
-    logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-    completed_process = subprocess.run(
-        cmd,
-        input=input_value,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        encoding="utf-8",
-        check=False,
-    )
-    return completed_process
-
-
 def get_omd_status(site: Site) -> dict[str, str]:
     """Get the omd status for all services of the given site."""
     cmd = ["/usr/bin/omd", "status", "--bare"]
     status = {}
-    for line in [_ for _ in _run_as_site_user(site, cmd).stdout.splitlines() if " " in _]:
+    for line in [_ for _ in site.run_as_site_user(cmd).stdout.splitlines() if " " in _]:
         key, val = (_.strip() for _ in line.split(" ", 1))
         status[key] = {"0": "running", "1": "stopped", "2": "partially running"}.get(val, val)
     return status
@@ -129,7 +111,7 @@ def update_config(site: Site) -> int:
     """
     for rc, conflict_mode in enumerate(("abort", "install")):
         cmd = [f"{site.root}/bin/cmk-update-config", "-v", f"--conflict={conflict_mode}"]
-        completed_process = _run_as_site_user(site, cmd)
+        completed_process = site.run_as_site_user(cmd)
         if completed_process.returncode == 0:
             logger.debug(completed_process.stdout)
             return rc
@@ -294,7 +276,7 @@ def _update_as_site_user(  # TODO: move this funtion to the Site.py module
         f"--conflict={conflict_mode}",
     ]
     test_site.stop()
-    proc = _run_as_site_user(test_site, cmd)
+    proc = test_site.run_as_site_user(cmd)
     assert proc.returncode == 0, proc.stdout
 
     # refresh the site object after creating the site

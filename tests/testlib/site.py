@@ -430,6 +430,22 @@ class Site:
             cmd, *args, preserve_env=preserve_env, sudo=True, substitute_user=self.id, **kwargs
         )
 
+    def run_as_site_user(
+        self, cmd: list[str], input_value: str | None = None
+    ) -> subprocess.CompletedProcess:
+        """Run a command as the site user and return the completed_process."""
+        cmd = ["/usr/bin/sudo", "-i", "-u", self.id] + cmd
+        logger.info("Executing: %s", subprocess.list2cmdline(cmd))
+        completed_process = subprocess.run(
+            cmd,
+            input=input_value,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
+        )
+        return completed_process
+
     def check_output(
         self, cmd: list[str], input: str | None = None  # pylint: disable=redefined-builtin
     ) -> str:

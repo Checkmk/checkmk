@@ -11,7 +11,6 @@ from ._explicit_graphs import ExplicitGraphSpecification
 from ._graph_specification import (
     graph_specification_registry,
     metric_operation_registry,
-    MetricOpCombined,
     MetricOpConstant,
     MetricOpOperator,
     MetricOpRRDChoice,
@@ -40,7 +39,6 @@ def register(page_registry: PageRegistry, config_variable_registry: ConfigVariab
     metric_operation_registry.register(MetricOpScalar)
     metric_operation_registry.register(MetricOpOperator)
     metric_operation_registry.register(MetricOpTransformation)
-    metric_operation_registry.register(MetricOpCombined)
     metric_operation_registry.register(MetricOpRRDSource)
     metric_operation_registry.register(MetricOpRRDChoice)
     graph_specification_registry.register(ExplicitGraphSpecification)

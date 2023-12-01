@@ -34,9 +34,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # 8080 Uptime 572011375
 # 8080,java.lang:name=PS_MarkSweep,type=GarbageCollector CollectionCount 0
 
-# Number of sessions low crit, low warn, high warn, high crit
-jolokia_metrics_app_sess_default_levels = (-1, -1, 800, 1000)
-
 
 # .
 #   .--Arcane helpers------------------------------------------------------.
@@ -291,15 +288,13 @@ check_info["jolokia_metrics.app_sess"] = LegacyCheckDefinition(
     service_name="JVM %s Sessions",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
-        "app_sess",
-        needed_keys={"Sessions", "activeSessions"},
-        default_params=jolokia_metrics_app_sess_default_levels,
+        "app_sess", needed_keys={"Sessions", "activeSessions"}
     ),
     check_function=check_jolokia_metrics_app_sess,
     check_ruleset_name="jvm_sessions",
     check_default_parameters={
-        "levels_lower": None,
-        "levels_upper": None,
+        "levels_lower": (-1, -1),
+        "levels_upper": (800, 1000),
     },
 )
 
@@ -314,9 +309,7 @@ check_info["jolokia_metrics.requests"] = LegacyCheckDefinition(
 check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
     service_name="JVM %s Queue",
     sections=["jolokia_metrics"],
-    discovery_function=get_inventory_jolokia_metrics_apps(
-        "queue", needed_keys={"QueueLength"}, default_params={}
-    ),
+    discovery_function=get_inventory_jolokia_metrics_apps("queue", needed_keys={"QueueLength"}),
     check_function=check_jolokia_metrics_bea_queue,
     check_ruleset_name="jvm_queue",
     check_default_parameters={
@@ -346,15 +339,13 @@ check_info["jolokia_metrics.bea_sess"] = LegacyCheckDefinition(
     service_name="JVM %s Sessions",
     sections=["jolokia_metrics"],
     discovery_function=get_inventory_jolokia_metrics_apps(
-        "bea_app_sess",
-        needed_keys={"OpenSessionsCurrentCount"},
-        default_params=jolokia_metrics_app_sess_default_levels,
+        "bea_app_sess", needed_keys={"OpenSessionsCurrentCount"}
     ),
     check_function=check_jolokia_metrics_app_sess,
     check_ruleset_name="jvm_sessions",
     check_default_parameters={
-        "levels_lower": None,
-        "levels_upper": None,
+        "levels_lower": (-1, -1),
+        "levels_upper": (800, 1000),
     },
 )
 

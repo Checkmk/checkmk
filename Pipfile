@@ -4,57 +4,65 @@ verify_ssl = true
 name = "pypi"
 
 [dev-packages]
+3to2 = "*"  # used for converting agent plugins from py3 to 2
 astroid = "*"  # used by testlib.pylint_checker_localization
+autoflake = "*"  # used to remove unused import statements
 bandit = "*"  # used by test/Makefile's test-bandit target
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
+boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
+botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync with botocore
 bson = "*"  # used by test_mk_mongodb unit test
+checkmk-dev-tools = "~=0.1.31"  # provides tooling for build artifacts
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
 devpi-client = "*" # Managing the devpi server
+dill = "*"
 docker = "*"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "*"  # used by dockerized tests for opening debug shells
+fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
+fastapi = "*"  # needed to run fake idp for cse tests
+flake8 = "*"
 freezegun = "*"  # used by various unit tests
-isort = "*"  # used as a plugin for editors
-pylint = "*"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
 hypothesis-jsonschema = "==0.22.1"  # pinned for: AttributeError: module 'jsonschema.exceptions' has no attribute '_RefResolutionError'. Did you mean: 'RefResolutionError'?
+isort = "*"  # used as a plugin for editors
+jsonschema = "*"
 mypy = "*"  # used by test/static/Makefile's test-mypy target
-twine = "*" # used to upload packages to internal PyPi mirror
-playwright = "==1.39.0"  # used for in-browser testing
+mypy-protobuf = "*" # for mypy
+networkx = "*" # needed for py-import-cycles
+pexpect = "*" # used for update testing
+pipfile = "*" # for generating import names during int tests
+playwright = "*"  # used for in-browser testing
+polyfactory = "*" # used for generating mock data for unit tests
+pre-commit = "*"  # used to fix / find issues before committing changes
+preprocess = "*" # implicit dependency of pytest-testmon, might be removed when testmon is updated
+py-import-cycles = "*"  # used in tests/Makefile
+pylint = "*"  # used by test/Makefile's test-pylint target
+pylint-pydantic = "*"
+pyls-isort = "*"  # isort plugin for python-lsp-server
+pylsp-mypy = "*"  # mypy plugin for python-lsp-server
 pymongo = "*"  # used by mk_mongodb agent plugin
 pytest = "*"  # used by various test/Makefile targets
 pytest-cov = "*"  # used (indirectly) by test/Makefile's test-unit-coverage-html target, see comment there
 pytest-html = "*"  # used to generate HTML reports for test suites
 pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker fixture
-preprocess = "*" # implicit dependency of pytest-testmon, might be removed when testmon is updated
-pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
 pytest-profiling = "*"  # used to analyze test run performance
 pytest-random-order = "*"  # used to test resiliency
 pytest-repeat = "*"  # used to test resiliency
+pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
 pytest-xdist = "*" # used to limit number of procs in e2e tests
+python-lsp-black = "*"  # black plugin for python-lsp-server
+python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
 responses = "*"  # used for unit tests
-webtest = "*"  # used by WSGI based tests
-pre-commit = "*"  # used to fix / find issues before committing changes
-flake8 = "*"
-autoflake = "*"  # used to remove unused import statements
+ruff = "*"
+schemathesis = "*"  # used for openapi tests
 semver = "*"
 sphinx = "==6.2.1"  # used for the plugin API documentation, pinned for now  see https://github.com/kivy/kivy/issues/8230)
 sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
 sphinx-rtd-theme = "*"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "*"  # used for the API and architecture
 sphinxcontrib-spelling = "*"
-3to2 = "*"  # used for converting agent plugins from py3 to 2
-fakeredis = {version = "*", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
-python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
-python-lsp-black = "*"  # black plugin for python-lsp-server
-pyls-isort = "*"  # isort plugin for python-lsp-server
-pylsp-mypy = "*"  # mypy plugin for python-lsp-server
-mypy-protobuf = "*" # for mypy
-pipfile = "*" # for generating import names during int tests
-networkx = "*" # needed for py-import-cycles
-py-import-cycles = "*"  # used in tests/Makefile
 telnetlib3 = "*"  # used by Windows Agent tests
-schemathesis = "*"  # used for openapi tests
-ruff = "*"
+twine = "*" # used to upload packages to internal PyPi mirror
 types-beautifulsoup4 = "*"  # used for type checking
 types-docutils = "*"  # used for type checking
 types-jmespath = "*"  # used for type checking
@@ -82,17 +90,9 @@ types-setuptools = "*"  # used for type checking
 types-simplejson = "*"  # used for type checking
 types-six = "*"  # used for type checking
 types-urllib3 = "*"  # used for type checking
-botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync with botocore
-boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
-pexpect = "*" # used for update testing
-dill = "*"
-jsonschema = "*"
-polyfactory = "*" # used for generating mock data for unit tests
-pylint-pydantic = "*"
-checkmk-dev-tools = "~=0.1.31"  # provides tooling for build artifacts
-fastapi = "*"  # needed to run fake idp for cse tests
-uvicorn = "*"
 types-xmltodict = "*" # used by xmltodict
+uvicorn = "*"
+webtest = "*"  # used by WSGI based tests
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py

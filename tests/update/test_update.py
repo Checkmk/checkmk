@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-import os
 import random
 from pathlib import Path
 
@@ -78,14 +77,6 @@ def test_update(  # pylint: disable=too-many-branches
 
         # get baseline monitoring data for each host
         base_data[hostname] = test_site.get_host_services(hostname)
-
-        # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros
-        #  after the update. See CMK-13774.
-        if os.environ.get("DISTRO") in ["centos-8", "almalinux-9"]:
-            postfix_services = ["Postfix Queue", "Postfix status"]
-            for postfix_service in postfix_services:
-                if postfix_service in base_data[hostname]:
-                    base_data[hostname].pop(postfix_service)
 
         base_ok_services[hostname] = get_services_with_status(base_data[hostname], 0)
         # used in debugging mode

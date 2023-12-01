@@ -50,6 +50,8 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("aws_ec2_security_groups"): (
         lambda p: p if isinstance(p, dict) else {"groups": p}
     ),
+    CheckPluginName("jolokia_metrics_app_sess"): (lambda p: {}),
+    CheckPluginName("jolokia_metrics_bea_sess"): (lambda p: {}),
     CheckPluginName("kentix_amp_sensors_smoke"): (lambda p: {}),
     CheckPluginName("liebert_bat_temp"): (lambda p: {}),
     CheckPluginName("mbg_lantime_ng_refclock_gps"): (lambda p: {}),

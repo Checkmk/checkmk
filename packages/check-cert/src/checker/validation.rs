@@ -36,9 +36,9 @@ mod selfsigned {
 use selfsigned::SelfSigned;
 
 mod verify {
-    use openssl::ssl::{SslContext, SslMethod};
+    use openssl::stack::Stack;
     use openssl::x509::store::{X509Store, X509StoreBuilder};
-    use openssl::x509::{X509StoreContext, X509StoreContextRef, X509VerifyResult, X509};
+    use openssl::x509::{X509StoreContext, X509StoreContextRef, X509};
 
     fn from_der(der: &[u8]) -> X509 {
         X509::from_der(der).unwrap()
@@ -49,37 +49,28 @@ mod verify {
         for der in cacerts {
             let _ = store.add_cert(from_der(der));
         }
+        store.set_default_paths().unwrap();
         store.build()
     }
 
-    fn make_ssl_ctx(chain: &[Vec<u8>], store: X509Store) -> SslContext {
-        let mut ctx = SslContext::builder(SslMethod::tls()).unwrap();
-        ctx.set_cert_store(store);
-
+    fn make_stack(chain: &[Vec<u8>]) -> (X509, Stack<X509>) {
         let mut iter = chain.iter();
-        let _ = ctx.set_certificate(&from_der(iter.next().unwrap()));
+        let cert = from_der(iter.next().unwrap());
+        let mut stack = Stack::<X509>::new().unwrap();
         for der in iter {
-            let _ = ctx.add_extra_chain_cert(from_der(der));
+            stack.push(from_der(der)).unwrap();
         }
-        ctx.build()
-    }
-
-    fn verify_with_ssl_ctx(ssl_ctx: &SslContext) -> (bool, X509VerifyResult) {
-        let mut verify_ctx = X509StoreContext::new().unwrap();
-        let result = verify_ctx.init(
-            ssl_ctx.cert_store(),
-            ssl_ctx.certificate().unwrap(),
-            ssl_ctx.extra_chain_certs(),
-            X509StoreContextRef::verify_cert,
-        );
-        (result.unwrap(), verify_ctx.error())
+        (cert, stack)
     }
 
     pub fn verify(chain: &[Vec<u8>], cacerts: &[Vec<u8>]) -> (bool, String) {
         let store = make_store(cacerts);
-        let ssl_ctx = make_ssl_ctx(chain, store);
-        let (res, reason) = verify_with_ssl_ctx(&ssl_ctx);
-        (res, reason.to_string())
+        let (cert, chain) = make_stack(chain);
+
+        let mut verify_ctx = X509StoreContext::new().unwrap();
+        let result = verify_ctx.init(&store, &cert, &chain, X509StoreContextRef::verify_cert);
+
+        (result.unwrap(), verify_ctx.error().to_string())
     }
 }
 

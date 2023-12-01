@@ -72,4 +72,5 @@ check_info["innovaphone_priports_l1"] = LegacyCheckDefinition(
     service_name="Port L1 %s",
     discovery_function=inventory_innovaphone_priports_l1,
     check_function=check_innovaphone_priports_l1,
+    check_default_parameters={},
 )

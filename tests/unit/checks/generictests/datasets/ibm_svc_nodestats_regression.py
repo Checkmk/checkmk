@@ -3,9 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# fmt: off
 # mypy: disable-error-code=var-annotated
-ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 
 checkname = "ibm_svc_nodestats"
@@ -61,8 +59,8 @@ info = [
 discovery = {
     "cache": [("BLUBBSVC01", None)],
     "cpu_util": [
-        ("BLUBBSVC01", ibm_svc_cpu_default_levels),
-        ("BLUBBSVC02", ibm_svc_cpu_default_levels),
+        ("BLUBBSVC01", {}),
+        ("BLUBBSVC02", {}),
     ],
     "disk_latency": [
         ("Drives BLUBBSVC01", None),
@@ -96,8 +94,16 @@ checks = {
         )
     ],
     "cpu_util": [
-        ("BLUBBSVC01", (90.0, 95.0), [(0, "Total CPU: 1.00%", [("util", 1, 90.0, 95.0, 0, 100)])]),
-        ("BLUBBSVC02", (90.0, 95.0), [(0, "Total CPU: 1.00%", [("util", 1, 90.0, 95.0, 0, 100)])]),
+        (
+            "BLUBBSVC01",
+            {"levels": (90.0, 95.0)},
+            [(0, "Total CPU: 1.00%", [("util", 1, 90.0, 95.0, 0, 100)])],
+        ),
+        (
+            "BLUBBSVC02",
+            {"levels": (90.0, 95.0)},
+            [(0, "Total CPU: 1.00%", [("util", 1, 90.0, 95.0, 0, 100)])],
+        ),
     ],
     "disk_latency": [
         (
@@ -210,8 +216,8 @@ checks = {
                     0,
                     "15.0 IO/s read, 865.0 IO/s write",
                     [
-                      ("read", 15.0, None, None, None, None),
-                      ("write", 865.0, None, None, None, None),
+                        ("read", 15.0, None, None, None, None),
+                        ("write", 865.0, None, None, None, None),
                     ],
                 )
             ],
@@ -224,8 +230,8 @@ checks = {
                     0,
                     "19.0 IO/s read, 110.0 IO/s write",
                     [
-                      ("read", 19.0, None, None, None, None),
-                      ("write", 110.0, None, None, None, None),
+                        ("read", 19.0, None, None, None, None),
+                        ("write", 110.0, None, None, None, None),
                     ],
                 )
             ],

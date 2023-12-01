@@ -339,7 +339,6 @@ class ErrorReporter:
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "domino_tasks", "domino_tasks"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "innovaphone_channels", "hw_single_channelserature"),
         ("check", "ironport_misc", "obsolete"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),

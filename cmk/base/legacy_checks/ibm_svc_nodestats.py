@@ -288,12 +288,10 @@ check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-ibm_svc_cpu_default_levels = (90.0, 95.0)
-
 
 def inventory_ibm_svc_nodestats_cpu(info):
     return [
-        (node_name, ibm_svc_cpu_default_levels)
+        (node_name, {})
         for node_name, data in parse_ibm_svc_nodestats(info).items()
         if "cpu_pc" in data
     ]
@@ -312,6 +310,7 @@ check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
     discovery_function=inventory_ibm_svc_nodestats_cpu,
     check_function=check_ibm_svc_nodestats_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (90.0, 95.0)},
 )
 
 # .

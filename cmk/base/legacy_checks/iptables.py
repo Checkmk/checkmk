@@ -90,4 +90,5 @@ check_info["iptables"] = LegacyCheckDefinition(
     service_name="Iptables",
     discovery_function=inventory_iptables,
     check_function=check_iptables,
+    check_default_parameters={},
 )

@@ -178,7 +178,7 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     >>> _grep_pipeline([])
     []
 
-    >>> _grep_pipeline([("event_core_host", '=', lambda x: True, '|| ping')])
+    >>> _grep_pipeline([QueryFilter("event_core_host", '=', lambda x: True, '|| ping')])
     ["grep -F -e '|| ping'"]
 
     """

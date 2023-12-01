@@ -24,13 +24,10 @@ mbg_lantime_refclock_gpsstate_map = {
     "2": "not synchronized",
 }
 
-# number of good satellites
-mbg_lantime_refclock_default_levels = (3, 3)
-
 
 def inventory_mbg_lantime_refclock(info):
     if len(info) > 0 and len(info[0]) == 6:
-        return [(None, mbg_lantime_refclock_default_levels)]
+        return [(None, {})]
     return []
 
 
@@ -71,15 +68,16 @@ def check_mbg_lantime_refclock(item, params, info):
 
         # Handle number of satellites
         thr_txt = ""
-        if params[0] is not None and int(gps_sat_good) < params[1]:
+        warn_lower, crit_lower = params["levels_lower"]
+        if int(gps_sat_good) < crit_lower:
             state = max(state, 2)
             thr_txt = " (!!)"
-        elif params[1] is not None and int(gps_sat_good) < params[0]:
+        elif int(gps_sat_good) < warn_lower:
             state = max(state, 1)
             thr_txt = " (!)"
         state_txt.append(f"Satellites: {gps_sat_good}/{gps_sat_total}{thr_txt}")
 
-        perfdata = [("sat_good", gps_sat_good, params[0], params[1]), ("sat_total", gps_sat_total)]
+        perfdata = [("sat_good", gps_sat_good), ("sat_total", gps_sat_total)]
 
         return (state, ", ".join(state_txt), perfdata)
 
@@ -95,4 +93,7 @@ check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
     service_name="LANTIME Refclock",
     discovery_function=inventory_mbg_lantime_refclock,
     check_function=check_mbg_lantime_refclock,
+    check_default_parameters={
+        "levels_lower": (3, 3),
+    },
 )

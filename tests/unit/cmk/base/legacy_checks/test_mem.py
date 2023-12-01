@@ -13,21 +13,29 @@ _SECTION = {
 
 
 def test_inventory_mem_vmalloc() -> None:
-    assert list(inventory_mem_vmalloc(_SECTION)) == [(None, (80.0, 90.0, 64, 32))]
+    assert list(inventory_mem_vmalloc(_SECTION)) == [(None, {})]
 
 
 def test_check_mem_vmalloc() -> None:
     assert list(
         check_mem_vmalloc(
             None,
-            (80.0, 90.0, 64, 32),
+            {
+                "levels_used_perc": (80.0, 90.0),
+                "levels_lower_chunk_mb": (64, 32),
+            },
             _SECTION,
         )
     ) == [
-        2,
-        "total 2.0 MB, used 1.8 MB (critical at 1.8 MB!!), largest chunk 43.0 MB (warning at 64.0 MB!)",
-        [
-            ("used", 1.8, 1.6, 1.8, 0, 2.0),
-            ("chunk", 43.0, 64.0, 32.0, 0, 2.0),
-        ],
+        (0, "Total: 2.0 MB"),
+        (
+            2,
+            "Used: 1.8 MB (warn/crit at 1.6 MB/1.8 MB)",
+            [("used", 1.8, 1.6, 1.8, 0.0, 2.0)],
+        ),
+        (
+            1,
+            "Largest chunk: 43.0 MB (warn/crit below 64.0 MB/32.0 MB)",
+            [("chunk", 43.0, None, None, 0.0, 2.0)],
+        ),
     ]

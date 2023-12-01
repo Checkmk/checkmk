@@ -9,7 +9,6 @@ use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
-use regex::{Regex, RegexBuilder};
 use reqwest::Method;
 
 mod cli;
@@ -87,93 +86,91 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 .body_string
                 .into_iter()
                 .map(Into::into)
-                .chain(args.body_regex.into_iter().map(|pattern| {
-                    TextMatcher::from_regex(
-                        regex_from_args(
-                            &pattern,
-                            args.body_regex_case_insensitive,
-                            args.body_regex_linespan,
-                        ),
-                        !args.body_regex_invert,
-                    )
-                }))
+                .chain(
+                    args.body_regex
+                        .into_iter()
+                        .map(|pattern| TextMatcher::from_regex(pattern, !args.body_regex_invert)),
+                )
                 .collect(),
             header_strings: args.header_strings,
         },
     )
 }
 
-fn regex_from_args(pattern: &str, case_insensitive: bool, linespan: bool) -> Regex {
-    RegexBuilder::new(pattern)
-        .crlf(true)
-        .case_insensitive(case_insensitive)
-        .multi_line(!linespan)
-        .dot_matches_new_line(linespan)
-        .build()
-        .unwrap() //TODO(au): This would panic. Better handle this with an UNKNOWN state.
-}
-
 #[cfg(test)]
 mod test_regex_from_args {
-    use crate::regex_from_args;
+    use regex::{Regex, RegexBuilder};
+
+    // While this test module doesn't test *our* code, it tests/documents the regex
+    // flags and options that we support in Checkmk Setup.
+    // - "case-insensitive" maps to: (?i)
+    // - "linespan" maps to the absense of the C-Style REG_NEWLINE flag, and by that to: (?s),
+    //   while "!linespan" maps to: (?m)
+    // - "crlf" mode is enabled by default, since we can't know which newline-character we will encounter,
+    //   while /r/n is common.
+    // - unicode matching is on by default, since both the pattern and the matched-on text are decoded to text/unicode internally.
+
+    fn regex(pattern: &str) -> Regex {
+        RegexBuilder::new(pattern).crlf(true).build().unwrap()
+    }
 
     #[test]
     fn test_simple() {
-        assert!(regex_from_args("f.*r", false, false).is_match("foobar"))
+        assert!(regex("(?m)f.*r").is_match("foobar"))
     }
 
     #[test]
     fn test_case_insensitive_false() {
-        assert!(!regex_from_args("f.*r", false, false).is_match("foobaR"))
+        assert!(!regex("(?m)f.*r").is_match("foobaR"))
     }
 
     #[test]
     fn test_case_insensitive_true() {
-        assert!(regex_from_args("f.*r", true, false).is_match("foobaR"))
+        assert!(regex("(?mi)f.*r").is_match("foobaR"))
     }
 
     #[test]
     fn test_no_linespan_true() {
-        assert!(regex_from_args("^f.*r$", true, false).is_match("baz\nfoobar\nmooh"))
+        assert!(regex("(?m)^f.*r$").is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_no_linespan_false() {
-        assert!(!regex_from_args("f.*h", true, false).is_match("baz\nfoobar\nmooh"))
+        assert!(!regex("(?m)f.*h").is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_linespan_false() {
-        assert!(!regex_from_args("^f.*r$", true, true).is_match("baz\nfoobar\nmooh"))
+        assert!(!regex("(?s)^f.*r$").is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_linespan_anchors_true() {
-        assert!(regex_from_args("^b.*h$", true, true).is_match("baz\nfoobar\nmooh"))
+        assert!(regex("(?s)^b.*h$").is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_linespan_no_anchors_true() {
-        assert!(regex_from_args("f.*h", true, true).is_match("baz\nfoobar\nmooh"))
+        assert!(regex("(?s)f.*h").is_match("baz\nfoobar\nmooh"))
     }
 
     #[test]
     fn test_no_linespan_crlf() {
-        assert!(regex_from_args("^f.*r$", true, false).is_match("baz\r\nfoobar\r\nmooh"))
+        assert!(regex("(?m)^f.*r$").is_match("baz\r\nfoobar\r\nmooh"))
     }
 
     #[test]
     fn test_no_linespan_cr() {
-        assert!(regex_from_args("^f.*r$", true, false).is_match("baz\rfoobar\rmooh"))
+        assert!(regex("(?m)^f.*r$").is_match("baz\rfoobar\rmooh"))
     }
 
     #[test]
     fn test_unicode_no_match() {
-        assert!(!regex_from_args("^foobar..baz$", true, false).is_match("foobar💩baz"))
+        assert!(!regex("(?m)^foobar..baz$").is_match("foobar💩baz"))
     }
 
     #[test]
     fn test_unicode_match() {
-        assert!(regex_from_args("^foobar.baz$", true, false).is_match("foobar🦀baz"))
+        assert!(regex("(?m)^foobar.baz$").is_match("foobar🦀baz"))
     }
 }

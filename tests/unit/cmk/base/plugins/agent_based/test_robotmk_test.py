@@ -164,7 +164,7 @@ def test_discover_robotmk_test() -> None:
     [
         pytest.param(
             "ok_passed",
-            Params(test_runtime=None),
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
             [
                 Result(state=State.OK, summary="Count My Veggies"),
                 Result(state=State.OK, summary="PASS"),
@@ -175,7 +175,7 @@ def test_discover_robotmk_test() -> None:
         ),
         pytest.param(
             "warn_passed_with_long_runtime",
-            Params(test_runtime=(30, 60)),
+            Params(test_runtime=(30, 60), runtime_thresholds_keywords=[]),
             [
                 Result(state=State.OK, summary="Count My Veggies"),
                 Result(state=State.OK, summary="PASS"),
@@ -189,7 +189,7 @@ def test_discover_robotmk_test() -> None:
         ),
         pytest.param(
             "warn_not_run",
-            Params(test_runtime=None),
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
             [
                 Result(
                     state=State.OK,
@@ -201,7 +201,7 @@ def test_discover_robotmk_test() -> None:
         ),
         pytest.param(
             "warn_skip",
-            Params(test_runtime=None),
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
             [
                 Result(state=State.OK, summary="Addition 1"),
                 Result(state=State.WARN, summary="SKIP"),
@@ -210,7 +210,7 @@ def test_discover_robotmk_test() -> None:
         ),
         pytest.param(
             "crit_fail",
-            Params(test_runtime=None),
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
             [
                 Result(state=State.OK, summary="Addition 2"),
                 Result(state=State.CRIT, summary="FAIL"),
@@ -219,7 +219,7 @@ def test_discover_robotmk_test() -> None:
         ),
         pytest.param(
             "skipped_test",
-            Params(test_runtime=None),
+            Params(test_runtime=None, runtime_thresholds_keywords=[]),
             [],
             id="Skipped test with robot:exit tag",
         ),
@@ -237,7 +237,7 @@ def test_check_robotmk_test_item_not_found() -> None:
     assert not list(
         check(
             item="unexpected-item",
-            params=Params(test_runtime=None),
+            params=Params(test_runtime=None, runtime_thresholds_keywords=[]),
             section=_Section,
         )
     )

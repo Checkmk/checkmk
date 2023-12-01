@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import assert_never, Literal, TypedDict
 
@@ -22,6 +23,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 class Params(TypedDict):
     test_runtime: tuple[int, int] | None
+    runtime_thresholds_keywords: Sequence[tuple[str, tuple[int, int] | None]]
 
 
 def discover(section: Section) -> DiscoveryResult:
@@ -97,5 +99,5 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     check_ruleset_name="robotmk",
-    check_default_parameters=Params(test_runtime=None),
+    check_default_parameters=Params(test_runtime=None, runtime_thresholds_keywords=[]),
 )

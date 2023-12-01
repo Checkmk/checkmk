@@ -12,7 +12,6 @@ from typing import Any, Callable, Iterable, Literal, Protocol
 import cmk.utils.config_warnings as config_warnings
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.translations import TranslationOptions
@@ -39,7 +38,7 @@ class InvalidPluginInfoError(Exception):
     pass
 
 
-class SpecialAgentError(Exception):
+class ActiveCheckError(Exception):
     pass
 
 
@@ -185,7 +184,7 @@ def _prepare_check_command(
             passwords.append((str(len(formatted)), pw_start_index, pw_ident))
 
         else:
-            raise MKGeneralException(f"Invalid argument for command line: {arg!r}")
+            raise ActiveCheckError(f"Invalid argument for command line: {arg!r}")
 
     if passwords:
         pw = ",".join(["@".join(p) for p in passwords])
@@ -210,10 +209,9 @@ def commandline_arguments(
     args = getattr(commandline_args, "args", commandline_args)
 
     if not isinstance(args, list):
-        raise MKGeneralException(
+        raise ActiveCheckError(
             "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)."
-            % (hostname, description)
+            "string of the concatenated arguments (Service: %s)." % (description)
         )
 
     return _prepare_check_command(
@@ -301,7 +299,12 @@ class ActiveCheck:
                         f"Invalid configuration (active check: {plugin_name}) on host {self.host_name}: "
                         f"active check plugin is missing an argument function or a service description"
                     )
-                    continue
+                except Exception as e:
+                    if cmk.utils.debug.enabled():
+                        raise
+                    config_warnings.warn(
+                        f"Config creation for active check {plugin_name} failed on {self.host_name}: {e}"
+                    )
 
     def _get_service_iterator(
         self,
@@ -561,14 +564,7 @@ class SpecialAgent:
     def _iter_legacy_commands(
         self, agent_name: str, info_func: InfoFunc, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        try:
-            agent_configuration = info_func(params, self.host_name, self.host_address)
-        except RuntimeError as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise SpecialAgentError(
-                f"Config creation for special agent {agent_name} failed on {self.host_name}: {e}"
-            ) from e
+        agent_configuration = info_func(params, self.host_name, self.host_address)
 
         cmdline = self._make_special_agent_cmdline(
             agent_name,
@@ -598,8 +594,15 @@ class SpecialAgent:
     def iter_special_agent_commands(
         self, agent_name: str, params: Mapping[str, object]
     ) -> Iterator[SpecialAgentCommandLine]:
-        if (info_func := self._legacy_plugins.get(agent_name)) is not None:
-            yield from self._iter_legacy_commands(agent_name, info_func, params)
+        try:
+            if (info_func := self._legacy_plugins.get(agent_name)) is not None:
+                yield from self._iter_legacy_commands(agent_name, info_func, params)
 
-        if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
-            yield from self._iter_commands(special_agent, params)
+            if (special_agent := self._plugins.get(agent_name.replace("agent_", ""))) is not None:
+                yield from self._iter_commands(special_agent, params)
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            config_warnings.warn(
+                f"Config creation for special agent {agent_name} failed on {self.host_name}: {e}"
+            )

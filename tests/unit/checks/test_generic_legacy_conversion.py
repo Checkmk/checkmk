@@ -834,7 +834,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "icom_repeater.pll_volt",
         "icom_repeater.temp",
         "icom_repeater",
-        "ifoperstatus",
         "infoblox_dhcp_stats",
         "infoblox_dns_stats",
         "infoblox_grid_status",

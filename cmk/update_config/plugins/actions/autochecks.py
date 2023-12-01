@@ -50,6 +50,10 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("aws_ec2_security_groups"): (
         lambda p: p if isinstance(p, dict) else {"groups": p}
     ),
+    CheckPluginName("ibm_svc_nodestats_cpu_util"): (lambda p: {}),
+    CheckPluginName("innovaphone_channels"): (lambda p: {}),
+    CheckPluginName("innovaphone_licenses"): (lambda p: {}),
+    CheckPluginName("isc_dhcpd"): (lambda p: {}),
     CheckPluginName("jolokia_metrics_app_sess"): (lambda p: {}),
     CheckPluginName("jolokia_metrics_bea_sess"): (lambda p: {}),
     CheckPluginName("kentix_amp_sensors_smoke"): (lambda p: {}),

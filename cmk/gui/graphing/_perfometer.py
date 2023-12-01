@@ -827,18 +827,16 @@ class MetricometerRendererLegacyLinear(MetricometerRenderer):
         result = self._label_expression.evaluate(self._translated_metrics)
         unit_info_ = unit_info[self._label_unit_name] if self._label_unit_name else result.unit_info
 
-        if isinstance(self._label_expression.declaration, Constant):
-            value = unit_info_.get("conversion", lambda v: v)(
-                self._label_expression.declaration.value
-            )
+        if isinstance(self._label_expression, Constant):
+            value = unit_info_.get("conversion", lambda v: v)(self._label_expression.value)
         else:
             value = result.value
 
         return self._render_value(unit_info_, value)
 
     def _evaluate_total(self) -> float:
-        if isinstance(self._total.declaration, Constant):
-            return self._unit().get("conversion", lambda v: v)(self._total.declaration.value)
+        if isinstance(self._total, Constant):
+            return self._unit().get("conversion", lambda v: v)(self._total.value)
         return self._total.evaluate(self._translated_metrics).value
 
     def _unit(self) -> UnitInfo:

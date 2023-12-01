@@ -92,7 +92,21 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                         .map(|pattern| TextMatcher::from_regex(pattern, !args.body_regex_invert)),
                 )
                 .collect(),
-            header_strings: args.header_strings,
+            header_matchers: args
+                .header_strings
+                .into_iter()
+                .map(|(name, value)| (name.into(), value.into()))
+                .chain(
+                    args.header_regexes
+                        .into_iter()
+                        .map(|(name_pattern, value_pattern)| {
+                            (
+                                TextMatcher::from_regex(name_pattern, !args.header_regexes_invert),
+                                TextMatcher::from_regex(value_pattern, !args.header_regexes_invert),
+                            )
+                        }),
+                )
+                .collect(),
         },
     )
 }

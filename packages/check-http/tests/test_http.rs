@@ -92,7 +92,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
             document_age_levels: None,
             timeout: Duration::from_secs(1),
             body_matchers: vec![],
-            header_strings: vec![],
+            header_matchers: vec![],
         },
     )
 }

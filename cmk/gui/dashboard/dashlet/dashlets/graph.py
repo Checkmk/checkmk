@@ -13,7 +13,6 @@ import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.metrics import MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.dashboard.type_defs import DashletId, DashletSize
@@ -24,7 +23,7 @@ from cmk.gui.graphing._graph_templates import TemplateGraphSpecification
 from cmk.gui.graphing._html_render import GraphDestinations
 from cmk.gui.graphing._utils import (
     graph_templates_internal,
-    metric_info,
+    metric_title,
     MKCombinedGraphLimitExceededError,
 )
 from cmk.gui.graphing._valuespecs import vs_graph_render_options
@@ -48,11 +47,6 @@ from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName
 from ..base import Dashlet
 from .status_helpers import make_mk_missing_data_error
-
-
-def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
-    metric_id = metric_or_graph_id.replace("METRIC_", "")
-    return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
 
 class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
@@ -106,7 +100,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                     value,
                     _("Deprecated choice, please re-select")
                     if value == self._MARKER_DEPRECATED_CHOICE
-                    else _metric_title_from_id(value),
+                    else metric_title(value),
                 ),
             )
         ]

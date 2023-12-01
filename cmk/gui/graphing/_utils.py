@@ -455,22 +455,26 @@ class CheckMetricEntry(TypedDict, total=False):
     deprecated: str
 
 
-class MetricInfo(TypedDict, total=False):
-    # title, unit and color should be required, but metric_info.get(xxx, {}) is
-    # used and is not compatible with requied keys
+class _MetricInfoMandatory(TypedDict):
     title: str | LazyString
     unit: str
     color: str
+
+
+class MetricInfo(_MetricInfoMandatory, total=False):
     help: str | LazyString
     render: Callable[[float | int], str]
 
 
-class MetricInfoExtended(TypedDict, total=False):
-    # this is identical to MetricInfo except unit, but one can not override the
-    # type of a field so we have to copy everything from MetricInfo
+class _MetricInfoExtendedMandatory(TypedDict):
     title: str | LazyString
     unit: UnitInfo
     color: str
+
+
+class MetricInfoExtended(_MetricInfoExtendedMandatory, total=False):
+    # this is identical to MetricInfo except unit, but one can not override the
+    # type of a field so we have to copy everything from MetricInfo
     help: str | LazyString
     render: Callable[[float | int], str]
 
@@ -1196,7 +1200,9 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
 
 
 def metric_title(metric_name: MetricName_) -> str:
-    return str(metric_info.get(metric_name, {}).get("title", metric_name.title()))
+    if metric_name in metric_info:
+        return str(metric_info[metric_name]["title"])
+    return metric_name.title()
 
 
 class RenderableRecipe(NamedTuple):
@@ -1224,7 +1230,10 @@ def metric_recipe_and_unit(
             return "average"
         raise ValueError(name)
 
-    mi = metric_info.get(metric_name, {})
+    mi = metric_info.get(
+        metric_name,
+        {"title": metric_name.title(), "unit": "", "color": "#000000"},
+    )
     return (
         RenderableRecipe(
             title=metric_title(metric_name),
@@ -1299,10 +1308,8 @@ def reverse_translate_into_all_potentially_relevant_metrics_cached(
 
 def metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
-        translated = perfvar_translation(perfvar, check_command)
-        name = translated["name"]
-        mi = metric_info.get(name, {})
-        yield name, str(mi.get("title", name.title()))
+        metric_name = perfvar_translation(perfvar, check_command)["name"]
+        yield metric_name, metric_title(metric_name)
 
 
 def metrics_of_query(

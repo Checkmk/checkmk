@@ -276,7 +276,10 @@ class ValuesWithUnits(CascadingDropdown):
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys
         known_units = list(unit_info.keys())
-        required_unit = metric_info.get(metric_name, {}).get("unit", "")
+        if metric_name in metric_info:
+            required_unit = metric_info[metric_name]["unit"]
+        else:
+            required_unit = ""
 
         try:
             index = known_units.index(required_unit)

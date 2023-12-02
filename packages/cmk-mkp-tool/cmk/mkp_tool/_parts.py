@@ -23,6 +23,8 @@ class PathConfig:
     # There are also paths that have different purposes :-(
 
     # paths for MKP content
+    cmk_plugins_dir: Path
+    cmk_addons_plugins_dir: Path
     agent_based_plugins_dir: Path
     agents_dir: Path
     alert_handlers_dir: Path
@@ -52,6 +54,8 @@ class PathConfig:
     def from_toml(cls, content: str) -> Self:
         raw = tomllib.loads(content)["paths"]
         return cls(
+            cmk_plugins_dir=Path(raw["cmk_plugins_dir"]),
+            cmk_addons_plugins_dir=Path(raw["cmk_addons_plugins_dir"]),
             agent_based_plugins_dir=Path(raw["agent_based_plugins_dir"]),
             agents_dir=Path(raw["agents_dir"]),
             alert_handlers_dir=Path(raw["alert_handlers_dir"]),
@@ -78,6 +82,10 @@ class PathConfig:
 
     def get_path(self, part: PackagePart) -> Path:
         match part:
+            case PackagePart.CMK_PLUGINS:
+                return self.cmk_plugins_dir
+            case PackagePart.CMK_ADDONS_PLUGINS:
+                return self.cmk_addons_plugins_dir
             case PackagePart.EC_RULE_PACKS:
                 return self.mkp_rule_pack_dir
             case PackagePart.AGENT_BASED:
@@ -141,24 +149,28 @@ class PathConfig:
 
 def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
     match part:
+        case PackagePart.CMK_PLUGINS:
+            return _("Shipped Checkmk plugins")
+        case PackagePart.CMK_ADDONS_PLUGINS:
+            return _("Additional Checkmk plugins by third parties")
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")
         case PackagePart.AGENT_BASED:
-            return _("Agent based plugins (Checks, Inventory)")
+            return _("Agent based plugins (deprecated)")
         case PackagePart.CHECKS:
-            return _("Legacy check plugins")
+            return _("Legacy check plugins (deprecated)")
         case PackagePart.HASI:
-            return _("Legacy inventory plugins")
+            return _("Legacy inventory plugins (deprecated)")
         case PackagePart.CHECKMAN:
-            return _("Checks' man pages")
+            return _("Checks' man pages (deprecated)")
         case PackagePart.AGENTS:
             return _("Agents")
         case PackagePart.NOTIFICATIONS:
             return _("Notification scripts")
         case PackagePart.GUI:
-            return _("GUI extensions")
+            return _("GUI extensions (deprecated)")
         case PackagePart.WEB:
-            return _("Legacy GUI extensions")
+            return _("Legacy GUI extensions (deprecated)")
         case PackagePart.PNP_TEMPLATES:
             return _("PNP4Nagios templates (deprecated)")
         case PackagePart.DOC:
@@ -179,6 +191,10 @@ def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
 
 def permissions(part: PackagePart) -> int:
     match part:
+        case PackagePart.CMK_PLUGINS:
+            return 0o644
+        case PackagePart.CMK_ADDONS_PLUGINS:
+            return 0o644
         case PackagePart.EC_RULE_PACKS:
             return 0o644
         case PackagePart.AGENT_BASED:

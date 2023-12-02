@@ -16,6 +16,7 @@ from cmk.utils.visuals import invalidate_visuals_cache
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     disable,
     Installer,
@@ -29,30 +30,35 @@ from cmk.mkp_tool import (
     reload_apache,
 )
 
-_PATH_CONFIG = PathConfig(
-    agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
-    agents_dir=paths.local_agents_dir,
-    alert_handlers_dir=paths.local_alert_handlers_dir,
-    bin_dir=paths.local_bin_dir,
-    check_manpages_dir=paths.local_legacy_check_manpages_dir,
-    checks_dir=paths.local_checks_dir,
-    doc_dir=paths.local_doc_dir,
-    gui_plugins_dir=paths.local_gui_plugins_dir,
-    installed_packages_dir=paths.installed_packages_dir,
-    inventory_dir=paths.local_inventory_dir,
-    lib_dir=paths.local_lib_dir,
-    locale_dir=paths.local_locale_dir,
-    local_root=paths.local_root,
-    mib_dir=paths.local_mib_dir,
-    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
-    notifications_dir=paths.local_notifications_dir,
-    packages_enabled_dir=paths.local_enabled_packages_dir,
-    packages_local_dir=paths.local_optional_packages_dir,
-    packages_shipped_dir=paths.optional_packages_dir,
-    pnp_templates_dir=paths.local_pnp_templates_dir,
-    tmp_dir=paths.tmp_dir,
-    web_dir=paths.local_web_dir,
-)
+
+def get_path_config() -> PathConfig:
+    return PathConfig(
+        cmk_plugins_dir=plugins_local_path(),
+        cmk_addons_plugins_dir=addons_plugins_local_path(),
+        agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
+        agents_dir=paths.local_agents_dir,
+        alert_handlers_dir=paths.local_alert_handlers_dir,
+        bin_dir=paths.local_bin_dir,
+        check_manpages_dir=paths.local_legacy_check_manpages_dir,
+        checks_dir=paths.local_checks_dir,
+        doc_dir=paths.local_doc_dir,
+        gui_plugins_dir=paths.local_gui_plugins_dir,
+        installed_packages_dir=paths.installed_packages_dir,
+        inventory_dir=paths.local_inventory_dir,
+        lib_dir=paths.local_lib_dir,
+        locale_dir=paths.local_locale_dir,
+        local_root=paths.local_root,
+        mib_dir=paths.local_mib_dir,
+        mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+        notifications_dir=paths.local_notifications_dir,
+        packages_enabled_dir=paths.local_enabled_packages_dir,
+        packages_local_dir=paths.local_optional_packages_dir,
+        packages_shipped_dir=paths.optional_packages_dir,
+        pnp_templates_dir=paths.local_pnp_templates_dir,
+        tmp_dir=paths.tmp_dir,
+        web_dir=paths.local_web_dir,
+    )
+
 
 _CALLBACKS: Final = {
     PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
@@ -62,11 +68,13 @@ _CALLBACKS: Final = {
     ),
 }
 
-_PACKAGE_STORE = PackageStore(
-    shipped_dir=_PATH_CONFIG.packages_shipped_dir,
-    local_dir=_PATH_CONFIG.packages_local_dir,
-    enabled_dir=_PATH_CONFIG.packages_enabled_dir,
-)
+
+def get_package_store(path_config: PathConfig) -> PackageStore:
+    return PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
 
 class ConflictMode(enum.StrEnum):
@@ -92,6 +100,8 @@ def disable_incomp_mkp(
     error: BaseException,
     package_id: PackageID,
     installer: Installer,
+    package_store: PackageStore,
+    path_config: PathConfig,
 ) -> bool:
     if (
         conflict_mode in NEED_USER_INPUT_MODES
@@ -101,8 +111,8 @@ def disable_incomp_mkp(
         if (
             disabled := disable(
                 installer,
-                _PACKAGE_STORE,
-                _PATH_CONFIG,
+                package_store,
+                path_config,
                 _CALLBACKS,
                 package_id,
             )
@@ -162,10 +172,12 @@ def continue_on_incomp_local_file(
     )
 
 
-def get_installer_and_package_map() -> tuple[Installer, dict[Path, PackageID]]:
+def get_installer_and_package_map(
+    path_config: PathConfig,
+) -> tuple[Installer, dict[Path, PackageID]]:
     installer = Installer(paths.installed_packages_dir)
     installed_files_package_map = {
-        Path(_PATH_CONFIG.get_path(part)).resolve() / file: manifest.id
+        Path(path_config.get_path(part)).resolve() / file: manifest.id
         for manifest in installer.get_installed_manifests()
         for part, files in manifest.files.items()
         for file in files

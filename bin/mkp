@@ -14,6 +14,7 @@ from cmk.utils.visuals import invalidate_visuals_cache
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.mkp_tool import (
     cli,
     make_post_package_change_actions,
@@ -24,6 +25,8 @@ from cmk.mkp_tool import (
 )
 
 _PATH_CONFIG = PathConfig(
+    cmk_plugins_dir=plugins_local_path(),
+    cmk_addons_plugins_dir=addons_plugins_local_path(),
     agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
     agents_dir=cmk.utils.paths.local_agents_dir,
     alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,

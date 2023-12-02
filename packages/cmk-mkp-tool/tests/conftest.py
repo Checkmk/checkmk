@@ -16,6 +16,8 @@ from cmk.mkp_tool import Installer, PackageStore, PathConfig
 def fixture_path_config(tmp_path: Path) -> Iterable[PathConfig]:
     local_root = tmp_path / "local_root"
     path_congfig = PathConfig(
+        cmk_plugins_dir=local_root / "cmk_plugins_dir",
+        cmk_addons_plugins_dir=local_root / "cmk_addons_plugins_dir",
         agent_based_plugins_dir=local_root / "agent_based_plugins_dir",
         agents_dir=local_root / "agents_dir",
         alert_handlers_dir=local_root / "alert_handlers_dir",

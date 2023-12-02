@@ -306,6 +306,8 @@ def test_unpackaged_files_none(installer: Installer, path_config: PathConfig) ->
     assert {
         part.ident: files for part, files in get_unpackaged_files(installer, path_config).items()
     } == {
+        "cmk_plugins": [],
+        "cmk_addons_plugins": [],
         "agent_based": [],
         "agents": [],
         "alert_handlers": [],
@@ -337,6 +339,8 @@ def test_unpackaged_files(installer: Installer, path_config: PathConfig) -> None
         f.write("huhu\n")
 
     assert get_unpackaged_files(installer, path_config) == {
+        PackagePart.CMK_PLUGINS: [],
+        PackagePart.CMK_ADDONS_PLUGINS: [],
         PackagePart.AGENT_BASED: [Path("abc"), Path("dada")],
         PackagePart.AGENTS: [],
         PackagePart.ALERT_HANDLERS: [],

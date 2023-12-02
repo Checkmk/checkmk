@@ -28,6 +28,8 @@ _logger = logging.getLogger(__name__)
 class PackagePart(str, enum.Enum):
     # We have to inherit str to make the (de)serialization work as expected.
     # It's a shame, but other approaches don't work or are worse.
+    CMK_PLUGINS = "cmk_plugins"
+    CMK_ADDONS_PLUGINS = "cmk_addons_plugins"
     EC_RULE_PACKS = "ec_rule_packs"
     AGENT_BASED = "agent_based"
     CHECKS = "checks"

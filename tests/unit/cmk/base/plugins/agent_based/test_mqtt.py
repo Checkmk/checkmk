@@ -339,7 +339,7 @@ def test_discovery_mqtt_uptime(discovery_scenario: DiscoveryScenario) -> None:
                 section=_SCENARIO_MOSQUITTO_1612.parse_result,
                 value_store={},
                 expected_result=[
-                    Result(state=State.OK, summary="Up since May 28 1988 00:22:51"),
+                    Result(state=State.OK, summary="Up since 1988-05-28 00:22:51"),
                     Result(state=State.OK, summary="Uptime: 11 days 16 hours"),
                     Metric("uptime", 1010229.0),
                 ],
@@ -352,7 +352,7 @@ def test_discovery_mqtt_uptime(discovery_scenario: DiscoveryScenario) -> None:
                 section=_SCENARIO_MOSQUITTO_1609.parse_result,
                 value_store={},
                 expected_result=[
-                    Result(state=State.OK, summary="Up since Jun 08 1988 16:57:15"),
+                    Result(state=State.OK, summary="Up since 1988-06-08 16:57:15"),
                     Result(state=State.OK, summary="Uptime: 2 minutes 45 seconds"),
                     Metric("uptime", 165.0),
                 ],

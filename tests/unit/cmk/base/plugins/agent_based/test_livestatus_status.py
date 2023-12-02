@@ -752,7 +752,7 @@ _RESULTS = [
     Result(state=State.OK, notice="Core version: Checkmk 2019.05.31"),
     Result(
         state=State.OK,
-        notice="Site certificate valid until Oct 01 3017",
+        notice="Site certificate valid until 3017-10-01",
     ),
     Result(
         state=State.OK,

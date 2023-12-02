@@ -13,9 +13,9 @@ from cmk.agent_based.v1 import render
 @pytest.mark.parametrize(
     "epoch, output",
     [
-        (0, "Jan 01 1970"),
-        (1587908220, "Apr 26 2020"),
-        (1587908220.0, "Apr 26 2020"),
+        (0, "1970-01-01"),
+        (1587908220, "2020-04-26"),
+        (1587908220.0, "2020-04-26"),
     ],
 )
 def test_date(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -26,9 +26,9 @@ def test_date(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch)
 @pytest.mark.parametrize(
     "epoch, output",
     [
-        (0, "Jan 01 1970 00:00:00"),
-        (1587908220, "Apr 26 2020 13:37:00"),
-        (1587908220.0, "Apr 26 2020 13:37:00"),
+        (0, "1970-01-01 00:00:00"),
+        (1587908220, "2020-04-26 13:37:00"),
+        (1587908220.0, "2020-04-26 13:37:00"),
     ],
 )
 def test_datetime(epoch: float | None, output: str, monkeypatch: pytest.MonkeyPatch) -> None:

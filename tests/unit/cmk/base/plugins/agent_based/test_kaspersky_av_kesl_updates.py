@@ -33,7 +33,7 @@ def set_fixed_timezone():
             },
             [
                 Result(state=State.CRIT, summary="Databases loaded: False"),
-                Result(state=State.OK, summary="Database date: Jan 01 1970 00:00:00"),
+                Result(state=State.OK, summary="Database date: 1970-01-01 00:00:00"),
                 Result(state=State.OK, summary="Database records: 1"),
             ],
         ),

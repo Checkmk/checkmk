@@ -474,7 +474,6 @@ class ErrorReporter:
             "esx_vsphere_vm_heartbeat",
             RuleGroup.CheckgroupParameters("vm_heartbeat"),
         ),
-        ("check", "f5_bigip_fans", RuleGroup.CheckgroupParameters("hw_fans")),
         (
             "check",
             "fortigate_antivirus",
@@ -489,11 +488,6 @@ class ErrorReporter:
             "check",
             "fortigate_ipsecvpn",
             RuleGroup.CheckgroupParameters("ipsecvpn"),
-        ),
-        (
-            "check",
-            "fortigate_memory",
-            RuleGroup.CheckgroupParameters("memory"),
         ),
         (
             "check",

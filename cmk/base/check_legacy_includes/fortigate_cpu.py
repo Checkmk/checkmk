@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_api import DiscoveryResult, Service
+
+from cmk.agent_based.v2.type_defs import StringTable
 
 from .cpu_util import check_cpu_util
 
 
-def inventory_fortigate_cpu(info):
-    yield None, {}
+def inventory_fortigate_cpu(string_table: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
 def check_fortigate_cpu(item, params, info):

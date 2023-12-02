@@ -12,10 +12,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.plugins.lib.fortinet import DETECT_FORTIGATE
 from cmk.plugins.lib.memory import get_levels_mode_from_value
 
-fortigate_memory_base_default_levels = {
-    "levels": (70.0, 80.0),
-}
-
 
 def parse_fortigate_memory_base(string_table):
     try:
@@ -35,7 +31,7 @@ def check_fortigate_memory_base(_item, params, parsed):
     if isinstance(params, tuple):
         levels = ("perc_used", params)
     else:
-        warn, crit = params.get("levels", fortigate_memory_base_default_levels["levels"])
+        warn, crit = params["levels"]
         mode = get_levels_mode_from_value(warn)
         # Rule 'memory' uses MiB for absolute values:
         scale = 1.0 if mode.startswith("perc") else 2**20
@@ -59,5 +55,5 @@ check_info["fortigate_memory_base"] = LegacyCheckDefinition(
     discovery_function=inventory_fortigate_memory_base,
     check_function=check_fortigate_memory_base,
     check_ruleset_name="memory",
-    check_default_parameters=fortigate_memory_base_default_levels,
+    check_default_parameters={"levels": (70.0, 80.0)},
 )

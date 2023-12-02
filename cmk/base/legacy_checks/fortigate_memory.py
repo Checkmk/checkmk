@@ -14,8 +14,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     SNMPTree,
 )
 
-fortigate_memory_default_levels = (70, 80)
-
 
 def parse_fortigate_memory(string_table):
     try:
@@ -26,7 +24,7 @@ def parse_fortigate_memory(string_table):
 
 def inventory_fortigate_memory(parsed):
     if parsed is not None:
-        return [(None, fortigate_memory_default_levels)]
+        return [(None, {})]
     return []
 
 
@@ -34,19 +32,11 @@ def check_fortigate_memory(item, params, current_reading):
     if current_reading is None:
         return
 
-    # This check does not yet support averaging. We need to
-    # convert it to mem.include
-    if isinstance(params, dict):
-        warn, crit = params["levels"]
-    else:
-        warn, crit = params
-
-    # This check is only able to check the used space in percent.
-    # Unfortunately, it is not straight forward to detect the configured absolute levels,
-    # since the default levels here are integers...
-    if isinstance(warn, int) and isinstance(params, dict):
+    warn, crit = params["levels"]
+    if isinstance(warn, int):
         yield 3, "Absolute levels are not supported"
         warn, crit = None, None
+
     # The checkgroup "memory" might set negative values which act as levels for free space
     # These levels are converted to used space, too..
     if warn is not None and warn < 0:
@@ -73,4 +63,5 @@ check_info["fortigate_memory"] = LegacyCheckDefinition(
     discovery_function=inventory_fortigate_memory,
     check_function=check_fortigate_memory,
     check_ruleset_name="memory",
+    check_default_parameters={"levels": (70.0, 80.0)},
 )

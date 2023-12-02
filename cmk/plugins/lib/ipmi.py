@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, Literal, TypedDict
 
-from cmk.agent_based.v2 import check_levels, Metric, Result, Service, State, type_defs
+from cmk.agent_based.v2 import check_levels_fixed, Metric, Result, Service, State, type_defs
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -149,7 +149,7 @@ def _compile_user_levels_map(params: Mapping[str, Any]) -> Mapping[str, UserLeve
     }
 
 
-def _sensor_levels_to_check_levels(
+def _sensor_levels_to_check_levels_fixed(
     sensor_warn: float | None,
     sensor_crit: float | None,
 ) -> tuple[float, float] | None:
@@ -216,10 +216,10 @@ def _check_ipmi_detailed(
             levels=(None, sensor.crit_high),
         )
 
-    sensor_result, *_ = check_levels(
+    sensor_result, *_ = check_levels_fixed(
         sensor.value,
-        levels_upper=_sensor_levels_to_check_levels(sensor.warn_high, sensor.crit_high),
-        levels_lower=_sensor_levels_to_check_levels(sensor.warn_low, sensor.crit_low),
+        levels_upper=_sensor_levels_to_check_levels_fixed(sensor.warn_high, sensor.crit_high),
+        levels_lower=_sensor_levels_to_check_levels_fixed(sensor.warn_low, sensor.crit_low),
         render_func=_unit_to_render_func(sensor.unit),
     )
     yield Result(
@@ -231,7 +231,7 @@ def _check_ipmi_detailed(
 
     user_levels_map = _compile_user_levels_map(params)
     if levels := user_levels_map.get(item):
-        yield from check_levels(
+        yield from check_levels_fixed(
             sensor.value,
             levels_upper=levels.upper,
             levels_lower=levels.lower,
@@ -286,7 +286,7 @@ def _check_individual_sensors(
         )
 
         if sensor.value is not None and (levels := user_levels_map.get(sensor_name)):
-            (sensor_result,) = check_levels(
+            (sensor_result,) = check_levels_fixed(
                 sensor.value,
                 levels_upper=levels.upper,
                 levels_lower=levels.lower,

@@ -6,7 +6,7 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels, Service, startswith
+from cmk.agent_based.v2 import check_levels_fixed, Service, startswith
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 from .humidity import check_humidity
@@ -281,7 +281,7 @@ def check_enviromux_voltage(
     if (sensor := section.get(item)) is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=sensor.value,
         metric_name="voltage",
         levels_lower=(

@@ -14,13 +14,15 @@ import argparse
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Self, Sequence
 
 IMPORTS = (
     ("cmk.base.plugins.agent_based.agent_based_api.v1", "cmk.agent_based.v2"),
     (".agent_based_api.v1", "cmk.agent_based.v2"),
     ("cmk.base.plugins.agent_based.utils", ".utils"),
+    ("check_levels", "check_levels_fixed as check_levels"),
 )
 
 
@@ -71,30 +73,65 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
+@dataclass
+class PyFile:
+    header: str
+    imports: str
+    body: str
+
+    def __str__(self) -> str:
+        return self.header + self.imports + self.body
+
+    @classmethod
+    def from_content(cls, content: str) -> Self:
+        header, imports, body = [], [], []
+        ilines = iter(content.splitlines())
+
+        for line in ilines:
+            if not line.startswith(("import", "from")):
+                header.append(f"{line}\n")
+            else:
+                imports.append(f"{line}\n")
+                break
+
+        for line in ilines:
+            if line.startswith(("import", "from", "    ", ")")) or not line:
+                imports.append(f"{line}\n")
+            else:
+                body.append(f"{line}\n")
+                break
+
+        body.extend(f"{line}\n" for line in ilines)
+        return cls("".join(header), "".join(imports), "".join(body))
+
+
 def _transform(file_name: Path, inplace: bool) -> None:
-    content = file_name.read_text()
+    py_file = PyFile.from_content(file_name.read_text())
 
-    marker = "\nfrom" if "\nfrom" in content else "\nimport"
-    content = content.replace(
-        marker,
-        (
-            "\nfrom cmk.agent_based.v2 import AgentSection, SNMPSection,"
-            f" SimpleSNMPSection, CheckPlugin, InvetoryPlugin{marker}"
-        ),
-        1,
-    )
-
-    for old, new in IMPORTS:
-        content = content.replace(old, new)
-
-    for prefix, plugin, regex in REGISTRATION_REGEXES:
-        while (m := next(regex.finditer(content), None)) is not None:
-            content = content.replace(m.group(0), f"{prefix}_{m.group(2)} = {plugin}{m.group(1)}")
+    py_file.imports = _transform_imports(py_file.imports)
+    py_file.body = _transform_body(py_file.body)
 
     if inplace:
-        file_name.write_text(content)
+        file_name.write_text(str(py_file))
     else:
-        sys.stdout.write(content)
+        sys.stdout.write(str(py_file))
+
+
+def _transform_imports(imports: str) -> str:
+    imports += (
+        "from cmk.agent_based.v2 import AgentSection, SNMPSection,"
+        " SimpleSNMPSection, CheckPlugin, InventoryPlugin\n\n"
+    )
+    for old, new in IMPORTS:
+        imports = imports.replace(old, new)
+    return imports
+
+
+def _transform_body(body: str) -> str:
+    for prefix, plugin, regex in REGISTRATION_REGEXES:
+        while (m := next(regex.finditer(body), None)) is not None:
+            body = body.replace(m.group(0), f"{prefix}_{m.group(2)} = {plugin}{m.group(1)}")
+    return body
 
 
 def _autoflake(file_names: Sequence[str]) -> None:

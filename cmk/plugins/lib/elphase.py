@@ -6,7 +6,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels, render, Result, State, type_defs
+from cmk.agent_based.v2 import check_levels_fixed, render, Result, State, type_defs
 
 CheckParams = Mapping[str, Any] | None
 Sensor = Mapping[str, Any]
@@ -115,7 +115,7 @@ def check_elphase(  # pylint: disable=too-many-branches
                 if levels[0] is not None and levels[1] is not None:
                     levels_lower = (factor * levels[0], factor * levels[1])
 
-        yield from check_levels(
+        yield from check_levels_fixed(
             value * factor,
             levels_upper=levels_upper,
             levels_lower=levels_lower,

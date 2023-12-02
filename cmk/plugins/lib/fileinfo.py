@@ -11,7 +11,7 @@ from enum import Enum
 from re import Match
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2 import check_levels, Metric, render, Result, Service, State
+from cmk.agent_based.v2 import check_levels_fixed, Metric, render, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 from . import eval_regex
@@ -311,7 +311,7 @@ def _fileinfo_check_function(
         max_levels = params.get("max" + metric.key, (None, None))
         min_levels = params.get("min" + metric.key, (None, None))
 
-        yield from check_levels(
+        yield from check_levels_fixed(
             adjusted_metric_value,
             levels_upper=max_levels,
             levels_lower=min_levels,
@@ -423,7 +423,7 @@ def _check_individual_files(
     ]:
         levels_upper = params.get("max" + key, (None, None))
         levels_lower = params.get("min" + key, (None, None))
-        results = check_levels(
+        results = check_levels_fixed(
             value,
             metric_name=key,
             levels_upper=levels_upper,

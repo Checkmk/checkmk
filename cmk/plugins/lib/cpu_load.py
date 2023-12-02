@@ -7,7 +7,7 @@ from typing import Any, Literal
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2 import check_levels, check_levels_predictive, Result, State
+from cmk.agent_based.v2 import check_levels_fixed, check_levels_predictive, Result, State
 from cmk.agent_based.v2.type_defs import CheckResult
 
 from .cpu import ProcessorType, Section
@@ -88,7 +88,7 @@ def _check_cpu_load_type(
         levels_upper = (
             (levels[0] * num_cpus, levels[1] * num_cpus) if isinstance(levels, tuple) else None
         )
-        yield from check_levels(
+        yield from check_levels_fixed(
             value,
             metric_name=f"load{avg}",
             levels_upper=levels_upper,

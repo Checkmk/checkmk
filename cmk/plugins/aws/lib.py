@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.agent_based.v2 import (
-    check_levels,
+    check_levels_fixed,
     IgnoreResultsError,
     Metric,
     render,
@@ -112,7 +112,7 @@ def check_aws_limits(
         if not limit_ref:
             continue
 
-        result, _ = check_levels(
+        result, _ = check_levels_fixed(
             value=100.0 * amount / limit_ref,
             levels_upper=(warn, crit),
             metric_name=resource_key + "_in_%",
@@ -136,7 +136,7 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
         raise IgnoreResultsError("Currently no data from AWS")
 
     for metric_info in metric_infos:
-        yield from check_levels(
+        yield from check_levels_fixed(
             value=metric_info.value,
             metric_name=metric_info.name,
             levels_lower=metric_info.levels_lower,

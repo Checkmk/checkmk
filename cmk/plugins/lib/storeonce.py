@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from typing import Any, Final
 
-from cmk.agent_based.v2 import check_levels, get_value_store, render, Result, State
+from cmk.agent_based.v2 import check_levels_fixed, get_value_store, render, Result, State
 from cmk.agent_based.v2.type_defs import CheckResult, StringTable
 
 from .df import df_check_filesystem_list
@@ -75,6 +75,6 @@ def check_storeonce_space(
 
     dedupl_ratio_str = section.get("Deduplication Ratio") or section.get("dedupeRatio")
     if dedupl_ratio_str is not None:
-        yield from check_levels(
+        yield from check_levels_fixed(
             float(dedupl_ratio_str), metric_name="dedup_rate", label="Dedup ratio"
         )

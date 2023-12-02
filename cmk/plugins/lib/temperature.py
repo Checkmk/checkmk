@@ -9,7 +9,7 @@ from typing import Any
 
 from typing_extensions import TypedDict
 
-from cmk.agent_based.v2 import check_levels, get_average, get_rate, Result, State
+from cmk.agent_based.v2 import check_levels_fixed, get_average, get_rate, Result, State
 from cmk.agent_based.v2.render import timespan
 from cmk.agent_based.v2.type_defs import CheckResult
 
@@ -201,7 +201,7 @@ def _check_trend(
         # as a positive or negative value
         levels_lower_trend = (abs(levels_lower_trend[0]) * -1, abs(levels_lower_trend[1]) * -1)
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=trend,
         levels_upper=levels_upper_trend,
         levels_lower=levels_lower_trend,
@@ -237,7 +237,7 @@ def _check_trend(
     diff_to_limit = limit - temp
     seconds_left = float(diff_to_limit / rate_avg)
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=seconds_left,
         levels_lower=levels_timeleft_sec,
         render_func=timespan,
@@ -317,7 +317,7 @@ def check_temperature(  # pylint: disable=too-many-branches
 
     device_levels_handling = params.get("device_levels_handling", "usrdefault")
 
-    usr_result, usr_metric = check_levels(
+    usr_result, usr_metric = check_levels_fixed(
         value=temp,
         metric_name="temp",
         levels_upper=usr_levels_upper,
@@ -328,7 +328,7 @@ def check_temperature(  # pylint: disable=too-many-branches
 
     assert isinstance(usr_result, Result)
 
-    dev_result, dev_metric = check_levels(
+    dev_result, dev_metric = check_levels_fixed(
         value=temp,
         metric_name="temp",
         levels_upper=dev_levels_upper,

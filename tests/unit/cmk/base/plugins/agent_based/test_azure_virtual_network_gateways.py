@@ -586,7 +586,7 @@ def test_check_virtual_network_gateway_settings(section, item, expected_result):
                 Result(state=State.OK, summary="Summary: This gateway isn't running."),
                 Result(
                     state=State.CRIT,
-                    summary="Reason type: Error, Occurred time: Jun 27 2022 21:25:58",
+                    summary="Reason type: Error, Occurred time: 2022-06-27 21:25:58",
                 ),
             ],
             id="state_not_available",

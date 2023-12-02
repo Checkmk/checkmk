@@ -472,7 +472,7 @@ def test_certificate_results(
                         "last_update": None,
                         "pending_hash": None,
                         "update_url": "foo",
-                        "last_check": 990789180,  # Fri May 25 2001 11:13:00 GMT+0000
+                        "last_check": 990789180,  # Fri 2001-05-25 11:13:00 GMT+0000
                         "trusted_certs": trusted_certs,
                         "error": None,
                     }
@@ -486,7 +486,7 @@ def test_certificate_results(
             Result(
                 state=State.OK, notice="Time since last update check: 2 hours 0 minutes"
             ),  # timezones?
-            Result(state=State.OK, notice="Last update check: May 25 2001 11:13:00"),
+            Result(state=State.OK, notice="Last update check: 2001-05-25 11:13:00"),
             Result(state=State.OK, notice="Update URL: foo"),
             *results,
         ]
@@ -525,8 +525,8 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",
         ),
-        Result(state=State.OK, notice="Last update check: Feb 16 2022 08:28:01"),
-        Result(state=State.OK, summary="Last update: Feb 16 2022 08:29:41"),
+        Result(state=State.OK, notice="Last update check: 2022-02-16 08:28:01"),
+        Result(state=State.OK, summary="Last update: 2022-02-16 08:29:41"),
         Result(state=State.OK, notice="Update URL: https://server/site/check_mk"),
         Result(state=State.OK, notice="Agent configuration: 38bf6e44"),
         Result(state=State.OK, notice="Pending installation: 1234abcd"),

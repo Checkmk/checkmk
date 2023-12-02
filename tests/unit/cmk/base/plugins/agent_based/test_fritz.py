@@ -284,7 +284,7 @@ def test_discover_fritz_uptime(
             [
                 Result(
                     state=State.OK,
-                    summary="Up since Mar 17 2022 11:07:38",
+                    summary="Up since 2022-03-17 11:07:38",
                 ),
                 Result(
                     state=State.OK,

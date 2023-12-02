@@ -313,7 +313,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
@@ -342,7 +342,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(
                     state=State.CRIT,
                     summary="Job age: 1 year 178 days (warn/crit at 1 second/2 seconds)",
@@ -377,7 +377,7 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                 ),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
@@ -413,9 +413,9 @@ def test_parse(string_table: StringTable, expected_parsed_data: job.Section) -> 
                     state=State.OK,
                     notice=(
                         "6 jobs are currently running, started at"
-                        " May 08 2019 09:41:01, May 08 2019 09:42:01,"
-                        " May 08 2019 09:43:01, May 08 2019 09:44:01,"
-                        " Sep 18 2018 22:11:41, May 08 2019 09:46:01"
+                        " 2019-05-08 09:41:01, 2019-05-08 09:42:01,"
+                        " 2019-05-08 09:43:01, 2019-05-08 09:44:01,"
+                        " 2018-09-18 22:11:41, 2019-05-08 09:46:01"
                     ),
                 ),
                 Result(
@@ -474,7 +474,7 @@ def test_process_job_stats(
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 2 minutes 0 seconds"),
                 Metric("real_time", 120.0, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Jan 12 2019 14:53:21"),
+                Result(state=State.OK, notice="Latest job started at 2019-01-12 14:53:21"),
                 Result(state=State.OK, summary="Job age: 1 year 178 days"),
                 Metric("job_age", 46999419.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 1000 B"),
@@ -509,7 +509,7 @@ def test_process_job_stats(
                 Result(state=State.OK, summary="Latest exit code: 0"),
                 Result(state=State.OK, summary="Real time: 10 seconds"),
                 Metric("real_time", 9.9, boundaries=(0.0, None)),
-                Result(state=State.OK, notice="Latest job started at Nov 05 2014 03:10:30"),
+                Result(state=State.OK, notice="Latest job started at 2014-11-05 03:10:30"),
                 Result(state=State.OK, summary="Job age: 5 years 248 days"),
                 Metric("job_age", 179147190.0, boundaries=(0.0, None)),
                 Result(state=State.OK, notice="Avg. memory: 0 B"),
@@ -540,7 +540,7 @@ def test_process_job_stats(
                 Metric("real_time", 281.65, boundaries=(0.0, None)),
                 Result(
                     state=State.OK,
-                    notice="1 job is currently running, started at Nov 05 2014 17:41:53",
+                    notice="1 job is currently running, started at 2014-11-05 17:41:53",
                 ),
                 Result(
                     state=State.CRIT,

@@ -96,7 +96,7 @@ def test_check_sap_hana_backup_OK() -> None:
     rendered_timestamp = yielded_results[1]
     assert isinstance(rendered_timestamp, Result)
     assert rendered_timestamp.state == State.OK
-    assert rendered_timestamp.summary.startswith("Last: Jan 01 2019")
+    assert rendered_timestamp.summary.startswith("Last: 2019-01-01")
 
     assert yielded_results[2:] == [
         Result(
@@ -118,7 +118,7 @@ def test_check_sap_hana_backup_CRIT() -> None:
     rendered_timestamp = yielded_results[1]
     assert isinstance(rendered_timestamp, Result)
     assert rendered_timestamp.state == State.OK
-    assert rendered_timestamp.summary.startswith("Last: Jan 01 2019")
+    assert rendered_timestamp.summary.startswith("Last: 2019-01-01")
 
     assert yielded_results[2:] == [
         Result(
@@ -146,7 +146,7 @@ def test_cluster_check_sap_hana_backup_CRIT() -> None:
     rendered_timestamp = yielded_results[2]
     assert isinstance(rendered_timestamp, Result)
     assert rendered_timestamp.state == State.OK
-    assert rendered_timestamp.summary.startswith("Last: Jan 01 2019")
+    assert rendered_timestamp.summary.startswith("Last: 2019-01-01")
 
     assert yielded_results[3:] == [
         Result(

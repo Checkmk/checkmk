@@ -102,6 +102,8 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("fortigate_memory"): (lambda p: {}),
     CheckPluginName("fortigate_node_cpu"): (lambda p: {}),
     CheckPluginName("fsc_subsystems"): (lambda p: {}),
+    CheckPluginName("genua_pfstate"): (lambda p: {}),
+    CheckPluginName("gude_humidity"): (lambda p: {}),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 
-from cmk.base.check_api import check_levels, ServiceCheckResult, state_markers
+from cmk.base.check_api import check_levels, CheckResult
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 import cmk.plugins.aws.constants as agent_aws_types
@@ -103,13 +103,14 @@ def check_aws_limits(aws_service, params, parsed_region_data):
             None,
             (warn, crit),
             human_readable_func=render.percent,
+            statemarkers=True,
             infoname="Usage",
         )
 
         max_state = max(state, max_state)
         if state:
             levels_reached.add(resource_title)
-            infotext += f", {extrainfo}{state_markers[state]}"
+            infotext += f", {extrainfo}"
         long_output.append(infotext)
 
     if levels_reached:
@@ -188,7 +189,7 @@ def check_aws_http_errors(
 
 def check_aws_metrics(
     metric_infos: list[dict[str, float | str | None | tuple | None | Callable | None]]
-) -> Iterable[ServiceCheckResult]:
+) -> CheckResult:
     go_stale = True
 
     for metric_info in metric_infos:

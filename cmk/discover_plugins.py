@@ -20,12 +20,14 @@ import enum
 import importlib
 import os
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from types import ModuleType
 from typing import Final, Generic, Hashable, Protocol, TypeVar
 
-PLUGIN_NAMESPACES = ("cmk.plugins", "cmk_addons.plugins")
+_CMK_PLUGINS = "cmk.plugins"
+_CMK_ADDONS_PLUGINS = "cmk_addons.plugins"
 
 
 class PluginGroup(enum.Enum):
@@ -98,7 +100,14 @@ def discover_families(
 ) -> Mapping[str, Sequence[str]]:
     """Discover all families below `modules` and their paths"""
     if modules is None:
-        modules = _get_plugin_modules(raise_errors=raise_errors)
+        modules = [
+            m
+            for m in (
+                _import_optionally(_CMK_PLUGINS, raise_errors=raise_errors),
+                _import_optionally(_CMK_ADDONS_PLUGINS, raise_errors=raise_errors),
+            )
+            if m is not None
+        ]
 
     family_paths = defaultdict(list)
     for module in modules:
@@ -133,12 +142,25 @@ def discover_modules(
     )
 
 
-def _get_plugin_modules(*, raise_errors: bool) -> Iterable[ModuleType]:
-    return (
-        m
-        for p_namespace in PLUGIN_NAMESPACES
-        if (m := _import_optionally(p_namespace, raise_errors)) is not None
-    )
+def plugins_local_path() -> Path:
+    """Return the first local path for cmk plugins
+
+    Currently there is always exactly one.
+    """
+    return Path(next(_writable_module_paths(_CMK_PLUGINS)))
+
+
+def addons_plugins_local_path() -> Path:
+    """Return the first local path for cmk addon plugins
+
+    Currently there is always exactly one.
+    """
+    return Path(next(_writable_module_paths(_CMK_ADDONS_PLUGINS)))
+
+
+def _writable_module_paths(m_name: str) -> Iterator[str]:
+    """Return the writable module paths"""
+    return (p for p in importlib.import_module(m_name).__path__ if os.access(p, os.W_OK))
 
 
 _T = TypeVar("_T")

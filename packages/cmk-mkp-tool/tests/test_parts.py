@@ -15,6 +15,8 @@ def test_config_from_toml() -> None:
 this = "this ignored"
 
 [paths]
+cmk_plugins_dir = "cmk_plugins_dir"
+cmk_addons_plugins_dir = "cmk_addons_plugins_dir"
 agent_based_plugins_dir = "local_agent_based_plugins_dir"
 agents_dir = "local_agents_dir"
 alert_handlers_dir = "local_alert_handlers_dir"

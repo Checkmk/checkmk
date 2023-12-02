@@ -116,6 +116,7 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 
 from cmk import mkp_tool
 from cmk.bi.type_defs import frozen_aggregations_dir
+from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -2580,6 +2581,8 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
             uninstalled, installed = mkp_tool.update_active_packages(
                 mkp_tool.Installer(paths.installed_packages_dir),
                 mkp_tool.PathConfig(
+                    cmk_plugins_dir=plugins_local_path(),
+                    cmk_addons_plugins_dir=addons_plugins_local_path(),
                     agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
                     agents_dir=paths.local_agents_dir,
                     alert_handlers_dir=paths.local_alert_handlers_dir,

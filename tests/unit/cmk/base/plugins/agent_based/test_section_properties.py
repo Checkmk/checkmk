@@ -273,7 +273,6 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "innovaphone_temp",
         "ironport_misc",
         "jar_signature",
-        "logins",
         "lvm_vgs",
         "mailman_lists",
         "mongodb_asserts",

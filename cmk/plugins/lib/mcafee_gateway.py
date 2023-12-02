@@ -8,7 +8,7 @@ import datetime
 import typing
 
 from cmk.agent_based.v2 import (
-    check_levels,
+    check_levels_fixed,
     check_levels_predictive,
     contains,
     get_rate,
@@ -93,7 +93,7 @@ def compute_rate(
             label=label,
         )
     else:
-        yield from check_levels(
+        yield from check_levels_fixed(
             rate,
             metric_name=metric_name,
             levels_upper=levels,

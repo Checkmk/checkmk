@@ -3,8 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-New in this version:
---------------------
+New in this version
+-------------------
+
+This section lists the most important changes you have to be
+aware of when migrating your plugin to this API version.
+
+Note that changes are expressed in relation to the API version 1.
+
+You can find a script in `doc/treasures/migration_helpers/` that
+will do most of the migration for you.
+
+
+`check_levels` renamed to `check_fixed_levels`
+**********************************************
+
+This renaming allows us to provide a new `check_levels` function,
+that is particularly designed to work well with the `Levels` element
+from the new `rulesets API v1`.
+
 
 Registration is replaced by a discovery approach
 ************************************************
@@ -40,11 +57,9 @@ You can use pythons :func:`re.compile` as drop-in replacement.
 """
 # pylint: disable=duplicate-code
 
+from ..v1 import all_of, any_of, Attributes
+from ..v1 import check_levels as check_levels_fixed
 from ..v1 import (
-    all_of,
-    any_of,
-    Attributes,
-    check_levels,
     check_levels_predictive,
     contains,
     endswith,
@@ -105,7 +120,7 @@ __all__ = [
     "not_matches",
     "not_startswith",
     "Attributes",
-    "check_levels",
+    "check_levels_fixed",
     "check_levels_predictive",
     "clusterize",
     "get_average",

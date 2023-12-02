@@ -7,7 +7,7 @@ import json
 from collections.abc import Callable, Iterable, Mapping, MutableMapping
 from typing import Any, cast, Literal, TypedDict
 
-from cmk.agent_based.v2 import check_levels, Metric, render, Result
+from cmk.agent_based.v2 import check_levels_fixed, Metric, render, Result
 from cmk.agent_based.v2.type_defs import CheckResult, StringTable
 
 from .kube import PerformanceUsage, Section
@@ -170,7 +170,7 @@ def check_with_utilization(
         metric_name = f"kube_{resource_type}_{kubernetes_object}_{requirement_type}_utilization"
         param = params[kubernetes_object]
         title = utilization_title[kubernetes_object]
-    result, metric = check_levels(
+    result, metric = check_levels_fixed(
         utilization,
         levels_upper=param[1] if param != "no_levels" else None,
         levels_lower=_get_request_lower_levels(params, requirement_type),
@@ -209,7 +209,7 @@ def check_resource(
 ) -> CheckResult:
     if resource_usage is not None:
         usage = resource_usage.resource.usage
-        yield from check_levels(
+        yield from check_levels_fixed(
             usage,
             label="Usage",
             levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
@@ -232,7 +232,7 @@ def check_resource(
             )
             yield Metric(f"kube_{resource_type}_{requirement_type}", requirement)
         else:  # requirements with no usage
-            result, metric = check_levels(
+            result, metric = check_levels_fixed(
                 requirement,
                 label=absolute_title[requirement_type],
                 metric_name=f"kube_{resource_type}_{requirement_type}",
@@ -267,7 +267,7 @@ def check_resource_quota_resource(
     """
     usage = resource_usage.resource.usage if resource_usage is not None else None
     if usage is not None:
-        yield from check_levels(
+        yield from check_levels_fixed(
             usage,
             label="Usage",
             levels_upper=params["usage"][1] if params["usage"] != "no_levels" else None,
@@ -299,7 +299,7 @@ def check_resource_quota_resource(
                 render_func=render_func,
             )
         else:  # requirements with no usage
-            yield from check_levels(
+            yield from check_levels_fixed(
                 requirement_value,
                 label=absolute_title[requirement_type],
                 metric_name=f"kube_{resource_type}_{requirement_type}",

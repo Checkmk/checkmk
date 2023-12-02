@@ -6,12 +6,12 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels
+from cmk.agent_based.v2 import check_levels_fixed
 from cmk.agent_based.v2.type_defs import CheckResult
 
 
 def check_fan(rpm: float, params: Mapping[str, Any]) -> CheckResult:
-    return check_levels(
+    return check_levels_fixed(
         rpm,
         levels_lower=params.get("lower"),
         levels_upper=params.get("upper"),

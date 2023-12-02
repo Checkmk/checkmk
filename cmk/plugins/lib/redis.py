@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.v2 import check_levels, render
+from cmk.agent_based.v2 import check_levels_fixed, render
 from cmk.agent_based.v2.type_defs import CheckResult
 
 
@@ -21,7 +21,7 @@ def check_cache_hitratio(hitratio: float, params: Mapping[str, Any]) -> CheckRes
     hitratio *= 100
     levels_upper = params["levels_upper_hitratio"]
     levels_lower = params["levels_lower_hitratio"]
-    yield from check_levels(
+    yield from check_levels_fixed(
         hitratio,
         levels_upper=levels_upper,
         levels_lower=levels_lower,
@@ -33,7 +33,7 @@ def check_cache_hitratio(hitratio: float, params: Mapping[str, Any]) -> CheckRes
 
 def check_clients_connected(connected_clients: float, params: Mapping[str, Any]) -> CheckResult:
     levels_upper = params["clients_connected"]
-    yield from check_levels(
+    yield from check_levels_fixed(
         connected_clients,
         levels_upper=levels_upper,
         metric_name="clients_connected",

@@ -8,7 +8,7 @@ from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
-    check_levels,
+    check_levels_fixed,
     CheckPlugin,
     get_rate,
     get_value_store,
@@ -158,7 +158,7 @@ def check_aws_ebs_burst_balance(
     if (disk_data := section.get(item)) is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=disk_data["BurstBalance"],
         metric_name="aws_burst_balance",
         levels_lower=params.get("burst_balance_levels_lower", (None, None)),

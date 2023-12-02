@@ -6,7 +6,7 @@ import time
 from collections.abc import Mapping
 from typing import Any, NamedTuple
 
-from cmk.agent_based.v2 import check_levels, render, Result, Service, State
+from cmk.agent_based.v2 import check_levels_fixed, render, Result, Service, State
 from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 
 
@@ -30,7 +30,7 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     up_date = render.datetime(time.time() - section.uptime_sec)
     yield Result(state=State.OK, summary=f"Up since {up_date}")
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         section.uptime_sec,
         levels_upper=params.get("max"),
         levels_lower=params.get("min"),

@@ -11,7 +11,7 @@ from typing_extensions import TypedDict
 
 from cmk.agent_based.v2 import (
     any_of,
-    check_levels,
+    check_levels_fixed,
     equals,
     render,
     Result,
@@ -150,7 +150,7 @@ def _output_time_remaining(
     # Metric for time left on battery always - check remaining time only when on battery
     ignore_levels = seconds_left == 0 and not on_battery
     if seconds_left is not None:
-        yield from check_levels(
+        yield from check_levels_fixed(
             seconds_left,
             metric_name="battery_seconds_remaining",
             levels_lower=None if ignore_levels else (levels[0] * 60, levels[1] * 60),
@@ -172,7 +172,7 @@ def _output_percent_charged(
     if percent_charged is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         percent_charged,
         metric_name="battery_capacity",
         levels_lower=levels if on_battery else None,

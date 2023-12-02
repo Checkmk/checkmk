@@ -9,7 +9,7 @@ from typing import Any
 
 from cmk.agent_based.v2 import (
     AgentSection,
-    check_levels,
+    check_levels_fixed,
     CheckPlugin,
     get_value_store,
     IgnoreResultsError,
@@ -339,7 +339,7 @@ def check_aws_rds_cpu_credits(
 
     yield Result(state=State.OK, summary=f"CPU Credit Usage: {metrics['CPUCreditUsage']:.2f}")
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=metrics["CPUCreditBalance"],
         metric_name="aws_cpu_credit_balance",
         levels_lower=params.get("balance_levels_lower", (None, None)),
@@ -347,7 +347,7 @@ def check_aws_rds_cpu_credits(
     )
 
     if metrics.get("BurstBalance"):
-        yield from check_levels(
+        yield from check_levels_fixed(
             value=metrics["BurstBalance"],
             metric_name="aws_burst_balance",
             levels_lower=params.get("burst_balance_levels_lower", (None, None)),
@@ -400,7 +400,7 @@ def check_aws_rds_bin_log_usage(
         return
 
     usage = 100.0 * bin_log_usage / allocated_storage
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=usage,
         metric_name="aws_rds_bin_log_disk_usage",
         levels_upper=params.get("levels"),
@@ -464,7 +464,7 @@ def check_aws_rds_transaction_logs_usage(
         return
 
     usage = 100.0 * transaction_logs_space / allocated_storage
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=usage,
         metric_name="aws_rds_transaction_logs_disk_usage",
         levels_upper=params.get("levels"),
@@ -528,7 +528,7 @@ def check_aws_rds_replication_slot_usage(
         return
 
     usage = 100.0 * replication_slot_space / allocated_storage
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=usage,
         metric_name="aws_rds_replication_slot_disk_usage",
         levels_upper=params.get("levels"),
@@ -572,7 +572,7 @@ def check_aws_rds_connections(
     if (metrics := section.get(item)) is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=metrics["DatabaseConnections"],
         metric_name="aws_rds_connections",
         levels_upper=params.get("levels"),
@@ -616,7 +616,7 @@ def check_aws_rds_replica_lag(
     if (metrics := section.get(item)) is None:
         return
 
-    yield from check_levels(
+    yield from check_levels_fixed(
         value=metrics["ReplicaLag"],
         metric_name="aws_rds_replica_lag",
         levels_upper=params.get("lag_levels"),
@@ -625,7 +625,7 @@ def check_aws_rds_replica_lag(
     )
 
     if (oldest_replica_lag_space := metrics.get("OldestReplicationSlotLag")) is not None:
-        yield from check_levels(
+        yield from check_levels_fixed(
             value=oldest_replica_lag_space,
             metric_name="aws_rds_oldest_replication_slot_lag",
             levels_upper=params.get("slot_levels"),

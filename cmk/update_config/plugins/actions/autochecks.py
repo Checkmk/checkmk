@@ -72,6 +72,21 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
         lambda p: p if not isinstance(p, tuple) else {"group": p[0], "state": p[1]}
     ),
     CheckPluginName("cpsecure_sessions"): (lambda p: {}),
+    CheckPluginName("decru_fans"): (lambda p: {}),
+    CheckPluginName("decru_perf"): (lambda p: {}),
+    CheckPluginName("dell_powerconnect_cpu"): (lambda p: {}),
+    CheckPluginName("drbd_stats"): (lambda p: {}),
+    CheckPluginName("drbd_disk"): (lambda p: {}),
+    CheckPluginName("drbd_net"): (lambda p: {}),
+    # this is unreadable, but since we remove it soon I don't bother to rewrite it
+    CheckPluginName("drbd"): (
+        lambda p: p
+        if isinstance(p, dict)
+        else {
+            "roles_inventory": p[0] and p[0] or None,
+            "diskstates_inventory": (p[0] and p[1]) and p[1] or None,
+        }
+    ),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

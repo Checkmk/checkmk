@@ -3,15 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import (
+    check_levels,
+    CheckResult,
+    DiscoveryResult,
+    LegacyCheckDefinition,
+    Service,
+)
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.decru import DETECT_DECRU
 
 
-def inventory_decru_perf(info):
+def discover_decru_perf(string_table: StringTable) -> DiscoveryResult:
     perf_names = {
         1: "read (bytes/s)",  # readBytesPerSec
         2: "write (bytes/s)",  # writeBytesPerSec
@@ -24,23 +32,24 @@ def inventory_decru_perf(info):
         9: "NFS operations (/s)",  # nfs-opsPerSec
     }
 
-    inventory = []
-    for index, rate in info:
+    for index, _rate in string_table:
         def_name = "unknown %s" % index
         name = perf_names.get(int(index), def_name)
-        item = f"{index}: {name}"
-        inventory.append((item, rate, None))
-    return inventory
+        yield Service(item=f"{index}: {name}")
 
 
-def check_decru_perf(item, _no_params, info):
+def check_decru_perf(item: str, _no_params: Mapping[str, object], info: StringTable) -> CheckResult:
     index, _name = item.split(":", 1)
     for perf in info:
         if perf[0] == index:
-            rate = int(perf[1])
-            return (0, "current rate is %d/s" % rate, [("rate", rate)])
-
-    return (3, "item not found")
+            yield check_levels(
+                int(perf[1]),
+                "rate",
+                None,
+                human_readable_func=lambda x: f"{x}/s",
+                infoname="Current rate",
+            )
+            return
 
 
 check_info["decru_perf"] = LegacyCheckDefinition(
@@ -50,6 +59,6 @@ check_info["decru_perf"] = LegacyCheckDefinition(
         oids=["1", "2"],
     ),
     service_name="COUNTER %s",
-    discovery_function=inventory_decru_perf,
+    discovery_function=discover_decru_perf,
     check_function=check_decru_perf,
 )

@@ -5,14 +5,21 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.dell_poweredge import (
-    check_dell_poweredge_pci,
-    inventory_dell_poweredge_pci,
-)
+from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_pci
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+
+def inventory_dell_poweredge_pci(info):
+    inventory = []
+    for line in info:
+        fqdd = line[4]
+        if fqdd != "":
+            inventory.append((fqdd, None))
+    return inventory
+
 
 check_info["dell_poweredge_pci"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,

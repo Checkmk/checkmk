@@ -9,7 +9,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.azure_virtual_network_gateways import (
+
+from cmk.plugins.azure.agent_based.azure_virtual_network_gateways import (
     BgpSettings,
     check_azure_virtual_network_gateway,
     check_virtual_network_gateway_bgp,
@@ -26,7 +27,6 @@ from cmk.base.plugins.agent_based.azure_virtual_network_gateways import (
     VNetGWHealth,
     VNetGWSettings,
 )
-
 from cmk.plugins.lib.azure import AzureMetric, Resource
 
 SECTION: Section = {

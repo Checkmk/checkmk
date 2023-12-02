@@ -9,20 +9,14 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.azure_load_balancer import (
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v2.type_defs import StringTable
+from cmk.plugins.azure.agent_based.azure_load_balancer import (
     check_byte_count,
     check_health,
     check_snat,
     parse_load_balancer,
 )
-
 from cmk.plugins.lib.azure import AzureMetric, FrontendIpConfiguration, PublicIP, Resource
 from cmk.plugins.lib.azure_load_balancer import (
     BackendIpConfiguration,

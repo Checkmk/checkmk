@@ -8,9 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.azure_mysql import check_replication
-
+from cmk.agent_based.v2 import Metric, Result, State
+from cmk.plugins.azure.agent_based.azure_mysql import check_replication
 from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 
 

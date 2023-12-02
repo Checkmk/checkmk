@@ -5,11 +5,11 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
-from cmk.base.plugins.agent_based.azure_load_balancer import parse_load_balancer
 from cmk.base.plugins.agent_based.inventory_azure_load_balancer import inventory_load_balancer
 
+from cmk.agent_based.v2 import TableRow
+from cmk.agent_based.v2.type_defs import InventoryResult
+from cmk.plugins.azure.agent_based.azure_load_balancer import parse_load_balancer
 from cmk.plugins.lib.azure_load_balancer import Section
 
 SECTION = parse_load_balancer(

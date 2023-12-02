@@ -6,12 +6,13 @@
 from collections.abc import Mapping
 from typing import Any
 
+from cmk.agent_based.v2 import AgentSection
+from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v2 import CheckPlugin, IgnoreResultsError, Result, State
+from cmk.agent_based.v2.type_defs import CheckResult
 from cmk.plugins.lib.azure import create_discover_by_metrics_function, parse_resources, Section
 
-from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, State
-from .agent_based_api.v1.type_defs import CheckResult
-
-register.agent_section(
+agent_section_azure_trafficmanagerprofiles = AgentSection(
     name="azure_trafficmanagerprofiles",
     parse_function=parse_resources,
 )
@@ -37,7 +38,7 @@ def check_qps(item: str, params: Mapping[str, Any], section: Section) -> CheckRe
     )
 
 
-register.check_plugin(
+check_plugin_azure_traffic_manager_qps = CheckPlugin(
     name="azure_traffic_manager_qps",
     sections=["azure_trafficmanagerprofiles"],
     service_name="Azure/Traffic Mgr. %s Qps",
@@ -65,7 +66,7 @@ def check_probe_state(item: str, params: Mapping[str, Any], section: Section) ->
     yield Result(state=State(not_enabled_state), summary="Probe state: not OK")
 
 
-register.check_plugin(
+check_plugin_azure_traffic_manager_probe_state = CheckPlugin(
     name="azure_traffic_manager_probe_state",
     sections=["azure_trafficmanagerprofiles"],
     service_name="Azure/Traffic Mgr. %s Probe State",

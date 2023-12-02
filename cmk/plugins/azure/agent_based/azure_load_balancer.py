@@ -7,20 +7,20 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.plugins.lib.azure import create_check_metrics_function, MetricData, parse_resources
-from cmk.plugins.lib.azure_load_balancer import LoadBalancer, Section
-
-from .agent_based_api.v1 import (
-    check_levels,
+from cmk.agent_based.v2 import AgentSection
+from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
     IgnoreResultsError,
     Metric,
-    register,
     render,
     Result,
     Service,
     State,
 )
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.lib.azure import create_check_metrics_function, MetricData, parse_resources
+from cmk.plugins.lib.azure_load_balancer import LoadBalancer, Section
 
 
 def parse_load_balancer(string_table: StringTable) -> Section:
@@ -39,7 +39,7 @@ def parse_load_balancer(string_table: StringTable) -> Section:
     }
 
 
-register.agent_section(
+agent_section_azure_loadbalancers = AgentSection(
     name="azure_loadbalancers",
     parse_function=parse_load_balancer,
 )
@@ -88,7 +88,7 @@ def check_byte_count(item: str, params: Mapping[str, Any], section: Section) -> 
     )
 
 
-register.check_plugin(
+check_plugin_azure_load_balancer_byte_count = CheckPlugin(
     name="azure_load_balancer_byte_count",
     sections=["azure_loadbalancers"],
     service_name="Azure/Load Balancer %s Byte Count",
@@ -140,7 +140,7 @@ def check_snat(item: str, params: Mapping[str, Any], section: Section) -> CheckR
     yield Metric("used_snat_ports", used_ports)
 
 
-register.check_plugin(
+check_plugin_azure_load_balancer_snat = CheckPlugin(
     name="azure_load_balancer_snat",
     sections=["azure_loadbalancers"],
     service_name="Azure/Load Balancer %s SNAT Consumption",
@@ -187,7 +187,7 @@ def check_health(item: str, params: Mapping[str, Any], section: Section) -> Chec
     )(item, params, {item: load_balancer.resource})
 
 
-register.check_plugin(
+check_plugin_azure_load_balancer_health = CheckPlugin(
     name="azure_load_balancer_health",
     sections=["azure_loadbalancers"],
     service_name="Azure/Load Balancer %s Health",

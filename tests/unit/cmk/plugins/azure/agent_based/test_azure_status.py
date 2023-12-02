@@ -7,9 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.azure_status import (
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2.type_defs import StringTable
+from cmk.plugins.azure.agent_based.azure_status import (
     _NO_ISSUES,
     AzureIssue,
     AzureStatusesPerRegion,

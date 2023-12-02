@@ -7,6 +7,18 @@ import time
 from collections.abc import Iterator, Mapping
 from typing import Any, NamedTuple
 
+from cmk.agent_based.v2 import AgentSection
+from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+    Result,
+    Service,
+    State,
+)
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.azure import (
     create_check_metrics_function_single,
@@ -18,18 +30,6 @@ from cmk.plugins.lib.azure import (
     Resource,
     Section,
 )
-
-from .agent_based_api.v1 import (
-    check_levels,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    render,
-    Result,
-    Service,
-    State,
-)
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 _MAP_STATES = {
     # Provisioning states
@@ -59,7 +59,7 @@ class VMStatus(NamedTuple):
 VMSummaryParams = Mapping[str, Mapping[str, tuple[float, float]]]
 
 
-register.agent_section(
+agent_section_azure_virtualmachines = AgentSection(
     name="azure_virtualmachines",
     parse_function=parse_resources,
 )
@@ -124,7 +124,7 @@ def check_azure_virtual_machine(
         yield Result(state=State.OK, summary=f"{key}: {value}")
 
 
-register.check_plugin(
+check_plugin_azure_virtual_machine = CheckPlugin(
     name="azure_virtual_machine",
     sections=["azure_virtualmachines"],
     service_name="VM %s",
@@ -205,7 +205,7 @@ def check_azure_virtual_machine_summary(
         yield Result(state=State.OK, notice=f"{name}: Provisioning {provisioning}, VM {power}")
 
 
-register.check_plugin(
+check_plugin_azure_virtual_machine_summary = CheckPlugin(
     name="azure_virtual_machine_summary",
     sections=["azure_virtualmachines"],
     service_name="VM Summary",
@@ -259,7 +259,7 @@ def check_azure_vm_cpu_utilization(
     )(params, section)
 
 
-register.check_plugin(
+check_plugin_azure_vm_cpu_utilization = CheckPlugin(
     name="azure_vm_cpu_utilization",
     sections=["azure_virtualmachines"],
     service_name="Azure/VM %s",
@@ -302,7 +302,7 @@ def check_azure_vm_burst_cpu_credits(
     )(params, section)
 
 
-register.check_plugin(
+check_plugin_azure_vm_burst_cpu_credits = CheckPlugin(
     name="azure_vm_burst_cpu_credits",
     sections=["azure_virtualmachines"],
     service_name="Azure/VM Burst CPU Credits",
@@ -342,7 +342,7 @@ def check_azure_vm_memory(
     )(params, section)
 
 
-register.check_plugin(
+check_plugin_azure_vm_memory = CheckPlugin(
     name="azure_vm_memory",
     sections=["azure_virtualmachines"],
     service_name="Azure/VM Memory",
@@ -406,7 +406,7 @@ def check_azure_vm_disk(params: Mapping[str, tuple[float, float]], section: Sect
         )
 
 
-register.check_plugin(
+check_plugin_azure_vm_disk = CheckPlugin(
     name="azure_vm_disk",
     sections=["azure_virtualmachines"],
     service_name="Azure/VM Disk",
@@ -471,7 +471,7 @@ def check_azure_vm_network_io(
     yield from interfaces.check_single_interface(item, params, interface)
 
 
-register.check_plugin(
+check_plugin_azure_vm_network_io = CheckPlugin(
     name="azure_vm_network_io",
     sections=["azure_virtualmachines"],
     service_name="Azure/VM %s",

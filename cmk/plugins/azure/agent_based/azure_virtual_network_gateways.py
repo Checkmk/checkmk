@@ -8,6 +8,8 @@ from collections.abc import Iterable, Mapping, Sequence
 
 from pydantic import BaseModel
 
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.azure import (
     create_check_metrics_function,
     iter_resource_attributes,
@@ -16,9 +18,6 @@ from cmk.plugins.lib.azure import (
     parse_resources,
     Resource,
 )
-
-from .agent_based_api.v1 import register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class PeeringAddresses(BaseModel):
@@ -80,7 +79,7 @@ def parse_virtual_network_gateway(string_table: StringTable) -> Section:
     return section
 
 
-register.agent_section(
+agent_section_azure_virtualnetworkgateways = AgentSection(
     name="azure_virtualnetworkgateways",
     parse_function=parse_virtual_network_gateway,
 )
@@ -176,7 +175,7 @@ def check_azure_virtual_network_gateway(
         yield Result(state=State.OK, summary=f"{name}: {value}")
 
 
-register.check_plugin(
+check_plugin_azure_virtual_network_gateways = CheckPlugin(
     name="azure_virtual_network_gateways",
     sections=["azure_virtualnetworkgateways"],
     service_name="VNet Gateway %s",
@@ -215,7 +214,7 @@ def check_virtual_network_gateway_settings(item: str, section: Section) -> Check
     yield Result(state=State.OK, summary=f"active/active: {settings.activeActive}")
 
 
-register.check_plugin(
+check_plugin_azure_virtual_network_gateway_settings = CheckPlugin(
     name="azure_virtual_network_gateway_settings",
     sections=["azure_virtualnetworkgateways"],
     service_name="VNet Gateway %s Settings",
@@ -253,7 +252,7 @@ def check_virtual_network_gateway_health(item: str, section: Section) -> CheckRe
         yield Result(state=State.CRIT, summary=summary)
 
 
-register.check_plugin(
+check_plugin_azure_virtual_network_gateway_health = CheckPlugin(
     name="azure_virtual_network_gateway_health",
     sections=["azure_virtualnetworkgateways"],
     service_name="VNet Gateway %s Health Probe",
@@ -302,7 +301,7 @@ def check_virtual_network_gateway_bgp(item: str, section: Section) -> CheckResul
         yield Result(state=State.OK, summary=f"Enabled: {settings.enableBgp}")
 
 
-register.check_plugin(
+check_plugin_azure_virtual_network_gateway_bgp = CheckPlugin(
     name="azure_virtual_network_gateway_bgp",
     sections=["azure_virtualnetworkgateways"],
     service_name="VNet Gateway %s BGP",
@@ -349,7 +348,7 @@ def check_virtual_network_gateway_peering(item: str, section: Section) -> CheckR
             )
 
 
-register.check_plugin(
+check_plugin_azure_virtual_network_gateway_peering = CheckPlugin(
     name="azure_virtual_network_gateway_peering",
     sections=["azure_virtualnetworkgateways"],
     service_name="VNet Gateway %s",

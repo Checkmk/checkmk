@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Generator, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from math import ceil
 
-from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.check_api import check_levels, CheckResult, get_age_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_rate,
     get_value_store,
@@ -18,9 +18,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTabl
 from cmk.plugins.lib.wmi import get_wmi_time
 from cmk.plugins.lib.wmi import parse_wmi_table as parse_wmi_table_migrated
 from cmk.plugins.lib.wmi import required_tables_missing, WMISection, WMITable
-
-_Metric = tuple[str, float, float | None, float | None, float | None, float | None]
-LegacyCheckFunctionGenerator = Generator[tuple[int, str, list[_Metric]], None, None]
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -186,7 +183,7 @@ def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
     infoname: str | None,
     perfvar: str | None,
     levels=None,
-) -> LegacyCheckFunctionGenerator:
+) -> CheckResult:
     if table is None:
         # This case may be when a check was discovered with a table which subsequently disappeared again.
         # We expect to get `None` in this case.
@@ -225,7 +222,7 @@ def wmi_yield_raw_counter(  # type: ignore[no-untyped-def]
     perfvar: str | None,
     levels=None,
     unit: str = "",
-) -> LegacyCheckFunctionGenerator:
+) -> CheckResult:
     if row == "":
         row = 0
 
@@ -321,7 +318,7 @@ def wmi_yield_raw_average(  # type: ignore[no-untyped-def]
     perfvar: str | None,
     levels=None,
     perfscale: float = 1.0,
-) -> LegacyCheckFunctionGenerator:
+) -> CheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
@@ -343,7 +340,7 @@ def wmi_yield_raw_average_timer(  # type: ignore[no-untyped-def]
     infoname: str | None,
     perfvar: str | None,
     levels=None,
-) -> LegacyCheckFunctionGenerator:
+) -> CheckResult:
     assert table.frequency
     try:
         average = (
@@ -372,7 +369,7 @@ def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
     infoname: str | None,
     perfvar: str | None,
     levels=None,
-) -> LegacyCheckFunctionGenerator:
+) -> CheckResult:
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:

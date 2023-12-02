@@ -17,8 +17,8 @@ The things in this module specify the old Check_MK (<- see? Old!) check API
 
 import socket
 import time
-from collections.abc import Callable
-from typing import Any, Literal
+from collections.abc import Callable, Mapping
+from typing import Any, Generator, Literal
 
 import cmk.utils.debug as _debug
 
@@ -29,8 +29,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import PredictionParameters as _PredictionParameters
-from cmk.utils.prediction import PredictionUpdater as _PredictionUpdater
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 from cmk.checkengine.checkresults import state_markers as state_markers
@@ -54,16 +52,25 @@ Crit = None | int | float
 _Bound = None | int | float
 Levels = tuple  # Has length 2 or 4
 
-_MetricTuple = tuple[
-    MetricName,
-    float,
-    Warn,
-    Crit,
-    _Bound,
-    _Bound,
-]
+_MetricTuple = (
+    tuple[str, float]
+    | tuple[str, float, Warn, Crit]
+    | tuple[str, float, Warn, Crit, _Bound, _Bound]
+)
 
 ServiceCheckResult = tuple[ServiceState, ServiceDetails, list[_MetricTuple]]
+
+
+# to ease migration:
+DiscoveryResult = Generator[tuple[str | None, Mapping[str, object]], None, None]
+CheckResult = Generator[tuple[int, str] | tuple[int, str, list[_MetricTuple]], None, None]
+
+
+# to ease migration:
+def Service(
+    *, item: str | None = None, parameters: Mapping[str, object] | None = None
+) -> tuple[str | None, Mapping[str, object]]:
+    return item, parameters or {}
 
 
 def get_check_api_context() -> _config.CheckContext:

@@ -103,16 +103,6 @@ def test_detect_spec_dedup(
             "fjdarye_summary_status",
             "fjdarye_system_capacitors",
         ),
-        (  # these probably are the same due to rebranding? Only two different implementations.
-            "fortiauthenticator_auth_fail",
-            "fortiauthenticator_system",
-            "primekey",
-            "primekey_cpu_temperature",
-            "primekey_data",
-            "primekey_db_usage",
-            "primekey_fan",
-            "primekey_hsm_battery_voltage",
-        ),
     }
 
 

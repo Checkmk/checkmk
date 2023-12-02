@@ -501,11 +501,6 @@ class ErrorReporter:
         ),
         (
             "check",
-            "genua_pfstate",
-            RuleGroup.CheckgroupParameters("pf_used_states"),
-        ),
-        (
-            "check",
             "hivemanager_devices",
             RuleGroup.CheckgroupParameters("hivemanager_devices"),
         ),

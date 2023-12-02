@@ -5,14 +5,20 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.dell_poweredge import (
-    check_dell_poweredge_netdev,
-    inventory_dell_poweredge_netdev,
-)
+from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_netdev
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+
+def inventory_dell_poweredge_netdev(info):
+    inventory = []
+    for line in info:
+        if line[1] != "2" and line[4] != "":
+            inventory.append((line[4], None))
+    return inventory
+
 
 check_info["dell_poweredge_netdev"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,

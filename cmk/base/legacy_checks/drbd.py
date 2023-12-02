@@ -131,10 +131,6 @@ from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
-drbd_net_default_levels = (None, None)
-drbd_disk_default_levels = (None, None)
-drbd_stats_default_levels = (None, None, None, None, None, None, None, None, None)
-
 _drbd_block_start_match = re.compile("^[0-9]+:")
 
 drbd_general_map = ["cs", "ro", "ds"]
@@ -209,12 +205,9 @@ def inventory_drbd(info, checktype):
                     "roles_inventory": parsed["ro"],
                     "diskstates_inventory": parsed["ds"],
                 }
-            elif checktype == "drbd.net":
-                levels = drbd_net_default_levels
-            elif checktype == "drbd.disk":
-                levels = drbd_disk_default_levels
-            elif checktype == "drbd.stats":
-                levels = drbd_stats_default_levels
+            else:
+                levels = {}
+
             inventory.append(("drbd%s" % line[0][:-1], levels))
     return inventory
 
@@ -272,14 +265,6 @@ def drbd_get_block(item, info, checktype):
 
 def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
     parsed = drbd_get_block(item, info, "drbd")
-
-    if isinstance(params, tuple):
-        params_conv = {}
-        params_conv.update({"roles_inventory": params[0] and params[0] or None})
-        params_conv.update(
-            {"diskstates_inventory": (params[0] and params[1]) and params[1] or None}
-        )
-        params = params_conv
 
     if parsed is not None:
         if parsed["cs"] == "Unconfigured":

@@ -5,15 +5,28 @@
 
 
 from cmk.base.check_api import LegacyCheckDefinition
-from cmk.base.check_legacy_includes.dell_poweredge import (
-    check_dell_poweredge_amperage,
-    inventory_dell_poweredge_amperage_current,
-    inventory_dell_poweredge_amperage_power,
-)
+from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_amperage
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+
+def inventory_dell_poweredge_amperage_power(info):
+    inventory = []
+    for line in info:
+        if line[6] != "" and line[5] in ("24", "26"):
+            inventory.append((line[6], None))
+    return inventory
+
+
+def inventory_dell_poweredge_amperage_current(info):
+    inventory = []
+    for line in info:
+        if line[6] != "" and line[5] in ("23", "25"):
+            inventory.append((line[6], None))
+    return inventory
+
 
 check_info["dell_poweredge_amperage"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,

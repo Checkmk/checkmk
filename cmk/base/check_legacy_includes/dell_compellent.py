@@ -5,10 +5,14 @@
 
 from collections.abc import Mapping
 
+from cmk.base.check_api import DiscoveryResult, Service
 
-def discover(info):
-    for item, *_rest in info:
-        yield item, {}
+from cmk.agent_based.v2.type_defs import StringTable
+
+
+def discover(string_table: StringTable) -> DiscoveryResult:
+    for item, *_rest in string_table:
+        yield Service(item=item)
 
 
 _STATE_MAP: Mapping[str, tuple[int, str]] = {

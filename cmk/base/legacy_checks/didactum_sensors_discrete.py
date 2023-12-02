@@ -33,10 +33,8 @@ from cmk.plugins.lib.didactum import DETECT_DIDACTUM
 
 
 def inventory_didactum_sensors_discrete_dry(parsed):
-    inventory = []
-    for discrete_sensort_type in ["dry", "smoke"]:
-        inventory += inventory_didactum_sensors(parsed, discrete_sensort_type)
-    return inventory
+    yield from inventory_didactum_sensors(parsed, "dry")
+    yield from inventory_didactum_sensors(parsed, "smoke")
 
 
 def check_didactum_sensors_discrete_dry(item, params, parsed):

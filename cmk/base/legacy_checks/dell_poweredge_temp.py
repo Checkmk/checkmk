@@ -7,12 +7,20 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.dell_poweredge import (
     check_dell_poweredge_temp,
-    inventory_dell_poweredge_temp,
+    dell_poweredge_temp_makeitem,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 from cmk.plugins.lib.dell import DETECT_IDRAC_POWEREDGE
+
+
+def inventory_dell_poweredge_temp(info):
+    for line in info:
+        if line[2] != "1":  # StateSettings not 'unknown'
+            item = dell_poweredge_temp_makeitem(line[0], line[1], line[5])
+            yield item, {}
+
 
 check_info["dell_poweredge_temp"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,

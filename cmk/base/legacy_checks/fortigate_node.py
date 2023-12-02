@@ -126,17 +126,15 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-fortigate_node_cpu_default_levels = (80.0, 90.0)
-
 
 def inventory_fortigate_node_cpu(parsed):
     for hostname in parsed["nodes"]:
-        yield hostname, fortigate_node_cpu_default_levels
+        yield hostname, {}
 
 
 def check_fortigate_node_cpu(item, params, parsed):
     if item in parsed["nodes"]:
-        return check_cpu_util(parsed["nodes"][item]["cpu"], params)
+        return check_cpu_util(parsed["nodes"][item]["cpu"], params["levels"])
     return None
 
 
@@ -145,6 +143,7 @@ check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
     sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_cpu,
     check_function=check_fortigate_node_cpu,
+    check_default_parameters={"levels": (80.0, 90.0)},
 )
 
 # .

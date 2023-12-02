@@ -10,38 +10,14 @@ checkname = "fortigate_memory"
 
 info = [["42"]]
 
-discovery = {"": [(None, (70, 80))]}
+discovery = {"": [(None, {})]}
 
 checks = {
     "": [
         (
             None,
-            (70, 80),
-            [
-                (0, "Usage: 42.00%", [("mem_usage", 42, 70.0, 80.0, None, None)]),
-            ],
-        ),
-        (
-            None,
-            (30, 80),
-            [
-                (
-                    1,
-                    "Usage: 42.00% (warn/crit at 30.00%/80.00%)",
-                    [("mem_usage", 42, 30.0, 80.0, None, None)],
-                ),
-            ],
-        ),
-        (
-            None,
-            (-80, -30),
-            [
-                (
-                    1,
-                    "Usage: 42.00% (warn/crit at 20.00%/70.00%)",
-                    [("mem_usage", 42, 20.0, 70.0, None, None)],
-                ),
-            ],
+            {"levels": (30.0, 80.0)},
+            [(1, "Usage: 42.00% (warn/crit at 30.00%/80.00%)", [("mem_usage", 42, 30.0, 80.0)])],
         ),
         (
             None,

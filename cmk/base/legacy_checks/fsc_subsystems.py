@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -14,16 +14,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     startswith,
 )
 
-
-def inventory_fsc_subsystems(info):
-    yield from (
-        (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
-        for line in info
-        if int(line[1]) > 0
-    )
+from cmk.agent_based.v2.type_defs import StringTable
 
 
-def check_fsc_subsystems(item, params, info):
+def inventory_fsc_subsystems(string_table: StringTable) -> DiscoveryResult:
+    yield from (Service(item=line[0]) for line in string_table if int(line[1]) > 0)
+
+
+def check_fsc_subsystems(item, _no_params, info):
     for line in info:  # , value1, value2 in info:
         name = line[0]
         if name != item:

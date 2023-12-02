@@ -8,13 +8,9 @@ from collections.abc import Mapping
 import freezegun
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-from cmk.base.plugins.agent_based.azure_app_registration import (
+from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.plugins.azure.agent_based.azure_app_registration import (
     check_app_registration,
     ClientSecret,
     discover_app_registration,

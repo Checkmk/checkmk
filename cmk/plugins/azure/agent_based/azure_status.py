@@ -7,8 +7,8 @@ from collections.abc import Mapping, Sequence
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import register, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 
 _NO_ISSUES = Result(
     state=State.OK, summary="No known issues. Details: https://azure.status.microsoft/en-us/status"
@@ -42,7 +42,7 @@ def parse_azure_status(string_table: StringTable) -> AzureStatusesPerRegion:
     return AzureStatusesPerRegion(link=azure_status.link, regions=regions)
 
 
-register.agent_section(
+agent_section_azure_status = AgentSection(
     name="azure_status",
     parse_function=parse_azure_status,
 )
@@ -68,7 +68,7 @@ def check_azure_status(item: str, section: AzureStatusesPerRegion) -> CheckResul
         yield Result(state=State.OK, notice=issue.description)
 
 
-register.check_plugin(
+check_plugin_azure_status = CheckPlugin(
     name="azure_status",
     service_name="Azure Status %s",
     discovery_function=discover_azure_status,

@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.agent_based.v2 import AgentSection
 from cmk.plugins.lib.azure import parse_resources
 
-from .agent_based_api.v1 import register
-
 # This section contains data for both the postgresql and mysql checks
-register.agent_section(
+agent_section_azure_servers = AgentSection(
     name="azure_servers",
     parse_function=parse_resources,
 )

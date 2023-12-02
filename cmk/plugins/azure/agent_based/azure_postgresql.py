@@ -6,6 +6,8 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from cmk.agent_based.v2 import CheckPlugin, render
+from cmk.agent_based.v2.type_defs import CheckResult
 from cmk.plugins.lib.azure import (
     check_connections,
     check_cpu,
@@ -18,13 +20,10 @@ from cmk.plugins.lib.azure import (
     Section,
 )
 
-from .agent_based_api.v1 import register, render
-from .agent_based_api.v1.type_defs import CheckResult
-
 DB_POSTGRESQL_RESOURCE_NAME = "Microsoft.DBforPostgreSQL/servers"
 
 
-register.check_plugin(
+check_plugin_azure_postgresql_memory = CheckPlugin(
     name="azure_postgresql_memory",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Memory",
@@ -37,7 +36,7 @@ register.check_plugin(
 )
 
 
-register.check_plugin(
+check_plugin_azure_postgresql_cpu = CheckPlugin(
     name="azure_postgresql_cpu",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s CPU",
@@ -64,7 +63,7 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     )
 
 
-register.check_plugin(
+check_plugin_azure_postgresql_replication = CheckPlugin(
     name="azure_postgresql_replication",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Replication",
@@ -77,7 +76,7 @@ register.check_plugin(
 )
 
 
-register.check_plugin(
+check_plugin_azure_postgresql_connections = CheckPlugin(
     name="azure_postgresql_connections",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Connections",
@@ -92,7 +91,7 @@ register.check_plugin(
 )
 
 
-register.check_plugin(
+check_plugin_azure_postgresql_network = CheckPlugin(
     name="azure_postgresql_network",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Network",
@@ -107,7 +106,7 @@ register.check_plugin(
 )
 
 
-register.check_plugin(
+check_plugin_azure_postgresql_storage = CheckPlugin(
     name="azure_postgresql_storage",
     sections=["azure_servers"],
     service_name="Azure/DB for PostgreSQL %s Storage",

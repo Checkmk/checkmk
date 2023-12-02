@@ -9,10 +9,11 @@ from datetime import datetime, timezone
 
 from pydantic import BaseModel
 
+from cmk.agent_based.v2 import AgentSection
+from cmk.agent_based.v2 import check_levels_fixed as check_levels
+from cmk.agent_based.v2 import CheckPlugin, render, Result, Service, State
+from cmk.agent_based.v2.type_defs import CheckResult, DiscoveryResult, StringTable
 from cmk.plugins.lib.azure import parse_azure_datetime
-
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 THIRTY_DAYS = 30 * 24 * 60 * 60
 SEVEN_DAYS = 7 * 24 * 60 * 60
@@ -46,7 +47,7 @@ def parse_app_registration(string_table: StringTable) -> Section:
     return section
 
 
-register.agent_section(
+agent_section_azure_app_registration = AgentSection(
     name="azure_app_registration",
     parse_function=parse_app_registration,
 )
@@ -81,7 +82,7 @@ def check_app_registration(
         )
 
 
-register.check_plugin(
+check_plugin_azure_app_registration = CheckPlugin(
     name="azure_app_registration",
     service_name="Azure/App Registration Secret %s",
     discovery_function=discover_app_registration,

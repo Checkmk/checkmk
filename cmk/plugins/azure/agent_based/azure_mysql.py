@@ -6,6 +6,8 @@
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from cmk.agent_based.v2 import CheckPlugin, render
+from cmk.agent_based.v2.type_defs import CheckResult
 from cmk.plugins.lib.azure import (
     check_connections,
     check_cpu,
@@ -18,13 +20,10 @@ from cmk.plugins.lib.azure import (
     Section,
 )
 
-from .agent_based_api.v1 import register, render
-from .agent_based_api.v1.type_defs import CheckResult
-
 DB_MYSQL_RESOURCE_NAME = "Microsoft.DBforMySQL/servers"
 
 
-register.check_plugin(
+check_plugin_azure_mysql_memory = CheckPlugin(
     name="azure_mysql_memory",
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Memory",
@@ -36,7 +35,7 @@ register.check_plugin(
     check_default_parameters={},
 )
 
-register.check_plugin(
+check_plugin_azure_mysql_cpu = CheckPlugin(
     name="azure_mysql_cpu",
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s CPU",
@@ -63,7 +62,7 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     )
 
 
-register.check_plugin(
+check_plugin_azure_mysql_replication = CheckPlugin(
     name="azure_mysql_replication",
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Replication",
@@ -75,7 +74,7 @@ register.check_plugin(
     check_default_parameters={},
 )
 
-register.check_plugin(
+check_plugin_azure_mysql_connections = CheckPlugin(
     name="azure_mysql_connections",
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Connections",
@@ -89,7 +88,7 @@ register.check_plugin(
     check_default_parameters={},
 )
 
-register.check_plugin(
+check_plugin_azure_mysql_network = CheckPlugin(
     name="azure_mysql_network",
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Network",
@@ -103,7 +102,7 @@ register.check_plugin(
     check_default_parameters={},
 )
 
-register.check_plugin(
+check_plugin_azure_mysql_storage = CheckPlugin(
     name="azure_mysql_storage",
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Storage",

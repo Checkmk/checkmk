@@ -15,7 +15,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from cmk.base.plugins.agent_based.azure_virtual_machine import (
+
+from cmk.plugins.azure.agent_based.azure_virtual_machine import (
     _MAP_STATES,
     check_azure_virtual_machine,
     check_azure_virtual_machine_summary,
@@ -30,7 +31,6 @@ from cmk.base.plugins.agent_based.azure_virtual_machine import (
     discover_azure_vm_network_io,
     VMSummaryParams,
 )
-
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.azure import AzureMetric, Resource, Section
 

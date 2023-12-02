@@ -87,6 +87,8 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
             "diskstates_inventory": (p[0] and p[1]) and p[1] or None,
         }
     ),
+    CheckPluginName("emc_vplex_cpu"): (lambda p: {}),
+    CheckPluginName("emerson_stat"): (lambda p: {}),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

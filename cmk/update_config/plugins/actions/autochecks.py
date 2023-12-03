@@ -37,19 +37,57 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
 ] = {
     CheckPluginName("aironet_clients"): (lambda p: {}),
     CheckPluginName("aironet_errors"): (lambda p: {}),
-    CheckPluginName("alcatel_cpu"): (lambda p: {}),
     CheckPluginName("alcatel_cpu_aos7"): (lambda p: {}),
+    CheckPluginName("alcatel_cpu"): (lambda p: {}),
     CheckPluginName("allnet_ip_sensoric_humidity"): (lambda p: {}),
     CheckPluginName("apc_ats_status"): (
         lambda p: p if isinstance(p, dict) else {"power_source": p}
     ),
-    CheckPluginName("apc_netbotz_sensors_humidity"): (lambda p: {}),
     CheckPluginName("apc_inrow_airflow"): (lambda p: {}),
+    CheckPluginName("apc_netbotz_sensors_humidity"): (lambda p: {}),
     CheckPluginName("arc_raid_status"): (lambda p: p if isinstance(p, dict) else {"n_disks": p}),
     CheckPluginName("arris_cmts_cpu"): (lambda p: {}),
     CheckPluginName("aws_ec2_security_groups"): (
         lambda p: p if isinstance(p, dict) else {"groups": p}
     ),
+    CheckPluginName("blade_powerfan"): (lambda p: {}),
+    CheckPluginName("brocade_fan"): (lambda p: {}),
+    CheckPluginName("brocade_mlx_module_cpu"): (lambda p: {}),
+    CheckPluginName("brocade_mlx_module_mem"): (lambda p: {}),
+    CheckPluginName("bvip_util"): (lambda p: {}),
+    CheckPluginName("cisco_hsrp"): (
+        lambda p: p if not isinstance(p, tuple) else {"group": p[0], "state": p[1]}
+    ),
+    CheckPluginName("cpsecure_sessions"): (lambda p: {}),
+    CheckPluginName("decru_fans"): (lambda p: {}),
+    CheckPluginName("decru_perf"): (lambda p: {}),
+    CheckPluginName("dell_powerconnect_cpu"): (lambda p: {}),
+    CheckPluginName("drbd_disk"): (lambda p: {}),
+    # this is unreadable, but since we remove it soon I don't bother to rewrite it
+    CheckPluginName("drbd"): (
+        lambda p: p
+        if isinstance(p, dict)
+        else {
+            "roles_inventory": p[0] and p[0] or None,
+            "diskstates_inventory": (p[0] and p[1]) and p[1] or None,
+        }
+    ),
+    CheckPluginName("drbd_net"): (lambda p: {}),
+    CheckPluginName("drbd_stats"): (lambda p: {}),
+    CheckPluginName("emc_vplex_cpu"): (lambda p: {}),
+    CheckPluginName("emerson_stat"): (lambda p: {}),
+    CheckPluginName("f5_bigip_chassis_temp"): (lambda p: {}),
+    CheckPluginName("f5_bigip_cpu_temp"): (lambda p: {}),
+    CheckPluginName("f5_bigip_fans"): (lambda p: {}),
+    CheckPluginName("fortigate_memory"): (lambda p: {}),
+    CheckPluginName("fortigate_node_cpu"): (lambda p: {}),
+    CheckPluginName("fsc_subsystems"): (lambda p: {}),
+    CheckPluginName("genua_pfstate"): (lambda p: {}),
+    CheckPluginName("gude_humidity"): (lambda p: {}),
+    CheckPluginName("hitachi_hnas_cpu"): (lambda p: {}),
+    CheckPluginName("hitachi_hnas_fpga"): (lambda p: {}),
+    CheckPluginName("hp_blade_manager"): (lambda p: p if isinstance(p, dict) else {"role": p[0]}),
+    CheckPluginName("hp_procurve_cpu"): (lambda p: {}),
     CheckPluginName("ibm_svc_nodestats_cpu_util"): (lambda p: {}),
     CheckPluginName("innovaphone_channels"): (lambda p: {}),
     CheckPluginName("innovaphone_licenses"): (lambda p: {}),
@@ -70,44 +108,6 @@ _EXPLICIT_DISCOVERED_PARAMETERS_TRANSFORMS: Mapping[
     CheckPluginName("strem1_sensors"): (lambda p: {}),
     CheckPluginName("stulz_humidity"): (lambda p: {}),
     CheckPluginName("sylo"): (lambda p: {}),
-    CheckPluginName("blade_powerfan"): (lambda p: {}),
-    CheckPluginName("brocade_fan"): (lambda p: {}),
-    CheckPluginName("brocade_mlx_module_cpu"): (lambda p: {}),
-    CheckPluginName("brocade_mlx_module_mem"): (lambda p: {}),
-    CheckPluginName("bvip_util"): (lambda p: {}),
-    CheckPluginName("cisco_hsrp"): (
-        lambda p: p if not isinstance(p, tuple) else {"group": p[0], "state": p[1]}
-    ),
-    CheckPluginName("cpsecure_sessions"): (lambda p: {}),
-    CheckPluginName("decru_fans"): (lambda p: {}),
-    CheckPluginName("decru_perf"): (lambda p: {}),
-    CheckPluginName("dell_powerconnect_cpu"): (lambda p: {}),
-    CheckPluginName("drbd_stats"): (lambda p: {}),
-    CheckPluginName("drbd_disk"): (lambda p: {}),
-    CheckPluginName("drbd_net"): (lambda p: {}),
-    # this is unreadable, but since we remove it soon I don't bother to rewrite it
-    CheckPluginName("drbd"): (
-        lambda p: p
-        if isinstance(p, dict)
-        else {
-            "roles_inventory": p[0] and p[0] or None,
-            "diskstates_inventory": (p[0] and p[1]) and p[1] or None,
-        }
-    ),
-    CheckPluginName("emc_vplex_cpu"): (lambda p: {}),
-    CheckPluginName("emerson_stat"): (lambda p: {}),
-    CheckPluginName("f5_bigip_chassis_temp"): (lambda p: {}),
-    CheckPluginName("f5_bigip_cpu_temp"): (lambda p: {}),
-    CheckPluginName("f5_bigip_fans"): (lambda p: {}),
-    CheckPluginName("fortigate_memory"): (lambda p: {}),
-    CheckPluginName("fortigate_node_cpu"): (lambda p: {}),
-    CheckPluginName("fsc_subsystems"): (lambda p: {}),
-    CheckPluginName("genua_pfstate"): (lambda p: {}),
-    CheckPluginName("gude_humidity"): (lambda p: {}),
-    CheckPluginName("hitachi_hnas_cpu"): (lambda p: {}),
-    CheckPluginName("hitachi_hnas_fpga"): (lambda p: {}),
-    CheckPluginName("hp_blade_manager"): (lambda p: p if isinstance(p, dict) else {"role": p[0]}),
-    CheckPluginName("hp_procurve_cpu"): (lambda p: {}),
     CheckPluginName("tsm_scratch"): (lambda p: {}),
     CheckPluginName("tsm_sessions"): (lambda p: {}),
     CheckPluginName("vxvm_objstatus"): (lambda p: {}),

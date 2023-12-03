@@ -859,7 +859,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "ipr400_in_voltage",
         "ipr400_temp",
         "iptables",
-        "ironport_misc",
         "ispro_sensors_digital",
         "ispro_sensors_humid",
         "ispro_sensors_temp",

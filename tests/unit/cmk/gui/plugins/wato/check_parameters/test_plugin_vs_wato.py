@@ -339,7 +339,6 @@ class ErrorReporter:
         ("check", "checkpoint_vsx_status", "checkpoint_vsx_traffic_status"),
         ("check", "domino_tasks", "domino_tasks"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "ironport_misc", "obsolete"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),
         ("check", "mongodb_replication_info", "mongodb_replication_info"),

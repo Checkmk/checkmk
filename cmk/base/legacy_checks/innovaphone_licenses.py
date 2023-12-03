@@ -4,14 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition, savefloat
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, savefloat, Service
 from cmk.base.config import check_info
 
+from cmk.agent_based.v2.type_defs import StringTable
 
-def inventory_innovaphone_licenses(info):
-    if info:
-        return [(None, {})]
-    return []
+
+def inventory_innovaphone_licenses(string_table: StringTable) -> DiscoveryResult:
+    if string_table:
+        yield Service()
 
 
 def check_innovaphone_licenses(_no_item, params, info):
@@ -34,5 +35,7 @@ check_info["innovaphone_licenses"] = LegacyCheckDefinition(
     service_name="Licenses",
     discovery_function=inventory_innovaphone_licenses,
     check_function=check_innovaphone_licenses,
-    check_default_parameters={"levels": (90.0, 95.0)},
+    check_default_parameters={
+        "levels": (90.0, 95.0),
+    },
 )

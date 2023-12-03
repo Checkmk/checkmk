@@ -973,7 +973,7 @@ class DiscoveryPageRenderer:
             css=[stateclass],
         )
         table.cell(_("Service"), entry.description, css=["service"])
-        table.cell(_("Status detail"), css=["expanding"])
+        table.cell(_("Summary"), css=["expanding"])
         self._show_status_detail(entry)
 
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:

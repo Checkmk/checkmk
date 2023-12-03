@@ -15,6 +15,12 @@ use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::{SubjectPublicKeyInfo, X509Name};
 
+macro_rules! unwrap {
+    ($e:expr) => {
+        $e.unwrap_or_default().into()
+    };
+}
+
 #[derive(Debug, TypedBuilder)]
 #[builder(field_defaults(default))]
 pub struct Config {
@@ -34,31 +40,30 @@ pub fn check(der: &[u8], config: Config) -> Writer {
     };
 
     Writer::from(&mut vec![
-        check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial)
-            .unwrap_or_default()
-            .into(),
-        check_subject(cert.tbs_certificate.subject(), config.subject)
-            .unwrap_or_default()
-            .into(),
-        check_issuer(cert.tbs_certificate.issuer(), config.issuer)
-            .unwrap_or_default()
-            .into(),
-        check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm)
-            .unwrap_or_default()
-            .into(),
-        check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm)
-            .unwrap_or_default()
-            .into(),
-        check_pubkey_size(cert.public_key(), config.pubkey_size)
-            .unwrap_or_default()
-            .into(),
-        check_validity_not_after(
+        unwrap!(check_serial(
+            cert.tbs_certificate.raw_serial_as_string(),
+            config.serial
+        )),
+        unwrap!(check_subject(
+            cert.tbs_certificate.subject(),
+            config.subject
+        )),
+        unwrap!(check_issuer(cert.tbs_certificate.issuer(), config.issuer)),
+        unwrap!(check_signature_algorithm(
+            &cert.signature_algorithm,
+            config.signature_algorithm
+        )),
+        unwrap!(check_pubkey_algorithm(
+            cert.public_key(),
+            config.pubkey_algorithm
+        )),
+        unwrap!(check_pubkey_size(cert.public_key(), config.pubkey_size)),
+        unwrap!(check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),
             config.not_after_levels_checker,
             cert.tbs_certificate.validity().not_after,
         )
-        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize)))
-        .unwrap_or_default(),
+        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize)))),
     ])
 }
 

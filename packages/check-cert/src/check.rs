@@ -456,20 +456,14 @@ impl From<SimpleCheckResult> for Writer {
 
 impl From<&mut Vec<CheckResult<Real>>> for Writer {
     fn from(check_results: &mut Vec<CheckResult<Real>>) -> Self {
-        Self {
-            state: match check_results.iter().map(|cr| &cr.summary.state).max() {
-                Some(state) => *state,
-                None => State::Ok,
-            },
-            summary: check_results
-                .iter_mut()
-                .map(|cr| cr.summary.clone())
-                .collect::<Vec<_>>(),
-            metrics: check_results
-                .iter_mut()
-                .flat_map(|cr| cr.metrics.clone())
-                .collect::<Vec<_>>(),
-        }
+        check_results
+            .drain(..)
+            .fold(Writer::default(), |mut w, cr| {
+                w.state = std::cmp::max(w.state, cr.summary.state);
+                w.summary.push(cr.summary);
+                w.metrics.extend(cr.metrics);
+                w
+            })
     }
 }
 
@@ -775,11 +769,13 @@ mod test_writer_format {
         let cr1 = CheckResult::ok("summary 1", m("m1", 13));
         let cr2 = CheckResult::warn("summary 2", m("m2", 37));
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
+        let mut vec = vec![cr1, cr2, cr3];
         assert_eq!(
-            format!("{}", Writer::from(&mut vec![cr1, cr2, cr3])),
+            format!("{}", Writer::from(&mut vec)),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
             | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );
+        assert!(vec.is_empty());
     }
 
     #[test]

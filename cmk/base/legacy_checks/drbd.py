@@ -190,26 +190,25 @@ drbd_ds_map = {
 
 
 def inventory_drbd(info, checktype):
-    inventory = []
     for line in info[2:]:
-        if _drbd_block_start_match.search(line[0]):
-            parsed = drbd_parse_block(drbd_extract_block("drbd%s" % line[0][:-1], info), checktype)
-            # Skip unconfigured drbd devices
-            if parsed["cs"] == "Unconfigured":
+        if not _drbd_block_start_match.search(line[0]):
+            continue
+        parsed = drbd_parse_block(drbd_extract_block("drbd%s" % line[0][:-1], info), checktype)
+        # Skip unconfigured drbd devices
+        if parsed["cs"] == "Unconfigured":
+            continue
+
+        if checktype == "drbd":
+            if "ro" not in parsed or "ds" not in parsed:
                 continue
+            levels = {
+                "roles_inventory": parsed["ro"],
+                "diskstates_inventory": parsed["ds"],
+            }
+        else:
+            levels = {}
 
-            if checktype == "drbd":
-                if "ro" not in parsed or "ds" not in parsed:
-                    continue
-                levels: dict | tuple = {
-                    "roles_inventory": parsed["ro"],
-                    "diskstates_inventory": parsed["ds"],
-                }
-            else:
-                levels = {}
-
-            inventory.append(("drbd%s" % line[0][:-1], levels))
-    return inventory
+        yield "drbd%s" % line[0][:-1], levels
 
 
 def drbd_parse_block(block, to_parse):

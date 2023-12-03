@@ -4,18 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
-hp_procurve_cpu_default_levels = (80.0, 90.0)
+from cmk.agent_based.v2.type_defs import StringTable
 
 
-def inventory_hp_procurve_cpu(info):
-    if len(info) == 1 and 0 <= int(info[0][0]) <= 100:
-        return [(None, hp_procurve_cpu_default_levels)]
-    return []
+def inventory_hp_procurve_cpu(string_table: StringTable) -> DiscoveryResult:
+    if len(string_table) == 1 and 0 <= int(string_table[0][0]) <= 100:
+        yield Service()
 
 
 def check_hp_procurve_cpu(item, params, info):
@@ -42,4 +41,5 @@ check_info["hp_procurve_cpu"] = LegacyCheckDefinition(
     discovery_function=inventory_hp_procurve_cpu,
     check_function=check_hp_procurve_cpu,
     check_ruleset_name="cpu_utilization",
+    check_default_parameters={"util": (80.0, 90.0)},
 )

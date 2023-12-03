@@ -4,20 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_api import DiscoveryResult, LegacyCheckDefinition, Service
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
+from cmk.agent_based.v2.type_defs import StringTable
 from cmk.plugins.lib.hitachi_hnas import DETECT
 
-hitachi_hnas_cpu_default_levels = {"levels": (80.0, 90.0)}
 
-
-def inventory_hitachi_hnas_cpu(info):
-    inventory = []
-    for id_, _util in info:
-        inventory.append((id_, hitachi_hnas_cpu_default_levels))
-    return inventory
+def inventory_hitachi_hnas_cpu(string_table: StringTable) -> DiscoveryResult:
+    for id_, _util in string_table:
+        yield Service(item=id_)
 
 
 def check_hitachi_hnas_cpu(item, params, info):
@@ -47,4 +44,5 @@ check_info["hitachi_hnas_cpu"] = LegacyCheckDefinition(
     discovery_function=inventory_hitachi_hnas_cpu,
     check_function=check_hitachi_hnas_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

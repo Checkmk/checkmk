@@ -15,8 +15,6 @@ from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 import cmk.utils.man_pages as man_pages
 
-from cmk.checkengine.checking import CheckPluginName
-
 from cmk.base.plugins.server_side_calls import load_active_checks
 
 from cmk.agent_based.v2 import CheckPlugin
@@ -87,13 +85,6 @@ def test_man_page_path_both_dirs(tmp_path: Path) -> None:
         man_page_dirs_for_test(tmp_path), PluginGroup.CHECKMAN.value
     )
     assert man_page_path_map["file2"] == tmp_checkman / "file2"
-
-
-def test_all_manpages_migrated(all_pages: Mapping[str, man_pages.ManPage]) -> None:
-    for name in all_pages:
-        if name in ("check-mk-inventory", "check-mk"):
-            continue
-        assert CheckPluginName(name)
 
 
 def test_all_man_pages(tmp_path: Path) -> None:
@@ -175,38 +166,19 @@ def test_cmk_plugins_families_manpages() -> None:
         assert family_path_segment in str(man_page_path_map[plugin.name])
 
 
-def test_find_missing_manpages_passive(
-    fix_register: FixRegister, all_pages: Mapping[str, man_pages.ManPage]
-) -> None:
-    for plugin_name in fix_register.check_plugins:
-        assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
-
-
-def test_find_missing_manpages_active(
-    fix_plugin_legacy: FixPluginLegacy, all_pages: Mapping[str, man_pages.ManPage]
-) -> None:
-    for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
-        assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
-
-
-def test_find_missing_plugins(
+def test_man_page_consistency(
     fix_register: FixRegister,
     fix_plugin_legacy: FixPluginLegacy,
     all_pages: Mapping[str, man_pages.ManPage],
 ) -> None:
-    missing_plugins = (
-        set(all_pages)
-        - {str(plugin_name) for plugin_name in fix_register.check_plugins}
-        - {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
-        - {f"check_{name}" for name in load_active_checks()[1]}
-        - {
-            "check-mk",
-            "check-mk-inventory",
-        }
+    """Make sure we have one man page per plugin, and no additional ones"""
+    expected_man_pages = (
+        {str(plugin_name) for plugin_name in fix_register.check_plugins}
+        | {f"check_{name}" for name in fix_plugin_legacy.active_check_info}
+        | {f"check_{name}" for name in load_active_checks()[1]}
+        | {"check-mk", "check-mk-inventory"}
     )
-    assert (
-        not missing_plugins
-    ), f"The following manpages have no corresponding plugins: {', '.join(missing_plugins)}"
+    assert set(all_pages) == expected_man_pages
 
 
 def test_cluster_check_functions_match_manpages_cluster_sections(

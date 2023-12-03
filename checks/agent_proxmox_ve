@@ -23,7 +23,7 @@ def agent_proxmox_ve_arguments(
             ("--log-cutoff-weeks", params["log-cutoff-weeks"])
             if "log-cutoff-weeks" in params
             else (),
-            (hostname,),
+            (ipaddress or hostname,),
         )
         for elem in chunk
     ]

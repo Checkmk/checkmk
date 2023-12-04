@@ -6,37 +6,6 @@
 from cmk.base.check_api import check_levels
 
 # .
-#   .--Memory--------------------------------------------------------------.
-#   |               __  __                                                 |
-#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
-#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
-#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
-#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
-#   |                                                |___/                 |
-#   '----------------------------------------------------------------------'
-
-ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS = {
-    "levels_ram": ("perc_used", (80.0, 90.0)),
-    "levels_swap": ("perc_used", (80.0, 90.0)),
-}
-
-
-def inventory_arbor_memory(parsed):
-    if len(parsed) > 0:
-        return [(None, {})]
-    return []
-
-
-def check_arbor_memory(_no_item, params, parsed):
-    ram_perc, swap_perc = map(int, parsed["memory"])
-
-    yield check_levels(ram_perc, "mem_used_percent", params["levels_ram"][1], infoname="Used RAM")
-    yield check_levels(
-        swap_perc, "swap_used_percent", params["levels_swap"][1], infoname="Used Swap"
-    )
-
-
-# .
 #   .--Disk Usage----------------------------------------------------------.
 #   |            ____  _     _      _   _                                  |
 #   |           |  _ \(_)___| | __ | | | |___  __ _  __ _  ___             |

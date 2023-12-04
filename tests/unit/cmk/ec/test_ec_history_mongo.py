@@ -45,7 +45,7 @@ def test_pymongo_add_get(history_mongo: MongoDBHistory) -> None:
         logger,
     )
 
-    query_result = list(history_mongo.get(query))
+    query_result = history_mongo.get(query)
 
     (row,) = query_result
     column_index = get_table("history").column_names.index

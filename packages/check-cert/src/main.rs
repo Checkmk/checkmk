@@ -205,5 +205,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
 
     println!("HTTP {}", collection);
-    std::process::exit(collection.exit_code())
+    std::process::exit(check::exit_code(&collection))
 }

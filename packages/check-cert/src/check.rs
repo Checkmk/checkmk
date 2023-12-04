@@ -399,17 +399,6 @@ pub struct Collection {
 }
 
 impl Collection {
-    pub fn exit_code(&self) -> i32 {
-        match self.state {
-            State::Ok => 0,
-            State::Warn => 1,
-            State::Crit => 2,
-            State::Unknown => 3,
-        }
-    }
-}
-
-impl Collection {
     pub fn join(&mut self, other: &mut Collection) {
         self.state = std::cmp::max(self.state, other.state);
         self.summary.append(&mut other.summary);
@@ -467,16 +456,25 @@ impl From<&mut Vec<CheckResult<Real>>> for Collection {
     }
 }
 
+pub fn exit_code(collection: &Collection) -> i32 {
+    match collection.state {
+        State::Ok => 0,
+        State::Warn => 1,
+        State::Crit => 2,
+        State::Unknown => 3,
+    }
+}
+
 pub fn bail_out(message: &str) -> ! {
     let out = Collection::from(SimpleCheckResult::unknown(message));
     eprintln!("{}", out);
-    std::process::exit(out.exit_code())
+    std::process::exit(exit_code(&out))
 }
 
 pub fn abort(message: &str) -> ! {
     let out = Collection::from(SimpleCheckResult::crit(message));
     eprintln!("{}", out);
-    std::process::exit(out.exit_code())
+    std::process::exit(exit_code(&out))
 }
 
 #[cfg(test)]

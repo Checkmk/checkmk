@@ -2017,7 +2017,7 @@ def test_get_node_services() -> None:
                 parameters={},
                 service_labels={},
             )
-            for discovery_status in ("old", "vanished")
+            for discovery_status in ("unchanged", "vanished")
         ],
         current=[
             AutocheckEntry(
@@ -2026,7 +2026,7 @@ def test_get_node_services() -> None:
                 parameters={},
                 service_labels={},
             )
-            for discovery_status in ("old", "new")
+            for discovery_status in ("unchanged", "new")
         ],
     )
     assert make_table(
@@ -2047,14 +2047,14 @@ def test_get_node_services() -> None:
             ),
             hosts=[host_name],
         ),
-        ServiceID(CheckPluginName("plugin_old"), item=None): ServicesTableEntry(
-            transition="old",
+        ServiceID(CheckPluginName("plugin_unchanged"), item=None): ServicesTableEntry(
+            transition="unchanged",
             autocheck=DiscoveredItem[AutocheckEntry](
                 previous=AutocheckEntry(
-                    CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
                 ),
                 new=AutocheckEntry(
-                    CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
+                    CheckPluginName("plugin_unchanged"), item=None, parameters={}, service_labels={}
                 ),
             ),
             hosts=[host_name],

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import dataclasses
+import itertools
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -74,7 +75,9 @@ class DiscoveryResult:
     diff_text: str | None = None
 
 
-_BasicTransition = Literal["old", "new", "vanished"]
+_BasicTransition = Literal[
+    "changed", "unchanged", "new", "vanished", "old"
+]  # TODO: "old" can be removed when GUI is adjusted
 _Transition = (
     _BasicTransition
     | Literal[
@@ -201,7 +204,13 @@ def automation_discovery(
             on_error=on_error,
         )
 
-        old_services = {DiscoveredService.id(x.service): x for x in services.get("old", [])}
+        existing_services = {
+            DiscoveredService.id(x.service): x
+            for x in itertools.chain(
+                services.get("changed", []),
+                services.get("unchanged", []),
+            )
+        }
 
         # Create new list of checks
         final_services = _get_post_discovery_autocheck_services(
@@ -230,13 +239,13 @@ def automation_discovery(
             host_labels.new,
             (
                 x.service
-                for x in old_services.values()
+                for x in existing_services.values()
                 if DiscoveredService.id(x.service) not in final_services
             ),
             (
                 x.service
                 for x in final_services.values()
-                if DiscoveredService.id(x.service) not in old_services
+                if DiscoveredService.id(x.service) not in existing_services
             ),
         )
 
@@ -287,7 +296,10 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 post_discovery_services.update(new)
 
         elif (  # pylint: disable=consider-using-in
-            check_source == "old" or check_source == "ignored"
+            check_source == "old"
+            or check_source == "changed"
+            or check_source == "unchanged"
+            or check_source == "ignored"
         ):
             # keep currently existing valid services in any case
             post_discovery_services.update(
@@ -683,7 +695,7 @@ def _node_service_source(
 
     if check_source == "vanished":
         return "clustered_vanished"
-    if check_source == "old":
+    if check_source in ("changed", "unchanged"):
         return "clustered_old"
     return "clustered_new"
 
@@ -773,14 +785,14 @@ def _get_cluster_services(
         for check_source, entry in entries.chain_with_transition():
             cluster_items.update(
                 _cluster_service_entry(
-                    check_source=check_source,
+                    node_transition=check_source,
                     host_name=host_name,
                     node_name=node,
                     services_cluster=get_effective_host(
                         node, get_service_description(node, *DiscoveredService.id(entry))
                     ),
                     entry=entry,
-                    existing_entry=cluster_items.get(DiscoveredService.id(entry)),
+                    current_recorded_entry=cluster_items.get(DiscoveredService.id(entry)),
                 )
             )
 
@@ -789,47 +801,102 @@ def _get_cluster_services(
 
 def _cluster_service_entry(
     *,
-    check_source: _BasicTransition,
+    node_transition: _BasicTransition,
     host_name: HostName,
     node_name: HostName,
     services_cluster: HostName,
     entry: DiscoveredItem[AutocheckEntry],
-    existing_entry: ServicesTableEntry[_Transition] | None,
+    current_recorded_entry: ServicesTableEntry[_Transition] | None,
 ) -> Iterable[tuple[ServiceID, ServicesTableEntry[_Transition]]]:
+    """
+    The purpose of this function is to determine the service transition (and autocheck) in a
+    cumulative way by going through all nodes where the service is present
+
+    To keep in mind:
+        * the order of the nodes is always the same
+
+    Variables:
+        * entry:
+            the service representation of the node we are currently investigating
+        * current_recorded_entry:
+            the cumulative service representation based on all previously iterated nodes
+
+    Example for understanding:
+        * cluster consists of 2 nodes: node1 and node2
+        * node1 has a service with transition "vanished"
+        * node2 has a service with transition "new"
+        * the order of nodes is always the same: first we inspect node1 and then node2
+        * from a cluster perspective the service is neither new nor vanished
+            * vanished assumes that the service existed before in the previous run
+            * new assumes that the service does still exist in the current run
+            --> from a cluster perspective it is therefore changed/unchanged it only moved from one
+            node to another
+
+    """
     if host_name != services_cluster:
         return  # not part of this host
 
-    if existing_entry is None:
+    if current_recorded_entry is None:
         yield DiscoveredService.id(entry), ServicesTableEntry(
-            transition=check_source,
+            transition=node_transition,
             autocheck=entry,
             hosts=[node_name],
         )
         return
 
-    first_check_source = existing_entry.transition
-    existing_ac_entry = existing_entry.autocheck
-    nodes_with_service = existing_entry.hosts
+    nodes_with_service = current_recorded_entry.hosts
     if node_name not in nodes_with_service:
         nodes_with_service.append(node_name)
 
-    if first_check_source == "old":
-        return
+    existing_autocheck_entry = current_recorded_entry.autocheck
+    accumulated_transition = current_recorded_entry.transition
+    match accumulated_transition, node_transition:
+        case "unchanged" | "changed", _not_relevant:
+            # unchanged/changed always preconditions a service's preexistence
+            return
+        case "new", "unchanged" | "changed" | "vanished":
+            # turns out the service already existed and is not really new
+            # Understanding example:
+            # Current run: node1 (new service), node2 (unchanged service --> existed before)
+            # --> have to compare new service state to previous state of node2 service due to next
+            # run, if we simply take node2 service state (e.g. unchanged), then we potentially jump
+            # over any potential changes relative to the next run
+            # Next run: node1 (unchanged service), node2 (unchanged service)
+            # --> node1 service will be taken (first node appearance wins)
+            assert existing_autocheck_entry.new is not None
+            assert entry.previous is not None
+            yield DiscoveredService.id(entry), ServicesTableEntry(
+                transition="changed"
+                if _changed_service(existing_autocheck_entry.new, entry.previous)
+                else "unchanged",
+                autocheck=DiscoveredItem[AutocheckEntry](
+                    new=existing_autocheck_entry.new,
+                    previous=entry.previous,
+                ),
+                hosts=nodes_with_service,
+            )
+        case "new", "new":
+            # still new, first new node appearance wins so we keep the existing entry
+            return
+        case "vanished", "unchanged" | "changed" | "new":
+            # turns out the service is not vanished but moved to another node or was already
+            # present before
+            assert current_recorded_entry.autocheck.previous is not None
+            assert entry.new is not None
+            yield DiscoveredService.id(entry), ServicesTableEntry(
+                transition="changed"
+                if _changed_service(current_recorded_entry.autocheck.previous, entry.new)
+                else "unchanged",
+                autocheck=DiscoveredItem[AutocheckEntry](
+                    new=entry.new,
+                    previous=current_recorded_entry.autocheck.previous,
+                ),
+                hosts=nodes_with_service,
+            )
+        case "vanished", "vanished":
+            # still vanished, first vanished node appearance wins so we keep the existing entry
+            return
 
-    if check_source == "old":
-        yield DiscoveredService.id(entry), ServicesTableEntry(
-            transition=check_source,
-            autocheck=entry,
-            hosts=nodes_with_service,
-        )
-        return
 
-    if {first_check_source, check_source} == {"vanished", "new"}:
-        yield DiscoveredService.id(existing_ac_entry), ServicesTableEntry(
-            transition="old",
-            autocheck=existing_ac_entry,
-            hosts=nodes_with_service,
-        )
-        return
-
-    # In all other cases either both must be "new" or "vanished" -> let it be
+def _changed_service(service: AutocheckEntry, compare_service: AutocheckEntry) -> bool:
+    return service.comparator() != compare_service.comparator()

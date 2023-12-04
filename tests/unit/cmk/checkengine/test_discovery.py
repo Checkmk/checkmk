@@ -165,7 +165,7 @@ def test_qualified_discovery() -> None:
     assert list(result.chain_with_transition()) == [
         ("vanished", DiscoveredItem(previous=_Discoverable(name="one", value=""), new=None)),
         (
-            "old",
+            "unchanged",
             DiscoveredItem(
                 previous=_Discoverable(name="two", value=""),
                 new=_Discoverable(name="two", value=""),

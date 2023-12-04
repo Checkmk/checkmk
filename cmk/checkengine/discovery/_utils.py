@@ -167,7 +167,8 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
 
     def chain_with_transition(
         self,
-    ) -> Iterable[tuple[Literal["vanished", "old", "new"], DiscoveredItem]]:
+    ) -> Iterable[tuple[Literal["vanished", "unchanged", "changed", "new"], DiscoveredItem]]:
         yield from (("vanished", value) for value in self._vanished)
-        yield from (("old", value) for value in self._old)
+        yield from (("unchanged", value) for value in self._unchanged)
+        yield from (("changed", value) for value in self._changed)
         yield from (("new", value) for value in self._new)

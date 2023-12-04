@@ -4201,6 +4201,8 @@ def _valuespec_periodic_discovery():
         default_value={
             "check_interval": 2 * 60,
             "severity_unmonitored": 1,
+            "severity_changed_service_labels": 1,
+            "severity_changed_service_params": 1,
             "severity_vanished": 0,
             "severity_new_host_label": 1,
         },
@@ -4259,6 +4261,38 @@ def _vs_periodic_discovery() -> Dictionary:
                     help=_(
                         "Please select which alarm state the service discovery check services "
                         "shall assume in case that non-existing services are being monitored."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
+                "severity_changed_service_labels",
+                DropdownChoice(
+                    title=_("Severity of services with changed labels"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that labels of services have changed."
+                    ),
+                    choices=[
+                        (0, _("OK - do not alert, just display")),
+                        (1, _("Warning")),
+                        (2, _("Critical")),
+                        (3, _("Unknown")),
+                    ],
+                ),
+            ),
+            (
+                "severity_changed_service_params",
+                DropdownChoice(
+                    title=_("Severity of services with changed parameters"),
+                    help=_(
+                        "Please select which alarm state the service discovery check services "
+                        "shall assume in case that parameters of services have changed."
                     ),
                     choices=[
                         (0, _("OK - do not alert, just display")),
@@ -4456,6 +4490,60 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                                                 "prevent removing of matching vanished services automatically. "
                                                 "If you set both this and 'Remove only matching vanished services', "
                                                 "both rules have to apply for a service to be removed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_labels_whitelist",
+                                        ListOfStrings(
+                                            title=_("Change labels only for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "change labels of services automatically. "
+                                                "If you set both this and 'Don't change labels for matching services', "
+                                                "both rules have to apply for a service's labels to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_labels_blacklist",
+                                        ListOfStrings(
+                                            title=_("Don't change labels for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent changing of labels for services automatically. "
+                                                "If you set both this and 'Change labels only for matching services', "
+                                                "both rules have to apply for a service's labels to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_params_whitelist",
+                                        ListOfStrings(
+                                            title=_("Change parameters only for matching services"),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "change parameters of services automatically. "
+                                                "If you set both this and 'Don't change parameters for matching services', "
+                                                "both rules have to apply for a service's parameters to be changed."
+                                            ),
+                                        ),
+                                    ),
+                                    (
+                                        "changed_service_params_blacklist",
+                                        ListOfStrings(
+                                            title=_(
+                                                "Don't change parameters for matching services"
+                                            ),
+                                            allow_empty=False,
+                                            help=_(
+                                                "Set service names or regular expression patterns here to "
+                                                "prevent changing of parameters for services automatically. "
+                                                "If you set both this and 'Change parameters only for matching services', "
+                                                "both rules have to apply for a service's parameters to be changed."
                                             ),
                                         ),
                                     ),

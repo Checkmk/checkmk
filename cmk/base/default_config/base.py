@@ -150,6 +150,8 @@ always_cleanup_autochecks = None  # For compatiblity with old configuration
 class _PeriodicDiscovery(TypedDict):
     severity_unmonitored: SupportsInt
     severity_vanished: SupportsInt
+    severity_changed_service_labels: SupportsInt
+    severity_changed_service_params: SupportsInt
     severity_new_host_label: SupportsInt
     check_interval: SupportsInt
     inventory_rediscovery: RediscoveryParameters

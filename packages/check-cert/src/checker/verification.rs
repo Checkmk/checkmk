@@ -49,7 +49,6 @@ mod verify {
         for der in cacerts {
             let _ = store.add_cert(from_der(der));
         }
-        store.set_default_paths().unwrap();
         store.build()
     }
 

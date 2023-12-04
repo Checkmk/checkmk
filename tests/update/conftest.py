@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
+import itertools
 import json
 import logging
 import os
@@ -57,9 +58,23 @@ class BaseVersions:
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())
         for base_version_str in BASE_VERSIONS_PB + BASE_VERSIONS_CB
     ]
-    IDS = [
-        f"from_{base_version.omd_version()}_to_{os.getenv('VERSION', 'daily')}"
-        for base_version in BASE_VERSIONS
+
+
+@dataclasses.dataclass
+class TestParams:
+    """Pytest parameters used in the test."""
+
+    INTERACTIVE_MODE = [True, False]
+    TEST_PARAMS = [
+        pytest.param(
+            (base_version, interactive_mode),
+            id=f"base-version={base_version.version}|interactive-mode={interactive_mode}",
+        )
+        for base_version, interactive_mode in itertools.product(
+            BaseVersions.BASE_VERSIONS, INTERACTIVE_MODE
+        )
+        # enable interactive-mode for base-versions in the previous branch only
+        if interactive_mode == (base_version.version in BaseVersions.BASE_VERSIONS_PB)
     ]
 
 
@@ -351,14 +366,13 @@ def version_supported(version: str) -> bool:
     return version_gte(version, BaseVersions.MIN_VERSION)
 
 
-@pytest.fixture(
-    name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS, scope="module"
-)
-def get_site(request: pytest.FixtureRequest) -> Site:
+@pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
+def _setup(request: pytest.FixtureRequest) -> tuple[Site, bool]:
     """Install the test site with the base version."""
-    base_version = request.param
-    logger.info("Setting up test-site ...")
-    return _get_site(base_version, interactive=True)
+    base_version, interactive_mode = request.param
+    logger.info("Setting up test-site (interactive-mode=%s) ...", interactive_mode)
+    test_site = _get_site(base_version, interactive=interactive_mode)
+    return test_site, interactive_mode
 
 
 def update_site(site: Site, target_version: CMKVersion, interactive: bool = True) -> Site:
@@ -386,7 +400,8 @@ def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(test_site: Site, tmp_path: Path) -> Path:
+def _installed_agent_ctl_in_unknown_state(test_setup: tuple[Site, bool], tmp_path: Path) -> Path:
+    test_site, _ = test_setup
     return download_and_install_agent_package(test_site, tmp_path)
 
 

@@ -21,7 +21,6 @@ from tests.composition.controller_site_interactions.common import (
 from cmk.utils.version import Edition
 
 from .conftest import (
-    BaseVersions,
     get_host_data,
     get_services_with_status,
     get_site_status,
@@ -41,9 +40,8 @@ logger = logging.getLogger(__name__)
     reason="Test currently failing for missing `php7`. "
     "This will be fixed starting from  base-version 2.1.0p31",
 )
-def test_update(test_site: Site, agent_ctl: Path) -> None:
-
-    # get version data
+def test_update(test_setup: tuple[Site, bool], agent_ctl: Path) -> None:
+    test_site, interactive_mode = test_setup
     base_version = test_site.version
 
     # create a new host and perform a service discovery
@@ -98,11 +96,7 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
         fallback_branch=current_base_branch_name(),
     )
 
-    interactive_update = True
-    if test_site.version.version in BaseVersions.BASE_VERSIONS_CB:
-        interactive_update = False  # perform update non-interactively as site-user
-
-    target_site = update_site(test_site, target_version, interactive=interactive_update)
+    target_site = update_site(test_site, target_version, interactive=interactive_mode)
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)

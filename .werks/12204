@@ -1,4 +1,4 @@
-Title: <tt>ibm_mq_queues</tt>: Fix crash by adjusting output of agent plugin <tt>ibm_mq</tt>
+Title: ibm_mq_queues: Fix crash by adjusting output of agent plugin ibm_mq
 Class: fix
 Compatible: compat
 Component: checks

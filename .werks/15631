@@ -1,4 +1,4 @@
-Title: <tt>bgp_peer</tt>: Expand Support for Cisco Devices
+Title: bgp_peer: Expand Support for Cisco Devices
 Class: fix
 Compatible: compat
 Component: checks

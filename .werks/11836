@@ -1,4 +1,4 @@
-Title: <tt>fortiauthenticator_auth_fail</tt>: Monitoring of authentication failures on Fortinet FortiAuthenticator devices
+Title: fortiauthenticator_auth_fail: Monitoring of authentication failures on Fortinet FortiAuthenticator devices
 Class: feature
 Compatible: compat
 Component: checks

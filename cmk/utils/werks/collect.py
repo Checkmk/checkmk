@@ -85,6 +85,14 @@ class CmkConfig(Config):
             return _replace_compatible(werk_string, "compat")
         if werk_filename in {"4914", "4737", "10303", "11202", "11277", "7048", "11159", "11475"}:
             return _replace_compatible(werk_string, "incomp")
+        if werk_filename == "13164":
+            return werk_string.replace("<PC_NAME>", "&lt;PC_NAME>")
+        if werk_filename == "13488":
+            return werk_string.replace("<tt>postgres_conn_time</tt>:", "postgres_conn_time:")
+        if werk_filename == "5141":
+            return werk_string.replace(
+                "parameter <tt>request_format</tt>", "parameter request_format"
+            )
         return werk_string
 
 

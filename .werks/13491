@@ -1,4 +1,4 @@
-Title: <tt>gude_humidity</tt>: Add support for Gude Expert Box 7214 devices
+Title: gude_humidity: Add support for Gude Expert Box 7214 devices
 Class: feature
 Compatible: compat
 Component: checks

@@ -49,8 +49,6 @@ def werkv1_to_werkv2(werkv1_content: str, werk_id: int) -> tuple[str, int]:
     def generator() -> Iterator[str]:
         yield "[//]: # (werk v2)"
         if (title := metadata.pop("title", None)) is not None:
-            # TODO: wait for CMK-14546: we might need to markdown escape the title
-            # yield f"# {_escape_markdown(title)}"
             yield f"# {title}"
         yield ""
         yield _table_entry("key", "value")

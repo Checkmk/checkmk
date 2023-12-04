@@ -1,4 +1,4 @@
-Title: <tt>mongodb_replica</tt>: Show both active and passive secondaries
+Title: mongodb_replica: Show both active and passive secondaries
 Class: fix
 Compatible: compat
 Component: checks

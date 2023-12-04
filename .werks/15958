@@ -1,4 +1,4 @@
-Title: Custom extensions: Avoid duplicate graphs in the user interface due to `graph_info.append`
+Title: Custom extensions: Avoid duplicate graphs in the user interface due to 'graph_info.append'
 Class: fix
 Compatible: compat
 Component: metrics
@@ -25,4 +25,3 @@ C-:
 
 Using the latter might have lead to duplicate graphs in the user interface. As of this werk, this is
 fixed.
-

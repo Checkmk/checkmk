@@ -1,4 +1,4 @@
-Title: <tt>qmail_stats</tt>: Check for <tt>/var/qmail/bin/qmail-qstat</tt>
+Title: qmail_stats: Check for /var/qmail/bin/qmail-qstat
 Class: fix
 Compatible: compat
 Component: checks

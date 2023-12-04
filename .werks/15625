@@ -1,4 +1,4 @@
-Title: <tt>mk_logwatch.py</tt>: Overflow Options are Case-Insensitive
+Title: mk_logwatch.py: Overflow Options are Case-Insensitive
 Class: fix
 Compatible: compat
 Component: checks

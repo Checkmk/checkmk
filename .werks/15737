@@ -1,4 +1,4 @@
-Title: <tt>docker_node_info</tt>: Fix sporadic UNKN if host is monitored by multiple sites
+Title: docker_node_info: Fix sporadic UNKN if host is monitored by multiple sites
 Class: fix
 Compatible: compat
 Component: checks

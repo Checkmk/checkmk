@@ -1,4 +1,4 @@
-Title: docker_container_cpu: fix `KeyError (percpu_usage)` crash
+Title: docker_container_cpu: fix 'KeyError (percpu_usage)' crash
 Class: fix
 Compatible: compat
 Component: checks

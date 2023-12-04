@@ -1,4 +1,4 @@
-Title: <tt>oracle_jobs</tt>: Fix ValueError for setups with CDB and nonCDB on same host
+Title: oracle_jobs: Fix ValueError for setups with CDB and nonCDB on same host
 Class: fix
 Compatible: compat
 Component: checks

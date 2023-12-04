@@ -1,4 +1,4 @@
-Title: <tt>zertificon_mail_queues</tt>: Monitor mail queue lengths of Zertificon mail encryption appliances
+Title: zertificon_mail_queues: Monitor mail queue lengths of Zertificon mail encryption appliances
 Class: feature
 Compatible: compat
 Component: checks

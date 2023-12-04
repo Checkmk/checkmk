@@ -1,4 +1,4 @@
-Title: oracle_crs_res: TypeError: Resource.__init__() got an unexpected keyword argument 'enabled'
+Title: oracle_crs_res: TypeError: Resource.\_\_init\_\_() got an unexpected keyword argument 'enabled'
 Class: fix
 Compatible: compat
 Component: checks

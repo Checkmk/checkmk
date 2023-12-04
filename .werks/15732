@@ -1,4 +1,4 @@
-Title: ESX VM monitoring: Fix missing or stale `ESX Memory` service
+Title: ESX VM monitoring: Fix missing or stale 'ESX Memory' service
 Class: fix
 Compatible: compat
 Component: checks

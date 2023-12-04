@@ -168,6 +168,7 @@ dependencies = [
  "anyhow",
  "clap",
  "openssl",
+ "openssl-probe",
  "time",
  "typed-builder",
  "x509-parser",
@@ -429,6 +430,12 @@ dependencies = [
  "quote",
  "syn 2.0.39",
 ]
+
+[[package]]
+name = "openssl-probe"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-src"

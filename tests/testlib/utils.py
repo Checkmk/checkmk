@@ -508,6 +508,8 @@ def get_services_with_status(
 def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     idp_url = "http://localhost:5551"
     makedirs("/etc/cse", sudo=True)
+    assert os.path.exists("/etc/cse")
+
     cognito_config = "/etc/cse/cognito-cmk.json"
     write_cognito_config = not os.path.exists(cognito_config)
     global_config = "/etc/cse/global-config.json"
@@ -520,6 +522,8 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
         )
     else:
         LOGGER.warning('Skipped writing "%s": File exists!', cognito_config)
+    assert os.path.exists(cognito_config)
+
     if write_global_config:
         with open(f"{cmk_path()}/tests/etc/cse/global-config.json") as f:
             write_file(
@@ -529,6 +533,8 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
             )
     else:
         LOGGER.warning('Skipped writing "%s": File exists!', global_config)
+    assert os.path.exists(global_config)
+
     idp = urlparse(idp_url)
     auth_provider_proc = execute(
         [

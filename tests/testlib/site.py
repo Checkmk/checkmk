@@ -1568,7 +1568,7 @@ class SiteFactory:
                 f"{test_site.version} is not a supported version for {target_version.version}"
             )
         self.version = target_version
-        site = self.get_existing_site(test_site.id)
+        site = self.get_existing_site("central", init_livestatus=False)
         site.install_cmk()
         site.stop()
 

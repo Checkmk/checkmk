@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.robotmk_suite import (
 from cmk.plugins.lib.robotmk_rebot_xml import Outcome, StatusV6, Suite
 from cmk.plugins.lib.robotmk_suite_execution_report import (
     AttemptOutcome,
+    AttemptOutcomeOtherError,
     AttemptsConfig,
     RebotOutcomeError,
     Section,
@@ -92,11 +93,14 @@ _SECTION = Section(
             rebot=RebotOutcomeError(Error="Some failure"),
         ),
         "suite_5": SuiteReport(
-            attempts=[AttemptOutcome.RobotFrameworkFailure],
+            attempts=[
+                AttemptOutcome.RobotFrameworkFailure,
+                AttemptOutcomeOtherError(OtherError="Crash\nmore info"),
+            ],
             config=AttemptsConfig(
                 interval=1200,
-                timeout=800,
-                n_attempts_max=1,
+                timeout=400,
+                n_attempts_max=2,
             ),
             rebot=None,
         ),
@@ -219,4 +223,9 @@ def test_check_suite_execution_report_no_rebot() -> None:
             summary="No data available because none of the attempts produced any output",
         ),
         Result(state=State.WARN, summary="Attempt 1: Robot Framework failure"),
+        Result(
+            state=State.WARN,
+            summary="Attempt 2: Error, see service details",
+            details="Crash\nmore info",
+        ),
     ]

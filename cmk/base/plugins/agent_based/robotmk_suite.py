@@ -141,22 +141,29 @@ def _check_attempt(
     attempt_number: int,
     attempt_outcome: AttemptOutcome | AttemptOutcomeOtherError,
 ) -> CheckResult:
-    match attempt_outcome:
-        case AttemptOutcome.RobotFrameworkFailure:
-            yield Result(
-                state=State.WARN,
-                summary=f"Attempt {attempt_number}: Robot Framework failure",
-            )
-        case AttemptOutcome.EnvironmentFailure:
-            yield Result(
-                state=State.WARN,
-                summary=f"Attempt {attempt_number}: Environment failure",
-            )
-        case AttemptOutcome.TimedOut:
-            yield Result(
-                state=State.WARN,
-                summary=f"Attempt {attempt_number}: Timeout",
-            )
+    if isinstance(attempt_outcome, AttemptOutcome):
+        match attempt_outcome:
+            case AttemptOutcome.RobotFrameworkFailure:
+                yield Result(
+                    state=State.WARN,
+                    summary=f"Attempt {attempt_number}: Robot Framework failure",
+                )
+            case AttemptOutcome.EnvironmentFailure:
+                yield Result(
+                    state=State.WARN,
+                    summary=f"Attempt {attempt_number}: Environment failure",
+                )
+            case AttemptOutcome.TimedOut:
+                yield Result(
+                    state=State.WARN,
+                    summary=f"Attempt {attempt_number}: Timeout",
+                )
+    else:
+        yield Result(
+            state=State.WARN,
+            summary=f"Attempt {attempt_number}: Error, see service details",
+            details=attempt_outcome.OtherError,
+        )
 
 
 register.check_plugin(

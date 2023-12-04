@@ -1,4 +1,4 @@
-Title: <tt>omd update</tt> reports <tt>etc/omd/allocated_ports</tt> as unwanted
+Title: 'omd update' reports 'etc/omd/allocated_ports' as unwanted
 Class: fix
 Compatible: compat
 Component: omd

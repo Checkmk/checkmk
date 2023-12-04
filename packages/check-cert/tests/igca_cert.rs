@@ -29,7 +29,7 @@ fn test_cert_ok() {
             .build(),
     );
     assert_eq!(
-        format!("{}", out),
+        out.to_string(),
         format!(
             "OK - \
             Serial {SERIAL}, \
@@ -54,7 +54,7 @@ fn test_cert_wrong_serial() {
             .build(),
     );
     assert_eq!(
-        format!("{}", out),
+        out.to_string(),
         format!(
             "WARNING - \
             Serial is {SERIAL} but expected {serial} (!), \

@@ -126,6 +126,10 @@ struct Args {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // We ran into https://github.com/sfackler/rust-openssl/issues/575
+    // without openssl_probe.
+    openssl_probe::init_ssl_cert_env_vars();
+
     let args = Args::parse();
 
     let not_after: [_; 2] = args

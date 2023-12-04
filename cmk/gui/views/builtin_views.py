@@ -4998,7 +4998,7 @@ builtin_views["docker_containers"] = _simple_host_view(
             ),
             ColumnSpec(
                 name="perfometer",
-                join_value="Memory used",
+                join_value="Memory",
             ),
             ColumnSpec(
                 name="perfometer",

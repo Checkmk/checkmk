@@ -1,4 +1,4 @@
-Title: <tt>cisco_qos</tt>: Handle metric units consistently & drop averaged metrics
+Title: cisco_qos: Handle metric units consistently & drop averaged metrics
 Class: fix
 Compatible: incomp
 Component: checks

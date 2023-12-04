@@ -1,4 +1,4 @@
-Title: Windows agent plugin for MySQL (<tt>mk_mysql</tt>): support MariaDB
+Title: Windows agent plugin for MySQL (mk_mysql): support MariaDB
 Class: feature
 Compatible: compat
 Component: checks

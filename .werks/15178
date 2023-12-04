@@ -1,4 +1,4 @@
-Title: <tt>liebert_temp_fluid</tt>: Take user-defined parameters into account
+Title: liebert_temp_fluid: Take user-defined parameters into account
 Class: fix
 Compatible: compat
 Component: checks

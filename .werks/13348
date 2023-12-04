@@ -1,4 +1,4 @@
-Title: <tt>windows_if.ps1</tt>: Use <tt>Get-NetAdapter</tt> if possible
+Title: windows_if.ps1: Use Get-NetAdapter if possible
 Class: fix
 Compatible: incomp
 Component: checks

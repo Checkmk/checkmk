@@ -1,4 +1,4 @@
-Title: <tt>esx_vsphere_counters_diskio</tt>: Fix summarized read and write latency
+Title: esx_vsphere_counters_diskio: Fix summarized read and write latency
 Class: fix
 Compatible: compat
 Component: checks

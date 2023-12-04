@@ -1,4 +1,4 @@
-Title: <tt>mk_sap_hana</tt>:SSL option added to SAP HANA agent
+Title: mk_sap_hana:SSL option added to SAP HANA agent
 Class: fix
 Compatible: compat
 Component: checks

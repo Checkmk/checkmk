@@ -1,4 +1,4 @@
-Title: <tt>cisco_asa_failover</tt>: Improve monitoring of Cisco ASA Failover
+Title: cisco_asa_failover: Improve monitoring of Cisco ASA Failover
 Class: feature
 Compatible: compat
 Component: checks

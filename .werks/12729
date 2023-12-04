@@ -1,4 +1,4 @@
-Title: <tt>logwatch_ec</tt>: Fix forwarding to remote host
+Title: logwatch_ec: Fix forwarding to remote host
 Class: fix
 Compatible: compat
 Component: checks

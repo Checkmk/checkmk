@@ -1,4 +1,4 @@
-Title: ibm_imm_temp: Fix <tt>ValueError (could not convert string to float: '')</tt>
+Title: ibm_imm_temp: Fix ValueError (could not convert string to float: '')
 Class: fix
 Compatible: compat
 Component: checks

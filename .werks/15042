@@ -1,4 +1,4 @@
-Title: <tt>mkbackup</tt>: Do not list system backups (appliance only)
+Title: mkbackup: Do not list system backups (appliance only)
 Class: fix
 Compatible: compat
 Component: setup

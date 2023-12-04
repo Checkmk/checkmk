@@ -1,4 +1,4 @@
-Title: <tt>cmk_site_statistics</tt>: Fix exception "StopIteration()" triggered by timeouts
+Title: cmk_site_statistics: Fix exception "StopIteration()" triggered by timeouts
 Class: fix
 Compatible: compat
 Component: checks

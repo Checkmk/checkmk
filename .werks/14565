@@ -1,4 +1,4 @@
-Title: <tt>inv_if</tt>: Fix crash on innovaphone IP811
+Title: inv_if: Fix crash on innovaphone IP811
 Class: fix
 Compatible: compat
 Component: checks

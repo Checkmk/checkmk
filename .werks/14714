@@ -1,4 +1,4 @@
-Title: Agent controller: Respect <tt>--detect-proxy</tt> when querying port from Checkmk REST API
+Title: Agent controller: Respect --detect-proxy when querying port from Checkmk REST API
 Class: fix
 Compatible: compat
 Component: agents

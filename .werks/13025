@@ -1,4 +1,4 @@
-Title: make `cmk --snmptranslate` more robust
+Title: make 'cmk --snmptranslate' more robust
 Class: fix
 Compatible: compat
 Component: omd

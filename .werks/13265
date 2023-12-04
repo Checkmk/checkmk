@@ -1,4 +1,4 @@
-Title: netapp_api_if: discover interfaces even if they have no `recv_data` entry
+Title: netapp_api_if: discover interfaces even if they have no 'recv_data' entry
 Class: fix
 Compatible: compat
 Component: checks
@@ -12,4 +12,3 @@ Discovery for `netapp_api_if` would skip interfaces with no entry for amount of 
 historical) reasons.
 This change makes the discovery function discover even those interfaces without this information
 resulting in potentially more discovered items.
-

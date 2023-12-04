@@ -1,4 +1,4 @@
-Title: <tt>logwatch</tt> agent plugin: Always encode output in UTF-8
+Title: logwatch agent plugin: Always encode output in UTF-8
 Class: fix
 Compatible: incomp
 Component: checks

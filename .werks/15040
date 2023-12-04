@@ -1,4 +1,4 @@
-Title: Make <tt>curl</tt> command work as site user on SLES 15 SP4
+Title: Make curl command work as site user on SLES 15 SP4
 Class: fix
 Compatible: compat
 Component: omd

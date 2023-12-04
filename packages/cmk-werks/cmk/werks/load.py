@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import html
 
 import lxml.html
 from pydantic import ValidationError
@@ -12,83 +13,80 @@ from .markup import markdown_to_html
 from .models import Werk
 from .parse import WerkV2ParseResult
 
+VALID_TAGS = {
+    "code",
+    "em",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "li",
+    "ol",
+    "p",
+    "pre",
+    "strong",
+    "table",
+    "td",
+    "thead",
+    "tr",
+    "ul",
+    "a",
+    "b",
+    "blockquote",
+    "br",
+    "i",
+    "th",
+    "tt",
+    "hr",
+}
+
 
 def load_werk_v2(parsed: WerkV2ParseResult) -> Werk:
     werk = parsed.metadata
     werk["__version__"] = "2"
 
-    # see CMK-14546
-    # try:
-    #     # the treeprocessor that extracted the title runs before the inline processor, so no
-    #     # inline markdown (links, bold, italic,..) has been replaced. this is
-    #     # basically okay, because we don't want any formatting in the
-    #     # headline. but we want to give some hint to the user that no
-    #     # formatting is allowed.
-    #     _raise_if_contains_markdown_formatting(werk["title"])
-    # except WerkError as e:
-    #     raise WerkError(
-    #         "Markdown formatting in title detected, this is not allowed."
-    #     ) from e
-
     werk["description"] = markdown_to_html(parsed.description)
     _check_html(werk["description"])
 
     try:
-        return Werk.model_validate(werk)
-    except ValidationError as e:
+        result = Werk.model_validate(werk)
+        result.title = _format_title(result.title)
+    except (ValidationError, WerkError) as e:
         raise WerkError(f"Error validating werk:\n{werk}\nerror:\n{e}") from e
 
-
-# see CMK-14546
-# def _raise_if_contains_markdown_formatting(string: str) -> None:
-#     markdown_converted = markdown.markdown(string)
-#     # if markdown_converted contains any html tags, then string contained markdown formatting
-#     try:
-#         number_of_tags = len(etree.fromstring(markdown_converted))
-#     except Exception as e:
-#         if '<<<' in string and '>>>' in string:
-#             # this is a hack, ignore if someone describes an agent section
-#             # title needs to be rendered without html interpretation anyway, we just want to give
-#             # a hint to the developer writing the werk, if they use formatting in the title.
-#             return
-#         raise WerkError(f"Can not parse title '{string}' to check if it contains html") from e
-#     if number_of_tags:
-#     if number_of_tags:
-#         raise WerkError(
-#             "string contained markdown formatting:\n"
-#             f"string: {string}\n"
-#             f"formatted string: {markdown_converted}"
-#         )
+    return result
 
 
-def _check_html(string: str) -> None:
-    tags_allowed = {
-        "code",
-        "em",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "li",
-        "ol",
-        "p",
-        "pre",
-        "strong",
-        "table",
-        "td",
-        "thead",
-        "tr",
-        "ul",
-        "a",
-        "b",
-        "blockquote",
-        "br",
-        "i",
-        "th",
-        "tt",
-        "hr",
-    }
+def _format_title(string: str) -> str:
+    # if string contains any html tags throw an error, but allow and remove markdown escaping
+
+    # this stuff seems funny, but we have to balance two things here:
+    # * on the one hand we want to be able to handle valid markdown input
+    #   formatting of werks should be without surprises. as the title is written in markdown, we
+    #   have to behave like markdown, which means we can not automatically escape html tags or
+    #   "surprise" markdown formatting
+    # * on the other hand we don't want formatting in the title
+    #   checkmk werks browser does not support html formatting in title, the search both on the
+    #   website and the built in werks browser would have to be adapted to exclude html tags, so we
+    #   want to handle it as a plain string without any special html formatting syntax.
+    markdown_converted = markdown_to_html(string)
+    markdown_converted = markdown_converted.removeprefix("<p>").removesuffix("</p>")
+    try:
+        _check_html(markdown_converted, tags_allowed=set())
+    except WerkError as e:
+        raise WerkError("Werk title contains formatting, this is not allowed") from e
+    except Exception as e:
+        raise WerkError(f"Can not parse title '{string}'") from e
+
+    markdown_converted = html.unescape(markdown_converted)
+    return markdown_converted
+
+
+def _check_html(string: str, tags_allowed: set[str] | None = None) -> None:
+    if tags_allowed is None:
+        tags_allowed = VALID_TAGS
+
     parser = lxml.html.HTMLParser(recover=False)
     tree = lxml.html.fromstring(f"<html><body>{string}</body></html>", parser=parser)
     tags_found = {e.tag for e in tree.xpath("./body//*")}

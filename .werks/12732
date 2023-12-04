@@ -1,4 +1,4 @@
-Title: Fix <tt>agent_netapp: error: unrecognized arguments: ...</tt>
+Title: Fix agent_netapp: error: unrecognized arguments: ...
 Class: fix
 Compatible: compat
 Component: checks

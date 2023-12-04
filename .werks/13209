@@ -1,4 +1,4 @@
-Title: <tt>fortigate_ap_connection</tt>: Monitor connection of FortiGate WiFi Access Points
+Title: fortigate_ap_connection: Monitor connection of FortiGate WiFi Access Points
 Class: feature
 Compatible: compat
 Component: checks

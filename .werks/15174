@@ -1,4 +1,4 @@
-Title: Process (<tt>ps</tt>) monitoring: Handle processes with empty command lines
+Title: Process (ps) monitoring: Handle processes with empty command lines
 Class: fix
 Compatible: compat
 Component: checks

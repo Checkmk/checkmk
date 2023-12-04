@@ -1,4 +1,4 @@
-Title: <tt>mk_logwatch</tt>: Make agent plugin executable under Python 2
+Title: mk_logwatch: Make agent plugin executable under Python 2
 Class: fix
 Compatible: compat
 Component: agents

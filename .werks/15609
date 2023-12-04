@@ -1,4 +1,4 @@
-Title: KUBE: Limit collection time for <tt>Persistent Volume Claims & Persistent Volumes</tt>
+Title: KUBE: Limit collection time for Persistent Volume Claims & Persistent Volumes
 Class: fix
 Compatible: compat
 Component: checks

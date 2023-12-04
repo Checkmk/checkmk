@@ -1,4 +1,4 @@
-Title: agent_aws(<tt>aws_ebs_limits</tt>): do not request public snapshots from marketplace
+Title: agent_aws(aws_ebs_limits): do not request public snapshots from marketplace
 Class: fix
 Compatible: compat
 Component: checks

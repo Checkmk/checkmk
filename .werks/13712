@@ -1,4 +1,4 @@
-Title: <tt>cmk-update-config</tt>: Drop removed check plugins from ruleset "Disabled checks"
+Title: cmk-update-config: Drop removed check plugins from ruleset "Disabled checks"
 Class: feature
 Compatible: compat
 Component: wato

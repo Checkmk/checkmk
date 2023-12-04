@@ -1,4 +1,4 @@
-Title: <tt>oracle_instance</tt>: Handle unresponsive databases and login failures correctly
+Title: oracle_instance: Handle unresponsive databases and login failures correctly
 Class: fix
 Compatible: compat
 Component: checks

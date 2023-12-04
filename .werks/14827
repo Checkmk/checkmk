@@ -1,4 +1,4 @@
-Title: <tt>mk_sshd_config</tt>: Monitor effective SSH daemon configuration
+Title: mk_sshd_config: Monitor effective SSH daemon configuration
 Class: fix
 Compatible: incomp
 Component: checks

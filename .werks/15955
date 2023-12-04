@@ -1,4 +1,4 @@
-Title: Fix <tt>'NoneType' object has no attribute 'startswith'</tt> crash in views
+Title: Fix 'NoneType' object has no attribute 'startswith' crash in views
 Class: fix
 Compatible: compat
 Component: cmc

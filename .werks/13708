@@ -1,4 +1,4 @@
-Title: <tt>bluecoat_sensors</tt>: Fix "TypeError ('NoneType' object is not iterable)"
+Title: bluecoat_sensors: Fix "TypeError ('NoneType' object is not iterable)"
 Class: fix
 Compatible: compat
 Component: checks

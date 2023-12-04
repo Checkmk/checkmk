@@ -1,4 +1,4 @@
-Title: <tt>systemd_units</tt>: Fix error when parsing incomplete data
+Title: systemd_units: Fix error when parsing incomplete data
 Class: fix
 Compatible: compat
 Component: checks

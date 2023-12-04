@@ -1,4 +1,4 @@
-Title: heartbeat_crm: Fix <tt>ValueError (unconverted data remains: ...)</tt>
+Title: heartbeat_crm: Fix ValueError (unconverted data remains: ...)
 Class: fix
 Compatible: compat
 Component: checks

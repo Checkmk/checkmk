@@ -1,4 +1,4 @@
-Title: Agent controller: Try to query port both via <tt>http</tt> and <tt>https</tt>
+Title: Agent controller: Try to query port both via http and https
 Class: feature
 Compatible: compat
 Component: agents

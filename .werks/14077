@@ -1,4 +1,4 @@
-Title: NagVis Geomaps: Deprecate <tt>wato_geo_fields.py</tt> in favor of regular custom host attributes
+Title: NagVis Geomaps: Deprecate wato_geo_fields.py in favor of regular custom host attributes
 Class: fix
 Compatible: incomp
 Component: wato

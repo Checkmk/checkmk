@@ -1,4 +1,4 @@
-Title: <tt>graylog_failures</tt>: Fix crash with <tt>JSONDecodeError</tt>
+Title: graylog_failures: Fix crash with JSONDecodeError
 Class: fix
 Compatible: compat
 Component: checks

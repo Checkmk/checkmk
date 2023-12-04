@@ -1,4 +1,4 @@
-Title: <tt>printer_supply</tt>: handle trailing null bytes in prtMarkerColorantValue
+Title: printer_supply: handle trailing null bytes in prtMarkerColorantValue
 Class: fix
 Compatible: compat
 Component: checks

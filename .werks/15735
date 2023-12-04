@@ -1,4 +1,4 @@
-Title: <tt>check_traceroute</tt>: Fix checking of routers specified by domain name
+Title: check_traceroute: Fix checking of routers specified by domain name
 Class: fix
 Compatible: compat
 Component: checks

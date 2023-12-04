@@ -1,4 +1,4 @@
-Title: <tt>cmk_site_statistics</tt>: Fix crash for pre-1.6 CRE sites
+Title: cmk_site_statistics: Fix crash for pre-1.6 CRE sites
 Class: fix
 Compatible: compat
 Component: checks

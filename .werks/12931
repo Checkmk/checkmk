@@ -1,4 +1,4 @@
-Title: <tt>mk_docker</tt>: Fix crash in mk_docker agent for Python2
+Title: mk_docker: Fix crash in mk_docker agent for Python2
 Class: fix
 Compatible: compat
 Component: checks

@@ -1,4 +1,4 @@
-Title: <tt>mongodb_counters</tt>: Fix "ValueError: too many values to unpack (expected 3)"
+Title: mongodb_counters: Fix "ValueError: too many values to unpack (expected 3)"
 Class: fix
 Compatible: compat
 Component: checks

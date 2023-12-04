@@ -1,4 +1,4 @@
-Title: <tt>check_http</tt>: Don't Crash with TypeError
+Title: check_http: Don't Crash with TypeError
 Class: fix
 Compatible: compat
 Component: checks

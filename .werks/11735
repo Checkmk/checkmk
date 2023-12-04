@@ -1,4 +1,4 @@
-Title: <tt>arc_raid_status</tt>: Do not go CRIT when checking raid consistency
+Title: arc_raid_status: Do not go CRIT when checking raid consistency
 Class: fix
 Compatible: compat
 Component: checks

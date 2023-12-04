@@ -1,4 +1,4 @@
-Title: <tt>cmk</tt>: fail on some previously ignored command line options
+Title: cmk: fail on some previously ignored command line options
 Class: feature
 Compatible: incomp
 Component: checks

@@ -1,4 +1,4 @@
-Title: <tt>logwatch_groups</tt>: Fix discovery
+Title: logwatch_groups: Fix discovery
 Class: fix
 Compatible: compat
 Component: checks

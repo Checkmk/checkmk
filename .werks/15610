@@ -1,4 +1,4 @@
-Title: Fix <tt>Error in LIVESTATUS_TCP_ONLY_FROM</tt> during <tt>omd config</tt>
+Title: Fix Error in LIVESTATUS_TCP_ONLY_FROM during omd config
 Class: fix
 Compatible: compat
 Component: omd

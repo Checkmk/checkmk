@@ -1,4 +1,4 @@
-Title: <tt>logwatch</tt>: Fix reclassification and persistance
+Title: logwatch: Fix reclassification and persistance
 Class: fix
 Compatible: compat
 Component: checks

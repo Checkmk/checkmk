@@ -1,4 +1,4 @@
-Title: <tt>check_http</tt>: Consolidate host and proxy settings
+Title: check_http: Consolidate host and proxy settings
 Class: fix
 Compatible: compat
 Component: checks

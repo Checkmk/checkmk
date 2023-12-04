@@ -1,4 +1,4 @@
-Title: Prometheus: Deprecation of `kube-state-metrics` scrape target
+Title: Prometheus: Deprecation of 'kube-state-metrics' scrape target
 Class: fix
 Compatible: incomp
 Component: checks

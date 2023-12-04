@@ -1,4 +1,4 @@
-Title: <tt>sentry_pdu, raritan_pdu_plugs</tt>: Fix parameter handling
+Title: sentry_pdu, raritan_pdu_plugs: Fix parameter handling
 Class: fix
 Compatible: incomp
 Component: checks

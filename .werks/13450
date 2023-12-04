@@ -1,4 +1,4 @@
-Title: <tt>apt</tt>: Fix APT Ubuntu security updates classification
+Title: apt: Fix APT Ubuntu security updates classification
 Class: fix
 Compatible: compat
 Component: checks

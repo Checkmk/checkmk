@@ -1,4 +1,4 @@
-Title: df: ignore "<i>Filesystem grouping patterns</i>" ruleset
+Title: df: ignore "Filesystem grouping patterns" ruleset
 Class: feature
 Compatible: incomp
 Component: checks

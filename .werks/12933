@@ -1,4 +1,4 @@
-Title: <tt>sap_hana_backup</tt>: WARN state if there is no backup
+Title: sap_hana_backup: WARN state if there is no backup
 Class: feature
 Compatible: compat
 Component: checks

@@ -105,19 +105,6 @@ def markdown_to_nowiki(content: str) -> str:
     return "\n".join(generator())
 
 
-# CMK-14546
-# def _escape_markdown(text: str) -> str:
-#     """
-#     >>> _escape_markdown("- one")
-#     '\\\\- one'
-#     >>> _escape_markdown("some_thing")
-#     'some\\\\_thing'
-#     >>> _escape_markdown("some[thing")
-#     'some\\\\[thing'
-#     """
-#     return re.sub(r"([\`*_{}\[\]()#+-.!])", r"\\\1", text)
-
-
 def markdown_to_html(text: str) -> str:
     return markdown.markdown(
         text,

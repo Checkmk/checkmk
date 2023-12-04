@@ -1,4 +1,4 @@
-Title: <tt>logwatch_ec</tt>: Fix crash with <tt>KeyError</tt> in cluster mode
+Title: logwatch_ec: Fix crash with KeyError in cluster mode
 Class: fix
 Compatible: compat
 Component: checks

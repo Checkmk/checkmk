@@ -1,4 +1,4 @@
-Title: <tt>wmi_cpuload</tt>: Handle Windows time counter resets
+Title: wmi_cpuload: Handle Windows time counter resets
 Class: fix
 Compatible: compat
 Component: checks

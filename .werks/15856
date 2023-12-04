@@ -1,4 +1,4 @@
-Title: <tt>mk_oracle</tt>: Support for only remote instances without piggyback hosts
+Title: mk_oracle: Support for only remote instances without piggyback hosts
 Class: fix
 Compatible: compat
 Component: checks

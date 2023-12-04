@@ -1,4 +1,4 @@
-Title: Make <tt>ssh</tt> command work as site user on SUSE Linux Enterprise Server 15 SP3
+Title: Make ssh command work as site user on SUSE Linux Enterprise Server 15 SP3
 Class: fix
 Compatible: compat
 Component: omd

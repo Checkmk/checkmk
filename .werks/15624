@@ -1,4 +1,4 @@
-Title: <tt>mk_logwatch.py</tt>: Do Not Crash Upon Entering Invalid Option
+Title: mk_logwatch.py: Do Not Crash Upon Entering Invalid Option
 Class: fix
 Compatible: compat
 Component: checks

@@ -1,9 +1,7 @@
-Title: Agent RPMs: Fixing dependency issue with old check_mk-agent-oracle-*.rpm and check_mk-agent-logwatch-*.rpm
+Title: Agent RPMs: Fixing dependency issue with old check_mk-agent-oracle-\*.rpm and check_mk-agent-logwatch-\*.rpm
 Level: 1
 Component: checks
 Compatible: compat
 Version: 1.4.0i2
 Date: 1476106561
 Class: fix
-
-

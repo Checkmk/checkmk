@@ -1,4 +1,4 @@
-Title: <tt>timesyncd</tt>: increase default thresholds for last synchronisation
+Title: timesyncd: increase default thresholds for last synchronisation
 Class: fix
 Compatible: compat
 Component: checks

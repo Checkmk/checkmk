@@ -1550,7 +1550,8 @@ class SiteFactory:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()
         if not site.exists():
-            site = self.get_site(name, init_livestatus)
+            site = self.get_site(name, start=False, init_livestatus=init_livestatus)
+        site.start()
         if auto_restart_httpd:
             restart_httpd()
         logger.info(
@@ -1561,6 +1562,7 @@ class SiteFactory:
         with cse_openid_oauth_provider(
             f"http://localhost:{site.apache_port}"
         ) if self.version.is_saas_edition() else nullcontext():
+            site.prepare_for_tests()
             try:
                 yield site
             finally:

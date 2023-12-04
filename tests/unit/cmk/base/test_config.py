@@ -1137,6 +1137,8 @@ def test_host_config_inventory_parameters(
                 check_interval=0,
                 severity_new_services=1,
                 severity_vanished_services=0,
+                severity_changed_service_labels=1,
+                severity_changed_service_params=1,
                 severity_new_host_labels=1,
                 rediscovery={},
             ),
@@ -1148,6 +1150,8 @@ def test_host_config_inventory_parameters(
                 check_interval=1,
                 severity_new_services=1,
                 severity_vanished_services=0,
+                severity_changed_service_labels=1,
+                severity_changed_service_params=1,
                 severity_new_host_labels=1,
                 rediscovery={},
             ),
@@ -1168,6 +1172,8 @@ def test_discovery_check_parameters(
                 "value": {
                     "check_interval": 1,
                     "severity_unmonitored": 1,
+                    "severity_changed_service_labels": 1,
+                    "severity_changed_service_params": 1,
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
@@ -1178,6 +1184,8 @@ def test_discovery_check_parameters(
                 "value": {
                     "check_interval": 2,
                     "severity_unmonitored": 1,
+                    "severity_changed_service_labels": 1,
+                    "severity_changed_service_params": 1,
                     "severity_vanished": 0,
                     "severity_new_host_label": 1,
                 },
@@ -2536,6 +2544,8 @@ def _rule_val(check_interval: int | None) -> dict[str, Any]:
     return {
         "check_interval": check_interval,
         "severity_unmonitored": 0,
+        "severity_changed_service_labels": 0,
+        "severity_changed_service_params": 0,
         "severity_vanished": 0,
         "severity_new_host_label": 0,
     }

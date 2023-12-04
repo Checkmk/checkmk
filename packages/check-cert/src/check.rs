@@ -392,13 +392,13 @@ where
 }
 
 #[derive(Debug, Default)]
-pub struct Writer {
+pub struct Collection {
     state: State,
     summary: Vec<Summary>,
     metrics: Vec<Metric<Real>>,
 }
 
-impl Writer {
+impl Collection {
     pub fn exit_code(&self) -> i32 {
         match self.state {
             State::Ok => 0,
@@ -409,15 +409,15 @@ impl Writer {
     }
 }
 
-impl Writer {
-    pub fn join(&mut self, other: &mut Writer) {
+impl Collection {
+    pub fn join(&mut self, other: &mut Collection) {
         self.state = std::cmp::max(self.state, other.state);
         self.summary.append(&mut other.summary);
         self.metrics.append(&mut other.metrics);
     }
 }
 
-impl Display for Writer {
+impl Display for Collection {
     fn fmt(&self, f: &mut Formatter) -> FormatResult {
         let mut out = String::from(self.state.as_str());
         let summary = self
@@ -444,7 +444,7 @@ impl Display for Writer {
     }
 }
 
-impl From<SimpleCheckResult> for Writer {
+impl From<SimpleCheckResult> for Collection {
     fn from(check_result: SimpleCheckResult) -> Self {
         Self {
             state: check_result.summary.state,
@@ -454,27 +454,27 @@ impl From<SimpleCheckResult> for Writer {
     }
 }
 
-impl From<&mut Vec<CheckResult<Real>>> for Writer {
+impl From<&mut Vec<CheckResult<Real>>> for Collection {
     fn from(check_results: &mut Vec<CheckResult<Real>>) -> Self {
         check_results
             .drain(..)
-            .fold(Writer::default(), |mut w, cr| {
-                w.state = std::cmp::max(w.state, cr.summary.state);
-                w.summary.push(cr.summary);
-                w.metrics.extend(cr.metrics);
-                w
+            .fold(Collection::default(), |mut out, cr| {
+                out.state = std::cmp::max(out.state, cr.summary.state);
+                out.summary.push(cr.summary);
+                out.metrics.extend(cr.metrics);
+                out
             })
     }
 }
 
 pub fn bail_out(message: &str) -> ! {
-    let out = Writer::from(SimpleCheckResult::unknown(message));
+    let out = Collection::from(SimpleCheckResult::unknown(message));
     eprintln!("{}", out);
     std::process::exit(out.exit_code())
 }
 
 pub fn abort(message: &str) -> ! {
-    let out = Writer::from(SimpleCheckResult::crit(message));
+    let out = Collection::from(SimpleCheckResult::crit(message));
     eprintln!("{}", out);
     std::process::exit(out.exit_code())
 }
@@ -647,12 +647,12 @@ mod test_metrics_display {
 
 #[cfg(test)]
 mod test_writer_format {
-    use super::{CheckResult, Metric, Real, SimpleCheckResult, Writer};
+    use super::{CheckResult, Collection, Metric, Real, SimpleCheckResult};
 
     #[test]
     fn test_single_check_result_ok() {
         assert_eq!(
-            format!("{}", Writer::from(SimpleCheckResult::ok("summary"))),
+            format!("{}", Collection::from(SimpleCheckResult::ok("summary"))),
             "OK - summary"
         );
     }
@@ -660,7 +660,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_warn() {
         assert_eq!(
-            format!("{}", Writer::from(SimpleCheckResult::warn("summary"))),
+            format!("{}", Collection::from(SimpleCheckResult::warn("summary"))),
             "WARNING - summary (!)"
         );
     }
@@ -668,7 +668,7 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_crit() {
         assert_eq!(
-            format!("{}", Writer::from(SimpleCheckResult::crit("summary"))),
+            format!("{}", Collection::from(SimpleCheckResult::crit("summary"))),
             "CRITICAL - summary (!!)"
         );
     }
@@ -676,14 +676,17 @@ mod test_writer_format {
     #[test]
     fn test_single_check_result_unknown() {
         assert_eq!(
-            format!("{}", Writer::from(SimpleCheckResult::unknown("summary"))),
+            format!(
+                "{}",
+                Collection::from(SimpleCheckResult::unknown("summary"))
+            ),
             "UNKNOWN - summary (?)"
         );
     }
 
     #[test]
     fn test_no_check_results_is_ok() {
-        assert_eq!(format!("{}", Writer::from(&mut vec![])), "OK");
+        assert_eq!(format!("{}", Collection::from(&mut vec![])), "OK");
     }
 
     #[test]
@@ -694,7 +697,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
+                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "OK"
         );
@@ -708,7 +711,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
+                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "OK - summary 1, summary 2, summary 3"
         );
@@ -722,7 +725,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
+                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "WARNING - summary 1, summary 2 (!), summary 3"
         );
@@ -736,7 +739,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
+                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into()])
             ),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!)"
         );
@@ -751,7 +754,7 @@ mod test_writer_format {
         assert_eq!(
             format!(
                 "{}",
-                Writer::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
+                Collection::from(&mut vec![cr1.into(), cr2.into(), cr3.into(), cr4.into()])
             ),
             "UNKNOWN - summary 1, summary 2 (!), summary 3 (!!), summary 4 (?)"
         );
@@ -771,7 +774,7 @@ mod test_writer_format {
         let cr3 = CheckResult::crit("summary 3", m("m3", 42));
         let mut vec = vec![cr1, cr2, cr3];
         assert_eq!(
-            format!("{}", Writer::from(&mut vec)),
+            format!("{}", Collection::from(&mut vec)),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
             | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );
@@ -780,21 +783,21 @@ mod test_writer_format {
 
     #[test]
     fn test_join_writers_with_metrics() {
-        let mut w = Writer::default();
-        w.join(&mut Writer::from(&mut vec![CheckResult::ok(
+        let mut c = Collection::default();
+        c.join(&mut Collection::from(&mut vec![CheckResult::ok(
             "summary 1",
             m("m1", 13),
         )]));
-        w.join(&mut Writer::from(&mut vec![CheckResult::warn(
+        c.join(&mut Collection::from(&mut vec![CheckResult::warn(
             "summary 2",
             m("m2", 37),
         )]));
-        w.join(&mut Writer::from(&mut vec![CheckResult::crit(
+        c.join(&mut Collection::from(&mut vec![CheckResult::crit(
             "summary 3",
             m("m3", 42),
         )]));
         assert_eq!(
-            format!("{}", w),
+            format!("{}", c),
             "CRITICAL - summary 1, summary 2 (!), summary 3 (!!) \
             | m1=13;;;;, m2=37;;;;, m3=42;;;;"
         );

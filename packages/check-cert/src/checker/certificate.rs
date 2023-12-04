@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::check::{
-    self, CheckResult, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult, Writer,
+    self, CheckResult, Collection, LevelsChecker, LevelsCheckerArgs, Real, SimpleCheckResult,
 };
 use time::Duration;
 use typed_builder::TypedBuilder;
@@ -33,13 +33,13 @@ pub struct Config {
     not_after_levels_checker: Option<LevelsChecker<Duration>>,
 }
 
-pub fn check(der: &[u8], config: Config) -> Writer {
+pub fn check(der: &[u8], config: Config) -> Collection {
     let cert = match X509Certificate::from_der(der) {
         Ok((_rem, cert)) => cert,
         Err(_) => check::abort("Failed to parse certificate"),
     };
 
-    Writer::from(&mut vec![
+    Collection::from(&mut vec![
         unwrap!(check_serial(
             cert.tbs_certificate.raw_serial_as_string(),
             config.serial

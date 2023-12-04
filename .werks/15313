@@ -1,0 +1,10 @@
+Title: Fix memory column in docker view
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1701694701
+Edition: cre
+Level: 1
+Version: 2.2.0p17
+
+Memory used column was always empty.

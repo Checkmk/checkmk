@@ -34,7 +34,7 @@ fn test_wrong_host() {
     #[allow(unused_variables, unused_mut)]
     let mut cmd = cmd("wrong.host.badssl.com");
 
-    // TODO: should fail
+    todo!("should fail");
     // assert!(stdout(cmd.output()).contains(...));
 }
 
@@ -68,6 +68,6 @@ fn test_pinning_test() {
     #[allow(unused_variables, unused_mut)]
     let mut cmd = cmd("pinning-test.badssl.com");
 
-    // TODO: should fail
+    todo!("should fail");
     // assert!(stdout(cmd.output()).contains(...));
 }

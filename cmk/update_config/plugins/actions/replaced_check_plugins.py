@@ -5,4 +5,8 @@
 
 from cmk.checkengine.checking import CheckPluginName
 
-REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {}
+REPLACED_CHECK_PLUGINS: dict[CheckPluginName, CheckPluginName] = {
+    CheckPluginName("arbor_peakflow_sp"): CheckPluginName("arbor_memory"),
+    CheckPluginName("arbor_peakflow_tms"): CheckPluginName("arbor_memory"),
+    CheckPluginName("arbor_peakflow_pravail"): CheckPluginName("arbor_memory"),
+}

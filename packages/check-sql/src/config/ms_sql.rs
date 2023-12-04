@@ -312,7 +312,8 @@ impl Connection {
         Ok(Some(Self {
             hostname: conn
                 .get_string(keys::HOSTNAME)
-                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string()),
+                .unwrap_or_else(|| defaults::CONNECTION_HOST_NAME.to_string())
+                .to_lowercase(),
             fail_over_partner: conn.get_string(keys::FAIL_OVER_PARTNER),
             port: conn.get_int::<u16>(keys::PORT, defaults::CONNECTION_PORT),
             socket: conn.get_pathbuf(keys::SOCKET),
@@ -607,6 +608,14 @@ impl CustomInstance {
     }
     pub fn piggyback(&self) -> Option<&Piggyback> {
         self.piggyback.as_ref()
+    }
+}
+
+pub fn calc_real_host(auth: &Authentication, conn: &Connection) -> String {
+    if auth.auth_type() == &AuthType::Integrated {
+        "localhost".to_string()
+    } else {
+        conn.hostname().to_owned().to_lowercase()
     }
 }
 
@@ -1158,5 +1167,24 @@ mssql:
             if all { "yes" } else { "no" }
         );
         Config::from_string(&source).unwrap().unwrap()
+    }
+
+    #[test]
+    fn test_calc_effective_host() {
+        let conn_to_bar = Connection {
+            hostname: "bAr".to_string(),
+            ..Default::default()
+        };
+        let auth_integrated = Authentication {
+            auth_type: AuthType::Integrated,
+            ..Default::default()
+        };
+        let auth_sql_server = Authentication {
+            auth_type: AuthType::SqlServer,
+            ..Default::default()
+        };
+
+        assert_eq!(calc_real_host(&auth_integrated, &conn_to_bar), "localhost");
+        assert_eq!(calc_real_host(&auth_sql_server, &conn_to_bar), "bar");
     }
 }

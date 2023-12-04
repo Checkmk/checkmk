@@ -40,7 +40,7 @@ def PredictiveLevels(
                 # The backend uses this marker to inject a callback to get the prediction.
                 # Its main purpose it to bind the host name and service description,
                 # which are not known to the plugin.
-                "__prediction_updater__",
+                "__get_predictive_levels__",
             ],
             optional_keys=[
                 "weight",

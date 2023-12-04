@@ -40,7 +40,7 @@ class HostConfigFactory(DataclassFactory):
                 "30",
                 "--log-cutoff-weeks",
                 "4",
-                "testhost",
+                "1.2.3.4",
             ],
             id="explicit_password",
         ),
@@ -57,7 +57,7 @@ class HostConfigFactory(DataclassFactory):
                 StoredSecret(value="passwd"),
                 "--timeout",
                 "40",
-                "testhost",
+                "1.2.3.4",
             ],
             id="password_from_store",
         ),
@@ -67,7 +67,7 @@ def test_agent_proxmox_ve_arguments(
     params: Mapping[str, object], expected_result: Sequence[str]
 ) -> None:
     # Assemble
-    host_config = HostConfigFactory.build(name="testhost")
+    host_config = HostConfigFactory.build(name="testhost", address="1.2.3.4")
     http_proxies = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
     # Act
     parsed_params = config.parameter_parser(params)
@@ -76,3 +76,28 @@ def test_agent_proxmox_ve_arguments(
     assert len(commands) == 1
     command = commands[0].command_arguments
     assert command == expected_result
+
+
+def test_agent_proxmox_ve_no_ip_address() -> None:
+    params = {
+        "username": "user",
+        "password": ("store", "passwd"),
+        "timeout": "40",
+    }
+    host_config = HostConfigFactory.build(name="testhost", address="")
+    http_proxies = {"my_proxy": HTTPProxy("my_proxy", "My Proxy", "proxy.com")}
+
+    parsed_params = config.parameter_parser(params)
+    commands = list(config.commands_function(parsed_params, host_config, http_proxies))
+
+    assert len(commands) == 1
+    command = commands[0].command_arguments
+    assert command == [
+        "-u",
+        "user",
+        "-p",
+        StoredSecret(value="passwd"),
+        "--timeout",
+        "40",
+        "testhost",
+    ]

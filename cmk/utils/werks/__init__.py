@@ -79,6 +79,8 @@ def load_raw_files(werks_dir: Path) -> list[RawWerkV1 | RawWerkV2]:
                 werks.append(load_werk_v1(file_name, werk_id))
             except Exception as e:
                 raise WerkError(_('Failed to load werk "%s": %s') % (werk_id, e)) from e
+    if markdown_werks := list(werks_dir.glob("*.md")):
+        raise WerkError(f"Found markdown werks in 2.2.0 branch: {markdown_werks!r}")
     return werks
 
 

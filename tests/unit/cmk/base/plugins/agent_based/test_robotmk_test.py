@@ -196,8 +196,6 @@ def test_discover_robotmk_test() -> None:
                     summary="Execute Google image search and store the first result image",
                 ),
                 Result(state=State.WARN, summary="NOT RUN"),
-                Result(state=State.OK, summary="Test runtime: 0 seconds"),
-                Metric("robotmk_test_runtime", 0.0),
             ],
             id="Test was not run",
         ),
@@ -207,8 +205,6 @@ def test_discover_robotmk_test() -> None:
             [
                 Result(state=State.OK, summary="Addition 1"),
                 Result(state=State.WARN, summary="SKIP"),
-                Result(state=State.OK, summary="Test runtime: 0 seconds"),
-                Metric("robotmk_test_runtime", 0.0),
             ],
             id="Test was skipped",
         ),
@@ -218,8 +214,6 @@ def test_discover_robotmk_test() -> None:
             [
                 Result(state=State.OK, summary="Addition 2"),
                 Result(state=State.CRIT, summary="FAIL"),
-                Result(state=State.OK, summary="Test runtime: 3 milliseconds"),
-                Metric("robotmk_test_runtime", 0.003),
             ],
             id="Test failed",
         ),

@@ -802,11 +802,6 @@ div.page_menu_popup {
           input[type="time"]:not(.active) {
             color: $font-color-dimmed;
           }
-
-          + span {
-            margin-left: $spacing;
-            color: $font-color-dimmed;
-          }
         }
 
         &.disabled {

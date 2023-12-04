@@ -5,7 +5,7 @@ Component: checks
 Date: 1701427733
 Edition: cre
 Level: 1
-Version: 2.2.0p16
+Version: 2.2.0p17
 
 The grouping patterns in the ruleset <i>Group patterns</i> allow to specify certain date macros (for details refer to the rulesets inline help).
 Previously only one instance of the macros could be used. Now all occurrences of either macro type are replaced.

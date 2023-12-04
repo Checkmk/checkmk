@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
+import itertools
 import json
 import logging
 import os
@@ -71,9 +72,22 @@ class BaseVersions:
         )
         for base_version_str in BASE_VERSIONS_STR
     ]
-    IDS = [
-        f"from_{base_version.omd_version()}_to_{os.getenv('VERSION', 'daily')}"
-        for base_version in BASE_VERSIONS
+
+
+@dataclasses.dataclass
+class TestParams:
+    """Pytest parameters used in the test."""
+
+    INTERACTIVE_MODE = [True, False]
+    TEST_PARAMS = [
+        pytest.param(
+            (base_version, interactive_mode),
+            id=f"base-version={base_version.version}|interactive-mode={interactive_mode}",
+        )
+        for base_version, interactive_mode in itertools.product(
+            BaseVersions.BASE_VERSIONS, INTERACTIVE_MODE
+        )
+        if interactive_mode == (base_version.version != BaseVersions.MIN_VERSION)
     ]
 
 
@@ -204,13 +218,10 @@ def version_supported(version: str) -> bool:
     return version_gte(version, BaseVersions.MIN_VERSION)
 
 
-@pytest.fixture(
-    name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS, scope="module"
-)
-def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
+@pytest.fixture(name="test_setup", params=TestParams.TEST_PARAMS, scope="module")
+def _setup(request: pytest.FixtureRequest) -> Generator[tuple, None, None]:
     """Install the test site with the base version."""
-    base_version = request.param
-
+    base_version, interactive_mode = request.param
     if (
         request.config.getoption(name="--latest-base-version")
         and base_version.version != BaseVersions.BASE_VERSIONS[-1].version
@@ -225,10 +236,12 @@ def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
             "base-version 2.2.0p8"
         )
 
-    interactive_mode_off = request.config.getoption(name="--disable-interactive-mode")
-    logger.info("Setting up test-site (interactive-mode=%s) ...", not interactive_mode_off)
-    test_site = _get_site(base_version, interactive=not interactive_mode_off)
-    yield test_site
+    disable_interactive_mode = (
+        request.config.getoption(name="--disable-interactive-mode") or not interactive_mode
+    )
+    logger.info("Setting up test-site (interactive-mode=%s) ...", not disable_interactive_mode)
+    test_site = _get_site(base_version, interactive=not disable_interactive_mode)
+    yield test_site, disable_interactive_mode
     logger.info("Removing test-site...")
     test_site.rm()
 
@@ -240,7 +253,8 @@ def update_site(site: Site, target_version: CMKVersion, interactive_mode: bool) 
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
-def _installed_agent_ctl_in_unknown_state(test_site: Site, tmp_path: Path) -> Path:
+def _installed_agent_ctl_in_unknown_state(test_setup: tuple, tmp_path: Path) -> Path:
+    test_site, _ = test_setup
     return download_and_install_agent_package(test_site, tmp_path)
 
 

@@ -26,7 +26,7 @@ def _transform_tuple_format(params: tuple[str, Any]) -> dict:
     if isinstance(params, tuple):
         return {
             "name": params[0],
-            "url_check": params[1],
+            "url_details": params[1],
         }
     return params
 
@@ -52,7 +52,7 @@ def _valuespec_active_checks_form_submit() -> Transform:
                     ),
                 ),
                 (
-                    "url_check",
+                    "url_details",
                     Dictionary(
                         title=_("Check the URL"),
                         elements=[

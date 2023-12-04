@@ -59,7 +59,7 @@ class HostConfig:  # pylint: disable=too-many-instance-attributes
     """
 
     name: str
-    address: str
+    address: str | None
     alias: str
     ip_family: IPAddressFamily
     ipv4address: str | None = None

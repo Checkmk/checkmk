@@ -131,11 +131,11 @@ def _get_host_config(host_name: str, host_attrs: Mapping[str, str]) -> HostConfi
 
     return HostConfig(
         name=host_name,
-        address=host_attrs["address"],
+        address=address if (address := host_attrs["address"]) else None,
         alias=host_attrs["alias"],
         ip_family=ip_family,
-        ipv4address=host_attrs.get("_ADDRESS_4"),
-        ipv6address=host_attrs.get("_ADDRESS_6"),
+        ipv4address=ipv4 if (ipv4 := host_attrs.get("_ADDRESS_4")) else None,
+        ipv6address=ipv6 if (ipv6 := host_attrs.get("_ADDRESS_6")) else None,
         additional_ipv4addresses=[a for a in host_attrs["_ADDRESSES_4"].split(" ") if a],
         additional_ipv6addresses=[a for a in host_attrs["_ADDRESSES_6"].split(" ") if a],
     )

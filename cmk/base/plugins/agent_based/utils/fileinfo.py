@@ -194,8 +194,8 @@ def _match(name: str, pattern: str) -> Union[bool, Match, None]:
 def fileinfo_process_date(pattern: str, reftime: int) -> str:
     r"""Replace date macros like "$DATE:%Y%m%d$" in the pattern
 
-     * You can have both macros in the string
-     * Multiple occurances are considered
+    * You can have both macros in the string
+    * Multiple occurances are considered
     """
 
     def fileinfo_date_macro_replacer(m: re.Match) -> str:

@@ -92,7 +92,8 @@ def get_check_preview(
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
-    all services if possible"""
+    all services if possible. Those are for example (only?) displayed in the UI discovery page
+    """
 
     fetched = fetcher(host_name, ip_address=ip_address)
     parsed = parser((f[0], f[1]) for f in fetched)
@@ -157,6 +158,12 @@ def get_check_preview(
         enforced_services=enforced_services,
         on_error=on_error,
     )
+
+    # TODO: this is a hack to ensure that the GUI remains compatible with "old" transition
+    # can be removed once a concept for changed/unchanged services is planned
+    if "changed" in grouped_services or "unchanged" in grouped_services:
+        grouped_services["old"] = grouped_services.get("changed", [])
+        grouped_services["old"].extend(grouped_services.get("unchanged", []))
 
     entry: DiscoveredItem[AutocheckEntry]
     passive_rows = [

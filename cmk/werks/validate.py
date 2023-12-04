@@ -23,16 +23,17 @@ def main(
     elif changed_werk_files := os.environ.get("CHANGED_WERK_FILES"):
         werks_to_check = list(Path(line) for line in changed_werk_files.split(" ") if line)
     else:
-        werks_to_check = list(
-            path
-            for path in Path(".werks").iterdir()
-            if path.name.isdigit() or path.name.endswith(".md")
-        )
+        werks_to_check = list(path for path in Path(".werks").iterdir())
 
     config = load_config(werks_config, defines_make)
     choices_component = {e[0] for e in config.all_components()}
 
     for werk_path in werks_to_check:
+        if not werk_path.name.isdigit():
+            if werk_path.name.endswith(".md"):
+                raise RuntimeError(f"Found at least one markdown werk in 2.1.0 branch: {werk_path}")
+            # ignore config and other unrelated files
+            continue
         werk_content = werk_path.read_text(encoding="utf-8")
         try:
             werk = load_werk(file_content=werk_content, file_name=werk_path.name)

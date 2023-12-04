@@ -130,6 +130,8 @@ def load_raw_files(werks_dir):
             werks[werk_id] = werk
         except Exception as e:
             raise MKGeneralException(_('Failed to load werk "%s": %s') % (werk_id, e))
+    if markdown_werks := list(werks_dir.glob("*.md")):
+        raise MKGeneralException(f"Found markdown werks in 2.1.0 branch: {markdown_werks!r}")
     return werks
 
 

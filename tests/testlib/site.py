@@ -1282,6 +1282,7 @@ class SiteFactory:
         name: str,
         start: bool = True,
         init_livestatus: bool = True,
+        prepare_for_tests: bool = True,
         activate_changes: bool = True,
     ) -> Site:
         site = self._site_obj(name)
@@ -1295,7 +1296,9 @@ class SiteFactory:
             return site
 
         site.start()
-        site.prepare_for_tests()
+
+        if prepare_for_tests:
+            site.prepare_for_tests()
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
@@ -1550,7 +1553,11 @@ class SiteFactory:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
                 site.rm()
         if not site.exists():
-            site = self.get_site(name, start=False, init_livestatus=init_livestatus)
+            site = self.get_site(
+                name,
+                init_livestatus=init_livestatus,
+                prepare_for_tests=not self.version.is_saas_edition(),
+            )
         site.start()
         if auto_restart_httpd:
             restart_httpd()
@@ -1562,7 +1569,9 @@ class SiteFactory:
         with cse_openid_oauth_provider(
             f"http://localhost:{site.apache_port}"
         ) if self.version.is_saas_edition() else nullcontext():
-            site.prepare_for_tests()
+            if self.version.is_saas_edition():
+                site.prepare_for_tests()
+                site.activate_changes_and_wait_for_core_reload()
             try:
                 yield site
             finally:

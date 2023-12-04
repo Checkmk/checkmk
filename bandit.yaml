@@ -90,13 +90,13 @@ tests:
 # (optional) list skipped test IDs here, eg '[B101, B406]':
 skips:
   - B415  # pyghmi is needed by our core
+  - B314  # xml_bad_ElementTree consider safe since python 3.6 >= ref: CMK-15194
+  - B318  # xml_bad_minidom same as above
 # medium severity tests excluded for now; enable step-by-step
 
   - B104  # hardcoded_bind_all_interfaces
   - B108  # hardcoded_tmp_directory
   - B302  # marshal
-  - B314  # xml_bad_ElementTree
-  - B318  # xml_bad_minidom
   - B608  # hardcoded_sql_expressions
 
 ### (optional) plugin settings - some test plugins require configuration data

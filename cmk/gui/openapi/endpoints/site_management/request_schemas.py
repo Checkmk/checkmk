@@ -266,12 +266,13 @@ class StatusConnectionAttributes(BaseSchema):
         example=2,
     )
     persistent_connection = fields.Boolean(
-        required=False,
+        load_default=False,
         description="If you enable persistent connections then Multisite will try to keep open the connection to the remote sites.",
         example=False,
     )
     url_prefix = gui_fields.RelativeUrl(
         required=False,
+        load_default="",
         must_endwith_one=["/"],
         description="The URL prefix will be prepended to links of addons like NagVis when a link to such applications points to a host or service on that site.",
         example="/remote_1/",
@@ -282,7 +283,7 @@ class StatusConnectionAttributes(BaseSchema):
         description="By specifying a status host for each non-local connection you prevent Multisite from running into timeouts when remote sites do not respond.",
     )
     disable_in_status_gui = fields.Boolean(
-        required=False,
+        load_default=False,
         description="If you disable a connection, then no data of this site will be shown in the status GUI. The replication is not affected by this, however.",
         example=False,
     )

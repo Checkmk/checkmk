@@ -12,6 +12,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteConfiguratio
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.config_validation_layer.site_management import validate_sites
 from cmk.utils.site import omd_site
 
 import cmk.gui.hooks as hooks
@@ -320,12 +321,15 @@ class SiteManagement:
             if site.get("proxy") is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
 
+        validate_sites(sites)
         return sites
 
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+        validate_sites(sites)
 
         store.mkdir(multisite_dir())
         store.save_to_mk_file(cls._sites_mk(), "sites", sites)

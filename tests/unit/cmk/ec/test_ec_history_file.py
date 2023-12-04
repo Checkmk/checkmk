@@ -11,11 +11,48 @@ from pathlib import Path
 
 from tests.testlib import on_time
 
+from cmk.utils.hostaddress import HostName
+
 from cmk.ec.config import Config
+from cmk.ec.event import Event
 from cmk.ec.history import _current_history_period
-from cmk.ec.history_file import _grep_pipeline, convert_history_line, parse_history_file
+from cmk.ec.history_file import (
+    _grep_pipeline,
+    convert_history_line,
+    FileHistory,
+    parse_history_file,
+)
 from cmk.ec.main import StatusTableHistory
-from cmk.ec.query import QueryFilter
+from cmk.ec.query import QueryFilter, QueryGET, StatusTable
+
+
+def test_file_add_get(history: FileHistory) -> None:
+    """Add 2 documents to history, get filtered result with 1 document."""
+
+    event1 = Event(host=HostName("ABC1"), text="Event1 text", core_host=HostName("ABC"))
+    event2 = Event(host=HostName("ABC2"), text="Event2 text", core_host=HostName("ABC"))
+
+    history.add(event=event1, what="NEW")
+    history.add(event=event2, what="NEW")
+
+    logger = logging.getLogger("cmk.mkeventd")
+
+    def get_table(name: str) -> StatusTable:
+        assert name == "history"
+        return StatusTableHistory(logger, history)
+
+    query = QueryGET(
+        get_table,
+        ["GET history", "Columns: history_what host_name", "Filter: event_host = ABC1"],
+        logger,
+    )
+
+    query_result = history.get(query)
+
+    (row,) = query_result
+    column_index = get_table("history").column_names.index
+    assert row[column_index("history_what")] == "NEW"
+    assert row[column_index("event_host")] == "ABC1"
 
 
 def test_current_history_period(config: Config) -> None:

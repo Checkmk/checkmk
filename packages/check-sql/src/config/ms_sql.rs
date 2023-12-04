@@ -162,13 +162,7 @@ impl Config {
         let configs: Result<Vec<Config>> = root
             .get_yaml_vector(keys::CONFIGS)
             .into_iter()
-            .filter_map(|v| {
-                trace_tools::write_stdout(&format!(
-                    "\n---\n{}\n---\n",
-                    &trace_tools::dump_yaml(&v)
-                ));
-                Config::parse_main_from_yaml(&v).transpose()
-            })
+            .filter_map(|v| Config::parse_main_from_yaml(&v).transpose())
             .collect();
 
         Ok(Some(Self {

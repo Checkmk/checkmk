@@ -515,7 +515,7 @@ def cse_openid_oauth_provider(site_url: str) -> Iterator[subprocess.Popen]:
     if write_cognito_config:
         write_file(
             cognito_config,
-            check_output([f"{cmk_path}/scripts/create_cognito_config_cse.sh", idp_url, site_url]),
+            check_output([f"{cmk_path()}/scripts/create_cognito_config_cse.sh", idp_url, site_url]),
             sudo=True,
         )
     else:

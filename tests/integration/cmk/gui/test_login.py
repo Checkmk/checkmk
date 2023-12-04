@@ -25,13 +25,13 @@ def test_login_and_logout(site: Site) -> None:
     assert "Global settings" not in r.text
 
 
+@skip_if_saas_edition
 def test_session_cookie(site: Site) -> None:
     web = CMKWebSession(site)
-
-    if not site.version.is_saas_edition():
-        web.login()
+    web.login()
 
     cookie = web.get_auth_cookie()
+
     assert cookie is not None
     assert cookie.path == f"/{site.id}/"
     # This is ugly but IMHO the only way...
@@ -39,6 +39,7 @@ def test_session_cookie(site: Site) -> None:
     assert cookie.__dict__.get("_rest", {}).get("SameSite") == "Lax"
 
 
+@skip_if_saas_edition
 def test_automation_user_gui(site: Site) -> None:
     """test authenticated request of an automation user to the gui
 
@@ -81,6 +82,7 @@ def test_automation_user_gui(site: Site) -> None:
     assert session.get_auth_cookie() is None
 
 
+@skip_if_saas_edition
 def test_automation_user_rest_api(site: Site) -> None:
     """test authenticated request of an automation user to the rest api
 
@@ -123,6 +125,7 @@ def test_automation_user_rest_api(site: Site) -> None:
     assert session.get_auth_cookie() is None
 
 
+@skip_if_saas_edition
 def test_human_user_gui(site: Site) -> None:
     """test authenticated request of a "normal"/"human" user to the gui
 
@@ -166,6 +169,7 @@ def test_human_user_gui(site: Site) -> None:
     assert session.get_auth_cookie() is not None
 
 
+@skip_if_saas_edition
 def test_human_user_restapi(site: Site) -> None:
     """test authenticated request of a "normal"/"human" user to the rest api
 

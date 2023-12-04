@@ -7,7 +7,7 @@ use check_cert::check::{
     self, Collection, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real,
 };
 use check_cert::checker::certificate::{self, Config as CertConfig};
-use check_cert::checker::validation::{self, Config as ValidationConfig};
+use check_cert::checker::verification::{self, Config as VerifConfig};
 use check_cert::fetcher::{self, Config as FetcherConfig};
 use check_cert::truststore;
 use clap::{Parser, ValueEnum};
@@ -196,9 +196,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));
-    collection.join(&mut validation::check(
+    collection.join(&mut verification::check(
         &chain,
-        ValidationConfig::builder()
+        VerifConfig::builder()
             .trust_store(&truststore::system().unwrap_or_default())
             .allow_self_signed(args.allow_self_signed)
             .build(),

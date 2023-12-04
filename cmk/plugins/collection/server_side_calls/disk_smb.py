@@ -31,10 +31,19 @@ class Params(BaseModel):
 def check_disk_smb_arguments(
     params: Params, host_config: HostConfig, _http_proxies: Mapping[str, HTTPProxy]
 ) -> Iterator[ActiveCheckCommand]:
+    def _get_address(host_config: HostConfig, params: Params) -> str:
+        if params.host != "use_parent_host":
+            return params.host[1]
+
+        if host_config.address:
+            return host_config.address
+
+        raise ValueError("No IP address available")
+
     args: list[str | Secret] = [
         params.share,
         "-H",
-        host_config.address if params.host == "use_parent_host" else params.host[1],
+        _get_address(host_config, params),
     ]
 
     warn, crit = params.levels

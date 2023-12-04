@@ -16,6 +16,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 import cmk.base.config as base_config
 from cmk.base.server_side_calls import (
     _get_host_address_config,
+    _get_host_config,
     ActiveCheck,
     ActiveCheckError,
     ActiveServiceData,
@@ -31,6 +32,8 @@ from cmk.base.server_side_calls import (
 from cmk.server_side_calls.v1 import (
     ActiveCheckCommand,
     ActiveCheckConfig,
+    HostConfig,
+    IPAddressFamily,
     PlainTextSecret,
     SpecialAgentCommand,
     SpecialAgentConfig,
@@ -895,6 +898,88 @@ def test_get_host_address_config(
     expected_result: HostAddressConfiguration,
 ) -> None:
     host_config = _get_host_address_config(hostname, host_attrs)
+    assert host_config == expected_result
+
+
+@pytest.mark.parametrize(
+    "hostname, host_attrs, expected_result",
+    [
+        pytest.param(
+            "myhost",
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "127.0.0.1",
+                "address": "127.0.0.1",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "127.0.0.2 127.0.0.3",
+                "_ADDRESSES_4_1": "127.0.0.2",
+                "_ADDRESSES_4_2": "127.0.0.3",
+                "_ADDRESSES_6": "",
+            },
+            HostConfig(
+                name="myhost",
+                address="127.0.0.1",
+                alias="my_host_alias",
+                ip_family=IPAddressFamily.IPV4,
+                ipv4address="127.0.0.1",
+                ipv6address=None,
+                additional_ipv4addresses=["127.0.0.2", "127.0.0.3"],
+                additional_ipv6addresses=[],
+            ),
+            id="ipv4 address",
+        ),
+        pytest.param(
+            "myhost",
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_6": "fe80::240",
+                "address": "fe80::240",
+                "_ADDRESS_FAMILY": "6",
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "fe80::241 fe80::242",
+            },
+            HostConfig(
+                name="myhost",
+                address="fe80::240",
+                alias="my_host_alias",
+                ip_family=IPAddressFamily.IPV6,
+                ipv4address=None,
+                ipv6address="fe80::240",
+                additional_ipv4addresses=[],
+                additional_ipv6addresses=["fe80::241", "fe80::242"],
+            ),
+            id="ipv6 address",
+        ),
+        pytest.param(
+            "myhost",
+            {
+                "alias": "my_host_alias",
+                "_ADDRESS_4": "",
+                "address": "",
+                "_ADDRESS_FAMILY": "4",
+                "_ADDRESSES_4": "",
+                "_ADDRESSES_6": "",
+            },
+            HostConfig(
+                name="myhost",
+                address=None,
+                alias="my_host_alias",
+                ip_family=IPAddressFamily.IPV4,
+                ipv4address=None,
+                ipv6address=None,
+                additional_ipv4addresses=[],
+                additional_ipv6addresses=[],
+            ),
+            id="no address",
+        ),
+    ],
+)
+def test_get_host_config(
+    hostname: str,
+    host_attrs: base_config.ObjectAttributes,
+    expected_result: HostConfig,
+) -> None:
+    host_config = _get_host_config(hostname, host_attrs)
     assert host_config == expected_result
 
 

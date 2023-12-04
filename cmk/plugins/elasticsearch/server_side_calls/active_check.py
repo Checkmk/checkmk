@@ -51,10 +51,13 @@ def commands_function(
     if params.count is not None:
         warn, crit = params.count
         args += ["--warn=%d" % warn, "--crit=%d" % crit]
+
     if params.hostname is not None:
         args += ["-H", params.hostname]
-    else:
+    elif host_config.address:
         args += ["-H", host_config.address]
+    else:
+        raise ValueError("No IP address available")
 
     yield ActiveCheckCommand(
         service_description=f"Elasticsearch Query {params.svc_item}", command_arguments=args

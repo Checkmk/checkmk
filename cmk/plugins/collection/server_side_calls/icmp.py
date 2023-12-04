@@ -91,6 +91,8 @@ def get_common_arguments(params: ICMPParams) -> list[str]:
 def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> AddressCmdArgs:
     match params.address:
         case AddressType.ADDRESS:
+            if not host_config.address:
+                raise ValueError("No IP address available")
             return AddressCmdArgs(host_config.ip_family, [host_config.address])
         case AddressType.ALIAS:
             return AddressCmdArgs(host_config.ip_family, [host_config.alias])
@@ -102,14 +104,24 @@ def get_address_arguments(params: ICMPParams, host_config: HostConfig) -> Addres
             return AddressCmdArgs(IPAddressFamily.IPV4, host_config.additional_ipv4addresses)
         case AddressType.ADDITIONAL_IP6vADDRESSES:
             return AddressCmdArgs(IPAddressFamily.IPV6, host_config.additional_ipv6addresses)
-    if params.address == AddressType.INDEXED_IPv4ADDRESS and params.address_index is not None:
+
+    if (
+        params.address == AddressType.INDEXED_IPv4ADDRESS
+        and params.address_index is not None
+        and params.address_index <= len(host_config.additional_ipv4addresses)
+    ):
         ipv4address = host_config.additional_ipv4addresses[params.address_index - 1]
         return AddressCmdArgs(IPAddressFamily.IPV4, [ipv4address])
-    if params.address == AddressType.INDEXED_IPv6ADDRESS and params.address_index is not None:
+    if (
+        params.address == AddressType.INDEXED_IPv6ADDRESS
+        and params.address_index is not None
+        and params.address_index <= len(host_config.additional_ipv6addresses)
+    ):
         ipv6address = host_config.additional_ipv6addresses[params.address_index - 1]
         return AddressCmdArgs(IPAddressFamily.IPV6, [ipv6address])
     if params.address == AddressType.EXPLICIT and params.explicit_address:
         return AddressCmdArgs(IPAddressFamily.IPV4, [params.explicit_address])
+
     raise ValueError("Invalid address parameters")
 
 

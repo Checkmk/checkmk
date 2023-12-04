@@ -33,6 +33,8 @@ def commands_function(
     command_arguments = ["-H", host_config.name]
 
     if params.server is None:
+        if not host_config.address:
+            raise ValueError("No IP address available")
         command_arguments += ["-s", host_config.address]
     elif params.server and params.server != "default DNS server":
         command_arguments += ["-s", params.server]

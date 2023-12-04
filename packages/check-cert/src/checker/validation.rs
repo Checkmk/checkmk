@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::check::{self, SimpleCheckResult, Writer};
+use crate::check::{self, Collection, SimpleCheckResult};
 use typed_builder::TypedBuilder;
 
 mod selfsigned {
@@ -82,10 +82,10 @@ pub struct Config<'a> {
     allow_self_signed: bool,
 }
 
-pub fn check(chain: &[Vec<u8>], config: Config) -> Writer {
+pub fn check(chain: &[Vec<u8>], config: Config) -> Collection {
     assert!(!chain.is_empty());
 
-    Writer::from(&mut vec![
+    Collection::from(&mut vec![
         check_self_signed(
             selfsigned::is_self_signed(&chain[0]),
             config.allow_self_signed,

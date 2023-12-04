@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 use check_cert::check::{
-    self, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real, Writer,
+    self, Collection, Levels, LevelsChecker, LevelsCheckerArgs, LevelsStrategy, Real,
 };
 use check_cert::checker::certificate::{self, Config as CertConfig};
 use check_cert::checker::validation::{self, Config as ValidationConfig};
@@ -168,7 +168,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         check::abort("Empty or invalid certificate chain on host")
     }
 
-    let mut writer = Writer::from(&mut vec![response_time_levels_checker
+    let mut collection = Collection::from(&mut vec![response_time_levels_checker
         .check(
             response_time,
             &format!(
@@ -181,7 +181,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .build(),
         )
         .map(|x| Real::from(x.whole_milliseconds() as isize))]);
-    writer.join(&mut certificate::check(
+    collection.join(&mut certificate::check(
         &chain[0],
         CertConfig::builder()
             .serial(args.serial)
@@ -196,7 +196,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .not_after_levels_checker(Some(not_after_levels_checker))
             .build(),
     ));
-    writer.join(&mut validation::check(
+    collection.join(&mut validation::check(
         &chain,
         ValidationConfig::builder()
             .trust_store(&truststore::system().unwrap_or_default())
@@ -204,6 +204,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build(),
     ));
 
-    println!("HTTP {}", writer);
-    std::process::exit(writer.exit_code())
+    println!("HTTP {}", collection);
+    std::process::exit(collection.exit_code())
 }

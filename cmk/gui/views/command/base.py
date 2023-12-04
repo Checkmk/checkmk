@@ -17,6 +17,7 @@ from cmk.gui.permissions import Permission
 from cmk.gui.type_defs import Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.time import timezone_utc_offset_str
 
 from .group import command_group_registry, CommandGroup
 
@@ -94,9 +95,18 @@ class Command(abc.ABC):
             self.confirm_button,
         )
 
-    def confirm_dialog_date_and_time_format(self, timestamp: float) -> str:
-        # Return date and time in the format of e.g. "Mon, 01. January 2042 at 01:23"
-        return time.strftime(_("%a, %d. %B %Y at %H:%M"), time.localtime(timestamp))
+    def confirm_dialog_date_and_time_format(
+        self, timestamp: float, show_timezone: bool = True
+    ) -> str:
+        """Return date, time and if show_timezone is True the local timezone in the format of e.g.
+        'Mon, 01. January 2042 at 01:23 [UTC+01:00]'"""
+        local_time = time.localtime(timestamp)
+        return (
+            time.strftime(_("%a, %d. %B %Y at %H:%M"), local_time)
+            + (" " + timezone_utc_offset_str(timestamp))
+            if show_timezone
+            else ""
+        )
 
     def affected(self, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]) -> HTML:
         return HTML(

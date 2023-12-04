@@ -35,6 +35,7 @@ from cmk.gui.permissions import (
 from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.time import timezone_utc_offset_str
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import AbsoluteDate, Age, Checkbox, DatePicker, Dictionary, TimePicker
 from cmk.gui.view_utils import render_cre_upgrade_button
@@ -970,8 +971,11 @@ class CommandAcknowledge(Command):
         html.close_div()
 
         html.span(
-            _("Server time (currently: %s)")
-            % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time()))
+            timezone_utc_offset_str()
+            + " "
+            + _("Server time (currently: %s)")
+            % time.strftime("%m/%d/%Y %H:%M", time.localtime(time.time())),
+            class_="server_time",
         )
         if is_raw_edition:
             render_cre_upgrade_button()
@@ -1486,8 +1490,10 @@ class CommandScheduleDowntimes(Command):
         html.open_td()
         self._vs_date().render_input("_down_from_date", time.strftime("%Y-%m-%d"))
         self._vs_time().render_input("_down_from_time", time.strftime("%H:%M"))
-        html.i(
-            _("Server time (currently: %s)") % time.strftime("%d/%m/%Y %H:%M", time.localtime()),
+        html.span(
+            timezone_utc_offset_str()
+            + " "
+            + _("Server time (currently: %s)") % time.strftime("%m/%d/%Y %H:%M", time.localtime()),
             class_="server_time",
         )
         html.close_td()
@@ -1500,10 +1506,14 @@ class CommandScheduleDowntimes(Command):
         html.close_td()
         html.open_td()
         self._vs_date().render_input("_down_to_date", time.strftime("%Y-%m-%d"))
+        default_endtime: float = time.time() + 7200
         self._vs_time().render_input(
-            "_down_to_time", time.strftime("%H:%M", time.localtime(time.time() + 7200))
+            "_down_to_time", time.strftime("%H:%M", time.localtime(default_endtime))
         )
-        html.i(_("Server time"), class_="server_time")
+        html.span(
+            timezone_utc_offset_str(default_endtime) + " " + _("Server time"),
+            class_="server_time",
+        )
         html.close_td()
 
         # Repeat section

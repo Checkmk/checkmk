@@ -16,18 +16,17 @@ from tests.testlib.version import CMKVersion, version_from_env
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
-from .conftest import BaseVersions, get_site_status, update_config, update_site
+from .conftest import get_site_status, update_config, update_site
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.cee
 def test_update(  # pylint: disable=too-many-branches
-    test_site: Site,
+    test_setup: tuple[Site, bool],
     agent_ctl: Path,
-    request: pytest.FixtureRequest,
 ) -> None:
-    # get version data
+    test_site, disable_interactive_mode = test_setup
     base_version = test_site.version
 
     hostnames = [HostName(f"test-host-{i}") for i in range(5)]
@@ -92,11 +91,6 @@ def test_update(  # pylint: disable=too-many-branches
         fallback_branch=current_base_branch_name(),
     )
 
-    # interactive-mode disabled either via CLI or when using the first allowed version
-    disable_interactive_mode = (
-        request.config.getoption(name="--disable-interactive-mode")
-        or base_version.version == BaseVersions.MIN_VERSION
-    )
     target_site = update_site(test_site, target_version, not disable_interactive_mode)
 
     # Triggering cmk config update

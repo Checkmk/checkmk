@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json as _json
+import logging
 import time as _time
 import uuid as _uuid
 from collections.abc import Iterator, Mapping
@@ -12,6 +13,8 @@ import pytest
 
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(name="default_cfg", scope="module")
@@ -119,6 +122,8 @@ def test_service_table(site: Site) -> None:
     assert len(rows) >= 20  # header + min 1 service
 
     descriptions = [r[0] for r in rows]
+
+    logger.info("Service table: %s", ",".join(descriptions))
 
     assert "Check_MK" in descriptions
     assert "Check_MK Discovery" in descriptions

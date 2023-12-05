@@ -46,11 +46,7 @@ from cmk.graphing.v1 import PhysicalUnit, ScientificUnit
 from cmk.graphing.v1 import translation as translation_api
 from cmk.graphing.v1 import Unit
 
-from ._color import (
-    get_next_random_palette_color,
-    get_palette_color_by_index,
-    parse_color_into_hexrgb,
-)
+from ._color import get_palette_color_by_index, parse_color_into_hexrgb
 from ._expression import (
     Constant,
     CriticalOf,
@@ -67,7 +63,7 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._graph_specification import MetricOperation, MetricOpRRDChoice
+from ._graph_specification import MetricOperation
 from ._loader import load_graphing_plugins
 from ._parser import parse_color, parse_unit
 from ._type_defs import (
@@ -1204,52 +1200,6 @@ def metric_title(metric_name: MetricName_) -> str:
     if metric_name in metric_info:
         return str(metric_info[metric_name]["title"])
     return metric_name.title()
-
-
-class RenderableRecipe(NamedTuple):
-    title: str
-    expression: MetricOperation
-    color: str
-    line_type: LineType
-    visible: bool
-
-
-def metric_recipe_and_unit(
-    host_name: HostName | str,
-    service_description: ServiceName,
-    metric_name: MetricName_,
-    consolidation_function: str,
-    line_type: LineType = "stack",
-    visible: bool = True,
-) -> tuple[RenderableRecipe, str]:
-    def _parse_consolidation_func_name(name: str) -> GraphConsoldiationFunction:
-        if name == "max":
-            return "max"
-        if name == "min":
-            return "min"
-        if name == "average":
-            return "average"
-        raise ValueError(name)
-
-    mi = metric_info.get(
-        metric_name,
-        {"title": metric_name.title(), "unit": "", "color": "#000000"},
-    )
-    return (
-        RenderableRecipe(
-            title=metric_title(metric_name),
-            expression=MetricOpRRDChoice(
-                host_name=HostName(host_name),
-                service_name=service_description,
-                metric_name=metric_name,
-                consolidation_func_name=_parse_consolidation_func_name(consolidation_function),
-            ),
-            color=parse_color_into_hexrgb(mi.get("color", get_next_random_palette_color())),
-            line_type=line_type,
-            visible=visible,
-        ),
-        mi.get("unit", ""),
-    )
 
 
 # .

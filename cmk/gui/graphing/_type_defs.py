@@ -6,12 +6,20 @@
 from collections.abc import Callable, Sequence
 from typing import Literal, NotRequired, Type, TypedDict
 
+from livestatus import SiteId
+
+from cmk.utils.hostaddress import HostName
+from cmk.utils.servicename import ServiceName
+
+from cmk.gui.time_series import TimeSeries
 from cmk.gui.valuespec import ValueSpec
 
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 GraphPresentation = Literal["lines", "stacked", "sum", "average", "min", "max"]
 LineType = Literal["line", "area", "stack", "-line", "-area", "-stack"]
 Operators = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
+RRDData = dict[RRDDataKey, TimeSeries]
 
 
 class UnitInfo(TypedDict):

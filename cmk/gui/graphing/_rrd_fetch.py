@@ -31,15 +31,13 @@ from ._graph_specification import (
     NeededElementForRRDDataKey,
 )
 from ._timeseries import op_func_wrapper, time_series_operators
-from ._type_defs import GraphConsoldiationFunction
+from ._type_defs import GraphConsoldiationFunction, RRDData, RRDDataKey
 from ._unit_info import unit_info
 from ._utils import (
     CheckMetricEntry,
     find_matching_translation,
     metric_info,
     reverse_translate_into_all_potentially_relevant_metrics_cached,
-    RRDData,
-    RRDDataKey,
 )
 
 

@@ -20,8 +20,7 @@ from ._perfometer import (
     renderer_registry,
 )
 from ._settings import ConfigVariableGraphTimeranges
-from ._timeseries import register_time_series_expressions
-from ._utils import time_series_expression_registry
+from ._timeseries import register_time_series_expressions, time_series_expression_registry
 from ._valuespecs import PageVsAutocomplete
 
 

@@ -15,15 +15,12 @@ from typing import Any, Literal, NamedTuple, NewType, NotRequired, Self
 
 from typing_extensions import TypedDict
 
-from livestatus import livestatus_lql, SiteId
+from livestatus import livestatus_lql
 
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
 from cmk.utils.metrics import MetricName as MetricName_
-from cmk.utils.plugin_registry import Registry
-from cmk.utils.servicename import ServiceName
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
@@ -63,7 +60,6 @@ from ._expression import (
     Sum,
     WarningOf,
 )
-from ._graph_specification import MetricOperation
 from ._loader import load_graphing_plugins
 from ._parser import parse_color, parse_unit
 from ._type_defs import (
@@ -436,10 +432,6 @@ class GraphTemplate:
             consolidation_function=None,
             omit_zero_metrics=False,
         )
-
-
-RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
-RRDData = dict[RRDDataKey, TimeSeries]
 
 
 class MetricUnitColor(TypedDict):
@@ -972,56 +964,6 @@ def translated_metrics_from_row(row: Row) -> Mapping[str, TranslatedMetric]:
     check_command = row[what + "_check_command"]
     return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
-
-# .
-#   .--Evaluation----------------------------------------------------------.
-#   |          _____            _             _   _                        |
-#   |         | ____|_   ____ _| |_   _  __ _| |_(_) ___  _ __             |
-#   |         |  _| \ \ / / _` | | | | |/ _` | __| |/ _ \| '_ \            |
-#   |         | |___ \ V / (_| | | |_| | (_| | |_| | (_) | | | |           |
-#   |         |_____| \_/ \__,_|_|\__,_|\__,_|\__|_|\___/|_| |_|           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Parsing of performance data into metrics, evaluation of expressions |
-#   '----------------------------------------------------------------------'
-
-
-@dataclass(frozen=True)
-class TimeSeriesMetaData:
-    title: str | None = None
-    color: str | None = None
-    line_type: LineType | Literal["ref"] | None = None
-
-
-@dataclass(frozen=True)
-class AugmentedTimeSeries:
-    data: TimeSeries
-    metadata: TimeSeriesMetaData = TimeSeriesMetaData()
-
-
-ExpressionFunc = Callable[[MetricOperation, RRDData], Sequence[AugmentedTimeSeries]]
-
-
-class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
-    def plugin_name(self, instance: ExpressionFunc) -> str:
-        # mypy does not know this attribute
-        return instance._ident  # type: ignore[attr-defined]
-
-    def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
-        def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
-            if not callable(plugin_func):
-                raise TypeError()
-
-            # We define the attribute here. for the `plugin_name` method.
-            plugin_func._ident = ident  # type: ignore[attr-defined]
-
-            self.register(plugin_func)
-            return plugin_func
-
-        return wrap
-
-
-time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 # .
 #   .--Graphs--------------------------------------------------------------.

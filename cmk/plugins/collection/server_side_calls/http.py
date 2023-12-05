@@ -96,8 +96,8 @@ class DirectHost:
     def port(self) -> int | None:
         return self.settings.port
 
-    def virtual_host(self, is_url_mode: bool, _host_config: HostConfig) -> str | None:
-        return (
+    def virtual_host(self, is_url_mode: bool, host_config: HostConfig) -> str | None:
+        virtual_host = (
             self.settings.virtual
             if isinstance(self.settings.virtual, str)
             # In URL mode, don't return the address in this case, because check_http would
@@ -108,6 +108,9 @@ class DirectHost:
             if is_url_mode
             else self.address
         )
+        if isinstance(virtual_host, str):
+            return virtual_host.replace("$HOSTNAME$", host_config.name)
+        return virtual_host
 
 
 @dataclass(frozen=True)
@@ -123,11 +126,12 @@ class ProxyHost:
         return self.proxy.port
 
     def virtual_host(self, _is_url_mode: bool, host_config: HostConfig) -> str:
-        vhost = (
+        vhost_with_macros = (
             self.settings.virtual
             if isinstance(self.settings.virtual, str)
             else self.settings.get_fallback_address(host_config)
         )
+        vhost = vhost_with_macros.replace("$HOSTNAME$", host_config.name)
         return vhost if self.settings.port is None else f"{vhost}:{self.settings.port}"
 
 

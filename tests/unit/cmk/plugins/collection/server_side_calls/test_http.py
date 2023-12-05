@@ -609,10 +609,8 @@ def test_parse_http_params(params: Mapping[str, object], expected_result: HTTPPa
         pytest.param("0.0.0.1", False, "0.0.0.1", id="virtual address, not url mode"),
         pytest.param(None, True, None, id="no virtual address, url mode"),
         pytest.param(None, False, "127.0.0.1", id="direct host address"),
-        pytest.param("$HOSTNAME$", True, "$HOSTNAME$", id="virtual address with macro, url mode"),
-        pytest.param(
-            "$HOSTNAME$", False, "$HOSTNAME$", id="virtual address with macro, no url mode"
-        ),
+        pytest.param("$HOSTNAME$", True, "hostname", id="virtual address with macro, url mode"),
+        pytest.param("$HOSTNAME$", False, "hostname", id="virtual address with macro, no url mode"),
     ],
 )
 def test_direct_host_virtual_host(
@@ -631,8 +629,8 @@ def test_direct_host_virtual_host(
         pytest.param("0.0.0.1", None, "0.0.0.1", id="virtual address, no port"),
         pytest.param(None, 443, "0.0.0.2:443", id="host config address, port"),
         pytest.param(None, None, "0.0.0.2", id="host config address, no port"),
-        pytest.param("$HOSTNAME$", 443, "$HOSTNAME$:443", id="virtual address with macro, port"),
-        pytest.param("$HOSTNAME$", None, "$HOSTNAME$", id="virtual address with macro, no port"),
+        pytest.param("$HOSTNAME$", 443, "hostname:443", id="virtual address with macro, port"),
+        pytest.param("$HOSTNAME$", None, "hostname", id="virtual address with macro, no port"),
     ],
 )
 def test_proxy_host_virtual_host(

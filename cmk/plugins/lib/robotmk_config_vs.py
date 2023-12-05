@@ -7,6 +7,11 @@ from collections.abc import Sequence
 from typing import Literal, NotRequired, TypedDict
 
 
+class RCCProfileConfig(TypedDict):
+    http_proxy: Literal["no_proxy"] | tuple[Literal["use_proxy"], str]
+    https_proxy: Literal["no_proxy"] | tuple[Literal["use_proxy"], str]
+
+
 class RFReExecutionConfig(TypedDict):
     strategy: Literal["incremental", "complete"]
     number: int
@@ -51,4 +56,5 @@ class SuiteConfig(TypedDict):
 
 class Config(TypedDict):
     suites_base_dir: str
+    rcc_profile_config: NotRequired[RCCProfileConfig]
     suites: Sequence[SuiteConfig]

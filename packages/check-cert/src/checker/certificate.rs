@@ -15,9 +15,13 @@ use x509_parser::signature_algorithm::SignatureAlgorithm;
 use x509_parser::time::ASN1Time;
 use x509_parser::x509::{SubjectPublicKeyInfo, X509Name};
 
-macro_rules! unwrap {
-    ($e:expr) => {
-        $e.unwrap_or_default().into()
+macro_rules! unwrap_into {
+    ( $($e:expr),* $(,)?) => {
+        {
+            vec![
+            $( $e.unwrap_or_default().into(), )*
+            ]
+        }
     };
 }
 
@@ -39,32 +43,20 @@ pub fn check(der: &[u8], config: Config) -> Collection {
         Err(_) => check::abort("Failed to parse certificate"),
     };
 
-    Collection::from(&mut vec![
-        unwrap!(check_serial(
-            cert.tbs_certificate.raw_serial_as_string(),
-            config.serial
-        )),
-        unwrap!(check_subject(
-            cert.tbs_certificate.subject(),
-            config.subject
-        )),
-        unwrap!(check_issuer(cert.tbs_certificate.issuer(), config.issuer)),
-        unwrap!(check_signature_algorithm(
-            &cert.signature_algorithm,
-            config.signature_algorithm
-        )),
-        unwrap!(check_pubkey_algorithm(
-            cert.public_key(),
-            config.pubkey_algorithm
-        )),
-        unwrap!(check_pubkey_size(cert.public_key(), config.pubkey_size)),
-        unwrap!(check_validity_not_after(
+    Collection::from(&mut unwrap_into!(
+        check_serial(cert.tbs_certificate.raw_serial_as_string(), config.serial),
+        check_subject(cert.tbs_certificate.subject(), config.subject),
+        check_issuer(cert.tbs_certificate.issuer(), config.issuer),
+        check_signature_algorithm(&cert.signature_algorithm, config.signature_algorithm),
+        check_pubkey_algorithm(cert.public_key(), config.pubkey_algorithm),
+        check_pubkey_size(cert.public_key(), config.pubkey_size),
+        check_validity_not_after(
             cert.tbs_certificate.validity().time_to_expiration(),
             config.not_after_levels_checker,
             cert.tbs_certificate.validity().not_after,
         )
-        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize)))),
-    ])
+        .map(|cr: CheckResult<Duration>| cr.map(|x| Real::from(x.whole_days() as isize))),
+    ))
 }
 
 fn check_serial(serial: String, expected: Option<String>) -> Option<SimpleCheckResult> {

@@ -13,6 +13,7 @@ import pytest
 
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
+from tests.testlib.version import version_from_env
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +114,7 @@ def test_host_table_host_equal_filter(site: Site) -> None:
     assert rows == results[site.core_name()]
 
 
+@pytest.mark.xfail(condition=version_from_env().is_saas_edition(), reason="CMK-14611", strict=True)
 @pytest.mark.usefixtures("default_cfg")
 def test_service_table(site: Site) -> None:
     rows = site.live.query(

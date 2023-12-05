@@ -27,6 +27,16 @@ pub struct Cli {
     #[arg(short, long)]
     pub url: String,
 
+    /// URL version to use for the request.
+    /// If not set, start with HTTP/1.1 and upgrade to HTTP/2 if supported by the server.
+    /// If set to "http11", send the request with HTTP/1.1 without HTTP/2 upgrade.
+    /// If set to "http2", send the request with HTTP/2.
+    /// Note: While HTTP/2 without TLS (h2c) is theoretically available, it's de facto
+    /// unsupported by common server software, so sending a HTTP/2 request
+    /// without TLS will most likely fail.
+    #[arg(long)]
+    pub http_version: Option<HttpVersion>,
+
     /// Set timeout in seconds
     #[arg(short, long, default_value = "10", value_parser=parse_seconds)]
     pub timeout: Duration,
@@ -138,6 +148,19 @@ pub struct Cli {
 
 type PageSizeLimits = (usize, Option<usize>);
 type ResponseTimeLevels = (f64, Option<f64>);
+
+// Only support HTTP/1.1 and HTTP/2 for now.
+// HTTP/0.9 is deprecated for over two decades, and while it's settable,
+// reqwest technically doesn't support it and refuses to execute the
+// request.
+// Same goes for HTTP/1.0. While the request doesn't fail, it's still sent
+// with virtual host header, so it's technically a HTTP/1.1 request.
+// Supporting these would require changing the HTTP backend.
+#[derive(Clone, Debug, ValueEnum)]
+pub enum HttpVersion {
+    Http11,
+    Http2,
+}
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum OnRedirect {

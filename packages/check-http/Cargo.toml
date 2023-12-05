@@ -15,7 +15,7 @@ bytes = { version = "*" }
 anyhow = { version = "*" }
 clap = { version = "*", features = ["derive"] }
 http = { version = "*" }
-reqwest = { version = "*", features = ["json"] }
+reqwest = { version = "*", features = ["json", "rustls-tls"] }
 scrypt = { version = "*", default-features = false, features = ["std"] }
 tokio = { version = "*", features = ["full"] }
 openssl = { version = "*", features = ["vendored"] }

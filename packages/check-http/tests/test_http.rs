@@ -68,6 +68,7 @@ async fn check_http_output(
 fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParameters) {
     (
         ClientConfig {
+            version: None,
             user_agent: "test_http".to_string(),
             timeout: Duration::from_secs(1),
             onredirect: OnRedirect::Follow,
@@ -77,6 +78,7 @@ fn make_standard_configs(port: u16) -> (ClientConfig, RequestConfig, CheckParame
         RequestConfig {
             url: format!("http://{}:{}", LOCALHOST_DNS, port),
             method: Method::GET,
+            version: None,
             headers: None,
             body: None,
             content_type: None,

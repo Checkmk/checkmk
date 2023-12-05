@@ -13,6 +13,7 @@ use reqwest::{
 pub struct RequestConfig {
     pub url: String,
     pub method: Method,
+    pub version: Option<Version>,
     pub headers: Option<Vec<(HeaderName, HeaderValue)>>,
     pub body: Option<String>,
     pub content_type: Option<HeaderValue>,
@@ -64,6 +65,12 @@ fn prepare_request(client: Client, request_cfg: RequestConfig) -> RequestBuilder
     let req = client
         .request(request_cfg.method, request_cfg.url)
         .headers(headers);
+
+    let req = if let Some(version) = request_cfg.version {
+        req.version(version)
+    } else {
+        req
+    };
 
     let req = if let Some(body) = request_cfg.body {
         req.body(body)

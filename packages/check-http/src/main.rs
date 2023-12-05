@@ -9,7 +9,7 @@ use check_http::output::Output;
 use check_http::runner::collect_checks;
 use clap::Parser;
 use cli::Cli;
-use reqwest::Method;
+use reqwest::{Method, Version};
 
 mod cli;
 mod pwstore;
@@ -29,6 +29,10 @@ async fn main() {
 fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
     (
         ClientConfig {
+            version: args.http_version.clone().map(|ver| match ver {
+                cli::HttpVersion::Http11 => Version::HTTP_11,
+                cli::HttpVersion::Http2 => Version::HTTP_2,
+            }),
             user_agent: args.user_agent.unwrap_or(DEFAULT_USER_AGENT.to_string()),
             timeout: args.timeout,
             onredirect: match args.onredirect {
@@ -55,6 +59,10 @@ fn make_configs(args: Cli) -> (ClientConfig, RequestConfig, CheckParameters) {
                 } else {
                     Method::GET
                 }
+            }),
+            version: args.http_version.map(|ver| match ver {
+                cli::HttpVersion::Http11 => Version::HTTP_11,
+                cli::HttpVersion::Http2 => Version::HTTP_2,
             }),
             body: args.body,
             auth_user: args.auth_user,

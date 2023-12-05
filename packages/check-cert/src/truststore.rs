@@ -2,22 +2,17 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use openssl::error::ErrorStack;
+use anyhow::Result;
 use openssl::x509::store::X509StoreBuilder;
+use openssl::x509::X509Ref;
 
-pub fn system() -> Result<Vec<Vec<u8>>, ErrorStack> {
+pub fn system() -> Result<Vec<Vec<u8>>> {
     let mut store = X509StoreBuilder::new()?;
     store.set_default_paths()?;
     let store = store.build();
     Ok(store
         .all_certificates()
         .iter()
-        .flat_map(|c| c.to_der())
+        .flat_map(X509Ref::to_der)
         .collect::<Vec<_>>())
-}
-
-#[test]
-fn test_system() {
-    let store = system().unwrap();
-    assert!(!store.is_empty());
 }

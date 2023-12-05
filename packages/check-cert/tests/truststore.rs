@@ -6,10 +6,5 @@ use check_cert::truststore;
 
 #[test]
 fn test_load_system_trust_store() {
-    assert_ne!(
-        truststore::system()
-            .expect("Failed to load trust store")
-            .len(),
-        0
-    );
+    assert!(!truststore::system().unwrap().is_empty());
 }

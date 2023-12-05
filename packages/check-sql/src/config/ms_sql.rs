@@ -230,7 +230,7 @@ impl Default for Authentication {
         Self {
             username: "".to_owned(),
             password: None,
-            auth_type: AuthType::Integrated,
+            auth_type: AuthType::default(),
             access_token: None,
         }
     }
@@ -269,6 +269,17 @@ pub enum AuthType {
     Windows,
     Integrated,
     Token,
+}
+
+impl Default for AuthType {
+    #[cfg(unix)]
+    fn default() -> Self {
+        Self::SqlServer
+    }
+    #[cfg(windows)]
+    fn default() -> Self {
+        Self::Integrated
+    }
 }
 
 impl TryFrom<&str> for AuthType {
@@ -574,20 +585,72 @@ pub struct CustomInstance {
 impl CustomInstance {
     pub fn from_yaml(
         yaml: &Yaml,
-        auth: &Authentication,
-        conn: &Connection,
+        main_auth: &Authentication,
+        main_conn: &Connection,
         sections: &Sections,
     ) -> Result<Self> {
+        let sid = yaml
+            .get_string(keys::SID)
+            .context("Bad/Missing sid in instance")?;
+        let (auth, conn) = CustomInstance::make_auth_and_conn(yaml, main_auth, main_conn, &sid)?;
         Ok(Self {
-            sid: yaml
-                .get_string(keys::SID)
-                .context("Bad/Missing sid in instance")?,
-            auth: Authentication::from_yaml(yaml).unwrap_or(auth.clone()),
-            conn: Connection::from_yaml(yaml)?.unwrap_or(conn.clone()),
+            sid,
+            auth,
+            conn,
             alias: yaml.get_string(keys::ALIAS),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
         })
     }
+
+    /// Make auth and conn for custom instance using yaml
+    /// - fallback on main_auth and main_conn if not defined in yaml
+    /// - correct connection hostname if needed
+    fn make_auth_and_conn(
+        yaml: &Yaml,
+        main_auth: &Authentication,
+        main_conn: &Connection,
+        sid: &str,
+    ) -> Result<(Authentication, Connection)> {
+        let mut auth = Authentication::from_yaml(yaml).unwrap_or(main_auth.clone());
+        let mut conn = Connection::from_yaml(yaml)?.unwrap_or(main_conn.clone());
+        let instance_host = calc_real_host(&auth, &conn);
+        let main_host = calc_real_host(main_auth, main_conn);
+        if instance_host != main_host {
+            log::error!("Host {instance_host} defined in {sid} doesn't match to main host {main_host}. Try to fall back");
+            if main_auth.auth_type() == auth.auth_type()
+                || main_auth.auth_type() == &AuthType::Integrated
+            {
+                log::warn!("Fall back to main conn host {main_host}");
+                conn = Connection {
+                    hostname: main_host.to_string(),
+                    ..conn
+                };
+            } else if auth.auth_type() == &AuthType::Integrated {
+                log::warn!(
+                    "Instance auth is `integrated`: fall back to main auth type {:?}",
+                    main_auth.auth_type()
+                );
+                auth = Authentication {
+                    auth_type: main_auth.auth_type().clone(),
+                    ..auth
+                };
+            } else {
+                log::error!(
+                    "Fall back is impossible {:?} {:?}",
+                    main_auth.auth_type(),
+                    auth.auth_type()
+                );
+            }
+        }
+        if auth.auth_type() == &AuthType::Integrated {
+            conn = Connection {
+                hostname: "localhost".to_string(),
+                ..conn
+            };
+        }
+        Ok((auth, conn))
+    }
+
     pub fn sid(&self) -> &String {
         &self.sid
     }
@@ -602,6 +665,9 @@ impl CustomInstance {
     }
     pub fn piggyback(&self) -> Option<&Piggyback> {
         self.piggyback.as_ref()
+    }
+    pub fn calc_real_host(&self) -> String {
+        calc_real_host(&self.auth, &self.conn)
     }
 }
 
@@ -957,8 +1023,8 @@ connection:
         let s = Sections::from_yaml(&create_sections_yaml_default())
             .unwrap()
             .unwrap();
-        assert_eq!(s.always(), defaults::SECTIONS_ALWAYS.clone());
-        assert_eq!(s.cached(), defaults::SECTIONS_CACHED.clone());
+        assert_eq!(s.always(), defaults::SECTIONS_ALWAYS);
+        assert_eq!(s.cached(), defaults::SECTIONS_CACHED);
         assert!(s.disabled().is_empty());
         assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
         assert!(Sections::from_yaml(&create_yaml("_sections:\n"))
@@ -1077,7 +1143,8 @@ discovery:
         .unwrap();
         assert_eq!(instance.sid(), "INST1");
         assert_eq!(instance.auth().username(), "u1");
-        assert_eq!(instance.conn().hostname(), "h1");
+        assert_eq!(instance.conn().hostname(), "localhost");
+        assert_eq!(instance.calc_real_host(), "localhost");
         assert_eq!(instance.alias().unwrap(), "a1");
         assert_eq!(instance.piggyback().unwrap().hostname(), "piggy");
         assert_eq!(instance.piggyback().unwrap().sections().cache_age(), 123);

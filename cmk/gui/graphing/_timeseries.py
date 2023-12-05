@@ -6,11 +6,13 @@
 import functools
 import operator
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
 from itertools import chain
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.plugin_registry import Registry
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
@@ -22,13 +24,45 @@ from ._graph_specification import (
     MetricOpOperator,
     MetricOpRRDSource,
 )
-from ._type_defs import Operators
-from ._utils import (
-    AugmentedTimeSeries,
-    RRDData,
-    time_series_expression_registry,
-    TimeSeriesExpressionRegistry,
-)
+from ._type_defs import LineType, Operators, RRDData
+
+
+@dataclass(frozen=True)
+class TimeSeriesMetaData:
+    title: str | None = None
+    color: str | None = None
+    line_type: LineType | Literal["ref"] | None = None
+
+
+@dataclass(frozen=True)
+class AugmentedTimeSeries:
+    data: TimeSeries
+    metadata: TimeSeriesMetaData = TimeSeriesMetaData()
+
+
+ExpressionFunc = Callable[[MetricOperation, RRDData], Sequence[AugmentedTimeSeries]]
+
+
+class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):
+    def plugin_name(self, instance: ExpressionFunc) -> str:
+        # mypy does not know this attribute
+        return instance._ident  # type: ignore[attr-defined]
+
+    def register_expression(self, ident: str) -> Callable[[ExpressionFunc], ExpressionFunc]:
+        def wrap(plugin_func: ExpressionFunc) -> ExpressionFunc:
+            if not callable(plugin_func):
+                raise TypeError()
+
+            # We define the attribute here. for the `plugin_name` method.
+            plugin_func._ident = ident  # type: ignore[attr-defined]
+
+            self.register(plugin_func)
+            return plugin_func
+
+        return wrap
+
+
+time_series_expression_registry = TimeSeriesExpressionRegistry()
 
 # .
 #   .--Curves--------------------------------------------------------------.

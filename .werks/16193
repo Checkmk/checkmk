@@ -1,0 +1,13 @@
+Title: Licensing: Distribute license information to remote CME sites
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1701792141
+Edition: cme
+Level: 1
+Version: 2.2.0p17
+
+Currently, license verification for a CME is not required and therefore the information required for verification is not distributed across the sites in a CME setup.
+With the 2.3, the CME will gain the CCE feature set, the verification will be required from then on.
+To avoid license warnings on the remote sites during the update, with this werk the necessary information will be available in the whole setup after the license usage has been submitted.
+If the associated subscription is valid for a 2.3 CME, no additional licensing is required during or after the update.

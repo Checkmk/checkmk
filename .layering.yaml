@@ -115,7 +115,6 @@ package-definitions:
   pytest-mock: [pytest_mock]
   redis: [redis]
   reportlab: [reportlab]
-  repoze-profile: [repoze.profile]
   requests: [requests]
   requests_kerberos: [requests_kerberos]
   requests_oauthlib: [requests_oauthlib]
@@ -322,7 +321,6 @@ allowed-package-relationships:
     pytz,
     redis,
     reportlab,
-    repoze-profile,
     requests,
     setproctitle,
     six,

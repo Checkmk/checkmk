@@ -14,6 +14,8 @@ from cmk.plugins.collection.server_side_calls.http import (
     Family,
     HostSettings,
     HTTPParams,
+    ProxyHost,
+    ProxySettings,
     URLMode,
 )
 from cmk.server_side_calls.v1 import HostConfig, IPAddressFamily, PlainTextSecret, StoredSecret
@@ -598,3 +600,46 @@ def test_check_http_service_description(
 )
 def test_parse_http_params(params: Mapping[str, object], expected_result: HTTPParams) -> None:
     assert active_check_http.parameter_parser(params) == expected_result
+
+
+@pytest.mark.parametrize(
+    "virtual, is_url_mode, expected_address",
+    [
+        pytest.param("0.0.0.1", True, "0.0.0.1", id="virtual address, url mode"),
+        pytest.param("0.0.0.1", False, "0.0.0.1", id="virtual address, not url mode"),
+        pytest.param(None, True, None, id="no virtual address, url mode"),
+        pytest.param(None, False, "127.0.0.1", id="direct host address"),
+        pytest.param("$HOSTNAME$", True, "$HOSTNAME$", id="virtual address with macro, url mode"),
+        pytest.param(
+            "$HOSTNAME$", False, "$HOSTNAME$", id="virtual address with macro, no url mode"
+        ),
+    ],
+)
+def test_direct_host_virtual_host(
+    virtual: str | None, is_url_mode: bool, expected_address: str | None
+) -> None:
+    host_settings = HostSettings(443, None, virtual)
+    direct_host = DirectHost("127.0.0.1", host_settings)
+
+    assert direct_host.virtual_host(is_url_mode, HOST_CONFIG) == expected_address
+
+
+@pytest.mark.parametrize(
+    "virtual, port, expected_address",
+    [
+        pytest.param("0.0.0.1", 443, "0.0.0.1:443", id="virtual address, port"),
+        pytest.param("0.0.0.1", None, "0.0.0.1", id="virtual address, no port"),
+        pytest.param(None, 443, "0.0.0.2:443", id="host config address, port"),
+        pytest.param(None, None, "0.0.0.2", id="host config address, no port"),
+        pytest.param("$HOSTNAME$", 443, "$HOSTNAME$:443", id="virtual address with macro, port"),
+        pytest.param("$HOSTNAME$", None, "$HOSTNAME$", id="virtual address with macro, no port"),
+    ],
+)
+def test_proxy_host_virtual_host(
+    virtual: str | None, port: int | None, expected_address: str | None
+) -> None:
+    proxy_settings = ProxySettings("8.8.8.8", None, None)
+    host_settings = HostSettings(port, None, virtual)
+    proxy_host = ProxyHost(proxy_settings, host_settings)
+
+    assert proxy_host.virtual_host(True, HOST_CONFIG) == expected_address

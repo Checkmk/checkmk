@@ -1,0 +1,12 @@
+Title: Duplicate services for Arbor Sightline devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1701777533
+Edition: cre
+Level: 1
+Version: 2.2.0p17
+
+This fixes the warning
+<i>"Duplicate service description (auto check) 'Memory' for host 'MyHost'"</i>
+during config generation for the affected devices.

@@ -32,6 +32,24 @@ def test_render_help_empty() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
+def test_html_form_context():
+    with html.output_funnel.plugged():
+        with html.form_context("foo", method="POST"):
+            html.upload_file("bar")
+        output = html.output_funnel.drain()
+
+    assert output.startswith(
+        """
+<form id="form_foo" name="foo" action="index.py" method="POST" enctype="multipart/form-data" class="foo">
+        """.strip()
+    )
+    # Skipping comparing CSRF token fields
+    assert output.endswith(
+        """<input type="file" name="bar" /><input type="submit" name="_save" class="hidden_submit" /></form>"""
+    )
+
+
+@pytest.mark.usefixtures("request_context")
 def test_render_help_html() -> None:
     assert html.have_help is False
     assert compare_html(

@@ -117,7 +117,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         return 10
 
     def generate(self) -> None:
-        save_global_settings(self._initial_global_settings())
+        save_global_settings(self._initial_global_settings(), skip_cse_edition_check=True)
 
         # A contact group for all hosts and services
         groups: AllGroupSpecs = {
